@@ -64,12 +64,33 @@ export function formatDuration(duration: number): string {
     }
 }
 
+/** Converts minutes to milliseconds.
+ * @param minutes - The number of minutes to convert.
+ * @returns The equivalent duration in milliseconds.
+ * @example
+ * millisecondsFromMinutes(5) // returns 300000
+ * @see secondsFromMinutes for converting minutes to seconds
+ * @see minutesFromSeconds for converting seconds to minutes
+ */
+export function millisecondsFromMinutes(minutes: number): number {
+    return secondsFromMinutes(minutes) * 1000
+}
+
 export function secondsFromMinutes(minutes: number): number {
     return minutes * 60;
 }
 
+/**
+ * Converts seconds to minutes.
+ * @param seconds - The number of seconds to convert.
+ * @returns The equivalent duration in minutes.
+ * @example
+ * minutesFromSeconds(120) // returns 2
+ * @see secondsFromMinutes for converting minutes to seconds
+ * @see millisecondsFromMinutes for converting minutes to milliseconds
+ */
 export function minutesFromSeconds(seconds: number): number {
-    return seconds / 60;
+    return seconds / 60
 }
 
 export function hoursFromMinutes(minutes: number): number {

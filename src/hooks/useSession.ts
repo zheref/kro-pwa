@@ -1,3 +1,5 @@
+
+// #region Imports
 import { useSession as useAuthSession } from 'next-auth/react'
 import { 
     SessionFragmentState, 
@@ -22,7 +24,9 @@ import {
 } from "@/domain/notificationsService"
 import {SessionFragment} from "@/model/Session/SessionFragment"
 import {playProgress, playStart, playSuccess} from "@/domain/soundsOperations"
+// #endregion Imports
 
+// #region Type Declarations
 // Extend the Session type to include our custom fields
 declare module 'next-auth' {
     interface Session {
@@ -37,6 +41,7 @@ declare module 'next-auth/jwt' {
         accessToken?: string;
     }
 }
+// #endregion Type Declarations
 
 export function createSessionFragmentState(): SessionFragmentState {
     return {
@@ -166,7 +171,7 @@ export const useSession = (
 
     /**
      * Pauses the current session by marking the end of the last open fragment
-     * and updating the session status to paused.
+     * and updating the session status to 'paused'.
      *
      * This function finds the most recently opened fragment (a fragment
      * without an end timestamp) within the session state. It updates that

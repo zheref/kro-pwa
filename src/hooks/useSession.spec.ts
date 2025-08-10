@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useSession as useFocusSession } from './useSession'
 import { SessionStatus, FragmentFocusStatus } from '@/model/Session/SessionTypes'
 import { SessionConfig } from '@/model/Session/SessionConfig'
-import { secondsFromMinutes } from '@/utils/durations'
+import {millisecondsFromMinutes, minutesFromSeconds, secondsFromMinutes} from '@/utils/durations'
 import { getObject, insertObject, memory } from '@/domain/stateStore'
 import {
     hasNotificationsPermissionBeenRequested,
@@ -210,6 +210,60 @@ describe('useSession', () => {
         expect(result.current.state.status).toEqual(
             SessionStatus.focused(FragmentFocusStatus.running)
         )
+    })
+
+    it('should keep session remaining duration when paused', () => {
+        const { result } = renderHook(() =>
+            useFocusSession({
+                targetConfig: new SessionConfig(
+                    secondsFromMinutes(25), // duration
+                    secondsFromMinutes(5)   // rest
+                )
+            }, mockedOnSessionFinished)
+        )
+
+        const { current: { state } } = result
+
+        act(() => {
+            result.current.actions.startSession()
+            // Simulate some time passing
+            jest.advanceTimersByTime(millisecondsFromMinutes(5))
+        })
+
+        const remainingMinutesBeforePause = minutesFromSeconds(state.remainingDuration)
+
+        expect(remainingMinutesBeforePause).toBe(20)
+
+        act(() => {
+            result.current.actions.pauseSession()
+            jest.advanceTimersByTime(millisecondsFromMinutes(1))
+        })
+
+        const remainingMinutesAfterPause = minutesFromSeconds(state.remainingDuration)
+
+        expect(remainingMinutesAfterPause).toBe((remainingMinutesBeforePause))
+
+        act(() => {
+            result.current.actions.resumeSession()
+        })
+
+        const remainingMinutesAfterResume = minutesFromSeconds(
+            result.current.state.remainingDuration
+        )
+        expect(remainingMinutesAfterResume).toBe(remainingMinutesBeforePause)
+        expect(result.current.state.status).toEqual(
+            SessionStatus.focused(FragmentFocusStatus.running)
+        )
+
+        act(() => {
+            // Simulate timer reaching zero
+            jest.advanceTimersByTime(millisecondsFromMinutes(20))
+        })
+
+        expect(result.current.state.remainingDuration).toBe(0)
+        expect(result.current.state.status).toEqual(SessionStatus.ready)
+        expect(mockedOnSessionFinished).toHaveBeenCalled()
+        expect(postNotification).toHaveBeenCalled()
     })
 
     it('should abort session and reset status', () => {

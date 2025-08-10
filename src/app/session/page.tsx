@@ -9,7 +9,6 @@ import {
     HStack,
     Group,
     IconButton,
-    Text,
     Field,
     Menu,
     defineStyle, Portal, Box,
@@ -17,7 +16,6 @@ import {
 } from '@chakra-ui/react'
 import { LuPlay } from 'react-icons/lu'
 import { useSession } from '@/hooks/useSession'
-import DurationDial from '@/components/DurationDial'
 import { seconds, secondsFromMinutes } from '@/utils/durations'
 import {FaPlay, FaPause, FaStop, FaCheck} from 'react-icons/fa'
 import { toaster } from "@/components/ui/toaster"
@@ -26,6 +24,7 @@ import { SessionConfig, standardRestDurationFrom } from '@/model/Session/Session
 import { FragmentFocusStatus, SessionStatusFocused } from '@/model/Session/SessionTypes'
 import {FaXmark} from "react-icons/fa6"
 import {LoginWithGoogleButton} from "@/components/LoginWithGoogle"
+import SessionDial from "@/app/session/SessionDial";
 
 const floatingStyles = defineStyle({
     pos: "absolute",
@@ -51,6 +50,11 @@ const floatingStyles = defineStyle({
     },
 })
 
+/**
+ * The main session page.
+ * Used to present session feature within the app navigation structure.
+ * @constructor
+ */
 export default function SessionPage() {
   // #region State
   const presets = usePresets()
@@ -118,7 +122,7 @@ export default function SessionPage() {
     * Handles the user dragging the dial.
     * @param seconds - The duration of the dial in seconds.
     */
-  const userDidDragDial = useCallback((seconds: number) => {
+  const userDidDragDial = (seconds: number) => {
     if (seconds > 0) {
       const minutes = secondsFromMinutes(seconds)
       
@@ -133,7 +137,7 @@ export default function SessionPage() {
           new SessionConfig(seconds, standardRestDurationFrom(seconds))
         )
       }
-  }, [presets, userDidUpdateTargetConfig])
+  }
 
     /**
      * Handles the change event for an intention input field.
@@ -226,37 +230,6 @@ export default function SessionPage() {
         </VStack>
     )
 
-  const dialArea = (
-    <VStack gap={3}>
-        {state.status instanceof SessionStatusFocused ? (
-            <DurationDial
-                duration={state.targetConfig.duration ?? 0}
-                onDurationChange={userDidDragDial}
-                isRunning={isRunning}
-            />
-        ) : (
-            <DurationDial
-                duration={state.remainingDuration}
-                onDurationChange={userDidDragDial}
-                isRunning={isRunning}
-            />
-        )}
-        <VStack gap={1} minH="40px">
-            <Text fontWeight="500" fontSize="12px" color={{
-                base: 'gray.600',
-                _dark: 'gray.400',
-            }}>
-                {isRunning
-                ? state.timeRangeForDisplay
-                : state.timeRangeForDisplay}
-            </Text>
-            <Text fontWeight="500" fontSize="12px" color={{base: 'gray.600', _dark: 'gray.400'}}>
-                {state.fragmentsCountForDisplay}
-            </Text>
-        </VStack>
-    </VStack>
-  )
-
   const renderControls = () => {
     if (state.status instanceof SessionStatusFocused) {
       return (
@@ -329,7 +302,14 @@ export default function SessionPage() {
           <Center h="full">
               <VStack gap={10} w="400px" maxW="700px" maxH="600px" justifyContent="space-between" alignItems="center">
                   {intentionArea}
-                  {dialArea}
+                  <SessionDial status={state.status}
+                               targetConfig={state.targetConfig}
+                               remainingDuration={state.remainingDuration}
+                               timeRangeForDisplay={state.timeRangeForDisplay}
+                               fragmentsCountForDisplay={state.fragmentsCountForDisplay}
+                               isRunning={isRunning}
+                               userDidDragDial={userDidDragDial}
+                  />
                   {renderControls()}
               </VStack>
           </Center>

@@ -4,24 +4,24 @@ import {
     SessionStatus, 
     FragmentFocusStatus, 
     SessionStatusFocused 
-} from '@/model/Session/SessionTypes';
+} from '@/model/Session/SessionTypes'
 import {useState, useCallback, useMemo, useEffect} from 'react'
-import { ISessionConfig, SessionConfig } from '@/model/Session/SessionConfig';
-import { useSessionTimer } from './useSessionTimer';
+import { ISessionConfig, SessionConfig } from '@/model/Session/SessionConfig'
+import { useSessionTimer } from './useSessionTimer'
 
 import { 
     dateAddingDuration, 
     digitalTime, 
     secondsFromMinutes 
-} from '@/utils/durations';
-import {getObject, insertObject, memory, remember} from "@/domain/stateStore";
+} from '@/utils/durations'
+import {getObject, insertObject, memory, remember} from "@/domain/stateStore"
 import {
     hasNotificationsPermissionBeenRequested,
     isNotificationsPermissionGranted, postNotification,
     requestNotificationsPermission
-} from "@/domain/notificationsService";
-import {SessionFragment} from "@/model/Session/SessionFragment";
-import {playProgress, playStart, playSuccess} from "@/domain/soundsOperations";
+} from "@/domain/notificationsService"
+import {SessionFragment} from "@/model/Session/SessionFragment"
+import {playProgress, playStart, playSuccess} from "@/domain/soundsOperations"
 
 // Extend the Session type to include our custom fields
 declare module 'next-auth' {
@@ -47,7 +47,7 @@ export function createSessionFragmentState(): SessionFragmentState {
         isHardEditing: false,
         fragments: [],
         presentingFailure: null,
-    };
+    }
 }
 
 export const useSession = (
@@ -65,14 +65,14 @@ export const useSession = (
     }))
 
     const updateIntention = useCallback((intention: string) => {
-        setState(prev => ({ ...prev, intention }));
-        remember("intention", intention);
-    }, []);
+        setState(prev => ({ ...prev, intention }))
+        remember("intention", intention)
+    }, [])
 
     const userDidUpdateTargetConfig = useCallback((config: ISessionConfig) => {
-        setState(prev => ({ ...prev, targetConfig: config }));
-        insertObject("targetConfig", config);
-    }, []);
+        setState(prev => ({ ...prev, targetConfig: config }))
+        insertObject("targetConfig", config)
+    }, [])
 
     useEffect(() => {
         const isGoogleConfigured = authProvider === 'google'
@@ -80,23 +80,23 @@ export const useSession = (
     }, [authProvider])
 
     useEffect(() => {
-        const intentionMemory = memory("intention");
+        const intentionMemory = memory("intention")
         if (intentionMemory && !initialState.intention) {
-            setState(prev => ({ ...prev, intention: intentionMemory }));
+            setState(prev => ({ ...prev, intention: intentionMemory }))
         }
 
-        const configCache: ISessionConfig | null = getObject("targetConfig");
+        const configCache: ISessionConfig | null = getObject("targetConfig")
         if (configCache && !initialState.targetConfig) {
-            setState(prev => ({ ...prev, targetConfig: configCache }));
+            setState(prev => ({ ...prev, targetConfig: configCache }))
         } else if (!initialState.targetConfig) {
             const defaultConfig = new SessionConfig(
                 secondsFromMinutes(25),
                 secondsFromMinutes(5)
-            );
-            setState(prev => ({ ...prev, targetConfig: defaultConfig }));
+            )
+            setState(prev => ({ ...prev, targetConfig: defaultConfig }))
         }
 
-        return () => {};
+        return () => {}
     }, [initialState.intention, initialState.targetConfig])
 
     const handleSessionSuccess = useCallback(() => {
@@ -148,7 +148,7 @@ export const useSession = (
             start: new Date(),
             end: undefined
         }
-        const fragments = [...state.fragments, newFragment];
+        const fragments = [...state.fragments, newFragment]
 
         setState(prev => ({
             ...prev,
@@ -160,7 +160,7 @@ export const useSession = (
         playStart().finally(() => {})
 
         if (!hasNotificationsPermissionBeenRequested()) {
-            requestNotificationsPermission((r: NotificationPermission) => {})
+            requestNotificationsPermission(() => {})
         }
     }, [state.fragments])
 
@@ -181,15 +181,15 @@ export const useSession = (
      * recreate on every render unless dependencies change.
      */
     const pauseSession = useCallback(() => {
-        const lastOpenFragmentIndex = state.fragments.findLastIndex(f => f.end === undefined);
-        const fragments = [...state.fragments];
-        fragments[lastOpenFragmentIndex].end = new Date();
+        const lastOpenFragmentIndex = state.fragments.findLastIndex(f => f.end === undefined)
+        const fragments = [...state.fragments]
+        fragments[lastOpenFragmentIndex].end = new Date()
         setState(prev => ({
             ...prev,
             status: SessionStatus.focused(FragmentFocusStatus.paused),
             fragments
-        }));
-    }, [state.fragments]);
+        }))
+    }, [state.fragments])
 
     /**
      * Callback function to resume a session.
@@ -210,13 +210,13 @@ export const useSession = (
             start: new Date(),
             end: undefined
         }
-        const fragments = [...state.fragments, newFragment];
+        const fragments = [...state.fragments, newFragment]
         setState(prev => ({
             ...prev,
             status: SessionStatus.focused(FragmentFocusStatus.running),
             fragments
-        }));
-    }, [state.fragments]);
+        }))
+    }, [state.fragments])
 
     /**
      * A callback function that resets the session state to a "ready" status.
@@ -239,8 +239,8 @@ export const useSession = (
         setState(prev => ({
             ...prev,
             status: SessionStatus.ready,
-        }));
-    }, []);
+        }))
+    }, [])
 
     const finishSession = useCallback(() => {
         const lastOpenFragmentIndex = state.fragments.findLastIndex(f => f.end === undefined)
@@ -269,7 +269,7 @@ export const useSession = (
             status: SessionStatus.ready,
             fragments: []
         }))
-    }, [onSessionFinished, handleSessionSuccess, state.fragments]);
+    }, [onSessionFinished, handleSessionSuccess, state.fragments])
 
     const handleSessionEnded = useCallback(() => {
         const lastOpenFragmentIndex = state.fragments.findLastIndex(f => f.end === undefined)
@@ -290,7 +290,7 @@ export const useSession = (
                 title: "Contratulations!",
                 body: "You have successfully completed the session",
                 img: undefined
-            });
+            })
         }
 
         setState(prev => ({
@@ -298,52 +298,52 @@ export const useSession = (
             status: SessionStatus.ready,
             fragments: []
         }))
-    }, [onSessionFinished, handleSessionSuccess, state.fragments]);
+    }, [onSessionFinished, handleSessionSuccess, state.fragments])
 
     const handleSessionProgress = useCallback(() => {
         playProgress().finally(() => {})
     }, [])
 
     const { elapsedDuration, remainingDuration, fragments, currentTime } 
-        = useSessionTimer(state, handleSessionEnded, handleSessionProgress);
+        = useSessionTimer(state, handleSessionEnded, handleSessionProgress)
 
     const baseTime = useMemo(() => {
-        return state.fragments[state.fragments.length - 1]?.end ?? currentTime;
-    }, [state.fragments, currentTime]);
+        return state.fragments[state.fragments.length - 1]?.end ?? currentTime
+    }, [state.fragments, currentTime])
 
     const startTime = useMemo(() => {
-        return state.fragments[0]?.start ?? currentTime;
-    }, [state.fragments, currentTime]);
+        return state.fragments[0]?.start ?? currentTime
+    }, [state.fragments, currentTime])
 
     const endTime = useMemo(() => {
         if (state.status instanceof SessionStatusFocused && state.status.status === FragmentFocusStatus.paused) {
-            return dateAddingDuration(currentTime, remainingDuration);
+            return dateAddingDuration(currentTime, remainingDuration)
         } else {
-            return dateAddingDuration(baseTime, remainingDuration);
+            return dateAddingDuration(baseTime, remainingDuration)
         }
-    }, [state.status, currentTime, remainingDuration, baseTime]);
+    }, [state.status, currentTime, remainingDuration, baseTime])
 
     const endTimeForDisplay = useMemo(() => {
         if (state.status instanceof SessionStatusFocused && state.status.status === FragmentFocusStatus.paused) {
-            return digitalTime(endTime, true);
+            return digitalTime(endTime, true)
         } else {
-            return digitalTime(endTime, false);
+            return digitalTime(endTime, false)
         }
-    }, [endTime, state.status]);
+    }, [endTime, state.status])
 
     const timeRangeForDisplay = useMemo(() => {
-        const startTimeForDisplay = digitalTime(startTime, false);
+        const startTimeForDisplay = digitalTime(startTime, false)
 
-        return `${startTimeForDisplay} - ${endTimeForDisplay}`;
-    }, [startTime, endTimeForDisplay]);
+        return `${startTimeForDisplay} - ${endTimeForDisplay}`
+    }, [startTime, endTimeForDisplay])
 
     const fragmentsCountForDisplay = useMemo(() => {
         if (state.status instanceof SessionStatusFocused) {
-            return `${state.fragments.length} ${state.fragments.length === 1 ? 'fragment' : 'fragments'} in place`;
+            return `${state.fragments.length} ${state.fragments.length === 1 ? 'fragment' : 'fragments'} in place`
         } else {
-            return "Ready to Start?";
+            return "Ready to Start?"
         }
-    }, [state.fragments, state.status]);
+    }, [state.fragments, state.status])
 
     return {
         state: {
@@ -363,5 +363,5 @@ export const useSession = (
             abortSession,
             finishSession
         },
-    };
-};
+    }
+}

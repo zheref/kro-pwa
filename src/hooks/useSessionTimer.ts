@@ -115,10 +115,12 @@ export const useSessionTimer = (
             lastElapsedRef.current = totalElapsed;
             startTimeRef.current = null;
 
+            const remainingDuration = Math.max(0, (state.targetConfig.duration ?? 0) - totalElapsed);
+
             setTimerState(prev => ({
                 ...prev,
                 elapsedDuration: totalElapsed,
-                remainingDuration: Math.max(0, (state.targetConfig.duration ?? 0) - totalElapsed),
+                remainingDuration: remainingDuration,
                 fragments: fragmentsRef.current
             }));
         }
@@ -216,4 +218,4 @@ export const useSessionTimer = (
         resumeTimer,
         stopTimer
     };
-}; 
+};

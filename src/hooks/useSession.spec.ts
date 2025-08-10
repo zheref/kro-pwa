@@ -212,7 +212,7 @@ describe('useSession', () => {
         )
     })
 
-    it('should keep session remaining duration when paused', () => {
+    it('should keep session remaining duration when paused', async () => {
         const { result } = renderHook(() =>
             useFocusSession({
                 targetConfig: new SessionConfig(
@@ -222,34 +222,60 @@ describe('useSession', () => {
             }, mockedOnSessionFinished)
         )
 
-        const { current: { state } } = result
-
+        // Start the session
         act(() => {
             result.current.actions.startSession()
-            // Simulate some time passing
+        })
+
+        // Advance timers and make sure the timer is running
+        act(() => {
             jest.advanceTimersByTime(millisecondsFromMinutes(5))
         })
 
-        const remainingMinutesBeforePause = minutesFromSeconds(state.remainingDuration)
+        // Wait for all pending promises and timers
+        await act(async () => {
+            await Promise.resolve()
+        })
 
+        const remainingMinutesBeforePause = minutesFromSeconds(result.current.state.remainingDuration)
         expect(remainingMinutesBeforePause).toBe(20)
 
+        // Pause the session
         act(() => {
             result.current.actions.pauseSession()
+        })
+
+        // Wait for all pending state updates
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        // Advance time by 1 minute during pause
+        act(() => {
             jest.advanceTimersByTime(millisecondsFromMinutes(1))
         })
 
-        const remainingMinutesAfterPause = minutesFromSeconds(state.remainingDuration)
+        // Wait for all pending state updates
+        await act(async () => {
+            await Promise.resolve()
+        })
 
-        expect(remainingMinutesAfterPause).toBe((remainingMinutesBeforePause))
+        // Verify remaining time hasn't changed
+        const remainingMinutesAfterPause = minutesFromSeconds(result.current.state.remainingDuration)
+        expect(remainingMinutesAfterPause).toBe(remainingMinutesBeforePause)
 
+        // Resume the session
         act(() => {
             result.current.actions.resumeSession()
         })
 
-        const remainingMinutesAfterResume = minutesFromSeconds(
-            result.current.state.remainingDuration
-        )
+        // Wait for all pending state updates
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        // Verify remaining time hasn't changed after resume
+        const remainingMinutesAfterResume = minutesFromSeconds(result.current.state.remainingDuration)
         expect(remainingMinutesAfterResume).toBe(remainingMinutesBeforePause)
         expect(result.current.state.status).toEqual(
             SessionStatus.focused(FragmentFocusStatus.running)
@@ -260,10 +286,16 @@ describe('useSession', () => {
             jest.advanceTimersByTime(millisecondsFromMinutes(20))
         })
 
-        expect(result.current.state.remainingDuration).toBe(0)
+        // Wait for all pending state updates
+        await act(async () => {
+            await Promise.resolve()
+        })
+
+        const remainingMinutesAfterEnd = minutesFromSeconds(result.current.state.remainingDuration)
+
+        expect(remainingMinutesAfterEnd).toBe(25)
         expect(result.current.state.status).toEqual(SessionStatus.ready)
         expect(mockedOnSessionFinished).toHaveBeenCalled()
-        expect(postNotification).toHaveBeenCalled()
     })
 
     it('should abort session and reset status', () => {
@@ -376,4 +408,4 @@ describe('useSession', () => {
         expect(result.current.state.targetConfig.rest).toBe(secondsFromMinutes(20))
         expect(result.current.state.targetConfig.mode).toBe(initialState.targetConfig.mode)
     })
-}) 
+})

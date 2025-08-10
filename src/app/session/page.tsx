@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import {
     Center,
     VStack,
@@ -14,18 +14,18 @@ import {
     Menu,
     defineStyle, Portal, Box,
     Alert,
-} from '@chakra-ui/react';
-import { LuPlay } from 'react-icons/lu';
-import { useSession } from '@/hooks/useSession';
-import DurationDial from '@/components/DurationDial';
-import { seconds, secondsFromMinutes } from '@/utils/durations';
-import {FaPlay, FaPause, FaStop, FaCheck} from 'react-icons/fa';
+} from '@chakra-ui/react'
+import { LuPlay } from 'react-icons/lu'
+import { useSession } from '@/hooks/useSession'
+import DurationDial from '@/components/DurationDial'
+import { seconds, secondsFromMinutes } from '@/utils/durations'
+import {FaPlay, FaPause, FaStop, FaCheck} from 'react-icons/fa'
 import { toaster } from "@/components/ui/toaster"
-import { customPreset, usePresets } from '@/hooks/usePresets';
-import { SessionConfig, standardRestDurationFrom } from '@/model/Session/SessionConfig';
-import { FragmentFocusStatus, SessionStatusFocused } from '@/model/Session/SessionTypes';
-import {FaXmark} from "react-icons/fa6";
-import {LoginWithGoogleButton} from "@/components/LoginWithGoogle";
+import { customPreset, usePresets } from '@/hooks/usePresets'
+import { SessionConfig, standardRestDurationFrom } from '@/model/Session/SessionConfig'
+import { FragmentFocusStatus, SessionStatusFocused } from '@/model/Session/SessionTypes'
+import {FaXmark} from "react-icons/fa6"
+import {LoginWithGoogleButton} from "@/components/LoginWithGoogle"
 
 const floatingStyles = defineStyle({
     pos: "absolute",
@@ -53,8 +53,8 @@ const floatingStyles = defineStyle({
 
 export default function SessionPage() {
   // #region State
-  const presets = usePresets();
-  const [selectedPreset, setSelectedPreset] = useState(presets[0]);
+  const presets = usePresets()
+  const [selectedPreset, setSelectedPreset] = useState(presets[0])
 
   const onSessionFinished = useCallback(() => {
     toaster.create({
@@ -65,30 +65,30 @@ export default function SessionPage() {
         action: {
             label: 'Done',
             onClick: () => {
-                toaster.dismiss();
+                toaster.dismiss()
             }
         }
-    });
-  }, []);
+    })
+  }, [])
 
   
-  const { state, actions } = useSession({}, onSessionFinished);
-  const [isIntentionFocused, setIsIntentionFocused] = useState(false);
-  const { userDidUpdateTargetConfig } = actions;
+  const { state, actions } = useSession({}, onSessionFinished)
+  const [isIntentionFocused, setIsIntentionFocused] = useState(false)
+  const { userDidUpdateTargetConfig } = actions
   
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // #region Computed State
 
   const isRunning = useMemo(() => {
     return state.status instanceof SessionStatusFocused
         && state.status.status === FragmentFocusStatus.running
-  }, [state.status]);
+  }, [state.status])
 
   const enabledToConfirmIntention = useMemo(() => {
-    const value = state.intention;
-    return isIntentionFocused && value.length > 0;
-  }, [isIntentionFocused, state.intention]);
+    const value = state.intention
+    return isIntentionFocused && value.length > 0
+  }, [isIntentionFocused, state.intention])
 
   // #endregion
 
@@ -99,16 +99,16 @@ export default function SessionPage() {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         if (isIntentionFocused) {
-          inputRef.current?.blur();
+          inputRef.current?.blur()
         } else if (!isRunning) {
-          inputRef.current?.focus();
+          inputRef.current?.focus()
         }
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isRunning, isIntentionFocused]);
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [isRunning, isIntentionFocused])
 
   // #endregion
 
@@ -131,9 +131,9 @@ export default function SessionPage() {
 
         userDidUpdateTargetConfig(
           new SessionConfig(seconds, standardRestDurationFrom(seconds))
-        );
+        )
       }
-  }, [presets, userDidUpdateTargetConfig]);
+  }, [presets, userDidUpdateTargetConfig])
 
     /**
      * Handles the change event for an intention input field.
@@ -144,8 +144,8 @@ export default function SessionPage() {
      * @param {React.ChangeEvent<HTMLInputElement>} event - The change event emitted by the input field.
      */
     const handleIntentionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        actions.updateIntention(value);
+        const value = event.target.value
+        actions.updateIntention(value)
     }
 
     // #endregion
@@ -224,7 +224,7 @@ export default function SessionPage() {
                 )}
             </Group>
         </VStack>
-    );
+    )
 
   const dialArea = (
     <VStack gap={3}>
@@ -255,7 +255,7 @@ export default function SessionPage() {
             </Text>
         </VStack>
     </VStack>
-  );
+  )
 
   const renderControls = () => {
     if (state.status instanceof SessionStatusFocused) {
@@ -303,7 +303,7 @@ export default function SessionPage() {
         return (
             <HStack gap={3} w="full" justifyContent="center">
                 <IconButton bg="blue.500" variant="solid" size="lg" rounded="full" onClick={() => {
-                    actions.startSession();
+                    actions.startSession()
                     toaster.create({
                         title: 'Session started',
                         description: 'Good luck!',
@@ -311,15 +311,15 @@ export default function SessionPage() {
                         action: {
                             label: 'Dismiss',
                             onClick: () => {
-                                toaster.dismiss();
+                                toaster.dismiss()
                             }
                         }
-                    });
+                    })
                 }}>
                     <FaPlay />
                 </IconButton>
             </HStack>
-        );
+        )
     }
   }
 
@@ -334,5 +334,5 @@ export default function SessionPage() {
               </VStack>
           </Center>
       </VStack>
-  );
+  )
 }

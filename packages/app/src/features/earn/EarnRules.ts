@@ -99,13 +99,19 @@ export const availableSuggestions = (
 }
 
 /**
- * `isCatalogEmptySelector` — canon's `didLoadCatalog && rewards.isEmpty`. This
- * port has no boolean of its own for "did the load run"; the one `load`
- * lifecycle field already answers it — `idle`/`loading` means "not yet", and
- * `loaded`/`failed` both mean the attempt happened (`RC-24`).
+ * `isCatalogEmptySelector` — canon's `didLoadCatalog && rewards.isEmpty`.
+ *
+ * Canon's storage read never throws — `RewardsStore.loadCatalog` degrades a
+ * missing/corrupt row to `[]` rather than failing — so `didLoadCatalog` alone
+ * (set unconditionally in `onViewAppearing`) is enough to mean "the read
+ * happened, trust `rewards.isEmpty`". This port's read genuinely *can* fail
+ * (`EarnException`), including the earn.pointsFormula/defaultRewardThreshold
+ * preferences read that runs before the catalog is ever fetched — so `failed`
+ * must **not** count as "loaded", or the surface would render the empty-state
+ * copy ("add a reward") over what is actually an error it should retry. Only
+ * `loaded` counts.
  */
 export const isCatalogEmpty = (
   loadKind: 'idle' | 'loading' | 'loaded' | 'failed',
   rewards: readonly Reward[],
-): boolean =>
-  loadKind !== 'idle' && loadKind !== 'loading' && rewards.length === 0
+): boolean => loadKind === 'loaded' && rewards.length === 0

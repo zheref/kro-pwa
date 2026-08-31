@@ -35,6 +35,57 @@ describe('readRewardsCatalog / writeRewardsCatalog', () => {
     writeRewardsCatalog(store, [rewardMocks.plain])
     expect(readRewardsCatalog(store)).toEqual([rewardMocks.plain])
   })
+
+  it('skips a row whose pointsRequired overflows to a non-finite number', () => {
+    // `1e400` is a syntactically valid JSON number that overflows to
+    // `Infinity` on parse — the one way a non-finite value can genuinely
+    // arrive through `JSON.parse` rather than `JSON.stringify` (which would
+    // have already turned a real `NaN`/`Infinity` into `null`).
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog':
+        '[{"id":"r1","title":"x","glyph":"🎁","pointsRequired":1e400,"notes":null,"dateAddedEpochMillis":1000}]',
+    })
+    expect(readRewardsCatalog(store)).toEqual([])
+  })
+
+  it('skips a row with a negative pointsRequired', () => {
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog':
+        '[{"id":"r1","title":"x","glyph":"🎁","pointsRequired":-50,"notes":null,"dateAddedEpochMillis":1000}]',
+    })
+    expect(readRewardsCatalog(store)).toEqual([])
+  })
+
+  it('skips a row whose dateAddedEpochMillis overflows to a non-finite number', () => {
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog':
+        '[{"id":"r1","title":"x","glyph":"🎁","pointsRequired":100,"notes":null,"dateAddedEpochMillis":1e400}]',
+    })
+    expect(readRewardsCatalog(store)).toEqual([])
+  })
+
+  it('skips a row whose notes is neither a string nor null', () => {
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog':
+        '[{"id":"r1","title":"x","glyph":"🎁","pointsRequired":100,"notes":42,"dateAddedEpochMillis":1000}]',
+    })
+    expect(readRewardsCatalog(store)).toEqual([])
+  })
+
+  it('keeps every well-formed row alongside one malformed one, rather than blanking the whole catalog', () => {
+    const good = JSON.stringify({
+      id: rewardMocks.bobaTea.id,
+      title: rewardMocks.bobaTea.title,
+      glyph: rewardMocks.bobaTea.glyph,
+      pointsRequired: rewardMocks.bobaTea.pointsRequired,
+      notes: rewardMocks.bobaTea.notes,
+      dateAddedEpochMillis: rewardMocks.bobaTea.dateAdded.getTime(),
+    })
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog': `[${good},{"id":"bad","pointsRequired":-1}]`,
+    })
+    expect(readRewardsCatalog(store)).toEqual([rewardMocks.bobaTea])
+  })
 })
 
 describe('readClaimedRewardIds / writeClaimedRewardIds', () => {

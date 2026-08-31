@@ -133,6 +133,26 @@ describe('loadEarnCatalogThunk', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('catalogLoadFailed')
   })
+
+  it(
+    'drops a claimed id that no longer names a reward in the catalog — the id-reuse ' +
+      'hazard a Copilot round flagged (a later reward minted with a stale claimed id ' +
+      'must not install as pre-claimed)',
+    async () => {
+      const localStore = makeInMemoryLocalStore()
+      writeRewardsCatalog(localStore.preferences, [rewardMocks.movieNight])
+      writeClaimedRewardIds(localStore.preferences, [
+        rewardMocks.bobaTea.id,
+        rewardMocks.movieNight.id,
+      ])
+
+      const result = await storeWith(localStore).dispatch(loadEarnCatalogThunk()).unwrap()
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.value.claimedRewardIds).toEqual([rewardMocks.movieNight.id])
+      }
+    },
+  )
 })
 
 describe('addRewardThunk', () => {

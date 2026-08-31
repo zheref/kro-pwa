@@ -63,7 +63,18 @@ const toStoredReward = (reward: Reward): StoredReward => ({
   dateAddedEpochMillis: reward.dateAdded.getTime(),
 })
 
-/** `null` on anything that isn't a well-formed row — never thrown. */
+/**
+ * `null` on anything that isn't a well-formed row — never thrown.
+ *
+ * Every numeric field is required to be **finite** (rules out `NaN`/
+ * `Infinity`/`-Infinity`, which `typeof` alone would let through) and
+ * `pointsRequired` additionally non-negative; `notes` is required to already
+ * be `string | null | undefined`, never coerced from some other truthy value.
+ * A row failing any of these degrades to "skip this row" (its caller filters
+ * `null`s out), matching #10's own record-store posture: a malformed row
+ * yields a smaller catalog, never a `Reward` carrying an invalid `Date` or a
+ * non-finite number into selectors' sort/partition math.
+ */
 const fromStoredReward = (value: unknown): Reward | null => {
   if (typeof value !== 'object' || value === null) return null
   const candidate = value as Partial<StoredReward>
@@ -72,7 +83,15 @@ const fromStoredReward = (value: unknown): Reward | null => {
     typeof candidate.title !== 'string' ||
     typeof candidate.glyph !== 'string' ||
     typeof candidate.pointsRequired !== 'number' ||
-    typeof candidate.dateAddedEpochMillis !== 'number'
+    !Number.isFinite(candidate.pointsRequired) ||
+    candidate.pointsRequired < 0 ||
+    typeof candidate.dateAddedEpochMillis !== 'number' ||
+    !Number.isFinite(candidate.dateAddedEpochMillis) ||
+    !(
+      candidate.notes === undefined ||
+      candidate.notes === null ||
+      typeof candidate.notes === 'string'
+    )
   ) {
     return null
   }

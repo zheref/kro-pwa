@@ -190,4 +190,12 @@ describe('isCatalogEmpty', () => {
   it('is false once loaded with rewards present', () => {
     expect(isCatalogEmpty('loaded', [rewardMocks.bobaTea])).toBe(false)
   })
+
+  it(
+    'is false on a failed load — never claims "empty" for a read that never ' +
+      'succeeded (a preferences-load failure before the first catalog fetch)',
+    () => {
+      expect(isCatalogEmpty('failed', [])).toBe(false)
+    },
+  )
 })

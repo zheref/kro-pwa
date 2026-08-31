@@ -82,6 +82,16 @@ export const loadEarnPreferencesThunk = createAsyncThunk<
  * balance's one source (`EarnRules.ts`). `performances.all()` already excludes
  * soft-deleted/pending-deletion rows (`#10`'s `livingChildRecords`), so a
  * removed performance can never inflate the balance.
+ *
+ * The claimed-id set is **filtered to ids present in the loaded catalog**
+ * before it is installed. The two are persisted independently, and
+ * `addRewardThunk` never checks a new id against the claimed-id history — so
+ * without this, a reward deleted after being claimed, followed by a
+ * *coincidentally* id-colliding new reward, would install as pre-claimed. The
+ * filter is defensive only: it changes nothing about the ordinary "delete a
+ * claimed reward and its cost stops counting as spent" behaviour
+ * (`EarnRules.ts`'s `spentPoints` already derives that from the same
+ * intersection on every read).
  */
 export const loadEarnCatalogThunk = createAsyncThunk<
   Result<EarnCatalogSnapshot, EarnException>,
@@ -90,7 +100,10 @@ export const loadEarnCatalogThunk = createAsyncThunk<
 >('earn/onEarnCatalogLoadCompleted', async (_arg, { extra }) => {
   try {
     const rewards = readRewardsCatalog(extra.localStore.preferences)
-    const claimedRewardIds = readClaimedRewardIds(extra.localStore.preferences)
+    const rewardIds = new Set(rewards.map((reward) => reward.id))
+    const claimedRewardIds = readClaimedRewardIds(
+      extra.localStore.preferences,
+    ).filter((id) => rewardIds.has(id))
     const performanceRecords = await extra.localStore.performances.all()
     return ok({
       rewards,

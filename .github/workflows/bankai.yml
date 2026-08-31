@@ -18,7 +18,48 @@
 # sync_canon) DO pin `bankai_core_ref` — see their own notes.
 #
 # ---------------------------------------------------------------------------
-# THIS WORKFLOW IS INERT UNTIL THE MAINTAINER TURNS IT ON  (G5)
+# BLOCKED: THIS FILE CANNOT RUN WHILE kro-pwa IS PUBLIC  (G5 — read this first)
+# ---------------------------------------------------------------------------
+# GitHub does not let a PUBLIC repository call a reusable workflow that lives in
+# a PRIVATE one. `kro-pwa` is public; `zheref/bankai-core` is private. Every
+# `uses:` below therefore fails to RESOLVE, and GitHub fails the whole run at
+# startup with zero jobs:
+#
+#   failed to parse workflow: error parsing called workflow
+#   -> "zheref/bankai-core/.github/workflows/<any>.yml@v0.11.2"
+#   : workflow was not found.
+#
+# Reproduce it in one command (a 422 creates no run):
+#   gh api -X POST \
+#     "repos/zheref/kro-pwa/actions/workflows/.github%2Fworkflows%2Fbankai.yml/dispatches" \
+#     -f ref=<this-branch>
+#
+# The named workflow varies between attempts — resolution is parallel and the
+# error reports whichever lookup lost the race. It is not one bad `uses:` line;
+# it is the repo-visibility pair.
+#
+# This is NOT fixable from inside this file. Job-level `if:` guards (including
+# the BANKAI_APPS_READY gate below) are evaluated AFTER the called workflows
+# resolve, so no gate can make an unresolvable `uses:` inert.
+#
+# The maintainer's options (G5 — an agent must not change repo visibility):
+#   A. Make kro-pwa PRIVATE. Every other Kro product repo already is (KroApple,
+#      KroAndroid, KroWindows), bankai-core's Actions "Access" is already set to
+#      `user` (accessible from repositories owned by zheref), and this file then
+#      works unchanged. RECOMMENDED — and doing it BEFORE merging this PR keeps
+#      the merge clean.
+#   B. Make bankai-core public. It holds the process canon and is deliberately
+#      private; not viable.
+#   C. Keep kro-pwa public and forgo the CI machinery entirely — no review pair,
+#      no sync_canon drift check, no sweeper. Delivery stays local-session-only,
+#      and this file should be deleted rather than left failing.
+#
+# Until A is taken, merging this file means every triggering event produces a
+# failed run (and the schedule fails every 15 minutes). That cost is the reason
+# to settle the visibility question first.
+#
+# ---------------------------------------------------------------------------
+# AND, ONCE VISIBILITY IS SETTLED: INERT UNTIL THE MAINTAINER TURNS IT ON  (G5)
 # ---------------------------------------------------------------------------
 # Every job below needs a GitHub App credential that this repo does not have yet.
 # The reusable workflows fail CLOSED on a missing secret (a clear `::error::`, no

@@ -156,5 +156,9 @@ export const decodeSettingPrimitive = (
     }
     case SettingValueType.string:
       return value
+    default:
+      // Rows arrive from PostgREST untyped at runtime: an unknown value_type
+      // is unparseable data, never a fall-through `undefined`.
+      return null
   }
 }

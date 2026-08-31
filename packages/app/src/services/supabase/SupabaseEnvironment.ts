@@ -154,8 +154,26 @@ export const makeRecordEnvironment = (
  * is no runtime object to enumerate. Reading by name keeps this correct on both
  * sides of that substitution.
  */
+/**
+ * The two public variables read via LITERAL member expressions: Next.js
+ * inlines `process.env.NEXT_PUBLIC_*` only where it appears as a static
+ * member access, so a dynamic `env[name]` read returns `undefined` in
+ * client bundles even when the variable is set at build time.
+ */
+const staticPublicEnvironment: Readonly<Record<string, string | undefined>> = {
+  NEXT_PUBLIC_SUPABASE_URL:
+    typeof process !== 'undefined'
+      ? process.env.NEXT_PUBLIC_SUPABASE_URL
+      : undefined,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY:
+    typeof process !== 'undefined'
+      ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      : undefined,
+}
+
 export const processEnvironment: EnvironmentProvider = {
   read: (name) => {
+    if (name in staticPublicEnvironment) return staticPublicEnvironment[name]
     const host = globalThis as {
       readonly process?: { readonly env?: Readonly<Record<string, string | undefined>> }
     }

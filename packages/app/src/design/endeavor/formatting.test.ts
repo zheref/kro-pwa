@@ -68,6 +68,25 @@ describe('formatRelativeTime', () => {
   it('counts calendar days, not 24-hour spans — 23:59 two nights ago is 2 days', () => {
     expect(formatRelativeTime(new Date(2026, 3, 13, 23, 59), NOW, 'en-US')).toBe('2 days ago')
   })
+
+  it('localizes the WORDS as well as the clock — de-DE gets "Gestern, 17:00"', () => {
+    // The regression: the relative words were hardcoded English, so a de-DE
+    // browser printed a 24-hour clock beside "Yesterday". iOS cannot produce
+    // that — its formatter is created per-locale by the OS.
+    const yesterday = new Date(2026, 3, 14, 17, 0)
+    expect(formatRelativeTime(yesterday, NOW, 'de-DE')).toBe('Gestern, 17:00')
+  })
+
+  it('localizes the counted form too — es-ES says "Hace 3 días", not "3 days ago"', () => {
+    expect(formatRelativeTime(new Date(2026, 3, 12, 9, 0), NOW, 'es-ES')).toBe('Hace 3 días')
+  })
+
+  it('lets the locale use its own word where it has one — de-DE has "vorgestern"', () => {
+    // `numeric: 'auto'` is what allows this. English has no single word for
+    // the day before yesterday and correctly falls back to "2 days ago".
+    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'de-DE')).toBe('Vorgestern')
+    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'en-US')).toBe('2 days ago')
+  })
 })
 
 describe('formatDueCaption', () => {

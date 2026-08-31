@@ -21,6 +21,26 @@
  * a white title and a 70%-white supporting line in BOTH schemes, and this
  * component is the consumer that contract was written for.
  *
+ * ## The severity is spoken as CONTENT, not as an `aria-label`
+ *
+ * This started as `aria-label={`${prefix}: ${message}`}` on the live region.
+ * Two things are wrong with that, and the second is why it was replaced rather
+ * than extended:
+ *
+ *  1. It omitted `detail`, so a two-line banner announced only its first line.
+ *     Appending the detail to the label fixes that one case and leaves a string
+ *     that has to be kept in sync with the rendered text forever.
+ *  2. A live region is announced from its CONTENTS. `aria-label` on a
+ *     `role="status"` is a name for the region — used when a user navigates to
+ *     it, and not reliably included in the live announcement — so the severity
+ *     was never dependably spoken in the first place, which is the whole thing
+ *     the prefix exists for.
+ *
+ * So the prefix is an `sr-only` span INSIDE the region and there is no
+ * `aria-label`. Everything rendered is announced, in order, with nothing
+ * duplicated and nothing to keep in sync; and the accessible name is now the
+ * visible text, which is what `WCAG 2.5.3` wants of it anyway.
+ *
  * ## `info` is not a banner token, and is not invented as one
  *
  * Canon's third kind is `.info` on `cozyBlue`. `cozyBlue` is declared in
@@ -44,7 +64,10 @@ interface BannerStyle {
   readonly title: ColorRole
   readonly body: string
   readonly symbol: KitSymbolName
-  /** Prefixed to the accessible name so severity is spoken, never only shown. */
+  /**
+   * Rendered `sr-only` at the head of the region, so severity is spoken and
+   * never carried by the colour and the glyph alone.
+   */
   readonly spokenPrefix: string
 }
 
@@ -98,7 +121,6 @@ export function InlineBanner({
   return (
     <div
       role="status"
-      aria-label={`${style.spokenPrefix}: ${message}`}
       data-kind={kind}
       className={cn(
         'flex w-full items-start gap-2.5 rounded-kro-field p-3',
@@ -106,6 +128,10 @@ export function InlineBanner({
       )}
       style={{ backgroundColor: colorVar(style.fill), color: colorVar(style.title) }}
     >
+      {/* The severity, spoken but not shown — the glyph shows it. Inside the
+          live region, so it is part of the announcement rather than a label
+          the announcement may or may not include. */}
+      <span className="sr-only">{`${style.spokenPrefix}: `}</span>
       <Icon size={16} strokeWidth={2.5} className="mt-px shrink-0" aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <p className="m-0 text-[13px] font-semibold leading-snug">{message}</p>

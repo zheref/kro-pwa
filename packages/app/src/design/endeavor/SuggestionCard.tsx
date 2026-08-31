@@ -14,14 +14,25 @@
  * | `padding(16)`                | `p-kro-medium`           |
  * | icon `36×36`, `size: 26`     | `size-9`, `size={26}`    |
  * | carousel `minWidth 280 / maxWidth 340` | `min-w-70 max-w-85` |
- * | `layoutPriority(1)` on text  | `min-w-0 flex-1`         |
+ * | `layoutPriority(1)` on text  | `grow shrink-0 basis-0`  |
  * | `Spacer(minLength: 0)`       | the flex gap             |
  *
- * The `layoutPriority(1)` line has a comment in canon explaining that the title
- * must be the LAST thing compressed and the button yields first. On the web
- * that is `min-w-0 flex-1` on the text column and `shrink-0` on the button —
- * stated here because the two are easy to swap and the failure (a truncated
- * "Connect Goo…" beside a comfortable button) looks like a design choice.
+ * ## `layoutPriority(1)`, and the way it is easy to get backwards
+ *
+ * Canon's comment on that line says the title must be the LAST thing
+ * compressed and the action yields first. SwiftUI expresses that by *raising*
+ * the text column's priority; flexbox has no priority, so it is expressed as
+ * which item is allowed to shrink:
+ *
+ *   · the text column is `shrink-0` — it keeps the width it was grown to;
+ *   · the CTA is `min-w-0 shrink`, and its label is `truncate`, so it is the
+ *     one that gives way in a narrow card.
+ *
+ * The inverse — `min-w-0 flex-1` on the text and `shrink-0` on the button —
+ * type-checks, looks tidy, and is the bug: a narrow card truncates the title
+ * to "Connect Goo…" beside a full-size CTA, which is what the Compression
+ * story exists to show. Note the longhands rather than `flex-1`: `flex-1` is
+ * the `flex: 1 1 0%` SHORTHAND and would quietly restore `flex-shrink: 1`.
  *
  * ## The Apple sources are kept
  *
@@ -158,8 +169,13 @@ export function SuggestionCard({
     >
       <Icon size={26} aria-hidden className="size-9 shrink-0" style={{ color: tint }} />
 
-      {/* The text column yields LAST — see the layoutPriority note above. */}
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      {/* The text column yields LAST — see the layoutPriority note above. It
+          grows into the free space and then refuses to shrink; the CTA below
+          is the item that gives way. */}
+      <div
+        data-slot="suggestion-card-text"
+        className="flex shrink-0 grow basis-0 flex-col gap-0.5"
+      >
         <p
           className="m-0 line-clamp-2 text-sm font-bold"
           style={{ color: colorVar('fore') }}
@@ -179,7 +195,10 @@ export function SuggestionCard({
         onClick={onAction}
         disabled={isActionDisabled}
         className={cn(
-          'inline-flex shrink-0 items-center gap-1 px-3 text-xs font-semibold text-white',
+          // `min-w-0 shrink`: the CTA is the item that compresses, so the title
+          // beside it is the last thing to lose width — canon's
+          // `layoutPriority(1)` on the text column, read as a flex rule.
+          'inline-flex min-w-0 shrink items-center gap-1 px-3 text-xs font-semibold text-white',
           'outline-none focus-visible:shadow-[var(--kro-ring)]',
           'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
         )}
@@ -189,7 +208,7 @@ export function SuggestionCard({
           backgroundColor: tint,
         }}
       >
-        <ActionIcon size={13} aria-hidden />
+        <ActionIcon size={13} aria-hidden className="shrink-0" />
         <span className="truncate">{model.actionTitle}</span>
       </button>
     </div>

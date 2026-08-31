@@ -431,6 +431,41 @@ describe('the backdate trigger', () => {
   })
 })
 
+describe('the overflow menu', () => {
+  const overflow = () =>
+    document.querySelector('[data-slot="endeavor-card-overflow"]') as HTMLElement
+
+  it('is a MENU trigger, and the flow it can open starts closed', () => {
+    render(<EndeavorCard model={endeavorCardMocks.highUrgency} isSelected now={NOW} />)
+
+    const trigger = screen.getByRole('button', { name: 'More actions' })
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
+    // Defer and Delete are STATE here, not calls: the entry sets a flow and the
+    // flow's popover presents it. `endeavorOverflow.test.ts` asserts the
+    // routing itself, which is where it is decided — opening this menu would
+    // mount a Radix popper, and this file's header says why that is not done.
+    expect(overflow().dataset.flow).toBe('none')
+  })
+
+  it('never defers or deletes on its own — no entry acts without its flow', () => {
+    const onDefer = vi.fn()
+    const onDelete = vi.fn()
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isSelected
+        now={NOW}
+        onDefer={onDefer}
+        onDelete={onDelete}
+      />,
+    )
+
+    expect(onDefer).not.toHaveBeenCalled()
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(overflow().dataset.flow).toBe('none')
+  })
+})
+
 describe('the wiggle', () => {
   it('leaves a card at rest outside mark-complete mode', () => {
     render(<EndeavorCard model={endeavorCardMocks.highUrgency} now={NOW} />)

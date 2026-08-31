@@ -85,7 +85,7 @@ export const Compression = {
   name: 'Compression · the title yields last',
   render: () => (
     <Stage gradient>
-      {[340, 280, 240].map((width) => (
+      {[340, 280, 240, 200].map((width) => (
         <Cell key={width} label={`${width}px`}>
           <div style={{ width }}>
             <SuggestionCard

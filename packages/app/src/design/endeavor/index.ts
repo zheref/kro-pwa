@@ -91,6 +91,14 @@ export {
   tintColorRole,
 } from './rowActions'
 export {
+  OVERFLOW_ACTIONS,
+  type OverflowAction,
+  type OverflowFlow,
+  type OverflowHandlers,
+  overflowFlowFor,
+  selectOverflowAction,
+} from './endeavorOverflow'
+export {
   SWIPE_COMMIT_PX,
   SWIPE_REVEAL_PX,
   type EndeavorActionSurfaceProps,
@@ -172,6 +180,7 @@ export {
   type TaskRowModel,
   type TaskRowProps,
   TaskRow,
+  completionLabel,
   sessionPointsCaption,
 } from './TaskRow'
 export {

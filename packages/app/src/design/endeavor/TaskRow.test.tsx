@@ -1,7 +1,12 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { MINUTES_PER_SESSION_POINT, TaskRow, sessionPointsCaption } from './TaskRow'
+import {
+  MINUTES_PER_SESSION_POINT,
+  TaskRow,
+  completionLabel,
+  sessionPointsCaption,
+} from './TaskRow'
 import type { TaskRowModel } from './TaskRow'
 
 afterEach(cleanup)
@@ -46,6 +51,39 @@ describe('TaskRow', () => {
 
     rerender(<TaskRow model={{ ...model, isCompleted: true }} />)
     expect(screen.getByText('Mark Incomplete')).not.toBeNull()
+  })
+
+  it('NAMES the checkbox without waiting for a hover — the keyboard never hovers', () => {
+    // The visible "Mark Complete" text is `hidden` until `group-hover`, so
+    // before this the input was an unnamed checkbox to assistive tech and to
+    // anyone arriving by keyboard, with the title in a separate, unassociated
+    // button.
+    render(<TaskRow model={model} />)
+
+    expect(screen.getByRole('checkbox', { name: 'Mark Clean the house complete' })).toBe(
+      screen.getByRole('checkbox'),
+    )
+  })
+
+  it('flips that name with the state, so it always says what the click will do', () => {
+    render(<TaskRow model={{ ...model, isCompleted: true }} />)
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Mark Clean the house incomplete' }),
+    ).not.toBeNull()
+  })
+
+  it('names the endeavor, because a row is one of many', () => {
+    expect(completionLabel({ title: 'Clean the house', isCompleted: false })).toBe(
+      'Mark Clean the house complete',
+    )
+    expect(completionLabel({ title: 'Clean the house', isCompleted: true })).toBe(
+      'Mark Clean the house incomplete',
+    )
+    // Same shape as the Start button's name, so one row reads as one convention.
+    expect(completionLabel({ title: '山田 太郎 🌸', isCompleted: false })).toContain(
+      '山田 太郎 🌸',
+    )
   })
 
   it('raises the start intent without also selecting the row', async () => {

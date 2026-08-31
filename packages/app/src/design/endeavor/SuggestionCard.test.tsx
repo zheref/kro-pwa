@@ -74,11 +74,38 @@ describe('SuggestionCard', () => {
   })
 
   it('lets the button yield before the title does — the layout priority canon calls out', () => {
+    // Canon's `layoutPriority(1)` on the text column: the title is the LAST
+    // thing compressed and the CTA gives way first. Flexbox has no priority,
+    // so it is expressed as which item may shrink — and getting that backwards
+    // (`min-w-0 flex-1` on the text, `shrink-0` on the button) is the bug that
+    // truncates "Connect Goo…" beside a full-size button.
     const { container } = render(<SuggestionCard model={model} onAction={() => undefined} />)
 
-    const text = container.querySelector('[data-slot="suggestion-card"] > div') as HTMLElement
-    expect(text.className).toContain('flex-1')
-    expect(screen.getByRole('button', { name: /Connect/ }).className).toContain('shrink-0')
+    const text = container.querySelector(
+      '[data-slot="suggestion-card-text"]',
+    ) as HTMLElement
+    expect(text.className).toContain('shrink-0')
+    expect(text.className).toContain('grow')
+    // `flex-1` is the `flex: 1 1 0%` shorthand and would restore `flex-shrink: 1`
+    // on the very column that must not shrink.
+    expect(text.className.split(/\s+/)).not.toContain('flex-1')
+
+    const action = screen.getByRole('button', { name: /Connect/ }).className.split(/\s+/)
+    expect(action).toContain('shrink')
+    expect(action).toContain('min-w-0')
+    expect(action).not.toContain('shrink-0')
+  })
+
+  it('truncates the CTA’s own label rather than letting it push the title', () => {
+    render(
+      <SuggestionCard
+        model={{ ...model, actionTitle: 'Connect your Google account' }}
+        onAction={() => undefined}
+      />,
+    )
+
+    const label = screen.getByText('Connect your Google account')
+    expect(label.className).toContain('truncate')
   })
 
   it('gives every source a drawable icon and action icon', () => {

@@ -43,6 +43,26 @@ export function readInputCapability(): InputCapability {
 }
 
 /**
+ * Subscribe to a media query across both of the APIs browsers ship.
+ *
+ * `MediaQueryList.addEventListener` is the modern form; Safari before 14 —
+ * still a live iOS population — implements only the deprecated
+ * `addListener`/`removeListener` pair. Calling only the modern form on those
+ * browsers throws nothing and silently never fires, so the capability freezes
+ * at whatever the first read said and a mouse plugged in mid-session is never
+ * noticed. Same shape, and the same reason, as the shell's `useSurfaceLayout`.
+ */
+function listen(query: MediaQueryList, onChange: () => void): () => void {
+  if (typeof query.addEventListener === 'function') {
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }
+  // Safari < 14 shipped only the deprecated pair.
+  query.addListener(onChange)
+  return () => query.removeListener(onChange)
+}
+
+/**
  * The current input capability, updated when the device gains or loses a
  * pointer (a keyboard folio attached, an external mouse unplugged).
  *
@@ -59,8 +79,7 @@ export function useInputCapability(): InputCapability {
     const query = matchMedia(POINTER_QUERY)
     const sync = () => setCapability(query.matches ? 'pointer' : 'touch')
     sync()
-    query.addEventListener('change', sync)
-    return () => query.removeEventListener('change', sync)
+    return listen(query, sync)
   }, [])
 
   return capability

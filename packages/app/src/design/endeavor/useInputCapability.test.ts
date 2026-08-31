@@ -8,22 +8,40 @@ type Listener = () => void
  * A `matchMedia` whose answer can be flipped, so the "the user just plugged in a
  * mouse" case is testable at all. jsdom ships no implementation, which is also
  * why `readInputCapability` has to survive its absence.
+ *
+ * `api` selects which listener surface the fake exposes. `'modern'` is
+ * `addEventListener`/`removeEventListener`; `'legacy'` is the
+ * `addListener`/`removeListener` pair Safari before 14 shipped INSTEAD — not
+ * alongside. A stub that offers both cannot tell the two code paths apart,
+ * which is exactly how the missing fallback went unnoticed.
  */
-function installMatchMedia(initiallyPointer: boolean) {
+function installMatchMedia(initiallyPointer: boolean, api: 'modern' | 'legacy' = 'modern') {
   const listeners = new Set<Listener>()
   let matches = initiallyPointer
 
-  const stub = vi.fn((query: string) => ({
-    media: query,
-    get matches() {
-      return matches
-    },
+  const modern = {
     addEventListener: (_: string, listener: Listener) => {
       listeners.add(listener)
     },
     removeEventListener: (_: string, listener: Listener) => {
       listeners.delete(listener)
     },
+  }
+  const legacy = {
+    addListener: (listener: Listener) => {
+      listeners.add(listener)
+    },
+    removeListener: (listener: Listener) => {
+      listeners.delete(listener)
+    },
+  }
+
+  const stub = vi.fn((query: string) => ({
+    media: query,
+    get matches() {
+      return matches
+    },
+    ...(api === 'modern' ? modern : legacy),
   }))
 
   Object.defineProperty(globalThis, 'matchMedia', {
@@ -100,5 +118,29 @@ describe('useInputCapability', () => {
   it('stays on touch where matchMedia is absent instead of throwing', () => {
     const { result } = renderHook(() => useInputCapability())
     expect(result.current).toBe('touch')
+  })
+
+  it('follows the device on Safari < 14, which has only addListener', () => {
+    // The regression: `addEventListener` alone is a no-op on those browsers,
+    // so the capability froze at the first read and the mouse was never seen.
+    const media = installMatchMedia(false, 'legacy')
+    const { result } = renderHook(() => useInputCapability())
+    expect(result.current).toBe('touch')
+
+    act(() => {
+      media.flip(true)
+    })
+
+    expect(result.current).toBe('pointer')
+  })
+
+  it('unsubscribes through the legacy pair too, rather than leaking a listener', () => {
+    const media = installMatchMedia(true, 'legacy')
+    const { unmount } = renderHook(() => useInputCapability())
+    expect(media.listenerCount()).toBe(1)
+
+    unmount()
+
+    expect(media.listenerCount()).toBe(0)
   })
 })

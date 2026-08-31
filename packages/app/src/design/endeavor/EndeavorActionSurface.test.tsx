@@ -27,19 +27,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   EndeavorActionSurface,
   SWIPE_COMMIT_PX,
+  SWIPE_DRAG_THRESHOLD_PX,
   SWIPE_REVEAL_PX,
 } from './EndeavorActionSurface'
 import { installPointerEvents } from './__tests__/pointerEnvironment'
 
-let uninstallPointerEvents: () => void
+let pointerEnvironment: ReturnType<typeof installPointerEvents>
 
 beforeEach(() => {
-  uninstallPointerEvents = installPointerEvents()
+  pointerEnvironment = installPointerEvents()
 })
 
 afterEach(() => {
   cleanup()
-  uninstallPointerEvents()
+  pointerEnvironment()
 })
 
 const capabilities = makeEndeavorCapabilities([
@@ -181,6 +182,92 @@ describe('touch — the swipe grammar', () => {
   })
 })
 
+describe('the release decision — read from the pointer, not from the last render', () => {
+  it('commits a full swipe whose final move never flushed to state', () => {
+    // THE REGRESSION. `pointermove` is continuous and React batches, so the
+    // last `setOffset` routinely has not landed when `pointerup` runs. This
+    // release is the extreme case of that — the pointer travelled the full
+    // commit distance and `offset` is still 0. Judged on the rendered offset
+    // the swipe snapped shut and fired nothing.
+    const onOperation = vi.fn()
+    render(<Surface input="touch" onOperation={onOperation} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerUp(target, { clientX: SWIPE_COMMIT_PX + 10 })
+
+    expect(onOperation).toHaveBeenCalledWith(EndeavorOperation.markComplete, 'e1')
+  })
+
+  it('does NOT carry the previous drag’s distance into the next release', () => {
+    // The other half of reading state: after a committed swipe the stale
+    // `offset` could make a subsequent short drag commit again on distance it
+    // never travelled.
+    const onOperation = vi.fn()
+    render(<Surface input="touch" onOperation={onOperation} />)
+
+    drag(SWIPE_COMMIT_PX + 10)
+    expect(onOperation).toHaveBeenCalledTimes(1)
+
+    drag(SWIPE_REVEAL_PX - 1)
+
+    expect(onOperation).toHaveBeenCalledTimes(1)
+  })
+
+  it('CAPTURES the pointer for the length of the drag and hands it back', () => {
+    // The row's transform is a frame behind the finger, so the pointer leaves
+    // the content mid-swipe. Without capture the moves and the release land
+    // somewhere else and the row is stuck open.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0, pointerId: 7 })
+    expect(pointerEnvironment.capture.captured).toEqual([7])
+    expect(pointerEnvironment.capture.released).toEqual([])
+
+    fireEvent.pointerUp(target, { clientX: SWIPE_COMMIT_PX + 10, pointerId: 7 })
+    expect(pointerEnvironment.capture.released).toEqual([7])
+  })
+
+  it('performs ONCE when pointerup and pointercancel both fire for one gesture', () => {
+    const onOperation = vi.fn()
+    render(<Surface input="touch" onOperation={onOperation} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerUp(target, { clientX: -(SWIPE_COMMIT_PX + 10) })
+    fireEvent.pointerCancel(target, { clientX: -(SWIPE_COMMIT_PX + 10) })
+
+    expect(onOperation).toHaveBeenCalledOnce()
+  })
+
+  it('ignores a release that never started a drag at all', () => {
+    const onOperation = vi.fn()
+    render(<Surface input="touch" onOperation={onOperation} />)
+
+    fireEvent.pointerUp(content(), { clientX: SWIPE_COMMIT_PX + 10 })
+
+    expect(onOperation).not.toHaveBeenCalled()
+    expect(content().style.transform).toBe('translateX(0px)')
+  })
+
+  it('treats a sub-threshold release as a TAP and leaves a parked row parked', () => {
+    const onOperation = vi.fn()
+    render(<Surface input="touch" onOperation={onOperation} />)
+
+    drag(SWIPE_REVEAL_PX + 5)
+    const parked = content().style.transform
+    expect(parked).not.toBe('translateX(0px)')
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 200 })
+    fireEvent.pointerUp(target, { clientX: 200 + SWIPE_DRAG_THRESHOLD_PX - 1 })
+
+    expect(onOperation).not.toHaveBeenCalled()
+    expect(content().style.transform).toBe(parked)
+  })
+})
+
 describe('pointer — the hover and context grammar', () => {
   it('turns the SAME swipe bindings into hover buttons', () => {
     render(<Surface input="pointer" onOperation={() => undefined} />)
@@ -224,6 +311,22 @@ describe('pointer — the hover and context grammar', () => {
 
     const trigger = screen.getByRole('button', { name: 'Actions for Review pull request' })
     expect(trigger.tagName).toBe('BUTTON')
+  })
+
+  it('takes the INVISIBLE trigger out of the hit-test tree, exactly as the strip does', () => {
+    // It sits at `z-3` in the top-right of every row. Left touchable while
+    // `opacity-0`, a tap or a swipe that starts there opens a menu the user
+    // cannot see instead of moving the row.
+    render(<Surface input="pointer" onOperation={() => undefined} />)
+
+    const trigger = screen.getByRole('button', { name: 'Actions for Review pull request' })
+    expect(trigger.className).toContain('opacity-0')
+    expect(trigger.className).toContain('pointer-events-none')
+    expect(trigger.className).toContain('group-hover:pointer-events-auto')
+    expect(trigger.className).toContain('group-focus-within:pointer-events-auto')
+    // The keyboard is never gated by `pointer-events`, so tabbing to it still
+    // reveals it — which is the whole reason the trigger exists.
+    expect(trigger.className).toContain('focus-visible:pointer-events-auto')
   })
 
   it('marks the surface with the input it resolved, so a story can prove which grammar ran', () => {

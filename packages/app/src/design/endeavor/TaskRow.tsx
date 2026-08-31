@@ -57,6 +57,20 @@ export function sessionPointsCaption(points: number): string {
   return `${points} × ${MINUTES_PER_SESSION_POINT}m`
 }
 
+/**
+ * The completion checkbox's accessible name — always present, never a hover.
+ *
+ * It names the endeavor, because a row is one of many and "Mark complete" on
+ * its own tells a screen-reader user nothing about WHICH task they are about to
+ * complete. Same shape as the Start button's `Start <title>`, so the two read
+ * as one row rather than two conventions.
+ */
+export function completionLabel(model: Pick<TaskRowModel, 'title' | 'isCompleted'>): string {
+  return model.isCompleted
+    ? `Mark ${model.title} incomplete`
+    : `Mark ${model.title} complete`
+}
+
 export interface TaskRowModel {
   readonly id: string
   readonly title: string
@@ -125,7 +139,14 @@ export function TaskRow({
       onClick={() => onSelect?.(model.id)}
     >
       {/* Checkbox. Canon grows a "Mark Complete" label on hover; on the web
-          that is `group-hover`, so the label costs no state. */}
+          that is `group-hover`, so the label costs no state.
+
+          The hover label is NOT the accessible name. It is `hidden` until the
+          pointer arrives, and a keyboard or screen-reader user never hovers —
+          they would meet an unnamed checkbox, with the title sitting in a
+          separate button that is not associated with the input. So the input
+          carries its own `aria-label`, always present, naming the endeavor the
+          way the Start button already does. */}
       <label
         className={cn(
           'inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 px-1.5',
@@ -139,6 +160,7 @@ export function TaskRow({
       >
         <input
           type="checkbox"
+          aria-label={completionLabel(model)}
           className="sr-only"
           checked={model.isCompleted}
           onChange={(event) => onToggleComplete?.(model.id, event.target.checked)}

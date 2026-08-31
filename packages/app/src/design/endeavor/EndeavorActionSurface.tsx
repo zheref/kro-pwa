@@ -21,6 +21,17 @@
  *     as entries in the right-click menu, so a mouse user reaches by two routes
  *     what a finger reaches by one.
  *
+ * ## The swipe reads the POINTER, never the rendered offset
+ *
+ * `pointermove` is a continuous event and React batches, so the last
+ * `setOffset` has usually not flushed when `pointerup` runs. Deciding
+ * commit-versus-park from the rendered `offset` therefore judges the swipe on
+ * stale data — a full swipe snaps shut and fires nothing, and a short one can
+ * commit the previous drag's distance. Both thresholds are measured against the
+ * pointer's own `clientX` at release instead. The drag is pointer-CAPTURED for
+ * the same reason the transform lags: the finger leaves the content element
+ * mid-swipe, and without capture the release lands somewhere else entirely.
+ *
  * ## Why the strip is not `display: none` until hover
  *
  * It is `opacity-0` + `pointer-events-none`, revealed by `group-hover` and by
@@ -58,6 +69,16 @@ export const SWIPE_REVEAL_PX = 56
 
 /** Drag distance at which releasing performs the edge's first binding. */
 export const SWIPE_COMMIT_PX = 140
+
+/**
+ * Below this, a release is a TAP and not a swipe.
+ *
+ * It commits nothing AND moves nothing: a row parked open stays parked, so its
+ * revealed buttons remain tappable. Without it, every touch that lands on the
+ * content — including the one aimed at a parked button's neighbour — reads as a
+ * zero-distance swipe and snaps the row shut under the finger.
+ */
+export const SWIPE_DRAG_THRESHOLD_PX = 4
 
 const Ellipsis = endeavorIcon('ellipsis')
 
@@ -107,27 +128,72 @@ export function EndeavorActionSurface({
     !isPointer &&
     (resolved.leadingSwipe.length > 0 || resolved.trailingSwipe.length > 0)
 
-  const onPointerDown = (event: React.PointerEvent) => {
+  /**
+   * A raw finger delta, clamped to what the row actually affords.
+   *
+   * An edge with no bindings does not move: a row that slides open onto nothing
+   * reads as broken, not as "no actions here". Both the drawing and the release
+   * decision run through this, so the two can never disagree about how far the
+   * row travelled.
+   */
+  const boundDelta = useCallback(
+    (delta: number): number => {
+      if (delta > 0 && resolved.leadingSwipe.length === 0) return 0
+      if (delta < 0 && resolved.trailingSwipe.length === 0) return 0
+      return delta
+    },
+    [resolved.leadingSwipe.length, resolved.trailingSwipe.length],
+  )
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canSwipe) return
     dragStart.current = event.clientX
     setIsDragging(true)
+    // CAPTURE, so the gesture cannot be lost mid-swipe. The row's transform is
+    // one React frame behind the finger, so the pointer routinely leaves the
+    // content element while the drag is still running; without capture the
+    // remaining moves and the release land on whatever is underneath and the
+    // row stays open with nothing to close it.
+    const target = event.currentTarget
+    if (typeof target.setPointerCapture === 'function') {
+      target.setPointerCapture(event.pointerId)
+    }
   }
 
-  const onPointerMove = (event: React.PointerEvent) => {
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const start = dragStart.current
     if (start === null) return
-    const delta = event.clientX - start
-    // An edge with no bindings does not move: a row that slides open onto
-    // nothing reads as broken, not as "no actions here".
-    if (delta > 0 && resolved.leadingSwipe.length === 0) return
-    if (delta < 0 && resolved.trailingSwipe.length === 0) return
-    setOffset(delta)
+    setOffset(boundDelta(event.clientX - start))
   }
 
-  const endDrag = () => {
-    const delta = offset
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = dragStart.current
+    // A release that never started a drag is not ours. `pointerup` and
+    // `pointercancel` can BOTH fire for one gesture, so whichever arrives first
+    // owns the release and the second finds no drag and returns — otherwise the
+    // same swipe commits twice.
+    if (start === null) return
     dragStart.current = null
     setIsDragging(false)
+
+    const target = event.currentTarget
+    if (
+      typeof target.hasPointerCapture === 'function' &&
+      target.hasPointerCapture(event.pointerId)
+    ) {
+      target.releasePointerCapture(event.pointerId)
+    }
+
+    // The decision reads THE POINTER, never the last-rendered `offset`.
+    // `pointermove` is continuous, so the final `setOffset` has usually not
+    // flushed by the time `pointerup` runs: reading state here makes a full
+    // swipe snap shut and fire nothing, and can make a short swipe commit the
+    // PREVIOUS drag's distance.
+    const delta = boundDelta(event.clientX - start)
+
+    // Below the threshold this was a tap, not a swipe: perform nothing and
+    // leave the row exactly where it was.
+    if (Math.abs(delta) < SWIPE_DRAG_THRESHOLD_PX) return
 
     const edge = delta > 0 ? resolved.leadingSwipe : resolved.trailingSwipe
     const first = edge[0]
@@ -227,6 +293,14 @@ export function EndeavorActionSurface({
                 'absolute top-1 right-1 z-3 inline-flex size-7 items-center justify-center',
                 'rounded-kro-small opacity-0 outline-none',
                 'group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100',
+                // Invisible AND untouchable, the same pairing the hover strip
+                // above uses. Left in the hit-test tree it sits at `z-3` in the
+                // top-right of every row, so on touch a tap or a swipe that
+                // starts there opens a menu the user cannot see instead of
+                // moving the row. `pointer-events` does not gate the keyboard,
+                // so tabbing to it still works — and that is what reveals it.
+                'pointer-events-none group-hover:pointer-events-auto',
+                'group-focus-within:pointer-events-auto focus-visible:pointer-events-auto',
                 'focus-visible:shadow-[var(--kro-ring)]',
               )}
               style={{ color: colorVar('foreSecondary') }}

@@ -45,7 +45,12 @@
  */
 
 import { useState } from 'react'
-import { Popover, PopoverContent, PopoverTrigger } from '../system/primitives/popover'
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+} from '../system/primitives/popover'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +64,11 @@ import { RewardBadge, UrgencyBadge } from './CardBadge'
 import type { EndeavorCardModel } from './endeavorCardModel'
 import { EndeavorUrgency } from './endeavorCardModel'
 import { endeavorIcon } from './endeavorIcons'
+import {
+  type OverflowAction,
+  type OverflowFlow,
+  selectOverflowAction,
+} from './endeavorOverflow'
 import {
   DeferPopover,
   DeleteConfirmationPopover,
@@ -911,6 +921,20 @@ function DeleteControl({
 /**
  * The overflow menu — canon's `moreActionsMenu`, in canon's order: Defer, Skip,
  * Delegate, Details (only when the surface opts in), a separator, then Delete.
+ *
+ * ## The menu is a shortcut INTO a flow, never past it
+ *
+ * Defer and Delete open the same two popovers the dedicated `DeferControl` and
+ * `DeleteControl` open. Reaching an action by a second route must not skip the
+ * step the first route exists for — a menu Defer that fired
+ * `defaultDeferTarget` picked the time on the user's behalf, and a menu Delete
+ * that fired `onDelete` removed the endeavor from every source with no warning.
+ * The routing rule itself lives in `endeavorOverflow.ts`, where `onDefer` and
+ * `onDelete` are not in scope at all.
+ *
+ * The popover is anchored rather than triggered: one button cannot be both a
+ * `DropdownMenuTrigger` and a `PopoverTrigger`, so the trigger opens the menu
+ * and the flow's panel hangs off a `PopoverAnchor` wrapping it.
  */
 function OverflowMenu({
   model,
@@ -935,56 +959,107 @@ function OverflowMenu({
   readonly onShowDetails?: () => void
   readonly onDelete?: () => void
 }) {
+  const [flow, setFlow] = useState<OverflowFlow | null>(null)
+
+  const select = (action: OverflowAction) =>
+    selectOverflowAction(action, {
+      openFlow: setFlow,
+      skip: onSkip,
+      delegate: onDelegate,
+      showDetails: onShowDetails,
+    })
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label="More actions"
-          tabIndex={tabbable ? 0 : -1}
-          onClick={(event) => event.stopPropagation()}
-          className={cn(
-            'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
-            'outline-none focus-visible:shadow-[var(--kro-ring)]',
-          )}
-          style={{
-            width: diameter,
-            height: diameter,
-            backgroundColor: colorVar('charcoal'),
-            color: colorVar('absolute'),
-            boxShadow: shadowVar('subtle'),
-          }}
+    <Popover
+      open={flow !== null}
+      onOpenChange={(open) => {
+        if (!open) setFlow(null)
+      }}
+    >
+      <PopoverAnchor asChild>
+        <span
+          data-slot="endeavor-card-overflow"
+          data-flow={flow ?? 'none'}
+          className="inline-flex"
         >
-          <Ellipsis size={glyphSize} aria-hidden />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onSelect={() => onDefer?.(defaultDeferTarget(model.dueTime, now))}
-        >
-          <DeferGlyph size={18} aria-hidden />
-          Defer
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onSkip?.()}>
-          <Skip size={18} aria-hidden />
-          Skip
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onDelegate?.()}>
-          <Delegate size={18} aria-hidden />
-          Delegate
-        </DropdownMenuItem>
-        {onShowDetails === undefined ? null : (
-          <DropdownMenuItem onSelect={() => onShowDetails()}>
-            <Details size={18} aria-hidden />
-            Details
-          </DropdownMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="More actions"
+                tabIndex={tabbable ? 0 : -1}
+                onClick={(event) => event.stopPropagation()}
+                className={cn(
+                  'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
+                  'outline-none focus-visible:shadow-[var(--kro-ring)]',
+                )}
+                style={{
+                  width: diameter,
+                  height: diameter,
+                  backgroundColor: colorVar('charcoal'),
+                  color: colorVar('absolute'),
+                  boxShadow: shadowVar('subtle'),
+                }}
+              >
+                <Ellipsis size={glyphSize} aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => select('defer')}>
+                <DeferGlyph size={18} aria-hidden />
+                Defer
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => select('skip')}>
+                <Skip size={18} aria-hidden />
+                Skip
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => select('delegate')}>
+                <Delegate size={18} aria-hidden />
+                Delegate
+              </DropdownMenuItem>
+              {onShowDetails === undefined ? null : (
+                <DropdownMenuItem onSelect={() => select('details')}>
+                  <Details size={18} aria-hidden />
+                  Details
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem destructive onSelect={() => select('delete')}>
+                <Trash size={18} aria-hidden />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </span>
+      </PopoverAnchor>
+      <PopoverContent align="start" onClick={(event) => event.stopPropagation()}>
+        {flow === 'delete' ? (
+          <DeleteConfirmationPopover
+            title={model.title}
+            onConfirm={() => {
+              setFlow(null)
+              onDelete?.()
+            }}
+            onCancel={() => setFlow(null)}
+          />
+        ) : (
+          <DeferPopover
+            initialTarget={defaultDeferTarget(model.dueTime, now)}
+            onConfirm={(target) => {
+              setFlow(null)
+              onDefer?.(target)
+            }}
+            onSkip={
+              onSkip === undefined
+                ? undefined
+                : () => {
+                    setFlow(null)
+                    onSkip()
+                  }
+            }
+          />
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem destructive onSelect={() => onDelete?.()}>
-          <Trash size={18} aria-hidden />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   )
 }

@@ -27,9 +27,44 @@ interface PointerInit extends MouseEventInit {
   readonly isPrimary?: boolean
 }
 
-/** Installs the stub and returns a teardown that puts the global back. */
-export function installPointerEvents(): () => void {
+/** What the capture stubs recorded, so a test can assert the gesture was held. */
+export interface PointerCaptureLog {
+  readonly captured: readonly number[]
+  readonly released: readonly number[]
+}
+
+/**
+ * Installs the stub and returns a teardown that puts the global back.
+ *
+ * The returned `capture` log is the second half: jsdom implements none of the
+ * `*PointerCapture` trio, so a component that captures its drag would throw
+ * here and — worse — a component that FORGOT to capture would look identical.
+ * The stubs record instead, so "this gesture is held" is an assertion rather
+ * than an assumption.
+ */
+export function installPointerEvents(): (() => void) & { readonly capture: PointerCaptureLog } {
   const original = (globalThis as { PointerEvent?: unknown }).PointerEvent
+  const originalCapture = {
+    set: Element.prototype.setPointerCapture,
+    release: Element.prototype.releasePointerCapture,
+    has: Element.prototype.hasPointerCapture,
+  }
+
+  const captured: number[] = []
+  const released: number[] = []
+  const held = new Set<number>()
+
+  Element.prototype.setPointerCapture = function setPointerCapture(pointerId: number) {
+    captured.push(pointerId)
+    held.add(pointerId)
+  }
+  Element.prototype.releasePointerCapture = function releasePointerCapture(pointerId: number) {
+    released.push(pointerId)
+    held.delete(pointerId)
+  }
+  Element.prototype.hasPointerCapture = function hasPointerCapture(pointerId: number) {
+    return held.has(pointerId)
+  }
 
   class PointerEventStub extends MouseEvent {
     readonly pointerId: number
@@ -50,7 +85,10 @@ export function installPointerEvents(): () => void {
     writable: true,
   })
 
-  return () => {
+  const teardown = () => {
+    Element.prototype.setPointerCapture = originalCapture.set
+    Element.prototype.releasePointerCapture = originalCapture.release
+    Element.prototype.hasPointerCapture = originalCapture.has
     if (original === undefined) {
       Reflect.deleteProperty(globalThis as object, 'PointerEvent')
     } else {
@@ -61,4 +99,7 @@ export function installPointerEvents(): () => void {
       })
     }
   }
+
+  const capture: PointerCaptureLog = { captured, released }
+  return Object.assign(teardown, { capture })
 }

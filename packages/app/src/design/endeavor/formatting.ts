@@ -11,6 +11,12 @@
  * same call for the same reason — a test states the moment it is asking about
  * instead of mocking a global, and a "2 days ago" caption is otherwise
  * untestable.
+ *
+ * `locale` is likewise a parameter, and it reaches EVERY string here — the
+ * clock through `Intl.DateTimeFormat`, the relative day words through
+ * `Intl.RelativeTimeFormat`. On iOS the OS localizes both; a port that
+ * localized only the clock produced "14:00" beside the word "Yesterday", which
+ * is worse than either language alone.
  */
 
 /** Seconds in one minute — the unit `Endeavor.duration` is denominated in. */
@@ -69,6 +75,36 @@ function calendarDaysBetween(date: Date, now: Date): number {
 }
 
 /**
+ * The relative day phrase, in the caller's locale.
+ *
+ * Canon gets "Yesterday" from `DateFormatter.doesRelativeDateFormatting` — the
+ * OS localizes it — and hand-rolls only the "N days ago" half. The port had
+ * BOTH halves hardcoded in English, so a `de-DE` browser printed a 24-hour
+ * clock beside the word "Yesterday": half-translated output the iOS app cannot
+ * produce. `Intl.RelativeTimeFormat` is the web's equivalent of that OS
+ * formatter, and `numeric: 'auto'` is what makes it substitute the word —
+ * "yesterday", "gestern", "昨日" — where the locale has one, and fall back to
+ * the counted form ("3 days ago", "vor 3 Tagen") where it does not.
+ */
+function relativeDays(days: number, locale?: string): string {
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-days, 'day')
+}
+
+/**
+ * Sentence-case the first character, in the locale's own casing rules.
+ *
+ * `Intl.RelativeTimeFormat` returns mid-sentence casing ("yesterday"); these
+ * strings LEAD a caption, and canon prints "Yesterday". A leading digit is
+ * unaffected, so "3 days ago" passes through untouched — which is why both
+ * branches can share one rule instead of one being a special case.
+ */
+function sentenceCase(text: string, locale?: string): string {
+  const first = [...text][0]
+  if (first === undefined) return text
+  return first.toLocaleUpperCase(locale) + text.slice(first.length)
+}
+
+/**
  * The overdue caption: `"Yesterday, 5:00 PM"`, `"3 days ago"`, or the plain
  * time when neither applies.
  *
@@ -79,10 +115,12 @@ function calendarDaysBetween(date: Date, now: Date): number {
  */
 export function formatRelativeTime(date: Date, now: Date, locale?: string): string {
   const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
-  if (isSameDay(date, yesterday)) return `Yesterday, ${formatTime(date, locale)}`
+  if (isSameDay(date, yesterday)) {
+    return `${sentenceCase(relativeDays(1, locale), locale)}, ${formatTime(date, locale)}`
+  }
 
   const days = calendarDaysBetween(date, now)
-  if (days > 1) return `${days} days ago`
+  if (days > 1) return sentenceCase(relativeDays(days, locale), locale)
 
   return formatTime(date, locale)
 }

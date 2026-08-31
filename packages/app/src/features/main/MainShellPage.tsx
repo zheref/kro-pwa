@@ -46,6 +46,7 @@ import {
   selectSidebarSections,
   selectTabBarElements,
 } from './MainSelectors'
+import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { searchDestination } from './NavigationSections'
 import {
   DestinationKind,
@@ -117,7 +118,18 @@ export function MainShellPage({
     const timer = setTimeout(() => {
       void dispatch(
         deliverCaptureRouteThunk({ pending: pendingRoute, now: new Date() }),
-      )
+      ).then((action) => {
+        // The intent lives in the capture slice; consuming it there is what
+        // stops a shell remount (Strict Mode, leaving and re-entering) from
+        // replaying the same navigation. The Page is the one artifact allowed
+        // to dispatch across slices (RC-37/RC-20).
+        const result = deliverCaptureRouteThunk.fulfilled.match(action)
+          ? action.payload
+          : null
+        if (result?.ok && result.value !== null) {
+          dispatch(onCaptureRouteDelivered({ now: new Date() }))
+        }
+      })
     }, wait)
 
     return () => clearTimeout(timer)
@@ -153,9 +165,24 @@ export function MainShellPage({
 
   const onDeleteProject = useCallback(
     (projectId: string) => {
-      void dispatch(deleteProjectThunk({ id: projectId, now: new Date() }))
+      const wasSelected =
+        selected.kind === 'list' && selected.listId === projectId
+      void dispatch(deleteProjectThunk({ id: projectId, now: new Date() })).then(
+        () => {
+          // The shifter already moves `selected` to My Day; the URL must
+          // follow, or the route remount re-selects the deleted list and the
+          // highlight snaps back.
+          if (wasSelected) {
+            void dispatch(
+              navigateToDestinationThunk({
+                destination: { kind: DestinationKind.myDay },
+              }),
+            )
+          }
+        },
+      )
     },
-    [dispatch],
+    [dispatch, selected],
   )
 
   return (

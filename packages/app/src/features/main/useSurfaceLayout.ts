@@ -70,13 +70,22 @@ const subscribe = (onChange: () => void): (() => void) => {
   // `addEventListener` on a MediaQueryList is the modern form; Safari < 14
   // only had `addListener`, and the design system's own reduced-motion read
   // makes the same allowance.
-  width.addEventListener('change', onChange)
-  pointer.addEventListener('change', onChange)
+  const listen = (list: MediaQueryList): (() => void) => {
+    if (typeof list.addEventListener === 'function') {
+      list.addEventListener('change', onChange)
+      return () => list.removeEventListener('change', onChange)
+    }
+    // Safari < 14 shipped only the deprecated pair.
+    list.addListener(onChange)
+    return () => list.removeListener(onChange)
+  }
+  const unlistenWidth = listen(width)
+  const unlistenPointer = listen(pointer)
   window.addEventListener('resize', onChange)
 
   return () => {
-    width.removeEventListener('change', onChange)
-    pointer.removeEventListener('change', onChange)
+    unlistenWidth()
+    unlistenPointer()
     window.removeEventListener('resize', onChange)
   }
 }

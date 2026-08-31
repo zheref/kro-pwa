@@ -205,3 +205,15 @@ describe('withSearchQueryChanged / withCaptureRouteConsumed', () => {
     expect(next.routeContext).toEqual(context)
   })
 })
+
+describe('a Lists read failure never hides the shell', () => {
+  it('applies the gates and marks the load failed in one install', () => {
+    const failed = withShellLoaded(MainMocks.idle, {
+      gates: statusQuoGates,
+      projects: [],
+      listsFailure: MainExceptions.listsLoadFailed('boom'),
+    })
+    expect(failed.load.kind).toBe('failed')
+    expect(failed.gates).toEqual(statusQuoGates)
+  })
+})

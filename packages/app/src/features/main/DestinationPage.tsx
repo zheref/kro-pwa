@@ -24,29 +24,35 @@ import {
   type SidebarDestination,
 } from './SidebarDestination'
 
-export interface DestinationPageProps {
-  /** Which destination this route is. */
-  readonly kind: SidebarDestination['kind']
-  /** Present only for `list` — the project the route names. */
-  readonly listId?: string
-}
+export type DestinationPageProps =
+  | {
+      /** Which destination this route is. */
+      readonly kind: Exclude<SidebarDestination['kind'], 'list'>
+    }
+  | {
+      readonly kind: typeof DestinationKind.list
+      /** The project the route names — required by the type, not by luck. */
+      readonly listId: string
+    }
 
-export function DestinationPage({ kind, listId }: DestinationPageProps) {
+export function DestinationPage(props: DestinationPageProps) {
   const dispatch = useAppDispatch()
   const projects = useAppSelector(selectProjects)
+  const { kind } = props
+  const listId = props.kind === DestinationKind.list ? props.listId : null
 
   const destination: SidebarDestination =
-    kind === DestinationKind.list
+    props.kind === DestinationKind.list
       ? {
           kind: DestinationKind.list,
-          listId: listId ?? '',
+          listId: props.listId,
           // Until the projects load the row has no title to show. The id is
           // the identity; the title is presentation, and an empty one is
           // honest rather than a guessed name that then changes.
           listTitle:
             projects.find((project) => project.id === listId)?.title ?? '',
         }
-      : { kind }
+      : { kind: props.kind }
 
   const listTitle =
     destination.kind === DestinationKind.list ? destination.listTitle : null

@@ -22,6 +22,13 @@ export const withLoadingStarted = (state: MainState): MainState => ({
 export interface ShellConfiguration {
   readonly gates: DestinationGates
   readonly projects: readonly Project[]
+  /**
+   * The Lists read's failure, when the flags resolved but the store did not:
+   * gates always apply — a sidebar with no destinations because the Lists
+   * section could not be read would hide the whole app behind one section's
+   * failure.
+   */
+  readonly listsFailure?: MainException | null
 }
 
 /**
@@ -36,7 +43,10 @@ export const withShellLoaded = (
   configuration: ShellConfiguration,
 ): MainState => ({
   ...state,
-  load: { kind: 'loaded' },
+  load:
+    configuration.listsFailure == null
+      ? { kind: 'loaded' }
+      : { kind: 'failed', exception: configuration.listsFailure },
   gates: configuration.gates,
   projects: configuration.projects,
 })

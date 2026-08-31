@@ -93,7 +93,13 @@ export const loadShellThunk = createAsyncThunk<
   try {
     return ok({ gates, projects: await readProjects(extra) })
   } catch (error) {
-    return err(MainExceptions.listsLoadFailed(reasonOf(error)))
+    // The gates already resolved, so they still apply: a Lists read failure
+    // must never leave the sidebar and tab bar with no destinations at all.
+    return ok({
+      gates,
+      projects: [],
+      listsFailure: MainExceptions.listsLoadFailed(reasonOf(error)),
+    })
   }
 })
 

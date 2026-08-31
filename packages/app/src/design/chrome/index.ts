@@ -45,6 +45,8 @@ export {
   springTransition,
 } from './layout/chromeMotion'
 
+export { useDisclosure } from './useDisclosure'
+
 export {
   DEFAULT_GLOW_HUES,
   GLOW_SHAPES,

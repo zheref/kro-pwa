@@ -18,7 +18,9 @@ afterEach(cleanup)
  * So: the panel's contents are covered by `EmojiPicker.test.tsx` (which mounts
  * the grid directly), and this file covers the part that is this wrapper's own
  * — that the trigger is the caller's control, correctly described, and closed
- * until asked.
+ * until asked. The open/closed logic itself — the part that shipped broken and
+ * was caught in review — lives in `useDisclosure` and is tested there, without
+ * a popper anywhere near it.
  */
 
 describe('EmojiPickerPopover', () => {
@@ -63,6 +65,28 @@ describe('EmojiPickerPopover', () => {
       </EmojiPickerPopover>,
     )
 
+    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('hands Radix a DEFINED open flag, which is what makes picking close it', () => {
+    // The bug, and why the assertion is shaped this way: passing the caller's
+    // `undefined` straight through puts Radix in ITS uncontrolled mode, where
+    // an `onOpenChange(false)` after a pick changes nothing — the panel stayed
+    // open. `useDisclosure` always supplies a value, so Radix is controlled in
+    // both modes.
+    //
+    // Asserted as "closed, and it knows it is closed" rather than by opening
+    // the panel: the round trip through the popper costs ELEVEN SECONDS under
+    // jsdom (measured, in this file's first draft — see the header). The
+    // behaviour itself is covered by `useDisclosure.test.tsx`, which is the
+    // module that was actually wrong, and by the *In a popover* story.
+    render(
+      <EmojiPickerPopover>
+        <button type="button">📊</button>
+      </EmojiPickerPopover>,
+    )
+
+    expect(screen.getByRole('button').getAttribute('data-state')).toBe('closed')
     expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('false')
   })
 

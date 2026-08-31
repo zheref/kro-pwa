@@ -1,14 +1,9 @@
-import {
-  type CSSProperties,
-  type KeyboardEvent,
-  useCallback,
-  useId,
-  useState,
-} from 'react'
+import { type CSSProperties, type KeyboardEvent, useCallback, useId, useRef } from 'react'
 import { type SfSymbolName, iconForSymbol } from '../../system/icons/icons'
 import { cn } from '../../system/utils/cn'
 import { RotatingGlow, type RotatingGlowProps } from '../glow/RotatingGlow'
 import { springTransition } from '../layout/chromeMotion'
+import { useDisclosure } from '../useDisclosure'
 import { LiquidGlassFAB } from './LiquidGlassFAB'
 
 /**
@@ -28,10 +23,12 @@ import { LiquidGlassFAB } from './LiquidGlassFAB'
  * WEB ADDITIONS, and why they are not scope creep. SwiftUI's `Button` stack
  * gets focus order, VoiceOver grouping and dismissal from the platform. The web
  * gets none of that free, so the port adds the equivalents a keyboard user
- * needs and nothing else: `aria-haspopup`/`aria-expanded` on the trigger, a
- * `role="menu"` list of `role="menuitem"` rows, and Escape to close. Without
- * them the menu is unreachable by keyboard, which would fail the epic's own
- * accessibility bar rather than match canon.
+ * needs and nothing else: a disclosure trigger (`aria-expanded` +
+ * `aria-controls`), a labelled group of ordinary buttons, `inert` while closed,
+ * Escape to close, and focus returned to the disc afterwards. Without them the
+ * menu is unreachable by keyboard, which would fail the epic's own
+ * accessibility bar rather than match canon. See the group's own note below for
+ * why it is deliberately NOT `role="menu"`.
  */
 
 export interface FABMenuEntry {
@@ -85,24 +82,30 @@ export function LiquidGlassFABMenu({
   className,
   style,
 }: LiquidGlassFABMenuProps) {
-  const [uncontrolledExpanded, setUncontrolledExpanded] = useState(false)
-  const expanded = isExpanded ?? uncontrolledExpanded
+  const [expanded, setExpanded] = useDisclosure(isExpanded, onExpandedChange)
   const menuId = useId()
+  const rootRef = useRef<HTMLDivElement | null>(null)
 
-  const setExpanded = useCallback(
-    (next: boolean) => {
-      if (isExpanded === undefined) setUncontrolledExpanded(next)
-      onExpandedChange?.(next)
-    },
-    [isExpanded, onExpandedChange],
-  )
+  /**
+   * Puts focus back on the disc.
+   *
+   * Closing the menu makes the open rows `inert`, and an `inert` element that
+   * currently holds focus loses it to the document — so a keyboard user who
+   * chooses a row or presses Escape would be dropped at the top of the page.
+   * Queried rather than held in a ref because `Button`'s props are
+   * `ComponentPropsWithoutRef`, so there is no ref to forward through it.
+   */
+  const returnFocusToTrigger = useCallback(() => {
+    rootRef.current?.querySelector<HTMLButtonElement>('[data-kro-fab]')?.focus()
+  }, [])
 
   const choose = useCallback(
     (entry: FABMenuEntry) => {
       entry.onSelect()
       setExpanded(false)
+      returnFocusToTrigger()
     },
-    [setExpanded],
+    [setExpanded, returnFocusToTrigger],
   )
 
   const onKeyDown = useCallback(
@@ -110,8 +113,9 @@ export function LiquidGlassFABMenu({
       if (event.key !== 'Escape' || !expanded) return
       event.stopPropagation()
       setExpanded(false)
+      returnFocusToTrigger()
     },
-    [expanded, setExpanded],
+    [expanded, setExpanded, returnFocusToTrigger],
   )
 
   const mainButton = (
@@ -119,7 +123,6 @@ export function LiquidGlassFABMenu({
       glyph={expanded ? 'xmark' : mainGlyph}
       accessibilityLabel={mainAccessibilityLabel}
       onClick={() => setExpanded(!expanded)}
-      aria-haspopup="menu"
       aria-expanded={expanded}
       aria-controls={menuId}
     />
@@ -127,21 +130,44 @@ export function LiquidGlassFABMenu({
 
   return (
     <div
-      className={cn('inline-flex flex-col items-end', className)}
+      ref={rootRef}
+      // `column-reverse` is load-bearing, not a styling choice. The rows have
+      // to PAINT above the disc and be TABBED TO AFTER it, and those are
+      // opposite orders — so the disc comes first in the DOM (tab order) and
+      // the column is reversed for paint. Putting the rows first in the DOM
+      // instead sends the next Tab straight past the component.
+      className={cn('inline-flex flex-col-reverse items-end', className)}
       style={{ gap: ROW_SPACING, ...style }}
       data-kro-fab-menu={expanded ? 'expanded' : 'collapsed'}
       onKeyDown={onKeyDown}
     >
+      {glow ? (
+        <RotatingGlow {...glow} isActive={isGlowActive && (glow.isActive ?? true)}>
+          {mainButton}
+        </RotatingGlow>
+      ) : (
+        mainButton
+      )}
+
       {/*
+        A labelled group of ordinary buttons — deliberately NOT `role="menu"` /
+        `role="menuitem"`.
+
+        Those roles promise the ARIA menu interaction model: arrow-key
+        navigation, a roving tabindex, Home/End, type-ahead. Canon's menu is a
+        column of buttons you tab through, and announcing an interaction model
+        the component does not implement is worse than announcing none — a
+        screen-reader user told "menu" reaches for the arrow keys and finds
+        nothing there.
+
         Always mounted, so the rows animate rather than pop. `inert` while
         closed is what keeps a collapsed row out of the tab order and out of
         the accessibility tree — the thing `opacity: 0` alone does not do.
       */}
       <div
         id={menuId}
-        role="menu"
+        role="group"
         aria-label={mainAccessibilityLabel}
-        aria-orientation="vertical"
         inert={!expanded}
         className="flex flex-col items-end"
         style={{
@@ -161,14 +187,6 @@ export function LiquidGlassFABMenu({
           />
         ))}
       </div>
-
-      {glow ? (
-        <RotatingGlow {...glow} isActive={isGlowActive && (glow.isActive ?? true)}>
-          {mainButton}
-        </RotatingGlow>
-      ) : (
-        mainButton
-      )}
     </div>
   )
 }
@@ -195,7 +213,6 @@ function MenuRow({
   return (
     <button
       type="button"
-      role="menuitem"
       disabled={entry.disabled}
       onClick={() => onSelect(entry)}
       data-kro-fab-menu-item=""

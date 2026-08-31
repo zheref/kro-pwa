@@ -26,13 +26,33 @@ function renderMenu(items = captureEntries()) {
   )
 }
 
+const rows = () =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>('[data-kro-fab-menu-item]'))
+
+const rowNamed = (label: string) => screen.getByRole('button', { name: new RegExp(label) })
+
 describe('opening and closing the menu', () => {
   it('starts collapsed, with the trigger saying so', () => {
     renderMenu()
 
     const trigger = screen.getByRole('button', { name: 'Quick input' })
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
+    expect(trigger.getAttribute('aria-controls')).toBeTruthy()
+  })
+
+  it('does not claim the ARIA menu model it does not implement', () => {
+    // `role="menu"` promises arrow-key navigation and a roving tabindex. This
+    // is a column of buttons you tab through, so it says so: a labelled group.
+    // Announcing an interaction model that is not there is worse than
+    // announcing none — the user reaches for the arrow keys and finds nothing.
+    renderMenu()
+
+    expect(document.querySelector('[role="menu"]')).toBeNull()
+    expect(document.querySelector('[role="menuitem"]')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-haspopup')).toBeNull()
+    expect(document.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe(
+      'Quick input',
+    )
   })
 
   it('unfurls the labelled actions when the user taps the FAB', async () => {
@@ -43,8 +63,8 @@ describe('opening and closing the menu', () => {
     expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
       'true',
     )
-    expect(screen.getAllByRole('menuitem')).toHaveLength(4)
-    expect(screen.getByRole('menuitem', { name: /Event/ })).toBeDefined()
+    expect(rows()).toHaveLength(4)
+    expect(rowNamed('Event')).toBeDefined()
   })
 
   it('keeps a collapsed row out of the tab order, not merely out of sight', () => {
@@ -55,12 +75,36 @@ describe('opening and closing the menu', () => {
     // takes them out of the tab order and the accessibility tree; jsdom does
     // not model it, so the attribute is what can be asserted here and the
     // Storybook run is where the behaviour is exercised.
-    const menu = document.querySelector('[role="menu"]') as HTMLElement
-    expect(menu.hasAttribute('inert')).toBe(true)
-    expect(menu.style.pointerEvents).toBe('none')
-    for (const row of screen.getAllByRole('menuitem')) {
-      expect((row as HTMLElement).style.opacity).toBe('0')
+    const group = document.querySelector('[role="group"]') as HTMLElement
+    expect(group.hasAttribute('inert')).toBe(true)
+    expect(group.style.pointerEvents).toBe('none')
+    for (const row of rows()) {
+      expect(row.style.opacity).toBe('0')
     }
+  })
+
+  it('puts the disc BEFORE the rows in the DOM, so Tab reaches them after it', () => {
+    // The rows paint above the disc and must be tabbed to after it — opposite
+    // orders. The DOM carries tab order and `flex-col-reverse` carries paint;
+    // rows-first in the DOM sends the next Tab straight past the component.
+    renderMenu()
+
+    const root = document.querySelector('[data-kro-fab-menu]') as HTMLElement
+    const fab = root.querySelector('[data-kro-fab]') as HTMLElement
+    const group = root.querySelector('[role="group"]') as HTMLElement
+
+    expect(fab.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(root.className).toContain('flex-col-reverse')
+  })
+
+  it('tabs from the disc into the first row once open', async () => {
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
+    screen.getByRole('button', { name: 'Quick input' }).focus()
+    await userEvent.tab()
+
+    expect(document.activeElement).toBe(rows()[0])
   })
 
   it('swaps the glyph for a close mark while open — canon`s xmark', async () => {
@@ -95,6 +139,19 @@ describe('opening and closing the menu', () => {
       'false',
     )
   })
+
+  it('hands focus back to the disc on Escape, rather than dropping it', async () => {
+    // Closing makes the open rows `inert`, and an `inert` element holding focus
+    // loses it to the document — so a keyboard user would be dumped at the top
+    // of the page.
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
+    rows()[0]?.focus()
+    await userEvent.keyboard('{Escape}')
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Quick input' }))
+  })
 })
 
 describe('choosing an action', () => {
@@ -104,7 +161,7 @@ describe('choosing an action', () => {
     renderMenu(captureEntries({ task, event }))
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
-    await userEvent.click(screen.getByRole('menuitem', { name: /Task/ }))
+    await userEvent.click(rowNamed('Task'))
 
     expect(task).toHaveBeenCalledOnce()
     expect(event).not.toHaveBeenCalled()
@@ -114,11 +171,20 @@ describe('choosing an action', () => {
     renderMenu()
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
-    await userEvent.click(screen.getByRole('menuitem', { name: /Habit/ }))
+    await userEvent.click(rowNamed('Habit'))
 
     expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
       'false',
     )
+  })
+
+  it('hands focus back to the disc after a choice, for the same reason', async () => {
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
+    await userEvent.click(rowNamed('Habit'))
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Quick input' }))
   })
 
   it('does not fire a disabled action', async () => {
@@ -129,7 +195,7 @@ describe('choosing an action', () => {
     renderMenu([{ ...first, disabled: true, onSelect }, ...items.slice(1)])
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
-    await userEvent.click(screen.getByRole('menuitem', { name: /Event/ }))
+    await userEvent.click(rowNamed('Event'))
 
     expect(onSelect).not.toHaveBeenCalled()
   })

@@ -30,11 +30,13 @@ import { ActiveToastView } from './ActiveToastView'
  * overshoot back into the pill it just moved to clear. Both are ported;
  * `chromeMotion` samples the spring from KroApple's own parameters.
  *
- * ANNOUNCEMENT. `role="status"` on a container that is present BEFORE the toast
- * is: an `aria-live` region only announces mutations to a region the assistive
+ * ANNOUNCEMENT. A `role="status"` region that is present BEFORE the toast is —
+ * an `aria-live` region only announces mutations to a region the assistive
  * technology was already observing, so mounting the region and the message
  * together is the classic way to announce nothing at all. The region is
- * therefore always mounted and only its contents change.
+ * therefore always mounted, visually hidden, and holds ONLY the message; the
+ * visible toast, with its buttons, is rendered outside it. See the note at the
+ * region itself for why the buttons must stay out.
  */
 
 export interface ActiveToastLayerProps {
@@ -55,6 +57,19 @@ export interface ActiveToastLayerProps {
 const PRESENT_SPRING_MS = settleMs(CHROME_SPRINGS.toast)
 const PRESENT_EASING = springEasing(CHROME_SPRINGS.toast)
 
+/** Screen-reader-only, and only ever text. */
+const VISUALLY_HIDDEN: CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  border: 0,
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+}
+
 export function ActiveToastLayer({
   toast,
   isSessionPillVisible = false,
@@ -62,27 +77,10 @@ export function ActiveToastLayer({
   className,
   style,
 }: ActiveToastLayerProps) {
-  // One frame of "mounted but off-stage" so the browser has a start value to
-  // transition FROM. Without it the toast is painted at its resting position on
-  // the first frame and there is nothing to animate.
-  const [entered, setEntered] = useState(false)
-
-  useEffect(() => {
-    if (!toast) {
-      setEntered(false)
-      return
-    }
-    const frame = requestAnimationFrame(() => setEntered(true))
-    return () => cancelAnimationFrame(frame)
-  }, [toast])
-
   const lift = isSessionPillVisible ? toastLiftAbovePill() : 0
 
   return (
     <div
-      // Always mounted — see the announcement note above.
-      role="status"
-      aria-live="polite"
       data-kro-toast-layer=""
       data-kro-toast-lifted={isSessionPillVisible ? 'true' : 'false'}
       className={className}
@@ -105,21 +103,61 @@ export function ActiveToastLayer({
         ...style,
       }}
     >
-      {toast ? (
-        <ActiveToastView
-          key={toast.id}
-          toast={toast}
-          style={{
-            pointerEvents: 'auto',
-            // Canon: `.move(edge: .trailing).combined(with: .opacity)`.
-            opacity: entered ? 1 : 0,
-            transform: entered ? 'translateX(0)' : 'translateX(24px)',
-            transitionProperty: 'opacity, transform',
-            transitionDuration: `${PRESENT_SPRING_MS}ms`,
-            transitionTimingFunction: PRESENT_EASING,
-          }}
-        />
-      ) : null}
+      {/*
+        The live region holds the MESSAGE and nothing else.
+
+        Wrapping the visible toast in it instead puts the action buttons inside
+        a region assistive technology is watching for text changes, and the
+        announcement becomes "…marked complete, Undo button, View button" — or,
+        on some screen readers, fires twice. `aria-atomic` makes the message
+        read as one sentence rather than as the diff of the previous one.
+
+        Always mounted, empty, before any toast exists: a region created
+        together with its first message announces nothing at all, because the
+        technology was not yet observing it.
+      */}
+      <div role="status" aria-live="polite" aria-atomic="true" style={VISUALLY_HIDDEN}>
+        {toast?.message ?? ''}
+      </div>
+
+      {toast ? <PresentedToast key={toast.id} toast={toast} /> : null}
     </div>
+  )
+}
+
+/**
+ * One presented toast, and its entry animation.
+ *
+ * KEYED AND SEPARATE ON PURPOSE. `entered` has to start `false` for EVERY
+ * toast, not just the first — a one-deep replace swaps the model while the
+ * layer is still mounted, and a flag living on the layer would still be `true`,
+ * so the replacement would paint on-stage and skip the slide entirely. Owning
+ * the flag in a component the parent keys by `toast.id` makes the reset a
+ * remount, which cannot be forgotten.
+ */
+function PresentedToast({ toast }: { toast: ActiveToastModel }) {
+  // One frame of "mounted but off-stage" so the browser has a start value to
+  // transition FROM. Without it the toast is painted at its resting position on
+  // the first frame and there is nothing to animate.
+  const [entered, setEntered] = useState(false)
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setEntered(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
+  return (
+    <ActiveToastView
+      toast={toast}
+      style={{
+        pointerEvents: 'auto',
+        // Canon: `.move(edge: .trailing).combined(with: .opacity)`.
+        opacity: entered ? 1 : 0,
+        transform: entered ? 'translateX(0)' : 'translateX(24px)',
+        transitionProperty: 'opacity, transform',
+        transitionDuration: `${PRESENT_SPRING_MS}ms`,
+        transitionTimingFunction: PRESENT_EASING,
+      }}
+    />
   )
 }

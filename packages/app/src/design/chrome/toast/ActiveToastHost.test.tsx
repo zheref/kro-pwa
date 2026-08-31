@@ -42,6 +42,19 @@ function advance(seconds: number) {
   })
 }
 
+/**
+ * What the VISIBLE toast says, or `null`.
+ *
+ * Queried through the toast's own marker rather than with `getByText`, because
+ * the layer also renders the message into a visually-hidden live region — so
+ * every message is legitimately in the document twice, and a bare text query
+ * would report that duplication as an ambiguity error rather than as the
+ * announcement it is.
+ */
+function shownMessage(): string | null {
+  return document.querySelector('[data-kro-toast-message]')?.textContent ?? null
+}
+
 describe('enqueue puts a toast up', () => {
   it('shows the message a feature raised', () => {
     render(
@@ -52,7 +65,7 @@ describe('enqueue puts a toast up', () => {
 
     press('Complete')
 
-    expect(screen.getByText('"Buy groceries" marked complete')).toBeDefined()
+    expect(shownMessage()).toBe('"Buy groceries" marked complete')
   })
 
   it('shows nothing until something is raised', () => {
@@ -85,7 +98,7 @@ describe('auto-dismiss timing', () => {
     press('Complete')
     advance(7.9)
 
-    expect(screen.getByText('Added for today')).toBeDefined()
+    expect(shownMessage()).toBe('Added for today')
   })
 
   it('takes it down once the duration elapses', () => {
@@ -98,7 +111,7 @@ describe('auto-dismiss timing', () => {
     press('Complete')
     advance(8.1)
 
-    expect(screen.queryByText('Added for today')).toBeNull()
+    expect(shownMessage()).toBeNull()
   })
 
   it('uses canon`s 10-second default when the caller names no duration', () => {
@@ -110,10 +123,10 @@ describe('auto-dismiss timing', () => {
 
     press('Complete')
     advance(TOAST_DURATION_SECONDS.default - 0.1)
-    expect(screen.getByText('Saved')).toBeDefined()
+    expect(shownMessage()).toBe('Saved')
 
     advance(0.2)
-    expect(screen.queryByText('Saved')).toBeNull()
+    expect(shownMessage()).toBeNull()
   })
 
   it('never dismisses faster than the 3-second reading floor, however short the ask', () => {
@@ -126,7 +139,7 @@ describe('auto-dismiss timing', () => {
     press('Complete')
     advance(1)
 
-    expect(screen.getByText('Saved')).toBeDefined()
+    expect(shownMessage()).toBe('Saved')
   })
 })
 
@@ -152,8 +165,8 @@ describe('a second toast replaces the first — the queue is one deep', () => {
     advance(2)
     press('Skip')
 
-    expect(screen.queryByText('"Groceries" completed')).toBeNull()
-    expect(screen.getByText('"Workout" skipped')).toBeDefined()
+    expect(shownMessage()).not.toBe('"Groceries" completed')
+    expect(shownMessage()).toBe('"Workout" skipped')
     expect(document.querySelectorAll('[data-kro-toast]')).toHaveLength(1)
   })
 
@@ -166,7 +179,7 @@ describe('a second toast replaces the first — the queue is one deep', () => {
     // The first toast's timer would have fired 1s from here.
     advance(2)
 
-    expect(screen.getByText('"Workout" skipped')).toBeDefined()
+    expect(shownMessage()).toBe('"Workout" skipped')
   })
 })
 
@@ -200,7 +213,7 @@ describe('dismiss', () => {
     press('Delete')
     press('Dismiss')
 
-    expect(screen.queryByText('Deleted')).toBeNull()
+    expect(shownMessage()).toBeNull()
   })
 
   it('ignores a stale dismiss, so an old Undo cannot take down a newer toast', () => {
@@ -213,7 +226,7 @@ describe('dismiss', () => {
     press('Delete')
     press('Dismiss stale')
 
-    expect(screen.getByText('Deleted')).toBeDefined()
+    expect(shownMessage()).toBe('Deleted')
   })
 
   it('reports what is on screen, for a caller that needs to know', () => {

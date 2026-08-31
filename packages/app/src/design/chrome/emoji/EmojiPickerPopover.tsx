@@ -4,6 +4,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '../../system/primitives/popover'
+import { useDisclosure } from '../useDisclosure'
 import type { EmojiCategory } from './emojiCategories'
 import { EmojiPicker } from './EmojiPicker'
 
@@ -53,8 +54,14 @@ export function EmojiPickerPopover({
   onOpenChange,
   align = 'start',
 }: EmojiPickerPopoverProps) {
+  // Always a DEFINED `open` handed to Radix — see `useDisclosure`, and the bug
+  // it names: `open={undefined}` puts Radix in its own uncontrolled mode, where
+  // an `onOpenChange(false)` after a pick changes nothing and the panel stays
+  // open.
+  const [isOpen, setOpen] = useDisclosure(open, onOpenChange)
+
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align={align}
@@ -69,7 +76,7 @@ export function EmojiPickerPopover({
           categories={categories}
           onPick={(emoji) => {
             onPick?.(emoji)
-            onOpenChange?.(false)
+            setOpen(false)
           }}
         />
       </PopoverContent>

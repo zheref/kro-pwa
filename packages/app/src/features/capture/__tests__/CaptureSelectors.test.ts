@@ -2,6 +2,7 @@ import { EndeavorOperation, EndeavorsVistas } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
@@ -54,6 +55,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   capture: slice,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  earn: initialEarnState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

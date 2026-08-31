@@ -50,3 +50,19 @@ export * from './utils/durations'
 // above so a parallel child appending after the `domain/` exports and this one
 // never contend for the same line.
 export * from './vistas'
+
+// --- settings & flags (#11) ------------------------------------------------
+// `settings/` is the preference schema ported from canon's `SettingOptions`:
+// every option's key, value shape, glyph, default and sync scope, the five
+// groups, the cloud-sync subset, the stored-value codec and the narrow
+// key-value port #10's persistence satisfies. `flags/` is the `UZF-22` central
+// registry: all 28 declared flags, the `statusQuoSet` baseline, the
+// last-match-wins override service and the flag × preference AND-ing helper.
+//
+// Appended after the vistas block for the same reason that block exists — a
+// parallel child appends its own block below rather than contending for a line
+// in the sorted list above. `flags/` imports from `settings/`
+// (`FeatureFlagGating` needs the two session options canon AND's), so the order
+// here is also the dependency order.
+export * from './settings'
+export * from './flags'

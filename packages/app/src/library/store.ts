@@ -18,6 +18,7 @@ import type { LocalStore } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { doSlice } from '../features/do/DoFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
+import { planSlice } from '../features/plan/PlanFeature'
 import {
   type GreetingService,
   liveGreetingService,
@@ -66,6 +67,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
     reducer: {
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
+      plan: planSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

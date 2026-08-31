@@ -29,6 +29,7 @@ export {
   destinationForKind,
   destinationHeading,
   destinationIcon,
+  tabDestinationIcon,
   destinationId,
   destinationPath,
   destinationTabLabel,

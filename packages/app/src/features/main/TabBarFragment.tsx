@@ -24,7 +24,7 @@ import type { DoSurfaceLayout } from './DoSurfaceLayout'
 import type { NavigationElement } from './NavigationSections'
 import {
   type SidebarDestination,
-  destinationIcon,
+  tabDestinationIcon,
   destinationId,
   destinationTabLabel,
   isSameDestination,
@@ -70,7 +70,7 @@ export function TabBarFragment(props: TabBarFragmentProps) {
           key={destinationId(element.destination)}
           destination={element.destination}
           label={destinationTabLabel(element.destination)}
-          icon={destinationIcon(element.destination)}
+          icon={tabDestinationIcon(element.destination)}
           isSelected={isSameDestination(element.destination, selected)}
           layout={layout}
           onSelect={onSelectDestination}

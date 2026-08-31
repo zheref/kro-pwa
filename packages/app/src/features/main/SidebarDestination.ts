@@ -26,6 +26,7 @@
  *   "must NOT read 'Triage' or it collides with that feature".
  */
 import {
+  CirclePlay,
   Asterisk,
   BookOpen,
   CalendarRange,
@@ -237,6 +238,26 @@ const SIMPLE_ICONS: Record<Exclude<DestinationKind, 'list'>, LucideIcon> = {
   dev: SlidersHorizontal,
   search: Search,
 }
+
+/**
+ * The phone tab bar's overrides. Canon splits the glyph by surface: the
+ * iPhone tab draws `play.circle.fill` for Do while the iPad/Mac sidebar
+ * draws `sun.max.fill` for the same destination's "My Day" row — one
+ * destination, two idiomatic glyphs. Every other tab reuses the sidebar map.
+ */
+const TAB_ICON_OVERRIDES: Partial<
+  Record<Exclude<DestinationKind, 'list'>, LucideIcon>
+> = {
+  myDay: CirclePlay,
+}
+
+/** The icon a phone TAB draws — canon's per-surface glyph split. */
+export const tabDestinationIcon = (
+  destination: SidebarDestination,
+): LucideIcon =>
+  destination.kind === 'list'
+    ? destinationIcon(destination)
+    : (TAB_ICON_OVERRIDES[destination.kind] ?? destinationIcon(destination))
 
 export const destinationIcon = (
   destination: SidebarDestination,

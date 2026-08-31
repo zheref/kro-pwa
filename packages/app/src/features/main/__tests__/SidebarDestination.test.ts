@@ -5,6 +5,7 @@
  * four is a place a port normally loses a string. They are asserted
  * individually rather than as a pair so a failure names which one drifted.
  */
+import { CirclePlay, Sun } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 import {
   ALL_SIMPLE_DESTINATIONS,
@@ -19,6 +20,7 @@ import {
   destinationTabLabel,
   destinationTitle,
   isSameDestination,
+  tabDestinationIcon,
 } from '../SidebarDestination'
 
 const project: SidebarDestination = {
@@ -169,5 +171,23 @@ describe('bottomEnforced — canon SidebarDestinationType.bottomEnforced', () =>
 
   it('never pins a project list', () => {
     expect(destinationBottomEnforced(project)).toBe(false)
+  })
+})
+
+describe('the phone tab glyph split', () => {
+  it('draws play for the Do tab while the sidebar keeps the sun', () => {
+    // Canon splits the glyph by surface: iPhone tab = play.circle.fill,
+    // iPad/Mac sidebar = sun.max.fill for the same destination.
+    expect(tabDestinationIcon({ kind: DestinationKind.myDay })).toBe(CirclePlay)
+    expect(destinationIcon({ kind: DestinationKind.myDay })).toBe(Sun)
+  })
+
+  it('every other tab reuses the sidebar glyph', () => {
+    expect(tabDestinationIcon({ kind: DestinationKind.plan })).toBe(
+      destinationIcon({ kind: DestinationKind.plan }),
+    )
+    expect(tabDestinationIcon({ kind: DestinationKind.earn })).toBe(
+      destinationIcon({ kind: DestinationKind.earn }),
+    )
   })
 })

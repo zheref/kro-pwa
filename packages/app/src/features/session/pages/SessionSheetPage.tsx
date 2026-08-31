@@ -83,16 +83,7 @@ import {
   SessionSurfacePresentation,
 } from './sessionSheetModel'
 
-export interface SessionSheetPageProps {
-  /**
-   * `raised` — the surface is layered over whatever the user was reading (the
-   * pill was tapped, or a countdown concluded). `destination` — the surface IS
-   * the page, at `/execute`.
-   */
-  readonly host: 'raised' | 'destination'
-  /** Ignored by the `destination` host, which is never closed. */
-  readonly isOpen?: boolean
-  readonly onRequestClose?: () => void
+interface SessionSheetPageCommonProps {
   /**
    * The parallel-task suggestions. Empty in the shipped build — the session
    * slice carries none and sourcing them is another child's lane — but a real
@@ -103,14 +94,40 @@ export interface SessionSheetPageProps {
   readonly suggestions?: readonly SessionSuggestion[]
 }
 
+/**
+ * **A discriminated union, not one shape with two optional fields.**
+ *
+ * The two hosts differ in exactly one contract: a `raised` surface is layered
+ * over whatever the user was reading and *must* be closable, while a
+ * `destination` surface IS the page and can never be closed. Optional
+ * `isOpen`/`onRequestClose` let a caller mount a raised surface with no way out
+ * — the close button and Escape both become no-ops, and nothing catches it
+ * until someone is trapped in it. Splitting the union moves that from a runtime
+ * trap to a compile error, and keeps the destination call site as short as it
+ * should be (`<SessionSheetPage host="destination" />`).
+ */
+export type SessionSheetPageProps =
+  | (SessionSheetPageCommonProps & {
+      /** The surface IS the page, at `/execute`. Never closed. */
+      readonly host: 'destination'
+    })
+  | (SessionSheetPageCommonProps & {
+      /** Layered over the route: the pill was tapped, or a countdown ended. */
+      readonly host: 'raised'
+      readonly isOpen: boolean
+      readonly onRequestClose: () => void
+    })
+
 const NO_SUGGESTIONS: readonly SessionSuggestion[] = []
 
-export function SessionSheetPage({
-  host,
-  isOpen = true,
-  onRequestClose,
-  suggestions = NO_SUGGESTIONS,
-}: SessionSheetPageProps) {
+/** The `destination` host's non-close. Stable, so it never re-renders the tree. */
+const noClose = (): void => {}
+
+export function SessionSheetPage(props: SessionSheetPageProps) {
+  const { host, suggestions = NO_SUGGESTIONS } = props
+  const isOpen = props.host === 'raised' ? props.isOpen : true
+  const onRequestClose =
+    props.host === 'raised' ? props.onRequestClose : undefined
   const dispatch = useAppDispatch()
   const surface = useSurfaceLayout()
 
@@ -163,7 +180,10 @@ export function SessionSheetPage({
     <SessionSurfaceFragment
       presentation={presentation}
       isOpen={isOpen}
-      onRequestClose={onRequestClose ?? (() => {})}
+      // The `destination` host has no close: it is a page. The union above is
+      // what makes the fallback unreachable for `raised`, where a missing
+      // handler would mean a surface with no way out.
+      onRequestClose={onRequestClose ?? noClose}
       phase={phase}
     >
       <SessionSheetFragment

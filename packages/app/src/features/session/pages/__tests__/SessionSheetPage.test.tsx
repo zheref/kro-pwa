@@ -109,10 +109,20 @@ const makeHarness = async (
   return store
 }
 
+/**
+ * The two hosts are a discriminated union, so the helper branches rather than
+ * spreading one shape over both: a `raised` surface must be closable and a
+ * `destination` one cannot be. That is the point of the union — see
+ * `SessionSheetPageProps`.
+ */
 const renderPage = (store: AppStore, host: 'raised' | 'destination') =>
   render(
     <StoreProvider store={store}>
-      <SessionSheetPage host={host} isOpen onRequestClose={() => {}} />
+      {host === 'raised' ? (
+        <SessionSheetPage host="raised" isOpen onRequestClose={() => {}} />
+      ) : (
+        <SessionSheetPage host="destination" />
+      )}
     </StoreProvider>,
   )
 
@@ -127,6 +137,25 @@ afterEach(() => {
   // Two tests install fake timers to move the wall clock past the finish-early
   // threshold; every other test wants the real one.
   vi.useRealTimers()
+})
+
+describe('the host contract', () => {
+  it('refuses a raised surface with no way out, at compile time', () => {
+    // The assertion IS the `@ts-expect-error`: `tsc --noEmit` fails if the
+    // union ever stops rejecting this, which is the only place a
+    // "raised surface nobody can close" could be caught. The runtime render
+    // below only proves the case still mounts.
+    const trap = (
+      // @ts-expect-error a `raised` host must supply `isOpen` + `onRequestClose`
+      <SessionSheetPage host="raised" />
+    )
+    expect(trap).toBeTruthy()
+  })
+
+  it('needs nothing but its name for the destination host', () => {
+    const page = <SessionSheetPage host="destination" />
+    expect(page.props.host).toBe('destination')
+  })
 })
 
 describe('the host', () => {

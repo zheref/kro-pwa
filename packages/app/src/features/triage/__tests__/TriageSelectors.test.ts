@@ -4,6 +4,7 @@ import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
@@ -70,6 +71,7 @@ const rootWith = (slice: TriageState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   platform: initialPlatformState,
+  session: initialSessionState,
   auth: initialAuthState,
 })
 

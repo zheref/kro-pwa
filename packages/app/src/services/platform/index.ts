@@ -8,6 +8,10 @@
  * `services/` (`RC-6`, `RC-21`).
  */
 export * from './audio/AudioFeedbackService'
+// The web's stand-in for the macOS menu-bar extra (KC-IS-#21; KC-IS-#34 shipped
+// no document-title binding, so the session lane declares it here beside the
+// other platform boundaries).
+export * from './documentTitle/DocumentTitleService'
 export * from './install/InstallService'
 export * from './notifications/NotificationsService'
 export * from './notifications/OverdueAlertReconciliation'

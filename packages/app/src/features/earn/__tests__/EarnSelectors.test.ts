@@ -14,6 +14,7 @@ import { rewardMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
@@ -52,6 +53,7 @@ const rootWith = (earn: EarnState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn,
+  platform: initialPlatformState,
   auth: initialAuthState,
 })
 

@@ -29,6 +29,7 @@ import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFe
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
+import { platformSlice } from '../features/platform/PlatformFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type AuthService,
@@ -42,6 +43,23 @@ import {
 } from '../services/greeting/GreetingService'
 import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
 import { liveLocalStore } from '../services/localStore/liveLocalStore'
+import {
+  type AudioFeedbackService,
+  type InstallService,
+  type NotificationsService,
+  type VibrationService,
+  type WakeLockService,
+  liveAudioFeedbackService,
+  liveInstallService,
+  liveNotificationsService,
+  liveVibrationService,
+  liveWakeLockService,
+  stubbedAudioFeedbackService,
+  stubbedInstallService,
+  stubbedNotificationsService,
+  stubbedVibrationService,
+  stubbedWakeLockService,
+} from '../services/platform'
 import { signOutWipe } from '../services/localStore/signOutWipe'
 import { liveSupabaseClientProvider } from '../services/supabase/SupabaseClientProvider'
 import { makeLiveEndeavorCloudTransport } from '../services/sync/EndeavorCloudTransport'
@@ -71,6 +89,19 @@ export interface ThunkExtra {
    * what keeps this interface readable as the store count grows.
    */
   readonly localStore: LocalStore
+  /**
+   * The PWA platform tier (#34) — five separate fields rather than one bundle,
+   * unlike `localStore` above. They share no handle and no lifecycle: a suite
+   * that swaps the notification binding to count `schedule` calls has no reason
+   * to also restate the audio, wake-lock, vibration and install bindings, and a
+   * bundle would make it. `localStore`'s eight ports are bundled for the
+   * opposite reason — one database, one sign-out.
+   */
+  readonly notificationsService: NotificationsService
+  readonly audioFeedbackService: AudioFeedbackService
+  readonly wakeLockService: WakeLockService
+  readonly vibrationService: VibrationService
+  readonly installService: InstallService
   /**
    * The sign-out wipe (#10). A field of its own rather than a method on
    * `LocalStore`, because it is the one operation that spans every store and
@@ -110,6 +141,11 @@ const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
 export const liveThunkExtra: ThunkExtra = {
   greetingService: liveGreetingService,
   localStore: liveLocalStore,
+  notificationsService: liveNotificationsService,
+  audioFeedbackService: liveAudioFeedbackService,
+  wakeLockService: liveWakeLockService,
+  vibrationService: liveVibrationService,
+  installService: liveInstallService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
   authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
@@ -134,6 +170,11 @@ export const liveThunkExtra: ThunkExtra = {
 export const stubbedThunkExtra: ThunkExtra = {
   greetingService: stubbedGreetingService,
   localStore: stubbedLocalStore,
+  notificationsService: stubbedNotificationsService,
+  audioFeedbackService: stubbedAudioFeedbackService,
+  wakeLockService: stubbedWakeLockService,
+  vibrationService: stubbedVibrationService,
+  installService: stubbedInstallService,
   signOutWipe,
   // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
   // shipping behaviour — `supabaseHosting` disabled, exactly like canon.
@@ -154,6 +195,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       find: findSlice.reducer,
       endeavorDetail: endeavorDetailSlice.reducer,
       earn: earnSlice.reducer,
+      platform: platformSlice.reducer,
       auth: authSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>

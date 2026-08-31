@@ -36,6 +36,7 @@ import {
   withModeToggled,
   withSettingsSyncState,
 } from '../AuthShifters'
+import { initialPlatformState } from '../../platform/PlatformFeature'
 import { AuthFlow, type AuthState } from '../AuthState'
 import { signOutIntents } from '../SignOutIntents'
 
@@ -50,6 +51,7 @@ const rootWith = (auth: AuthState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  platform: initialPlatformState,
   auth,
 })
 

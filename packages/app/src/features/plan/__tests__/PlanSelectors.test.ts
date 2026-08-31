@@ -13,6 +13,8 @@ import {
 import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import type { RootState } from '../../../library/store'
 import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
@@ -56,11 +58,13 @@ const tomorrow = addingPlanDays(today, 1)
 
 const rootWith = (plan: PlanState): RootState => ({
   greeting: initialGreetingState,
-  // Present only because `RootState` names every registered slice (#16, #23);
-  // this suite asserts nothing about Do or Capture.
+  // Present only because `RootState` names every registered slice (#16, #23,
+  // #29); this suite asserts nothing about Do, Capture, Find or Detail.
   do: initialDoState,
   capture: initialCaptureState,
   plan,
+  find: initialFindState,
+  endeavorDetail: initialEndeavorDetailState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

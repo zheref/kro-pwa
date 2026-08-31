@@ -23,16 +23,20 @@ import {
   selectIsDoLoading,
 } from '../DoSelectors'
 import { withVisibilityApplied } from '../DoShifters'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
 import { initialPlanState } from '../../plan/PlanState'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
   greeting: greetingStateMocks.idle,
   do: slice,
-  // Present only because `RootState` names every registered slice (#18, #23);
-  // this suite asserts nothing about Plan or Capture.
+  // Present only because `RootState` names every registered slice (#18, #23,
+  // #29); this suite asserts nothing about Plan, Capture, Find or Detail.
   plan: initialPlanState,
   capture: initialCaptureState,
+  find: initialFindState,
+  endeavorDetail: initialEndeavorDetailState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

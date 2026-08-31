@@ -196,6 +196,32 @@ export function makeTriageStore(options: TriageStoreOptions = {}) {
 export type TriageStore = ReturnType<typeof makeTriageStore>
 
 /**
+ * A `LocalStore` that reads normally and **refuses every write** to the
+ * endeavor table.
+ *
+ * The one failure the durable save treats as fatal is the local upsert — *"the
+ * only case where the triage decision truly wasn't captured"* — and it is
+ * reachable in a browser (a full quota, a blocked origin). Refusing the write
+ * rather than stubbing the thunk is what keeps the test about the real path:
+ * the Producer still runs, still catches, and still resolves
+ * `localSaveFailed`.
+ */
+export function makeUnwritableLocalStore(
+  endeavors: readonly EndeavorRecord[] = triageFixtureRecords(),
+) {
+  const store = makeInMemoryLocalStore({ endeavors: [...endeavors] })
+  return {
+    ...store,
+    endeavors: {
+      ...store.endeavors,
+      put: async () => {
+        throw new Error('QuotaExceededError')
+      },
+    },
+  }
+}
+
+/**
  * The Inbox's own hand-off, driven through the real Producers.
  *
  * `withTriageRequested` **no-ops on an unknown row id**, so the pool has to

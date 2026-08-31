@@ -302,8 +302,14 @@ export function TriageCarouselPage({
       // The Inbox's pool is a per-surface read, so the triaged row leaves
       // Pending Triage only once it has been re-read. A failed save leaves the
       // pool alone: the row is still untriaged and must stay on the list.
+      //
+      // The reload classifies against **the same `now` the decision was saved
+      // with**, never a second clock reading: the rows the Inbox is about to
+      // re-draw are the rows this decision just changed, and two instants would
+      // let a row's urgency disagree with the write that produced it. It is the
+      // same rule `InboxOverlayPage` states about its Undo deadline.
       if (result !== null && result.ok) {
-        void dispatch(loadCaptureContextThunk({ now: new Date() }))
+        void dispatch(loadCaptureContextThunk({ now }))
       }
       return result !== null && result.ok
     }
@@ -330,7 +336,17 @@ export function TriageCarouselPage({
         })
         break
       case 'shared':
-        void save(outcome.decision).then(async () => {
+        void save(outcome.decision).then(async (saved) => {
+          // Gated on the save exactly as Start Now is, and for a reason
+          // specific to this arm: Delegate is the one outcome that keeps the
+          // screen mounted, so its hand-off ends by *popping* it
+          // (`onShareSheetDismissed`). Running that after a **local** save
+          // failure would throw the form away in the one case the decision was
+          // genuinely lost — the case `withSaveFailed` exists to leave alone,
+          // because "a user who has to retry should not also have to re-enter
+          // it". Handing the row to somebody else on the strength of a write
+          // that did not land is the second half of the same mistake.
+          if (!saved) return
           const shareOutcome = await performTriageShare(
             outcome.text,
             shareGateway,

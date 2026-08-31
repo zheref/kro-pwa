@@ -39,6 +39,7 @@ import {
   TriageStoreStage,
   installTriageEnvironment,
   makeTriageStore,
+  makeUnwritableLocalStore,
   seedTriageRequest,
 } from './triageHarness'
 
@@ -368,6 +369,73 @@ describe('Share — the Web Share hand-off and its clipboard fallback', () => {
     })
     const strip = await screen.findByTestId('triage-status-strip')
     expect(strip.textContent).toContain('could not be copied')
+  })
+
+  it('hands nothing off, and keeps the form, when the local save failed', async () => {
+    // Delegate is the one outcome that keeps the screen mounted, so its
+    // hand-off ends by popping it. On a local save failure — the one case the
+    // decision was truly lost — that would throw away the form the user needs
+    // in order to retry, and would hand the row to somebody else on the
+    // strength of a write that did not land.
+    const share = vi.fn().mockResolvedValue(undefined)
+    const store = makeTriageStore({
+      endeavors: triageFixtureRecords(),
+      extra: { localStore: makeUnwritableLocalStore() },
+    })
+    mount(store, { share })
+    await seedTriageRequest(store, triageEndeavorFixtures.unscheduledTask.id)
+    await screen.findByTestId('triage-form')
+
+    fireEvent.click(
+      screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.delegate}`),
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('triage-secondary-share')).toBeTruthy()
+    })
+    fireEvent.click(screen.getByTestId('triage-secondary-share'))
+
+    await waitFor(() => {
+      expect(store.getState().triage.save.kind).toBe('failed')
+    })
+    expect(share).not.toHaveBeenCalled()
+    // The session survives, with every selection still on it.
+    expect(store.getState().triage.session).not.toBeNull()
+    expect(store.getState().triage.session?.form.quadrant).toBe(
+      EisenhowerQuadrant.delegate,
+    )
+    expect(screen.getByTestId('triage-form')).toBeTruthy()
+    // And the failure is an alert, not a polite line.
+    expect(screen.getByTestId('triage-save-error').getAttribute('role')).toBe(
+      'alert',
+    )
+  })
+})
+
+describe('one instant per operation', () => {
+  it('re-reads the Inbox against the same now the decision was saved with', async () => {
+    const store = await openedOn(triageEndeavorFixtures.unscheduledTask.id)
+
+    fireEvent.click(
+      screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.decide}`),
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
+        false,
+      )
+    })
+    fireEvent.click(screen.getByTestId('triage-confirm'))
+
+    await waitFor(() => {
+      expect(store.getState().triage.save.kind).toBe('saved')
+    })
+    // The rows the Inbox is about to re-draw are the rows this decision just
+    // changed. A second clock reading for the reload would let a row's urgency
+    // disagree with the write that produced it.
+    await waitFor(() => {
+      expect(store.getState().capture.clockAnchor?.getTime()).toBe(
+        store.getState().triage.clockAnchor?.getTime(),
+      )
+    })
   })
 })
 

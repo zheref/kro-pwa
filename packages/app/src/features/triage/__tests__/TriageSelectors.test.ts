@@ -1,6 +1,7 @@
 import { EisenhowerQuadrant, EndeavorHost } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -67,6 +68,7 @@ const rootWith = (slice: TriageState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  auth: initialAuthState,
 })
 
 describe('lifecycle selectors', () => {

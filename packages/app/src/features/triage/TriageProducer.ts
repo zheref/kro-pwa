@@ -54,11 +54,7 @@ import {
 } from './TriageApplication'
 import { type TriageException, TriageExceptions } from './TriageException'
 import type { TriageDecision } from './TriageRules'
-import {
-  type TriagePushOutcome,
-  TriagePushTransport,
-  triagePushOutcomeFor,
-} from './TriageSave'
+import { type TriagePushOutcome, triagePushOutcomeFor } from './TriageSave'
 import { triageBusyIntervalsFor } from './TriageScheduling'
 import { TRIAGE_DEFAULT_SYMBOL, type TriageSessionSeed } from './TriageState'
 
@@ -269,9 +265,12 @@ export interface TriageSaveResult {
  *    decision appended are both awaited. A failure here resolves
  *    `localSaveFailed` and **returns immediately** — the push is not attempted,
  *    because there is nothing durable to push.
- * 4. **Then the remote push attempt.** Its outcome rides on the success; see
- *    `TriageSave` for why it is bound to `unavailable` until #31 lands a
- *    client, and why that is still the offline behaviour canon describes.
+ * 4. **Then the remote push attempt.** Its outcome rides on the success. The
+ *    transport is now real (#31): `endeavorSync.pushOne` answers `unavailable`
+ *    when `supabaseHosting` is off or nobody is signed in — which is the
+ *    shipping configuration and therefore the same behaviour this step had
+ *    before — `succeeded` when Kro Cloud accepted the row, and `failed`
+ *    otherwise. `TriageSave` maps all three; none of them can undo step 3.
  *
  * There is no retry, no timer and no connectivity listener here, deliberately:
  * canon's own note is that the sweep is *planned*, not shipped, and inventing
@@ -316,7 +315,7 @@ export const saveTriageDecisionThunk = createAsyncThunk<
   // --- step 2: the remote push attempt. Never rolls step 1 back. ---
   const push = triagePushOutcomeFor({
     endeavor: triaged,
-    transport: TriagePushTransport.unavailable,
+    transport: await extra.endeavorSync.pushOne({ endeavor: triaged, now }),
   })
 
   return ok({ endeavor: triaged, push, now })

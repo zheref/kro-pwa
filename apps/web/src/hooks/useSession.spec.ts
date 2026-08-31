@@ -48,15 +48,8 @@ vi.mock('@/domain/soundsOperations', () => ({
   playSuccess: () => Promise.resolve(),
 }))
 
-// Mock next-auth
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({
-    data: {
-      provider: 'google',
-    },
-    status: 'authenticated',
-  }),
-}))
+// The `next-auth/react` mock this suite carried is gone with NextAuth itself
+// (KC-IS-#31): the hook no longer reads a session, so there is nothing to mock.
 
 describe('useSession', () => {
   const mockedOnSessionFinished = vi.fn()

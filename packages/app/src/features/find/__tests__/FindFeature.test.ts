@@ -15,8 +15,7 @@ import {
   endeavorRecordFromEndeavor,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   childIntentDelegatedConsumed,
@@ -53,7 +52,7 @@ const recordsOf = (): readonly EndeavorRecord[] =>
 
 const storeWith = (records: readonly EndeavorRecord[] = recordsOf()) => {
   const localStore = makeInMemoryLocalStore({ endeavors: records })
-  return makeStore({ greetingService: stubbedGreetingService, localStore })
+  return makeStore({ ...stubbedThunkExtra, localStore })
 }
 
 describe('onViewLoaded — a surface mounts', () => {
@@ -213,7 +212,7 @@ describe('the fetch lifecycle', () => {
   it('surfaces a typed exception when the store cannot be read', async () => {
     const base = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         endeavors: {
@@ -273,7 +272,7 @@ describe('the lens restore lifecycle', () => {
   it('settles even when the read throws, so the surface never waits forever', async () => {
     const base = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         lensSnapshots: {
@@ -301,7 +300,7 @@ describe('the lens restore lifecycle', () => {
       grouping: 'status',
     })
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore,
     })
     await store.dispatch(restoreFindLensThunk({ surface: 'find', vistaId: 'find' }))
@@ -477,7 +476,7 @@ describe('the bulk lifecycle applies to the whole visible set at once', () => {
   it('reports a partial batch as a failure', async () => {
     const base = makeInMemoryLocalStore({ endeavors: recordsOf() })
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         endeavors: {

@@ -10,6 +10,7 @@
  */
 import { EndeavorKind, EndeavorStatus } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -64,6 +65,7 @@ const rootWith = (find: FindState): RootState => ({
   find,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  auth: initialAuthState,
 })
 
 const loaded = rootWith(findStateMocks.loaded)

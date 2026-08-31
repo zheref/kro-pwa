@@ -12,8 +12,7 @@ import {
   makeEndeavor,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
 import { PLAN_REFERENCE_DAY, planAt } from '../PlanMocks'
@@ -46,14 +45,14 @@ const storeWith = (records: readonly EndeavorRecord[] = []) => {
   const localStore = makeInMemoryLocalStore({ endeavors: records })
   return {
     localStore,
-    store: makeStore({ greetingService: stubbedGreetingService, localStore }),
+    store: makeStore({ ...stubbedThunkExtra, localStore }),
   }
 }
 
 const failingStore = (message: string) => {
   const base = makeInMemoryLocalStore()
   return makeStore({
-    greetingService: stubbedGreetingService,
+    ...stubbedThunkExtra,
     localStore: {
       ...base,
       endeavors: {
@@ -72,7 +71,7 @@ const failingStore = (message: string) => {
 describe('planHostsFor', () => {
   it('fans out over exactly one host today — the on-device store', () => {
     const hosts = planHostsFor({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: makeInMemoryLocalStore(),
     })
     expect(hosts.map((host) => host.id)).toEqual([EndeavorHost.local])
@@ -80,7 +79,7 @@ describe('planHostsFor', () => {
 
   it('gives every host the same range-request shape', () => {
     const hosts = planHostsFor({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: makeInMemoryLocalStore(),
     })
     expect(typeof hosts[0]?.fetchRange).toBe('function')
@@ -91,7 +90,7 @@ describe('planHostsFor', () => {
       endeavors: [recordOf(event('seeded', planAt(9)))],
     })
     const [host] = planHostsFor({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: seeded,
     })
     const events = await host?.fetchRange({ start: today, end: tomorrow })

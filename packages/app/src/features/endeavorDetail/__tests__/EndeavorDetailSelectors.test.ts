@@ -5,6 +5,7 @@
  */
 import { EndeavorField, EndeavorHost, EndeavorRelation } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -61,6 +62,7 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   find: initialFindState,
   endeavorDetail,
   earn: initialEarnState,
+  auth: initialAuthState,
 })
 
 describe('presentation', () => {

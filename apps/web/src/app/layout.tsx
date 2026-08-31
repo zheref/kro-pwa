@@ -8,7 +8,6 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { AppProviders } from '@/components/ui/app-providers'
 import { ColorModeButton } from '@/components/ui/color-mode'
 import { NavigationLayout } from '@/components/ui/navigation-layout'
-import { getAuthSession } from '@/auth'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,8 +29,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await getAuthSession()
-
   const actionBar = (
     <HStack>
       <ColorModeButton variant="subtle" size="xs" />
@@ -44,7 +41,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AppProviders session={session}>
+        <AppProviders>
           <NavigationLayout title="Kro" actionBar={actionBar}>
             {children}
           </NavigationLayout>

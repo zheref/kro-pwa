@@ -3,14 +3,23 @@
 import { Provider as ChakraProvider } from '@/components/ui/provider'
 import { ColorModeProvider } from '@/components/ui/color-mode'
 import { Global } from '@emotion/react'
-import { SessionProvider } from 'next-auth/react'
 
 interface ProvidersProps {
-  session: any
   children: React.ReactNode
 }
 
-export function AppProviders({ session, children }: ProvidersProps) {
+/**
+ * NextAuth's `SessionProvider` used to wrap this tree and carry a server-read
+ * session down to `useSession`. KC-IS-#31 retires NextAuth: Kro Cloud auth is
+ * Supabase now, and the session lives in the `auth` slice of `@kro/app`'s store.
+ *
+ * No store provider is wired here yet — the composition root that calls
+ * `makeStore(...)` and mounts `StoreProvider` is the shell child's (KC-IS-#13),
+ * and adding one here would put a second store-construction site in the repo
+ * (`RC-22`, `RC-41`). This component is therefore theme-and-styles only until
+ * that child lands.
+ */
+export function AppProviders({ children }: ProvidersProps) {
   return (
     <>
       <Global
@@ -28,11 +37,9 @@ export function AppProviders({ session, children }: ProvidersProps) {
           }
         `}
       />
-      <SessionProvider session={session}>
-        <ChakraProvider>
-          <ColorModeProvider>{children}</ColorModeProvider>
-        </ChakraProvider>
-      </SessionProvider>
+      <ChakraProvider>
+        <ColorModeProvider>{children}</ColorModeProvider>
+      </ChakraProvider>
     </>
   )
 }

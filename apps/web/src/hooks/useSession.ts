@@ -1,5 +1,4 @@
 // #region Imports
-import { useSession as useAuthSession } from 'next-auth/react'
 import {
   type SessionFragmentState,
   SessionStatus,
@@ -26,20 +25,24 @@ import { playProgress, playStart, playSuccess } from '@/domain/soundsOperations'
 // #endregion Imports
 
 // #region Type Declarations
-// Extend the Session type to include our custom fields
-declare module 'next-auth' {
-  interface Session {
-    provider?: string
-    accessToken?: string
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    provider?: string
-    accessToken?: string
-  }
-}
+/**
+ * This hook used to read NextAuth's session to learn whether the user had
+ * connected a Google account, and augmented NextAuth's `Session`/`JWT` types to
+ * carry `provider` and `accessToken`. KC-IS-#31 retires NextAuth entirely, so
+ * both the read and the augmentations are gone.
+ *
+ * Nothing takes their place *here*, deliberately. Kro Cloud auth is now Supabase
+ * and lives in `@kro/app`'s `auth` slice, but this page has no store provider
+ * above it — the composition root is KC-IS-#13's — and the Google **Calendar**
+ * connection is a second OAuth grant that KC-IS-#33 owns, not the Supabase
+ * sign-in this issue ships. So `isCalendarConfigured` now comes from the
+ * caller's `initialState` and defaults to `false`, which is the honest answer:
+ * no calendar is connected until #33 wires one.
+ *
+ * This whole page is replaced by the Session UI child (KC-IS-#22); the change
+ * here is the smallest one that keeps it building, and is deliberately not a
+ * redesign.
+ */
 // #endregion Type Declarations
 
 export function createSessionFragmentState(): SessionFragmentState {
@@ -58,14 +61,9 @@ export const useSession = (
   initialState: Partial<SessionFragmentState>,
   onSessionFinished: () => void,
 ) => {
-  const authSession = useAuthSession()
-
-  const authProvider = useMemo(() => authSession?.data?.provider, [authSession])
-
   const [state, setState] = useState<SessionFragmentState>(() => ({
     ...createSessionFragmentState(),
     ...initialState,
-    isCalendarConfigured: authProvider === 'google',
   }))
 
   const updateIntention = useCallback((intention: string) => {
@@ -77,11 +75,6 @@ export const useSession = (
     setState((prev) => ({ ...prev, targetConfig: config }))
     insertObject('targetConfig', config)
   }, [])
-
-  useEffect(() => {
-    const isGoogleConfigured = authProvider === 'google'
-    setState((prev) => ({ ...prev, isCalendarConfigured: isGoogleConfigured }))
-  }, [authProvider])
 
   useEffect(() => {
     const intentionMemory = memory('intention')

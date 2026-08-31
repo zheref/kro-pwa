@@ -62,6 +62,19 @@ export * from './features/endeavorDetail/pages'
  */
 export * from './features/earn'
 /**
+ * The Do surface (KC-IS-#17) — the one destination whose body exists, mounted
+ * by `apps/web`'s `/my-day` route.
+ *
+ * ONE LINE, and only the Page: the rest of `features/do/pages` is reachable
+ * from inside this package as `…/features/do/pages`, and nothing in `apps/web`
+ * needs a Fragment, a Producer or a projection. Adding a subpath export instead
+ * would have cost two config files — the `exports` map here **and** the
+ * hand-written alias list in `apps/web/vitest.config.mts` that mirrors it — for
+ * the same result. This is the line `#14` and `#15` each deferred to "whichever
+ * child next touches this file"; it is now three, one per surface.
+ */
+export { type DoPageProps, DoPage } from './features/do/pages'
+/**
  * The Plan timeline (KC-IS-#19) — the Page `/plan` mounts, its Fragments and
  * the pure modules behind them. The Plan *slice* stays unexported for the same
  * reason every other slice does: a component reaches it through this Page, not

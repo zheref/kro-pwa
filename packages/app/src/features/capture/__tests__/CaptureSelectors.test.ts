@@ -1,6 +1,7 @@
 import { EndeavorOperation, EndeavorsVistas } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialDoState } from '../../do/DoFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -61,6 +62,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   platform: initialPlatformState,
+  auth: initialAuthState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

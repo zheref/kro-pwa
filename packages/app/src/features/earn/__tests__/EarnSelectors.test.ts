@@ -12,6 +12,7 @@
 import { PerformResolution, makePerform } from '@kro/core'
 import { rewardMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialDoState } from '../../do/DoFeature'
@@ -53,6 +54,7 @@ const rootWith = (earn: EarnState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn,
   platform: initialPlatformState,
+  auth: initialAuthState,
 })
 
 const loaded = earnStateMocks.loadedTypical

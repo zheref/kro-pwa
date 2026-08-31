@@ -22,7 +22,6 @@
     "@kro/core": "workspace:*",
     "googleapis": "^148.0.0",
     "next": "15.3.2",
-    "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
     "parse-json": "^5.2.0",
     "query-string": "^9.1.2",

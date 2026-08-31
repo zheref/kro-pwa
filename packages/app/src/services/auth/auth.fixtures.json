@@ -1,0 +1,41 @@
+{
+  "$comment": "Fixture `public.users` rows backing `stubbedAuthService` (RC-33, RC-59). Wire shape, snake_case, exactly as PostgREST returns it — so the stub exercises `AuthMapper.toDomain` on the same path the live service does. No real account, no real project, no token: ids are obviously synthetic and every email is on `example.com`.",
+  "users": {
+    "email": {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "username": "ada",
+      "emails": ["ada@example.com"],
+      "name": "Ada Lovelace",
+      "avatar_url": null,
+      "birth_date": null,
+      "nationality": null,
+      "login_kind": "email_password",
+      "connected_services": ["email_password"],
+      "created_at": "2026-01-01T00:00:00.000Z"
+    },
+    "apple": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "username": null,
+      "emails": ["apple@example.com"],
+      "name": "Apple User",
+      "avatar_url": null,
+      "birth_date": null,
+      "nationality": null,
+      "login_kind": "apple",
+      "connected_services": ["apple"],
+      "created_at": "2026-01-02T00:00:00.000Z"
+    },
+    "google": {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "username": null,
+      "emails": ["google@example.com"],
+      "name": "Google User",
+      "avatar_url": "https://avatars.example.com/google.png",
+      "birth_date": null,
+      "nationality": null,
+      "login_kind": "google",
+      "connected_services": ["google"],
+      "created_at": "2026-01-03T00:00:00.000Z"
+    }
+  }
+}

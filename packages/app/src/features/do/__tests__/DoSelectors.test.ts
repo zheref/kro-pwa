@@ -1,5 +1,6 @@
 import { EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
@@ -44,6 +45,7 @@ const rootWith = (slice: DoState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   platform: initialPlatformState,
+  auth: initialAuthState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

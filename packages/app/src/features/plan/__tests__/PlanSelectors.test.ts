@@ -11,6 +11,7 @@ import {
   makeEndeavor,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialDoState } from '../../do/DoFeature'
@@ -71,6 +72,7 @@ const rootWith = (plan: PlanState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   platform: initialPlatformState,
+  auth: initialAuthState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

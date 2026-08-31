@@ -50,6 +50,7 @@ export function SheetContent({
   children,
   side,
   hideClose = false,
+  style,
   ...rest
 }: SheetContentProps) {
   return (
@@ -59,6 +60,21 @@ export function SheetContent({
         data-slot="sheet-content"
         data-side={side ?? 'bottom'}
         className={cn(sheetVariants({ side }), className)}
+        // `position: fixed` FORCED inline — never through `fixed` alone in
+        // `className`. `.kro-glass` (`design/system/glass/glass.css`) is
+        // deliberately UNLAYERED CSS (so its Safari `backdrop-filter` fix
+        // reliably wins against a caller's own styling); unlayered CSS beats
+        // every `@layer`-wrapped rule regardless of specificity or source
+        // order, so Tailwind v4's `.fixed` utility (always layered) can
+        // never win that fight — `.kro-glass`'s own `position: relative`
+        // silently wins instead, and the sheet renders off-screen. An inline
+        // style is the one thing no stylesheet rule can out-rank. First real
+        // consumer to hit this (`KC-IS-#28`); `dialog.tsx`'s `DialogContent`
+        // carries the identical fix for the same reason. `position` is
+        // spread LAST, after any caller `style`, so a caller's own `style`
+        // prop can never reintroduce the bug this fix exists to close
+        // (Copilot round 1).
+        style={{ ...style, position: 'fixed' }}
         {...rest}
       >
         {/*

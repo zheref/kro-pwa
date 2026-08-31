@@ -57,6 +57,7 @@ import {
 } from './SessionOutcome'
 import type {
   SessionAvailability,
+  SessionConclusion,
   SessionPreferences,
   SessionState,
 } from './SessionState'
@@ -150,6 +151,20 @@ export const withLaunchPrepared = (
  * time is derived on read, so there is no number here to be stale.
  *
  * A `null` anchor is "no session", and lands on `ready` with the cleared shape.
+ *
+ * ## The claim a concluded anchor arrives without
+ *
+ * The tick writes the concluded anchor **before** `recordSessionPerformanceThunk`
+ * runs, so a reload inside that window — or after a record that failed — finds a
+ * document parked at `concluded` and a runtime whose `conclusion` is `none`.
+ * Nothing re-claims it afterwards (`withDisplayAdvanced` only claims from
+ * `running`/`break`) and every recorder dispatch is refused by its `condition`,
+ * so the session the user actually worked would be silently lost.
+ *
+ * So a concluded anchor rebuilds its `pending` claim here, from the document
+ * itself. The caller supplies the one fact a pure Shifter cannot read —
+ * `isConclusionRecorded`, whether the row is already on disk — which is what
+ * keeps "exactly once" intact across any number of reloads.
  */
 export const withAnchorHydrated = (
   state: SessionState,
@@ -157,6 +172,8 @@ export const withAnchorHydrated = (
     readonly anchor: PersistedRunningSession | null
     readonly identity: SessionIdentity | null
     readonly completedSessionsCount: number
+    /** Whether this conclusion's performance row already landed (Producer-read). */
+    readonly isConclusionRecorded: boolean
     readonly now: Date
   },
 ): SessionState => {
@@ -167,6 +184,7 @@ export const withAnchorHydrated = (
       load: { kind: 'loaded' },
       phase: SessionPhase.ready,
       anchor: null,
+      pausedFromBreak: false,
       now,
       conclusion: { kind: 'none' },
       isPresentingConclusion: false,
@@ -175,28 +193,73 @@ export const withAnchorHydrated = (
     }
   }
   const phase = sessionPhaseFromPersisted(anchor.phase)
+  const identity = hydrated.identity ??
+    state.identity ?? {
+      endeavorId: anchor.endeavor.id,
+      symbol: anchor.endeavor.symbol,
+      title: anchor.endeavor.title,
+      duration: anchor.endeavor.duration,
+      isAnonymous: true,
+    }
   return {
     ...state,
     load: { kind: 'loaded' },
     phase,
     anchor,
-    identity:
-      hydrated.identity ??
-      state.identity ?? {
-        endeavorId: anchor.endeavor.id,
-        symbol: anchor.endeavor.symbol,
-        title: anchor.endeavor.title,
-        duration: anchor.endeavor.duration,
-        isAnonymous: true,
-      },
+    // A paused document cannot say whether it was a break; canon's persisted
+    // phase has no case for it (see `SessionState.pausedFromBreak`).
+    pausedFromBreak: false,
+    identity,
     mode: anchor.mode,
     targetDuration: anchor.targetDuration,
     completedSessionsCount: hydrated.completedSessionsCount,
     now,
+    conclusion:
+      phase === SessionPhase.concluded && !hydrated.isConclusionRecorded
+        ? rebuiltConclusion(anchor, identity.title, now)
+        : state.conclusion,
     // A session recovered at `concluded` re-presents its conclusion screen —
     // canon parks the anchor there precisely so the choice is not lost, and
     // `docs/Features/Session.md` flow 7 has the pill keep offering it.
     isPresentingConclusion: phase === SessionPhase.concluded,
+  }
+}
+
+/**
+ * The claim a reload rebuilds for a concluded anchor whose row never landed.
+ *
+ * Everything comes from the document, which is what makes it the *same*
+ * performance the lost dispatch would have written: the fragments are already
+ * closed (`concludeSessionAt` closed them before the anchor was persisted), so
+ * `endedAt` is the last fragment's own end rather than the hydration instant,
+ * and the elapsed total is the sum the runtime had.
+ *
+ * `reason` is `countdownElapsed` because a `concluded` document cannot say
+ * whether the user finished early above the threshold; the reason is the
+ * claim's own note and never reaches the recorded row, so the honest default
+ * costs nothing. `resolution` is `complete` for the same reason it is in
+ * `withSessionAwaitingResolution`: the session ended, the task did not.
+ */
+const rebuiltConclusion = (
+  anchor: PersistedRunningSession,
+  intention: string,
+  fallbackNow: Date,
+): SessionConclusion => {
+  const endedAt =
+    anchor.fragments[anchor.fragments.length - 1]?.end ?? fallbackNow
+  const span = closedSpan(anchor, endedAt)
+  return {
+    kind: 'pending',
+    outcome: {
+      endeavorId: anchor.endeavor.id,
+      intention,
+      resolution: Resolution.complete,
+      fragments: span.fragments,
+      elapsedDuration: span.elapsedDuration,
+      targetDuration: anchor.targetDuration,
+      reason: Reason.countdownElapsed,
+      endedAt,
+    },
   }
 }
 
@@ -254,6 +317,7 @@ export const withSessionStarted = (
     load: { kind: 'loaded' },
     phase: SessionPhase.running,
     anchor,
+    pausedFromBreak: false,
     now,
     conclusion: { kind: 'none' },
     isPresentingConclusion: false,
@@ -274,13 +338,22 @@ export const withSessionStartRefused = (
       ...state,
       phase: SessionPhase.ready,
       anchor: null,
+      pausedFromBreak: false,
       conclusion: { kind: 'none' },
       isPresentingConclusion: false,
     },
     exception,
   )
 
-/** Canon's `applySessionPaused(at:)` — freeze, with the open fragment stamped. */
+/**
+ * Canon's `applySessionPaused(at:)` — freeze, with the open fragment stamped.
+ *
+ * `pauseSessionAt` writes `paused` unconditionally, exactly as canon does, and
+ * that is pinned (#8/#43). The one thing the document therefore drops — that
+ * this was a **break** — is remembered here in slice state, because a break
+ * that resumes as a focus session gets recorded as a performance and a break is
+ * never a performance. See `SessionState.pausedFromBreak` for the canon trace.
+ */
 export const withSessionPaused = (
   state: SessionState,
   now: Date,
@@ -293,22 +366,35 @@ export const withSessionPaused = (
     ...state,
     phase: SessionPhase.paused,
     anchor: pauseSessionAt(state.anchor, now),
+    pausedFromBreak: state.phase === SessionPhase.break,
     now,
   }
 }
 
-/** Canon's resume — a fresh open fragment appended; a break stays a break. */
+/**
+ * Canon's resume — a fresh open fragment appended; a break stays a break.
+ *
+ * `resumeSessionAt` keeps `break` when the anchor is *still* a break, but a
+ * pause has already overwritten that phase with `paused`, so the breakness has
+ * to come from `pausedFromBreak`. `startBreakAt` is the composition canon uses
+ * to re-enter a break (`resumeSessionAt` over a `break`-phased anchor), so the
+ * fragments are appended identically and the persisted phase goes back to
+ * `break` — which is what makes the recovery survive the *next* reload too.
+ */
 export const withSessionResumed = (
   state: SessionState,
   now: Date,
 ): SessionState => {
   if (state.anchor === null) return state
   if (state.phase !== SessionPhase.paused) return state
-  const anchor = resumeSessionAt(state.anchor, now)
+  const anchor = state.pausedFromBreak
+    ? startBreakAt(state.anchor, now)
+    : resumeSessionAt(state.anchor, now)
   return {
     ...state,
     phase: sessionPhaseFromPersisted(anchor.phase),
     anchor,
+    pausedFromBreak: false,
     now,
   }
 }
@@ -406,12 +492,17 @@ export const withSessionAborted = (
 ): SessionState => {
   const anchor = state.anchor
   if (anchor === null) return state
-  const wasBreak = state.phase === SessionPhase.break
+  // A *paused* break is still a break — the phase says `paused`, so the
+  // breakness has to come from the same memory `withSessionResumed` reads.
+  // Without it, aborting a paused break would claim an outcome and record the
+  // break as a performance.
+  const wasBreak = state.phase === SessionPhase.break || state.pausedFromBreak
 
   const cleared: SessionState = {
     ...state,
     phase: SessionPhase.ready,
     anchor: null,
+    pausedFromBreak: false,
     now: params.now,
     targetDuration: state.preferences.defaultDuration,
     isPresentingConclusion: false,
@@ -531,6 +622,7 @@ export const withBreakStarted = (
     ...state,
     phase: SessionPhase.break,
     anchor,
+    pausedFromBreak: false,
     mode: TimerMode.countdown,
     targetDuration: state.preferences.defaultBreakDuration,
     now,
@@ -561,6 +653,7 @@ export const withBreakElapsed = (
     ...state,
     phase: SessionPhase.ready,
     anchor: null,
+    pausedFromBreak: false,
     now,
     targetDuration: state.preferences.defaultDuration,
     conclusion: { kind: 'breakElapsed', endedAt: now },
@@ -586,6 +679,7 @@ export const withBreakEnded = (
     ...state,
     phase: SessionPhase.ready,
     anchor: null,
+    pausedFromBreak: false,
     now,
     targetDuration: state.preferences.defaultDuration,
     conclusion: { kind: 'none' },
@@ -679,6 +773,7 @@ export const withSessionClosed = (
   ...state,
   phase: SessionPhase.ready,
   anchor: null,
+  pausedFromBreak: false,
   now,
   targetDuration: state.preferences.defaultDuration,
   isPresentingConclusion: false,

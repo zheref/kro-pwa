@@ -116,6 +116,25 @@ const prepared = (
 const running = prepared(sessionIdentityMocks.slides)
 const started = withSessionStarted(running, SESSION_MOCK_NOW)
 
+/** A break running, two minutes in — breaks need their flag turned on. */
+const onBreak = withDisplayAdvanced(
+  withBreakStarted(
+    prepared(sessionIdentityMocks.slides, sessionAvailabilityMocks.everythingOn),
+    SESSION_MOCK_NOW,
+  ),
+  sessionMockInstant(120),
+)
+
+/**
+ * The document a conclusion parks on disk. Built by running the real claim
+ * Shifter and taking its anchor, so it carries the closed fragments and the
+ * `concluded` phase a reload would actually read back.
+ */
+const concludedAnchor = withSessionAwaitingResolution(started, {
+  now: sessionMockInstant(SESSION_MOCK_TARGET),
+  reason: SessionOutcomeReason.countdownElapsed,
+}).anchor
+
 /** The states the session surface claims to support. */
 export const sessionStateMocks = {
   /** Cold start — nothing loaded, nothing prepared. */
@@ -176,26 +195,33 @@ export const sessionStateMocks = {
   ),
 
   /** A break running, two minutes in. */
-  onBreak: withDisplayAdvanced(
-    withBreakStarted(
-      {
-        ...prepared(
-          sessionIdentityMocks.slides,
-          sessionAvailabilityMocks.everythingOn,
-        ),
-      },
-      SESSION_MOCK_NOW,
-    ),
-    sessionMockInstant(120),
-  ),
+  onBreak,
 
   /** Recovered from storage after a reload, mid-session. */
   hydrated: withAnchorHydrated(running, {
     anchor: started.anchor,
     identity: sessionIdentityMocks.slides,
     completedSessionsCount: 3,
+    // A running document has no conclusion to have recorded.
+    isConclusionRecorded: false,
     now: sessionMockInstant(900),
   }),
+
+  /**
+   * The reload the recording window loses to: the anchor was persisted at
+   * `concluded` and the row never landed, so hydration rebuilds the claim and
+   * the performance is still owed.
+   */
+  hydratedUnrecordedConclusion: withAnchorHydrated(initialSessionState, {
+    anchor: concludedAnchor,
+    identity: sessionIdentityMocks.slides,
+    completedSessionsCount: 3,
+    isConclusionRecorded: false,
+    now: sessionMockInstant(SESSION_MOCK_TARGET + 60),
+  }),
+
+  /** A break that was paused — the one state the document cannot describe. */
+  pausedOnBreak: withSessionPaused(onBreak, sessionMockInstant(120)),
 
   /** The title editor open, prefilled from the identity. */
   editingTitle: withTitleEditingStarted(running),

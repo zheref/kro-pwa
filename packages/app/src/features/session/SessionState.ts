@@ -126,6 +126,27 @@ export interface SessionState {
   readonly phase: SessionPhase
   /** The anchored session, or `null` in `ready`. The only elapsed-time source. */
   readonly anchor: PersistedRunningSession | null
+  /**
+   * Whether the paused session was on a **break** when it froze.
+   *
+   * It exists because the persisted phase cannot say so and canon cannot
+   * recover it. `pauseSessionAt` writes `paused` unconditionally — pinned by
+   * #8/#43 and faithful to canon's `applySessionPaused`, which sets
+   * `phase = .paused` with no break branch — and `PersistedSessionPhase` has no
+   * `pausedBreak` case to hold the distinction. Canon then resumes through
+   * `applySessionActivated`, which assigns `phase = .running` *before*
+   * `phaseForBreakOrRunning()` reads it, so its `.break` arm is unreachable and
+   * a paused break comes back as a focus session — whose countdown canon's
+   * `._timerTicked` then records as a performance (`wasBreak` is already
+   * `false`). A break is never a performance, so this slice remembers the one
+   * fact the document drops, and `withSessionResumed` routes back into `break`.
+   *
+   * Named divergence, recorded rather than hidden: the memory is **runtime
+   * only**. A reload while a break is paused hydrates a `paused` anchor with no
+   * breakness to restore, and canon's behaviour stands. Closing that needs a
+   * persisted marker, which is a `packages/core` change this issue may not make.
+   */
+  readonly pausedFromBreak: boolean
   /** Who the session is for. `null` before a launch surface prepares one. */
   readonly identity: SessionIdentity | null
   readonly mode: FocusTimerMode
@@ -184,6 +205,7 @@ export const initialSessionState: SessionState = {
   load: { kind: 'idle' },
   phase: SessionPhase.ready,
   anchor: null,
+  pausedFromBreak: false,
   identity: null,
   mode: TimerMode.countdown,
   targetDuration: FALLBACK_SESSION_TARGET_DURATION,

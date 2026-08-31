@@ -437,6 +437,76 @@ describe('the one-session invariant', () => {
     expect(store.getState().session.phase).toBe(SessionPhase.ready)
     expect(anchor.total()).toBe(0)
   })
+
+  it('writes no ghost anchor when the session is aborted mid-read', async () => {
+    // The rival-tab read is the one `await` between the optimistic start and
+    // the write it owes. Holding it open lets the abort land in that window —
+    // the abort clears the document, and a start that persisted the anchor it
+    // captured beforehand would put a session the user ended straight back.
+    const it = harness({ endeavors: [SLIDES] })
+    await it.store.dispatch(loadSessionPreferencesThunk())
+    await it.store.dispatch(
+      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+    )
+
+    let releaseRead: () => void = () => {}
+    const held = new Promise<void>((resolve) => {
+      releaseRead = resolve
+    })
+    const storedRead = it.localStore.runningSessionAnchor.read
+    it.localStore.runningSessionAnchor.read = async () => {
+      await held
+      return storedRead()
+    }
+
+    const starting = it.store.dispatch(startSessionThunk({ now: NOW }))
+    await it.store.dispatch(abortSessionThunk({ now: at(5) }))
+    releaseRead()
+    await starting
+
+    expect(it.store.getState().session.phase).toBe(SessionPhase.ready)
+    expect(await it.localStore.runningSessionAnchor.read()).toBeNull()
+
+    // And the property that actually matters to the user: a reload finds
+    // nothing to resume.
+    const reloaded = makeStore({
+      ...stubbedThunkExtra,
+      localStore: it.localStore,
+    })
+    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(30) }))
+    expect(reloaded.getState().session.phase).toBe(SessionPhase.ready)
+    expect(reloaded.getState().session.anchor).toBeNull()
+  })
+
+  it('keeps the aborted attempt’s own record when a start loses that race', async () => {
+    // The superseded start must resolve without rolling the runtime back
+    // through a refusal, which would discard the abort's pending claim before
+    // it could be recorded.
+    const it = harness({ endeavors: [SLIDES] })
+    await it.store.dispatch(loadSessionPreferencesThunk())
+    await it.store.dispatch(
+      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+    )
+
+    let releaseRead: () => void = () => {}
+    const held = new Promise<void>((resolve) => {
+      releaseRead = resolve
+    })
+    const storedRead = it.localStore.runningSessionAnchor.read
+    it.localStore.runningSessionAnchor.read = async () => {
+      await held
+      return storedRead()
+    }
+
+    const starting = it.store.dispatch(startSessionThunk({ now: NOW }))
+    await it.store.dispatch(abortSessionThunk({ now: at(5) }))
+    releaseRead()
+    await starting
+
+    const rows = await it.localStore.performances.forEndeavor(SLIDES.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.resolution).toBe(PerformResolution.aborted)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -540,6 +610,72 @@ describe('pause, kill and reload', () => {
 
     expect(store.getState().session.phase).toBe(SessionPhase.ready)
     expect(store.getState().session.anchor).toBeNull()
+  })
+
+  it('rebuilds the conclusion claim after a reload inside the recording window', async () => {
+    // The tick persists the concluded anchor before the recorder runs. Failing
+    // the performance write reproduces that window exactly: the document says
+    // `concluded`, and no row was ever written.
+    const { store, localStore } = await startedHarness()
+    const put = localStore.performances.put
+    localStore.performances.put = async () => {
+      throw new Error('the store is unavailable')
+    }
+    await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+    expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(0)
+    localStore.performances.put = put
+
+    const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
+    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    expect(reloaded.getState().session.conclusion.kind).toBe('pending')
+
+    await reloaded.dispatch(
+      recordSessionPerformanceThunk({ now: at(TARGET + 60) }),
+    )
+    const rows = await localStore.performances.forEndeavor(SLIDES.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.durationSeconds).toBeCloseTo(TARGET, 5)
+  })
+
+  it('claims nothing on a reload once the performance is on disk', async () => {
+    // The exactly-once guarantee has to survive any number of reloads, not
+    // just the first — otherwise the rebuild above becomes a duplicate factory.
+    const { store, localStore } = await startedHarness()
+    await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+
+    const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
+    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      recordSessionPerformanceThunk({ now: at(TARGET + 60) }),
+    )
+    const again = makeStore({ ...stubbedThunkExtra, localStore })
+    await again.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 120) }))
+    await again.dispatch(
+      recordSessionPerformanceThunk({ now: at(TARGET + 120) }),
+    )
+
+    expect(reloaded.getState().session.conclusion.kind).toBe('none')
+    expect(again.getState().session.conclusion.kind).toBe('none')
+    expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+  })
+
+  it('recovers a paused break as a break, not as a focus session', async () => {
+    // Within one runtime the slice carries the breakness across the pause; the
+    // resume writes `break` back into the document, so this reload sees it.
+    const it = await startedHarness({ breaksEnabled: true })
+    await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+    await it.store.dispatch(startBreakThunk({ now: at(TARGET + 1) }))
+    await it.store.dispatch(pauseSessionThunk({ now: at(TARGET + 60) }))
+    await it.store.dispatch(resumeSessionThunk({ now: at(TARGET + 120) }))
+
+    const reloaded = makeStore({
+      ...stubbedThunkExtra,
+      localStore: it.localStore,
+    })
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 150) }),
+    )
+    expect(reloaded.getState().session.phase).toBe(SessionPhase.break)
   })
 
   it('reports a failed anchor read rather than inventing a session', async () => {
@@ -966,17 +1102,85 @@ describe('markEndeavorCompleteFromSessionThunk', () => {
 
     expect(it.store.getState().session.phase).toBe(SessionPhase.ready)
     expect(it.store.getState().session.anchor).toBeNull()
+    // The close is durable: nothing is left on disk to hydrate a phantom pill.
+    expect(await it.localStore.runningSessionAnchor.read()).toBeNull()
   })
 
   it('reports a missing endeavor rather than closing nothing silently', async () => {
     const it = await startedHarness()
+    await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
     await it.localStore.endeavors.remove(SLIDES.id)
     await it.store.dispatch(
-      markEndeavorCompleteFromSessionThunk({ now: at(60) }),
+      markEndeavorCompleteFromSessionThunk({ now: at(TARGET + 5) }),
     )
 
     const { load } = it.store.getState().session
     expect(load.kind === 'failed' && load.exception.kind).toBe('markCompleteFailed')
+  })
+
+  // -- The close waits for the write ---------------------------------------
+
+  it('keeps the concluded session on screen when the endeavor write fails', async () => {
+    const it = await startedHarness()
+    await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+    it.localStore.endeavors.put = async () => {
+      throw new Error('the store is unavailable')
+    }
+
+    await it.store.dispatch(
+      markEndeavorCompleteFromSessionThunk({ now: at(TARGET + 5) }),
+    )
+
+    const slice = it.store.getState().session
+    // The task is still open, so the sheet and the pill must still be there to
+    // retry from — the failure surfaces, it does not vanish the session.
+    expect(slice.phase).toBe(SessionPhase.concluded)
+    expect(slice.anchor).not.toBeNull()
+    expect(slice.load.kind === 'failed' && slice.load.exception.kind).toBe(
+      'markCompleteFailed',
+    )
+    expect(await it.localStore.runningSessionAnchor.read()).not.toBeNull()
+  })
+
+  it('ignores a stale Complete aimed at a session that is still running', async () => {
+    const it = await startedHarness()
+    const live = it.store.getState().session.anchor
+
+    await it.store.dispatch(
+      markEndeavorCompleteFromSessionThunk({ now: at(60) }),
+    )
+
+    const slice = it.store.getState().session
+    expect(slice.phase).toBe(SessionPhase.running)
+    expect(slice.anchor).toBe(live)
+    const record = await it.localStore.endeavors.get(SLIDES.id)
+    expect(record?.status).not.toBe(EndeavorStatus.closed)
+  })
+
+  it('records a conclusion the reload rebuilt, and only ever one row', async () => {
+    // The performance write fails, so the anchor is parked at `concluded` with
+    // the row still owed; the reload rebuilds the claim and Complete pays it.
+    const it = await startedHarness()
+    const put = it.localStore.performances.put
+    it.localStore.performances.put = async () => {
+      throw new Error('the store is unavailable')
+    }
+    await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+    it.localStore.performances.put = put
+
+    const reloaded = makeStore({
+      ...stubbedThunkExtra,
+      localStore: it.localStore,
+    })
+    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      markEndeavorCompleteFromSessionThunk({ now: at(TARGET + 65) }),
+    )
+
+    expect(await it.localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    const record = await it.localStore.endeavors.get(SLIDES.id)
+    expect(record?.status).toBe(EndeavorStatus.closed)
+    expect(reloaded.getState().session.phase).toBe(SessionPhase.ready)
   })
 })
 

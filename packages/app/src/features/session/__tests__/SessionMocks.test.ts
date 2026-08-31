@@ -126,6 +126,25 @@ describe('the named scenarios really are what they claim', () => {
   })
 })
 
+describe('the two fixtures a reload produces', () => {
+  it('rebuilds the claim for a conclusion whose row never landed', () => {
+    const state = sessionStateMocks.hydratedUnrecordedConclusion
+    expect(state.phase).toBe(SessionPhase.concluded)
+    expect(state.conclusion.kind).toBe('pending')
+    expect(
+      state.conclusion.kind === 'pending' &&
+        state.conclusion.outcome.elapsedDuration,
+    ).toBeCloseTo(SESSION_MOCK_TARGET, 5)
+  })
+
+  it('keeps a paused break knowable as a break, which the document cannot', () => {
+    const state = sessionStateMocks.pausedOnBreak
+    expect(state.phase).toBe(SessionPhase.paused)
+    expect(state.anchor?.phase).toBe(PersistedSessionPhase.paused)
+    expect(state.pausedFromBreak).toBe(true)
+  })
+})
+
 describe('the supporting fixture sets', () => {
   it('ships an identity for each of the three cases a launch can hit', () => {
     expect(sessionIdentityMocks.slides.isAnonymous).toBe(false)

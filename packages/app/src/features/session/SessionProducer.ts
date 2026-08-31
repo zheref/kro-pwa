@@ -389,6 +389,36 @@ export interface SessionHydration {
   readonly anchor: PersistedRunningSession | null
   readonly identity: SessionIdentity | null
   readonly completedSessionsCount: number
+  /**
+   * Whether this conclusion's performance row is already on disk — the one
+   * fact `withAnchorHydrated` needs and a pure Shifter cannot read.
+   */
+  readonly isConclusionRecorded: boolean
+}
+
+/**
+ * Whether the concluded anchor's performance has already been written.
+ *
+ * The session's **first fragment start** is its identity here:
+ * `recordSessionPerformanceThunk` writes exactly that instant as the row's
+ * `date`, and two sessions of one endeavor cannot begin at the same
+ * millisecond. That is what lets a reload tell "concluded, never recorded"
+ * (rebuild the claim, the performance is still owed) from "concluded, already
+ * recorded" (leave it alone) — and it is why re-hydrating any number of times
+ * still yields exactly one row.
+ *
+ * A running/paused/break anchor is never a conclusion, so it answers `false`
+ * and the caller's phase test does the rest.
+ */
+const isConclusionRecordedFor = (
+  endeavor: Endeavor | null,
+  anchor: PersistedRunningSession,
+): boolean => {
+  const start = anchor.fragments[0]?.start
+  if (endeavor === null || start === undefined) return false
+  return endeavor.performances.some(
+    (performance) => performance.date.getTime() === start.getTime(),
+  )
 }
 
 /**
@@ -404,6 +434,13 @@ export interface SessionHydration {
  *
  * A corrupt document decodes to `null` (#10's decision, not this file's) and
  * lands the user on `ready` — the one state a cleared anchor already means.
+ *
+ * It also answers the one question a **concluded** document raises: was its
+ * performance ever written? The anchor is persisted at `concluded` *before* the
+ * recorder runs, so a reload in that window (or after a record that failed)
+ * recovers a session that still owes a row. `isConclusionRecorded` is what lets
+ * `withAnchorHydrated` rebuild the claim in the first case and leave it alone
+ * in the second — exactly once, however many reloads happen.
  */
 export const hydrateRunningSessionThunk = createAsyncThunk<
   SessionResult<SessionHydration>,
@@ -413,11 +450,17 @@ export const hydrateRunningSessionThunk = createAsyncThunk<
   try {
     const anchor = await extra.localStore.runningSessionAnchor.read()
     if (anchor === null) {
-      return ok({ anchor: null, identity: null, completedSessionsCount: 0 })
+      return ok({
+        anchor: null,
+        identity: null,
+        completedSessionsCount: 0,
+        isConclusionRecorded: false,
+      })
     }
     const endeavor = await readEndeavor(extra.localStore, anchor.endeavor.id)
     return ok({
       anchor,
+      isConclusionRecorded: isConclusionRecordedFor(endeavor, anchor),
       identity:
         endeavor === null
           ? {
@@ -456,16 +499,35 @@ export const hydrateRunningSessionThunk = createAsyncThunk<
  * On the second refusal the runtime rolls back to `ready`, because `.pending`
  * has already started the session optimistically — a session that was never
  * persisted must not go on counting down.
+ *
+ * ## Why the anchor is read twice, and what `ok(null)` means
+ *
+ * This is the one creator in the file with an `await` **between** the
+ * transition and the write it owes. Persisting the anchor captured before that
+ * `await` resurrects a session the user has already ended: abort clears the
+ * runtime anchor synchronously and its own creator clears the document, and a
+ * start still suspended on the rival-tab read would then write the stale value
+ * straight back — a ghost session the next reload hydrates and counts down.
+ *
+ * So the value written is the one the runtime holds **at the write site**,
+ * which is the pattern this whole file states ("the creator persists whatever
+ * state holds") rather than a new one; `sessionOf` is the narrow, named read
+ * `RC-3` sanctions, not a whole-state reach. When the runtime has moved on, the
+ * start resolves `ok(null)` — nothing was persisted, nothing is claimed, and
+ * the `.fulfilled` arm leaves the abort's own state exactly where it is. It is
+ * deliberately **not** an `err`: `withSessionStartRefused` would roll the
+ * runtime back through `conclusion: none` and throw away the aborted attempt's
+ * claim before it could be recorded.
  */
 export const startSessionThunk = createAsyncThunk<
-  SessionResult<PersistedRunningSession>,
+  SessionResult<PersistedRunningSession | null>,
   { readonly now: Date },
   { extra: ThunkExtra; state: RootState }
 >(
   'session/onSessionStartCompleted',
   async (_arg, { extra, dispatch, getState }) => {
-    const anchor = sessionOf(getState).anchor
-    if (anchor === null) return err(SessionExceptions.noRunningSession())
+    const started = sessionOf(getState).anchor
+    if (started === null) return err(SessionExceptions.noRunningSession())
     try {
       const stored = await extra.localStore.runningSessionAnchor.read()
       // `condition` proved this tab held no anchor, and hydration installs any
@@ -475,9 +537,14 @@ export const startSessionThunk = createAsyncThunk<
       if (stored !== null) {
         return err(SessionExceptions.sessionAlreadyRunning())
       }
-      await writeAnchorFor(extra, anchor)
+      // The read was awaited; the runtime may have been aborted, concluded or
+      // restarted while it was in flight. Write what state holds now, or
+      // nothing at all — never the value captured above (see the header).
+      const live = sessionOf(getState).anchor
+      if (live === null || live !== started) return ok(null)
+      await writeAnchorFor(extra, live)
       await dispatch(setScreenAwakeThunk({ enabled: true }))
-      return ok(anchor)
+      return ok(live)
     } catch (error) {
       return err(
         SessionExceptions.anchorWriteFailed(sessionExceptionMessage(error)),
@@ -902,10 +969,30 @@ export const recordSessionPerformanceThunk = createAsyncThunk<
  * Canon's `endeavorMarkedComplete` — "Complete Task" from the concluded sheet,
  * and the pill's blue checkmark.
  *
- * The performance was already recorded when the session concluded, so this
- * **never records a second one** (`docs/Features/Session.md`: *"choosing
+ * The performance is normally already recorded when the session concluded, so
+ * this **never records a second one** (`docs/Features/Session.md`: *"choosing
  * Complete, Start New, or Break after conclusion never records a duplicate"*).
- * It closes the endeavor and nothing else.
+ * It does dispatch the recorder, because a claim can still be outstanding — a
+ * record that failed released its claim back to `pending`, and a reload inside
+ * the recording window rebuilds one — and the recorder's `condition` refuses
+ * anything but a `pending` claim, so consuming one here can never duplicate a
+ * row. This is the choice that pays the session's outstanding debt rather than
+ * discarding it.
+ *
+ * ## Nothing is closed until the endeavor is on disk
+ *
+ * The close used to be optimistic, in `.pending`: the sheet and the pill
+ * disappeared the instant the user tapped, and a failed write left the task
+ * open with no session left to retry from. So the transition moved to the
+ * `fulfilled(ok)` arm — a failure now surfaces the exception and leaves the
+ * concluded session exactly where it was, still offering Mark complete. The
+ * anchor document is cleared here too, so the close survives a reload instead
+ * of leaving a concluded document to hydrate back into a phantom pill.
+ *
+ * `condition` is the matching guard: Complete Task exists only at the
+ * conclusion screen and on the pill's checkmark, both `concluded`, so a stale
+ * or replayed dispatch cannot close a session that is still running (and would
+ * therefore be discarded without ever being recorded).
  *
  * One named divergence: canon sets `status = .closed` and leaves `completed`
  * unset. This also stamps `completed` when it is `null`, because the web's
@@ -921,7 +1008,7 @@ export const markEndeavorCompleteFromSessionThunk = createAsyncThunk<
   { extra: ThunkExtra; state: RootState }
 >(
   'session/onEndeavorMarkCompleteCompleted',
-  async ({ now }, { extra, getState }) => {
+  async ({ now }, { extra, dispatch, getState }) => {
     const identity = sessionOf(getState).identity
     if (identity === null) return err(SessionExceptions.noRunningSession())
     try {
@@ -939,12 +1026,20 @@ export const markEndeavorCompleteFromSessionThunk = createAsyncThunk<
         completed: stored.completed ?? now,
       }
       await persistEndeavor(extra.localStore, closed, now)
+      // Settle any outstanding claim before the close discards it. A no-op
+      // whenever the conclusion already recorded — that is the `condition`'s job.
+      await dispatch(recordSessionPerformanceThunk({ now }))
+      await writeAnchorFor(extra, null)
       return ok(closed)
     } catch (error) {
       return err(
         SessionExceptions.markCompleteFailed(sessionExceptionMessage(error)),
       )
     }
+  },
+  {
+    condition: (_arg, { getState }) =>
+      sessionOf(getState as () => unknown).phase === SessionPhase.concluded,
   },
 )
 

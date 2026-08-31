@@ -173,6 +173,7 @@ export const sessionSlice = createSlice({
         )
       })
       .addCase(loadSessionPreferencesThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -196,6 +197,7 @@ export const sessionSlice = createSlice({
         )
       })
       .addCase(prepareSessionLaunchThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -222,6 +224,7 @@ export const sessionSlice = createSlice({
         )
       })
       .addCase(hydrateRunningSessionThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -246,6 +249,9 @@ export const sessionSlice = createSlice({
         }
       })
       .addCase(startSessionThunk.rejected, (state, action) => {
+        // A cancelled start is not a refused one: rolling back to `ready` here
+        // would clear a claim the session may still owe.
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withSessionStartRefused(
@@ -263,6 +269,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(pauseSessionThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -280,6 +287,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(resumeSessionThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -308,6 +316,7 @@ export const sessionSlice = createSlice({
         }
       })
       .addCase(advanceSessionThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -348,6 +357,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(finishSessionEarlyThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -372,6 +382,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(abortSessionThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -390,6 +401,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(startBreakThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -407,6 +419,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(endBreakThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -430,6 +443,7 @@ export const sessionSlice = createSlice({
         )
       })
       .addCase(recordSessionPerformanceThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withConclusionRecordingFailed(
@@ -440,24 +454,30 @@ export const sessionSlice = createSlice({
       })
 
       // -- Complete Task ------------------------------------------------------
-      .addCase(
-        markEndeavorCompleteFromSessionThunk.pending,
-        (state, action) => {
-          Object.assign(state, withSessionClosed(state, action.meta.arg.now))
-        },
-      )
+      // The one lifecycle transition that is deliberately **not** optimistic.
+      // Every other `.pending` arm here moves state the storage write then
+      // mirrors; closing the session before the endeavor is on disk would take
+      // the sheet and the pill away while the task stays open, with nothing
+      // left to retry from. So the close waits for `fulfilled(ok)`, and a
+      // failure surfaces the exception on a session still standing at
+      // `concluded`. (The Producer's `condition` keeps a stale dispatch from
+      // closing a session that is still running.)
       .addCase(
         markEndeavorCompleteFromSessionThunk.fulfilled,
         (state, action) => {
           const result = action.payload
-          if (!result.ok) {
-            Object.assign(state, withException(state, result.error))
-          }
+          Object.assign(
+            state,
+            result.ok
+              ? withSessionClosed(state, action.meta.arg.now)
+              : withException(state, result.error),
+          )
         },
       )
       .addCase(
         markEndeavorCompleteFromSessionThunk.rejected,
         (state, action) => {
+          if (action.meta.aborted) return
           Object.assign(
             state,
             withException(
@@ -478,6 +498,7 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(syncSessionDocumentTitleThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(
@@ -498,6 +519,7 @@ export const sessionSlice = createSlice({
         )
       })
       .addCase(updateSessionIdentityThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
         Object.assign(
           state,
           withException(

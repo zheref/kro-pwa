@@ -199,6 +199,7 @@ describe('withAnchorHydrated', () => {
       anchor: started.anchor,
       identity: sessionIdentityMocks.slides,
       completedSessionsCount: 3,
+      isConclusionRecorded: false,
       now: sessionMockInstant(900),
     })
     expect(next.phase).toBe(SessionPhase.running)
@@ -212,6 +213,7 @@ describe('withAnchorHydrated', () => {
       anchor: started.anchor,
       identity: sessionIdentityMocks.slides,
       completedSessionsCount: 3,
+      isConclusionRecorded: false,
       now: sessionMockInstant(900),
     })
     expect(
@@ -224,6 +226,7 @@ describe('withAnchorHydrated', () => {
       anchor: null,
       identity: null,
       completedSessionsCount: 0,
+      isConclusionRecorded: false,
       now: sessionMockInstant(900),
     })
     expect(next.phase).toBe(SessionPhase.ready)
@@ -239,6 +242,7 @@ describe('withAnchorHydrated', () => {
       anchor: concludedAnchor,
       identity: sessionIdentityMocks.slides,
       completedSessionsCount: 3,
+      isConclusionRecorded: false,
       now: sessionMockInstant(1_800),
     })
     expect(next.phase).toBe(SessionPhase.concluded)
@@ -250,9 +254,69 @@ describe('withAnchorHydrated', () => {
       anchor: started.anchor,
       identity: null,
       completedSessionsCount: 0,
+      isConclusionRecorded: false,
       now: sessionMockInstant(60),
     })
     expect(next.identity?.title).toBe(started.anchor?.endeavor.title)
+  })
+
+  // -- The claim a concluded document arrives without -----------------------
+  // The tick persists the concluded anchor before the recorder runs, so a
+  // reload in that window recovers a session that still owes a performance.
+
+  it('rebuilds the conclusion claim when the reload lands before the row did', () => {
+    const concluded = withSessionAwaitingResolution(started, {
+      now: sessionMockInstant(SESSION_MOCK_TARGET),
+      reason: SessionOutcomeReason.countdownElapsed,
+    })
+    const next = withAnchorHydrated(initialSessionState, {
+      anchor: concluded.anchor,
+      identity: sessionIdentityMocks.slides,
+      completedSessionsCount: 3,
+      isConclusionRecorded: false,
+      now: sessionMockInstant(SESSION_MOCK_TARGET + 600),
+    })
+
+    expect(next.conclusion.kind).toBe('pending')
+    if (next.conclusion.kind === 'pending') {
+      // The span comes from the document, so ten minutes of being closed do
+      // not inflate the session the user actually worked.
+      expect(next.conclusion.outcome.elapsedDuration).toBeCloseTo(
+        SESSION_MOCK_TARGET,
+        5,
+      )
+      expect(next.conclusion.outcome.endedAt).toEqual(
+        sessionMockInstant(SESSION_MOCK_TARGET),
+      )
+      expect(next.conclusion.outcome.resolution).toBe(PerformResolution.complete)
+    }
+  })
+
+  it('claims nothing when the conclusion’s performance already landed', () => {
+    const concluded = withSessionAwaitingResolution(started, {
+      now: sessionMockInstant(SESSION_MOCK_TARGET),
+      reason: SessionOutcomeReason.countdownElapsed,
+    })
+    const next = withAnchorHydrated(initialSessionState, {
+      anchor: concluded.anchor,
+      identity: sessionIdentityMocks.slides,
+      completedSessionsCount: 3,
+      isConclusionRecorded: true,
+      now: sessionMockInstant(SESSION_MOCK_TARGET + 600),
+    })
+
+    expect(next.conclusion.kind).toBe('none')
+  })
+
+  it('claims nothing for a document that is still running', () => {
+    const next = withAnchorHydrated(initialSessionState, {
+      anchor: started.anchor,
+      identity: sessionIdentityMocks.slides,
+      completedSessionsCount: 3,
+      isConclusionRecorded: false,
+      now: sessionMockInstant(60),
+    })
+    expect(next.conclusion.kind).toBe('none')
   })
 })
 
@@ -382,6 +446,60 @@ describe('withSessionResumed', () => {
 
   it('refuses on a session that is not paused', () => {
     expect(withSessionResumed(started, sessionMockInstant(700))).toBe(started)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A paused break is still a break
+// ---------------------------------------------------------------------------
+//
+// Canon loses this: `applySessionPaused` writes `.paused` unconditionally and
+// `applySessionActivated` sets `phase = .running` *before* reading it back, so
+// its `.break` arm is unreachable and `._timerTicked` sees `wasBreak == false`
+// on the resumed break — which it then records as a performance. A break is
+// never a performance, so the slice carries the breakness across the pause.
+
+describe('pausing and resuming a break', () => {
+  const pausedBreak = sessionStateMocks.pausedOnBreak
+
+  it('remembers it was a break while the document can only say paused', () => {
+    expect(pausedBreak.phase).toBe(SessionPhase.paused)
+    expect(pausedBreak.anchor?.phase).toBe(PersistedSessionPhase.paused)
+    expect(pausedBreak.pausedFromBreak).toBe(true)
+  })
+
+  it('resumes back into the break rather than into a focus session', () => {
+    const resumed = withSessionResumed(pausedBreak, sessionMockInstant(300))
+    expect(resumed.phase).toBe(SessionPhase.break)
+    // Persisted too, so the next reload recovers the break as a break.
+    expect(resumed.anchor?.phase).toBe(PersistedSessionPhase.break)
+    expect(resumed.pausedFromBreak).toBe(false)
+  })
+
+  it('ends a resumed break with the break cue and no performance at all', () => {
+    const resumed = withSessionResumed(pausedBreak, sessionMockInstant(300))
+    // The break's 5-minute countdown, less the two minutes already spent.
+    const elapsed = withDisplayAdvanced(resumed, sessionMockInstant(300 + 181))
+
+    expect(elapsed.phase).toBe(SessionPhase.ready)
+    expect(elapsed.conclusion.kind).toBe('breakElapsed')
+  })
+
+  it('aborts a paused break without claiming a performance for it', () => {
+    const aborted = withSessionAborted(pausedBreak, {
+      now: sessionMockInstant(200),
+      reason: SessionOutcomeReason.aborted,
+    })
+    expect(aborted.phase).toBe(SessionPhase.ready)
+    expect(aborted.conclusion.kind).toBe('none')
+  })
+
+  it('leaves a paused focus session resuming as a focus session', () => {
+    const paused = withSessionPaused(started, sessionMockInstant(600))
+    expect(paused.pausedFromBreak).toBe(false)
+    expect(withSessionResumed(paused, sessionMockInstant(900)).phase).toBe(
+      SessionPhase.running,
+    )
   })
 })
 

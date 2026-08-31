@@ -18,6 +18,7 @@ import {
   minutesInSeconds,
   taskEndeavor,
 } from '@kro/core'
+import type { UnknownAction } from '@reduxjs/toolkit'
 import { describe, expect, it } from 'vitest'
 import {
   type AppStore,
@@ -45,14 +46,19 @@ import {
 import {
   abortSessionThunk,
   advanceSessionThunk,
+  endBreakThunk,
   finishSessionEarlyThunk,
   hydrateRunningSessionThunk,
   loadSessionPreferencesThunk,
+  markEndeavorCompleteFromSessionThunk,
   pauseSessionThunk,
   prepareSessionLaunchThunk,
   recordSessionPerformanceThunk,
   resumeSessionThunk,
+  startBreakThunk,
   startSessionThunk,
+  syncSessionDocumentTitleThunk,
+  updateSessionIdentityThunk,
 } from '../SessionProducer'
 import { initialSessionState } from '../SessionState'
 import { SessionPhase } from '../SessionVocabulary'
@@ -373,6 +379,126 @@ describe('finish early, under a controlled clock', () => {
 
     expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
   })
+})
+
+// ---------------------------------------------------------------------------
+// Cancellation is the one silent exit
+// ---------------------------------------------------------------------------
+//
+// `RC-7`/`UZF-14`: a Producer never throws, so `.rejected` is a defensive
+// fallback — except for a cancelled dispatch, which is not a failure and must
+// never paint an exception. Every other feature in this repo returns early on
+// `action.meta.aborted` (`DoFeature`, `EarnFeature`, `PlanFeature`, …); this
+// slice now does too, and each arm carries the scenario that proves it.
+
+/** The rejection RTK stamps `meta.aborted` on — what `.abort()` produces. */
+const abortError = (): Error =>
+  Object.assign(new Error('Aborted'), { name: 'AbortError' })
+
+const REQUEST = 'request-id'
+
+const rejectedArms: readonly {
+  readonly name: string
+  readonly reject: (error: Error) => UnknownAction
+}[] = [
+  {
+    name: 'loadSessionPreferencesThunk',
+    reject: (error) =>
+      loadSessionPreferencesThunk.rejected(error, REQUEST, undefined),
+  },
+  {
+    name: 'prepareSessionLaunchThunk',
+    reject: (error) =>
+      prepareSessionLaunchThunk.rejected(error, REQUEST, {
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
+  },
+  {
+    name: 'hydrateRunningSessionThunk',
+    reject: (error) =>
+      hydrateRunningSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'startSessionThunk',
+    reject: (error) => startSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'pauseSessionThunk',
+    reject: (error) => pauseSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'resumeSessionThunk',
+    reject: (error) => resumeSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'advanceSessionThunk',
+    reject: (error) =>
+      advanceSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'finishSessionEarlyThunk',
+    reject: (error) =>
+      finishSessionEarlyThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'abortSessionThunk',
+    reject: (error) => abortSessionThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'startBreakThunk',
+    reject: (error) => startBreakThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'endBreakThunk',
+    reject: (error) => endBreakThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'recordSessionPerformanceThunk',
+    reject: (error) =>
+      recordSessionPerformanceThunk.rejected(error, REQUEST, { now: NOW }),
+  },
+  {
+    name: 'markEndeavorCompleteFromSessionThunk',
+    reject: (error) =>
+      markEndeavorCompleteFromSessionThunk.rejected(error, REQUEST, {
+        now: NOW,
+      }),
+  },
+  {
+    name: 'syncSessionDocumentTitleThunk',
+    reject: (error) =>
+      syncSessionDocumentTitleThunk.rejected(error, REQUEST, { title: null }),
+  },
+  {
+    name: 'updateSessionIdentityThunk',
+    reject: (error) =>
+      updateSessionIdentityThunk.rejected(error, REQUEST, {
+        title: 'Renamed',
+        now: NOW,
+      }),
+  },
+]
+
+describe('a cancelled dispatch paints no exception', () => {
+  it.each(rejectedArms)(
+    '$name leaves the running session exactly as it was',
+    ({ reject }) => {
+      const before = sessionStateMocks.running
+      expect(reduce(before, reject(abortError()))).toEqual(before)
+    },
+  )
+
+  it.each(rejectedArms)(
+    '$name still surfaces a genuine failure, so nothing is swallowed',
+    ({ reject }) => {
+      const next = reduce(
+        sessionStateMocks.running,
+        reject(new Error('the store is unavailable')),
+      )
+      expect(next.load.kind).toBe('failed')
+    },
+  )
 })
 
 describe('the recording claim moves only forward', () => {

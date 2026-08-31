@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Motion tokens — KroTokens.Motion, ported.
+
+   Canon (zheref/KroApple@2c1ee45, KroUI/Theme/KroTokens.swift):
+     quick          .milliseconds(180)
+     standard       .milliseconds(240)
+     quickSpring    .spring(duration: 0.18, bounce: 0.10)
+     standardSpring .spring(duration: 0.24, bounce: 0.12)
+
+   THE SPRING PORT, and why the numbers differ from the durations above.
+
+   SwiftUI's `spring(duration:bounce:)` does not mean "animate for `duration`
+   milliseconds" — `duration` is the *perceptual* duration, from which SwiftUI
+   derives an undamped frequency (omega = 2pi / duration) and a damping ratio
+   (zeta = 1 - bounce). The animation keeps settling after that: with
+   zeta = 0.9 and omega = 34.9 rad/s the residual is only under 0.2% at 198ms.
+
+   CSS has no spring primitive, so each curve is sampled from the closed form
+     x(t) = 1 - e^(-zeta*omega*t) * (cos(w_d t) + (zeta*omega/w_d) sin(w_d t))
+   at 25 points across its settle time and emitted as `linear()`. The values
+   above 1 near the end are the bounce — they are the point, not rounding
+   error. The matching `--kro-duration-*-spring` is the settle time, so a
+   transition using one must use the other; pairing the spring easing with the
+   180ms duration would cut the overshoot off mid-flight.
+
+   Verified against the same formula in `motion.test.ts`, so a hand-edit to a
+   curve that no longer describes KroApple's spring fails the suite.
+   ========================================================================== */
+
+:root {
+  /* Timing — canon */
+  --kro-duration-quick: 180ms;
+  --kro-duration-standard: 240ms;
+
+  /* Spring settle times — the duration each linear() below is sampled over */
+  --kro-duration-quick-spring: 198ms;
+  --kro-duration-standard-spring: 270ms;
+
+  /* Easings.
+     `--kro-ease-standard` is the system curve SwiftUI's non-spring animations
+     read as; `--kro-ease-out` is the decelerating curve for anything entering
+     the screen. */
+  --kro-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --kro-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* quick spring — duration 0.18, bounce 0.10 (zeta 0.90) */
+  --kro-ease-quick-spring: linear(
+    0,
+    0.0349,
+    0.1177,
+    0.2237,
+    0.3368,
+    0.4467,
+    0.5477,
+    0.637,
+    0.7134,
+    0.7774,
+    0.8298,
+    0.8719,
+    0.9052,
+    0.9312,
+    0.951,
+    0.966,
+    0.9771,
+    0.9852,
+    0.991,
+    0.995,
+    0.9977,
+    0.9995,
+    1.0005,
+    1.0012,
+    1
+  );
+
+  /* standard spring — duration 0.24, bounce 0.12 (zeta 0.88) */
+  --kro-ease-standard-spring: linear(
+    0,
+    0.0365,
+    0.123,
+    0.2334,
+    0.3507,
+    0.4642,
+    0.5678,
+    0.6585,
+    0.7355,
+    0.7991,
+    0.8505,
+    0.8911,
+    0.9227,
+    0.9466,
+    0.9645,
+    0.9775,
+    0.9868,
+    0.9932,
+    0.9975,
+    1.0002,
+    1.0018,
+    1.0026,
+    1.0029,
+    1.0029,
+    1
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Utilities. Named after the token, so a call site reads as the token.
+   -------------------------------------------------------------------------- */
+
+.kro-motion-quick {
+  transition-duration: var(--kro-duration-quick);
+  transition-timing-function: var(--kro-ease-standard);
+}
+
+.kro-motion-standard {
+  transition-duration: var(--kro-duration-standard);
+  transition-timing-function: var(--kro-ease-standard);
+}
+
+.kro-motion-quick-spring {
+  transition-duration: var(--kro-duration-quick-spring);
+  transition-timing-function: var(--kro-ease-quick-spring);
+}
+
+.kro-motion-standard-spring {
+  transition-duration: var(--kro-duration-standard-spring);
+  transition-timing-function: var(--kro-ease-standard-spring);
+}
+
+/* ==========================================================================
+   Reduced motion.
+
+   Two halves, and both are needed.
+
+   1. The TOKENS collapse. Anything that reads `var(--kro-duration-…)` —
+      including an inline style or a JS-driven transition — becomes instant
+      without knowing this layer exists. This is the half a blanket `*` rule
+      cannot do.
+   2. The BLANKET rule catches everything that hardcoded its own timing, plus
+      running animations (`animation-iteration-count: 1` stops the FAB's
+      rotating glow and the block waves the epic names in AC 9).
+
+   0.01ms rather than 0: a zero-length transition never fires `transitionend`,
+   and code that waits for it would hang forever.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --kro-duration-quick: 0.01ms;
+    --kro-duration-standard: 0.01ms;
+    --kro-duration-quick-spring: 0.01ms;
+    --kro-duration-standard-spring: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

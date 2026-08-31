@@ -1,0 +1,106 @@
+/* ==========================================================================
+   indigoGrape — the My Day header slab.
+
+   Canon: zheref/KroApple@2c1ee45
+     · Kro/Components/GradientBackDrop.swift — `GradientStyle.indigoGrape` is
+       `LinearGradient(colors: [headerGradientIndigo, headerGradientGrape],
+        startPoint: .topLeading, endPoint: .bottomTrailing)`.
+     · The stops themselves are palette roles, so they live in `tokens.css` and
+       are contrast-asserted against `headerDate` in both schemes.
+
+   `to bottom right` is the exact CSS equivalent of SwiftUI's
+   `.topLeading -> .bottomTrailing`: both place the gradient line so the two
+   named corners sit on its ends, whatever the box's aspect ratio.
+
+   The slab is a CONTENT TOP INSET, not a page background: it occupies the top
+   of the scroll container, content scrolls beneath it, and the bottom edge
+   fades into the page surface so nothing meets a hard line. On desktop the
+   same slab runs behind the translucent sidebar as one piece (epic Design
+   Direction) — which is why the element is separate from any header chrome
+   rather than being that chrome's own background.
+   ========================================================================== */
+
+.kro-gradient-backdrop {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 0;
+  height: var(--kro-gradient-height, 220px);
+  background-image: linear-gradient(
+    to bottom right,
+    var(--kro-color-header-gradient-indigo),
+    var(--kro-color-header-gradient-grape)
+  );
+  /* Decorative: it carries no information the labels over it do not. */
+  pointer-events: none;
+}
+
+/**
+ * Fixed to the viewport instead of the scroll container — the mobile shell,
+ * where the slab stays put and the day's content moves under it.
+ *
+ * No `backdrop-filter` here, deliberately: an opaque gradient has nothing to
+ * sample, and adding one would walk straight into the WebKit fixed-element bug
+ * that `glass.css` exists to avoid.
+ */
+.kro-gradient-backdrop--fixed {
+  position: fixed;
+}
+
+/**
+ * The bottom fade. A separate layer rather than a third stop in the gradient
+ * so the fade is to the *live* page surface and therefore follows the theme,
+ * which a colour stop inside the slab could not do.
+ */
+.kro-gradient-backdrop::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: var(--kro-space-x-large);
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--kro-color-back)
+  );
+}
+
+.kro-gradient-backdrop--hard {
+  --kro-gradient-fade: 0px;
+}
+
+.kro-gradient-backdrop--hard::after {
+  display: none;
+}
+
+/**
+ * The content that sits over the slab. Establishes the stacking order once, so
+ * a surface does not have to remember to raise itself above a decoration.
+ */
+.kro-gradient-content {
+  position: relative;
+  z-index: 1;
+}
+
+/** A label painted on the slab. `headerDate` is contrast-asserted on both stops. */
+.kro-gradient-headline {
+  color: var(--kro-color-header-date);
+}
+
+/* --------------------------------------------------------------------------
+   Forced colours (Windows high-contrast).
+
+   A gradient carries no meaning here, and forced-colors mode replaces the
+   text colour with a system one — leaving a decorative slab behind it that the
+   OS did not choose. Drop it and let the page surface show through.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .kro-gradient-backdrop {
+    background-image: none;
+    background-color: Canvas;
+  }
+
+  .kro-gradient-headline {
+    color: CanvasText;
+  }
+}

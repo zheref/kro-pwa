@@ -96,18 +96,29 @@ export const useSession = (
     return () => {}
   }, [initialState.intention, initialState.targetConfig])
 
+  /**
+   * KC-IS-#33 fixup, flagged: the request contract of
+   * `/api/google/createEvent` changed, so this call had to change with it.
+   *
+   * The route now takes the **intention** rather than a pre-formatted title —
+   * canon's `"Session: <intention>"` rule is composed and tested in
+   * `sessionCalendarEventRequest`, not in a hook — and it names the field
+   * `timeZone` rather than `timezone`. Everything else is untouched: this
+   * legacy hook is KC-IS-#21's to replace, and this PR only keeps it working.
+   */
   const handleSessionSuccess = useCallback(() => {
     const firstFragment = state.fragments[0]
     const lastFragment = state.fragments[state.fragments.length - 1]
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
     fetch('/api/google/createEvent', {
       method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        title: `Session: ${state.intention}`,
+        intention: state.intention,
         start: firstFragment?.start,
         end: lastFragment?.end,
-        timezone,
+        timeZone,
       }),
     })
   }, [state.intention, state.fragments])

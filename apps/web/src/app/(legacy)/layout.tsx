@@ -9,12 +9,14 @@ import { Toaster } from '@/components/ui/toaster'
  * The pre-parity surfaces' own provider tree.
  *
  * This is the wiring that used to live in the root layout, moved down one
- * level so it wraps ONLY the routes that still need it — `/`, `/session`,
- * `/settings`, `/integrations`. The parity shell under `(shell)` gets
- * `providers.tsx` instead, and Chakra never reaches it.
+ * level so it wraps ONLY the routes that still need it — `/`, `/settings`,
+ * `/integrations`. The parity shell under `(shell)` gets `providers.tsx`
+ * instead, and Chakra never reaches it.
  *
- * Deleting this file is most of what KC-IS-#22 does when it retires these
- * surfaces; nothing else in the tree references it.
+ * KC-IS-#22 took `/session` out of that set — the parity shell serves the
+ * session at `/execute` now — but this file survives it: three pre-parity
+ * routes still hang off this provider tree, so the Chakra dependencies stay
+ * until their own children (`#32` Settings, `#35` Thirst) retire them.
  */
 export default function LegacyLayout({
   children,

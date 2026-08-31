@@ -62,6 +62,19 @@ export * from './features/endeavorDetail/pages'
  */
 export * from './features/earn'
 /**
+ * The Do surface (KC-IS-#17) — the one destination whose body exists, mounted
+ * by `apps/web`'s `/my-day` route.
+ *
+ * ONE LINE, and only the Page: the rest of `features/do/pages` is reachable
+ * from inside this package as `…/features/do/pages`, and nothing in `apps/web`
+ * needs a Fragment, a Producer or a projection. Adding a subpath export instead
+ * would have cost two config files — the `exports` map here **and** the
+ * hand-written alias list in `apps/web/vitest.config.mts` that mirrors it — for
+ * the same result. This is the line `#14` and `#15` each deferred to "whichever
+ * child next touches this file"; it is now three, one per surface.
+ */
+export { type DoPageProps, DoPage } from './features/do/pages'
+/**
  * The Plan timeline (KC-IS-#19) — the Page `/plan` mounts, its Fragments and
  * the pure modules behind them. The Plan *slice* stays unexported for the same
  * reason every other slice does: a component reaches it through this Page, not
@@ -80,6 +93,12 @@ export * from './features/plan/pages'
  * dispatches `userDidRequestCapture`; it needs nothing from here.
  */
 export * from './features/capture/pages'
+/**
+ * The session's render tier (KC-IS-#22) — the Execute destination's body and
+ * the shell-level overlays (the pill and the raised sheet). The logic tier
+ * stays unexported: a surface reaches it through these two, never directly.
+ */
+export * from './features/session/pages'
 
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
@@ -139,3 +158,19 @@ export {
   AuthSurfacePage,
   LocalDataDialogFragment,
 } from './features/auth/pages'
+
+/**
+ * The Triage render tier (KC-IS-#26) — the carousel that mounts **inside** the
+ * Inbox surface, its form, and the two pure modules they sit on.
+ *
+ * Appended as its own block rather than folded above, for the same
+ * anti-contention reason the `features/main` and Settings blocks give: a
+ * parallel child adds its own block below instead of contending for a line in
+ * an existing one.
+ *
+ * `apps/web` reaches none of it. Triage has no route by canon's own decision,
+ * and the Inbox's two Pages mount `TriageCarouselPage` into their `overlay`
+ * slot — so the barrel exists for stories, tests, and a sibling that composes
+ * one of the pieces.
+ */
+export * from './features/triage/pages'

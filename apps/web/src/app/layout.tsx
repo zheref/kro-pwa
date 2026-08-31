@@ -11,13 +11,14 @@ import { Geist, Geist_Mono } from 'next/font/google'
  *
  *   `(shell)`   the parity shell — Store + theme + navigation, wired in
  *               `providers.tsx`, which is the one client composition root.
- *   `(legacy)`  the pre-parity surfaces (`/`, `/session`, `/settings`,
- *               `/integrations`) that Chakra still renders until KC-IS-#22
- *               retires them. They keep their own provider tree, in their own
- *               group's layout, so nothing new can quietly start depending on
- *               it.
+ *   `(legacy)`  the pre-parity surfaces (`/`, `/settings`, `/integrations`)
+ *               that Chakra still renders. They keep their own provider tree,
+ *               in their own group's layout, so nothing new can quietly start
+ *               depending on it. `/session` was the fourth and is gone —
+ *               KC-IS-#22 retired it; the parity shell serves the surface at
+ *               `/execute`, canon's own name for that destination.
  *
- * A route group changes no URL: `/session` is still `/session`. The split is
+ * A route group changes no URL: `/settings` is still `/settings`. The split is
  * about which providers wrap a route, not about where it lives.
  */
 

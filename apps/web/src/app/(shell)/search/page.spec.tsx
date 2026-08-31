@@ -1,16 +1,35 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import SearchRoute from './page'
 
 describe('/search', () => {
-  it("mounts the Search destination inside the shell's store", () => {
+  it("mounts the Find surface inside the shell's store", async () => {
     render(
       <StoreProvider store={makeStore(stubbedThunkExtra)}>
         <SearchRoute />
       </StoreProvider>,
     )
 
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Search')
+    await waitFor(() => {
+      expect(screen.getByTestId('find-surface')).toBeTruthy()
+    })
+    expect(
+      screen.getByRole('searchbox', { name: 'Search endeavors' }),
+    ).toBeTruthy()
+  })
+
+  it('selects the Search destination, so the shell highlight follows the URL', async () => {
+    const store = makeStore(stubbedThunkExtra)
+
+    render(
+      <StoreProvider store={store}>
+        <SearchRoute />
+      </StoreProvider>,
+    )
+
+    await waitFor(() => {
+      expect(store.getState().main.selected.kind).toBe('search')
+    })
   })
 })

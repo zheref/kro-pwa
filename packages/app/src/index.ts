@@ -46,6 +46,14 @@ export {
  */
 export * from './features/main'
 
+/*
+ * Feature render tiers, one line each. A feature's LOGIC stays unexported —
+ * `apps/web` never reads a slice — so only the Pages a route file mounts and
+ * the overlay the shell hosts cross this boundary.
+ */
+// KC-IS-#30 — Find, All Tasks and the global Endeavor Detail overlay.
+export * from './features/find/pages'
+export * from './features/endeavorDetail/pages'
 /**
  * The Earn destination (`KC-IS-#28`) — the catalog, the claim flow and the
  * Add-Reward form. `EarnPage` is what the `/earn` route mounts in place of

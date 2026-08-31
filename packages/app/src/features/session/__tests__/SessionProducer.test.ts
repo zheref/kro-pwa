@@ -71,6 +71,7 @@ import {
   recordSessionPerformanceThunk,
   resumeSessionThunk,
   startBreakThunk,
+  startNewSessionThunk,
   startSessionThunk,
   startSessionTickTask,
   syncSessionDocumentTitleThunk,
@@ -1375,5 +1376,19 @@ describe('tomatoCountFor', () => {
 
   it('answers zero for an endeavor that does not exist', () => {
     expect(tomatoCountFor(null)).toBe(0)
+  })
+})
+
+describe('Start New clears the concluded document', () => {
+  it('leaves no anchor for a reload to re-present', async () => {
+    const it = await startedHarness()
+    await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+    // Concluded anchors deliberately survive (the reload-rebuilt claim
+    // depends on them) — Start New is the transition that must erase one.
+    expect(await it.localStore.runningSessionAnchor.read()).not.toBeNull()
+
+    await it.store.dispatch(startNewSessionThunk({ now: at(TARGET + 5) }))
+
+    expect(await it.localStore.runningSessionAnchor.read()).toBeNull()
   })
 })

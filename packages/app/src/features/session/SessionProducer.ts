@@ -1151,6 +1151,28 @@ export const syncSessionDocumentTitleThunk = createAsyncThunk<
 
 // ---------------------------------------------------------------------------
 // The display ticker — a `…Task` (`RC-27`), not a thunk
+/**
+ * "Start New" — canon's `userDidTapStartNew`, made durable. The concluded
+ * anchor deliberately SURVIVES conclusion (the reload-rebuilt claim depends
+ * on it), so returning to `ready` must clear the document too — otherwise a
+ * reload after Start New re-presents the concluded session as a ghost.
+ */
+export const startNewSessionThunk = createAsyncThunk<
+  SessionResult<void>,
+  { readonly now: Date },
+  { extra: ThunkExtra; state: RootState }
+>('session/onStartNewCompleted', async (_arg, { extra, dispatch }) => {
+  try {
+    await writeAnchorFor(extra, null)
+    await dispatch(setScreenAwakeThunk({ enabled: false }))
+    return ok(undefined)
+  } catch (error) {
+    return err(
+      SessionExceptions.anchorWriteFailed(sessionExceptionMessage(error)),
+    )
+  }
+})
+
 // ---------------------------------------------------------------------------
 
 /**

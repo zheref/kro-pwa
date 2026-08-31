@@ -48,6 +48,7 @@ import {
   abortSessionThunk,
   advanceSessionThunk,
   endBreakThunk,
+  startNewSessionThunk,
   finishSessionEarlyThunk,
   hydrateRunningSessionThunk,
   loadSessionPreferencesThunk,
@@ -148,9 +149,10 @@ export const sessionSlice = createSlice({
     },
 
     /**
-     * "Start New" — canon's `userDidTapStartNew`. The anchor was already
-     * cleared and the performance already recorded at conclusion, so this only
-     * returns the runtime to `ready`; `now` is the caller's, as everywhere.
+     * "Start New" — canon's `userDidTapStartNew`. The concluded anchor
+     * SURVIVES conclusion (the reload-rebuilt claim depends on it), so the
+     * durable half lives in `startNewSessionThunk`, which clears the
+     * document; this arm returns the runtime to `ready`.
      */
     userDidTapStartNewSession(state, action: PayloadAction<{ now: Date }>) {
       Object.assign(state, withSessionClosed(state, action.payload.now))
@@ -419,6 +421,21 @@ export const sessionSlice = createSlice({
         if (!result.ok) Object.assign(state, withException(state, result.error))
       })
       .addCase(endBreakThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
+        Object.assign(
+          state,
+          withException(
+            state,
+            SessionExceptions.unknown(action.error.message ?? 'Unknown error'),
+          ),
+        )
+      })
+
+      .addCase(startNewSessionThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) Object.assign(state, withException(state, result.error))
+      })
+      .addCase(startNewSessionThunk.rejected, (state, action) => {
         if (action.meta.aborted) return
         Object.assign(
           state,

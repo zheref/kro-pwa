@@ -16,6 +16,13 @@ describe('isThirstVotable', () => {
   it('is false for an arbitrary unmapped key', () => {
     expect(isThirstVotable('some-future-destination')).toBe(false)
   })
+
+  it.each(['toString', 'constructor', 'hasOwnProperty', 'valueOf'])(
+    'is false for %s — an inherited Object.prototype member, not a registry key (found in review)',
+    (key) => {
+      expect(isThirstVotable(key)).toBe(false)
+    },
+  )
 })
 
 describe('thirstFeatureTitle', () => {

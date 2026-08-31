@@ -48,9 +48,17 @@ export const THIRST_AVAILABLE_SOON: Readonly<Record<string, ThirstRegistryFeatur
   },
 }
 
-/** Canon's `ThirstRegistry.isVotable(_:)`. */
+/**
+ * Canon's `ThirstRegistry.isVotable(_:)`.
+ *
+ * `Object.hasOwn`, not the `in` operator (found in review): `in` also
+ * matches inherited `Object.prototype` members, so a dead-end whose key
+ * happens to collide with one — `"toString"`, `"constructor"`,
+ * `"hasOwnProperty"` — would read as votable even though the registry never
+ * listed it.
+ */
 export function isThirstVotable(featureKey: string): boolean {
-  return featureKey in THIRST_AVAILABLE_SOON
+  return Object.hasOwn(THIRST_AVAILABLE_SOON, featureKey)
 }
 
 /**

@@ -8,7 +8,7 @@
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import { initialThirstVoteEntry, type ThirstState, type ThirstVoteEntryState } from './ThirstFeature'
-import { isThirstVotable, thirstFeatureBlurb, thirstFeatureTitle } from './ThirstRegistry'
+import { isThirstVotable } from './ThirstRegistry'
 import { thirstExceptionCopy } from './ThirstException'
 import {
   type PlatformVoteTally,
@@ -24,16 +24,6 @@ export const selectThirstEntry = createSelector(
   [selectThirstSlice, featureKeyArg],
   (thirst, featureKey): ThirstVoteEntryState =>
     thirst.byFeatureKey[featureKey] ?? initialThirstVoteEntry,
-)
-
-/** The registry title, falling back to the feature key itself — a caller
- * (`ComingSoonPage.tsx`) supplies its own copy for an unmapped dead-end. */
-export const selectThirstFeatureTitle = createSelector([featureKeyArg], (featureKey) =>
-  thirstFeatureTitle(featureKey),
-)
-
-export const selectThirstFeatureBlurb = createSelector([featureKeyArg], (featureKey) =>
-  thirstFeatureBlurb(featureKey),
 )
 
 /**

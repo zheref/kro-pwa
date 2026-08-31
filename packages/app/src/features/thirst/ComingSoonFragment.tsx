@@ -60,7 +60,12 @@ export function ComingSoonFragment({
 
   return (
     <section
-      aria-labelledby="coming-soon-heading"
+      // `aria-label`, not `aria-labelledby` + a fixed id (found in review):
+      // a fixed id collides the moment two Fragments render on one page
+      // (e.g. Storybook's `BothSchemes` story), producing duplicate DOM ids
+      // — invalid HTML that leaves assistive tech pointing at the wrong
+      // instance's heading. `aria-label` needs no id to stay unique.
+      aria-label={featureTitle}
       data-testid="coming-soon-surface"
       className={cn(
         'flex h-full flex-col items-center justify-center',
@@ -73,9 +78,7 @@ export function ComingSoonFragment({
           aria-hidden="true"
           style={{ color: colorVar('accent') }}
         />
-        <h2 id="coming-soon-heading" className="font-semibold text-2xl text-kro-fore">
-          {featureTitle}
-        </h2>
+        <h2 className="font-semibold text-2xl text-kro-fore">{featureTitle}</h2>
         <p className="font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide">
           Available soon
         </p>

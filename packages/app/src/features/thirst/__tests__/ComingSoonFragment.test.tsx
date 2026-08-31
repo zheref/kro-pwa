@@ -172,4 +172,31 @@ describe('ComingSoonFragment', () => {
     }) as HTMLButtonElement
     expect(cta.disabled).toBe(false)
   })
+
+  it('two instances on one page never produce a duplicate DOM id (found in review — the BothSchemes story renders exactly this)', () => {
+    const { container } = render(
+      <>
+        <ComingSoonFragment
+          featureTitle="Priority Matrix"
+          status={{ kind: 'votable' }}
+          hasCounts={false}
+          totalCount={0}
+          perPlatform={[]}
+          isVoting={false}
+        />
+        <ComingSoonFragment
+          featureTitle="Priority Matrix"
+          status={{ kind: 'votable' }}
+          hasCounts={false}
+          totalCount={0}
+          perPlatform={[]}
+          isVoting={false}
+        />
+      </>,
+    )
+
+    const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(screen.getAllByRole('heading', { level: 2, name: 'Priority Matrix' })).toHaveLength(2)
+  })
 })

@@ -92,6 +92,12 @@ export const MATRIX_TINT_ALPHA = 0.18
 export const MATRIX_QUADRANT_GAP = 12
 export const MATRIX_CARD_GAP = 10
 
+/**
+ * The narrowest a card track may be — canon's own card side at phone width,
+ * which is what makes a 390px viewport draw canon's two columns exactly.
+ */
+export const MATRIX_CARD_MIN_PX = 76
+
 export interface PlanMatrixFragmentProps {
   /** Already admitted and already classified by `selectPlanMatrixItems`. */
   readonly items: readonly PlanMatrixItem[]
@@ -201,8 +207,23 @@ function QuadrantBox({
       ) : (
         <ul
           data-testid="plan-matrix-grid"
-          className="m-0 grid min-h-0 flex-1 list-none grid-cols-2 content-start overflow-y-auto p-kro-small"
-          style={{ gap: MATRIX_CARD_GAP }}
+          className="m-0 grid min-h-0 flex-1 list-none content-start overflow-y-auto p-kro-small"
+          style={{
+            gap: MATRIX_CARD_GAP,
+            /*
+              Canon fixes TWO columns and sizes each card at half the quadrant's
+              width, because on a phone the quadrant is always about 180pt wide
+              — so the card lands near 85pt. The web's desktop quadrant is three
+              times that, and two columns there would draw a pair of 270pt
+              squares for two short tasks.
+
+              The CARD SIZE is what is ported, not the column count: a track
+              floor of `MATRIX_CARD_MIN_PX` gives exactly canon's two columns at
+              phone width and more of the same-sized cards as the quadrant
+              grows, which is what "a 2-column responsive grid" asks for.
+            */
+            gridTemplateColumns: `repeat(auto-fill, minmax(${MATRIX_CARD_MIN_PX}px, 1fr))`,
+          }}
         >
           {items.map((item) => {
             const glyph = planMatrixItemSymbol(item.title)

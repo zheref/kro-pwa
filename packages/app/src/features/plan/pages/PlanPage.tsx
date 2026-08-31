@@ -817,9 +817,22 @@ export function PlanPage({
           side="bottom"
           data-testid="plan-picker-sheet"
           className="max-h-[85vh] overflow-y-auto"
+          // The picker draws its own close beside its own header; the sheet's
+          // would be a second ✕ in the same corner (caught by the first
+          // screenshot pass).
+          hideClose
         >
-          <SheetTitle>Add existing</SheetTitle>
-          <SheetDescription>
+          {/*
+            The sheet's own title and description are SCREEN-READER ONLY here.
+            The dialog primitive requires both for its accessible name, and the
+            picker draws its own header ("Add to <Quadrant>" plus canon's
+            subtitle) — rendering both visibly gave the sheet two titles and two
+            close buttons, which the first screenshot pass caught.
+          */}
+          <SheetTitle className="sr-only">
+            Add existing to this quadrant
+          </SheetTitle>
+          <SheetDescription className="sr-only">
             Choose tasks to move into this quadrant.
           </SheetDescription>
           {pickerContent}

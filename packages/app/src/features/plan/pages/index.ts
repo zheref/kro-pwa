@@ -161,6 +161,7 @@ export {
 } from './matrix/planMatrixPresentation'
 export {
   MATRIX_CARD_GAP,
+  MATRIX_CARD_MIN_PX,
   MATRIX_QUADRANT_GAP,
   MATRIX_TINT_ALPHA,
   type PlanMatrixFragmentProps,

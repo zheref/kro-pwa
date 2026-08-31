@@ -40,7 +40,6 @@ import { endeavorIcon } from '../../../../design/endeavor/endeavorIcons'
 import { colorVar, radiusVar } from '../../../../design/system/tokens/roles'
 import { cn } from '../../../../design/system/utils/cn'
 import {
-  planListRowBadges,
   planListRowSymbol,
   planListRowTimeInfo,
 } from '../list/planListPresentation'
@@ -296,13 +295,19 @@ export function PickEndeavorFragment({
                           {isSelected ? <Check size={12} /> : null}
                         </span>
                         <span className="min-w-0 flex-1">
+                          {/*
+                            No kind badge: every row here is a task by
+                            construction, so a "Task" chip is noise that costs
+                            the title its width on a phone. Canon's own picker
+                            card prints the glyph, the title and the schedule
+                            and nothing else.
+                          */}
                           <EndeavorRow
                             config="find"
                             symbol={lead.symbol}
                             isGenericSymbol={lead.isGeneric}
                             title={lead.title}
                             timeInfo={planListRowTimeInfo(endeavor)}
-                            badges={planListRowBadges(endeavor)}
                             now={now}
                             locale={locale}
                           />

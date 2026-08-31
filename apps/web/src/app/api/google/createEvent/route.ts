@@ -30,7 +30,6 @@ export async function POST(request: Request) {
         }
     }
 
-    console.log("Event to be created", event)
 
     const calendar = google.calendar({ version: 'v3', auth })
 
@@ -40,7 +39,6 @@ export async function POST(request: Request) {
             requestBody: event,
         }, undefined)
 
-        console.log("Calendar event insertion response", response)
         return NextResponse.json(response.data)
     } catch (error) {
         console.error("Error creating calendar event:", error)

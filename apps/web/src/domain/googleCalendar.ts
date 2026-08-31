@@ -22,7 +22,6 @@ export async function handleGoogleAuth(req: NextApiRequest, res: NextApiResponse
     const data = await response.json();
 
     // Store tokens in session, DB, or cookies (demo only)
-    console.log('Tokens:', data);
 
     // Redirect or respond
     res.redirect(`/session?token=${data.access_token}`);

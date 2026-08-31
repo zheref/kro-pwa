@@ -885,7 +885,7 @@ describe('loadPlanMatrixThunk lifecycle', () => {
     const { matrixLoad } = store.getState().plan
     expect(matrixLoad.kind).toBe('failed')
     if (matrixLoad.kind === 'failed') {
-      expect(matrixLoad.exception.kind).toBe('dayLoadFailed')
+      expect(matrixLoad.exception.kind).toBe('matrixLoadFailed')
     }
   })
 })

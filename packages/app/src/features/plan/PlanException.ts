@@ -27,6 +27,7 @@ import type { PlanDayKey } from './PlanCalendar'
 export type PlanException =
   /** The authoritative day's read failed. Retryable. */
   | Exception<'dayLoadFailed'>
+  | Exception<'matrixLoadFailed'>
   /** A read-ahead window failed. Carries the day it was centred on. */
   | (Exception<'preloadFailed'> & { readonly centerDayKey: PlanDayKey })
   /** A stored row could not be decoded into a domain endeavor. */
@@ -37,6 +38,8 @@ export type PlanException =
 export const PlanExceptions = {
   dayLoadFailed: (message: string): PlanException =>
     exception('dayLoadFailed', message, true),
+  matrixLoadFailed: (message: string): PlanException =>
+    exception('matrixLoadFailed', message, true),
 
   preloadFailed: (centerDayKey: PlanDayKey, message: string): PlanException => ({
     ...exception('preloadFailed', message, true),
@@ -64,6 +67,8 @@ export const planExceptionCopy = (value: PlanException): string => {
   switch (value.kind) {
     case 'dayLoadFailed':
       return "We couldn't load this day. Pull to refresh to try again."
+    case 'matrixLoadFailed':
+      return "We couldn't load the priority matrix. Try again."
     case 'preloadFailed':
       return "We couldn't load the days around this one."
     case 'malformedRow':

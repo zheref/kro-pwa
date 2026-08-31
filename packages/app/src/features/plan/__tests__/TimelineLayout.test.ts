@@ -201,3 +201,41 @@ describe('placedEventXFraction / placedEventWidthFraction', () => {
     expect(placedEventWidthFraction(degenerate)).toBe(1)
   })
 })
+
+describe('band anchoring — events relative to a late-starting band', () => {
+  const preBand = makeEndeavor({
+    id: 'pre-band',
+    title: 'Early call',
+    kind: EndeavorKind.calendarEvent,
+    status: EndeavorStatus.planned,
+    start: planAt(7),
+    duration: 2 * 3600, // 07:00–09:00 against the 08:00 Business band
+  })
+  const beforeBand = makeEndeavor({
+    id: 'before-band',
+    title: 'Dawn run',
+    kind: EndeavorKind.calendarEvent,
+    status: EndeavorStatus.planned,
+    start: planAt(6),
+    duration: 3600, // ends 07:00, before the band opens
+  })
+
+  it('anchors a pre-band start at the band top with its visible height', () => {
+    const placements = timelinePlacements([preBand], {
+      on: PLAN_REFERENCE_DAY,
+      startHour: 8,
+    })
+    expect(placements).toHaveLength(1)
+    expect(placements[0]?.yOffset).toBe(0)
+    expect(placements[0]?.height).toBe(60) // the one visible hour at 60px/h
+  })
+
+  it('does not place an event that ends before the band opens', () => {
+    expect(
+      timelinePlacements([beforeBand], {
+        on: PLAN_REFERENCE_DAY,
+        startHour: 8,
+      }),
+    ).toHaveLength(0)
+  })
+})

@@ -195,7 +195,7 @@ describe('loadPlanMatrixThunk', () => {
     const store = failingStore('store closed')
     const result = await store.dispatch(loadPlanMatrixThunk()).unwrap()
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error.kind).toBe('dayLoadFailed')
+    if (!result.ok) expect(result.error.kind).toBe('matrixLoadFailed')
   })
 
   it('resolves an empty set for an empty store', async () => {

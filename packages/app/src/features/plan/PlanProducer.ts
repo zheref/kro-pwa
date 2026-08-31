@@ -144,7 +144,9 @@ export const loadPlanMatrixThunk = createAsyncThunk<
     const records = await extra.localStore.endeavors.all()
     return ok(endeavorsFromRecords(records))
   } catch (error) {
-    return err(PlanExceptions.dayLoadFailed(planExceptionFrom(error).message))
+    return err(
+      PlanExceptions.matrixLoadFailed(planExceptionFrom(error).message),
+    )
   }
 })
 

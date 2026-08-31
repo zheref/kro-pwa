@@ -124,16 +124,22 @@ export const timelinePlacements = (
   const startHour = options.startHour ?? 0
   const dayStart = startOfPlanDay(options.on)
   const dayEnd = startOfNextPlanDay(options.on)
+  // The visible window opens at the band, not at midnight: an event that
+  // starts before a late-starting band anchors at the band's top edge with
+  // its remaining visible height, and one that ends before the band opens is
+  // not placed at all — the canvas is only as tall as the band.
+  const bandStart = new Date(dayStart.getTime() + startHour * 3_600_000)
 
   const scoped: ScopedEvent[] = []
   for (const endeavor of endeavors) {
     const start = endeavor.start
     if (start === null) continue
     const end = new Date(start.getTime() + (endeavor.duration ?? 0) * 1000)
-    if (!(end.getTime() > dayStart.getTime() && start.getTime() < dayEnd.getTime())) {
+    if (!(end.getTime() > bandStart.getTime() && start.getTime() < dayEnd.getTime())) {
       continue
     }
-    const clampedStart = start.getTime() > dayStart.getTime() ? start : dayStart
+    const clampedStart =
+      start.getTime() > bandStart.getTime() ? start : bandStart
     const clampedEnd = end.getTime() < dayEnd.getTime() ? end : dayEnd
     if (!(clampedEnd.getTime() > clampedStart.getTime())) continue
     scoped.push({ endeavor, start: clampedStart, end: clampedEnd })

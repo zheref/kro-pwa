@@ -49,6 +49,7 @@ import {
   withTriageRequested,
 } from '../CaptureShifters'
 import { initialMainState } from '../../main/MainFeature'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: CaptureState): RootState => ({
@@ -67,6 +68,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

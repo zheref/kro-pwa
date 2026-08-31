@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest'
 import MatrixRoute from './page'
 
 describe('/matrix', () => {
-  it("mounts the Priority Matrix destination inside the shell's store", () => {
+  it("mounts the Priority Matrix Thirst vote surface inside the shell's store", () => {
+    const store = makeStore(stubbedThunkExtra)
     render(
-      <StoreProvider store={makeStore(stubbedThunkExtra)}>
+      <StoreProvider store={store}>
         <MatrixRoute />
       </StoreProvider>,
     )
@@ -14,5 +15,8 @@ describe('/matrix', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
       'Priority Matrix',
     )
+    // The sidebar highlight still follows the URL (`RC-17`, `RC-63`) even
+    // though this route no longer mounts the shared `DestinationPage`.
+    expect(store.getState().main.selected.kind).toBe('matrix')
   })
 })

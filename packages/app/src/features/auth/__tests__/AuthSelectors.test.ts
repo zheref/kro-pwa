@@ -39,6 +39,7 @@ import {
 import { initialMainState } from '../../main/MainFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 import { AuthFlow, type AuthState } from '../AuthState'
 import { signOutIntents } from '../SignOutIntents'
 
@@ -57,6 +58,7 @@ const rootWith = (auth: AuthState): RootState => ({
   session: initialSessionState,
   auth,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 describe('the session', () => {

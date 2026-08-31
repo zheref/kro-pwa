@@ -1,6 +1,6 @@
 'use client'
 
-import { DetailOverlays, MainShellPage } from '@kro/app'
+import { CaptureOverlays, DetailOverlays, MainShellPage } from '@kro/app'
 import type { ReactNode } from 'react'
 
 interface Props {
@@ -15,12 +15,17 @@ interface Props {
  * global presentations — one line per overlay, each mounted once for every
  * surface rather than per destination. `DetailOverlays` (KC-IS-#30) opens on
  * the `viewDetail` / `edit` intents any endeavor row can raise.
+ * The overlay area below the shell's children is the shared anchor every
+ * feature that owns a global surface adds one line to. Each mount is its own
+ * feature's composition (`CaptureOverlays` is KC-IS-#24's), so this file never
+ * grows logic — only the list.
  */
 export function AppShellClient({ isDevelopment, children }: Props) {
   return (
     <MainShellPage isDevelopment={isDevelopment}>
       {children}
       {/* --- overlay area --- */}
+      <CaptureOverlays />
       <DetailOverlays />
       {/* --- end overlay area --- */}
     </MainShellPage>

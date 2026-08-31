@@ -4,10 +4,11 @@
  * The first question a vista answers: **where does the data come from, and
  * what slice of it?** Immutable per screen — a user never edits a query; they
  * edit the lens. Every field is optional-as-`null`, and `null` means "no
- * constraint on this axis", which is a different statement from an empty set
- * ("constrain to nothing"). Canon relies on that distinction (`hosts: nil` =
- * every configured host), so the port keeps `null` and never collapses it to
- * `[]`.
+ * constraint on this axis". An empty set is treated the same way in practice:
+ * canon guards every set with `!isEmpty` before applying it, so `[]` also
+ * means "no constraint" rather than "match nothing" — and the filter tests
+ * pin that. `null` is still kept distinct in the shape (canon's `hosts: nil`)
+ * so encoded queries round-trip against Swift.
  *
  * ## What the port changes, and why
  *

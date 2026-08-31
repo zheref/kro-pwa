@@ -197,7 +197,7 @@ export const upgradeLensSnapshotRecord = (
   return { record: current, applied }
 }
 
-/** Members of `values` present in `raw`, in canon `allCases` order. */
+/** The members of `raw` that narrow successfully, as a Set (unordered). */
 const decodeSet = <T extends string>(
   raw: unknown,
   narrow: (value: string) => T | null,

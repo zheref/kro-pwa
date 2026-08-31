@@ -110,19 +110,27 @@ describe('a relation’s manage affordance obeys the same matrix', () => {
     })
   })
 
-  it('refuses performances on a calendar event', () => {
+  it('opens performances read-only on a calendar event', () => {
+    // Canon renders read-only relation screens with their "why" copy; only
+    // the mutation path refuses. Opening must always succeed.
     const next = withRelationManagementRequested(
       detailStateMocks.presentedEvent,
       { relation: EndeavorRelation.performances },
     )
-    expect(next.destination).toBeNull()
+    expect(next.destination).toEqual({
+      kind: 'relation',
+      relation: EndeavorRelation.performances,
+    })
   })
 
-  it('refuses hosts on a habit', () => {
+  it('opens hosts read-only on a habit', () => {
     const next = withRelationManagementRequested(detailStateMocks.presentedHabit, {
       relation: EndeavorRelation.hosts,
     })
-    expect(next.destination).toBeNull()
+    expect(next.destination).toEqual({
+      kind: 'relation',
+      relation: EndeavorRelation.hosts,
+    })
   })
 
   it('clears the editor drafts when a relation screen takes over', () => {

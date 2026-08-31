@@ -23,7 +23,6 @@ import {
   EndeavorField as Field,
   type EndeavorRelation,
   isFieldEditable,
-  isRelationEditable,
 } from '@kro/core'
 import type { EndeavorFieldChange } from './EndeavorDetailEditing'
 import { applyFieldChange, endeavorsEqual } from './EndeavorDetailEditing'
@@ -143,7 +142,9 @@ export function withRelationManagementRequested(
 ): EndeavorDetailState {
   const endeavor = state.endeavor
   if (endeavor === null) return state
-  if (!isRelationEditable(args.relation, endeavor.kind)) return state
+  // Read-only relations still OPEN — canon renders their screens with the
+  // "why" copy and disabled affordances. Only the mutation path refuses
+  // (the draft guard in the Feature and `isManageable` on the cards).
   return {
     ...state,
     destination: { kind: 'relation', relation: args.relation },

@@ -130,20 +130,26 @@ describe('userDidTapManageRelation obeys the same matrix', () => {
     })
   })
 
-  it('refuses one a calendar event cannot', () => {
+  it('opens a read-only relation a calendar event cannot edit', () => {
     const next = reducer(
       detailStateMocks.presentedEvent,
       userDidTapManageRelation({ relation: EndeavorRelation.performances }),
     )
-    expect(next.destination).toBeNull()
+    expect(next.destination).toEqual({
+      kind: 'relation',
+      relation: EndeavorRelation.performances,
+    })
   })
 
-  it('refuses hosts on a habit', () => {
+  it('opens hosts read-only on a habit — the draft path still refuses', () => {
     const next = reducer(
       detailStateMocks.presentedHabit,
       userDidTapManageRelation({ relation: EndeavorRelation.hosts }),
     )
-    expect(next.destination).toBeNull()
+    expect(next.destination).toEqual({
+      kind: 'relation',
+      relation: EndeavorRelation.hosts,
+    })
   })
 })
 

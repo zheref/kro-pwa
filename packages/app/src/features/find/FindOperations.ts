@@ -264,9 +264,12 @@ export const endeavorAfterOperation = (
     case OperationEffect.archive:
       // Canon's Find archives by closing the row — deliberately with **no**
       // completion stamp: archiving is a filing action, not an achievement.
-      return { ...endeavor, status: EndeavorStatus.closed }
+      // Clearing `completed` is what makes that true for a previously
+      // completed row too: closed-with-a-stamp reads as completed, and an
+      // archived row must never match completedToday.
+      return { ...endeavor, status: EndeavorStatus.closed, completed: null }
     case OperationEffect.unarchive:
-      return { ...endeavor, status: EndeavorStatus.pending }
+      return { ...endeavor, status: EndeavorStatus.pending, completed: null }
     default:
       return endeavor
   }

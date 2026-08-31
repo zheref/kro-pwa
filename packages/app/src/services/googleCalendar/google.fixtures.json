@@ -1,0 +1,111 @@
+{
+  "_comment": "Fixture data backing stubbedGoogleCalendarService (RC-33/RC-59). Shapes mirror the /api/google/* payloads, which in turn mirror Google Calendar API v3. No value here is or resembles a credential.",
+  "events": {
+    "events": [
+      {
+        "calendarId": "primary",
+        "calendarName": "Sergio",
+        "event": {
+          "id": "gcal-standup-2026-08-31",
+          "etag": "\"etag-standup-1\"",
+          "summary": "Daily standup",
+          "status": "confirmed",
+          "start": { "dateTime": "2026-08-31T09:00:00Z", "timeZone": "UTC" },
+          "end": { "dateTime": "2026-08-31T09:15:00Z", "timeZone": "UTC" }
+        }
+      },
+      {
+        "calendarId": "primary",
+        "calendarName": "Sergio",
+        "event": {
+          "id": "gcal-design-review-2026-08-31",
+          "etag": "\"etag-review-1\"",
+          "summary": "Design review",
+          "location": "Meet",
+          "status": "confirmed",
+          "start": { "dateTime": "2026-08-31T14:00:00Z", "timeZone": "UTC" },
+          "end": { "dateTime": "2026-08-31T15:00:00Z", "timeZone": "UTC" }
+        }
+      },
+      {
+        "calendarId": "team@example.com",
+        "calendarName": "Team",
+        "event": {
+          "id": "gcal-offsite-2026-08-31",
+          "summary": "Company offsite",
+          "status": "confirmed",
+          "start": { "date": "2026-08-31" },
+          "end": { "date": "2026-09-01" }
+        }
+      },
+      {
+        "calendarId": "team@example.com",
+        "calendarName": "Team",
+        "event": {
+          "id": "gcal-cancelled-2026-08-31",
+          "summary": "Cancelled sync",
+          "status": "cancelled",
+          "start": { "dateTime": "2026-08-31T11:00:00Z", "timeZone": "UTC" },
+          "end": { "dateTime": "2026-08-31T11:30:00Z", "timeZone": "UTC" }
+        }
+      },
+      {
+        "calendarId": "team@example.com",
+        "calendarName": "Team",
+        "event": {
+          "id": "gcal-untitled-2026-08-31",
+          "status": "confirmed",
+          "start": { "dateTime": "2026-08-31T17:00:00Z", "timeZone": "UTC" },
+          "end": { "dateTime": "2026-08-31T17:30:00Z", "timeZone": "UTC" }
+        }
+      }
+    ]
+  },
+  "calendars": {
+    "calendars": [
+      { "id": "primary", "name": "Sergio", "isPrimary": true, "isSelected": true },
+      {
+        "id": "team@example.com",
+        "name": "Team",
+        "isPrimary": false,
+        "isSelected": true
+      },
+      {
+        "id": "holidays@group.v.calendar.google.com",
+        "name": "Holidays in Colombia",
+        "isPrimary": false,
+        "isSelected": false
+      }
+    ]
+  },
+  "calendarListResponse": {
+    "items": [
+      { "id": "primary", "summary": "Sergio", "primary": true, "selected": true },
+      { "id": "team@example.com", "summary": "Team", "selected": true },
+      {
+        "id": "holidays@group.v.calendar.google.com",
+        "summary": "Holidays in Colombia",
+        "selected": false
+      }
+    ]
+  },
+  "eventListResponse": {
+    "items": [
+      {
+        "id": "gcal-standup-2026-08-31",
+        "etag": "\"etag-standup-1\"",
+        "summary": "Daily standup",
+        "status": "confirmed",
+        "start": { "dateTime": "2026-08-31T09:00:00Z", "timeZone": "UTC" },
+        "end": { "dateTime": "2026-08-31T09:15:00Z", "timeZone": "UTC" }
+      },
+      {
+        "id": "gcal-design-review-2026-08-31",
+        "summary": "Design review",
+        "status": "confirmed",
+        "start": { "dateTime": "2026-08-31T14:00:00Z", "timeZone": "UTC" },
+        "end": { "dateTime": "2026-08-31T15:00:00Z", "timeZone": "UTC" }
+      }
+    ]
+  }
+}

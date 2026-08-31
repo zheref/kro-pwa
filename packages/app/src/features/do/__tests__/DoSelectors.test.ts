@@ -22,11 +22,15 @@ import {
   selectIsDoLoading,
 } from '../DoSelectors'
 import { withVisibilityApplied } from '../DoShifters'
+import { initialPlanState } from '../../plan/PlanState'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
   greeting: greetingStateMocks.idle,
   do: slice,
+  // Present only because `RootState` names every registered slice (#18); this
+  // suite asserts nothing about Plan.
+  plan: initialPlanState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

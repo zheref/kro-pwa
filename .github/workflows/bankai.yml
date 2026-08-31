@@ -1,0 +1,681 @@
+# Bankai — the CI half of the process machinery for kro-pwa (product code KC).
+# Copied from bankai-core examples/product-repo-bankai.yml and pinned to ONE release.
+#
+# ---------------------------------------------------------------------------
+# PINNING (CON-13 tag-first, CON-14 strictly factual)
+# ---------------------------------------------------------------------------
+# EVERY `uses:` below, and every `bankai_core_ref:`, is v0.11.2 — the newest
+# bankai-core tag, verified to CONTAIN each reusable workflow referenced here.
+# Upgrade by bumping them all in lockstep, never one at a time.
+#
+# The event-gated jobs deliberately do NOT set `bankai_core_ref`, so it keeps its
+# `main` default: two-axis pinning. The `uses:@vX.Y.Z` ref pins the WORKFLOW (the
+# executable/security surface) to a reviewed release, while agent definitions and
+# handbooks stay live so a prompt/handbook fix reaches this repo without a per-repo
+# bump. This matters here: `handbooks/INDEX.md`'s `react-uzf-v1` row landed on
+# `main` AFTER v0.11.2 was cut, so a reviewer pinned to the tag would not find this
+# repo's stack in the index. The two ungated/scheduled jobs (copilot_sweeper,
+# sync_canon) DO pin `bankai_core_ref` — see their own notes.
+#
+# ---------------------------------------------------------------------------
+# THIS WORKFLOW IS INERT UNTIL THE MAINTAINER TURNS IT ON  (G5)
+# ---------------------------------------------------------------------------
+# Every job below needs a GitHub App credential that this repo does not have yet.
+# The reusable workflows fail CLOSED on a missing secret (a clear `::error::`, no
+# partial work) — correct, but it would mean a red X on every PR and a failing
+# scheduled run every 15 minutes from the moment this file merges.
+#
+# So every job additionally requires the repository variable:
+#
+#     BANKAI_APPS_READY == 'true'
+#
+# Unset (the default) => every job is skipped => merging this file changes nothing
+# observable. That is deliberate: the file can land at G2 before the Apps exist.
+#
+# The maintainer's G5 sequence, in order:
+#   1. Register + install the Apps: Sasuke, Tenma, Bisky (this repo ships UI, so the
+#      design gate genuinely applies); Roy/Edward/Alphonse/Gon only if the CI builder
+#      loop is ever wired — the current epic delivers via local sessions.
+#   2. Set each App's *_APP_ID / *_APP_PRIVATE_KEY, plus CLAUDE_CODE_OAUTH_TOKEN and
+#      COPILOT_REVIEW_PAT (a USER-scoped fine-grained PAT with "Pull requests: write";
+#      a bot-token Copilot request silently no-ops — CON-16).
+#   3. Settings > Secrets and variables > Actions > Variables:
+#      BANKAI_APPS_READY = true.
+#   4. Let it run once, THEN register the required checks (`sasuke / audit`,
+#      `tenma / review`, `bisky / review`, plus this repo's own `pr` contexts).
+#      Registering a required check while the job is still skipped would leave every
+#      PR stuck on "Expected" forever.
+#
+# Removing the gate is a one-line-per-job edit once step 3 is permanent.
+#
+# Secrets used, once the above is done:
+#   SASUKE_APP_ID/KEY · TENMA_APP_ID/KEY · BISKY_APP_ID/KEY
+#   GON_APP_ID/KEY · ROY_APP_ID/KEY · EDWARD_APP_ID/KEY · ALPHONSE_APP_ID/KEY
+#   KISUKE_APP_ID/KEY  (only for the kisuke job — optional)
+#   CLAUDE_CODE_OAUTH_TOKEN · COPILOT_REVIEW_PAT
+# Not wired: NEFERPITOU_* (the CON-28 runner probe). This is a headless web stack on
+# GitHub-hosted runners with no self-hosted pool to probe; resolve-runner.yml's own
+# fail-safe degrades to hosted without it.
+#
+# Deliberately absent: a `db-migrate` caller. The Kro Cloud (Supabase) schema is
+# owned by zheref/KroApple; this repo is a client and authors no migration.
+name: bankai
+
+on:
+  # Phase 1 — review pair on every PR. `closed` also lets Roy release the next
+  # shikai-mode wave when a child PR to main is merged (see the roy job).
+  # `labeled` is the CON-26/CON-38 non-vote wake edge: `bankai:wake/iterate`
+  # applied to a builder's OWN open PR re-fires its ITERATE without a review vote
+  # on the human's identity — the review-pair jobs allow-list their own three
+  # actions so `labeled` never wakes a fresh review.
+  pull_request:
+    types: [opened, synchronize, reopened, closed, labeled]
+  # Phase 2 — builder loop.
+  issues:
+    types: [labeled, opened] # idea->Gon; ready-for-bankai|shikai->Roy (open epic); building->the child's owner; opened->CON-11 handbook-question-dedupe guard
+  pull_request_review:
+    types: [submitted] # changes_requested->the PR author iterates; approved on an integration/* child PR->Roy gate-checks & merges
+  check_suite:
+    types: [completed] # CI failed on an agent's branch -> that agent auto-remediates. Only fires from the default branch's workflow.
+  issue_comment:
+    types: [created] # a HUMAN comment on an in-review child issue -> its owning agent addresses it; or CON-34's observation-fix lane
+  pull_request_review_comment:
+    types: [created] # CON-34: the inline-review-comment variant of the same wakes
+  # Phase 3 — canon mirror (CON-13, the sync_canon job) AND the CON-21 cascade
+  # ancestry backstop. `main` covers a bankai-core pin bump landing;
+  # `integration/**` covers a sync or child-PR merge onto a live epic branch.
+  # GitHub allows only one `push:` block, so both live here.
+  push:
+    branches: [main, 'integration/**']
+  schedule:
+    # CON-16 sweeper. GitHub gates workflow runs triggered by the Copilot bot, so a
+    # child PR's own Copilot review can never auto-wake the owning agent. This tick
+    # runs as github-actions[bot] (trusted) and does it.
+    - cron: '*/15 * * * *'
+    # sync_canon weekly regeneration backstop (CON-13) — catches a mirror that
+    # drifted some way other than a bankai.yml push (e.g. canon-values changed).
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      idea:
+        description: Idea text for Gon to research directly (no issue needed). Leave blank to just re-run sync_canon on demand.
+        required: false
+      roy_cascade:
+        description: >-
+          Internal — set by roy-build.yml's own cascade_redispatch job (CON-21 mode
+          H), never by a human. claude-code-action rejects the raw `push` event that
+          lands a trunk commit, so that push-triggered job bounces itself through
+          this workflow_dispatch instead. Leave `false` for a manual dispatch.
+        required: false
+        default: 'false'
+
+# Least-privilege default for this repo's GITHUB_TOKEN. The reusable workflows do
+# their privileged work with per-agent App tokens, not this token. Defense-in-depth
+# per SEC-14; the event surface here (issues / pull_request_review) always runs with
+# base-repo privileges, so the default is pinned down.
+permissions:
+  contents: read
+
+jobs:
+  # ---- CON-9 stage-label exclusivity guard --------------------------------------
+  # Deterministic, no agent: on ANY bankai:stage/* label applied to an issue, strips
+  # every other bankai:stage/* label in the same operation. Reuses Roy's App token.
+  stage_label_guard:
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'issues' &&
+      github.event.action == 'labeled' &&
+      startsWith(github.event.label.name, 'bankai:stage/')
+    uses: zheref/bankai-core/.github/workflows/stage-label-guard.yml@v0.11.2
+    secrets:
+      GUARD_APP_ID: ${{ secrets.ROY_APP_ID }}
+      GUARD_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+
+  # ---- CON-11 handbook-question idempotent-filing guard -------------------------
+  # Deterministic, no agent: collapses a concurrent duplicate handbook-question
+  # filing (a TOCTOU race between two search-before-file runs) to one open issue.
+  handbook_question_dedupe:
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'issues' &&
+      (github.event.action == 'opened' || github.event.action == 'labeled') &&
+      contains(github.event.issue.labels.*.name, 'bankai:handbook-question')
+    uses: zheref/bankai-core/.github/workflows/handbook-question-dedupe.yml@v0.11.2
+    secrets:
+      GUARD_APP_ID: ${{ secrets.ROY_APP_ID }}
+      GUARD_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+
+  sasuke:
+    # Correctness & architecture: UZF conformance against this repo's stack rules
+    # (RC-1..RC-63, handbooks/stacks/react-uzf-v1/).
+    #
+    # Skip dependabot PRs: GitHub withholds Actions secrets from dependabot runs, so
+    # the App-token preflight cannot pass — and a skipped required check never posts,
+    # blocking branch protection forever. Preferred fix when that day comes:
+    # examples/dependabot-review-shim.yml, which posts the skipped contexts as
+    # passing for dependabot PRs only. Policy: CON-30.
+    #
+    # Explicit action allow-list (not `!= 'closed'`): `pull_request.types` above also
+    # carries `labeled` for the CON-26/CON-38 non-vote wake edge, which must NOT
+    # re-trigger a fresh review pair — only the three real review actions do.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    uses: zheref/bankai-core/.github/workflows/sasuke-review.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+    secrets:
+      SASUKE_APP_ID: ${{ secrets.SASUKE_APP_ID }}
+      SASUKE_APP_PRIVATE_KEY: ${{ secrets.SASUKE_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  tenma:
+    # Security: secrets, authz at the data layer (SEC-6 — Kro Cloud RLS), typed
+    # boundary parsing (SEC-7), token/PII hygiene (SEC-5), CI supply chain (SEC-14).
+    # A `critical` finding pages the maintainer (CON-8).
+    # Same dependabot skip and action allow-list as sasuke above.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    uses: zheref/bankai-core/.github/workflows/tenma-review.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+    secrets:
+      TENMA_APP_ID: ${{ secrets.TENMA_APP_ID }}
+      TENMA_APP_PRIVATE_KEY: ${{ secrets.TENMA_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  bisky:
+    # Design & UX quality — REQUIRED here, because this repo ships UI: accessibility,
+    # touch/pointer target sizes, tokens, contrast, motion (incl. reduced-motion),
+    # platform conventions. Bisky's OWN author-gate and scope-gate decide whether it
+    # reviews or abstains-green, so no extra `if:` logic belongs here.
+    # v0.11.2 contains bisky-review.yml (verified), so this is a real pin, not the
+    # example's placeholder.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    uses: zheref/bankai-core/.github/workflows/bisky-review.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+    secrets:
+      BISKY_APP_ID: ${{ secrets.BISKY_APP_ID }}
+      BISKY_APP_PRIVATE_KEY: ${{ secrets.BISKY_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  gon:
+    # Idea label (human-applied), or a direct dispatch with a non-blank idea. A
+    # blank-idea dispatch is meant only to re-run sync_canon on demand and must NOT
+    # also wake Gon.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.idea != '') ||
+        (github.event_name == 'issues' &&
+         github.event.label.name == 'bankai:stage/idea' &&
+         github.event.sender.type == 'User')
+      )
+    uses: zheref/bankai-core/.github/workflows/gon-research.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+    secrets:
+      GON_APP_ID: ${{ secrets.GON_APP_ID }}
+      GON_APP_PRIVATE_KEY: ${{ secrets.GON_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  roy:
+    # Roy = Lead. Wake conditions (letters are the MODE ids in roy-build.yml; grouped
+    # by event, so the letters are not sequential — roy-build.yml enforces the same
+    # guards one layer down): (A) a human applies a G1 mode label to an epic -> open
+    # it; (C) a chore child carrying bankai:agent/roy is released BY roy-bankai[bot]
+    # (or, in a USER-OWNED repo, the owner) -> build it; (B) a dev-bot PR into
+    # integration/* is APPROVED by a trusted reviewer -> gate-check & merge; (D) a
+    # trusted reviewer requests changes on Roy's OWN PR, OR Copilot reviews it (the
+    # CON-16 round), OR the CON-26/CON-38 non-vote `bankai:wake/iterate` label lands
+    # on Roy's OWN PR (sender-gated to the repo owner) -> iterate; (E) a dev-bot child
+    # PR to the default branch is MERGED (shikai) -> next wave; (F) CI failed on Roy's
+    # OWN roy/* branch -> auto-remediate; (G) a human comments on Roy's own in-review
+    # chore child -> address it; (H) a commit lands on the default branch -> cascade
+    # the sync into every live integration/* branch (CON-21); (I) a child PR MERGED
+    # into integration/epic-* -> keep the epic delivery PR body living (CON-31);
+    # (J) a human comments on Roy's OWN open bankai:epic delivery PR -> classify into
+    # the CON-34 observation-fix lane; (K) a human plain-comments on Roy's OWN open
+    # bankai:observation-fix PR -> iterate, the sole CON-26 carve-out.
+    # NB: `github.repository_owner` is the ORG in an org-owned repo; kro-pwa is
+    # user-owned, so the owner clauses do enable a human override here.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'issues' &&
+         (github.event.label.name == 'bankai:stage/ready-for-bankai' ||
+          github.event.label.name == 'bankai:stage/ready-for-shikai') &&
+         github.event.sender.type == 'User') ||
+        (github.event_name == 'issues' &&
+         github.event.label.name == 'bankai:stage/building' &&
+         (github.event.sender.login == 'roy-bankai[bot]' ||
+          github.event.sender.login == github.repository_owner) &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/roy')) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'approved' &&
+         startsWith(github.event.pull_request.base.ref, 'integration/') &&
+         (github.event.pull_request.user.login == 'edward-bankai[bot]' ||
+          github.event.pull_request.user.login == 'alphonse-bankai[bot]' ||
+          github.event.pull_request.user.login == 'roy-bankai[bot]') &&
+         (github.event.review.user.login == 'sasuke-bankai[bot]' ||
+          github.event.review.user.login == 'tenma-bankai[bot]' ||
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'changes_requested' &&
+         github.event.pull_request.user.login == 'roy-bankai[bot]' &&
+         (github.event.review.user.login == 'sasuke-bankai[bot]' ||
+          github.event.review.user.login == 'tenma-bankai[bot]' ||
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.pull_request.user.login == 'roy-bankai[bot]' &&
+         github.event.review.user.login == 'copilot-pull-request-reviewer[bot]') ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'labeled' &&
+         github.event.label.name == 'bankai:wake/iterate' &&
+         github.event.pull_request.user.login == 'roy-bankai[bot]' &&
+         github.event.sender.login == github.repository_owner) ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'closed' &&
+         github.event.pull_request.merged == true &&
+         github.event.pull_request.base.ref == github.event.repository.default_branch &&
+         (github.event.pull_request.user.login == 'edward-bankai[bot]' ||
+          github.event.pull_request.user.login == 'alphonse-bankai[bot]' ||
+          github.event.pull_request.user.login == 'roy-bankai[bot]')) ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'closed' &&
+         github.event.pull_request.merged == true &&
+         startsWith(github.event.pull_request.base.ref, 'integration/epic-')) ||
+        (github.event_name == 'check_suite' &&
+         github.event.check_suite.conclusion == 'failure' &&
+         github.event.check_suite.app.slug == 'github-actions' &&
+         startsWith(github.event.check_suite.head_branch, 'roy/') &&
+         github.event.check_suite.pull_requests[0] &&
+         github.event.check_suite.pull_requests[0].head.repo.id == github.event.check_suite.pull_requests[0].base.repo.id) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.comment.user.type == 'User' &&
+         github.event.action == 'created' &&
+         !github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/roy') &&
+         contains(github.event.issue.labels.*.name, 'bankai:stage/in-review') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'push' &&
+         github.event.ref == format('refs/heads/{0}', github.event.repository.default_branch)) ||
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.roy_cascade == 'true' &&
+         github.actor == 'roy-bankai[bot]') ||
+        (github.event_name == 'issue_comment' &&
+         github.event.action == 'created' &&
+         github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         github.event.issue.user.login == 'roy-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.issue.labels.*.name, 'bankai:epic') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' &&
+         github.event.action == 'created' &&
+         github.event.pull_request.state == 'open' &&
+         github.event.pull_request.user.login == 'roy-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.pull_request.labels.*.name, 'bankai:epic') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.action == 'created' &&
+         github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         github.event.issue.user.login == 'roy-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.issue.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' &&
+         github.event.action == 'created' &&
+         github.event.pull_request.state == 'open' &&
+         github.event.pull_request.user.login == 'roy-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.pull_request.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+      )
+    uses: zheref/bankai-core/.github/workflows/roy-build.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+    secrets:
+      ROY_APP_ID: ${{ secrets.ROY_APP_ID }}
+      ROY_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      # User PAT for requesting Copilot (a bot-token request no-ops; CON-16).
+      # roy-build.yml declares this secret at v0.11.2 (verified), so passing it is safe.
+      COPILOT_REVIEW_PAT: ${{ secrets.COPILOT_REVIEW_PAT }}
+
+  edward:
+    # Edward = UI & design-system engineer. Woken when a child carrying
+    # bankai:agent/edward is released (bankai:stage/building) BY roy-bankai[bot] or
+    # the repo owner — the sender gate stops a triage-level actor forging a release to
+    # wake this privileged job (CWE-862) — or a trusted reviewer requests changes on
+    # Edward's OWN PR, or Copilot reviews it (CON-16), or the CON-26/CON-38 non-vote
+    # `bankai:wake/iterate` label lands on his OWN PR (sender-gated to the owner), or
+    # CI fails on his edward/* branch. dev-build.yml enforces the same one layer down.
+    #
+    # No `runner:` input: this is a headless web stack. There is no device-snapshot
+    # requirement (Storybook + its test-runner carries UZF-26), so the ubuntu-latest
+    # default is correct and no self-hosted macOS runner is needed.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'issues' &&
+         github.event.label.name == 'bankai:stage/building' &&
+         (github.event.sender.login == 'roy-bankai[bot]' ||
+          github.event.sender.login == github.repository_owner) &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/edward')) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'changes_requested' &&
+         github.event.pull_request.user.login == 'edward-bankai[bot]' &&
+         (github.event.review.user.login == 'sasuke-bankai[bot]' ||
+          github.event.review.user.login == 'tenma-bankai[bot]' ||
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.pull_request.user.login == 'edward-bankai[bot]' &&
+         github.event.review.user.login == 'copilot-pull-request-reviewer[bot]') ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'labeled' &&
+         github.event.label.name == 'bankai:wake/iterate' &&
+         github.event.pull_request.user.login == 'edward-bankai[bot]' &&
+         github.event.sender.login == github.repository_owner) ||
+        (github.event_name == 'check_suite' &&
+         github.event.check_suite.conclusion == 'failure' &&
+         github.event.check_suite.app.slug == 'github-actions' &&
+         startsWith(github.event.check_suite.head_branch, 'edward/') &&
+         github.event.check_suite.pull_requests[0] &&
+         github.event.check_suite.pull_requests[0].head.repo.id == github.event.check_suite.pull_requests[0].base.repo.id) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.comment.user.type == 'User' &&
+         github.event.action == 'created' &&
+         !github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/edward') &&
+         contains(github.event.issue.labels.*.name, 'bankai:stage/in-review') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.action == 'created' &&
+         github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         github.event.issue.user.login == 'edward-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.issue.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' &&
+         github.event.action == 'created' &&
+         github.event.pull_request.state == 'open' &&
+         github.event.pull_request.user.login == 'edward-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.pull_request.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+      )
+    uses: zheref/bankai-core/.github/workflows/dev-build.yml@v0.11.2
+    with:
+      agent: edward
+      bankai_scenario: react-uzf-v1
+    secrets:
+      DEV_APP_ID: ${{ secrets.EDWARD_APP_ID }}
+      DEV_APP_PRIVATE_KEY: ${{ secrets.EDWARD_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      COPILOT_REVIEW_PAT: ${{ secrets.COPILOT_REVIEW_PAT }}
+
+  alphonse:
+    # Alphonse = application-logic engineer. Same wake shape as Edward, on his own
+    # label / PR author / alphonse/* branch. Sender gate for the same CWE-862 reason.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'issues' &&
+         github.event.label.name == 'bankai:stage/building' &&
+         (github.event.sender.login == 'roy-bankai[bot]' ||
+          github.event.sender.login == github.repository_owner) &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/alphonse')) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'changes_requested' &&
+         github.event.pull_request.user.login == 'alphonse-bankai[bot]' &&
+         (github.event.review.user.login == 'sasuke-bankai[bot]' ||
+          github.event.review.user.login == 'tenma-bankai[bot]' ||
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.pull_request.user.login == 'alphonse-bankai[bot]' &&
+         github.event.review.user.login == 'copilot-pull-request-reviewer[bot]') ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'labeled' &&
+         github.event.label.name == 'bankai:wake/iterate' &&
+         github.event.pull_request.user.login == 'alphonse-bankai[bot]' &&
+         github.event.sender.login == github.repository_owner) ||
+        (github.event_name == 'check_suite' &&
+         github.event.check_suite.conclusion == 'failure' &&
+         github.event.check_suite.app.slug == 'github-actions' &&
+         startsWith(github.event.check_suite.head_branch, 'alphonse/') &&
+         github.event.check_suite.pull_requests[0] &&
+         github.event.check_suite.pull_requests[0].head.repo.id == github.event.check_suite.pull_requests[0].base.repo.id) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.comment.user.type == 'User' &&
+         github.event.action == 'created' &&
+         !github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/alphonse') &&
+         contains(github.event.issue.labels.*.name, 'bankai:stage/in-review') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.action == 'created' &&
+         github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         github.event.issue.user.login == 'alphonse-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.issue.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' &&
+         github.event.action == 'created' &&
+         github.event.pull_request.state == 'open' &&
+         github.event.pull_request.user.login == 'alphonse-bankai[bot]' &&
+         github.event.comment.user.type == 'User' &&
+         contains(github.event.pull_request.labels.*.name, 'bankai:observation-fix') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+      )
+    uses: zheref/bankai-core/.github/workflows/dev-build.yml@v0.11.2
+    with:
+      agent: alphonse
+      bankai_scenario: react-uzf-v1
+    secrets:
+      DEV_APP_ID: ${{ secrets.ALPHONSE_APP_ID }}
+      DEV_APP_PRIVATE_KEY: ${{ secrets.ALPHONSE_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      COPILOT_REVIEW_PAT: ${{ secrets.COPILOT_REVIEW_PAT }}
+
+  kisuke:
+    # Kisuke (machinery builder) — consumer-repo dispatch path. Wired the same shape
+    # as bankai-core's own self-hosting bankai.yml: (RELEASE) a machinery child
+    # carrying bankai:agent/kisuke released BY roy-bankai[bot] or the owner (sender
+    # gate, CWE-862); (ITERATE) a trusted reviewer requests changes on Kisuke's OWN
+    # PR, Copilot reviews it (CON-16), or `bankai:wake/iterate` lands on his OWN PR
+    # (sender-gated to the owner — the replacement for a local agent synthesizing a
+    # review vote on the human's identity, which CON-38 prohibits outright);
+    # (REMEDIATE) CI failed on his OWN kisuke/* branch.
+    #
+    # Relevant here because sync_canon's regenerate PR is stamped agent=kisuke: this
+    # is the path that iterates on one. KISUKE_APP_ID/KEY are OPTIONAL — without them
+    # this job stays skipped along with every other (BANKAI_APPS_READY), and once the
+    # variable is set it fails closed with a clear error until the App exists.
+    #
+    # NOT wired: Kisuke's scheduled DevEx sweeps (deps-ci-health / failure-pattern /
+    # runner-cost) — those crons are pinned to bankai-core itself.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'issues' &&
+         github.event.label.name == 'bankai:stage/building' &&
+         (github.event.sender.login == 'roy-bankai[bot]' ||
+          github.event.sender.login == github.repository_owner) &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/kisuke')) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'changes_requested' &&
+         github.event.pull_request.user.login == 'kisuke-bankai[bot]' &&
+         (github.event.review.user.login == 'sasuke-bankai[bot]' ||
+          github.event.review.user.login == 'tenma-bankai[bot]' ||
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))) ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.pull_request.user.login == 'kisuke-bankai[bot]' &&
+         github.event.review.user.login == 'copilot-pull-request-reviewer[bot]') ||
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'labeled' &&
+         github.event.label.name == 'bankai:wake/iterate' &&
+         github.event.pull_request.user.login == 'kisuke-bankai[bot]' &&
+         github.event.sender.login == github.repository_owner) ||
+        (github.event_name == 'check_suite' &&
+         github.event.check_suite.conclusion == 'failure' &&
+         github.event.check_suite.app.slug == 'github-actions' &&
+         startsWith(github.event.check_suite.head_branch, 'kisuke/') &&
+         github.event.check_suite.pull_requests[0] &&
+         github.event.check_suite.pull_requests[0].head.repo.id == github.event.check_suite.pull_requests[0].base.repo.id) ||
+        (github.event_name == 'issue_comment' &&
+         github.event.comment.user.type == 'User' &&
+         github.event.action == 'created' &&
+         !github.event.issue.pull_request &&
+         github.event.issue.state == 'open' &&
+         contains(github.event.issue.labels.*.name, 'bankai:agent/kisuke') &&
+         contains(github.event.issue.labels.*.name, 'bankai:stage/in-review') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+      )
+    uses: zheref/bankai-core/.github/workflows/kisuke-build.yml@v0.11.2
+    secrets:
+      KISUKE_APP_ID: ${{ secrets.KISUKE_APP_ID }}
+      KISUKE_APP_PRIVATE_KEY: ${{ secrets.KISUKE_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      COPILOT_REVIEW_PAT: ${{ secrets.COPILOT_REVIEW_PAT }}
+
+  copilot_sweeper:
+    # CON-16 backstop, and REQUIRED of any consumer that wires a CI builder: without
+    # it the repo has no mechanism to reach `addressed` on a Copilot round without a
+    # human. Runs ONLY on the schedule tick (github-actions[bot] actor — trusted, so
+    # GitHub does not gate it). Sweeps open agent-authored child PRs and wakes the
+    # owning agent to address any Copilot round GitHub gated.
+    #
+    # No `edward_runner:` input — headless web stack, ubuntu-latest default is right.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'schedule'
+    uses: zheref/bankai-core/.github/workflows/copilot-sweeper.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+      # SECURITY (SEC-14): unlike the event-gated jobs — which let bankai_core_ref
+      # default to `main` so agent definitions stay live — the sweeper is one of the
+      # two jobs with no event gate (pure schedule), driving an autonomous,
+      # push-capable agent. PIN its agent-definition ref to the SAME reviewed release
+      # as its `uses:` tag, so a bare commit to bankai-core:main cannot alter this
+      # ungated path on the next tick. Bump both together.
+      bankai_core_ref: v0.11.2
+    secrets:
+      EDWARD_APP_ID: ${{ secrets.EDWARD_APP_ID }}
+      EDWARD_APP_PRIVATE_KEY: ${{ secrets.EDWARD_APP_PRIVATE_KEY }}
+      ALPHONSE_APP_ID: ${{ secrets.ALPHONSE_APP_ID }}
+      ALPHONSE_APP_PRIVATE_KEY: ${{ secrets.ALPHONSE_APP_PRIVATE_KEY }}
+      ROY_APP_ID: ${{ secrets.ROY_APP_ID }}
+      ROY_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      # Lets the sweeper START a Copilot round that never began (a bot PR that opened
+      # while the PAT was unset). A bot-token request no-ops (CON-16); the sweeper
+      # only warns if it is missing.
+      COPILOT_REVIEW_PAT: ${{ secrets.COPILOT_REVIEW_PAT }}
+
+  epic_coordinator:
+    # CON-23 — a child completion PR MERGED into integration/epic-* -> the
+    # deterministic coordinator rewrites the epic body (progress bar + child
+    # checklist) AND releases the next wave. THE SINGLE releaser: Roy MODE B
+    # gate-checks + merges but DEFERS the release to this, so no double wave, and a
+    # child merged by a HUMAN advances the epic too. No agent, no LLM.
+    #
+    # The schedule branch is the level-triggered backstop: it reuses the same 15-min
+    # tick declared above and, per firing, recomputes + releases any unblocked child
+    # on every ACTIVE epic — so a quiescent epic self-recovers. Idempotent.
+    #
+    # NOTE for this repo: epic #1 was released at G1 with SHIKAI semantics — children
+    # deliver as PRs directly against `main`, so no `integration/epic-*` branch exists
+    # today and the merge branch of this job will not fire. It is wired anyway so a
+    # future bankai-mode epic needs no workflow change, and the schedule branch is a
+    # no-op tick when nothing is releasable.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'pull_request' &&
+         github.event.action == 'closed' &&
+         github.event.pull_request.merged == true &&
+         startsWith(github.event.pull_request.base.ref, 'integration/epic-')) ||
+        github.event_name == 'schedule'
+      )
+    uses: zheref/bankai-core/.github/workflows/epic-coordinator.yml@v0.11.2
+    with:
+      cap: 3
+      bankai_core_ref: v0.11.2
+      stall_grace_minutes: 30
+      stall_max_attempts: 3
+    secrets:
+      ROY_APP_ID: ${{ secrets.ROY_APP_ID }}
+      ROY_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+
+  cascade_ancestry_guard:
+    # CON-21 cascade ancestry backstop. Every push to a live integration/* branch (a
+    # sync or an ordinary child-PR merge) — checks that `main` is still an ancestor;
+    # only a squashed sync can sever that. Detective, not preventive (GitHub has no
+    # native per-branch "merge commits only" rule) — files/updates one alert issue per
+    # severed branch. Reuses Roy's App.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      github.event_name == 'push' &&
+      startsWith(github.event.ref, 'refs/heads/integration/')
+    uses: zheref/bankai-core/.github/workflows/cascade-ancestry-guard.yml@v0.11.2
+    secrets:
+      ROY_APP_ID: ${{ secrets.ROY_APP_ID }}
+      ROY_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}
+
+  sync_canon:
+    # CON-13 — the .claude/rules/ canon mirror. `drift_check` (inside sync-canon.yml)
+    # runs on `pull_request` and fails the check if any committed mirror file is
+    # HAND-EDITED (differs from a fresh generation) or STALE (its own generated-header
+    # ref lags `bankai_core_ref`). `regenerate` runs on the other three gates and
+    # opens/updates a PR when the mirror changed.
+    #
+    # mirror_dir is the per-stack subdirectory, NOT `.claude/rules` itself: the shared
+    # `00-uzf-core.md` and `00-stack-matrix.md` mirrors live at the top level and have
+    # no canon source under `handbooks/stacks/react-uzf-v1/rules/`, so a flat
+    # mirror_dir would report them as `extra` and fail the drift check on every PR.
+    # This matches how bankai-scaffold wires the same job.
+    #
+    # The fork guard is defense-in-depth (SEC-14): GitHub already withholds secrets
+    # from fork-triggered pull_request runs by default, but this keeps the ROY_APP_*
+    # secrets from ever reaching a fork PR's job even if that default is changed.
+    if: >-
+      vars.BANKAI_APPS_READY == 'true' &&
+      (
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.user.login != 'dependabot[bot]' &&
+         github.event.pull_request.head.repo.fork == false) ||
+        github.event_name == 'schedule' ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.roy_cascade != 'true') ||
+        (github.event_name == 'push' && github.event.ref == format('refs/heads/{0}', github.event.repository.default_branch))
+      )
+    uses: zheref/bankai-core/.github/workflows/sync-canon.yml@v0.11.2
+    with:
+      bankai_scenario: react-uzf-v1
+      canon_values_path: .claude/canon-values.yml
+      mirror_dir: .claude/rules/react-uzf-v1
+      # Same tag as this job's `uses:` (two-axis pinning, CON-14): the drift-check's
+      # staleness check compares each committed mirror file's recorded ref against
+      # exactly this value, and the mirror in this PR was generated at v0.11.2.
+      bankai_core_ref: v0.11.2
+    secrets:
+      ROY_APP_ID: ${{ secrets.ROY_APP_ID }}
+      ROY_APP_PRIVATE_KEY: ${{ secrets.ROY_APP_PRIVATE_KEY }}

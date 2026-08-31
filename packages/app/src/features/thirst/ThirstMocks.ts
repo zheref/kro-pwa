@@ -32,10 +32,17 @@ export const thirstEntryMocks = {
     isLoadingCounts: true,
   } satisfies ThirstVoteEntryState,
 
-  /** Signed in, not yet voted, counts loaded. */
+  /**
+   * Signed in, not yet voted, counts loaded — both checks have RESOLVED, so
+   * `isCheckingVoteState` is explicitly `false` here rather than inherited
+   * from `initialThirstVoteEntry`'s default (`true`, meaning "not yet
+   * known" — see that field's own doc comment). Every other "resolved"
+   * mock below does the same for the same reason.
+   */
   votable: {
     ...initialThirstVoteEntry,
     counts: thirstCountsFixture,
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 
   /** Already voted — the `web` tally the vote bumped is visible. */
@@ -43,25 +50,29 @@ export const thirstEntryMocks = {
     ...initialThirstVoteEntry,
     counts: bumpVotePlatform(thirstCountsFixture, THIRST_MOCK_FEATURE_KEY, VotePlatform.web),
     alreadyVoted: true,
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 
   /** Signed out — the vote-state check failed with the typed reason. */
   unavailableSignedOut: {
     ...initialThirstVoteEntry,
     voteStateException: ThirstExceptions.notSignedIn(),
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 
   /** Offline before the auth check ever resolved — no counts loaded either. */
   unavailableOffline: {
     ...initialThirstVoteEntry,
     voteStateException: ThirstExceptions.offline(),
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 
-  /** A vote request in flight. */
+  /** A vote request in flight — both checks already resolved cleanly. */
   voting: {
     ...initialThirstVoteEntry,
     counts: thirstCountsFixture,
     isVoting: true,
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 
   /** A vote attempt failed — the surface stays votable for a retry. */
@@ -69,6 +80,7 @@ export const thirstEntryMocks = {
     ...initialThirstVoteEntry,
     counts: thirstCountsFixture,
     voteException: ThirstExceptions.unknown('insert failed'),
+    isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,
 }
 

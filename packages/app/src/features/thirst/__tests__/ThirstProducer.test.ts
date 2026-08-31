@@ -102,4 +102,57 @@ describe('castVoteThunk', () => {
     const action = await store.dispatch(castVoteThunk({ featureKey: key, id: 'vote-2' }))
     expect(castVoteThunk.fulfilled.match(action)).toBe(true)
   })
+
+  /**
+   * The stale-counts race (found in review): a counts fetch dispatched
+   * *before* the vote, but resolving *after* it, must never overwrite the
+   * optimistic bump with its now-outdated snapshot — the scenario is a
+   * remount re-firing `fetchCountsThunk` while the vote lands before that
+   * refetch resolves. Driven end to end through real thunks: seed the
+   * counts with one ordinary fetch, then dispatch a second, deliberately
+   * delayed one that is still in flight when the (fast, real) vote resolves.
+   */
+  it('a slower in-flight counts fetch never overwrites an optimistic vote that resolves first', async () => {
+    let releaseFetch: (() => void) | undefined
+    const fetchGate = new Promise<void>((resolve) => {
+      releaseFetch = resolve
+    })
+    let gateNextFetch = false
+    const base = makeStubbedThirstService({
+      signedIn: true,
+      initialCounts: { [key]: thirstCountsFixture },
+    })
+    const delayedService = {
+      ...base,
+      async fetchCounts(featureKey: string, options?: { signal?: AbortSignal }) {
+        if (gateNextFetch) await fetchGate
+        return base.fetchCounts(featureKey, options)
+      },
+    }
+    const extra: ThunkExtra = { ...stubbedThunkExtra, thirstService: delayedService }
+    const store = makeStore(extra)
+
+    // The ordinary first mount's fetch — resolves immediately and installs
+    // the seeded counts.
+    await store.dispatch(fetchCountsThunk({ featureKey: key }))
+    expect(store.getState().thirst.byFeatureKey[key]?.counts?.total).toBe(
+      thirstCountsFixture.total,
+    )
+
+    // A remount re-fires the fetch; gate this one so it stays in flight.
+    gateNextFetch = true
+    const refetching = store.dispatch(fetchCountsThunk({ featureKey: key }))
+
+    await store.dispatch(castVoteThunk({ featureKey: key, id: 'vote-1' }))
+    const bumpedTotal = store.getState().thirst.byFeatureKey[key]?.counts?.total
+    expect(bumpedTotal).toBe(thirstCountsFixture.total + 1)
+
+    // The stale, gated fetch finally resolves with its pre-vote snapshot.
+    releaseFetch?.()
+    await refetching
+
+    const entry = store.getState().thirst.byFeatureKey[key]
+    expect(entry?.counts?.total).toBe(bumpedTotal)
+    expect(entry?.alreadyVoted).toBe(true)
+  })
 })

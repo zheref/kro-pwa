@@ -123,6 +123,35 @@ interface FakeClientConfig {
   readonly selectError?: { readonly message: string } | null
   readonly rpcRows?: readonly Record<string, unknown>[]
   readonly rpcError?: { readonly message: string } | null
+  /** Called with whatever `AbortSignal` a query's `.abortSignal(...)` chain
+   * was given — the way to prove signal forwarding actually reached the
+   * query builder, not just that the Service accepted the option. */
+  readonly onAbortSignal?: (signal: AbortSignal) => void
+}
+
+/**
+ * A minimal thenable + chainable double for a Postgrest/RPC query builder:
+ * `await` resolves it (matching how the live Service awaits the builder
+ * directly), and `.abortSignal(signal)` is chainable and observable, the
+ * same shape real supabase-js query builders expose.
+ */
+const fakeQuery = (
+  result: { readonly data?: unknown; readonly error: unknown },
+  onAbortSignal?: (signal: AbortSignal) => void,
+) => {
+  const query = {
+    abortSignal(signal: AbortSignal) {
+      onAbortSignal?.(signal)
+      return query
+    },
+    then(
+      resolve: (value: typeof result) => void,
+      reject?: (reason: unknown) => void,
+    ) {
+      return Promise.resolve(result).then(resolve, reject)
+    },
+  }
+  return query
 }
 
 const fakeClient = (config: FakeClientConfig): SupabaseClient => {
@@ -134,21 +163,23 @@ const fakeClient = (config: FakeClientConfig): SupabaseClient => {
       }),
     },
     from: (_table: string) => ({
-      insert: async (payload: unknown) => {
+      insert: (payload: unknown) => {
         config.onInsert?.(payload)
-        return { error: config.insertError ?? null }
+        return fakeQuery({ error: config.insertError ?? null }, config.onAbortSignal)
       },
       select: (_columns: string) => ({
-        eq: async (_column: string, _value: string) => ({
-          data: config.selectRows ?? [],
-          error: config.selectError ?? null,
-        }),
+        eq: (_column: string, _value: string) =>
+          fakeQuery(
+            { data: config.selectRows ?? [], error: config.selectError ?? null },
+            config.onAbortSignal,
+          ),
       }),
     }),
-    rpc: async (_fn: string, _params: Record<string, unknown>) => ({
-      data: config.rpcRows ?? [],
-      error: config.rpcError ?? null,
-    }),
+    rpc: (_fn: string, _params: Record<string, unknown>) =>
+      fakeQuery(
+        { data: config.rpcRows ?? [], error: config.rpcError ?? null },
+        config.onAbortSignal,
+      ),
   }
   return client as unknown as SupabaseClient
 }
@@ -159,6 +190,24 @@ const providerFor = (client: SupabaseClient): SupabaseClientProvider => ({
 })
 
 const SESSION = { user: { id: 'user-1', email: 'ada@example.com' } }
+
+describe('requireSignedInClient — getSession() failing is a transport error, not "signed out"', () => {
+  it('maps a getSession() failure to a typed exception rather than throwing the raw Supabase error', async () => {
+    const client = {
+      auth: {
+        getSession: async () => ({
+          data: { session: null },
+          error: Object.assign(new Error('network unreachable'), { code: 'unreachable' }),
+        }),
+      },
+    } as unknown as SupabaseClient
+    const service = makeLiveThirstService({ clientProvider: providerFor(client) })
+    await expect(service.castVote('matrix', 'vote-1')).rejects.toMatchObject({
+      kind: 'unknown',
+      message: 'network unreachable',
+    })
+  })
+})
 
 describe('the live service, configured, signed in', () => {
   it('castVote writes the web platform tag against the canon table — no KroApple change needed', async () => {
@@ -215,6 +264,16 @@ describe('the live service, configured, signed in', () => {
     })
   })
 
+  it('forwards the caller\'s AbortSignal to the insert — a cancelled thunk actually cancels the request', async () => {
+    const controller = new AbortController()
+    const onAbortSignal = vi.fn()
+    const service = makeLiveThirstService({
+      clientProvider: providerFor(fakeClient({ session: SESSION, onAbortSignal })),
+    })
+    await service.castVote('matrix', 'vote-1', { signal: controller.signal })
+    expect(onAbortSignal).toHaveBeenCalledWith(controller.signal)
+  })
+
   it('hasVoted reports true when RLS returns a matching row', async () => {
     const service = makeLiveThirstService({
       clientProvider: providerFor(fakeClient({ session: SESSION, selectRows: [{ id: 'v1' }] })),
@@ -236,6 +295,16 @@ describe('the live service, configured, signed in', () => {
       ),
     })
     await expect(service.hasVoted('matrix')).rejects.toMatchObject({ kind: 'unknown' })
+  })
+
+  it('forwards the caller\'s AbortSignal to the select', async () => {
+    const controller = new AbortController()
+    const onAbortSignal = vi.fn()
+    const service = makeLiveThirstService({
+      clientProvider: providerFor(fakeClient({ session: SESSION, onAbortSignal })),
+    })
+    await service.hasVoted('matrix', { signal: controller.signal })
+    expect(onAbortSignal).toHaveBeenCalledWith(controller.signal)
   })
 })
 
@@ -289,6 +358,16 @@ describe('the live service, fetchCounts (public, no session required)', () => {
       clientProvider: providerFor(fakeClient({ rpcError: { message: 'function not found' } })),
     })
     await expect(service.fetchCounts('matrix')).rejects.toMatchObject({ kind: 'unknown' })
+  })
+
+  it('forwards the caller\'s AbortSignal to the RPC call', async () => {
+    const controller = new AbortController()
+    const onAbortSignal = vi.fn()
+    const service = makeLiveThirstService({
+      clientProvider: providerFor(fakeClient({ onAbortSignal })),
+    })
+    await service.fetchCounts('matrix', { signal: controller.signal })
+    expect(onAbortSignal).toHaveBeenCalledWith(controller.signal)
   })
 
   it('a browser transport failure (TypeError) degrades to offline', async () => {

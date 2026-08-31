@@ -122,7 +122,10 @@ const requireSignedInClient = async (
   const client = provider.client()
   if (client === null) throw ThirstExceptions.notSignedIn()
   const { data, error } = await client.auth.getSession()
-  if (error !== null) throw error
+  // `getSession()` failing is not itself "no session" — it is a transport/
+  // server failure, so it goes through the same mapping every other caught
+  // error does rather than escaping as a raw Supabase error.
+  if (error !== null) throw toThirstException(error)
   const user = data.session?.user
   if (user === undefined) throw ThirstExceptions.notSignedIn()
   return { client, username: user.email ?? user.id }
@@ -132,16 +135,18 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
   const { clientProvider } = options
 
   return {
-    async castVote(featureKey, id) {
+    async castVote(featureKey, id, callOptions) {
       const { client, username } = await requireSignedInClient(clientProvider)
       try {
-        const { error } = await client.from(VOTES_TABLE).insert({
+        let query = client.from(VOTES_TABLE).insert({
           id,
           feature_title: thirstFeatureTitle(featureKey) ?? featureKey,
           feature_key: featureKey,
           username,
           platform: WEB_VOTE_PLATFORM,
         })
+        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        const { error } = await query
         if (error !== null) {
           if (error.code === UNIQUE_VIOLATION) return
           throw error
@@ -151,15 +156,14 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
       }
     },
 
-    async hasVoted(featureKey) {
+    async hasVoted(featureKey, callOptions) {
       const { client } = await requireSignedInClient(clientProvider)
       try {
         // RLS scopes SELECT to the caller's own rows (`votes_select_self`),
         // so any match means the current user has voted.
-        const { data, error } = await client
-          .from(VOTES_TABLE)
-          .select('id')
-          .eq('feature_key', featureKey)
+        let query = client.from(VOTES_TABLE).select('id').eq('feature_key', featureKey)
+        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        const { data, error } = await query
         if (error !== null) throw error
         return (data ?? []).length > 0
       } catch (error) {
@@ -167,16 +171,16 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
       }
     },
 
-    async fetchCounts(featureKey) {
+    async fetchCounts(featureKey, callOptions) {
       const client = clientProvider.client()
       // Public data; an unconfigured project simply has none to show — not
       // a failure (mirrors `AuthService.signOut`'s "no client, nothing to
       // do" shape).
       if (client === null) return emptyFeatureVoteCounts(featureKey)
       try {
-        const { data, error } = await client.rpc(VOTE_COUNTS_RPC, {
-          p_feature_key: featureKey,
-        })
+        let query = client.rpc(VOTE_COUNTS_RPC, { p_feature_key: featureKey })
+        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        const { data, error } = await query
         if (error !== null) throw error
         return foldVoteCountRows(featureKey, (data ?? []) as readonly VoteCountRow[])
       } catch (error) {

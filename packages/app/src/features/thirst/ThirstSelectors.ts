@@ -54,6 +54,10 @@ export const selectThirstVoteStatus = createSelector(
     }
     // Stay in loading until the auth check resolves, even if public counts
     // already arrived — never show a votable CTA to a not-yet-verified user.
+    // This also covers the check NOT having started yet: `isCheckingVoteState`
+    // defaults `true` (`ThirstFeature.ts`'s `initialThirstVoteEntry`) for
+    // exactly this reason — the pre-`useEffect` first paint reads as loading,
+    // never as a transiently-votable false positive (found in review).
     if (entry.isCheckingVoteState) return { kind: 'loading' }
     if (entry.isLoadingCounts && entry.counts === null) return { kind: 'loading' }
     return { kind: 'votable' }
@@ -88,15 +92,21 @@ export const selectThirstIsVoting = createSelector(
   (entry) => entry.isVoting,
 )
 
-/** A transient vote-attempt error, shown inline only while the surface is
- * still votable (not while loading or blocked by an auth failure) — canon's
- * `voteErrorMessageSelector`. */
+/**
+ * A transient vote-attempt error, shown inline only while the surface is
+ * still votable (not while blocked by an auth failure, and not once a vote
+ * already landed) — canon's `voteErrorMessageSelector`, minus its `counts !=
+ * nil` guard. That guard is dropped deliberately: casting a vote never
+ * depends on counts having loaded (`ComingSoonPage.tsx`'s `onVote` does not
+ * check `hasCounts`), so requiring it here only hid a genuine failed-vote
+ * retry message whenever the public counts fetch had itself failed — the
+ * user would see the CTA stop spinning with no explanation at all (found in
+ * review).
+ */
 export const selectThirstVoteErrorMessage = createSelector(
   [selectThirstEntry],
   (entry): string | null => {
-    if (entry.alreadyVoted || entry.voteStateException !== null || entry.counts === null) {
-      return null
-    }
+    if (entry.alreadyVoted || entry.voteStateException !== null) return null
     return entry.voteException === null ? null : thirstExceptionCopy(entry.voteException)
   },
 )

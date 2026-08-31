@@ -86,10 +86,12 @@ describe('thirstStateMocks — composed against the real Selectors', () => {
 
   it('empty resolves to loading before either check has started', () => {
     const state = rootWith(thirstStateMocks.empty)
-    // No entry yet ⇒ the initial-entry defaults; a votable key that has not
-    // started checking reads as votable (nothing in flight, nothing failed).
+    // No entry yet ⇒ the initial-entry defaults, which start
+    // `isCheckingVoteState: true` for exactly this reason (found in review:
+    // the pre-mount first paint must never read as a transiently-votable
+    // false positive for a signed-out visitor).
     expect(selectThirstVoteStatus(state, THIRST_MOCK_FEATURE_KEY)).toEqual({
-      kind: 'votable',
+      kind: 'loading',
     })
   })
 })

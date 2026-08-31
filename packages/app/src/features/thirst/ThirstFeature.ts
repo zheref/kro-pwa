@@ -59,16 +59,60 @@ export interface ThirstVoteEntryState {
   readonly voteStateException: ThirstException | null
   /** Failure from a vote attempt — surface stays votable so a retry works. */
   readonly voteException: ThirstException | null
+  /**
+   * Bumped every time a vote is locally confirmed (`withVoteResult`'s
+   * success branch). Lets a `checkVoteStateThunk`/`fetchCountsThunk`
+   * dispatched *before* that confirmation recognize its own response, on
+   * arrival, as stale relative to the vote — see
+   * `pendingCountsVoteEpoch`/`pendingVoteStateVoteEpoch` below and
+   * `ThirstShifters.ts`'s header (found in review: a slower counts fetch
+   * landing after a faster vote was silently erasing the optimistic bump).
+   */
+  readonly voteEpoch: number
+  /** The `requestId` of the currently-outstanding counts fetch, so an OLDER
+   * dispatch's late response (e.g. a fetch from before a remount) is
+   * recognized as superseded by a newer one rather than applied. `null`
+   * when no fetch is outstanding. */
+  readonly pendingCountsRequestId: string | null
+  /** `voteEpoch` as of the moment `pendingCountsRequestId`'s fetch was
+   * dispatched. If `voteEpoch` has since moved on by the time that fetch
+   * resolves, its payload predates a vote and must not overwrite the
+   * optimistic bump. */
+  readonly pendingCountsVoteEpoch: number
+  /** The same guard, for `checkVoteStateThunk` — a stale "not yet voted"
+   * answer must never revert `alreadyVoted` back to `false` after a vote
+   * has since been confirmed. */
+  readonly pendingVoteStateRequestId: string | null
+  readonly pendingVoteStateVoteEpoch: number
 }
 
+/**
+ * `isCheckingVoteState` defaults to `true`, not `false`.
+ *
+ * `ComingSoonPage.tsx` dispatches `checkVoteStateThunk` from a `useEffect`,
+ * which fires strictly *after* the first paint — so any read of this entry
+ * before that effect runs (or for a feature key the store has never touched
+ * at all) is genuinely "we don't yet know whether this account voted", never
+ * "resolved, and the answer is no". Defaulting to `false` here let
+ * `selectThirstVoteStatus` fall through to `votable` for that one frame,
+ * flashing an enabled vote CTA at a signed-out visitor before the auth check
+ * ever started (found in review). `.pending` still sets this explicitly on
+ * dispatch, so the value is unchanged once the effect fires — only the
+ * pre-effect gap is fixed.
+ */
 export const initialThirstVoteEntry: ThirstVoteEntryState = {
   counts: null,
   alreadyVoted: false,
   isVoting: false,
   isLoadingCounts: false,
-  isCheckingVoteState: false,
+  isCheckingVoteState: true,
   voteStateException: null,
   voteException: null,
+  voteEpoch: 0,
+  pendingCountsRequestId: null,
+  pendingCountsVoteEpoch: 0,
+  pendingVoteStateRequestId: null,
+  pendingVoteStateVoteEpoch: 0,
 }
 
 export interface ThirstState {
@@ -87,13 +131,22 @@ export const thirstSlice = createSlice({
       .addCase(checkVoteStateThunk.pending, (state, action) => {
         Object.assign(
           state,
-          withVoteStateCheckStarted(state, action.meta.arg.featureKey),
+          withVoteStateCheckStarted(
+            state,
+            action.meta.arg.featureKey,
+            action.meta.requestId,
+          ),
         )
       })
       .addCase(checkVoteStateThunk.fulfilled, (state, action) => {
         Object.assign(
           state,
-          withVoteStateResult(state, action.meta.arg.featureKey, action.payload),
+          withVoteStateResult(
+            state,
+            action.meta.arg.featureKey,
+            action.meta.requestId,
+            action.payload,
+          ),
         )
       })
       // Defensive only — the payload creator's try/catch means this should
@@ -105,6 +158,7 @@ export const thirstSlice = createSlice({
           withVoteStateResult(
             state,
             action.meta.arg.featureKey,
+            action.meta.requestId,
             err(ThirstExceptions.unknown(action.error.message ?? 'Unknown error')),
           ),
         )
@@ -112,12 +166,20 @@ export const thirstSlice = createSlice({
 
       // --- the public counts fetch ---------------------------------------
       .addCase(fetchCountsThunk.pending, (state, action) => {
-        Object.assign(state, withCountsFetchStarted(state, action.meta.arg.featureKey))
+        Object.assign(
+          state,
+          withCountsFetchStarted(state, action.meta.arg.featureKey, action.meta.requestId),
+        )
       })
       .addCase(fetchCountsThunk.fulfilled, (state, action) => {
         Object.assign(
           state,
-          withCountsResult(state, action.meta.arg.featureKey, action.payload),
+          withCountsResult(
+            state,
+            action.meta.arg.featureKey,
+            action.meta.requestId,
+            action.payload,
+          ),
         )
       })
       .addCase(fetchCountsThunk.rejected, (state, action) => {
@@ -129,6 +191,7 @@ export const thirstSlice = createSlice({
           withCountsResult(
             state,
             action.meta.arg.featureKey,
+            action.meta.requestId,
             err(ThirstExceptions.unknown(action.error.message ?? 'Unknown error')),
           ),
         )

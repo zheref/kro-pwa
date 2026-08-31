@@ -96,6 +96,48 @@ describe('makeLiveLocalStore — the factory opens nothing', () => {
     expect(await store.runningSessionAnchor.read()).toBeNull()
   })
 
+  it('still builds where the runtime has NO IndexedDB — SSR, a Node test', () => {
+    vi.stubGlobal('indexedDB', undefined)
+    try {
+      expect(() =>
+        makeLiveLocalStore({ webStorage: makeMemoryWebStorage() }),
+      ).not.toThrow()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('rejects with a NAMED `unavailable`, not a bare TypeError, on first use', async () => {
+    // Dereferencing an absent global would produce
+    // `TypeError: Cannot read properties of undefined (reading 'open')`, which
+    // maps to `writeFailed` — offering the user a retry that cannot succeed.
+    vi.stubGlobal('indexedDB', undefined)
+    try {
+      const store = makeLiveLocalStore({ webStorage: makeMemoryWebStorage() })
+      await expect(store.endeavors.all()).rejects.toMatchObject({
+        kind: 'unavailable',
+        recoverable: false,
+      })
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('keeps the two localStorage-backed stores working without IndexedDB', async () => {
+    // The reason the factory degrades rather than throwing: preferences and the
+    // session anchor do not need a database, and losing them too would turn a
+    // storage gap into a dead app.
+    vi.stubGlobal('indexedDB', undefined)
+    try {
+      const store = makeLiveLocalStore({ webStorage: makeMemoryWebStorage() })
+      store.preferences.set('kro:theme', 'dark')
+      expect(store.preferences.get('kro:theme')).toBe('dark')
+      expect(await store.runningSessionAnchor.read()).toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('does not reach `localStorage` for the six IndexedDB stores', async () => {
     const backing = makeMemoryWebStorage()
     const store = makeLiveLocalStore({

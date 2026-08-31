@@ -22,6 +22,7 @@
  * `runningSessionAnchor`). `WebStorageStores.ts` gives the reason for the
  * split — synchronous reads and whole-document replacement, respectively.
  */
+import { PersistenceExceptions } from '@kro/core'
 import type { LocalStore } from '@kro/core'
 import {
   type DatabaseProvider,
@@ -73,28 +74,61 @@ export const memoizeDatabase = (
 }
 
 /**
+ * The browser's `IDBFactory`, or `undefined` where there is none.
+ *
+ * `undefined` is a real state, not a defensive flourish: a Next.js server
+ * render, a Node test, and a browser mode with storage disabled all reach this
+ * code with no `indexedDB`. The DOM lib types the global as non-optional, which
+ * is exactly why a plain `globalThis.indexedDB` read type-checks and then fails
+ * at runtime — so the read is guarded and the result is honestly typed.
+ *
+ * The `try` mirrors `resolveWebStorage`'s: some privacy modes throw on the
+ * property access itself, before any method is called.
+ */
+const resolveIndexedDb = (): IDBFactory | undefined => {
+  try {
+    return typeof indexedDB === 'undefined' ? undefined : indexedDB
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * The live bundle.
  *
- * `indexedDB` is resolved from the global by default and is **required** — a
- * runtime without it cannot back these six stores, and the failure surfaces on
- * the first operation as a rejected promise a Producer maps through
- * `localStoreException`, rather than as a factory that throws at import time.
- * `localStorage`, by contrast, degrades to an in-memory stand-in, because
- * losing preferences for a tab is survivable and losing the app is not.
+ * **`indexedDB` is required, and its absence is a named failure.** A runtime
+ * without it cannot back these six stores, and the failure surfaces on the
+ * first operation as a rejected `PersistenceExceptions.unavailable(...)` — not
+ * as a factory that throws at import time, and not as the bare
+ * `TypeError: Cannot read properties of undefined (reading 'open')` that
+ * dereferencing an absent global would produce. That distinction is the whole
+ * point: `unavailable` is `recoverable: false` and carries copy that tells the
+ * user their work stays in this tab, whereas a `TypeError` maps to
+ * `writeFailed` and offers them a retry that cannot possibly succeed.
+ *
+ * `localStorage`, by contrast, degrades silently to an in-memory stand-in:
+ * losing preferences for one tab is survivable, and losing the app is not.
  */
 export const makeLiveLocalStore = (
   options: LiveLocalStoreOptions = {},
 ): LocalStore => {
-  const factory = options.indexedDB ?? globalThis.indexedDB
+  const factory = options.indexedDB ?? resolveIndexedDb()
   const storage = options.webStorage ?? resolveWebStorage()
 
-  const provider = memoizeDatabase(() =>
-    openKroDatabase(factory, {
+  const provider = memoizeDatabase(() => {
+    if (factory === undefined) {
+      return Promise.reject(
+        PersistenceExceptions.unavailable(
+          'this runtime has no IndexedDB (a server render, or a browser mode with storage disabled)',
+        ),
+      )
+    }
+    return openKroDatabase(factory, {
       name: options.databaseName,
       version: options.databaseVersion,
       migrations: options.migrations,
-    }),
-  )
+    })
+  })
 
   return {
     endeavors: makeIndexedDbEndeavorStore(provider),

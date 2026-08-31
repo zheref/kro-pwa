@@ -65,8 +65,10 @@ describe('the inline column — the /execute host', () => {
       '[data-kro-session-surface="inline"]',
     ) as HTMLElement
 
+    // `min(…, 100%)` rather than a hard floor: canon's minimum is a macOS
+    // window frame, and 360px would overflow a 320px phone.
     expect(surface.style.minWidth).toBe(
-      `${SESSION_PRESENTATION_SIZE.session.minWidth}px`,
+      `min(${SESSION_PRESENTATION_SIZE.session.minWidth}px, 100%)`,
     )
     expect(surface.style.maxWidth).toBe(
       `${SESSION_PRESENTATION_SIZE.session.maxWidth}px`,
@@ -189,8 +191,10 @@ describe('the desktop modal', () => {
     const surface = document.querySelector(
       '[data-kro-session-surface="modal"]',
     ) as HTMLElement
+    // `min(…, 100%)` rather than a hard floor: canon's minimum is a macOS
+    // window frame, and 360px would overflow a 320px phone.
     expect(surface.style.minWidth).toBe(
-      `${SESSION_PRESENTATION_SIZE.session.minWidth}px`,
+      `min(${SESSION_PRESENTATION_SIZE.session.minWidth}px, 100%)`,
     )
     expect(surface.style.maxWidth).toBe(
       `${SESSION_PRESENTATION_SIZE.session.maxWidth}px`,

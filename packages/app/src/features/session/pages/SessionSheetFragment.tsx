@@ -560,7 +560,14 @@ function SessionControlsDeck(props: SessionSheetFragmentProps) {
     <div
       data-kro-session-slot="deck"
       className="grid w-full pt-kro-medium"
-      style={{ gridTemplateColumns: '1fr' }}
+      // `minmax(0, 1fr)`, never a bare `1fr`. A bare `1fr` is
+      // `minmax(auto, 1fr)`, so the column's MINIMUM is the widest child's
+      // max-content — and every deck shares this one cell, including the one
+      // holding a horizontally-scrolling preset row. Measured on a 390px
+      // viewport: the decks came out 465px wide inside a 360px panel and every
+      // phase's copy sat off-centre. The `0` minimum is what lets the
+      // `overflow-x-auto` rows actually scroll instead of pushing the column.
+      style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}
     >
       <StableControlSlot name="ready" isVisible={phase === SessionPhase.ready}>
         <ReadyControls {...props} />
@@ -605,9 +612,10 @@ function StableControlSlot({
       data-kro-session-deck-visible={isVisible ? 'true' : 'false'}
       inert={!isVisible}
       aria-hidden={isVisible ? undefined : true}
-      className="flex flex-col items-center"
+      className="flex min-w-0 flex-col items-center"
       style={{
         gridArea: '1 / 1',
+        minWidth: 0,
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? 'auto' : 'none',
       }}
@@ -626,7 +634,10 @@ function ReadyControls(props: SessionSheetFragmentProps) {
   const isCountdown = mode === FocusTimerMode.countdown
 
   return (
-    <div className="flex w-full flex-col items-center" style={{ gap: 20 }}>
+    <div
+      className="flex w-full min-w-0 flex-col items-center"
+      style={{ gap: 20 }}
+    >
       <div
         data-kro-session-slot="deck-lead"
         data-kro-session-presets=""
@@ -634,7 +645,7 @@ function ReadyControls(props: SessionSheetFragmentProps) {
         aria-label="Duration presets"
         inert={!isCountdown}
         aria-hidden={isCountdown ? undefined : true}
-        className="flex w-full items-center justify-center overflow-x-auto px-kro-medium"
+        className="flex w-full min-w-0 items-center justify-center overflow-x-auto px-kro-medium"
         style={{
           height: SESSION_SLOT_HEIGHT.deckLead,
           gap: 10,
@@ -716,7 +727,10 @@ function FocusedControls(props: SessionSheetFragmentProps) {
   )
 
   return (
-    <div className="flex w-full flex-col items-center" style={{ gap: 20 }}>
+    <div
+      className="flex w-full min-w-0 flex-col items-center"
+      style={{ gap: 20 }}
+    >
       <p
         data-kro-session-slot="deck-lead"
         data-kro-session-focused-clock=""
@@ -887,7 +901,10 @@ function ConcludedControls({
   onTapBreak,
 }: SessionSheetFragmentProps) {
   return (
-    <div className="flex w-full flex-col items-center" style={{ gap: 24 }}>
+    <div
+      className="flex w-full min-w-0 flex-col items-center"
+      style={{ gap: 24 }}
+    >
       <p className="m-0 font-semibold text-xl">Session Completed!</p>
 
       <p
@@ -983,7 +1000,10 @@ function BreakControls({
   onTapEndBreak,
 }: SessionSheetFragmentProps) {
   return (
-    <div className="flex w-full flex-col items-center" style={{ gap: 24 }}>
+    <div
+      className="flex w-full min-w-0 flex-col items-center"
+      style={{ gap: 24 }}
+    >
       <p className="m-0 font-semibold text-xl">Break Time</p>
 
       <p
@@ -1055,7 +1075,7 @@ function SessionSuggestionsArea({
       aria-label={sessionSuggestionsHeading(phase)}
       inert={isEmpty}
       aria-hidden={isEmpty ? true : undefined}
-      className="flex w-full flex-col justify-start gap-3 overflow-hidden"
+      className="flex w-full min-w-0 flex-col justify-start gap-3 overflow-hidden"
       style={{
         height: SESSION_SLOT_HEIGHT.suggestions,
         opacity: isEmpty ? 0 : 1,

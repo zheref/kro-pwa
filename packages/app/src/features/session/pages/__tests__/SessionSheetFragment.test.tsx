@@ -180,6 +180,23 @@ describe('the fixed-slot contract', () => {
     }
   })
 
+  it('never lets a hidden deck widen the column the visible one sits in', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.concluded} />,
+    )
+    const region = container.querySelector(
+      '[data-kro-session-slot="deck"]',
+    ) as HTMLElement
+
+    // A bare `1fr` is `minmax(auto, 1fr)`, so the widest deck's max-content
+    // becomes the column's MINIMUM — measured at 465px inside a 360px panel,
+    // which pushed every phase's copy off-centre. The `0` minimum is the fix.
+    expect(region.style.gridTemplateColumns).toBe('minmax(0, 1fr)')
+    for (const slot of container.querySelectorAll('[data-kro-session-deck]')) {
+      expect((slot as HTMLElement).style.minWidth).toBe('0')
+    }
+  })
+
   it('keeps a concluded session’s buttons out of reach while it is still running', () => {
     render(<SessionSheetFragment {...sessionSheetMocks.running} />)
     // Present in the DOM (so the deck keeps its space) but hidden from the

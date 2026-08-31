@@ -119,7 +119,10 @@ export function SessionSurfaceFragment({
           // side panel's hue with `presentationBackground`'s downward gradient
           // instead (below), and layering both would double it.
           ['--kro-glass-surface' as string]: sessionSurfaceMaterial(null),
-          minWidth: SESSION_PRESENTATION_SIZE.session.minWidth,
+          // `min(360px, 100%)`, not a bare 360: canon's minimum is a macOS
+          // window frame, and a hard floor on a 320px phone would overflow the
+          // column it is meant to sit inside.
+          minWidth: `min(${SESSION_PRESENTATION_SIZE.session.minWidth}px, 100%)`,
           maxWidth: SESSION_PRESENTATION_SIZE.session.maxWidth,
         }}
       >
@@ -195,7 +198,10 @@ export function SessionSurfaceFragment({
         style={{
           ...material,
           ...SESSION_GLASS_OVERRIDES.modal,
-          minWidth: SESSION_PRESENTATION_SIZE.session.minWidth,
+          // Same `min(…, 100%)` floor as the inline column, for the same
+          // reason: canon's 360 is a macOS window minimum, not a promise that
+          // the viewport is that wide.
+          minWidth: `min(${SESSION_PRESENTATION_SIZE.session.minWidth}px, 100%)`,
           maxWidth: SESSION_PRESENTATION_SIZE.session.maxWidth,
         }}
       >

@@ -51,10 +51,14 @@ import {
   endeavorKinds,
 } from '@kro/core'
 import { Bell, BellDot, Eye, EyeOff, LoaderCircle, RefreshCw } from 'lucide-react'
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
-
-/** The wrapper that scopes a control and its panel together — see `AnchoredPanel`. */
-const ANCHOR_ATTRIBUTE = 'data-do-toolbar-anchor'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react'
 import {
   type EndeavorCardModel,
   KroChip,
@@ -80,6 +84,9 @@ import {
   doNotificationsAccessibilityValue,
   doVisibilityToggled,
 } from './doPresentation'
+
+/** The wrapper that scopes a control and its panel together — see `AnchoredPanel`. */
+const ANCHOR_ATTRIBUTE = 'data-do-toolbar-anchor'
 
 export interface DoToolbarFragmentProps {
   readonly shape: ShellShape
@@ -119,6 +126,15 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
 
   const [isPanelOpen, setPanelOpen] = useState(false)
   const [isVisibilityOpen, setVisibilityOpen] = useState(false)
+
+  /*
+    Stable, because `AnchoredPanel` keys its document listeners on the dismiss
+    callback. A fresh arrow every render would tear those listeners down and
+    re-arm the one-macrotask delay on every render, which is churn at best and
+    a swallowed outside-click at worst.
+  */
+  const closePanel = useCallback(() => setPanelOpen(false), [])
+  const closeVisibility = useCallback(() => setVisibilityOpen(false), [])
 
   const inline = layout.presentsNotificationsInline
   const badgeCount = overdue.length + expired.length
@@ -176,13 +192,13 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
       </ToolbarButton>
 
       {inline && isPanelOpen ? (
-        <AnchoredPanel align="start" onDismiss={() => setPanelOpen(false)}>
+        <AnchoredPanel align="start" onDismiss={closePanel}>
           <DoNotificationsFragment
             overdue={overdue}
             expired={expired}
             now={now}
             locale={locale}
-            onDismiss={() => setPanelOpen(false)}
+            onDismiss={closePanel}
           />
         </AnchoredPanel>
       ) : null}
@@ -225,7 +241,7 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
       </ToolbarButton>
 
       {inline && isVisibilityOpen ? (
-        <AnchoredPanel align="end" onDismiss={() => setVisibilityOpen(false)}>
+        <AnchoredPanel align="end" onDismiss={closeVisibility}>
           <VisibilityPanel
             visibility={visibility}
             onChange={onChangeVisibility}

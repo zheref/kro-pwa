@@ -14,6 +14,7 @@
  * own sentence, and the reason this file reads no lane and no lens.
  */
 import { BellOff, CalendarClock, ClockAlert } from 'lucide-react'
+import type { ReactNode } from 'react'
 import {
   CompactPresentationHeader,
   type EndeavorCardModel,
@@ -136,7 +137,7 @@ function NotificationSection({
   locale,
 }: {
   readonly title: string
-  readonly icon: React.ReactNode
+  readonly icon: ReactNode
   readonly cards: readonly EndeavorCardModel[]
   readonly now: Date
   readonly locale?: string

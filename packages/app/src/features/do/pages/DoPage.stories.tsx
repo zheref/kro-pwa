@@ -1,5 +1,5 @@
 import type { EndeavorRecord } from '@kro/core'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { StoreProvider } from '../../../library/StoreProvider'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
@@ -39,13 +39,20 @@ function Preview({
   surface: DoSurface
   records?: readonly EndeavorRecord[]
 }): ReactNode {
-  const store = makeStore({
-    ...stubbedThunkExtra,
-    localStore: makeInMemoryLocalStore({ endeavors: records }),
+  // Built ONCE, in a lazy initialiser — the same shape `MainShellPage` uses.
+  // Calling `makeStore` in the body would hand out a fresh store on every
+  // re-render, so toggling a Storybook control would silently reset the day.
+  // The surface is stamped here too: the shell is the artifact that measures
+  // the browser, and a story states the answer rather than mounting the whole
+  // shell for one boolean.
+  const [store] = useState(() => {
+    const built = makeStore({
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore({ endeavors: records }),
+    })
+    built.dispatch(onSurfaceChanged({ surface }))
+    return built
   })
-  // The shell is the artifact that measures the browser; a story states the
-  // surface directly rather than mounting the whole shell for one boolean.
-  store.dispatch(onSurfaceChanged({ surface }))
 
   return (
     <div

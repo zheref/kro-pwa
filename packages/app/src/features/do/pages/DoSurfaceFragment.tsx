@@ -298,10 +298,16 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           handlers.onDeselect()
         }}
       >
+        {/*
+          The travel is state, and the settle-back is derived from it: at zero
+          the content animates home, mid-drag it follows the finger frame for
+          frame. Reading `pullOrigin.current` here instead would be a ref read
+          during render — same picture, impure for no gain.
+        */}
         <div
           style={{
             transform: pull > 0 ? `translateY(${pull}px)` : undefined,
-            transition: pullOrigin.current === null ? 'transform 200ms' : undefined,
+            transition: pull === 0 ? 'transform 200ms' : undefined,
           }}
         >
           {touch ? (

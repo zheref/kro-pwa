@@ -37,6 +37,8 @@ import {
   withSettingsSyncState,
 } from '../AuthShifters'
 import { initialMainState } from '../../main/MainFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
 import { AuthFlow, type AuthState } from '../AuthState'
 import { signOutIntents } from '../SignOutIntents'
 
@@ -51,6 +53,8 @@ const rootWith = (auth: AuthState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  platform: initialPlatformState,
+  session: initialSessionState,
   auth,
   main: initialMainState,
 })

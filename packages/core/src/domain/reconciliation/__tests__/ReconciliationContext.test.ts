@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { appleRemindersRuleset } from '../AppleRemindersRuleset'
+import {
+  appleRemindersRuleset,
+  defaultProviderRulesets,
+} from '../AppleRemindersRuleset'
 import { systemCalendar, utcCalendar } from '../ReconciliationCalendar'
 import {
   DEFAULT_ORPHAN_QUARANTINE_SECONDS,
@@ -19,10 +22,11 @@ describe('building a reconciliation context', () => {
     expect(makeReconciliationContext().calendar).toBe(systemCalendar)
   })
 
-  it('defaults to the Apple ruleset alone', () => {
-    expect(makeReconciliationContext().rulesets).toEqual([
-      appleRemindersRuleset,
-    ])
+  it('defaults to the shipped ruleset registry', () => {
+    // Apple (KC-IS-#12) then Google (KC-IS-#33) — the registry, not a copy of
+    // it, so appending a third table needs no edit here.
+    expect(makeReconciliationContext().rulesets).toEqual(defaultProviderRulesets)
+    expect(makeReconciliationContext().rulesets[0]).toBe(appleRemindersRuleset)
   })
 
   it('defaults the quarantine window to the named constant', () => {
@@ -41,7 +45,7 @@ describe('building a reconciliation context', () => {
     expect(context.calendar).toBe(utcCalendar)
     expect(context.orphanQuarantineSeconds).toBe(60)
     // Untouched fields keep their defaults.
-    expect(context.rulesets).toEqual([appleRemindersRuleset])
+    expect(context.rulesets).toEqual(defaultProviderRulesets)
   })
 
   it('accepts an explicitly empty ruleset list', () => {

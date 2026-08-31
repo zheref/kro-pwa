@@ -15,6 +15,7 @@ import {
   appleRemindersRuleset,
   defaultProviderRulesets,
 } from '../AppleRemindersRuleset'
+import { googleCalendarRuleset } from '../GoogleCalendarRuleset'
 import { classifyFromEvidence } from '../ProviderClassification'
 
 describe('the shipped Apple table', () => {
@@ -125,8 +126,14 @@ describe('the shipped Apple table', () => {
 })
 
 describe('the default ruleset registry', () => {
-  it('contains the Apple table and nothing else today', () => {
-    expect(defaultProviderRulesets).toEqual([appleRemindersRuleset])
+  it('contains the Apple table then the Google one', () => {
+    // Order is precedence order (`rulesetFor` takes the first match), and
+    // Apple leads deliberately: its table reads real evidence where Google's
+    // reads none. See `GoogleCalendarRuleset.ts`.
+    expect(defaultProviderRulesets).toEqual([
+      appleRemindersRuleset,
+      googleCalendarRuleset,
+    ])
   })
 
   it('registers each provider at most once', () => {
@@ -143,11 +150,20 @@ describe('the default ruleset registry', () => {
     }
   })
 
-  it('does not yet register Google Calendar — that is #33', () => {
+  it('registers Google Calendar — KC-IS-#33', () => {
     expect(
       defaultProviderRulesets.some(
         (ruleset) => ruleset.provider === EndeavorHost.googleCalendar,
       ),
-    ).toBe(false)
+    ).toBe(true)
+  })
+
+  it('still leaves Apple with the higher precedence of the two', () => {
+    // A row mirrored to both providers resolves through Apple's table, which
+    // carries priority and recurrence evidence Google's cannot.
+    const providers = defaultProviderRulesets.map((ruleset) => ruleset.provider)
+    expect(providers.indexOf(EndeavorHost.appleReminders)).toBeLessThan(
+      providers.indexOf(EndeavorHost.googleCalendar),
+    )
   })
 })

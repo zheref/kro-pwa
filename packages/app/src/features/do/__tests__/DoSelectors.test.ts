@@ -2,6 +2,8 @@ import { EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import type { RootState } from '../../../library/store'
 import type { DoState } from '../DoFeature'
@@ -44,6 +46,8 @@ const rootWith = (slice: DoState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  platform: initialPlatformState,
+  session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
 })

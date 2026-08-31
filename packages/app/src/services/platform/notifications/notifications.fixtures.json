@@ -1,0 +1,11 @@
+{
+  "permission": "granted",
+  "pendingIdentifiers": [],
+  "pushSubscription": {
+    "endpoint": "https://push.kro.invalid/subscription/fixture-1",
+    "keys": {
+      "p256dh": "ZmFrZS1wMjU2ZGgtcHVibGljLWtleS1mb3ItdGVzdHM",
+      "auth": "ZmFrZS1hdXRoLXNlY3JldA"
+    }
+  }
+}

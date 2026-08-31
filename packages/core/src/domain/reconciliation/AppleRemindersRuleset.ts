@@ -31,6 +31,9 @@
 import { EndeavorHost } from '../endeavor/EndeavorHost'
 import { EndeavorKind } from '../endeavor/EndeavorKind'
 import { RepeatBaseType } from '../endeavor/RepeatConfig'
+// KC-IS-#33's registry entry. Imported here rather than the reverse because
+// this file owns `defaultProviderRulesets`, which the ruleset must join.
+import { googleCalendarRuleset } from './GoogleCalendarRuleset'
 import {
   type ProviderClassificationRuleset,
   SourceEvidenceKey,
@@ -75,11 +78,14 @@ export const appleRemindersRuleset: ProviderClassificationRuleset = {
 }
 
 /**
- * The rulesets in force by default. One entry today; #33 appends Google's.
+ * The rulesets in force by default. Two entries: Apple's, and Google's (#33).
  *
  * Order is meaningful: `resolvedKind` applies the **first** registered ruleset
  * whose provider the endeavor is linked to, so a row linked to two classifying
- * providers resolves deterministically rather than by object-key order.
+ * providers resolves deterministically rather than by object-key order. Apple
+ * stays first deliberately — its table reads real evidence (priority,
+ * recurrence) where Google's reads none, so a row mirrored to both resolves
+ * through the better-informed one. See `GoogleCalendarRuleset.ts`.
  */
 export const defaultProviderRulesets: readonly ProviderClassificationRuleset[] =
-  [appleRemindersRuleset]
+  [appleRemindersRuleset, googleCalendarRuleset]

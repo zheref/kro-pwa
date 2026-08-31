@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialDoState } from '../../do/DoFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
 import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
@@ -61,6 +63,8 @@ const rootWith = (slice: CaptureState): RootState => ({
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
+  platform: initialPlatformState,
+  session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
 })

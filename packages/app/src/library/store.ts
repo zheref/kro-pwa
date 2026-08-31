@@ -30,12 +30,21 @@ import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
+import { platformSlice } from '../features/platform/PlatformFeature'
+import { sessionSlice } from '../features/session/SessionFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type AuthService,
   makeLiveAuthService,
   stubbedAuthService,
 } from '../services/auth/AuthService'
+import type { PlanHost } from '../features/plan/PlanHosts'
+import {
+  type GoogleCalendarService,
+  makeGoogleCalendarPlanHost,
+  makeLiveGoogleCalendarService,
+  stubbedGoogleCalendarService,
+} from '../services/googleCalendar'
 import {
   type GreetingService,
   liveGreetingService,
@@ -43,6 +52,26 @@ import {
 } from '../services/greeting/GreetingService'
 import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
 import { liveLocalStore } from '../services/localStore/liveLocalStore'
+import {
+  type AudioFeedbackService,
+  type DocumentTitleService,
+  type InstallService,
+  type NotificationsService,
+  type VibrationService,
+  type WakeLockService,
+  liveAudioFeedbackService,
+  liveDocumentTitleService,
+  liveInstallService,
+  liveNotificationsService,
+  liveVibrationService,
+  liveWakeLockService,
+  stubbedAudioFeedbackService,
+  stubbedDocumentTitleService,
+  stubbedInstallService,
+  stubbedNotificationsService,
+  stubbedVibrationService,
+  stubbedWakeLockService,
+} from '../services/platform'
 import { signOutWipe } from '../services/localStore/signOutWipe'
 import {
   type NavigationService,
@@ -77,6 +106,27 @@ export interface ThunkExtra {
    */
   readonly localStore: LocalStore
   /**
+   * The PWA platform tier (#34) — five separate fields rather than one bundle,
+   * unlike `localStore` above. They share no handle and no lifecycle: a suite
+   * that swaps the notification binding to count `schedule` calls has no reason
+   * to also restate the audio, wake-lock, vibration and install bindings, and a
+   * bundle would make it. `localStore`'s eight ports are bundled for the
+   * opposite reason — one database, one sign-out.
+   */
+  readonly notificationsService: NotificationsService
+  readonly audioFeedbackService: AudioFeedbackService
+  readonly wakeLockService: WakeLockService
+  readonly vibrationService: VibrationService
+  readonly installService: InstallService
+  /**
+   * The browser tab's title (#21) — the web's stand-in for KroApple's macOS
+   * menu-bar extra, per epic #1. A sixth field rather than a member of the
+   * platform bundle above for the same reason those five are separate: it
+   * shares no handle and no lifecycle with them. #34 shipped no such binding,
+   * so the session lane declares it; see `DocumentTitleService`'s header.
+   */
+  readonly documentTitleService: DocumentTitleService
+  /**
    * The sign-out wipe (#10). A field of its own rather than a method on
    * `LocalStore`, because it is the one operation that spans every store and
    * the port deliberately keeps it outside the per-store interfaces — see
@@ -108,6 +158,24 @@ export interface ThunkExtra {
    * repo that imports `next/navigation`.
    */
   readonly navigation: NavigationService
+  /**
+   * Google Calendar (#33) — connection state, the day-range read, the calendar
+   * inventory and session logging. The **browser's** binding: it calls this
+   * app's own `/api/google/*` routes, never Google, so no OAuth token exists on
+   * this side of the wire at all (`SEC-5`).
+   */
+  readonly googleCalendar: GoogleCalendarService
+  /**
+   * The same service, already adapted to #18's `PlanHost` port.
+   *
+   * A second field rather than an adapter built inside `planHostsFor`, because
+   * `check-uzf-boundaries.mjs` refuses a feature file that imports anything
+   * under `services/` (`RC-6`) — and `makeGoogleCalendarPlanHost` needs the
+   * Service's type. This file is the one the check exempts, so the adaptation
+   * happens here and `planHostsFor` reads a field. `GoogleCalendarPlanHost.ts`
+   * records the same reasoning from the other side.
+   */
+  readonly googleCalendarPlanHost: PlanHost
 }
 
 /**
@@ -119,10 +187,23 @@ export interface ThunkExtra {
  */
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
 
+/**
+ * The live Google binding, built once so the service and the `PlanHost` adapted
+ * from it are the same instance — a second construction would be a second
+ * in-flight cache the day the service grows one.
+ */
+const liveGoogleCalendar: GoogleCalendarService = makeLiveGoogleCalendarService()
+
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
   greetingService: liveGreetingService,
   localStore: liveLocalStore,
+  notificationsService: liveNotificationsService,
+  audioFeedbackService: liveAudioFeedbackService,
+  wakeLockService: liveWakeLockService,
+  vibrationService: liveVibrationService,
+  installService: liveInstallService,
+  documentTitleService: liveDocumentTitleService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
   authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
@@ -138,6 +219,8 @@ export const liveThunkExtra: ThunkExtra = {
   // entirely without — a router. `apps/web/src/app/providers.tsx` builds the
   // live binding and passes it in.
   navigation: stubbedNavigationService,
+  googleCalendar: liveGoogleCalendar,
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(liveGoogleCalendar),
 }
 
 /**
@@ -151,6 +234,12 @@ export const liveThunkExtra: ThunkExtra = {
 export const stubbedThunkExtra: ThunkExtra = {
   greetingService: stubbedGreetingService,
   localStore: stubbedLocalStore,
+  notificationsService: stubbedNotificationsService,
+  audioFeedbackService: stubbedAudioFeedbackService,
+  wakeLockService: stubbedWakeLockService,
+  vibrationService: stubbedVibrationService,
+  installService: stubbedInstallService,
+  documentTitleService: stubbedDocumentTitleService,
   signOutWipe,
   // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
   // shipping behaviour — `supabaseHosting` disabled, exactly like canon.
@@ -162,6 +251,12 @@ export const stubbedThunkExtra: ThunkExtra = {
   // `makeRecordingNavigationService()`; the shared default records nothing, so
   // no two suites can see each other's calls.
   navigation: stubbedNavigationService,
+  // Disconnected by default, exactly like `supabaseHosting` being off: a suite
+  // asserting on shipping behaviour sees a day with no Google events, which is
+  // what a user who has never connected sees. A suite that wants events builds
+  // its own binding with `makeStubbedGoogleCalendarService({ connection: … })`.
+  googleCalendar: stubbedGoogleCalendarService,
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(stubbedGoogleCalendarService),
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
@@ -175,6 +270,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       find: findSlice.reducer,
       endeavorDetail: endeavorDetailSlice.reducer,
       earn: earnSlice.reducer,
+      platform: platformSlice.reducer,
+      session: sessionSlice.reducer,
       auth: authSlice.reducer,
       main: mainSlice.reducer,
     },

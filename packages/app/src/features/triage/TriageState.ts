@@ -163,7 +163,12 @@ export const triageFormFromEndeavor = (endeavor: Endeavor): TriageForm => {
   return {
     quadrant: null,
     durationMinutes:
-      endeavor.duration === null ? null : Math.trunc(endeavor.duration / 60),
+      // A non-positive stored duration (zero-length calendar events exist)
+      // prefills as "no estimate yet" — 0 maps to no chip and would fake the
+      // irreversibility state. Sub-minute durations truncate to 1, not 0.
+      endeavor.duration === null || endeavor.duration <= 0
+        ? null
+        : Math.max(1, Math.trunc(endeavor.duration / 60)),
     dueDate: scheduled,
     expiry: endeavor.expiry ?? defaultTriageExpiry(scheduled),
     rewardPoints: endeavor.sessionPoints ?? TRIAGE_DEFAULT_REWARD_POINTS,

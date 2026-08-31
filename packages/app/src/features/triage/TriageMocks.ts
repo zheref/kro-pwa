@@ -366,7 +366,9 @@ export const triageDecisionFixtures = {
   /** Duration only — keep the existing start, take the new duration. */
   durationOnly: {
     endeavorId: triageEndeavorFixtures.startOnlyTask.id,
-    quadrant: EisenhowerQuadrant.delete,
+    // A non-Archive quadrant: Archive short-circuits scheduling entirely,
+    // which would contradict this fixture's stated purpose.
+    quadrant: EisenhowerQuadrant.delegate,
     durationSeconds: 2700,
     dueDate: null,
     rewardPoints: 10,

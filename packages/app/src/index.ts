@@ -46,6 +46,14 @@ export {
  */
 export * from './features/main'
 
+/**
+ * The Earn destination (`KC-IS-#28`) — the catalog, the claim flow and the
+ * Add-Reward form. `EarnPage` is what the `/earn` route mounts in place of
+ * the shell's placeholder; the rest of the barrel is exported for its own
+ * stories/tests and for a sibling that composes one of its pieces directly.
+ */
+export * from './features/earn'
+
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
   type GreetingLoadState,

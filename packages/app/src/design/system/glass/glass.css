@@ -1,0 +1,196 @@
+/* ==========================================================================
+   KroGlass — Kro Web's translucent material.
+
+   Canon: zheref.io@b2cda9f — `src/styles/global.css` (the `--glass-*` tokens,
+   ported into `tokens.css` as `--kro-glass-*`) and `src/components/Nav.module.css`
+   (this layering, and the Safari workaround). It is the web stand-in for
+   Apple's Liquid Glass, named by the epic's Design Direction.
+
+   FIVE LAYERS, bottom to top:
+     1. the backdrop, blurred and saturated          ::before, backdrop-filter
+     2. a translucent tint over it                   ::before, background
+     3. a specular sheen (radial hotspot + falloff)  ::after,  background
+     4. the rim and the inner top highlight          box-shadow insets
+     5. the content
+
+   THE SAFARI RULE, and why it is unconditional here.
+   WebKit miscomputes the compositing layer of an element that has
+   `backdrop-filter` AND `position: fixed` — the element visibly detaches from
+   the viewport edge as the page scrolls. zheref.io fixes this by moving the
+   filter onto an inner pseudo-element. This port applies that shape to EVERY
+   glass surface, not just fixed ones: one construction is one thing to get
+   right, and a card that is later made sticky must not silently acquire the
+   bug. The element itself therefore never carries `backdrop-filter`.
+
+   `isolation: isolate` is what makes `z-index: -1` safe. It gives the element
+   its own stacking context, so the pseudo-layers paint above the element's own
+   background and below its content, and can never fall behind an ancestor.
+   ========================================================================== */
+
+.kro-glass {
+  position: relative;
+  isolation: isolate;
+  /* No background: layer 2 is the ::before, so the backdrop filter has the
+     page to sample rather than an opaque fill of our own. */
+  background: none;
+  border-radius: var(--kro-radius-surface);
+  color: var(--kro-color-fore);
+  box-shadow:
+    inset 0 0 0 1px var(--kro-glass-rim),
+    inset 0 1px 0 var(--kro-glass-hi),
+    inset 0 -8px 14px -10px rgb(0 0 0 / 0.15),
+    var(--kro-shadow-card);
+  transition:
+    box-shadow var(--kro-duration-standard) var(--kro-ease-standard),
+    background-color var(--kro-duration-standard) var(--kro-ease-standard);
+}
+
+/* Layers 1 + 2 — the material. */
+.kro-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--kro-glass-surface);
+  -webkit-backdrop-filter: var(--kro-glass-filter);
+  backdrop-filter: var(--kro-glass-filter);
+  pointer-events: none;
+  transition: background var(--kro-duration-standard) var(--kro-ease-standard);
+}
+
+/* Layer 3 — the specular sheen. */
+.kro-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--kro-glass-sheen);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Variants
+   -------------------------------------------------------------------------- */
+
+/**
+ * Small controls — a pill button, a segmented control, a chip.
+ * A shallower blur keeps a 12–14px label crisp; a 20px blur behind a small
+ * control reads as smeared rather than frosted.
+ */
+.kro-glass--control {
+  border-radius: var(--kro-radius-pill);
+  min-height: var(--kro-size-min-touch-target);
+  box-shadow:
+    inset 0 0 0 1px var(--kro-glass-rim),
+    inset 0 1px 0 var(--kro-glass-hi),
+    inset 0 -6px 10px -8px rgb(0 0 0 / 0.3),
+    var(--kro-shadow-subtle);
+}
+
+.kro-glass--control::before {
+  -webkit-backdrop-filter: var(--kro-glass-filter-control);
+  backdrop-filter: var(--kro-glass-filter-control);
+}
+
+/**
+ * A bar — the fixed top chrome. The rim becomes a bottom hairline instead of a
+ * full ring, because a bar has no left or right edge to draw.
+ */
+.kro-glass--bar {
+  border-radius: 0;
+  border-bottom: 1px solid var(--kro-glass-rim);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.05),
+    inset 0 1px 0 var(--kro-glass-hi),
+    inset 0 -8px 14px -10px rgb(0 0 0 / 0.1);
+}
+
+/**
+ * A bar that is `position: fixed`.
+ *
+ * The material bleeds 120px above the element so Safari's dynamic toolbar
+ * strip — the sliver that appears above a fixed bar as the URL bar collapses —
+ * is covered by frosted glass rather than by a hard edge.
+ */
+.kro-glass--fixed::before {
+  inset: auto 0 0 0;
+  top: -120px;
+}
+
+/** Elevated on scroll — the bar earns a shadow once content passes under it. */
+.kro-glass--bar.is-scrolled {
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 0.12),
+    0 1px 2px rgb(0 0 0 / 0.06),
+    inset 0 1px 0 var(--kro-glass-hi),
+    inset 0 -8px 14px -10px rgb(0 0 0 / 0.12);
+}
+
+/** Hover/press response, for glass that is actually a control. */
+.kro-glass--interactive {
+  cursor: pointer;
+}
+
+.kro-glass--interactive:hover::before {
+  background: var(--kro-glass-surface-hover);
+}
+
+.kro-glass--interactive:active {
+  transform: scale(0.97);
+}
+
+.kro-glass--interactive:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--kro-ring),
+    inset 0 0 0 1px var(--kro-glass-rim),
+    inset 0 1px 0 var(--kro-glass-hi);
+}
+
+/* --------------------------------------------------------------------------
+   Fallbacks — three engines, three reasons the material cannot be drawn.
+   -------------------------------------------------------------------------- */
+
+/**
+ * 1. The user asked for less transparency.
+ *
+ * The whole point of the setting is that see-through chrome is hard to read
+ * against a busy page, so the fallback is genuinely opaque and the sheen goes
+ * away entirely — a "less transparent" surface that still carries a specular
+ * highlight has not honoured the request.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .kro-glass::before {
+    background: var(--kro-glass-surface-opaque);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .kro-glass::after {
+    display: none;
+  }
+
+  .kro-glass--interactive:hover::before {
+    background: var(--kro-color-back-next);
+  }
+}
+
+/** 2. The engine has no backdrop-filter at all. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .kro-glass::before {
+    background: var(--kro-glass-surface-opaque);
+  }
+}
+
+/** 3. The engine has no color-mix(), so the tokens above resolve to nothing. */
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .kro-glass::before {
+    background: rgb(255 255 255 / 0.78);
+  }
+
+  [data-theme="dark"] .kro-glass::before {
+    background: rgb(22 22 24 / 0.78);
+  }
+}

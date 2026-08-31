@@ -1,0 +1,448 @@
+/* ==========================================================================
+   KroTokens — the web port.
+
+   Canon: zheref/KroApple@2c1ee45
+     · KroUI/Theme/KroTokens.swift        (scales, elevation, motion, opacity)
+     · Kro/Design/AppTheme.swift          (the app-tier re-export + role names)
+     · KroUI/Assets.xcassets/Palette/*    (43 colorsets, light/dark per role)
+     · Kro/Assets.xcassets/*              (kroColor + the 3 session-state sets)
+
+   THIS FILE IS THE SINGLE SOURCE OF TRUTH for every colour value in Kro Web.
+   `roles.ts` names the roles; `contrastContracts.test.ts` parses THIS TEXT and
+   asserts the WCAG floors, so a hand-edit here that breaks contrast fails the
+   suite rather than shipping. Never re-type a value from here into a
+   component — read the custom property.
+
+   Colour-space adaptation: KroApple stores most sets in Display P3. CSS hex is
+   sRGB, so each P3 triple was converted through XYZ(D65) and gamut-clipped.
+   Every KroApple contrast assertion still passes on the converted values
+   (verified before the port; see the PR's "Notes"). One role needed a real
+   adaptation — `fore-secondary` in light mode — and says so at its
+   declaration.
+
+   Structure, and why it is shaped this way:
+     1. `:root`                               — the scheme-independent scales
+     2. `:root, [data-theme="light"]`         — light values
+     3. `@media (prefers-color-scheme: dark)` — OS preference, unless [data-theme="light"]
+     4. `[data-theme="dark"]`                 — the explicit toggle
+
+   Blocks 3 and 4 carry identical declarations on purpose: a `@media` block
+   cannot be re-used as a selector. `tokenSource.test.ts` asserts they stay
+   identical, so the toggle can never drift from the OS preference.
+
+   The theme selectors are attribute selectors, NOT `:root[data-theme=…]`.
+   That is what makes theming SCOPED: a settings preview, and the token
+   gallery showing both schemes side by side, put `data-theme` on a `div` and
+   get a correctly themed subtree. Anchoring to `:root` would make the whole
+   document the only unit a theme can apply to.
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+}
+
+:root,
+[data-theme="light"] {
+  /* ------------------------------------------------------------------
+     Surface hierarchy — AppTheme.Colors.back / backInner / backNext
+     ------------------------------------------------------------------ */
+
+  /** The page behind grouped cards (`Color.kroGroupedBackground`). */
+  --kro-color-back: #fafafa;
+  /** A field/control surface *inside* a card — one step recessed. */
+  --kro-color-back-inner: #f0f0f0;
+  /** The next surface in the stack: sheet over page, row over card. */
+  --kro-color-back-next: #f5f5f5;
+  /** Pure white in light, pure black in dark. The grouped card surface. */
+  --kro-color-absolute: #ffffff;
+  /** The opposite pole of `absolute`. */
+  --kro-color-total: #000000;
+
+  /* ------------------------------------------------------------------
+     Foreground hierarchy
+     ------------------------------------------------------------------ */
+
+  /** Primary label. */
+  --kro-color-fore: #1b1c20;
+  /**
+   * Supporting label.
+   *
+   * WEB ADAPTATION. KroApple's `Fore2` is P3 rgb(109,113,130) → sRGB #6C7184,
+   * which measures 4.25:1 on `back-inner` and 4.45:1 on `back-next` — under
+   * AA. iOS never hits those pairs because its recessed surfaces only ever
+   * carry primary text, but on the web a caption inside a field row is
+   * ordinary. Darkened by 6/255 per channel (hue and chroma preserved) to
+   * #666B7E, which clears 4.5:1 on every surface role: back-inner 4.64,
+   * back-next 4.85, back 5.07, absolute 5.29.
+   */
+  --kro-color-fore-secondary: #666b7e;
+
+  /* ------------------------------------------------------------------
+     Neutral scale
+     ------------------------------------------------------------------ */
+
+  --kro-color-snow: #ffffff;
+  --kro-color-eggshell: #faf3dd;
+  --kro-color-mist: #f5f5f5;
+  --kro-color-smoke: #f0f0f0;
+  --kro-color-scotch-mist: #e8dabe;
+  --kro-color-athens-gray: #f0eff7;
+  --kro-color-payne-gray: #5e6472;
+  --kro-color-charcoal: #333438;
+
+  /* ------------------------------------------------------------------
+     Brand
+     ------------------------------------------------------------------ */
+
+  /** `kroColor` — the app tint. Default value of the accent role below. */
+  --kro-color-kro: #5e6472;
+  --kro-color-kro-red: #fb2b37;
+  --kro-color-cozy-blue: #aed9e0;
+  --kro-color-celeste: #b8f2e6;
+  --kro-color-melon: #ffa69e;
+  /** The canonical "complete this endeavor" blue, shared by every affordance. */
+  --kro-color-complete-blue: #007aff;
+
+  /* ------------------------------------------------------------------
+     Session states (Kro/Assets.xcassets)
+     ------------------------------------------------------------------ */
+
+  --kro-color-focus-green: #33cc33;
+  --kro-color-break-beige: #f2e0c7;
+  --kro-color-pastry-green: #bfe0ad;
+
+  /* ------------------------------------------------------------------
+     Badge fills — the chip palette every semantic role resolves to.
+     Contrast-verified in four ways; see `contrastContracts.ts`.
+     ------------------------------------------------------------------ */
+
+  --kro-color-badge-blue: #1a5bc7;
+  --kro-color-badge-red: #b7162f;
+  --kro-color-badge-green: #1b7d3e;
+  --kro-color-badge-orange: #a85400;
+  --kro-color-badge-indigo: #4840b3;
+  --kro-color-badge-purple: #7a2ead;
+  --kro-color-badge-teal: #0b6c6f;
+  --kro-color-badge-neutral: #5c5c61;
+  --kro-color-badge-cyan: #0a6e8a;
+  --kro-color-badge-pink: #b4216e;
+  --kro-color-badge-mint: #0f7a63;
+
+  /* ------------------------------------------------------------------
+     Status banners. Opaque on purpose: a translucent fill's contrast is a
+     property of whatever is behind it, so it cannot be verified once.
+     Same value in both schemes — that is canon, not an oversight.
+     ------------------------------------------------------------------ */
+
+  --kro-color-banner-warning: #7e3f00;
+  --kro-color-banner-danger: #891123;
+
+  /* ------------------------------------------------------------------
+     My Day header — the fixed indigoGrape slab and the date on it
+     ------------------------------------------------------------------ */
+
+  --kro-color-header-date: #ffe6e8;
+  --kro-color-header-gradient-indigo: #5856d6;
+  --kro-color-header-gradient-grape: #663399;
+
+  /* ------------------------------------------------------------------
+     Rings, rewards, timeline
+     ------------------------------------------------------------------ */
+
+  --kro-color-ring-gold: #e8b338;
+  --kro-color-ring-emerald: #14a86e;
+  --kro-color-reward-yellow: #c78c00;
+  --kro-color-glow-lime: #8fcc2e;
+  --kro-color-timeline-today-foreground: #b7162f;
+  --kro-color-timeline-today-selected-foreground: #ff5a5a;
+  --kro-color-timeline-selection-outline: #c76bff;
+
+  /* ------------------------------------------------------------------
+     Accent — the one role a user may re-tint at runtime.
+
+     `useAccentColor` writes BOTH of these together: an accent without a
+     recomputed on-accent is how a themed button loses its label.
+     ------------------------------------------------------------------ */
+
+  --kro-color-accent: var(--kro-color-kro);
+  --kro-color-on-accent: #ffffff;
+
+  /* ------------------------------------------------------------------
+     Derived surfaces
+     ------------------------------------------------------------------ */
+
+  /** Hairline between rows inside a card — `Color.kroHairline`. */
+  --kro-color-hairline: color-mix(
+    in srgb,
+    var(--kro-color-fore-secondary) 14%,
+    transparent
+  );
+  /** Focus ring, drawn from the live accent so re-tinting carries through. */
+  --kro-ring: 0 0 0 3px color-mix(in srgb, var(--kro-color-accent) 35%, transparent);
+
+  /* ==================================================================
+     Semantic roles — "what colour is a Habit" has exactly one answer.
+     KroTokens.Colors, one-for-one.
+     ================================================================== */
+
+  /* Endeavor kinds */
+  --kro-role-kind-task: var(--kro-color-badge-blue);
+  --kro-role-kind-event: var(--kro-color-badge-red);
+  --kro-role-kind-habit: var(--kro-color-badge-green);
+  --kro-role-kind-reminder: var(--kro-color-badge-orange);
+  --kro-role-kind-behavior: var(--kro-color-badge-orange);
+  --kro-role-kind-blueprint: var(--kro-color-badge-indigo);
+  --kro-role-kind-background: var(--kro-color-badge-purple);
+
+  /* Hosts */
+  --kro-role-host-supabase: var(--kro-color-badge-teal);
+  --kro-role-host-local: var(--kro-color-badge-neutral);
+  --kro-role-host-apple-calendar: var(--kro-color-badge-red);
+  --kro-role-host-apple-reminders: var(--kro-color-badge-orange);
+  --kro-role-host-google-calendar: var(--kro-color-badge-blue);
+  --kro-role-host-outlook-calendar: var(--kro-color-badge-indigo);
+
+  /** De-emphasised / unavailable chip. Replaces raw grey, which sat at ~3.3:1. */
+  --kro-role-chip-neutral: var(--kro-color-badge-neutral);
+
+  /* Endeavor status chips */
+  --kro-role-status-pending: var(--kro-color-badge-cyan);
+  --kro-role-status-planned: var(--kro-color-badge-teal);
+  --kro-role-status-ongoing: var(--kro-color-badge-green);
+  --kro-role-status-paused: var(--kro-color-badge-orange);
+  /** The status palette's yellow is unreadable as text; amber instead. */
+  --kro-role-status-reviewing: var(--kro-color-badge-orange);
+  --kro-role-status-delegated: var(--kro-color-badge-pink);
+  --kro-role-status-qa: var(--kro-color-badge-mint);
+  --kro-role-status-blocked: var(--kro-color-badge-red);
+
+  /* ==================================================================
+     Scales — scheme-independent. KroTokens.Spacing / Radius / Size /
+     Opacity / Motion, verbatim.
+     ================================================================== */
+
+  /* Spacing — the 4pt rhythm */
+  --kro-space-tiny: 4px;
+  --kro-space-small: 8px;
+  --kro-space-medium: 16px;
+  --kro-space-large: 24px;
+  --kro-space-x-large: 32px;
+  --kro-space-xx-large: 48px;
+
+  /* Radius */
+  --kro-radius-small: 8px;
+  --kro-radius-field: 12px;
+  --kro-radius-card: 12px;
+  --kro-radius-surface: 20px;
+  --kro-radius-large: 20px;
+  /* `.infinity` in SwiftUI; the web idiom for a capsule is a huge finite px. */
+  --kro-radius-pill: 9999px;
+
+  /* Sizing */
+  --kro-size-min-touch-target: 44px;
+  --kro-size-min-pointer-target: 28px;
+  --kro-size-field-min-height: 44px;
+  --kro-size-row-icon-column: 22px;
+
+  /**
+   * The single disabled fade. Apply it EXACTLY ONCE per control: a container
+   * that dims its subtree while the control inside also dims itself
+   * multiplies the two (0.62 x 0.62 ~= 0.38) and drops below the 3:1 floor
+   * for UI elements. Disabled reads as reduced emphasis, never as illegible.
+   */
+  --kro-opacity-disabled: 0.62;
+
+  /* Motion lives in `motion.css` — durations, easings, the spring
+     equivalents and the reduced-motion layer are one subject with one home. */
+
+  /* ------------------------------------------------------------------
+     Elevation — KroTokens.Shadow, numbers ported 1:1.
+
+     Dark mode raises alpha only. An 8%-black shadow is invisible against a
+     dark page, so elevation would silently disappear; zheref.io's own
+     `--shadow-*` tokens make the same move (0.08 -> 0.5). Geometry is
+     untouched, so the elevation *language* is identical in both schemes.
+     ------------------------------------------------------------------ */
+
+  --kro-shadow-subtle: 0 2px 8px rgb(0 0 0 / 0.08);
+  --kro-shadow-card: 0 4px 20px rgb(0 0 0 / 0.14);
+  --kro-shadow-surface: 0 3px 12px rgb(0 0 0 / 0.06);
+
+  /* ==================================================================
+     KroGlass material tokens — ported from zheref.io@b2cda9f
+     (`src/styles/global.css`). The layering lives in `glass.css`.
+     ================================================================== */
+
+  /** The translucent elevated fill. `absolute` is our `--bg-elevated`. */
+  --kro-glass-surface: color-mix(in srgb, var(--kro-color-absolute) 24%, transparent);
+  --kro-glass-surface-hover: color-mix(
+    in srgb,
+    var(--kro-color-absolute) 85%,
+    transparent
+  );
+  /** Opaque stand-in for reduced-transparency and no-backdrop-filter engines. */
+  --kro-glass-surface-opaque: color-mix(
+    in srgb,
+    var(--kro-color-absolute) 92%,
+    var(--kro-color-back)
+  );
+  /** The thin rim, drawn as an inset ring rather than a border. */
+  --kro-glass-rim: color-mix(in srgb, var(--kro-color-fore) 14%, transparent);
+  /** The inner top highlight. */
+  --kro-glass-hi: rgb(255 255 255 / 0.55);
+  /** The specular sheen: a radial hotspot over a top-down linear falloff. */
+  --kro-glass-sheen: radial-gradient(
+      120% 80% at 30% 15%,
+      rgb(255 255 255 / 0.4),
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 60%);
+  --kro-glass-filter: blur(20px) saturate(180%);
+  /** Small controls get a shallower blur so their label stays crisp. */
+  --kro-glass-filter-control: blur(14px) saturate(160%);
+}
+
+/* ==========================================================================
+   Dark — OS preference, unless an explicit light toggle was saved.
+   Declarations below MUST match the explicit dark block exactly.
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --kro-color-back: #2a2a2a;
+    --kro-color-back-inner: #525252;
+    --kro-color-back-next: #414141;
+    --kro-color-absolute: #000000;
+    --kro-color-total: #ffffff;
+    --kro-color-fore: #ffffff;
+    --kro-color-fore-secondary: #eaeded;
+    --kro-color-snow: #ffffff;
+    --kro-color-eggshell: #faf3dd;
+    --kro-color-mist: #f5f5f5;
+    --kro-color-smoke: #f0f0f0;
+    --kro-color-scotch-mist: #e8dabe;
+    --kro-color-athens-gray: #f0eff7;
+    --kro-color-payne-gray: #5e6472;
+    --kro-color-charcoal: #6b6e73;
+    --kro-color-kro: #b0b9d4;
+    --kro-color-kro-red: #fb2b37;
+    --kro-color-cozy-blue: #aed9e0;
+    --kro-color-celeste: #b8f2e6;
+    --kro-color-melon: #ffa69e;
+    --kro-color-complete-blue: #0a84ff;
+    --kro-color-focus-green: #38d938;
+    --kro-color-break-beige: #807a6b;
+    --kro-color-pastry-green: #99bf8c;
+    --kro-color-badge-blue: #5c9eff;
+    --kro-color-badge-red: #ff7373;
+    --kro-color-badge-green: #34c759;
+    --kro-color-badge-orange: #ffa21f;
+    --kro-color-badge-indigo: #a09cff;
+    --kro-color-badge-purple: #cf8dff;
+    --kro-color-badge-teal: #3cc7cc;
+    --kro-color-badge-neutral: #a8a8ad;
+    --kro-color-badge-cyan: #4fd1f0;
+    --kro-color-badge-pink: #ff7ab8;
+    --kro-color-badge-mint: #5ce0bf;
+    --kro-color-banner-warning: #7e3f00;
+    --kro-color-banner-danger: #891123;
+    --kro-color-header-date: #ffe6e8;
+    --kro-color-header-gradient-indigo: #5856d6;
+    --kro-color-header-gradient-grape: #663399;
+    --kro-color-ring-gold: #f7c54a;
+    --kro-color-ring-emerald: #2ac480;
+    --kro-color-reward-yellow: #ffd400;
+    --kro-color-glow-lime: #b0e84a;
+    --kro-color-timeline-today-foreground: #b7162f;
+    --kro-color-timeline-today-selected-foreground: #b7162f;
+    --kro-color-timeline-selection-outline: #cf8dff;
+    --kro-color-on-accent: #000000;
+    --kro-glass-hi: rgb(255 255 255 / 0.2);
+    --kro-glass-sheen: radial-gradient(
+        120% 80% at 30% 15%,
+        rgb(255 255 255 / 0.18),
+        transparent 55%
+      ),
+      linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 60%);
+    --kro-shadow-subtle: 0 2px 8px rgb(0 0 0 / 0.36);
+    --kro-shadow-card: 0 4px 20px rgb(0 0 0 / 0.55);
+    --kro-shadow-surface: 0 3px 12px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* ==========================================================================
+   Dark — the explicit toggle. Same declarations, by contract.
+
+   An attribute selector rather than `:root[data-theme="dark"]`, so a subtree
+   can be themed independently of the document.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --kro-color-back: #2a2a2a;
+  --kro-color-back-inner: #525252;
+  --kro-color-back-next: #414141;
+  --kro-color-absolute: #000000;
+  --kro-color-total: #ffffff;
+  --kro-color-fore: #ffffff;
+  --kro-color-fore-secondary: #eaeded;
+  --kro-color-snow: #ffffff;
+  --kro-color-eggshell: #faf3dd;
+  --kro-color-mist: #f5f5f5;
+  --kro-color-smoke: #f0f0f0;
+  --kro-color-scotch-mist: #e8dabe;
+  --kro-color-athens-gray: #f0eff7;
+  --kro-color-payne-gray: #5e6472;
+  --kro-color-charcoal: #6b6e73;
+  --kro-color-kro: #b0b9d4;
+  --kro-color-kro-red: #fb2b37;
+  --kro-color-cozy-blue: #aed9e0;
+  --kro-color-celeste: #b8f2e6;
+  --kro-color-melon: #ffa69e;
+  --kro-color-complete-blue: #0a84ff;
+  --kro-color-focus-green: #38d938;
+  --kro-color-break-beige: #807a6b;
+  --kro-color-pastry-green: #99bf8c;
+  --kro-color-badge-blue: #5c9eff;
+  --kro-color-badge-red: #ff7373;
+  --kro-color-badge-green: #34c759;
+  --kro-color-badge-orange: #ffa21f;
+  --kro-color-badge-indigo: #a09cff;
+  --kro-color-badge-purple: #cf8dff;
+  --kro-color-badge-teal: #3cc7cc;
+  --kro-color-badge-neutral: #a8a8ad;
+  --kro-color-badge-cyan: #4fd1f0;
+  --kro-color-badge-pink: #ff7ab8;
+  --kro-color-badge-mint: #5ce0bf;
+  --kro-color-banner-warning: #7e3f00;
+  --kro-color-banner-danger: #891123;
+  --kro-color-header-date: #ffe6e8;
+  --kro-color-header-gradient-indigo: #5856d6;
+  --kro-color-header-gradient-grape: #663399;
+  --kro-color-ring-gold: #f7c54a;
+  --kro-color-ring-emerald: #2ac480;
+  --kro-color-reward-yellow: #ffd400;
+  --kro-color-glow-lime: #b0e84a;
+  --kro-color-timeline-today-foreground: #b7162f;
+  --kro-color-timeline-today-selected-foreground: #b7162f;
+  --kro-color-timeline-selection-outline: #cf8dff;
+  --kro-color-on-accent: #000000;
+  --kro-glass-hi: rgb(255 255 255 / 0.2);
+  --kro-glass-sheen: radial-gradient(
+      120% 80% at 30% 15%,
+      rgb(255 255 255 / 0.18),
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 60%);
+  --kro-shadow-subtle: 0 2px 8px rgb(0 0 0 / 0.36);
+  --kro-shadow-card: 0 4px 20px rgb(0 0 0 / 0.55);
+  --kro-shadow-surface: 0 3px 12px rgb(0 0 0 / 0.3);
+}
+
+/* The explicit light toggle carries the light values through the selector list
+   at the top of this file; here it only has to pin the colour scheme, and it
+   comes last so it wins on a light subtree nested inside a dark one. */
+[data-theme="light"] {
+  color-scheme: light;
+}

@@ -1,0 +1,16 @@
+/* ==========================================================================
+   The Kro design system, as one stylesheet.
+
+   `apps/web/src/app/globals.css` imports this file and nothing else from the
+   design system, so the shell never has to know how many parts there are or
+   what order they go in.
+
+   Order matters in exactly one place: `tokens.css` declares the custom
+   properties every other file reads. Beyond that the files are independent —
+   they define disjoint class names and no cascade between them.
+   ========================================================================== */
+
+@import "./tokens/tokens.css";
+@import "./motion/motion.css";
+@import "./glass/glass.css";
+@import "./gradient/gradient.css";

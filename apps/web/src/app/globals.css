@@ -1,42 +1,231 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   The shell's one stylesheet.
+
+   Three things happen here and nothing else:
+     1. Tailwind CSS v4 is imported and told where to look for classes.
+     2. The Kro design system is imported — one file, whose own imports are its
+        business (`@kro/app/design/system/styles.css`).
+     3. The tokens are exposed to Tailwind as theme variables, so
+        `bg-kro-back` and `var(--kro-color-back)` are the same value by
+        construction rather than by convention.
+
+   Feature CSS does NOT belong here. A surface either uses a token utility or
+   ships its own module; this file is the seam, not a dumping ground.
+   ========================================================================== */
+
+/*
+  Every `@import` first: the CSS spec requires import rules to precede all
+  other at-rules and style rules, and Tailwind's own directives below are
+  ordinary at-rules as far as that rule is concerned.
+*/
+@import "tailwindcss";
+
+/* The design system: tokens, motion, KroGlass, indigoGrape. */
+@import "../../../../packages/app/src/design/system/styles.css";
+
+/*
+  Tailwind v4 discovers content automatically from the project root, but that
+  scan deliberately stops at package boundaries — and every primitive in this
+  design system lives in `packages/app`. Without this the buttons compile to
+  bare markup with no utilities behind them.
+
+  A relative path rather than a package specifier: `@kro/app` resolves through
+  an `exports` map that has no reason to expose a glob, and a broken content
+  path fails SILENTLY (missing styles, green build), which is the worst way for
+  this to go wrong.
+*/
+@source "../../../../packages/app/src/**/*.{ts,tsx}";
+
+/* ==========================================================================
+   The Tailwind theme.
+
+   `@theme inline` rather than `@theme`: inline emits the utility with the
+   custom property REFERENCE in it (`background-color: var(--kro-color-back)`)
+   instead of resolving the reference once at `:root`. That difference is what
+   makes `bg-kro-back` follow a `[data-theme]` scope — with a non-inline
+   `@theme` the value would be computed on the root element and every nested
+   theme would silently inherit the document's scheme.
+   ========================================================================== */
+
+@theme inline {
+  /* --- Surfaces and foregrounds --- */
+  --color-kro-back: var(--kro-color-back);
+  --color-kro-back-inner: var(--kro-color-back-inner);
+  --color-kro-back-next: var(--kro-color-back-next);
+  --color-kro-absolute: var(--kro-color-absolute);
+  --color-kro-total: var(--kro-color-total);
+  --color-kro-fore: var(--kro-color-fore);
+  --color-kro-fore-secondary: var(--kro-color-fore-secondary);
+  --color-kro-hairline: var(--kro-color-hairline);
+
+  /* --- Accent --- */
+  --color-kro-accent: var(--kro-color-accent);
+  --color-kro-on-accent: var(--kro-color-on-accent);
+
+  /* --- Neutral scale --- */
+  --color-kro-snow: var(--kro-color-snow);
+  --color-kro-eggshell: var(--kro-color-eggshell);
+  --color-kro-mist: var(--kro-color-mist);
+  --color-kro-smoke: var(--kro-color-smoke);
+  --color-kro-scotch-mist: var(--kro-color-scotch-mist);
+  --color-kro-athens-gray: var(--kro-color-athens-gray);
+  --color-kro-payne-gray: var(--kro-color-payne-gray);
+  --color-kro-charcoal: var(--kro-color-charcoal);
+
+  /* --- Brand --- */
+  --color-kro-kro: var(--kro-color-kro);
+  --color-kro-red: var(--kro-color-kro-red);
+  --color-kro-cozy-blue: var(--kro-color-cozy-blue);
+  --color-kro-celeste: var(--kro-color-celeste);
+  --color-kro-melon: var(--kro-color-melon);
+  --color-kro-complete-blue: var(--kro-color-complete-blue);
+
+  /* --- Session states --- */
+  --color-kro-focus-green: var(--kro-color-focus-green);
+  --color-kro-break-beige: var(--kro-color-break-beige);
+  --color-kro-pastry-green: var(--kro-color-pastry-green);
+
+  /* --- Badge fills --- */
+  --color-kro-badge-blue: var(--kro-color-badge-blue);
+  --color-kro-badge-red: var(--kro-color-badge-red);
+  --color-kro-badge-green: var(--kro-color-badge-green);
+  --color-kro-badge-orange: var(--kro-color-badge-orange);
+  --color-kro-badge-indigo: var(--kro-color-badge-indigo);
+  --color-kro-badge-purple: var(--kro-color-badge-purple);
+  --color-kro-badge-teal: var(--kro-color-badge-teal);
+  --color-kro-badge-neutral: var(--kro-color-badge-neutral);
+  --color-kro-badge-cyan: var(--kro-color-badge-cyan);
+  --color-kro-badge-pink: var(--kro-color-badge-pink);
+  --color-kro-badge-mint: var(--kro-color-badge-mint);
+
+  /* --- Banners --- */
+  --color-kro-banner-warning: var(--kro-color-banner-warning);
+  --color-kro-banner-danger: var(--kro-color-banner-danger);
+
+  /* --- Header, rings, timeline --- */
+  --color-kro-header-date: var(--kro-color-header-date);
+  --color-kro-header-indigo: var(--kro-color-header-gradient-indigo);
+  --color-kro-header-grape: var(--kro-color-header-gradient-grape);
+  --color-kro-ring-gold: var(--kro-color-ring-gold);
+  --color-kro-ring-emerald: var(--kro-color-ring-emerald);
+  --color-kro-reward-yellow: var(--kro-color-reward-yellow);
+  --color-kro-glow-lime: var(--kro-color-glow-lime);
+  --color-kro-timeline-today: var(--kro-color-timeline-today-foreground);
+  --color-kro-timeline-today-selected: var(
+    --kro-color-timeline-today-selected-foreground
+  );
+  --color-kro-timeline-outline: var(--kro-color-timeline-selection-outline);
+
+  /* --- Semantic roles: chips, hosts, statuses --- */
+  --color-kro-kind-task: var(--kro-role-kind-task);
+  --color-kro-kind-event: var(--kro-role-kind-event);
+  --color-kro-kind-habit: var(--kro-role-kind-habit);
+  --color-kro-kind-reminder: var(--kro-role-kind-reminder);
+  --color-kro-kind-behavior: var(--kro-role-kind-behavior);
+  --color-kro-kind-blueprint: var(--kro-role-kind-blueprint);
+  --color-kro-kind-background: var(--kro-role-kind-background);
+  --color-kro-host-supabase: var(--kro-role-host-supabase);
+  --color-kro-host-local: var(--kro-role-host-local);
+  --color-kro-host-apple-calendar: var(--kro-role-host-apple-calendar);
+  --color-kro-host-apple-reminders: var(--kro-role-host-apple-reminders);
+  --color-kro-host-google-calendar: var(--kro-role-host-google-calendar);
+  --color-kro-host-outlook-calendar: var(--kro-role-host-outlook-calendar);
+  --color-kro-chip-neutral: var(--kro-role-chip-neutral);
+  --color-kro-status-pending: var(--kro-role-status-pending);
+  --color-kro-status-planned: var(--kro-role-status-planned);
+  --color-kro-status-ongoing: var(--kro-role-status-ongoing);
+  --color-kro-status-paused: var(--kro-role-status-paused);
+  --color-kro-status-reviewing: var(--kro-role-status-reviewing);
+  --color-kro-status-delegated: var(--kro-role-status-delegated);
+  --color-kro-status-qa: var(--kro-role-status-qa);
+  --color-kro-status-blocked: var(--kro-role-status-blocked);
+
+  /* --- Spacing: `p-kro-medium`, `gap-kro-small`, … --- */
+  --spacing-kro-tiny: var(--kro-space-tiny);
+  --spacing-kro-small: var(--kro-space-small);
+  --spacing-kro-medium: var(--kro-space-medium);
+  --spacing-kro-large: var(--kro-space-large);
+  --spacing-kro-x-large: var(--kro-space-x-large);
+  --spacing-kro-xx-large: var(--kro-space-xx-large);
+
+  /* --- Radii: `rounded-kro-surface`, … --- */
+  --radius-kro-small: var(--kro-radius-small);
+  --radius-kro-field: var(--kro-radius-field);
+  --radius-kro-card: var(--kro-radius-card);
+  --radius-kro-surface: var(--kro-radius-surface);
+  --radius-kro-large: var(--kro-radius-large);
+  --radius-kro-pill: var(--kro-radius-pill);
+
+  /* --- Elevation: `shadow-kro-card`, … --- */
+  --shadow-kro-subtle: var(--kro-shadow-subtle);
+  --shadow-kro-card: var(--kro-shadow-card);
+  --shadow-kro-surface: var(--kro-shadow-surface);
+
+  /* --- Easing: `ease-kro-standard`, … --- */
+  --ease-kro-standard: var(--kro-ease-standard);
+  --ease-kro-out: var(--kro-ease-out);
+  --ease-kro-quick-spring: var(--kro-ease-quick-spring);
+  --ease-kro-standard-spring: var(--kro-ease-standard-spring);
+
+  /* --- Type --- */
+  --font-sans:
+    var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    system-ui, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+  `dark:` for the rare utility that has to differ beyond what a token can
+  express. Almost nothing should need it — the tokens flip themselves — but a
+  variant that agrees with the stylesheet's own cascade is better than each
+  call site inventing one.
+*/
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"]) *, :not([data-theme="light"])) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"] *, [data-theme="dark"]) {
+    @slot;
   }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+/* ==========================================================================
+   Base layer.
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+   Deliberately thin. Chakra still renders the `/session` surface and brings
+   its own reset, so anything opinionated here would fight it until #22 retires
+   that page. What is left is what both agree on.
+   ========================================================================== */
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   html {
-    color-scheme: dark;
+    background: var(--kro-color-back);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    color: var(--kro-color-fore);
+    background: var(--kro-color-back);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /*
+      `clip`, not `hidden`. `overflow: hidden` on <body> makes Safari treat the
+      body as the scroll container, which detaches `position: fixed` elements
+      from the viewport top — the same class of bug the glass material works
+      around, arriving by a different route.
+    */
+    overflow-x: clip;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--kro-ring);
+    border-radius: var(--kro-radius-small);
   }
 }

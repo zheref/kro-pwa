@@ -5,7 +5,7 @@
 # underlying tool (npm -> pnpm, Jest -> Vitest, ...) never changes the interface.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev build lint typecheck analyze test codegen tokens deploy publish clean
+.PHONY: help setup dev build lint format typecheck analyze test test-e2e codegen tokens deploy publish clean
 
 PNPM ?= pnpm
 
@@ -15,10 +15,12 @@ help:
 	@echo "  setup     install the toolchain and all workspace dependencies"
 	@echo "  dev       run the web app in development mode"
 	@echo "  build     production build of every workspace member"
-	@echo "  lint      lint every workspace member (includes the @kro/core platform-free check)"
+	@echo "  lint      Biome across the repo + the @kro/core platform-free check"
+	@echo "  format    rewrite the repo with Biome's formatter and safe fixes"
 	@echo "  typecheck tsc --noEmit across every workspace member"
 	@echo "  analyze   production build with the bundle analyzer enabled"
-	@echo "  test      run every workspace member's test suite"
+	@echo "  test      run every workspace member's test suite (Vitest in apps/web)"
+	@echo "  test-e2e  run the Playwright end-to-end suite (needs browsers installed)"
 	@echo "  codegen   generate derived sources (no-op today)"
 	@echo "  tokens    generate design tokens (no-op today)"
 	@echo "  deploy    deploy the web app (not wired — see TOOLCHAIN.md)"
@@ -38,9 +40,14 @@ dev:
 build:
 	$(PNPM) turbo run build
 
-## lint: lint every workspace member
+## lint: Biome across the repo + per-package structural checks
 lint:
+	$(PNPM) exec biome check .
 	$(PNPM) turbo run lint
+
+## format: rewrite the repo with Biome's formatter and safe fixes
+format:
+	$(PNPM) exec biome check --write .
 
 ## typecheck: tsc --noEmit across every workspace member
 typecheck:
@@ -53,6 +60,11 @@ analyze:
 ## test: run every workspace member's test suite
 test:
 	$(PNPM) turbo run test
+
+## test-e2e: run the Playwright end-to-end suite
+test-e2e:
+	$(PNPM) --filter @kro/web exec playwright install --with-deps chromium
+	$(PNPM) --filter @kro/web run test:e2e
 
 ## codegen: generate derived sources
 codegen:
@@ -78,4 +90,5 @@ publish:
 
 ## clean: remove build output and caches
 clean:
-	rm -rf apps/web/.next apps/web/coverage .turbo node_modules/.cache
+	rm -rf apps/web/.next apps/web/coverage apps/web/storybook-static \
+		apps/web/playwright-report apps/web/test-results .turbo node_modules/.cache

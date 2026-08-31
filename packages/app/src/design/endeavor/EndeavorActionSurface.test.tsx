@@ -252,6 +252,39 @@ describe('the release decision — read from the pointer, not from the last rend
     expect(pointerEnvironment.capture.captured).toEqual([3])
   })
 
+  it('MOVES NOTHING below the threshold, so a jittery tap leaves the row put', () => {
+    // `SWIPE_DRAG_THRESHOLD_PX` says a sub-threshold gesture "commits nothing
+    // AND moves nothing", and the release path honours that by leaving
+    // `offset` alone. Painting a 1px tremor here would therefore strand the
+    // row at that 1px until something else moved it.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerMove(target, { clientX: 1 })
+    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1 })
+
+    expect(target.style.transform).toBe('translateX(0px)')
+
+    fireEvent.pointerUp(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1 })
+    expect(content().style.transform).toBe('translateX(0px)')
+  })
+
+  it('LATCHES: once past the threshold the row follows the finger back inside it', () => {
+    // The threshold decides whether this gesture is a swipe, once. Re-testing
+    // it on every move would freeze the row wherever it last painted when the
+    // finger came home, which is the shape a per-move gate produces.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerMove(target, { clientX: 40 })
+    expect(target.style.transform).toBe('translateX(40px)')
+
+    fireEvent.pointerMove(target, { clientX: 1 })
+    expect(target.style.transform).toBe('translateX(1px)')
+  })
+
   it('never captures a TAP — the click has to reach the control it landed on', () => {
     // THE REGRESSION, in the shape jsdom can hold: capture is what retargets a
     // click to the capturing element, so canon's in-row Triage and Add for

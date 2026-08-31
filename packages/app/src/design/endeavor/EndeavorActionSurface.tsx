@@ -51,6 +51,11 @@
  * by `apps/web/e2e-kit/action-surface.spec.ts` and pinned here by the capture
  * log in `__tests__/pointerEnvironment.ts`.
  *
+ * That same crossing is what starts the row PAINTING, and it latches: below the
+ * threshold a gesture moves nothing at all, and once past it the row follows
+ * the finger for the rest of the gesture — including back inside the threshold,
+ * so a swipe that returns to where it started returns the row with it.
+ *
  * ## Why the strip is not `display: none` until hover
  *
  * It is `opacity-0` + `pointer-events-none`, revealed by `group-hover` and by
@@ -195,9 +200,11 @@ export function EndeavorActionSurface({
   const [isDragging, setIsDragging] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const dragStart = useRef<number | null>(null)
-  // Whether THIS drag has taken the capture yet. A ref, not state: it is one
-  // gesture's bookkeeping and painting it would be a wasted render (`RC-4`).
-  const hasCaptured = useRef(false)
+  // Whether THIS gesture has latched into a swipe — i.e. crossed the drag
+  // threshold at least once, taken the capture, and started painting. A ref,
+  // not state: it is one gesture's bookkeeping and painting it would be a
+  // wasted render (`RC-4`).
+  const isSwiping = useRef(false)
 
   const perform = useCallback(
     (binding: EndeavorOperationBinding) => {
@@ -232,7 +239,7 @@ export function EndeavorActionSurface({
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canSwipe) return
     dragStart.current = event.clientX
-    hasCaptured.current = false
+    isSwiping.current = false
     setIsDragging(true)
     // NO capture here. See the header note: a captured pointer retargets the
     // click, so capturing on `pointerdown` swallows every tap aimed at a
@@ -246,21 +253,32 @@ export function EndeavorActionSurface({
 
     const delta = boundDelta(event.clientX - start)
 
-    // CAPTURE, so the gesture cannot be lost mid-swipe — but only once this is
-    // demonstrably a swipe. The row's transform is one React frame behind the
-    // finger, so the pointer routinely leaves the content element while the
-    // drag is still running; without capture the remaining moves and the
-    // release land on whatever is underneath and the row stays open with
-    // nothing to close it.
+    // THE THRESHOLD IS A LATCH, not a per-move test. Crossing it once makes
+    // this gesture a swipe for the rest of its life, so a finger that wanders
+    // back inside 4px still drags the row home with it rather than freezing it
+    // wherever it last painted.
+    //
+    // Until it latches, nothing happens at all — no capture and no paint.
+    // `SWIPE_DRAG_THRESHOLD_PX`'s own contract is that a sub-threshold gesture
+    // "commits nothing AND moves nothing", and the release path honours it by
+    // leaving `offset` alone; painting a 1px jitter here would strand the row
+    // at that 1px until something else moved it.
     //
     // The gate reads the BOUNDED delta: an edge with no bindings does not
     // move, so a drag in that direction is still a tap as far as the row is
     // concerned and must not eat the click either.
-    if (!hasCaptured.current && Math.abs(delta) >= SWIPE_DRAG_THRESHOLD_PX) {
+    if (!isSwiping.current) {
+      if (Math.abs(delta) < SWIPE_DRAG_THRESHOLD_PX) return
+      isSwiping.current = true
+
+      // CAPTURE, so the gesture cannot be lost mid-swipe. The row's transform
+      // is one React frame behind the finger, so the pointer routinely leaves
+      // the content element while the drag is still running; without capture
+      // the remaining moves and the release land on whatever is underneath and
+      // the row stays open with nothing to close it.
       const target = event.currentTarget
       if (typeof target.setPointerCapture === 'function') {
         target.setPointerCapture(event.pointerId)
-        hasCaptured.current = true
       }
     }
 
@@ -275,17 +293,16 @@ export function EndeavorActionSurface({
     // same swipe commits twice.
     if (start === null) return
     dragStart.current = null
+    isSwiping.current = false
     setIsDragging(false)
 
     const target = event.currentTarget
     if (
-      hasCaptured.current &&
       typeof target.hasPointerCapture === 'function' &&
       target.hasPointerCapture(event.pointerId)
     ) {
       target.releasePointerCapture(event.pointerId)
     }
-    hasCaptured.current = false
 
     // The decision reads THE POINTER, never the last-rendered `offset`.
     // `pointermove` is continuous, so the final `setOffset` has usually not

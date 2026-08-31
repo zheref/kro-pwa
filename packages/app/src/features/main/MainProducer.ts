@@ -181,6 +181,13 @@ export const navigateToDestinationThunk = createAsyncThunk<
  * The cross-slice read happens where `RC-20` puts it: a Selector composed at
  * the root (`MainSelectors`), never a slice importing another slice's shape.
  * By the time the intent reaches this thunk it is already a shell type.
+ *
+ * DELIVERING IS NOT ALWAYS NAVIGATING. `context.autoNavigates` is `false` for
+ * the branch the capture rules say never auto-navigates — everything that is
+ * not a timed event. That route is still delivered, because consuming the
+ * one-shot is what opens the Inbox with its Just Created row; it just does not
+ * call the router, so the user stays on the surface they captured from. See
+ * `ShellRouteContext.autoNavigates`.
  */
 export const deliverCaptureRouteThunk = createAsyncThunk<
   Result<PendingShellRoute['context'] | null, MainException>,
@@ -188,6 +195,7 @@ export const deliverCaptureRouteThunk = createAsyncThunk<
   { extra: ThunkExtra }
 >('main/onCaptureRouteDeliveryCompleted', async ({ pending, now }, { extra }) => {
   if (pending === null || now.getTime() < pending.deliverAtMs) return ok(null)
+  if (!pending.context.autoNavigates) return ok(pending.context)
 
   try {
     extra.navigation.navigate(destinationPath(pending.context.destination))

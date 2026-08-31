@@ -194,6 +194,31 @@ describe('selectPendingShellRoute — the one cross-slice read (RC-20)', () => {
     expect(pending?.deliverAtMs).toBe(decidedAt.getTime() + 500)
   })
 
+  it('marks the Plan branch as the ONE that may move the user', () => {
+    // The capture rules: an event going to Plan is "the only path that
+    // auto-navigates a captured endeavor away from the Inbox".
+    const root = {
+      ...rootWith(MainMocks.desktopLoaded),
+      capture: {
+        ...initialCaptureState,
+        navigation: {
+          route: {
+            kind: 'plan' as const,
+            day: new Date('2026-08-31T00:00:00.000Z'),
+            scrollTarget: new Date('2026-08-31T09:30:00.000Z'),
+            endeavorId: 'e-1',
+            highlight: true,
+            listMode: true,
+          },
+          decidedAt: new Date('2026-08-31T09:00:00.000Z'),
+          deliverAfterMs: 500,
+        },
+      },
+    }
+
+    expect(selectPendingShellRoute(root)?.context.autoNavigates).toBe(true)
+  })
+
   it('reshapes an Inbox intent with no day and no highlight', () => {
     const root = {
       ...rootWith(MainMocks.desktopLoaded),
@@ -211,5 +236,30 @@ describe('selectPendingShellRoute — the one cross-slice read (RC-20)', () => {
     expect(pending?.context.destination.kind).toBe(DestinationKind.inbox)
     expect(pending?.context.day).toBeNull()
     expect(pending?.context.highlight).toBe(false)
+  })
+
+  it('does NOT let an Inbox route auto-navigate — the rules forbid it', () => {
+    // THE REGRESSION. The capture rules: "everything else opens the Inbox and
+    // never auto-navigates, even when it would apply to today". On iOS the
+    // Inbox is a sheet over the current tab, so nothing moves; here it is also
+    // an ordinary destination, and delivering it as a route pushed `/inbox`
+    // and re-selected the tab — taking the user off the surface they captured
+    // from. The intent is still delivered; it just may not move anybody.
+    const root = {
+      ...rootWith(MainMocks.desktopLoaded),
+      capture: {
+        ...initialCaptureState,
+        navigation: {
+          route: { kind: 'inbox' as const, endeavorId: 'e-2' },
+          decidedAt: new Date('2026-08-31T09:00:00.000Z'),
+          deliverAfterMs: 500,
+        },
+      },
+    }
+
+    const pending = selectPendingShellRoute(root)
+    expect(pending).not.toBeNull()
+    expect(pending?.context.autoNavigates).toBe(false)
+    expect(pending?.context.endeavorId).toBe('e-2')
   })
 })

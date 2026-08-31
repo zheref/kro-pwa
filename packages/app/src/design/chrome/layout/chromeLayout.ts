@@ -116,18 +116,67 @@ export const CHROME_LAYOUT = {
 } as const
 
 /**
+ * The custom property a shell publishes its bottom inset on.
+ *
+ * WHY THE KIT NAMES IT AND THE SHELL FILLS IT. Every number in `CHROME_LAYOUT`
+ * is canon's, and canon measures them inside a tab — where SwiftUI's safe area
+ * has *already* excluded the tab bar. On the web the tab bar is an ordinary
+ * flex child of the shell, so the viewport's bottom edge is BELOW it and a
+ * viewport-anchored toast lands underneath the bar.
+ *
+ * The kit cannot ask the shell how tall its bar is without importing it, so it
+ * states a contract instead: publish this property and every bottom-anchored
+ * chrome surface rises by it. The `0px` fallback is what keeps the kit
+ * shell-agnostic — mounted with no shell around it, or on the sidebar shell
+ * which has no bar at all, nothing changes.
+ */
+export const SHELL_BOTTOM_INSET_VAR = '--kro-shell-bottom-inset'
+
+/** The default a bottom-anchored chrome surface reads when nobody passes one. */
+export const SHELL_BOTTOM_INSET_FALLBACK = `var(${SHELL_BOTTOM_INSET_VAR}, 0px)`
+
+/**
+ * The toast's distance from the bottom edge, given the shell's inset.
+ *
+ * `toastBottomPadding` is canon's 24, measured inside the tab safe area; the
+ * inset is what the web has to add to reach the same place.
+ */
+export function toastBottomOffset(bottomInset = 0): number {
+  return CHROME_LAYOUT.toastBottomPadding + bottomInset
+}
+
+/**
+ * The pill's distance from the bottom edge, given the same inset.
+ *
+ * Exported for `#22` alongside `pillTrailingPadding()`, and used here so the
+ * lift below is written in terms of both surfaces rather than in terms of one
+ * of them plus an assumption about the other.
+ */
+export function pillBottomOffset(bottomInset = 0): number {
+  return CHROME_LAYOUT.pillBottomPadding + bottomInset
+}
+
+/**
  * How far the toast must rise to clear the Session Pill entirely.
  *
  * Derived, exactly as `MainScreen.toastLiftAbovePill` is, so nudging any one
  * of the four inputs moves the toast with it instead of leaving a literal
  * behind that nobody remembers to update.
+ *
+ * THE INSET IS A PARAMETER AND IT CANCELS — deliberately, and stated rather
+ * than assumed. The lift is a distance *between two surfaces*, and a shell that
+ * raises its bottom chrome raises the pill and the toast by the same amount, so
+ * the gap between them is unchanged. Taking the inset as an argument is what
+ * makes that a checkable property (`chromeLayout.test.ts` asserts it across a
+ * range of insets) instead of an unwritten belief, and leaves exactly one place
+ * to change if a future shell ever insets only one of the two.
  */
-export function toastLiftAbovePill(): number {
+export function toastLiftAbovePill(bottomInset = 0): number {
   return (
-    CHROME_LAYOUT.pillBottomPadding +
+    pillBottomOffset(bottomInset) +
     CHROME_LAYOUT.pillHeight +
     CHROME_LAYOUT.pillToastSpacing -
-    CHROME_LAYOUT.toastBottomPadding
+    toastBottomOffset(bottomInset)
   )
 }
 

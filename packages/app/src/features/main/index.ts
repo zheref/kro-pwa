@@ -16,7 +16,9 @@ export {
   type SurfaceObservation,
   doSurfaceLayout,
   resolveDoSurface,
+  shellBottomInset,
   shellShapeFor,
+  tabBarReservedHeight,
 } from './DoSurfaceLayout'
 export {
   ALL_SIMPLE_DESTINATIONS,

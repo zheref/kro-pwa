@@ -9,7 +9,13 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { doSurfaceLayout, shellShapeFor } from '../DoSurfaceLayout'
+import { SHELL_BOTTOM_INSET_VAR } from '../../../design/chrome/layout/chromeLayout'
+import {
+  doSurfaceLayout,
+  shellBottomInset,
+  shellShapeFor,
+  tabBarReservedHeight,
+} from '../DoSurfaceLayout'
 import {
   MainMocks,
   desktopSurface,
@@ -241,5 +247,36 @@ describe('shell-owned intents', () => {
 
     expect(onTapInbox).toHaveBeenCalledTimes(1)
     expect(onToggleSidebar).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('the bottom inset the shell publishes for the design system', () => {
+  it('reserves the tab bar’s own height on the handheld shell', () => {
+    // Canon anchors the Active Toast 24pt off "the bottom" and means 24pt
+    // above the tab bar, because on iOS a tab is a safe area that already
+    // excludes it. Here the bar is an ordinary flex child, so the shell has to
+    // say how much of the bottom edge it occupies or the toast lands under it.
+    renderShell(handheldSurface)
+
+    const shell = screen.getByTestId('shell-tab-bar-shape')
+    expect(shell.style.getPropertyValue(SHELL_BOTTOM_INSET_VAR)).toBe(
+      `${tabBarReservedHeight(doSurfaceLayout(handheldSurface))}px`,
+    )
+  })
+
+  it('derives it from the same numbers the bar lays itself out with', () => {
+    const layout = doSurfaceLayout(handheldSurface)
+
+    expect(tabBarReservedHeight(layout)).toBe(
+      layout.minimumControlSide + 2 * layout.minimumControlSpacing,
+    )
+  })
+
+  it('reserves NOTHING on the sidebar shell — it has no bottom chrome', () => {
+    renderShell(desktopSurface)
+
+    const shell = screen.getByTestId('shell-sidebar-shape')
+    expect(shell.style.getPropertyValue(SHELL_BOTTOM_INSET_VAR)).toBe('0px')
+    expect(shellBottomInset('sidebar', doSurfaceLayout(desktopSurface))).toBe(0)
   })
 })

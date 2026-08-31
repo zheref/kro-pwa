@@ -187,6 +187,7 @@ describe('the shell one-shot', () => {
         scrollTarget: null,
         highlight: false,
         listMode: false,
+        autoNavigates: true,
       },
     } as const
 

@@ -299,6 +299,31 @@ export type ShellShape = 'tabBar' | 'sidebar'
 export const shellShapeFor = (surface: DoSurface): ShellShape =>
   surface.idiom === DoSurfaceIdiom.handheld ? 'tabBar' : 'sidebar'
 
+/**
+ * How much of the viewport's bottom edge the tab bar occupies.
+ *
+ * Derived from the same two numbers `TabBarFragment` lays itself out with — a
+ * `minimumControlSide` tall button between two `minimumControlSpacing`
+ * paddings — so nudging either moves the reservation with it instead of
+ * leaving a literal behind.
+ *
+ * WHY IT EXISTS. On iOS a tab is a safe area and SwiftUI has already excluded
+ * the bar from it, which is why canon can anchor the Active Toast 24pt off "the
+ * bottom" and mean 24pt above the bar. Here the bar is an ordinary flex child,
+ * so the viewport's bottom edge is *below* it and a viewport-anchored surface
+ * lands underneath. Chrome that anchors to that edge reads this through the
+ * design system's `SHELL_BOTTOM_INSET_VAR`, which `MainShellFragment`
+ * publishes; the kit never imports the shell to ask.
+ */
+export const tabBarReservedHeight = (layout: DoSurfaceLayout): number =>
+  layout.minimumControlSide + 2 * layout.minimumControlSpacing
+
+/** The inset for a shell shape — the sidebar shell has no bottom chrome. */
+export const shellBottomInset = (
+  shape: ShellShape,
+  layout: DoSurfaceLayout,
+): number => (shape === 'tabBar' ? tabBarReservedHeight(layout) : 0)
+
 /** The surface a server render assumes before the browser has been measured. */
 export const SSR_DEFAULT_SURFACE: DoSurface = {
   idiom: DoSurfaceIdiom.desktop,

@@ -198,10 +198,30 @@ describe('withSearchQueryChanged / withCaptureRouteConsumed', () => {
       scrollTarget: new Date('2026-08-31T09:30:00Z'),
       highlight: true,
       listMode: true,
+      autoNavigates: true,
     } as const
 
     const next = withCaptureRouteConsumed(MainMocks.desktopLoaded, context)
     expect(next.selected.kind).toBe(DestinationKind.plan)
+    expect(next.routeContext).toEqual(context)
+  })
+
+  it('parks the payload WITHOUT moving the selection on a non-navigating route', () => {
+    // The selection is the other half of auto-navigating: re-selecting the
+    // Inbox moves the shell's highlight and body just as surely as pushing
+    // `/inbox` moves the browser. Both read the same flag.
+    const context = {
+      destination: { kind: DestinationKind.inbox },
+      endeavorId: 'e-2',
+      day: null,
+      scrollTarget: null,
+      highlight: false,
+      listMode: false,
+      autoNavigates: false,
+    } as const
+
+    const next = withCaptureRouteConsumed(MainMocks.desktopLoaded, context)
+    expect(next.selected).toEqual(MainMocks.desktopLoaded.selected)
     expect(next.routeContext).toEqual(context)
   })
 })

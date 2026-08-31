@@ -47,7 +47,7 @@ import {
   isPreferenceStorageKey,
   wipePreferences,
 } from '@kro/core'
-import { kroObjectStores } from './KroDatabase'
+import { KroObjectStore } from './KroDatabase'
 
 /**
  * Empty every Kro-owned object store, remove every `kro:` preference, and leave
@@ -68,22 +68,40 @@ export const signOutWipe = async (
 
   const preferenceKeys = wipePreferences(store.preferences, isPreferenceKey)
 
+  /**
+   * Each entry names the store it clears, so `clearedStores` is a record of
+   * what this function **did** rather than a copy of what the schema declares.
+   *
+   * An earlier cut returned `kroObjectStores` directly, with a comment claiming
+   * that a store added to the schema but not cleared here would "show up as a
+   * discrepancy". Nothing compared the two, so it would have shown up as a
+   * report cheerfully asserting that data which quietly survived had been
+   * wiped — the worst possible failure in a log line whose entire job is to
+   * answer *what was removed*. The completeness claim now lives where it can
+   * actually fail: `__tests__/signOutWipe.test.ts` asserts this list equals
+   * `kroObjectStores`, so omitting a `clear()` breaks a test instead of a
+   * promise.
+   */
+  const clearing: readonly (readonly [KroObjectStore, Promise<void>])[] = [
+    [KroObjectStore.endeavors, store.endeavors.clear()],
+    [KroObjectStore.projects, store.projects.clear()],
+    [KroObjectStore.defers, store.defers.clear()],
+    [KroObjectStore.performances, store.performances.clear()],
+    [KroObjectStore.userProfiles, store.userProfiles.clear()],
+    [KroObjectStore.lensSnapshots, store.lensSnapshots.clearAll()],
+  ]
+
   await Promise.all([
-    store.endeavors.clear(),
-    store.projects.clear(),
-    store.defers.clear(),
-    store.performances.clear(),
-    store.userProfiles.clear(),
-    store.lensSnapshots.clearAll(),
+    ...clearing.map(([, done]) => done),
+    // Not an object store — the anchor is one `localStorage` document. The
+    // preference sweep above already removed it (it lives under `kro:`); this
+    // covers a binding that keeps it elsewhere, such as the in-memory stub.
     store.runningSessionAnchor.clear(),
   ])
 
   return {
     preferenceKeys,
     preservedKeys,
-    // Named from the schema rather than from this function's own call list, so
-    // a store added to the database without a `clear()` call above shows up as
-    // a discrepancy in the report instead of as data that quietly survives.
-    clearedStores: kroObjectStores,
+    clearedStores: clearing.map(([name]) => name),
   }
 }

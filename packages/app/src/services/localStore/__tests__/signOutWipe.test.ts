@@ -35,11 +35,19 @@ const fullStore = () =>
   })
 
 describe('completeness — every store the schema declares is emptied', () => {
-  it('reports the schema`s full store list, not this function`s call list', async () => {
+  it('reports what it CLEARED, and that set is the schema`s full list', async () => {
+    // The report is built from the wipe's own call list, so this assertion is
+    // the completeness guarantee: omitting a `clear()` for a newly declared
+    // store fails here rather than producing a report that claims otherwise.
     const report = await signOutWipe(fullStore())
     expect([...report.clearedStores].sort()).toEqual(
       [...kroObjectStores].sort(),
     )
+  })
+
+  it('reports each store exactly once', async () => {
+    const report = await signOutWipe(fullStore())
+    expect(new Set(report.clearedStores).size).toBe(report.clearedStores.length)
   })
 
   it('leaves nothing behind in any of them', async () => {

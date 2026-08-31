@@ -61,23 +61,43 @@ export interface WebStorageLike {
   key(index: number): string | null
 }
 
-/** A `Storage`-shaped object over a `Map`, for a runtime that has none. */
+/**
+ * A `Storage`-shaped object over a `Map`, for a runtime that has none.
+ *
+ * `key(index)` is **O(1) amortised**, which matters more than it looks: the
+ * `Storage` API has no `keys()`, so every caller — including this file's own
+ * `keys()` — walks `key(0…length-1)`. A naive `[...entries.keys()][index]`
+ * rebuilds the whole key list on each of those calls, making one sweep O(n²)
+ * and allocating n arrays. The ordered list is therefore cached and invalidated
+ * on mutation instead. `Map` already guarantees insertion order, so the cache
+ * is a materialisation of it, not a second source of truth.
+ */
 export const makeMemoryWebStorage = (
   seed: Readonly<Record<string, string>> = {},
 ): WebStorageLike => {
   const entries = new Map<string, string>(Object.entries(seed))
+  let ordered: readonly string[] | null = null
+
+  const orderedKeys = (): readonly string[] => {
+    if (ordered === null) ordered = [...entries.keys()]
+    return ordered
+  }
+
   return {
     getItem: (key) => entries.get(key) ?? null,
     setItem: (key, value) => {
+      // Only a NEW key changes the order; overwriting one does not, so the
+      // cache survives the common case.
+      if (!entries.has(key)) ordered = null
       entries.set(key, value)
     },
     removeItem: (key) => {
-      entries.delete(key)
+      if (entries.delete(key)) ordered = null
     },
     get length() {
       return entries.size
     },
-    key: (index) => [...entries.keys()][index] ?? null,
+    key: (index) => orderedKeys()[index] ?? null,
   }
 }
 
@@ -97,11 +117,22 @@ export const WEB_STORAGE_PROBE_KEY = '__kro_storage_probe__'
  * under that key — from an older build, another script on the origin, or a
  * second Kro build sharing it — as a side effect of merely *constructing* the
  * store. The prior value is now captured first and put back: removed only if
- * the key was genuinely absent, restored verbatim if it was not. JavaScript is
- * single-threaded, so nothing can observe the intermediate state.
+ * the key was genuinely absent, restored verbatim if it was not.
  *
- * Exported because that property is worth a test of its own, and the global
- * `localStorage` is awkward to seed.
+ * **The intermediate write is not invisible, and this file will not claim it
+ * is.** Within this document nothing can observe it — JavaScript is
+ * single-threaded and the restore lands in the same task — but `localStorage`
+ * writes fire a `storage` event in *other tabs on the same origin*, so a
+ * listener there sees the probe value and then the restore. Two reasons that is
+ * an accepted cost rather than a defect: the key is namespaced
+ * `__kro_storage_probe__`, so no other script plausibly listens for it; and the
+ * only alternative is not probing at all, which gives up detecting the
+ * storage-disabled case entirely. Naming the exposure is the point — a comment
+ * that claimed unobservability would be wrong, and wrong in a way that hides
+ * the trade instead of stating it.
+ *
+ * Exported because the non-destructive property is worth a test of its own, and
+ * the global `localStorage` is awkward to seed.
  */
 export const probeWebStorage = (storage: WebStorageLike): boolean => {
   try {

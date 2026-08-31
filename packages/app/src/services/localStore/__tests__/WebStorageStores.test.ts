@@ -211,6 +211,60 @@ describe('resolveWebStorage — absent storage degrades, it does not throw', () 
   })
 })
 
+describe('the in-memory stand-in`s key order stays correct as it mutates', () => {
+  it('reports keys in insertion order', () => {
+    const storage = makeMemoryWebStorage()
+    storage.setItem('first', '1')
+    storage.setItem('second', '2')
+    expect([storage.key(0), storage.key(1)]).toEqual(['first', 'second'])
+  })
+
+  it('does NOT reorder when an existing key is overwritten', () => {
+    // The order cache is kept across an overwrite precisely because `Map` does
+    // not reorder on `set` of an existing key — so the two must agree.
+    const storage = makeMemoryWebStorage({ first: '1', second: '2' })
+    storage.setItem('first', 'changed')
+    expect([storage.key(0), storage.key(1)]).toEqual(['first', 'second'])
+    expect(storage.getItem('first')).toBe('changed')
+  })
+
+  it('picks up a NEW key immediately', () => {
+    const storage = makeMemoryWebStorage({ first: '1' })
+    expect(storage.key(1)).toBeNull()
+    storage.setItem('second', '2')
+    expect(storage.key(1)).toBe('second')
+    expect(storage.length).toBe(2)
+  })
+
+  it('closes the gap after a removal', () => {
+    const storage = makeMemoryWebStorage({ a: '1', b: '2', c: '3' })
+    storage.removeItem('b')
+    expect([storage.key(0), storage.key(1), storage.key(2)]).toEqual([
+      'a',
+      'c',
+      null,
+    ])
+  })
+
+  it('is unmoved by removing a key that was never there', () => {
+    const storage = makeMemoryWebStorage({ a: '1' })
+    storage.removeItem('never')
+    expect(storage.key(0)).toBe('a')
+    expect(storage.length).toBe(1)
+  })
+
+  it('enumerates every key through a full keys() sweep', () => {
+    // `keys()` walks `key(0…length-1)`, which is the access pattern the order
+    // cache exists for: without it that sweep is O(n²).
+    const seed = Object.fromEntries(
+      Array.from({ length: 200 }, (_, index) => [`kro:key-${index}`, '1']),
+    )
+    const keys = makeWebPreferenceStorage(makeMemoryWebStorage(seed)).keys()
+    expect(keys).toHaveLength(200)
+    expect(new Set(keys).size).toBe(200)
+  })
+})
+
 describe('probeWebStorage — proves writes work WITHOUT destroying anything', () => {
   it('answers true for a writable store', () => {
     expect(probeWebStorage(makeMemoryWebStorage())).toBe(true)

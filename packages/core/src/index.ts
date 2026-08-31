@@ -66,3 +66,16 @@ export * from './vistas'
 // here is also the dependency order.
 export * from './settings'
 export * from './flags'
+
+// --- source reconciliation & Kro-enhanced (#12) ----------------------------
+// The host-agnostic reconciliation pass: logical identity, the transitive
+// linker, field-scoped ownership on conflict, the pluggable per-provider
+// classification tables (Apple's ships as data), and the citizen / tourist /
+// enhanced model with its promotion and integrity rules. Runs before
+// filtering, grouping or presentation — see `Reconcile.ts`.
+//
+// Appended as its own block, after `vistas`, for the same anti-contention
+// reason that block gives. #12's own comment asked that it stay last if a
+// settings/flags block landed first; merging `main` into this branch is that
+// moment, so the two blocks sit in the order both asked for.
+export * from './domain/reconciliation'

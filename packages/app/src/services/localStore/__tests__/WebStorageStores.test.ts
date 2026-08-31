@@ -6,9 +6,12 @@ import {
 import { persistedRunningSessionMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
 import {
+  WEB_STORAGE_PROBE_KEY,
+  type WebStorageLike,
   makeMemoryWebStorage,
   makeWebPreferenceStorage,
   makeWebRunningSessionAnchorStore,
+  probeWebStorage,
   resolveWebStorage,
 } from '../WebStorageStores'
 
@@ -177,5 +180,65 @@ describe('resolveWebStorage — absent storage degrades, it does not throw', () 
     expect(storage.key(0)).toBe('a')
     expect(storage.key(9)).toBeNull()
     expect(storage.getItem('missing')).toBeNull()
+  })
+})
+
+describe('probeWebStorage — proves writes work WITHOUT destroying anything', () => {
+  it('answers true for a writable store', () => {
+    expect(probeWebStorage(makeMemoryWebStorage())).toBe(true)
+  })
+
+  it('leaves no probe key behind when the key was absent', () => {
+    const storage = makeMemoryWebStorage()
+    probeWebStorage(storage)
+    expect(storage.getItem(WEB_STORAGE_PROBE_KEY)).toBeNull()
+    expect(storage.length).toBe(0)
+  })
+
+  it('RESTORES a pre-existing value under the probe key verbatim', () => {
+    // Merely constructing the store must not delete an older build's — or
+    // another script's — value. This is the data-loss case, not a nicety.
+    const storage = makeMemoryWebStorage({
+      [WEB_STORAGE_PROBE_KEY]: 'someone else owns this',
+    })
+    probeWebStorage(storage)
+    expect(storage.getItem(WEB_STORAGE_PROBE_KEY)).toBe(
+      'someone else owns this',
+    )
+  })
+
+  it('restores an empty-string value, which is NOT the same as absent', () => {
+    const storage = makeMemoryWebStorage({ [WEB_STORAGE_PROBE_KEY]: '' })
+    probeWebStorage(storage)
+    expect(storage.getItem(WEB_STORAGE_PROBE_KEY)).toBe('')
+    expect(storage.length).toBe(1)
+  })
+
+  it('touches no other key', () => {
+    const storage = makeMemoryWebStorage({ 'kro:theme': '"dark"' })
+    probeWebStorage(storage)
+    expect(storage.getItem('kro:theme')).toBe('"dark"')
+    expect(storage.length).toBe(1)
+  })
+
+  it('answers false for a store whose setItem throws — the disabled case', () => {
+    const storage: WebStorageLike = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('QuotaExceededError')
+      },
+      removeItem: () => undefined,
+      length: 0,
+      key: () => null,
+    }
+    expect(probeWebStorage(storage)).toBe(false)
+  })
+
+  it('resolveWebStorage falls back to memory when the probe fails', () => {
+    const storage = resolveWebStorage()
+    // Whatever this runtime provides, the resolved value is always writable.
+    storage.setItem('kro:probe-check', '1')
+    expect(storage.getItem('kro:probe-check')).toBe('1')
+    storage.removeItem('kro:probe-check')
   })
 })

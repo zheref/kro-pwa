@@ -81,6 +81,40 @@ export const makeMemoryWebStorage = (
   }
 }
 
+/** The key the write probe uses. Namespaced so it reads as ours in devtools. */
+export const WEB_STORAGE_PROBE_KEY = '__kro_storage_probe__'
+
+/**
+ * Whether `storage` can actually be **written** to.
+ *
+ * A read-only check would not answer this: the failure mode worth detecting is
+ * a `localStorage` that exists and whose `setItem` throws — historically
+ * Safari's private mode with a zero quota, and any browser with DOM storage
+ * disabled. So the probe writes.
+ *
+ * **It is non-destructive.** An earlier cut wrote the probe key and then
+ * unconditionally removed it, which would silently delete a pre-existing value
+ * under that key — from an older build, another script on the origin, or a
+ * second Kro build sharing it — as a side effect of merely *constructing* the
+ * store. The prior value is now captured first and put back: removed only if
+ * the key was genuinely absent, restored verbatim if it was not. JavaScript is
+ * single-threaded, so nothing can observe the intermediate state.
+ *
+ * Exported because that property is worth a test of its own, and the global
+ * `localStorage` is awkward to seed.
+ */
+export const probeWebStorage = (storage: WebStorageLike): boolean => {
+  try {
+    const previous = storage.getItem(WEB_STORAGE_PROBE_KEY)
+    storage.setItem(WEB_STORAGE_PROBE_KEY, '1')
+    if (previous === null) storage.removeItem(WEB_STORAGE_PROBE_KEY)
+    else storage.setItem(WEB_STORAGE_PROBE_KEY, previous)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Resolve the browser's `localStorage`, or an in-memory stand-in when there is
  * none (SSR, a privacy mode that throws on access).
@@ -92,10 +126,7 @@ export const makeMemoryWebStorage = (
 export const resolveWebStorage = (): WebStorageLike => {
   try {
     if (typeof localStorage === 'undefined') return makeMemoryWebStorage()
-    const probe = '__kro_probe__'
-    localStorage.setItem(probe, '1')
-    localStorage.removeItem(probe)
-    return localStorage
+    return probeWebStorage(localStorage) ? localStorage : makeMemoryWebStorage()
   } catch {
     return makeMemoryWebStorage()
   }

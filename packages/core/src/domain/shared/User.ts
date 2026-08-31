@@ -81,9 +81,18 @@ export interface User {
 export const primaryEmail = (user: User): string => user.emails[0] ?? ''
 
 /**
- * `User.initials` — the first letter of each of the first two whitespace-
+ * `User.initials` — the first letter of each of the first two **space**-
  * separated words of the display name, uppercased; falls back to the primary
  * email when the user has no name. Empty when neither yields a letter.
+ *
+ * The separator is the single ASCII space `' '`, not "any whitespace". Canon
+ * is `source.split(separator: " ")`, which splits on that one character and
+ * drops the empty pieces (Swift's `omittingEmptySubsequences` default) — so
+ * `"  Prince  "` yields `P`, one letter, not three. A tab or a newline is
+ * therefore **part of a word**, not a separator, and `"Ada\tLovelace"` is one
+ * word yielding `A`. Widening this to `/\s+/` would read better in isolation
+ * but would hand the same user different initials on iOS and on the web, so
+ * the narrower canon behaviour is kept and pinned by test.
  */
 export const userInitials = (user: User): string => {
   const source = user.name ?? primaryEmail(user)

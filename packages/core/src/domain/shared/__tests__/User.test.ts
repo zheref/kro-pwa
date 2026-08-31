@@ -75,4 +75,12 @@ describe('userInitials', () => {
   it('uppercases a lowercase name', () => {
     expect(userInitials({ ...userMocks.complete, name: 'ada lovelace' })).toBe('AL')
   })
+
+  it('treats a TAB as part of the word, not as a separator', () => {
+    // Canon splits on the single ASCII space (`split(separator: " ")`), not on
+    // any whitespace. Widening to /\s+/ would give the same user different
+    // initials on iOS and on the web.
+    expect(userInitials({ ...userMocks.complete, name: 'Ada\tLovelace' })).toBe('A')
+    expect(userInitials({ ...userMocks.complete, name: 'Ada\nLovelace' })).toBe('A')
+  })
 })

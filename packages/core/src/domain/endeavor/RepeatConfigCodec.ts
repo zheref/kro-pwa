@@ -187,6 +187,25 @@ const decodeWeekdays = (
   return ok(weekdays)
 }
 
+/**
+ * Decodes a day-of-month.
+ *
+ * **Range is deliberately not validated**, and this is the interesting half.
+ * Canon decodes with a bare `try container.decode(Int.self, forKey: .day)` —
+ * no bounds at all — so KroApple accepts `0`, `-5` and `99`. Rejecting them
+ * here would make the web reader *stricter* than the writer on the other side
+ * of the same wire: a row KroApple happily round-trips would fail to load on
+ * the web, and the user would see the endeavor on their phone and not in the
+ * browser. For a cross-platform data contract that asymmetry is worse than
+ * carrying an odd number, and it is a one-way door — a decoder can always be
+ * tightened later, but data already rejected is data already lost.
+ *
+ * What *is* rejected is the shape: a missing key, a non-number, or a
+ * non-integer. Whether a rule can actually fire (day 31 in February, day 0
+ * anywhere) is a question for the recurrence engine that expands these rules,
+ * which is not this issue's scope. The tolerance is pinned by test so it reads
+ * as a decision rather than an oversight.
+ */
 const decodeDay = (
   raw: unknown,
   baseType: string,
@@ -260,6 +279,12 @@ export const decodeRepeatBase = (
  * `everyOther` is tolerated as absent and falls back to canon's default of
  * `1` — a Swift value that never left its default still round-trips, and this
  * is the one place a decoder may fill in rather than fail.
+ *
+ * Its **range** is deliberately not validated either, for the reason spelled
+ * out on `decodeDay`: canon's synthesized `Codable` reads a plain `Int`, so
+ * `0` and negatives decode on the Swift side, and a stricter web reader would
+ * drop rules the phone still shows. Only the shape — number, and whole — is
+ * enforced. Pinned by test.
  */
 export const decodeRepeatConfig = (
   raw: unknown,

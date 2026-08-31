@@ -168,6 +168,55 @@ describe('decoding a rule written by KroApple', () => {
   })
 })
 
+describe('wire tolerance matches canon, deliberately', () => {
+  // Canon decodes `day` and `everyOther` as bare `Int`s with no bounds. A
+  // stricter reader here would reject rules KroApple round-trips happily, so
+  // the web would lose an endeavor the phone still shows. These assertions
+  // exist so the tolerance reads as a decision, not an oversight — see the
+  // notes on `decodeDay` and `decodeRepeatConfig`.
+
+  it('accepts a day of 0, which no calendar has', () => {
+    const decoded = decodeRepeatConfig({ base: { type: 'monthly', day: 0 } })
+    expect(decoded).toEqual({ ok: true, value: makeRepeatConfig(monthlyBase(0)) })
+  })
+
+  it('accepts a negative day and a day past the end of any month', () => {
+    expect(decodeRepeatConfig({ base: { type: 'monthly', day: -5 } }).ok).toBe(true)
+    expect(decodeRepeatConfig({ base: { type: 'monthly', day: 99 } }).ok).toBe(true)
+  })
+
+  it('accepts an everyOther of 0 and a negative one', () => {
+    expect(
+      decodeRepeatConfig({ base: { type: 'daily' }, everyOther: 0 }),
+    ).toEqual({ ok: true, value: makeRepeatConfig(dailyBase(), 0) })
+    expect(
+      decodeRepeatConfig({ base: { type: 'daily' }, everyOther: -2 }),
+    ).toEqual({ ok: true, value: makeRepeatConfig(dailyBase(), -2) })
+  })
+
+  it('still rejects the SHAPE — a non-number day or multiplier', () => {
+    expect(decodeRepeatConfig({ base: { type: 'monthly', day: '15' } }).ok).toBe(
+      false,
+    )
+    expect(
+      decodeRepeatConfig({ base: { type: 'daily' }, everyOther: 'two' }).ok,
+    ).toBe(false)
+  })
+
+  it('still rejects a month outside 1…12, because Month IS a closed enum', () => {
+    // The asymmetry is canon's: `month` decodes through `Month(rawValue:)`,
+    // which fails outside its cases, while `day` is a plain `Int`.
+    expect(
+      decodeRepeatConfig({ base: { type: 'yearly', day: 1, month: 0 } }).ok,
+    ).toBe(false)
+  })
+
+  it('round-trips an out-of-range day rather than mangling it', () => {
+    const config = makeRepeatConfig(monthlyBase(0), 0)
+    expect(roundTrip(config)).toEqual({ ok: true, value: config })
+  })
+})
+
 describe('decoding failures are typed, never thrown', () => {
   it('rejects a non-object', () => {
     const decoded = decodeRepeatConfig('daily')

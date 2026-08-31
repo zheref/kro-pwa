@@ -11,7 +11,9 @@ authors no canon of its own (CON-13).
 - **Scenario:** `react-uzf-v1` (Stack Matrix Scenario 5 — Web Only). This repo is the **first**
   consumer of that stack handbook.
 - **Programme:** epic [#1](https://github.com/zheref/kro-pwa/issues/1) (parity with KroApple +
-  compliance), children #2–#35. Product/UX canon: `zheref/KroApple@main` (`docs/Features/*.md`).
+  compliance), children #2–#35. Product/UX canon: `zheref/KroApple@main` — always the latest tip,
+  re-fetched before each child build; the epic was authored against pin `2c1ee45`
+  (`docs/Features/*.md`).
 
 ---
 
@@ -22,7 +24,7 @@ bankai-core `docs/HUMAN-GATES.md`):
 
 | Gate | Clause | Fires when | Who acts, and how — in this repo |
 |---|---|---|---|
-| **G1 — epic approval** | CON-4 | An epic is drafted and parked | The maintainer picks the delivery mode. **Fired for epic #1 on 2026-08-30**: local delivery with shikai semantics — children PR directly against `main`, each PR is its own G2. Agents never apply a mode label. |
+| **G1 — epic approval** | CON-4 | An epic is drafted and parked | The maintainer picks the delivery mode. **Fired for epic #1 on 2026-08-30**: local delivery with shikai semantics — children deliver as PRs directly against `main`, each its own G2. Agents never apply a mode label. |
 | **G1-M — release into build** | CON-25 | A routed child is ready to be worked | The maintainer releases work (here: by dispatching a local session for it). Agents route (`bankai:agent/*`) but never release, outside CON-25's four carve-outs. |
 | **G2 — merge to `main`** | CON-5 | A delivery PR is fully green | **Only the maintainer merges.** No agent ever merges the default branch; branch protection should enforce it (see the missing-pieces list). |
 | **G3 — release go/no-go** | CON-6 | A shippable build exists on `main` | The maintainer authorizes shipping (deploy to the chosen host). Releases follow REL-1..8. |

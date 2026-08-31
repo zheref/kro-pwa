@@ -57,6 +57,23 @@ describe('Sheet', () => {
     expect(screen.getByRole('dialog').className).toContain('kro-glass')
   })
 
+  /**
+   * `.kro-glass` is deliberately UNLAYERED CSS (`glass.css`'s own header:
+   * the Safari `backdrop-filter` fix must reliably win against a caller's
+   * own styling), and unlayered CSS beats every `@layer`-wrapped rule
+   * regardless of specificity or source order — so Tailwind v4's `.fixed`
+   * utility (always layered) can never out-rank `.kro-glass`'s own
+   * `position: relative`, and a sheet built from `fixed` in `className`
+   * alone renders off-screen. `KC-IS-#28` is the first real consumer to hit
+   * this in a browser; the fix is an inline style, which nothing in a
+   * stylesheet can out-rank.
+   */
+  it('forces position:fixed inline — className alone loses to `.kro-glass`\'s unlayered CSS', () => {
+    render(<InboxSheet />)
+
+    expect(screen.getByRole('dialog').style.position).toBe('fixed')
+  })
+
   it('keeps the grabber out of the reading order — it is a shape, not a control', () => {
     render(<InboxSheet />)
 

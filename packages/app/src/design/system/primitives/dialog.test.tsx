@@ -56,6 +56,13 @@ describe('Dialog', () => {
     expect(screen.getByRole('dialog').className).toContain('kro-glass')
   })
 
+  /** Same fix, same reason as `sheet.test.tsx`'s own — see that file. */
+  it('forces position:fixed inline — className alone loses to `.kro-glass`\'s unlayered CSS', () => {
+    render(<TriageDialog />)
+
+    expect(screen.getByRole('dialog').style.position).toBe('fixed')
+  })
+
   it('offers a labelled close affordance rather than an unnamed glyph', () => {
     render(<TriageDialog />)
 

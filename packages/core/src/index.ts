@@ -23,6 +23,13 @@
  */
 
 export * from './domain/endeavor'
+// #8 — the focus-session domain. Anchored right after `domain/endeavor`
+// because it builds on it (`Perform`, `PerformResolution`, `Endeavor`) and
+// nothing points back. Its three renamed types (`FocusTimerMode`,
+// `FocusSessionConfig`, `FocusSessionFragment`) exist to keep this barrel free
+// of the `TS2308` collisions the legacy `model/Session/*` exports below would
+// otherwise cause — see `domain/session/index.ts` for the rule.
+export * from './domain/session'
 export * from './domain/shared'
 export * from './library/assertNever'
 export * from './library/exception'

@@ -8,6 +8,11 @@
 
 export * from './domain/endeavor/__mocks__/Endeavor.mocks'
 export * from './domain/endeavor/__mocks__/EndeavorRelations.mocks'
+export * from './domain/session/__mocks__/FocusSessionConfig.mocks'
+export * from './domain/session/__mocks__/FocusSessionFragment.mocks'
+export * from './domain/session/__mocks__/PersistedRunningSession.mocks'
+export * from './domain/session/__mocks__/SessionLaunchRecommendation.mocks'
+export * from './domain/session/__mocks__/SessionSummary.mocks'
 export * from './domain/shared/__mocks__/EndeavorList.mocks'
 export * from './domain/shared/__mocks__/Reward.mocks'
 export * from './domain/shared/__mocks__/User.mocks'

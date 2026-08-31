@@ -18,8 +18,7 @@ import {
   makePerform,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   endeavorDetailSlice,
@@ -60,7 +59,7 @@ const recordsOf = (
 
 const storeWith = (records: readonly EndeavorRecord[] = recordsOf()) =>
   makeStore({
-    greetingService: stubbedGreetingService,
+    ...stubbedThunkExtra,
     localStore: makeInMemoryLocalStore({ endeavors: records }),
   })
 
@@ -220,7 +219,7 @@ describe('dirty tracking, save and dismiss', () => {
   it('leaves the edit dirty when the save failed — nothing was persisted', async () => {
     const base = makeInMemoryLocalStore({ endeavors: recordsOf() })
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         endeavors: {

@@ -15,8 +15,7 @@ import {
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
 import {
   childCreationPromptDelegatedClose,
@@ -68,7 +67,7 @@ const recordOf = (endeavor: Endeavor): EndeavorRecord =>
 /** A store wired to a seeded on-device store and stubbed everything else. */
 const storeWith = (records: readonly EndeavorRecord[] = []) =>
   makeStore({
-    greetingService: stubbedGreetingService,
+    ...stubbedThunkExtra,
     localStore: makeInMemoryLocalStore({ endeavors: records }),
   })
 
@@ -655,7 +654,7 @@ describe('loadPlanDayThunk lifecycle', () => {
   it('surfaces a typed exception when the store cannot be read (device full)', async () => {
     const broken = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...broken,
         endeavors: {
@@ -870,7 +869,7 @@ describe('loadPlanMatrixThunk lifecycle', () => {
   it('surfaces a typed exception rather than throwing out of the reducer', async () => {
     const broken = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...broken,
         endeavors: {

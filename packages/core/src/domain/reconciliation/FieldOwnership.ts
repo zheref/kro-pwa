@@ -38,6 +38,7 @@
  * erase stronger source evidence already received"*, and, run the other way,
  * why a fresh Apple row cannot erase a `value` the user set last week.
  */
+import { sourceIdentityKey } from './SourceIdentity'
 import type { Endeavor } from '../endeavor/Endeavor'
 import { EndeavorHost } from '../endeavor/EndeavorHost'
 import type { Shadow } from '../endeavor/Shadow'
@@ -149,7 +150,10 @@ export const mergeShadows = (
   const result: Shadow[] = []
   const indexByKey = new Map<string, number>()
   for (const shadow of all) {
-    const key = `${shadow.source} ${shadow.sourceIdentifier}`
+    const key = sourceIdentityKey({
+      source: shadow.source,
+      identifier: shadow.sourceIdentifier,
+    })
     const existing = indexByKey.get(key)
     if (existing === undefined) {
       indexByKey.set(key, result.length)

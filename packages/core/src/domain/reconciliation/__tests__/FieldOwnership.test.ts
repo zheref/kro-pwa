@@ -111,6 +111,18 @@ describe('merging shadows', () => {
     expect(merged).toHaveLength(2)
   })
 
+  it('keys dedupe by the collision-safe identity key, not string concat', () => {
+    // source is an enum today, so plain-space aliasing was only theoretical —
+    // but the key now delegates to sourceIdentityKey so the invariant holds
+    // even if a free-form provider ever appears. Spaced identifiers stay
+    // distinct across providers and dedupe within one.
+    const merged = mergeShadows(
+      [appleShadow({ sourceIdentifier: 'a b' })],
+      [appleShadow({ sourceIdentifier: 'a b' }), appleShadow({ sourceIdentifier: 'a' })],
+    )
+    expect(merged).toHaveLength(2)
+  })
+
   it('deduplicates by provider and identifier', () => {
     const merged = mergeShadows(
       [appleShadow({ sourceIdentifier: 'a' })],

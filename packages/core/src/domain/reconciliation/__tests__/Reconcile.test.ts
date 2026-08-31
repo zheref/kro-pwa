@@ -369,6 +369,20 @@ describe('stage ordering — series repair must see the raw fan-out', () => {
 })
 
 describe('reconciledCounterpartOf', () => {
+  it('answers through series repair, where no identity key links the rows', () => {
+    // The rotated-identifier pair from the stage-ordering suite: identity
+    // matching alone cannot link these, only stage 1 can. The helper must
+    // run the whole pipeline or it answers null/wrong here.
+    const counterpart = reconciledCounterpartOf(
+      seriesScenarioMocks.liveToday,
+      [seriesScenarioMocks.enrichedMirror, seriesScenarioMocks.liveToday],
+      context,
+    )
+    expect(counterpart?.id).toBe('mirror-vitamins')
+    expect(counterpart?.kind).toBe(EndeavorKind.habit)
+  })
+
+
   it('finds the merged row a given endeavor ends up in', () => {
     const mirror = localMirrorRow({
       id: 'local',

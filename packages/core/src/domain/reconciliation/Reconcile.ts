@@ -45,6 +45,7 @@
 import type { Endeavor } from '../endeavor/Endeavor'
 import { mergeReconciled } from './FieldOwnership'
 import { groupByIdentity } from './IdentityIndex'
+import { identitiesOf, sourceIdentityKey } from './SourceIdentity'
 import {
   type ReconciliationContext,
   defaultReconciliationContext,
@@ -111,15 +112,22 @@ export const reconciledCounterpartOf = (
   endeavors: readonly Endeavor[],
   context: ReconciliationContext = defaultReconciliationContext(),
 ): Endeavor | null => {
-  const index = endeavors.indexOf(endeavor)
-  if (index < 0) return null
-  const groups = groupByIdentity(endeavors)
-  const group = groups.find((candidate) =>
-    candidate.memberIndices.includes(index),
+  if (!endeavors.includes(endeavor)) return null
+  // Run the WHOLE pipeline, not just the identity stage: series repair can
+  // merge two rows that share no identity key yet (a rotated identifier),
+  // and skipping it here would answer with the wrong row. Membership in the
+  // output is by id or by identity intersection — a merged carrier retains
+  // every absorbed row's source routes (integrity rule), so the identities
+  // of the input always survive into its carrier.
+  const identityKeys = new Set(identitiesOf(endeavor).map(sourceIdentityKey))
+  const reconciled = reconcile(endeavors, context)
+  return (
+    reconciled.find(
+      (row) =>
+        row.id === endeavor.id ||
+        identitiesOf(row).some((identity) =>
+          identityKeys.has(sourceIdentityKey(identity)),
+        ),
+    ) ?? null
   )
-  if (group === undefined) return null
-  const members = group.memberIndices.map(
-    (memberIndex) => endeavors[memberIndex] as Endeavor,
-  )
-  return reconcile(members, context)[0] ?? null
 }

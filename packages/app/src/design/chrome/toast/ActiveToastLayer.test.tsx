@@ -111,9 +111,16 @@ describe('the shell’s bottom inset — canon’s 24pt is measured inside the t
     // below it: without this the toast lands underneath the bar.
     render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} bottomInset={60} />)
 
-    // CSSOM folds a `calc()` of two absolute lengths to their sum, so the
-    // assertion is on the resolved distance rather than on the expression.
-    expect(layer().style.bottom).toBe(`calc(${CHROME_LAYOUT.toastBottomPadding + 60}px)`)
+    // Either shape is correct CSS, and which one a parser hands back is its
+    // own business: jsdom folds a `calc()` of two absolute lengths into their
+    // sum, another engine may keep the expression. What this test is actually
+    // about is the DISTANCE, so it accepts both rather than pinning a
+    // normalisation nobody promised.
+    expect(layer().style.bottom).toMatch(
+      new RegExp(
+        `^calc\\((${CHROME_LAYOUT.toastBottomPadding + 60}px|${CHROME_LAYOUT.toastBottomPadding}px \\+ 60px)\\)$`,
+      ),
+    )
   })
 
   it('takes any CSS length, so a shell may hand over a safe-area inset', () => {

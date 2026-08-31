@@ -2,7 +2,7 @@
 
 import { Flex, VStack } from '@chakra-ui/react'
 import { NavigationItem } from './navigation-item'
-import { FiClock, FiLink, FiSettings } from 'react-icons/fi'
+import { FiLink, FiSettings } from 'react-icons/fi'
 
 export function NavigationSidebar() {
   return (
@@ -18,8 +18,13 @@ export function NavigationSidebar() {
         _dark: 'gray.700',
       }}
     >
+      {/*
+        No Session row any more: KC-IS-#22 retired `/session` and the parity
+        shell serves the surface at `/execute`. A row pointing at a route that
+        404s is worse than no row, and this sidebar is the pre-parity one —
+        linking out of it into the parity shell would be a one-way trip.
+      */}
       <VStack alignItems="stretch" gap={0.5}>
-        <NavigationItem href="/session" icon={FiClock} label="Session" />
         <NavigationItem
           href="/integrations"
           icon={FiLink}

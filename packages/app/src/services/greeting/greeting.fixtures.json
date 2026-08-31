@@ -1,0 +1,39 @@
+{
+  "greetings": {
+    "ada": {
+      "id": "greeting-1",
+      "recipient": "ada",
+      "message": "Good morning, Ada.",
+      "signature": "— Kro",
+      "issued_at": "2026-01-15T08:00:00.000Z"
+    },
+    "grace": {
+      "id": "greeting-2",
+      "recipient": "grace",
+      "message": "Welcome back, Grace.",
+      "signature": "— Kro",
+      "issued_at": "2026-01-15T08:59:59.000Z"
+    },
+    "linus": {
+      "id": "greeting-4",
+      "recipient": "linus",
+      "message": "Hey Linus.",
+      "signature": null,
+      "issued_at": "2026-01-14T19:45:00.000Z"
+    },
+    "山田": {
+      "id": "greeting-7",
+      "recipient": "山田",
+      "message": "おはよう、山田さん 🌸 — مرحبا",
+      "signature": "— クロ",
+      "issued_at": "2026-01-13T22:05:00.000Z"
+    },
+    "malformed": {
+      "id": "greeting-8",
+      "recipient": "malformed",
+      "message": "This payload never survives the Mapper.",
+      "signature": null,
+      "issued_at": "the day before yesterday"
+    }
+  }
+}

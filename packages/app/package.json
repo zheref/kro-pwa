@@ -2,7 +2,7 @@
   "name": "@kro/app",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared feature + design tier (UI that is not app-shell specific). Skeleton — populated by the design-system and feature children of #1.",
+  "description": "Shared UZF state + feature tier: makeStore(extra), the ThunkExtra service manifest, typed hooks, Services and feature slices. May import react; never next.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -13,12 +13,27 @@
     "src"
   ],
   "scripts": {
+    "lint": "node ./scripts/check-uzf-boundaries.mjs",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kro/core": "workspace:*"
+    "@kro/core": "workspace:*",
+    "@reduxjs/toolkit": "^2.12.0",
+    "react-redux": "^9.3.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "jsdom": "^30.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

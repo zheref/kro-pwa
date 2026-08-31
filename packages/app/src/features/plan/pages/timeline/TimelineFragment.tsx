@@ -40,7 +40,12 @@
  */
 import type { Endeavor } from '@kro/core'
 import { endOf } from '@kro/core'
-import { type CSSProperties, type ReactNode, useCallback } from 'react'
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  useCallback,
+} from 'react'
 import {
   computedSymbol,
   displayTitle,
@@ -396,11 +401,27 @@ function SlotLayer({
             aria-hidden={!onTheHour}
             tabIndex={onTheHour ? 0 : -1}
             aria-label={slotAccessibilityLabel(start)}
-            // The accessible path is a plain activation. The hold and the
-            // double-tap are pointer gestures with no assistive equivalent, so
-            // this fires the same intent with `isHold: false` — no haptic,
-            // exactly as canon's own accessibility action does.
-            onClick={() => onPressSlot(index, false)}
+            /*
+              The accessible path — and ONLY the accessible path.
+
+              `MouseEvent.detail` is the click count, and it is `0` exactly
+              when the click was not produced by a pointer: a keyboard Enter or
+              Space, and the synthetic activation a screen reader dispatches.
+              A real click carries `1` or more.
+
+              Without that guard this handler is a second, contradictory way to
+              create an event: a plain single click would create one, which is
+              precisely what `useSlotPress` is written to refuse — and the
+              `click` the browser also synthesises after a hold or a double-tap
+              would fire it a SECOND time, opening the capture prompt twice.
+
+              Fires with `isHold: false`, so no haptic — canon's own
+              accessibility action does the same.
+            */
+            onClick={(event) => {
+              if (event.detail !== 0) return
+              onPressSlot(index, false)
+            }}
             className="w-full shrink-0 cursor-default border-none bg-transparent p-0"
             style={{ height: slotHeight * multiple }}
           />
@@ -530,6 +551,39 @@ function TimelineBlock({
     disabled: !isDraggable,
   })
 
+  /**
+   * The press and the body drag **share** one set of DOM handlers.
+   *
+   * Spreading `{...press} {...body}` looks equivalent and is not: the second
+   * spread REPLACES the four keys they have in common, so the press hook stops
+   * receiving `pointerup` the instant a card becomes draggable. Two things
+   * break together — `isPressed` never clears, so the deepened fill sticks
+   * after the edit commits; and the drag hook, mounted mid-gesture, never saw
+   * the `pointerdown` it is waiting for, so a hold-then-slide moves nothing.
+   *
+   * Composing them explicitly fixes the first. The second is fixed inside
+   * `useVerticalDrag`, which adopts a pointer that is already down.
+   */
+  const surfaceHandlers = {
+    onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
+      handlers.onPointerDown(event)
+      if (isDraggable) body.handlers.onPointerDown(event)
+    },
+    onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
+      handlers.onPointerMove(event)
+      if (isDraggable) body.handlers.onPointerMove(event)
+    },
+    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
+      handlers.onPointerUp(event)
+      if (isDraggable) body.handlers.onPointerUp(event)
+    },
+    onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => {
+      handlers.onPointerCancel(event)
+      if (isDraggable) body.handlers.onPointerCancel(event)
+    },
+    onPointerLeave: handlers.onPointerLeave,
+  }
+
   const tier = cardTierFor(endeavor)
   const end = endOf(endeavor)
   const calendarName = endeavor.shadows?.[0]?.group ?? null
@@ -573,8 +627,7 @@ function TimelineBlock({
           // a vertical flick belongs to the scroll container.
           touchAction: isDraggable ? 'none' : 'pan-y',
         }}
-        {...handlers}
-        {...(isDraggable ? body.handlers : {})}
+        {...surfaceHandlers}
       >
         {/* The tint. `transition: none` on the way IN is the whole press
             feedback: canon's fill *"lands with no animation at all — a press

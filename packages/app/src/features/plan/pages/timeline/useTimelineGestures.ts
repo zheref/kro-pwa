@@ -427,8 +427,34 @@ export function useVerticalDrag(options: UseVerticalDragOptions): {
 
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      const start = origin.current
-      if (start === null) return
+      let start = origin.current
+      if (start === null) {
+        // ADOPT a pointer that was already down.
+        //
+        // On the timeline a card becomes draggable *mid-press*: the 0.6s hold
+        // arms edit mode while the finger is still on the glass, so this hook
+        // is mounted onto a gesture whose `pointerdown` it never saw. Without
+        // this branch a user who holds and then slides in one motion moves
+        // nothing — they have to lift and press again, which is not what canon
+        // does (its `blockDrag` becomes active under the same continued
+        // press).
+        //
+        // `buttons` is the discriminator: it is non-zero exactly while a
+        // button or a contact is down, so a stray `pointermove` from a mouse
+        // merely hovering the card never starts a drag.
+        if (disabled || event.buttons === 0) return
+        start = { x: event.clientX, y: event.clientY }
+        origin.current = start
+        capturePointer(event.currentTarget, event.pointerId)
+        // Measured from HERE, not from where the press began: the press was a
+        // hold, and the translation the user means is the one they have made
+        // since the card started answering to it.
+        if (minimumDistancePx === 0) {
+          isDragging.current = true
+          onBegin()
+        }
+        return
+      }
       const point = { x: event.clientX, y: event.clientY }
       if (!isDragging.current) {
         if (pointerDistance(start, point) < minimumDistancePx) return
@@ -438,7 +464,7 @@ export function useVerticalDrag(options: UseVerticalDragOptions): {
       event.stopPropagation()
       onDrag(point.y - start.y)
     },
-    [minimumDistancePx, onBegin, onDrag],
+    [disabled, minimumDistancePx, onBegin, onDrag],
   )
 
   const finish = useCallback(

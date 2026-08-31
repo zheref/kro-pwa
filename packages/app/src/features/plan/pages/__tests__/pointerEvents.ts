@@ -83,6 +83,12 @@ export function pointer(
 ): void {
   fireEvent[phase](element, {
     button: 0,
+    // `buttons` is the bitmask of what is currently DOWN, so it is 1 through
+    // the press and 0 once it ends. It matters: `useVerticalDrag` reads it to
+    // decide whether a `pointermove` belongs to a press it can adopt or to a
+    // mouse merely hovering — and a helper that left it at the default 0
+    // would make every adoption test pass for the wrong reason.
+    buttons: phase === 'pointerUp' || phase === 'pointerCancel' ? 0 : 1,
     pointerId: 1,
     pointerType: at.pointerType ?? 'mouse',
     clientX: at.clientX ?? 0,

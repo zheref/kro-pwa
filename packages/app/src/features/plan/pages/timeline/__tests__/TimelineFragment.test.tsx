@@ -8,7 +8,7 @@
  * layout could not produce would prove nothing about the layout.
  */
 import type { Endeavor } from '@kro/core'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -52,30 +52,33 @@ const placementsFor = (
   band = FULL_BAND,
 ) => timelinePlacements(events, { on: selectedDate, startHour: band.start })
 
+/**
+ * The default scene, named so a case that has to **re-render** mid-gesture can
+ * rebuild it — which is the only way to model "edit mode arms while the finger
+ * is still down", the state the two composed-handler cases below are about.
+ */
+const baseProps: Parameters<typeof TimelineFragment>[0] = {
+  placements: placementsFor(planDayFixtures.longBlockWithShortOverlaps),
+  selectedDate,
+  now: PLAN_REFERENCE_NOW,
+  band: FULL_BAND,
+  isShowingToday: true,
+  slotCount: timelineSlotCount(FULL_BAND),
+  isQuickCreateAvailable: true,
+  quickCreate: null,
+  editingEndeavorId: null,
+  onViewDetail: () => {},
+  onHoldBlock: () => {},
+  onGrabHandle: () => {},
+  onDragHandle: () => {},
+  onReleaseHandle: () => {},
+  onTapOutsideEditing: () => {},
+  onPressSlot: () => {},
+}
+
 const mount = (
   overrides: Partial<Parameters<typeof TimelineFragment>[0]> = {},
-) =>
-  render(
-    <TimelineFragment
-      placements={placementsFor(planDayFixtures.longBlockWithShortOverlaps)}
-      selectedDate={selectedDate}
-      now={PLAN_REFERENCE_NOW}
-      band={FULL_BAND}
-      isShowingToday
-      slotCount={timelineSlotCount(FULL_BAND)}
-      isQuickCreateAvailable
-      quickCreate={null}
-      editingEndeavorId={null}
-      onViewDetail={() => {}}
-      onHoldBlock={() => {}}
-      onGrabHandle={() => {}}
-      onDragHandle={() => {}}
-      onReleaseHandle={() => {}}
-      onTapOutsideEditing={() => {}}
-      onPressSlot={() => {}}
-      {...overrides}
-    />,
-  )
+) => render(<TimelineFragment {...baseProps} {...overrides} />)
 
 // ------------------------------------------------------------------ the grid
 
@@ -364,6 +367,72 @@ describe('edit mode', () => {
     expect(onViewDetail).not.toHaveBeenCalled()
   })
 
+  it('MOVES the card when the hold is continued into a slide, without lifting', () => {
+    // The gesture a user actually makes: press, feel it arm, keep going. The
+    // drag hook is mounted onto a press already in flight, so it never sees a
+    // `pointerdown` — it has to adopt the pointer that is already down.
+    const onGrabHandle = vi.fn()
+    const onDragHandle = vi.fn()
+    const props = {
+      placements: placementsFor(planDayFixtures.longSoloBlock),
+      onHoldBlock: () => {},
+      onGrabHandle,
+      onDragHandle,
+    }
+    const { rerender } = mount(props)
+    const surface = screen.getByTestId('plan-timeline-block-surface')
+
+    pointer('pointerDown', surface, { clientX: 100, clientY: 200 })
+    act(() => {
+      vi.advanceTimersByTime(600)
+    })
+
+    // Edit mode arms while the finger is still down.
+    rerender(
+      <TimelineFragment
+        {...baseProps}
+        {...props}
+        editingEndeavorId="solo-standup"
+      />,
+    )
+
+    pointer('pointerMove', surface, { clientX: 100, clientY: 210 })
+    pointer('pointerMove', surface, { clientX: 100, clientY: 245 })
+
+    expect(onGrabHandle).toHaveBeenCalledWith(TimelineDragHandle.body)
+    // Measured from where the card started answering, not from the press.
+    expect(onDragHandle).toHaveBeenCalledWith(35)
+  })
+
+  it('lets the deepened fill go on release, even though a drag took the gesture over', () => {
+    // The other half of the same defect: with the drag hook REPLACING the
+    // press handlers, `pointerup` never reached the press hook and the block
+    // stayed lit after the edit committed.
+    const props = {
+      placements: placementsFor(planDayFixtures.longSoloBlock),
+      onHoldBlock: () => {},
+    }
+    const { rerender } = mount(props)
+    const surface = screen.getByTestId('plan-timeline-block-surface')
+
+    pointer('pointerDown', surface, { clientX: 100, clientY: 200 })
+    act(() => {
+      vi.advanceTimersByTime(600)
+    })
+    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe('true')
+
+    rerender(
+      <TimelineFragment
+        {...baseProps}
+        {...props}
+        editingEndeavorId="solo-standup"
+      />,
+    )
+    pointer('pointerUp', surface, { clientX: 100, clientY: 200 })
+
+    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe('false')
+  })
+
   it('keeps the armed card armed when it is tapped itself', () => {
     const onTapOutsideEditing = vi.fn()
     mount({ ...editing, onTapOutsideEditing })
@@ -419,6 +488,45 @@ describe('quick create', () => {
     pointer('pointerUp', slot, { clientX: 100, clientY: 500 })
 
     expect(onPressSlot).toHaveBeenCalledTimes(1)
+    expect(onPressSlot).toHaveBeenCalledWith(36, false)
+  })
+
+  it('does NOT create on a plain single click — one click is not a gesture', async () => {
+    // The accessible activation and a pointer click are the SAME DOM event, so
+    // an unguarded `onClick` would be a second, contradictory way to create.
+    const onPressSlot = vi.fn()
+    mount({ onPressSlot })
+
+    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    await userEvent.click(slot)
+
+    expect(onPressSlot).not.toHaveBeenCalled()
+  })
+
+  it('does NOT fire twice when the browser synthesises a click after a hold', () => {
+    const onPressSlot = vi.fn()
+    mount({ onPressSlot })
+
+    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    pointer('pointerDown', slot, { clientX: 100, clientY: 500 })
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+    pointer('pointerUp', slot, { clientX: 100, clientY: 500 })
+    // The click every real browser sends after a press that ended on the
+    // element. It carries a non-zero `detail`, so it is not an activation.
+    fireEvent.click(slot, { detail: 1 })
+
+    expect(onPressSlot).toHaveBeenCalledTimes(1)
+  })
+
+  it('DOES create on a keyboard or screen-reader activation, which carries no click count', () => {
+    const onPressSlot = vi.fn()
+    mount({ onPressSlot })
+
+    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    fireEvent.click(slot, { detail: 0 })
+
     expect(onPressSlot).toHaveBeenCalledWith(36, false)
   })
 

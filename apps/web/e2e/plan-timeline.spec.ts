@@ -255,6 +255,58 @@ test.describe('Plan timeline — pointer (mouse) path', () => {
       .toBe(Math.round(before.height))
   })
 
+  test('MOVES the card when the hold is continued into a slide, without lifting', async ({
+    page,
+  }) => {
+    // The gesture a user actually makes — press, feel it arm, keep going — as
+    // one uninterrupted pointer sequence. The drag hook is mounted onto a
+    // press already in flight and never sees a `pointerdown`, so it has to
+    // adopt the pointer that is already down.
+    await seedDay(page, REALISTIC_DAY)
+    await page.goto('/plan')
+
+    const block = page.locator('[data-endeavor-id="e2e-review"]')
+    await block.scrollIntoViewIfNeeded()
+    const before = await block.boundingBox()
+    expect(before).not.toBeNull()
+    if (before === null) return
+
+    const x = before.x + before.width / 2
+    const y = before.y + before.height / 2
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.waitForTimeout(900) // past the 0.6s arm
+    for (let step = 1; step <= 4; step += 1) {
+      await page.mouse.move(x, y + step * (HOUR_HEIGHT / 4), { steps: 3 })
+    }
+    await page.mouse.up()
+
+    await expect
+      .poll(async () => (await block.boundingBox())?.y ?? 0)
+      .toBeGreaterThan(before.y)
+    // And the deepened press fill let go, rather than sticking on the card.
+    await expect(block).toHaveAttribute('data-pressed', 'false')
+  })
+
+  test('does NOT create an event from a plain single click on empty canvas', async ({
+    page,
+  }) => {
+    // A slot's accessible activation and a pointer click are the same DOM
+    // event; an unguarded handler would make one click create, which is
+    // exactly what the hold/double-tap grammar refuses.
+    await seedDay(page, [])
+    await page.goto('/plan')
+
+    const { x, y } = await centreOf(slotAt(page, 40))
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.up()
+    await page.waitForTimeout(600)
+
+    await expect(page.getByTestId('plan-timeline-draft')).toHaveCount(0)
+  })
+
   test('commits the edit and re-enables scrolling when the canvas is clicked', async ({
     page,
   }) => {

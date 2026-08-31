@@ -46,6 +46,19 @@ export {
  */
 export * from './features/main'
 
+/**
+ * The Plan timeline (KC-IS-#19) — the Page `/plan` mounts, its Fragments and
+ * the pure modules behind them. The Plan *slice* stays unexported for the same
+ * reason every other slice does: a component reaches it through this Page, not
+ * through the store's shape.
+ *
+ * One line on a shared barrel, added by the child that first needed it — the
+ * same seam `design/endeavor/index.ts` and `design/chrome/index.ts` describe
+ * for themselves. KC-IS-#20 needs no second line; it extends this Page's
+ * destination slots.
+ */
+export * from './features/plan/pages'
+
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
   type GreetingLoadState,

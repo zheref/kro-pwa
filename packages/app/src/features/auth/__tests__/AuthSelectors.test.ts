@@ -36,6 +36,7 @@ import {
   withModeToggled,
   withSettingsSyncState,
 } from '../AuthShifters'
+import { initialMainState } from '../../main/MainFeature'
 import { AuthFlow, type AuthState } from '../AuthState'
 import { signOutIntents } from '../SignOutIntents'
 
@@ -51,6 +52,7 @@ const rootWith = (auth: AuthState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   auth,
+  main: initialMainState,
 })
 
 describe('the session', () => {

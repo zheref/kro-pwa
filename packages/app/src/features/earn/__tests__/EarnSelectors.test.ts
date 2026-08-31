@@ -40,6 +40,7 @@ import {
   selectSpentPoints,
   selectTotalEarnedPoints,
 } from '../EarnSelectors'
+import { initialMainState } from '../../main/MainFeature'
 
 const rootWith = (earn: EarnState): RootState => ({
   greeting: initialGreetingState,
@@ -53,6 +54,7 @@ const rootWith = (earn: EarnState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 const loaded = earnStateMocks.loadedTypical

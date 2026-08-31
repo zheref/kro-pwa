@@ -28,6 +28,7 @@ import { earnSlice } from '../features/earn/EarnFeature'
 import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFeature'
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
+import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
@@ -43,6 +44,10 @@ import {
 import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
 import { liveLocalStore } from '../services/localStore/liveLocalStore'
 import { signOutWipe } from '../services/localStore/signOutWipe'
+import {
+  type NavigationService,
+  stubbedNavigationService,
+} from '../services/navigation/NavigationService'
 import { liveSupabaseClientProvider } from '../services/supabase/SupabaseClientProvider'
 import { makeLiveEndeavorCloudTransport } from '../services/sync/EndeavorCloudTransport'
 import {
@@ -95,6 +100,14 @@ export interface ThunkExtra {
    * gated behind `supabaseHosting`, which is OFF at `statusQuo`.
    */
   readonly endeavorSync: EndeavorSyncService
+  /**
+   * The router, as a Service (#13). `RC-17`/`RC-63`: navigation is invoked
+   * from a Producer, never from a component, so the router arrives here like
+   * any other boundary. The default binding is the no-op stub — the live one
+   * is built at `apps/web`'s composition root, which is the only file in the
+   * repo that imports `next/navigation`.
+   */
+  readonly navigation: NavigationService
 }
 
 /**
@@ -121,6 +134,10 @@ export const liveThunkExtra: ThunkExtra = {
     transport: makeLiveEndeavorCloudTransport(liveSupabaseClientProvider),
     isCloudEnabled: supabaseHostingGate(liveFeatureFlags),
   }),
+  // The no-op default: `makeStore()` runs before — and during a server render,
+  // entirely without — a router. `apps/web/src/app/providers.tsx` builds the
+  // live binding and passes it in.
+  navigation: stubbedNavigationService,
 }
 
 /**
@@ -141,6 +158,10 @@ export const stubbedThunkExtra: ThunkExtra = {
   authService: stubbedAuthService,
   settingsSync: stubbedSettingsSyncService,
   endeavorSync: stubbedEndeavorSyncService,
+  // A suite that asserts on navigation passes its own
+  // `makeRecordingNavigationService()`; the shared default records nothing, so
+  // no two suites can see each other's calls.
+  navigation: stubbedNavigationService,
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
@@ -155,6 +176,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       endeavorDetail: endeavorDetailSlice.reducer,
       earn: earnSlice.reducer,
       auth: authSlice.reducer,
+      main: mainSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

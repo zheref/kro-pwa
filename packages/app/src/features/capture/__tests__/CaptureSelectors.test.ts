@@ -46,6 +46,7 @@ import {
   withException,
   withTriageRequested,
 } from '../CaptureShifters'
+import { initialMainState } from '../../main/MainFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: CaptureState): RootState => ({
@@ -61,6 +62,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

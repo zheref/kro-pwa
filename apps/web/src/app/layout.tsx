@@ -1,13 +1,25 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { FaUser } from 'react-icons/fa'
-import { HStack } from '@chakra-ui/react'
-import { IconButton } from '@chakra-ui/react'
-import { Toaster } from '@/components/ui/toaster'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { AppProviders } from '@/components/ui/app-providers'
-import { ColorModeButton } from '@/components/ui/color-mode'
-import { NavigationLayout } from '@/components/ui/navigation-layout'
+
+/**
+ * The root layout — passive, and nothing else (`RC-41`).
+ *
+ * It sets the document up (fonts, the one stylesheet, the metadata) and
+ * renders its children. Everything stateful moved out, because there are now
+ * two shells under this one document and they do not share a provider tree:
+ *
+ *   `(shell)`   the parity shell — Store + theme + navigation, wired in
+ *               `providers.tsx`, which is the one client composition root.
+ *   `(legacy)`  the pre-parity surfaces (`/`, `/session`, `/settings`,
+ *               `/integrations`) that Chakra still renders until KC-IS-#22
+ *               retires them. They keep their own provider tree, in their own
+ *               group's layout, so nothing new can quietly start depending on
+ *               it.
+ *
+ * A route group changes no URL: `/session` is still `/session`. The split is
+ * about which providers wrap a route, not about where it lives.
+ */
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,29 +36,15 @@ export const metadata: Metadata = {
   description: 'by Zheref',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const actionBar = (
-    <HStack>
-      <ColorModeButton variant="subtle" size="xs" />
-      <IconButton aria-label="Settings" size="xs" variant="subtle">
-        <FaUser />
-      </IconButton>
-    </HStack>
-  )
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AppProviders>
-          <NavigationLayout title="Kro" actionBar={actionBar}>
-            {children}
-          </NavigationLayout>
-          <Toaster />
-        </AppProviders>
+        {children}
       </body>
     </html>
   )

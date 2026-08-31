@@ -47,6 +47,7 @@ import {
   selectTabBarElements,
 } from './MainSelectors'
 import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
+import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { searchDestination } from './NavigationSections'
 import {
   DestinationKind,
@@ -227,6 +228,22 @@ export function MainShellPage({
           onSelectDestination({ kind: DestinationKind.settings })
         }
       >
+        {/*
+          The Profile control's CONTENT, mounted shell-wide (KC-IS-#32).
+
+          It fills the shell's `profile` toolbar slot with canon's
+          `ProfilePopoverView`, and it hosts the two surfaces that must be
+          reachable from anywhere rather than from one destination: the auth
+          sheet, and the existing-local-data dialog — which appears after a
+          sign-in that may have completed via an OAuth redirect landing on any
+          route at all.
+
+          Mounted here rather than inside `/adjust` for exactly that reason, and
+          composed by the shell's Page rather than imported by its Fragment: a
+          Page is the artifact allowed to reach across features (`RC-37`), the
+          same way this one already dispatches into the capture slice above.
+        */}
+        <ProfileControlPage />
         {children}
       </MainShellFragment>
     </ToolbarSlotsProvider>

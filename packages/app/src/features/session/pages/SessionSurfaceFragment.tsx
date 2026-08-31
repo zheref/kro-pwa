@@ -57,7 +57,6 @@ import {
 import { cn } from '../../../design/system/utils/cn'
 import type { SessionPhase } from '../SessionVocabulary'
 import {
-  SESSION_GLASS_OVERRIDES,
   SESSION_PRESENTATION_SIZE,
   SessionSurfacePresentation,
   sessionSurfaceMaterial,
@@ -162,14 +161,7 @@ export function SessionSurfaceFragment({
           // duplicate control announcing the wrong thing.
           hideClose
           className={cn('max-h-[92vh] overflow-y-auto px-0 pb-0', className)}
-          // The positioning is inline because the class would lose — see
-          // `SESSION_GLASS_OVERRIDES`. Without it the sheet renders in flow and
-          // never appears at the bottom edge at all.
-          style={{
-            ...material,
-            ...SESSION_GLASS_OVERRIDES.sheet,
-            borderRadius: 'var(--kro-radius-surface) var(--kro-radius-surface) 0 0',
-          }}
+          style={material}
         >
           <DialogTitle className="sr-only">{SURFACE_TITLE}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -193,14 +185,10 @@ export function SessionSurfaceFragment({
         data-kro-session-surface="modal"
         hideClose
         className={cn('max-h-[92vh] overflow-y-auto px-0 pb-0', className)}
-        // Same reason as the sheet above: `fixed top-1/2 left-1/2` loses to
-        // `.kro-glass { position: relative }`, and the modal drops into flow.
         style={{
           ...material,
-          ...SESSION_GLASS_OVERRIDES.modal,
-          // Same `min(…, 100%)` floor as the inline column, for the same
-          // reason: canon's 360 is a macOS window minimum, not a promise that
-          // the viewport is that wide.
+          // `min(…, 100%)`, not a bare 360: canon's minimum is a macOS window
+          // frame, not a promise that the viewport is that wide.
           minWidth: `min(${SESSION_PRESENTATION_SIZE.session.minWidth}px, 100%)`,
           maxWidth: SESSION_PRESENTATION_SIZE.session.maxWidth,
         }}

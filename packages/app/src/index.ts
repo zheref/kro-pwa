@@ -46,6 +46,28 @@ export {
  */
 export * from './features/main'
 
+/*
+ * Feature render tiers, one line each. A feature's LOGIC stays unexported —
+ * `apps/web` never reads a slice — so only the Pages a route file mounts and
+ * the overlay the shell hosts cross this boundary.
+ */
+// KC-IS-#30 — Find, All Tasks and the global Endeavor Detail overlay.
+export * from './features/find/pages'
+export * from './features/endeavorDetail/pages'
+/**
+ * The Earn destination (`KC-IS-#28`) — the catalog, the claim flow and the
+ * Add-Reward form. `EarnPage` is what the `/earn` route mounts in place of
+ * the shell's placeholder; the rest of the barrel is exported for its own
+ * stories/tests and for a sibling that composes one of its pieces directly.
+ */
+export * from './features/earn'
+/**
+ * The Capture & Inbox render tier (KC-IS-#24) — the capture prompt, the Inbox
+ * in all three of its presentations, and the `CaptureOverlays` mount the shell
+ * wrapper anchors in one line. A feature child that wants to open the prompt
+ * dispatches `userDidRequestCapture`; it needs nothing from here.
+ */
+export * from './features/capture/pages'
 /**
  * The session's render tier (KC-IS-#22) — the Execute destination's body and
  * the shell-level overlays (the pill and the raised sheet). The logic tier
@@ -73,3 +95,41 @@ export {
   selectIsGreetingLoading,
 } from './features/greeting/GreetingSelectors'
 export { type GreetingViewModel, useGreeting } from './features/greeting/useGreeting'
+
+/**
+ * Auth + Settings UI (KC-IS-#32) — the Settings hub and its panes, the profile
+ * popover, and the auth surface.
+ *
+ * Appended as its own block rather than folded above, for the same
+ * anti-contention reason `features/main`'s block gives: a parallel child adds
+ * its own block below instead of contending for a line in an existing one.
+ *
+ * Only `SettingsHubPage` is reachable from `apps/web` (the `/adjust` route
+ * mounts it); everything else is exported because a story, a test or the shell
+ * composes it. The auth *slice* stays KC-IS-#31's and is not re-exported here.
+ */
+export {
+  type AccountPane,
+  type AccountSectionFragmentProps,
+  type IntegrationsSectionFragmentProps,
+  type PreferencesSectionFragmentProps,
+  type ProfilePopoverFragmentProps,
+  type SettingsHubFragmentProps,
+  AccountSectionFragment,
+  IntegrationsSectionFragment,
+  PreferencesSectionFragment,
+  ProfileControlPage,
+  ProfilePopoverFragment,
+  SettingsHubFragment,
+  SettingsHubPage,
+  SettingsSectionId,
+  settingsSections,
+} from './features/settings'
+export {
+  type AuthSurfaceFragmentProps,
+  type AuthSurfacePageProps,
+  type LocalDataDialogFragmentProps,
+  AuthSurfaceFragment,
+  AuthSurfacePage,
+  LocalDataDialogFragment,
+} from './features/auth/pages'

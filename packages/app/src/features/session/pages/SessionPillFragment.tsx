@@ -149,15 +149,9 @@ export function SessionPillFragment({
       <GlassSurface
         material="surface"
         data-kro-session-pill={pill.tint}
-        className="flex min-w-0 max-w-full items-center overflow-hidden"
+        className="flex min-w-0 max-w-full items-center overflow-hidden rounded-kro-pill"
         style={{
           height: SESSION_PILL_BOX.height,
-          // Inline, not `rounded-kro-pill`: `.kro-glass` declares its own
-          // `border-radius` **unlayered**, and an unlayered rule beats every
-          // Tailwind utility whatever the specificity — so the class loses and
-          // the capsule comes out at the 20px surface radius. Same cascade
-          // defect the two portalled hosts hit; see `SESSION_GLASS_OVERRIDES`.
-          borderRadius: 'var(--kro-radius-pill)',
           pointerEvents: isVisible ? 'auto' : 'none',
           // `null` means "no custom tint" — the pill takes the plain glass.
           ...(tint === null ? {} : { backgroundColor: tint }),

@@ -32,6 +32,8 @@ import { initialFindState } from '../../find/FindState'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
@@ -48,8 +50,10 @@ const rootWith = (slice: DoState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

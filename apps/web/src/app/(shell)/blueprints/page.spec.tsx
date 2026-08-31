@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest'
 import BlueprintsRoute from './page'
 
 describe('/blueprints', () => {
-  it("mounts the Blueprints destination inside the shell's store", () => {
+  it("mounts the Blueprints Thirst vote surface inside the shell's store", () => {
+    const store = makeStore(stubbedThunkExtra)
     render(
-      <StoreProvider store={makeStore(stubbedThunkExtra)}>
+      <StoreProvider store={store}>
         <BlueprintsRoute />
       </StoreProvider>,
     )
@@ -14,5 +15,6 @@ describe('/blueprints', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
       'Blueprints',
     )
+    expect(store.getState().main.selected.kind).toBe('blueprints')
   })
 })

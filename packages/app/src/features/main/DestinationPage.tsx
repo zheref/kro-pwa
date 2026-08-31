@@ -16,6 +16,7 @@
  */
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
+import { EarnPage } from '../earn/pages/EarnPage'
 import { DestinationPlaceholderFragment } from './DestinationPlaceholderFragment'
 import { onDestinationRouteMounted } from './MainFeature'
 import { selectProjects } from './MainSelectors'
@@ -65,6 +66,12 @@ export function DestinationPage(props: DestinationPageProps) {
     // biome-ignore lint/correctness/useExhaustiveDependencies: the object is
     // derived; its identity fields (kind, listId, listTitle) are the real deps.
   }, [dispatch, kind, listId, listTitle])
+
+  // The swap point (this file's own header): a landing feature child replaces
+  // the placeholder call for its one destination kind. `#28` is the first.
+  if (destination.kind === DestinationKind.earn) {
+    return <EarnPage />
+  }
 
   return <DestinationPlaceholderFragment destination={destination} />
 }

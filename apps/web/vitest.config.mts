@@ -18,6 +18,14 @@ export default defineConfig({
       // Workspace packages are consumed as TypeScript source (see
       // `transpilePackages` in next.config.ts); point Vitest at the same
       // entry the bundler resolves.
+      //
+      // Subpath exports come FIRST, same reason as `@kro/app/google` below:
+      // a string alias matches by prefix, so the bare `@kro/core` entry would
+      // otherwise rewrite `@kro/core/mocks` to `…/src/index.ts/mocks`.
+      // Mirrors `exports` in `packages/core/package.json` (`KC-IS-#28`).
+      '@kro/core/mocks': fileURLToPath(
+        new URL('../../packages/core/src/mocks.ts', import.meta.url),
+      ),
       '@kro/core': fileURLToPath(
         new URL('../../packages/core/src/index.ts', import.meta.url),
       ),
@@ -34,6 +42,12 @@ export default defineConfig({
       ),
       '@kro/app/design': fileURLToPath(
         new URL('../../packages/app/src/design/index.ts', import.meta.url),
+      ),
+      '@kro/app/thirst': fileURLToPath(
+        new URL(
+          '../../packages/app/src/features/thirst/index.ts',
+          import.meta.url,
+        ),
       ),
       '@kro/app': fileURLToPath(
         new URL('../../packages/app/src/index.ts', import.meta.url),

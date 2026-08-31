@@ -58,6 +58,8 @@ import {
 import type { TimelineEditSession } from '../PlanEditSession'
 import type { PlanState } from '../PlanState'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const tomorrow = addingPlanDays(today, 1)
@@ -75,8 +77,10 @@ const rootWith = (plan: PlanState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

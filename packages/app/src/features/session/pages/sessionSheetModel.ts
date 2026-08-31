@@ -177,53 +177,6 @@ export const sessionSurfaceTint = (phase: SessionPhase): string | null => {
 }
 
 /**
- * Positioning and radius that must be inline, because a class would lose.
- *
- * ## The cascade defect this works around (filed, not hidden)
- *
- * `glass.css` declares `.kro-glass { position: relative; border-radius:
- * var(--kro-radius-surface); … }` **unlayered**, and Tailwind v4 emits its
- * utilities inside `@layer utilities`. Unlayered rules beat layered ones in the
- * cascade **regardless of specificity or source order**, so on any element that
- * carries `kro-glass`:
- *
- *   · `fixed`, `absolute` → lose to `position: relative`
- *   · `rounded-kro-pill`, `rounded-t-kro-surface` → lose to the surface radius
- *   · `bg-*`, `text-*`, `shadow-*` → lose to the glass's own declarations
- *
- * That is not a session bug — it is every `kro-glass` element in the repo, and
- * the design system's own `DialogContent` (`kro-glass fixed top-1/2 …`) and
- * `SheetContent` (`kro-glass fixed inset-x-0 bottom-0 …`) are both built
- * exactly that way. Measured on the built app: the modal computed
- * `position: relative`, so it rendered in flow instead of centred, and the
- * bottom sheet did not appear at all. The pill's capsule came out at the
- * 20px surface radius.
- *
- * **The real fix belongs to the design system** (wrapping `glass.css`'s
- * component rules in `@layer components`, so utilities win again) and is filed
- * against that lane — it is a two-line change with a repo-wide blast radius,
- * which is exactly why it is not made from here. Inline styles are the local,
- * honest patch: they beat everything, they are visible at the call site, and
- * they disappear the day the layer lands.
- */
-export const SESSION_GLASS_OVERRIDES = {
-  /** `DialogContent`'s `fixed top-1/2 left-1/2 -translate-*`, as a style. */
-  modal: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    translate: '-50% -50%',
-  },
-  /** `SheetContent`'s `fixed inset-x-0 bottom-0`, as a style. */
-  sheet: {
-    position: 'fixed',
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-} as const
-
-/**
  * The KroGlass material the session surface substitutes for the default one.
  *
  * **Why the surface cannot just take the plain glass.** Canon presents this

@@ -189,17 +189,17 @@ describe('placement and the crossfade', () => {
     expect(pill.className).toContain('max-w-full')
   })
 
-  it('carries its capsule radius inline, because the utility class loses', () => {
+  it('asks for the capsule radius, not the glass default', () => {
     const { container } = renderPill(sessionPillMocks.running)
     const pill = container.querySelector(
       '[data-kro-session-pill]',
     ) as HTMLElement
 
-    // `.kro-glass` declares an unlayered `border-radius`, which beats every
-    // Tailwind utility regardless of specificity — so `rounded-kro-pill` would
-    // silently render at the 20px surface radius.
-    expect(pill.style.borderRadius).toBe('var(--kro-radius-pill)')
-    expect(pill.className).not.toContain('rounded-kro-pill')
+    // The class is enough again: `glass.css` is imported into `@layer
+    // components` (KC-IS-#30), so a Tailwind utility on a `.kro-glass` element
+    // wins. It did not while the file was unlayered, and this pill silently
+    // rendered at the 20px surface radius — hence the assertion.
+    expect(pill.className).toContain('rounded-kro-pill')
   })
 
   it('never takes a pointer on the layer, so the chrome beneath stays clickable', () => {

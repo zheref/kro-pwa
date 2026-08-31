@@ -44,6 +44,7 @@ export function DialogContent({
   className,
   children,
   hideClose = false,
+  style,
   ...rest
 }: DialogContentProps) {
   return (
@@ -57,6 +58,15 @@ export function DialogContent({
           'rounded-kro-surface',
           className,
         )}
+        // `position: fixed` FORCED inline — see `sheet.tsx`'s `SheetContent`
+        // for the full explanation: `.kro-glass` is deliberately UNLAYERED
+        // CSS, which beats every `@layer`-wrapped Tailwind utility
+        // (including `.fixed`) regardless of specificity or source order, so
+        // the className alone silently loses this fight and the dialog
+        // renders un-positioned. `KC-IS-#28`. `position` is spread LAST,
+        // after any caller `style`, so a caller's own `style` prop can never
+        // reintroduce the bug (Copilot round 1).
+        style={{ ...style, position: 'fixed' }}
         {...rest}
       >
         {children}

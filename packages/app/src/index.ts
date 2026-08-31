@@ -29,6 +29,23 @@ export {
   stubbedThunkExtra,
 } from './library/store'
 
+/*
+ * No Service is exported here, including the navigation one (`RC-6`). The
+ * *live* navigation binding cannot be built inside this package anyway —
+ * `RC-40` forbids it from importing `next/*` — so, exactly as `RC-48`
+ * prescribes for a platform-bound Service, the interface lives here and
+ * `apps/web` authors the live implementation at its own composition root. It
+ * needs no import to do so: `ThunkExtra['navigation']` is the contract.
+ */
+
+/**
+ * The navigation shell (KC-IS-#13) — the responsive contract, the destination
+ * model, the two shells and the Pages `apps/web`'s route files mount. The
+ * route tree is the shell's; a feature child replaces a destination's body
+ * without touching `apps/web` at all.
+ */
+export * from './features/main'
+
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
   type GreetingLoadState,

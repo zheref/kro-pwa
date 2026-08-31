@@ -133,11 +133,12 @@ would breach `@kro/core`'s platform-free contract. Ruled that way in the deliver
 | Composition root | `app/layout.tsx` passive; one client `providers.tsx` wires Store + Theme + Navigation and is the one place `makeStore(...)` is called | `apps/web` | `RC-41` |
 | Navigation | a `NavigationService` behind `ThunkExtra`; `router.navigate(...)` is invoked from a Producer, never a component | `RC-17`, `RC-63` |
 
-**Realized today:** everything from Feature down to Stateful wrapper, by the `greeting`
-scaffolding feature (`packages/app/src/features/greeting/`) — the reference a feature child
-copies. **Not yet realized:** Page / Fragment / Component / route entry / composition root /
-`NavigationService` — those arrive with the design-system child (#6) and the shell child (#13).
-Until then `use<F>()` *is* the render contract, and its test is what proves the loop runs.
+**Realized today:** every row. Feature down to Stateful wrapper by the `greeting` scaffolding
+feature (`packages/app/src/features/greeting/`) — the reference a feature child copies; Component
+by the design system (#6); and Page / Fragment / route entry / composition root /
+`NavigationService` by the shell (#13), whose `packages/app/src/features/main/` is the reference
+for the render tier. A feature child replaces a destination's body in `packages/app` and does not
+touch `apps/web` at all.
 
 ---
 
@@ -242,11 +243,21 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
 
 ## 8. Project specifics
 
-- **Route map:** `/` · `/session` · `/settings` · `/integrations` today. The parity route set
-  (Plan · Do · Earn · Find, Inbox, Triage, Endeavor detail, Auth) is owned by the shell child
-  (#13); no other in-flight child may add files under `apps/web/src/app/**`.
+- **Route map:** two groups under one passive root layout, and a route group changes no URL.
+  `(shell)` is the parity set — `/my-day` · `/tasks` · `/inbox` · `/matrix` · `/plan` ·
+  `/habits` · `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
+  `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared ≤10-line client
+  wrapper, wrapped by `providers.tsx` and the shell. `(legacy)` is the pre-parity set — `/` ·
+  `/session` · `/settings` · `/integrations` — which keeps the Chakra provider tree in its own
+  group layout until #22 retires it. Route files are the shell child's (#13) exclusively; a
+  feature child replaces a destination's Page in `packages/app` instead. The macOS names are
+  what keep the two sets apart without a prefix: canon calls the session destination "Execute"
+  and the settings one "Adjust".
 - **Responsive contract:** web mobile mirrors iPhone (flat tab bar), web desktop mirrors macOS
   (sidebar shell, popover-first). The binding decision table is KroApple's
-  `KroUI/Do/DoSurfaceLayout.swift` idiom×width matrix, ported by #13.
+  `KroUI/Do/DoSurfaceLayout.swift` idiom×width matrix, ported by #13 as
+  `packages/app/src/features/main/DoSurfaceLayout.ts` — all three idioms, both widths, with a
+  resolver mapping pointer + viewport onto them and `shellShapeFor` collapsing the result to the
+  web's two shells.
 - **Shared cross-feature state:** none yet. When it appears it composes through root-level
   Selectors, never by one slice importing another's shape (`RC-20`).

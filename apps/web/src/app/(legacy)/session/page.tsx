@@ -32,7 +32,7 @@ import {
 } from '@kro/core'
 import { FaXmark } from 'react-icons/fa6'
 import { LoginWithGoogleButton } from '@/components/LoginWithGoogle'
-import SessionDial from '@/app/session/SessionDial'
+import SessionDial from './SessionDial'
 
 const floatingStyles = defineStyle({
   pos: 'absolute',

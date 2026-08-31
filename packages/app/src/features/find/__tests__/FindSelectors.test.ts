@@ -55,6 +55,7 @@ import {
   selectTasksTitle,
   selectTasksVista,
 } from '../FindSelectors'
+import { initialMainState } from '../../main/MainFeature'
 
 const rootWith = (find: FindState): RootState => ({
   greeting: initialGreetingState,
@@ -70,6 +71,7 @@ const rootWith = (find: FindState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 const loaded = rootWith(findStateMocks.loaded)

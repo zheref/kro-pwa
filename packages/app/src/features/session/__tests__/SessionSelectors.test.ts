@@ -12,6 +12,7 @@ import { FocusTimerMode, minutesInSeconds } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
+import { initialMainState } from '../../main/MainFeature'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -81,6 +82,7 @@ const rootWith = (session: SessionState): RootState => ({
   platform: initialPlatformState,
   session,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 const running = rootWith(sessionStateMocks.running)

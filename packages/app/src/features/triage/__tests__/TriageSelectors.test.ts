@@ -56,6 +56,7 @@ import {
 } from '../TriageShifters'
 import { triageSessionSeed, triageEndeavorFixtures } from '../TriageMocks'
 import { initialTriageState } from '../TriageFeature'
+import { initialMainState } from '../../main/MainFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: TriageState): RootState => ({
@@ -73,6 +74,7 @@ const rootWith = (slice: TriageState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 describe('lifecycle selectors', () => {

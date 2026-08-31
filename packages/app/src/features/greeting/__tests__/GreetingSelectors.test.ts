@@ -20,6 +20,7 @@ import {
   selectIsGreetingDetailOpen,
   selectIsGreetingLoading,
 } from '../GreetingSelectors'
+import { initialMainState } from '../../main/MainFeature'
 
 /**
  * Selectors are exercised against a hand-built root state, never a live store.
@@ -40,6 +41,7 @@ const rootWith = (greeting: GreetingState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 describe('selectGreeting', () => {

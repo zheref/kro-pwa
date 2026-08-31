@@ -53,6 +53,7 @@ import {
   selectRelationReadOnlyReason,
 } from '../EndeavorDetailSelectors'
 import type { EndeavorDetailState } from '../EndeavorDetailState'
+import { initialMainState } from '../../main/MainFeature'
 
 const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   greeting: initialGreetingState,
@@ -67,6 +68,7 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 describe('presentation', () => {

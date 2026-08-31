@@ -36,6 +36,7 @@ import {
   withModeToggled,
   withSettingsSyncState,
 } from '../AuthShifters'
+import { initialMainState } from '../../main/MainFeature'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
 import { AuthFlow, type AuthState } from '../AuthState'
@@ -55,6 +56,7 @@ const rootWith = (auth: AuthState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth,
+  main: initialMainState,
 })
 
 describe('the session', () => {

@@ -3,6 +3,7 @@
  * (`RC-55`).
  */
 import { initialAuthState } from '../../auth/AuthState'
+import { initialMainState } from '../../main/MainFeature'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialCaptureState } from '../../capture/CaptureFeature'
@@ -43,6 +44,7 @@ const rootWith = (platform: PlatformState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   auth: initialAuthState,
+  main: initialMainState,
   session: initialSessionState,
   platform,
 })

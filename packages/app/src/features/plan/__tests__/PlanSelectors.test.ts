@@ -57,6 +57,7 @@ import {
 } from '../PlanSelectors'
 import type { TimelineEditSession } from '../PlanEditSession'
 import type { PlanState } from '../PlanState'
+import { initialMainState } from '../../main/MainFeature'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const tomorrow = addingPlanDays(today, 1)
@@ -75,6 +76,7 @@ const rootWith = (plan: PlanState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  main: initialMainState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

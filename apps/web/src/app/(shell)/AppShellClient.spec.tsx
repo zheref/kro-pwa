@@ -54,4 +54,20 @@ describe('AppShellClient', () => {
     // anything of its own.
     expect(screen.getByTestId('shell-sidebar')).toBeTruthy()
   })
+
+  it('mounts the global overlays, which draw nothing until one is presented', () => {
+    render(
+      <StoreProvider store={makeStore(stubbedThunkExtra)}>
+        <AppShellClient isDevelopment={false}>
+          <p>destination content</p>
+        </AppShellClient>
+      </StoreProvider>,
+    )
+
+    // `DetailOverlays` renders `null` while no endeavor is presented, so its
+    // presence is asserted by the shell still rendering cleanly around it —
+    // an overlay that threw on mount would take the whole shell with it.
+    expect(screen.queryByTestId('detail-overlay')).toBeNull()
+    expect(screen.getByText('destination content')).toBeTruthy()
+  })
 })

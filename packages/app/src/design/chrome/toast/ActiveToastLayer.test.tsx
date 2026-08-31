@@ -1,6 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CHROME_LAYOUT, toastLiftAbovePill } from '../layout/chromeLayout'
+import {
+  CHROME_LAYOUT,
+  SHELL_BOTTOM_INSET_FALLBACK,
+  SHELL_BOTTOM_INSET_VAR,
+  toastLiftAbovePill,
+} from '../layout/chromeLayout'
 import { ActiveToastLayer } from './ActiveToastLayer'
 import { resetActiveToastSequence, toActiveToast } from './activeToast'
 
@@ -20,7 +25,12 @@ describe('placement — ActiveToast.md § Positioning', () => {
     render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} />)
 
     expect(layer().style.paddingLeft).toBe(`${CHROME_LAYOUT.toastLeadingPadding}px`)
-    expect(layer().style.bottom).toBe(`${CHROME_LAYOUT.toastBottomPadding}px`)
+    // Canon's 24 plus whatever the shell reserves. With nothing published the
+    // property resolves to its own `0px` fallback, which is where the toast
+    // has always sat.
+    expect(layer().style.bottom).toBe(
+      `calc(${CHROME_LAYOUT.toastBottomPadding}px + ${SHELL_BOTTOM_INSET_FALLBACK})`,
+    )
   })
 
   it('rises 15pt onto the FAB`s vertical centre when no pill is showing', () => {
@@ -72,6 +82,66 @@ describe('the lift-above-pill rule', () => {
 
     expect(layer().style.transitionProperty).toBe('transform')
     expect(layer().style.transitionTimingFunction).not.toContain('linear(')
+  })
+
+  it('does not change the lift when the shell reserves a bottom inset', () => {
+    // The inset raises the pill by the same amount, so the distance between
+    // the two — which is all the lift is — is unchanged. `chromeLayout.ts`
+    // takes the inset as a parameter precisely so this is checkable.
+    const { rerender } = render(
+      <ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} isSessionPillVisible />,
+    )
+    const withoutShell = layer().style.transform
+
+    rerender(
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        isSessionPillVisible
+        bottomInset={60}
+      />,
+    )
+
+    expect(layer().style.transform).toBe(withoutShell)
+  })
+})
+
+describe('the shell’s bottom inset — canon’s 24pt is measured inside the tab', () => {
+  it('clears a tab bar the shell tells it about', () => {
+    // The web tab bar is an ordinary flex child, so the viewport bottom is
+    // below it: without this the toast lands underneath the bar.
+    render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} bottomInset={60} />)
+
+    // Either shape is correct CSS, and which one a parser hands back is its
+    // own business: jsdom folds a `calc()` of two absolute lengths into their
+    // sum, another engine may keep the expression. What this test is actually
+    // about is the DISTANCE, so it accepts both rather than pinning a
+    // normalisation nobody promised.
+    expect(layer().style.bottom).toMatch(
+      new RegExp(
+        `^calc\\((${CHROME_LAYOUT.toastBottomPadding + 60}px|${CHROME_LAYOUT.toastBottomPadding}px \\+ 60px)\\)$`,
+      ),
+    )
+  })
+
+  it('takes any CSS length, so a shell may hand over a safe-area inset', () => {
+    render(
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        bottomInset="env(safe-area-inset-bottom)"
+      />,
+    )
+
+    expect(layer().style.bottom).toBe(
+      `calc(${CHROME_LAYOUT.toastBottomPadding}px + env(safe-area-inset-bottom))`,
+    )
+  })
+
+  it('reads the shell’s published property when nobody passes one', () => {
+    render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} />)
+
+    expect(layer().style.bottom).toContain(SHELL_BOTTOM_INSET_VAR)
+    // The `0px` fallback is what keeps the kit shell-agnostic.
+    expect(layer().style.bottom).toContain('0px')
   })
 })
 

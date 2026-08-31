@@ -1,6 +1,7 @@
 import { EndeavorsVistas } from '@kro/core'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { POINTER_GUTTER_VAR } from './EndeavorActionSurface'
 import {
   ENDEAVOR_ROW_CONFIGS,
   EndeavorRow,
@@ -221,5 +222,89 @@ describe('the row’s optional action surface', () => {
       '[data-slot="endeavor-action-surface"]',
     ) as HTMLElement
     expect(surface.dataset.input).toBe('pointer')
+  })
+})
+
+describe('the row reserves the surface’s pointer gutter', () => {
+  const row = (container: HTMLElement) =>
+    container.querySelector('[data-slot="endeavor-row"]') as HTMLElement
+
+  const reserved = `calc(${ENDEAVOR_ROW_CONFIGS.inbox.horizontalPadding}px + var(${POINTER_GUTTER_VAR}, 0px))`
+
+  it('adds it to the trailing padding when it has controls at that edge', () => {
+    // Without it the hover strip and the ⋯ trigger — both anchored to the same
+    // edge, both clickable on hover — sit exactly on top of Triage and Add for
+    // Today, which is how canon's two in-row buttons became unreachable on a
+    // desktop Inbox row.
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        config="inbox"
+        now={NOW}
+        endeavorId="e1"
+        capabilities={EndeavorsVistas.inbox.capabilities}
+        onOperation={() => undefined}
+        input="pointer"
+        trailing={<button type="button">Triage</button>}
+      />,
+    )
+
+    expect(row(container).style.paddingRight).toBe(reserved)
+  })
+
+  it('reserves it for trailing BADGES too — they are covered the same way', () => {
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        config="find"
+        badges={[{ kind: 'status', value: 'pending' }]}
+        now={NOW}
+      />,
+    )
+
+    expect(row(container).style.paddingRight).toBe(
+      `calc(${ENDEAVOR_ROW_CONFIGS.find.horizontalPadding}px + var(${POINTER_GUTTER_VAR}, 0px))`,
+    )
+  })
+
+  it('leaves a row with nothing at that edge exactly as it was', () => {
+    // Scoped on purpose: a row with no trailing control loses nothing to the
+    // overlay, so indenting it would be a layout change with no defect behind
+    // it.
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        config="inbox"
+        now={NOW}
+        endeavorId="e1"
+        capabilities={EndeavorsVistas.inbox.capabilities}
+        onOperation={() => undefined}
+        input="pointer"
+      />,
+    )
+
+    expect(row(container).style.paddingRight).toBe(
+      `${ENDEAVOR_ROW_CONFIGS.inbox.horizontalPadding}px`,
+    )
+  })
+
+  it('falls back to zero outside a surface, so a bare row is unmoved', () => {
+    // The `var()` fallback is what makes the reservation free: nothing
+    // publishes the property, so `calc(16px + 0px)` is the padding it had.
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        config="inbox"
+        now={NOW}
+        trailing={<button type="button">Triage</button>}
+      />,
+    )
+
+    expect(row(container).style.paddingRight).toContain(`var(${POINTER_GUTTER_VAR}, 0px)`)
+    expect(container.querySelector('[data-slot="endeavor-action-surface"]')).toBeNull()
   })
 })

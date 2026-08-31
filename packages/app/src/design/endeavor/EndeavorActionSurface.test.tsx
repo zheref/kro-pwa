@@ -26,9 +26,12 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   EndeavorActionSurface,
+  POINTER_CHROME,
+  POINTER_GUTTER_VAR,
   SWIPE_COMMIT_PX,
   SWIPE_DRAG_THRESHOLD_PX,
   SWIPE_REVEAL_PX,
+  pointerChromeGutterPx,
 } from './EndeavorActionSurface'
 import { installPointerEvents } from './__tests__/pointerEnvironment'
 
@@ -214,7 +217,7 @@ describe('the release decision — read from the pointer, not from the last rend
     expect(onOperation).toHaveBeenCalledTimes(1)
   })
 
-  it('CAPTURES the pointer for the length of the drag and hands it back', () => {
+  it('CAPTURES the pointer once the drag crosses the threshold, and hands it back', () => {
     // The row's transform is a frame behind the finger, so the pointer leaves
     // the content mid-swipe. Without capture the moves and the release land
     // somewhere else and the row is stuck open.
@@ -222,11 +225,111 @@ describe('the release decision — read from the pointer, not from the last rend
 
     const target = content()
     fireEvent.pointerDown(target, { clientX: 0, pointerId: 7 })
+    // NOT at pointerdown — a captured pointer retargets the click, which is
+    // what swallowed every tap on an in-row button.
+    expect(pointerEnvironment.capture.captured).toEqual([])
+
+    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1, pointerId: 7 })
+    expect(pointerEnvironment.capture.captured).toEqual([])
+
+    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX, pointerId: 7 })
     expect(pointerEnvironment.capture.captured).toEqual([7])
     expect(pointerEnvironment.capture.released).toEqual([])
 
     fireEvent.pointerUp(target, { clientX: SWIPE_COMMIT_PX + 10, pointerId: 7 })
     expect(pointerEnvironment.capture.released).toEqual([7])
+  })
+
+  it('captures ONCE per gesture, however many moves the browser coalesces into', () => {
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0, pointerId: 3 })
+    for (const x of [20, 60, 100, 140]) {
+      fireEvent.pointerMove(target, { clientX: x, pointerId: 3 })
+    }
+
+    expect(pointerEnvironment.capture.captured).toEqual([3])
+  })
+
+  it('MOVES NOTHING below the threshold, so a jittery tap leaves the row put', () => {
+    // `SWIPE_DRAG_THRESHOLD_PX` says a sub-threshold gesture "commits nothing
+    // AND moves nothing", and the release path honours that by leaving
+    // `offset` alone. Painting a 1px tremor here would therefore strand the
+    // row at that 1px until something else moved it.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerMove(target, { clientX: 1 })
+    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1 })
+
+    expect(target.style.transform).toBe('translateX(0px)')
+
+    fireEvent.pointerUp(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1 })
+    expect(content().style.transform).toBe('translateX(0px)')
+  })
+
+  it('LATCHES: once past the threshold the row follows the finger back inside it', () => {
+    // The threshold decides whether this gesture is a swipe, once. Re-testing
+    // it on every move would freeze the row wherever it last painted when the
+    // finger came home, which is the shape a per-move gate produces.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0 })
+    fireEvent.pointerMove(target, { clientX: 40 })
+    expect(target.style.transform).toBe('translateX(40px)')
+
+    fireEvent.pointerMove(target, { clientX: 1 })
+    expect(target.style.transform).toBe('translateX(1px)')
+  })
+
+  it('never captures a TAP — the click has to reach the control it landed on', () => {
+    // THE REGRESSION, in the shape jsdom can hold: capture is what retargets a
+    // click to the capturing element, so canon's in-row Triage and Add for
+    // Today buttons never fired in a real browser. Chromium proves the click
+    // itself in `apps/web/e2e-kit/action-surface.spec.ts`; this pins the cause.
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 120, pointerId: 5 })
+    fireEvent.pointerMove(target, { clientX: 121, pointerId: 5 })
+    fireEvent.pointerUp(target, { clientX: 121, pointerId: 5 })
+
+    expect(pointerEnvironment.capture.captured).toEqual([])
+    expect(pointerEnvironment.capture.released).toEqual([])
+  })
+
+  it('does not capture a drag toward an edge the row cannot open', () => {
+    // The bounded delta is the gate, so a pull toward an empty edge stays a
+    // tap: the row does not move, and the click must still land.
+    const onlyTrailing = makeEndeavorCapabilities([
+      makeEndeavorOperationBinding({
+        operation: EndeavorOperation.delete,
+        gesture: swipeTrailingGesture,
+        role: OperationRole.destructive,
+        icon: 'trash',
+        label: 'Delete',
+      }),
+    ])
+    render(
+      <EndeavorActionSurface
+        endeavorId="e1"
+        capabilities={onlyTrailing}
+        onOperation={() => undefined}
+        input="touch"
+        label="Row"
+      >
+        <div>Row</div>
+      </EndeavorActionSurface>,
+    )
+
+    const target = content()
+    fireEvent.pointerDown(target, { clientX: 0, pointerId: 9 })
+    fireEvent.pointerMove(target, { clientX: 80, pointerId: 9 })
+
+    expect(pointerEnvironment.capture.captured).toEqual([])
   })
 
   it('performs ONCE when pointerup and pointercancel both fire for one gesture', () => {
@@ -338,5 +441,65 @@ describe('pointer — the hover and context grammar', () => {
 
     rerender(<Surface input="pointer" onOperation={() => undefined} />)
     expect(surface().dataset.input).toBe('pointer')
+  })
+})
+
+describe('the pointer chrome reserves its own gutter', () => {
+  const surface = () =>
+    document.querySelector('[data-slot="endeavor-action-surface"]') as HTMLElement
+
+  it('measures the strip from the kit’s own geometry — inset, buttons, gaps', () => {
+    expect(
+      pointerChromeGutterPx({ hoverActionCount: 2, hasContextMenu: false }),
+    ).toBe(
+      POINTER_CHROME.stripInset +
+        2 * POINTER_CHROME.stripButton +
+        POINTER_CHROME.stripGap,
+    )
+  })
+
+  it('falls back to the menu trigger when there is no strip', () => {
+    expect(
+      pointerChromeGutterPx({ hoverActionCount: 0, hasContextMenu: true }),
+    ).toBe(POINTER_CHROME.triggerInset + POINTER_CHROME.triggerSize)
+  })
+
+  it('takes the WIDER of the two — they overlap, they do not sit side by side', () => {
+    const wide = pointerChromeGutterPx({ hoverActionCount: 3, hasContextMenu: true })
+    const strip =
+      POINTER_CHROME.stripInset +
+      3 * POINTER_CHROME.stripButton +
+      2 * POINTER_CHROME.stripGap
+
+    expect(wide).toBe(strip)
+    expect(wide).toBeGreaterThan(
+      POINTER_CHROME.triggerInset + POINTER_CHROME.triggerSize,
+    )
+  })
+
+  it('reserves nothing at all when the row carries no chrome', () => {
+    expect(
+      pointerChromeGutterPx({ hoverActionCount: 0, hasContextMenu: false }),
+    ).toBe(0)
+  })
+
+  it('publishes the gutter on the surface, for the children to reserve', () => {
+    render(<Surface input="pointer" onOperation={() => undefined} />)
+
+    // Two hover actions (the leading and trailing swipe bindings) and a menu.
+    const expected = pointerChromeGutterPx({
+      hoverActionCount: 2,
+      hasContextMenu: true,
+    })
+
+    expect(surface().dataset.pointerGutter).toBe(String(expected))
+    expect(surface().style.getPropertyValue(POINTER_GUTTER_VAR)).toBe(`${expected}px`)
+  })
+
+  it('publishes ZERO on touch, where none of that chrome is rendered', () => {
+    render(<Surface input="touch" onOperation={() => undefined} />)
+
+    expect(surface().dataset.pointerGutter).toBe('0')
+    expect(surface().style.getPropertyValue(POINTER_GUTTER_VAR)).toBe('0px')
   })
 })

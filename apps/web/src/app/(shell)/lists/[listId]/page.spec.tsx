@@ -1,10 +1,27 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import ListRoute from './page'
 
 describe('/lists/[listId]', () => {
   it('forwards the project id from the route to the shared Page', async () => {
+    const store = makeStore(stubbedThunkExtra)
+    const element = await ListRoute({
+      params: Promise.resolve({ listId: 'p-2' }),
+    })
+
+    render(<StoreProvider store={store}>{element}</StoreProvider>)
+
+    await waitFor(() => {
+      expect(store.getState().find.tasksSelection).toEqual({
+        kind: 'list',
+        listId: 'p-2',
+        listTitle: null,
+      })
+    })
+  })
+
+  it('renders the list destination as the All Tasks surface over that vista', async () => {
     const element = await ListRoute({
       params: Promise.resolve({ listId: 'p-2' }),
     })
@@ -15,9 +32,24 @@ describe('/lists/[listId]', () => {
       </StoreProvider>,
     )
 
-    // No projects are loaded in this store, so the heading is empty rather
-    // than a guessed name — the id is the identity, the title is presentation.
-    expect(screen.getByTestId('destination-placeholder')).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('')
+    await waitFor(() => {
+      expect(screen.getByTestId('tasks-surface')).toBeTruthy()
+    })
+  })
+
+  it('selects the Lists row so the sidebar highlight follows the URL', async () => {
+    const store = makeStore(stubbedThunkExtra)
+    const element = await ListRoute({
+      params: Promise.resolve({ listId: 'p-2' }),
+    })
+
+    render(<StoreProvider store={store}>{element}</StoreProvider>)
+
+    await waitFor(() => {
+      expect(store.getState().main.selected).toMatchObject({
+        kind: 'list',
+        listId: 'p-2',
+      })
+    })
   })
 })

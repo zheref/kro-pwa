@@ -1,5 +1,9 @@
 import { type CSSProperties, useEffect, useState } from 'react'
-import { CHROME_LAYOUT, toastLiftAbovePill } from '../layout/chromeLayout'
+import {
+  CHROME_LAYOUT,
+  SHELL_BOTTOM_INSET_FALLBACK,
+  toastLiftAbovePill,
+} from '../layout/chromeLayout'
 import { TOAST_LIFT, settleMs, springEasing } from '../layout/chromeMotion'
 import { CHROME_SPRINGS } from '../layout/chromeMotion'
 import type { ActiveToastModel } from './activeToast'
@@ -16,6 +20,16 @@ import { ActiveToastView } from './ActiveToastView'
  * from the leading edge and 96pt from the trailing edge so it clears the FAB,
  * 24pt off the bottom, then lifted 15pt so its centre lines up with the FAB's.
  * Every one of those numbers comes from `CHROME_LAYOUT`, never a literal here.
+ *
+ * THE SHELL'S BOTTOM INSET. Canon's 24pt is measured inside a tab, where
+ * SwiftUI's safe area has already excluded the tab bar. The web shell's tab bar
+ * is an ordinary flex child, so the viewport bottom is BELOW it and 24pt alone
+ * puts the toast under the bar. `bottomInset` is what closes that gap: a length
+ * the shell supplies, defaulting to `var(--kro-shell-bottom-inset, 0px)` so a
+ * shell can publish it once on its root rather than threading a prop through
+ * every surface that mounts a host — and so a toast mounted with no shell
+ * around it, or on the sidebar shell that has no bar, is exactly where it was.
+ * The kit never imports the shell; it names the property and honours it.
  *
  * THE LIFT-ABOVE-PILL RULE. When the Session Pill is on screen the toast rises
  * clear of it entirely — `pillBottomPadding + pillHeight + pillToastSpacing -
@@ -50,9 +64,19 @@ export interface ActiveToastLayerProps {
    * test want, so the matrix can be shown in a box).
    */
   readonly position?: 'fixed' | 'absolute'
+  /**
+   * How far the shell's own bottom chrome (the tab bar) reaches up from the
+   * viewport edge. A number is read as px; a string is any CSS length, so a
+   * shell may hand over `env(safe-area-inset-bottom)` or a custom property.
+   */
+  readonly bottomInset?: number | string
   readonly className?: string
   readonly style?: CSSProperties
 }
+
+/** A px number or a CSS length, as a CSS length. */
+const asLength = (value: number | string): string =>
+  typeof value === 'number' ? `${value}px` : value
 
 const PRESENT_SPRING_MS = settleMs(CHROME_SPRINGS.toast)
 const PRESENT_EASING = springEasing(CHROME_SPRINGS.toast)
@@ -74,10 +98,15 @@ export function ActiveToastLayer({
   toast,
   isSessionPillVisible = false,
   position = 'fixed',
+  bottomInset = SHELL_BOTTOM_INSET_FALLBACK,
   className,
   style,
 }: ActiveToastLayerProps) {
+  // The inset raises the pill by the same amount, so the gap between the two —
+  // which is what the lift is — does not depend on it. `chromeLayout.ts` says
+  // so where the arithmetic lives, and its suite proves it.
   const lift = isSessionPillVisible ? toastLiftAbovePill() : 0
+  const inset = asLength(bottomInset)
 
   return (
     <div
@@ -88,7 +117,7 @@ export function ActiveToastLayer({
         position,
         left: 0,
         right: 0,
-        bottom: CHROME_LAYOUT.toastBottomPadding,
+        bottom: `calc(${CHROME_LAYOUT.toastBottomPadding}px + ${inset})`,
         paddingLeft: CHROME_LAYOUT.toastLeadingPadding,
         paddingRight: CHROME_LAYOUT.toastTrailingPadding,
         display: 'flex',

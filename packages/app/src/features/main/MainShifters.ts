@@ -155,15 +155,21 @@ export const withProjectDeleted = (
 /**
  * A capture's routing intent, delivered.
  *
- * Sets the selection *and* the one-shot in one move: the destination the
- * capture chose is now the selection, and the payload it carried (the day, the
- * scroll target, the just-created accent) waits for that surface to read it.
+ * Sets the one-shot always, and the selection only when the route is one that
+ * may move the user. The payload it carried (the day, the scroll target, the
+ * just-created accent) waits for the receiving surface to read it either way.
+ *
+ * The selection is half of "auto-navigating": pushing `/inbox` moves the
+ * browser, and re-selecting the Inbox moves the shell's own highlight and
+ * body. A route the capture rules say never auto-navigates must do neither, so
+ * both halves read the same `autoNavigates` flag rather than each deciding for
+ * itself.
  */
 export const withCaptureRouteConsumed = (
   state: MainState,
   context: ShellRouteContext,
 ): MainState => ({
   ...state,
-  selected: context.destination,
+  selected: context.autoNavigates ? context.destination : state.selected,
   routeContext: context,
 })

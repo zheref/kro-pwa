@@ -30,12 +30,17 @@
  * `ToolbarOutlet`, never hardcoded here.
  */
 import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { GlassSurface } from '../../design/system/glass/GlassSurface'
 import { GradientBackdrop } from '../../design/system/gradient/GradientBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
-import type { DoSurfaceLayout, ShellShape } from './DoSurfaceLayout'
+import {
+  type DoSurfaceLayout,
+  type ShellShape,
+  shellBottomInset,
+} from './DoSurfaceLayout'
 import type { NavigationElement, NavigationSection } from './NavigationSections'
 import {
   DestinationKind,
@@ -48,7 +53,7 @@ import {
   type SidebarFragmentProps,
 } from './SidebarFragment'
 import { TabBarFragment } from './TabBarFragment'
-import { ToolbarOutlet } from './ToolbarSlots'
+import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
 
 export interface MainShellFragmentProps
   extends Omit<SidebarFragmentProps, 'layout' | 'sections' | 'selected'> {
@@ -83,11 +88,27 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     ...sidebar
   } = props
 
+  /**
+   * What the shell's own bottom chrome reserves, published for the design
+   * system's bottom-anchored surfaces (the Active Toast today, the Session
+   * Pill when `#22` lands) to clear.
+   *
+   * A custom property rather than a prop: the toast host is mounted by whoever
+   * owns the overlay anchor, which is not this Fragment, and threading a
+   * number through every surface in between would give four files a chance to
+   * forget. The kit names the property and falls back to `0px`, so it never
+   * learns that a shell exists.
+   */
+  const shellStyle = {
+    [SHELL_BOTTOM_INSET_VAR]: `${shellBottomInset(shape, layout)}px`,
+  } as CSSProperties
+
   return shape === 'sidebar' ? (
     <div
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
       className="flex h-dvh w-full overflow-hidden bg-kro-back"
+      style={shellStyle}
     >
       {isSidebarVisible && (
         <SidebarFragment
@@ -133,6 +154,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
       data-testid="shell-tab-bar-shape"
       data-shell-shape="tabBar"
       className="flex h-dvh w-full flex-col overflow-hidden bg-kro-back"
+      style={shellStyle}
     >
       <GradientBackdrop height="180px" fixed />
 
@@ -204,13 +226,7 @@ function ContentToolbar({
         </ToolbarButton>
 
         {layout.showsProfileControl && (
-          <ToolbarButton
-            label="Profile"
-            layout={layout}
-            onClick={onTapProfile}
-          >
-            <User size={ICON_SIZE.medium} aria-hidden="true" />
-          </ToolbarButton>
+          <ProfileControl layout={layout} onTapProfile={onTapProfile} />
         )}
 
         <ToolbarOutlet
@@ -286,9 +302,7 @@ function TabBarToolbar({
         className="flex items-center"
         style={{ gap: `${layout.minimumControlSpacing}px` }}
       >
-        <ToolbarButton label="Profile" layout={layout} onClick={onTapProfile}>
-          <User size={ICON_SIZE.medium} aria-hidden="true" />
-        </ToolbarButton>
+        <ProfileControl layout={layout} onTapProfile={onTapProfile} />
 
         {!isPrimaryTab && (
           <ToolbarButton
@@ -324,6 +338,40 @@ function TabBarToolbar({
         </ToolbarButton>
       </div>
     </GlassSurface>
+  )
+}
+
+/**
+ * The Profile control — the shell's placement, a feature's content.
+ *
+ * The outlet is always rendered, so a feature's `ToolbarSlot placement="profile"`
+ * has somewhere to portal into. The shell's own button renders **only while no
+ * feature has supplied one**, which is what keeps the flag-off path
+ * byte-identical to what shipped: with nothing slotted this is the same
+ * `ToolbarButton` calling the same `onTapProfile`, in the same position.
+ *
+ * The settings child (KC-IS-#32) fills the slot with canon's
+ * `ProfilePopoverView` trigger; the comment in `MainShellPage` that said the
+ * popover "belongs to the settings child" is the contract this implements.
+ */
+function ProfileControl({
+  layout,
+  onTapProfile,
+}: {
+  readonly layout: DoSurfaceLayout
+  readonly onTapProfile: () => void
+}) {
+  const isSlotted = useToolbarSlotFilled('profile')
+
+  return (
+    <>
+      <ToolbarOutlet placement="profile" className="flex items-center" />
+      {isSlotted ? null : (
+        <ToolbarButton label="Profile" layout={layout} onClick={onTapProfile}>
+          <User size={ICON_SIZE.medium} aria-hidden="true" />
+        </ToolbarButton>
+      )}
+    </>
   )
 }
 

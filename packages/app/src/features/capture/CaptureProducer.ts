@@ -127,6 +127,28 @@ const readStoredEndeavors = async (
 }
 
 /**
+ * One stored endeavor by id, hydrated with only its own relations — the
+ * O(1)-ish read for a single-row mutation (Add-for-Today, its undo), where
+ * hydrating the whole store would make every tap O(N) IndexedDB work.
+ */
+const readStoredEndeavor = async (
+  localStore: LocalStore,
+  endeavorId: string,
+): Promise<Endeavor | undefined> => {
+  const record = await localStore.endeavors.get(endeavorId)
+  if (record === null) return undefined
+  const [deferRecords, performanceRecords] = await Promise.all([
+    localStore.defers.forEndeavor(endeavorId),
+    localStore.performances.forEndeavor(endeavorId),
+  ])
+  const hydrated = endeavorFromRecord(record, {
+    defers: deferRecords.map(deferFromRecord),
+    performances: performanceRecords.map(performFromRecord),
+  })
+  return hydrated.ok ? hydrated.value : undefined
+}
+
+/**
  * Rewrites one stored endeavor, preserving its sync watermark.
  *
  * `lastSyncedAtEpochMillis` is carried forward from the row on disk: dropping
@@ -286,8 +308,7 @@ export const scheduleForTodayThunk = createAsyncThunk<
   async ({ endeavorId, scheduledAt, now }, { extra }) => {
     let target: Endeavor | undefined
     try {
-      const stored = await readStoredEndeavors(extra.localStore)
-      target = stored.find((endeavor) => endeavor.id === endeavorId)
+      target = await readStoredEndeavor(extra.localStore, endeavorId)
     } catch (error) {
       return err(CaptureExceptions.schedulingFailed(messageOf(error)))
     }
@@ -337,8 +358,7 @@ export const undoScheduleForTodayThunk = createAsyncThunk<
 >('capture/onUndoAddForTodayCompleted', async ({ snapshot, now }, { extra }) => {
   let target: Endeavor | undefined
   try {
-    const stored = await readStoredEndeavors(extra.localStore)
-    target = stored.find((endeavor) => endeavor.id === snapshot.endeavorId)
+    target = await readStoredEndeavor(extra.localStore, snapshot.endeavorId)
   } catch (error) {
     return err(CaptureExceptions.undoFailed(messageOf(error)))
   }

@@ -23,13 +23,15 @@ import {
   selectIsDoLoading,
 } from '../DoSelectors'
 import { withVisibilityApplied } from '../DoShifters'
+import { initialPlanState } from '../../plan/PlanState'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
   greeting: greetingStateMocks.idle,
   do: slice,
-  // `capture` is present only because `RootState` gained a third slice (#23);
-  // this suite asserts nothing about it.
+  // Present only because `RootState` names every registered slice (#18, #23);
+  // this suite asserts nothing about Plan or Capture.
+  plan: initialPlanState,
   capture: initialCaptureState,
 })
 

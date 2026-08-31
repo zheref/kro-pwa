@@ -19,6 +19,7 @@ import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { captureSlice } from '../features/capture/CaptureFeature'
 import { doSlice } from '../features/do/DoFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
+import { planSlice } from '../features/plan/PlanFeature'
 import {
   type GreetingService,
   liveGreetingService,
@@ -68,6 +69,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
       capture: captureSlice.reducer,
+      plan: planSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

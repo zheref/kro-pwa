@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialDoState } from '../../do/DoFeature'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
+import { initialPlanState } from '../../plan/PlanState'
 import { CaptureExceptions } from '../CaptureException'
 import type { CaptureState } from '../CaptureFeature'
 import {
@@ -44,7 +45,10 @@ import {
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: CaptureState): RootState => ({
   greeting: greetingStateMocks.idle,
+  // Present only because `RootState` names every registered slice (#16, #18);
+  // this suite asserts nothing about Do or Plan.
   do: initialDoState,
+  plan: initialPlanState,
   capture: slice,
 })
 

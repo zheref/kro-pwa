@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import type { RootState } from '../../../library/store'
+import { initialPlanState } from '../../plan/PlanState'
 import type { GreetingState } from '../GreetingFeature'
 import { greetingStateMocks } from '../GreetingMocks'
 import {
@@ -13,12 +14,16 @@ import {
   selectIsGreetingLoading,
 } from '../GreetingSelectors'
 
-/** Selectors are exercised against a hand-built root state, never a live store. */
-// `do` and `capture` are present only because `RootState` has grown further
-// slices (#16, #23); this suite asserts nothing about either.
+/**
+ * Selectors are exercised against a hand-built root state, never a live store.
+ * `do` (#16), `plan` (#18) and `capture` (#23) are filled from their own initial
+ * states only because `RootState` names every registered slice; this suite
+ * asserts nothing about any of them.
+ */
 const rootWith = (greeting: GreetingState): RootState => ({
   greeting,
   do: initialDoState,
+  plan: initialPlanState,
   capture: initialCaptureState,
 })
 

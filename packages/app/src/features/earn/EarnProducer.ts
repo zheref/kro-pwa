@@ -190,6 +190,14 @@ export const deleteRewardThunk = createAsyncThunk<
  *
  * Idempotent on the already-claimed case, matching canon's
  * `guard !stored.contains(id) else return`.
+ *
+ * **Refuses to claim an id absent from the persisted catalog** (a second
+ * Copilot round, against this fix's own first head). Without this, a claim
+ * dispatched for a stale/deleted id would still write a "ghost" entry into
+ * the claimed set — and because `loadEarnCatalogThunk` (above) only checks
+ * "does *some* current reward have this id", a later reward that happened to
+ * mint the same id would load as pre-claimed. Checking existence here, not
+ * only at load, closes that the whole way rather than only after the fact.
  */
 export const claimRewardThunk = createAsyncThunk<
   Result<{ id: string }, EarnException>,
@@ -198,6 +206,10 @@ export const claimRewardThunk = createAsyncThunk<
 >('earn/onRewardClaimCompleted', async ({ id }, { extra }) => {
   try {
     const store = extra.localStore.preferences
+    const rewards = readRewardsCatalog(store)
+    if (!rewards.some((reward) => reward.id === id)) {
+      return err(EarnExceptions.rewardNotFound(id))
+    }
     const claimedRewardIds = readClaimedRewardIds(store)
     if (!claimedRewardIds.includes(id)) {
       writeClaimedRewardIds(store, [...claimedRewardIds, id])

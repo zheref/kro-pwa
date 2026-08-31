@@ -23,6 +23,8 @@ export type EarnException =
   | Exception<'deleteRewardFailed'>
   /** Persisting a claim failed. */
   | Exception<'claimRewardFailed'>
+  /** A claim was requested for an id absent from the persisted catalog. */
+  | Exception<'rewardNotFound'>
   /** The defensive `.rejected` fallback's landing shape (`RC-26`). */
   | Exception<'unknown'>
 
@@ -48,6 +50,13 @@ export const EarnExceptions = {
 
   claimRewardFailed: (reason: string): EarnException =>
     exception('claimRewardFailed', `Couldn't claim that reward: ${reason}`, true),
+
+  rewardNotFound: (id: string): EarnException =>
+    exception(
+      'rewardNotFound',
+      `No reward with id '${id}' is in your catalog.`,
+      false,
+    ),
 
   unknown: (message: string): EarnException => exception('unknown', message, true),
 } as const

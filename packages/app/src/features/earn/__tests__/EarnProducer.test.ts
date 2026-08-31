@@ -290,6 +290,7 @@ describe('deleteRewardThunk', () => {
 describe('claimRewardThunk — the atomic one', () => {
   it('persists the claimed id', async () => {
     const localStore = makeInMemoryLocalStore()
+    writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
     const result = await storeWith(localStore)
       .dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
       .unwrap()
@@ -299,15 +300,31 @@ describe('claimRewardThunk — the atomic one', () => {
 
   it('is idempotent — claiming an already-claimed id does not duplicate it', async () => {
     const localStore = makeInMemoryLocalStore()
+    writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
     writeClaimedRewardIds(localStore.preferences, [rewardMocks.bobaTea.id])
     await storeWith(localStore).dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id })).unwrap()
     expect(readClaimedRewardIds(localStore.preferences)).toEqual([rewardMocks.bobaTea.id])
   })
 
   it(
+    'refuses to claim an id absent from the persisted catalog — the "ghost claim" ' +
+      'a second Copilot round flagged',
+    async () => {
+      const localStore = makeInMemoryLocalStore()
+      const result = await storeWith(localStore)
+        .dispatch(claimRewardThunk({ id: 'ghost-id' }))
+        .unwrap()
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.error.kind).toBe('rewardNotFound')
+      expect(readClaimedRewardIds(localStore.preferences)).toEqual([])
+    },
+  )
+
+  it(
     'a failed persist leaves the stored claimed set untouched (producer-level atomicity)',
     async () => {
       const localStore = makeInMemoryLocalStore()
+      writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
       const broken: LocalStore = {
         ...localStore,
         preferences: instrumentPreferences(localStore.preferences, 0),

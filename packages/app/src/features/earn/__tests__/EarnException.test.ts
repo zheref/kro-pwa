@@ -20,6 +20,13 @@ describe('EarnExceptions', () => {
     expect(EarnExceptions.claimRewardFailed('x').kind).toBe('claimRewardFailed')
   })
 
+  it('marks a claim on a missing reward unrecoverable — retrying the same stale id cannot help', () => {
+    const exception = EarnExceptions.rewardNotFound('ghost-id')
+    expect(exception.kind).toBe('rewardNotFound')
+    expect(exception.recoverable).toBe(false)
+    expect(exception.message).toContain('ghost-id')
+  })
+
   it('marks every mutation failure recoverable — a retry can succeed', () => {
     expect(EarnExceptions.addRewardFailed('x').recoverable).toBe(true)
     expect(EarnExceptions.deleteRewardFailed('x').recoverable).toBe(true)
@@ -41,6 +48,7 @@ describe('EarnExceptions', () => {
         case 'addRewardFailed':
         case 'deleteRewardFailed':
         case 'claimRewardFailed':
+        case 'rewardNotFound':
         case 'unknown':
           return exception.kind
       }

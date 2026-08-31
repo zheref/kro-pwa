@@ -18,7 +18,9 @@
 #      environment; a literal in the diff fails the commit.
 #
 # Manual run: `.bankai/hooks/guard.sh` (reads the git index, changes nothing).
-# `--no-verify` is not an escape hatch here — CI runs the same checks.
+# `--no-verify` is never acceptable (SEC-14). CI does not run this script
+# yet — that enforcement arrives with the bankai.yml wiring (#4); until then
+# these rules are enforced locally by lefthook.
 
 set -euo pipefail
 
@@ -161,7 +163,7 @@ if [ ${#violations[@]} -gt 0 ]; then
     printf '%s\n' "  ${RED}✗${RESET} ${violation}" >&2
   done
   printf '%s\n' '' >&2
-  printf '%s\n' "${YELLOW}Fix the finding. Do not pass --no-verify: CI runs the same rules.${RESET}" >&2
+  printf '%s\n' "${YELLOW}Fix the finding. Do not pass --no-verify (SEC-14).${RESET}" >&2
   exit 1
 fi
 

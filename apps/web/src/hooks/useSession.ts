@@ -272,7 +272,7 @@ export const useSession = (
     handleSessionSuccess()
     if (isNotificationsPermissionGranted()) {
       postNotification({
-        title: 'Contratulations!',
+        title: 'Congratulations!',
         body: 'You have successfully completed the session',
         img: undefined,
       })
@@ -306,7 +306,7 @@ export const useSession = (
     handleSessionSuccess()
     if (isNotificationsPermissionGranted()) {
       postNotification({
-        title: 'Contratulations!',
+        title: 'Congratulations!',
         body: 'You have successfully completed the session',
         img: undefined,
       })

@@ -46,6 +46,8 @@ import {
   EmptyDayStateView,
   EndeavorCard,
   type EndeavorCardModel,
+  REWARD_BACKGROUND_ROLE,
+  REWARD_FOREGROUND_ROLE,
   SuggestionCard,
   type SuggestionCardModel,
   formatTime,
@@ -186,7 +188,28 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
   return (
     <div
       data-testid="do-lanes"
-      className={cn('flex flex-col gap-kro-large', className)}
+      className={cn('flex flex-col gap-kro-large pt-kro-medium', className)}
+      /*
+        The day's own surface, with the shell's header slab fading into it over
+        its first 32px.
+
+        Without this the first lane's title lands on whatever the slab happens
+        to be at that height — a dark title on mid-ramp purple, which measures
+        around 3:1 and fails the epic's own 4.5:1 bar on a compact window where
+        the header is short. Canon has the same problem solved a different way
+        (`DoScreen` paints indigoGrape behind the WHOLE surface and every title
+        is white); the web shell paints a 180px slab instead, so the day is a
+        page surface and the fade is what keeps the join from being a hard
+        line. 32px is `--kro-space-x-large`, the same distance
+        `GradientBackdrop`'s own fade uses.
+
+        `color-mix(… 0%, transparent)` rather than the `transparent` keyword:
+        the keyword interpolates through transparent BLACK, which greys the
+        ramp in light mode.
+      */
+      style={{
+        backgroundImage: `linear-gradient(to bottom, color-mix(in srgb, ${colorVar('back')} 0%, transparent), ${colorVar('back')} var(--kro-space-x-large))`,
+      }}
     >
       {showsSuggestions && suggestions.length > 0 ? (
         <SuggestionsLane
@@ -196,7 +219,27 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
       ) : null}
 
       {hasNoEndeavors ? (
-        <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
+        /*
+          The promotion inset is drawn white-on-translucent-black, because canon
+          shows it over `DoScreen`'s full-screen indigoGrape gradient. The web
+          shell's slab stops 180px down, so the inset would otherwise land on
+          the page surface and paint 0.85-white text on light grey — measured
+          well under the 4.5:1 the epic's own contrast bar requires. Restoring
+          the field the component was designed against is a wrapper, not a fork
+          of the component: the two gradient stops are the design system's own,
+          so the inset and the header slab cannot drift apart.
+        */
+        <div className="px-kro-medium">
+          <div
+            data-testid="do-empty-day"
+            style={{
+              borderRadius: radiusVar('surface'),
+              backgroundImage: `linear-gradient(to bottom right, ${colorVar('headerGradientIndigo')}, ${colorVar('headerGradientGrape')})`,
+            }}
+          >
+            <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
+          </div>
+        </div>
       ) : (
         <>
           {reminders.length > 0 ? (
@@ -336,10 +379,23 @@ function SectionHeader({
 const badgeClassName =
   'inline-flex items-center gap-1 px-2.5 py-1 font-semibold text-xs'
 
+/**
+ * The lane badge, in the kit's own reward-pill pair.
+ *
+ * Canon paints it `scotchMist.opacity(0.6)` with a dark olive label — the 0.6
+ * exists so the indigoGrape gradient shows through, and this surface has the
+ * page colour behind it instead. Sixty percent of a pale sand over a dark page
+ * mixes to a muddy olive, which is how a 9:1 label in light becomes a 3:1 one
+ * in dark. So the fill is solid, and the ink is `REWARD_FOREGROUND_ROLE` —
+ * `scotchMist` + `bannerWarning` is precisely the pair `RewardBadge` uses and
+ * the design system's contrast suite already regression-tests in both schemes.
+ * A `charcoal` label would have looked right and quietly failed the dark half,
+ * because that token flips to a mid grey.
+ */
 const badgeStyle = {
   borderRadius: radiusVar('pill'),
-  backgroundColor: `color-mix(in srgb, ${colorVar('scotchMist')} 60%, transparent)`,
-  color: colorVar('charcoal'),
+  backgroundColor: colorVar(REWARD_BACKGROUND_ROLE),
+  color: colorVar(REWARD_FOREGROUND_ROLE),
 } as const
 
 /* ------------------------------------------------------------------------ */

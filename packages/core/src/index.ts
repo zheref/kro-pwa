@@ -51,6 +51,22 @@ export * from './utils/durations'
 // never contend for the same line.
 export * from './vistas'
 
+// --- settings & flags (#11) ------------------------------------------------
+// `settings/` is the preference schema ported from canon's `SettingOptions`:
+// every option's key, value shape, glyph, default and sync scope, the five
+// groups, the cloud-sync subset, the stored-value codec and the narrow
+// key-value port #10's persistence satisfies. `flags/` is the `UZF-22` central
+// registry: all 28 declared flags, the `statusQuoSet` baseline, the
+// last-match-wins override service and the flag × preference AND-ing helper.
+//
+// Appended after the vistas block for the same reason that block exists — a
+// parallel child appends its own block below rather than contending for a line
+// in the sorted list above. `flags/` imports from `settings/`
+// (`FeatureFlagGating` needs the two session options canon AND's), so the order
+// here is also the dependency order.
+export * from './settings'
+export * from './flags'
+
 // --- source reconciliation & Kro-enhanced (#12) ----------------------------
 // The host-agnostic reconciliation pass: logical identity, the transitive
 // linker, field-scoped ownership on conflict, the pluggable per-provider
@@ -59,7 +75,7 @@ export * from './vistas'
 // filtering, grouping or presentation — see `Reconcile.ts`.
 //
 // Appended as its own block, after `vistas`, for the same anti-contention
-// reason that block gives. At this branch's rebase point no flags/settings
-// block existed yet (#11 had not landed); if one lands first, this block
-// stays last.
+// reason that block gives. #12's own comment asked that it stay last if a
+// settings/flags block landed first; merging `main` into this branch is that
+// moment, so the two blocks sit in the order both asked for.
 export * from './domain/reconciliation'

@@ -18,11 +18,16 @@ import { type TimeIntervalSeconds, secondsBetween } from '../shared/TimeInterval
 
 /** How a performance ended. */
 export const PerformResolution = {
-  /** Task completed successfully. */
+  /**
+   * The session concluded but the task itself stayed open (30% in the
+   * sliding-scale formula). Canon's Swift doc comment has this and
+   * `finished` swapped; the semantics here follow `Performances.md` and
+   * `RewardCalculator.swift`'s actual behavior.
+   */
   complete: 'complete',
   /** Session/task aborted before completion. */
   aborted: 'aborted',
-  /** Task finished early (before target duration). */
+  /** The task was completed (100% in the sliding-scale formula). */
   finished: 'finished',
 } as const
 

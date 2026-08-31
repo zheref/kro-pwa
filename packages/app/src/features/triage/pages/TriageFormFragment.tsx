@@ -583,7 +583,14 @@ function EisenhowerMatrix({
     >
       <SectionLabel>Where does it belong?</SectionLabel>
 
-      <div aria-hidden className="flex gap-3 pl-[22px]">
+      {/*
+        The leading spacer is a real 22px column plus the row's own gap, not a
+        `pl-[22px]`: the tile rows are `label | gap | grid`, so padding alone
+        drops one gap and every column header lands ~12px left of the column it
+        names.
+      */}
+      <div aria-hidden className="flex gap-3">
+        <span className="w-[22px] shrink-0" />
         <ColumnLabel>Urgent</ColumnLabel>
         <ColumnLabel>Not urgent</ColumnLabel>
       </div>
@@ -634,18 +641,33 @@ function ColumnLabel({ children }: { readonly children: ReactNode }) {
   )
 }
 
+/**
+ * Canon's rotated row label — `.fixedSize().rotationEffect(.degrees(-90))` over
+ * a fixed 22-point column.
+ *
+ * **`.fixedSize()` is the load-bearing half**, and it is why this is a rotated
+ * horizontal line rather than `writing-mode: vertical-rl`. In a vertical
+ * writing mode the *inline* axis is vertical, so the text is laid out against
+ * the column's HEIGHT — and the moment a row is shorter than the label is long
+ * the label loses a letter. "NOT IMPORTANT" is the longer of the two and the
+ * desktop popover's rows are the shorter, so that one pairing clipped to "OT
+ * IMPORTANT". A horizontal line at `width: max-content`, rotated a quarter
+ * turn and centred absolutely, has no such coupling: its box never depends on
+ * the column, exactly as canon's does not.
+ *
+ * `aria-hidden` because every tile already announces its own axes in words; a
+ * decorative label read twice is noise, not information.
+ */
 function RowLabel({ children }: { readonly children: ReactNode }) {
   return (
-    <span
-      aria-hidden
-      className="flex w-[22px] shrink-0 items-center justify-center"
-    >
+    <span aria-hidden className="relative w-[22px] shrink-0">
       <span
-        className="whitespace-nowrap font-bold text-[11px] uppercase tracking-wide"
+        className="absolute top-1/2 left-1/2 whitespace-nowrap font-bold text-[10px] uppercase tracking-wide"
         style={{
           color: colorVar('foreSecondary'),
-          writingMode: 'vertical-rl',
-          transform: 'rotate(180deg)',
+          width: 'max-content',
+          transformOrigin: 'center',
+          transform: 'translate(-50%, -50%) rotate(-90deg)',
         }}
       >
         {children}
@@ -697,15 +719,32 @@ function QuadrantTile({
         'kro-motion-quick transition-[background-color,box-shadow]',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
         isSelected ? 'items-start justify-start' : 'items-center justify-center',
+        /*
+          Canon's two-branch unselected fill: *"explicit sRGB white in light
+          mode (clean card on the form surface); the palette's elevated dark
+          gray in dark mode (slightly lighter than the surrounding glass surface
+          so the tile still stands out)"*.
+
+          No single token expresses that — `--kro-color-absolute` is white in
+          light and BLACK in dark, which inverts canon's intent and makes the
+          tile disappear into the panel. `globals.css` mints the `dark:` variant
+          for exactly this case ("the rare utility that has to differ beyond
+          what a token can express"), so the pair is two classes rather than a
+          `matchMedia` read in the render body.
+
+          Classes, not an inline style, because an inline `backgroundColor`
+          would outrank both.
+        */
+        !isSelected && 'bg-kro-absolute dark:bg-kro-back-inner',
       )}
       style={{
         borderRadius: radiusVar('card'),
-        backgroundColor: isSelected
-          ? `color-mix(in srgb, ${tint} 18%, transparent)`
-          : colorVar('absolute'),
+        ...(isSelected
+          ? { backgroundColor: `color-mix(in srgb, ${tint} 18%, transparent)` }
+          : {}),
         boxShadow: isSelected
           ? `inset 0 0 0 2px ${tint}`
-          : `inset 0 0 0 1px ${colorVar('hairline')}, ${'var(--kro-shadow-subtle)'}`,
+          : `inset 0 0 0 1px ${colorVar('hairline')}, var(--kro-shadow-subtle)`,
         color: isSelected ? tint : colorVar('foreSecondary'),
       }}
     >

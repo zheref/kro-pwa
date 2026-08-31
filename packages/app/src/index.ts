@@ -46,6 +46,20 @@ export {
  */
 export * from './features/main'
 
+/**
+ * The Do surface (KC-IS-#17) — the one destination whose body exists, mounted
+ * by `apps/web`'s `/my-day` route.
+ *
+ * ONE LINE, and only the Page: the rest of `features/do/pages` is reachable
+ * from inside this package as `…/features/do/pages`, and nothing in `apps/web`
+ * needs a Fragment, a Producer or a projection. Adding a subpath export instead
+ * would have cost two config files — the `exports` map here **and** the
+ * hand-written alias list in `apps/web/vitest.config.mts` that mirrors it — for
+ * the same result. This is the line `#14` and `#15` each deferred to "whichever
+ * child next touches this file"; it is now three, one per surface.
+ */
+export { type DoPageProps, DoPage } from './features/do/pages'
+
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
   type GreetingLoadState,

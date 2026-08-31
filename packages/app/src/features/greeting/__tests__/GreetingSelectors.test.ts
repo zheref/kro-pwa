@@ -2,6 +2,8 @@ import { greetingMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
 import type { GreetingState } from '../GreetingFeature'
@@ -16,15 +18,17 @@ import {
 
 /**
  * Selectors are exercised against a hand-built root state, never a live store.
- * `do` (#16), `plan` (#18) and `capture` (#23) are filled from their own initial
- * states only because `RootState` names every registered slice; this suite
- * asserts nothing about any of them.
+ * `do` (#16), `plan` (#18), `capture` (#23), `find` and `endeavorDetail` (#29)
+ * are filled from their own initial states only because `RootState` names every
+ * registered slice; this suite asserts nothing about any of them.
  */
 const rootWith = (greeting: GreetingState): RootState => ({
   greeting,
   do: initialDoState,
   plan: initialPlanState,
   capture: initialCaptureState,
+  find: initialFindState,
+  endeavorDetail: initialEndeavorDetailState,
 })
 
 describe('selectGreeting', () => {

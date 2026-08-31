@@ -5,6 +5,7 @@
  */
 import { EndeavorField, EndeavorHost, EndeavorRelation } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
@@ -52,6 +53,7 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   greeting: initialGreetingState,
   // Present only because `RootState` names every registered slice.
   do: initialDoState,
+  capture: initialCaptureState,
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail,

@@ -2,6 +2,8 @@ import { EndeavorOperation, EndeavorsVistas } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import { initialPlanState } from '../../plan/PlanState'
 import { CaptureExceptions } from '../CaptureException'
@@ -45,11 +47,13 @@ import {
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: CaptureState): RootState => ({
   greeting: greetingStateMocks.idle,
-  // Present only because `RootState` names every registered slice (#16, #18);
-  // this suite asserts nothing about Do or Plan.
+  // Present only because `RootState` names every registered slice (#16, #18,
+  // #29); this suite asserts nothing about Do, Plan, Find or Detail.
   do: initialDoState,
   plan: initialPlanState,
   capture: slice,
+  find: initialFindState,
+  endeavorDetail: initialEndeavorDetailState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

@@ -32,8 +32,8 @@ import {
   type PerformanceRecord,
   type PerformanceStore,
   type PersistedRunningSession,
-  type PreferenceStorage,
-  type PreferenceValue,
+  type KeyValueStore,
+  type SettingValue,
   type ProjectRecord,
   type ProjectStore,
   type RunningSessionAnchorStore,
@@ -57,7 +57,14 @@ export interface InMemoryLocalStoreSeed {
   readonly defers?: readonly DeferRecord[]
   readonly performances?: readonly PerformanceRecord[]
   readonly userProfiles?: readonly UserProfileRecord[]
-  readonly preferences?: Readonly<Record<string, PreferenceValue>>
+  readonly preferences?: Readonly<Record<string, SettingValue>>
+  /**
+   * An already-built key-value store, which wins over `preferences`. It exists
+   * so a suite can hand in KC-IS-#11's `makeInMemoryKeyValueStore(...)` — the
+   * two are the same port, and passing #11's fixture straight in is the
+   * cheapest possible proof of that.
+   */
+  readonly preferenceStore?: KeyValueStore
   readonly runningSessionAnchor?: PersistedRunningSession | null
   readonly lensSnapshots?: Readonly<Record<string, EndeavorsLensSnapshot>>
 }
@@ -231,17 +238,25 @@ export const makeInMemoryUserProfileStore = (
 }
 
 /**
- * The stubbed `PreferenceStorage`.
+ * The stubbed `KeyValueStore`.
  *
- * Note it stores the **values**, not their JSON encoding — a stub has no wire,
- * so encoding here would test the encoder twice and hide a type mismatch the
- * live binding would surface. The contract suite runs the same assertions
- * against both, which is where the encoding is actually exercised.
+ * KC-IS-#11 ships an equivalent under `settings/__mocks__/KeyValueStore.mocks`,
+ * and this is deliberately **not** a re-export of it: that one lives behind the
+ * `@kro/core/mocks` subpath, which exists precisely so mocks never ride into a
+ * production bundle (`RC-13`) — and `stubbedThunkExtra` is production module
+ * scope. The two are interchangeable by construction, and
+ * `InMemoryLocalStoreSeed.preferenceStore` lets a suite pass #11's in directly,
+ * which is where that interchangeability is actually asserted.
+ *
+ * It stores the **values**, not their JSON encoding: a stub has no wire, so
+ * encoding here would test the encoder twice and hide a type mismatch only the
+ * live binding can surface. The contract suite exercises the encoding where it
+ * belongs — against the live binding.
  */
 export const makeInMemoryPreferenceStorage = (
-  seed: Readonly<Record<string, PreferenceValue>> = {},
-): PreferenceStorage => {
-  const entries = new Map<string, PreferenceValue>(Object.entries(seed))
+  seed: Readonly<Record<string, SettingValue>> = {},
+): KeyValueStore => {
+  const entries = new Map<string, SettingValue>(Object.entries(seed))
   return {
     get: (key) => entries.get(key) ?? null,
     set: (key, value) => {
@@ -296,7 +311,8 @@ export const makeInMemoryLocalStore = (
   defers: makeInMemoryDeferStore(seed.defers),
   performances: makeInMemoryPerformanceStore(seed.performances),
   userProfiles: makeInMemoryUserProfileStore(seed.userProfiles),
-  preferences: makeInMemoryPreferenceStorage(seed.preferences),
+  preferences:
+    seed.preferenceStore ?? makeInMemoryPreferenceStorage(seed.preferences),
   runningSessionAnchor: makeInMemoryRunningSessionAnchorStore(
     seed.runningSessionAnchor ?? null,
   ),

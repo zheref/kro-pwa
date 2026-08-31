@@ -15,7 +15,7 @@ import {
   decodeRunningSessionAnchor,
   encodeRunningSessionAnchor,
 } from '../RunningSessionAnchor'
-import { isKroPreferenceKey } from '../PreferenceStorage'
+import { isPreferenceStorageKey } from '../../settings/KeyValueStore'
 
 /** What actually happens on a reload: serialize, throw the object away, parse. */
 const throughStorage = (
@@ -181,7 +181,7 @@ describe('a document that does not describe a resumable session reads as null', 
 
 describe('where the anchor is stored', () => {
   it('sits inside the `kro:` namespace, so sign-out takes it', () => {
-    expect(isKroPreferenceKey(RUNNING_SESSION_ANCHOR_KEY)).toBe(true)
+    expect(isPreferenceStorageKey(RUNNING_SESSION_ANCHOR_KEY)).toBe(true)
   })
 
   it('is one key — the single-document contract canon`s file mechanism gives', () => {

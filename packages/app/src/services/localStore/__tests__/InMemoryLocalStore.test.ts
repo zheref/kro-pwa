@@ -5,16 +5,19 @@
  * The rules it shares with the live binding are asserted once in
  * `LocalStoreContract.test.ts`.
  */
-import { makeEndeavorsLensSnapshot } from '@kro/core'
+import { isPreferenceStorageKey, makeEndeavorsLensSnapshot } from '@kro/core'
 import {
   deferRecordMocks,
   endeavorRecordMocks,
+  makeInMemoryKeyValueStore,
   performanceRecordMocks,
   persistedRunningSessionMocks,
   projectRecordMocks,
+  signOutContractStoreSeed,
   userProfileRecordMocks,
 } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
+import { signOutWipe } from '../signOutWipe'
 import {
   makeInMemoryEndeavorStore,
   makeInMemoryLocalStore,
@@ -84,6 +87,34 @@ describe('isolation — one suite cannot see another`s fixtures', () => {
 
   it('leaves `stubbedLocalStore` empty, so a forgetful suite sees an empty app', async () => {
     expect(await stubbedLocalStore.endeavors.all()).toEqual([])
+  })
+})
+
+describe('the preference port is KC-IS-#11`s, not a second one', () => {
+  it('accepts #11`s own in-memory KeyValueStore as the bundle`s preferences', () => {
+    const store = makeInMemoryLocalStore({
+      preferenceStore: makeInMemoryKeyValueStore(signOutContractStoreSeed),
+    })
+    expect(store.preferences.get('kro:session.defaultDuration')).toBe(45)
+  })
+
+  it('wipes #11`s fixture by #11`s own rule — one contract, end to end', async () => {
+    const store = makeInMemoryLocalStore({
+      preferenceStore: makeInMemoryKeyValueStore(signOutContractStoreSeed),
+    })
+    await signOutWipe(store)
+
+    expect(store.preferences.keys().filter(isPreferenceStorageKey)).toEqual([])
+    expect(store.preferences.get('debug.ff.sessionBreak')).toBe(true)
+    expect(store.preferences.get('debug.ff.matrix')).toBe(false)
+  })
+
+  it('prefers an injected store over a seed record', () => {
+    const store = makeInMemoryLocalStore({
+      preferences: { 'kro:theme': 'dark' },
+      preferenceStore: makeInMemoryKeyValueStore({ 'kro:theme': 'light' }),
+    })
+    expect(store.preferences.get('kro:theme')).toBe('light')
   })
 })
 

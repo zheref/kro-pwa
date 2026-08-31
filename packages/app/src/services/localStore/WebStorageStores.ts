@@ -4,7 +4,7 @@
  *
  * ## Why `localStorage` for these two, and IndexedDB for everything else
  *
- * **Preferences must be synchronous.** `PreferenceStorage` is a `RC-47`
+ * **Preferences must be synchronous.** KC-IS-#11's `KeyValueStore` is a `RC-47`
  * Provider-shaped port precisely because a reducer and a Selector may read it
  * directly, and neither can await. IndexedDB has no synchronous API at all, so
  * an IndexedDB-backed preference store would have to be a hydrated in-memory
@@ -40,8 +40,8 @@
  */
 import {
   type PersistedRunningSession,
-  type PreferenceStorage,
-  type PreferenceValue,
+  type KeyValueStore,
+  type SettingValue,
   RUNNING_SESSION_ANCHOR_KEY,
   type RunningSessionAnchorStore,
   decodeRunningSessionAnchor,
@@ -111,10 +111,9 @@ export const resolveWebStorage = (): WebStorageLike => {
  * back as a number. A bare `String(value)` would lose that distinction, and the
  * loss would surface as a setting that silently changes type on reload.
  */
-const encodePreference = (value: PreferenceValue): string =>
-  JSON.stringify(value)
+const encodePreference = (value: SettingValue): string => JSON.stringify(value)
 
-const decodePreference = (raw: string): PreferenceValue | null => {
+const decodePreference = (raw: string): SettingValue | null => {
   try {
     const parsed: unknown = JSON.parse(raw)
     if (
@@ -133,10 +132,10 @@ const decodePreference = (raw: string): PreferenceValue | null => {
   }
 }
 
-/** The live `PreferenceStorage` — synchronous, over `localStorage`. */
+/** The live `KeyValueStore` — synchronous, over `localStorage`. */
 export const makeWebPreferenceStorage = (
   storage: WebStorageLike = resolveWebStorage(),
-): PreferenceStorage => ({
+): KeyValueStore => ({
   get: (key) => {
     const raw = storage.getItem(key)
     return raw === null ? null : decodePreference(raw)

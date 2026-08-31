@@ -44,7 +44,7 @@
 import {
   type LocalStore,
   type SignOutWipeReport,
-  isKroPreferenceKey,
+  isPreferenceStorageKey,
   wipePreferences,
 } from '@kro/core'
 import { kroObjectStores } from './KroDatabase'
@@ -53,13 +53,14 @@ import { kroObjectStores } from './KroDatabase'
  * Empty every Kro-owned object store, remove every `kro:` preference, and leave
  * `debug.ff.*` — and anything another library owns — untouched.
  *
- * `isPreferenceKey` is a parameter so the KC-IS-#11 handoff is a one-line
- * substitution (pass its `isPreferenceStorageKey`) and so a test can prove the
- * wipe honours whatever predicate it is given rather than only the default.
+ * `isPreferenceKey` defaults to KC-IS-#11's `isPreferenceStorageKey` and stays
+ * a parameter so a test can prove the wipe honours *whatever* predicate it is
+ * given — the difference between testing this operation and testing the
+ * constant it happens to import.
  */
 export const signOutWipe = async (
   store: LocalStore,
-  isPreferenceKey: (storageKey: string) => boolean = isKroPreferenceKey,
+  isPreferenceKey: (storageKey: string) => boolean = isPreferenceStorageKey,
 ): Promise<SignOutWipeReport> => {
   const preservedKeys = store.preferences
     .keys()

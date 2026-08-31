@@ -30,8 +30,9 @@
  *   that atomic across a caller's `await`. Callers build the next record with
  *   the pure helpers in `SyncBookkeeping` and put it.
  *
- * Everything returns a `Promise`, except `PreferenceStorage` — see that file
- * for why it is synchronous.
+ * Everything returns a `Promise`, except `preferences`, which is KC-IS-#11's
+ * `KeyValueStore` — synchronous because a reducer and a Selector read it
+ * directly (`RC-47`), and neither can await. See `settings/KeyValueStore.ts`.
  */
 import type { EndeavorsLensSnapshot } from '../vistas/EndeavorsLensSnapshot'
 import type { PersistedRunningSession } from '../domain/session/PersistedRunningSession'
@@ -39,7 +40,7 @@ import type { DeferRecord } from './DeferRecord'
 import type { EndeavorRecord } from './EndeavorRecord'
 import type { EpochMillis } from './EpochMillis'
 import type { PerformanceRecord } from './PerformanceRecord'
-import type { PreferenceStorage } from './PreferenceStorage'
+import type { KeyValueStore } from '../settings/KeyValueStore'
 import type { ProjectRecord } from './ProjectRecord'
 import type { UserProfileRecord } from './UserProfileRecord'
 
@@ -174,7 +175,12 @@ export interface LocalStore {
   readonly defers: DeferStore
   readonly performances: PerformanceStore
   readonly userProfiles: UserProfileStore
-  readonly preferences: PreferenceStorage
+  /**
+   * The namespaced key-value store — KC-IS-#11's `KeyValueStore`, not a second
+   * port. #11 owns the contract and the `kro:` / `debug.ff.` predicates; this
+   * issue owns the live `localStorage` binding, the stub, and the wipe.
+   */
+  readonly preferences: KeyValueStore
   readonly runningSessionAnchor: RunningSessionAnchorStore
   readonly lensSnapshots: LensSnapshotStore
 }

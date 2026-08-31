@@ -428,3 +428,24 @@ describe('the anchoring invariant, under arbitrary pause/resume sequences', () =
     }
   })
 })
+
+describe('self-healing a corrupted anchor', () => {
+  it('pausing closes EVERY open fragment, not just the newest', () => {
+    const corrupt = persistedRunningSessionMocks.corruptTwoOpenFragments
+    const now = new Date(corrupt.fragments[0]!.start.getTime() + 60_000)
+    const paused = pauseSessionAt(corrupt, now)
+    expect(paused.fragments.every((fragment) => fragment.end !== null)).toBe(
+      true,
+    )
+    expect(isRunningSessionConsistent(paused)).toBe(true)
+  })
+
+  it('a healed anchor stops accruing elapsed time no matter how far now advances', () => {
+    const corrupt = persistedRunningSessionMocks.corruptTwoOpenFragments
+    const now = new Date(corrupt.fragments[0]!.start.getTime() + 60_000)
+    const paused = pauseSessionAt(corrupt, now)
+    const frozen = runningSessionElapsedDuration(paused, now)
+    const muchLater = new Date(now.getTime() + 3_600_000)
+    expect(runningSessionElapsedDuration(paused, muchLater)).toBe(frozen)
+  })
+})

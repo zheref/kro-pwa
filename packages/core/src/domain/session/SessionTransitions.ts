@@ -27,21 +27,18 @@ import {
  * first, so a corrupt anchor carrying two open fragments degrades to closing
  * the newer one rather than resurrecting the older.
  */
-const withLastFragmentClosed = (
+const withOpenFragmentsClosed = (
   fragments: readonly FocusSessionFragment[],
   endedAt: Date,
 ): readonly FocusSessionFragment[] => {
-  let target = -1
-  for (let index = fragments.length - 1; index >= 0; index -= 1) {
-    const fragment = fragments[index]
-    if (fragment !== undefined && fragment.end === null) {
-      target = index
-      break
-    }
-  }
-  if (target === -1) return fragments
-  return fragments.map((fragment, index) =>
-    index === target ? { start: fragment.start, end: endedAt } : fragment,
+  // A healthy anchor never holds more than one open fragment (activation only
+  // appends when nothing is open), so on every reachable state this matches
+  // canon's close-the-last semantics exactly. Closing ALL open fragments is
+  // pure defence: a corrupted persisted anchor self-heals on its next
+  // transition instead of silently accruing elapsed time forever.
+  if (!fragments.some((fragment) => fragment.end === null)) return fragments
+  return fragments.map((fragment) =>
+    fragment.end === null ? { start: fragment.start, end: endedAt } : fragment,
   )
 }
 
@@ -58,7 +55,7 @@ export const pauseSessionAt = (
   now: Date,
 ): PersistedRunningSession => ({
   ...session,
-  fragments: withLastFragmentClosed(session.fragments, now),
+  fragments: withOpenFragmentsClosed(session.fragments, now),
   phase: PersistedSessionPhase.paused,
 })
 
@@ -83,7 +80,7 @@ export const resumeSessionAt = (
 ): PersistedRunningSession => ({
   ...session,
   fragments: [
-    ...withLastFragmentClosed(session.fragments, now),
+    ...withOpenFragmentsClosed(session.fragments, now),
     makeFocusSessionFragment({ start: now }),
   ],
   phase:
@@ -106,7 +103,7 @@ export const concludeSessionAt = (
   now: Date,
 ): PersistedRunningSession => ({
   ...session,
-  fragments: withLastFragmentClosed(session.fragments, now),
+  fragments: withOpenFragmentsClosed(session.fragments, now),
   phase: PersistedSessionPhase.concluded,
 })
 
@@ -143,7 +140,7 @@ export const closeSessionAt = (
   session: PersistedRunningSession,
   now: Date,
 ): ClosedSession => {
-  const fragments = withLastFragmentClosed(session.fragments, now)
+  const fragments = withOpenFragmentsClosed(session.fragments, now)
   return {
     fragments,
     elapsedDuration: runningSessionElapsedDuration(

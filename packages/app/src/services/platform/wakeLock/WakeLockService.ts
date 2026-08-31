@@ -107,15 +107,32 @@ export const makeLiveWakeLockService = (
   const isVisible = (): boolean =>
     doc === null || doc.visibilityState === 'visible'
 
+  let acquiring = false
+
   const acquire = async (): Promise<void> => {
-    if (!wakeLock || sentinel !== null || !isVisible()) return
+    if (!wakeLock || sentinel !== null || acquiring || !isVisible()) return
+    acquiring = true
     try {
-      sentinel = await wakeLock.request('screen')
+      const fresh = await wakeLock.request('screen')
+      // The await can resolve AFTER a setKeepAwake(false) or a visibility
+      // loss: the lock is no longer desired, so release the fresh sentinel
+      // instead of holding it against the caller's wishes.
+      if (!requested || !isVisible()) {
+        try {
+          await fresh.release()
+        } catch {
+          // A dead sentinel needs no release; nothing to do.
+        }
+        return
+      }
+      sentinel = fresh
     } catch (reason) {
       // A refused request (battery saver, a hidden document racing us) leaves
       // `requested` true, so the next visibility change retries.
       log('Kro: the screen wake lock was refused.', reason)
       sentinel = null
+    } finally {
+      acquiring = false
     }
   }
 

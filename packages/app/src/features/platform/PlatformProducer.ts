@@ -32,6 +32,7 @@
  * view: *"an overdue alert shows the task's own wording on the lock screen,
  * where anyone holding the device can read it"* (SEC-8 / CWE-668).
  */
+import { PLATFORM_OVERDUE_ALERT_ID_PREFIX } from './PlatformVocabulary'
 import {
   type Result,
   err,
@@ -96,8 +97,12 @@ export const refreshPlatformStatusThunk = createAsyncThunk<
 >('platform/onPlatformStatusProbeCompleted', async (_arg, { extra }) => {
   try {
     const notificationPermission = extra.notificationsService.permissionState()
-    const pendingOverdueAlertIds =
-      await extra.notificationsService.pendingIdentifiers()
+    const armed = await extra.notificationsService.pendingIdentifiers()
+    // pendingIdentifiers() returns EVERY armed notification; the slice's
+    // overdue count must only see canon's prefixed overdue-alert ids.
+    const pendingOverdueAlertIds = armed.filter((identifier) =>
+      identifier.startsWith(PLATFORM_OVERDUE_ALERT_ID_PREFIX),
+    )
 
     return ok({
       notificationPermission,

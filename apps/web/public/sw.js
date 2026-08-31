@@ -124,10 +124,15 @@ const networkFirstDocument = async (request) => {
     const response = await fetch(request)
     if (response.ok) {
       const cache = await caches.open(CACHE_VERSION)
-      await cache.put('/', response.clone())
+      // Keyed by the request: caching every navigation under '/' would let
+      // any route's HTML overwrite the shell, so an offline start at '/'
+      // could render the wrong route.
+      await cache.put(request, response.clone())
     }
     return response
   } catch (error) {
+    const lastKnown = await caches.match(request)
+    if (lastKnown) return lastKnown
     const shell = await caches.match('/')
     if (shell) return shell
     throw error

@@ -8,6 +8,7 @@
  * file fails `tsc` — which is the whole point of deriving rather than copying.
  */
 import { describe, expect, it } from 'vitest'
+import { PLATFORM_OVERDUE_ALERT_ID_PREFIX } from '../PlatformVocabulary'
 import { stubbedThunkExtra } from '../../../library/store'
 import {
   makeStubbedInstallService,
@@ -120,5 +121,14 @@ describe('OverdueAlertReconciliationReport', () => {
       })
     expect(report.scheduled).toEqual([])
     expect(report.withdrawn).toEqual([])
+  })
+})
+
+describe('the overdue-alert id prefix restatement', () => {
+  it('matches the service constant it restates', async () => {
+    const service = await import(
+      '../../../services/platform/notifications/OverdueAlertReconciliation'
+    )
+    expect(PLATFORM_OVERDUE_ALERT_ID_PREFIX).toBe(service.OVERDUE_ALERT_ID_PREFIX)
   })
 })

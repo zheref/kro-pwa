@@ -53,3 +53,10 @@ export type InstallOutcome = Awaited<
 export type OverdueAlertReconciliationReport = Awaited<
   ReturnType<ThunkExtra['notificationsService']['reconcileOverdueAlerts']>
 >
+
+/**
+ * Canon's `overdueNotificationIdPrefix`, restated at the feature tier: the
+ * boundary gate (RC-6) refuses a feature-tier service import, so the literal
+ * lives here and a test pins it equal to the service constant.
+ */
+export const PLATFORM_OVERDUE_ALERT_ID_PREFIX = 'overdue-'

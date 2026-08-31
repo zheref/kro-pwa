@@ -1,0 +1,4 @@
+{
+  "$comment": "Backs stubbedDocumentTitleService (RC-33). `baseTitle` is what the tab reads before a session overrides it — the value set(null) must restore.",
+  "baseTitle": "Kro"
+}

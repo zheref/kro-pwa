@@ -50,3 +50,16 @@ export * from './utils/durations'
 // above so a parallel child appending after the `domain/` exports and this one
 // never contend for the same line.
 export * from './vistas'
+
+// --- source reconciliation & Kro-enhanced (#12) ----------------------------
+// The host-agnostic reconciliation pass: logical identity, the transitive
+// linker, field-scoped ownership on conflict, the pluggable per-provider
+// classification tables (Apple's ships as data), and the citizen / tourist /
+// enhanced model with its promotion and integrity rules. Runs before
+// filtering, grouping or presentation — see `Reconcile.ts`.
+//
+// Appended as its own block, after `vistas`, for the same anti-contention
+// reason that block gives. At this branch's rebase point no flags/settings
+// block existed yet (#11 had not landed); if one lands first, this block
+// stays last.
+export * from './domain/reconciliation'

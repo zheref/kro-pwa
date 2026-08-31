@@ -4,7 +4,10 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { EarnExceptions } from '../../EarnException'
+import { initialEarnState } from '../../EarnFeature'
 import { earnStateMocks } from '../../EarnMocks'
+import { withException } from '../../EarnShifters'
 import { ToolbarOutlet, ToolbarSlotsProvider } from '../../../main'
 import { EarnFragment } from '../EarnFragment'
 import { earnFragmentPropsFrom } from './earnFixtures'
@@ -18,6 +21,43 @@ describe('EarnFragment', () => {
     expect(screen.getByText('Available to Claim')).toBeTruthy()
     expect(screen.getByText('Keep Earning')).toBeTruthy()
     expect(screen.getByText('Discover More')).toBeTruthy()
+  })
+
+  /**
+   * Bugbot (`KC-PR-#65` round 1): `state.rewards` starts `[]`, which reads
+   * identically to a genuinely empty catalog for the suggestions section's
+   * own visibility check — so rendering unconditionally showed "Get
+   * Started" plus all fifteen starter suggestions, live Add buttons
+   * included, before the real read ever lands.
+   */
+  it('shows a pending message instead of the catalog while the first load is in flight', () => {
+    render(
+      <EarnFragment
+        {...earnFragmentPropsFrom(earnStateMocks.loading, {
+          isLoading: true,
+        })}
+      />,
+    )
+
+    expect(screen.getByTestId('earn-catalog-pending')).toBeTruthy()
+    expect(screen.queryByText('Get Started')).toBeNull()
+    expect(screen.queryByText('Discover More')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Add Reward' })).toBeNull()
+  })
+
+  it('shows the error, not the starter suggestions, when the FIRST load fails outright', () => {
+    const neverLoaded = withException(
+      initialEarnState,
+      EarnExceptions.catalogLoadFailed('offline'),
+    )
+
+    render(<EarnFragment {...earnFragmentPropsFrom(neverLoaded)} />)
+
+    expect(screen.getByTestId('earn-catalog-pending').textContent).toBe(
+      "Couldn't load your rewards: offline",
+    )
+    expect(screen.queryByText('Get Started')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Add Reward' })).toBeNull()
   })
 
   it("shows canon's empty-catalog copy inside Get Started, never a separate empty screen", () => {

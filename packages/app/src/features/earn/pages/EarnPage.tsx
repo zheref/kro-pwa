@@ -54,8 +54,10 @@ import {
   selectClaimingReward,
   selectClaimingRewardId,
   selectCurrentPoints,
+  selectEarnException,
   selectIsAddingReward,
   selectIsEarnCatalogEmpty,
+  selectIsEarnLoading,
   selectLockedRewards,
 } from '../EarnSelectors'
 import { EarnFragment } from './EarnFragment'
@@ -72,6 +74,8 @@ export function EarnPage() {
   const availableSuggestions = useAppSelector(selectAvailableSuggestions)
   const currentPoints = useAppSelector(selectCurrentPoints)
   const isCatalogEmpty = useAppSelector(selectIsEarnCatalogEmpty)
+  const isLoading = useAppSelector(selectIsEarnLoading)
+  const exception = useAppSelector(selectEarnException)
   const isAddingReward = useAppSelector(selectIsAddingReward)
   const addRewardDraft = useAppSelector(selectAddRewardDraft)
   const claimingRewardId = useAppSelector(selectClaimingRewardId)
@@ -139,6 +143,8 @@ export function EarnPage() {
       availableSuggestions={availableSuggestions}
       currentPoints={currentPoints}
       isCatalogEmpty={isCatalogEmpty}
+      isLoading={isLoading}
+      errorMessage={exception?.message ?? null}
       isAddingReward={isAddingReward}
       addRewardDraft={addRewardDraft}
       claimingRewardId={claimingRewardId}

@@ -33,6 +33,25 @@
  * `preferencesSection`. That is a `ToolbarSlot` portal (`../../main`), and it
  * mounts only on the `tabBar` shell shape — the sidebar toolbar has no
  * per-destination preferences gear in canon's own Mac composition.
+ *
+ * ## Why the catalog is gated on `isSettled`, not rendered from first paint
+ *
+ * `selectAvailableSuggestions`/`selectClaimableRewards`/`selectLockedRewards`
+ * are pure functions of `state.rewards`, which starts as `[]` in
+ * `initialEarnState` — **not** gated on `load.kind`. Rendering the sections
+ * unconditionally therefore shows the WRONG thing for one real tick on every
+ * mount: an empty `rewards` array reads identically to a genuinely empty,
+ * successfully-loaded catalog, so "Get Started" plus all fifteen starter
+ * suggestions would flash on screen before the real read lands — live Add
+ * buttons included, which is exactly the window a suggestion tap could race
+ * `loadEarnCatalogThunk` in (Bugbot, `KC-PR-#65` round 1). `isCatalogEmpty`
+ * alone does not close this: it is already correctly `false` while loading,
+ * but the suggestions section's own visibility check
+ * (`availableSuggestions.length === 0`) never consulted it. `isSettled`
+ * below is the general fix: "we know a real answer" is true once the
+ * catalog is genuinely empty (`isCatalogEmpty`) OR genuinely has content
+ * (claimable/locked non-empty) — never merely once loading has stopped,
+ * which a first-attempt failure also does without ever making either true.
  */
 import { ToolbarSlot } from '../../main'
 import { Settings, Zap } from 'lucide-react'
@@ -56,6 +75,10 @@ export interface EarnFragmentProps {
   readonly availableSuggestions: readonly Reward[]
   readonly currentPoints: number
   readonly isCatalogEmpty: boolean
+  /** `load.kind === 'loading'` — gates the catalog off first paint. */
+  readonly isLoading: boolean
+  /** The load/mutation exception's message, or `null`. */
+  readonly errorMessage: string | null
 
   readonly isAddingReward: boolean
   readonly addRewardDraft: EarnRewardDraft
@@ -92,6 +115,8 @@ export function EarnFragment(props: EarnFragmentProps) {
     availableSuggestions,
     currentPoints,
     isCatalogEmpty,
+    isLoading,
+    errorMessage,
     isAddingReward,
     addRewardDraft,
     claimingRewardId,
@@ -112,6 +137,11 @@ export function EarnFragment(props: EarnFragmentProps) {
     onTapAddSuggestion,
     onTapEarnPreferences,
   } = props
+
+  // See this file's header ("Why the catalog is gated on `isSettled`").
+  const isSettled =
+    isCatalogEmpty || claimableRewards.length > 0 || lockedRewards.length > 0
+  const showsCatalog = !isLoading && isSettled
 
   const fab = (
     <LiquidGlassFAB
@@ -154,85 +184,102 @@ export function EarnFragment(props: EarnFragmentProps) {
       </div>
 
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-kro-medium pt-kro-small pb-24">
-        {claimableRewards.length === 0 ? null : (
-          <RewardSection title="Available to Claim" count={claimableRewards.length}>
-            {claimableRewards.map((reward) => (
-              <RewardListRow
-                key={reward.id}
-                reward={reward}
-                currentPoints={currentPoints}
-                isClaimable
-                isConfirmingClaim={claimingRewardId === reward.id}
-                presentation={presentation}
-                onTapClaim={onTapClaim}
-                onConfirmClaim={onConfirmClaim}
-                onCancelClaim={onCancelClaim}
-                onDelete={onDelete}
-              />
-            ))}
-          </RewardSection>
-        )}
-
-        {lockedRewards.length === 0 ? null : (
-          <RewardSection title="Keep Earning" count={lockedRewards.length}>
-            {lockedRewards.map((reward) => (
-              <RewardListRow
-                key={reward.id}
-                reward={reward}
-                currentPoints={currentPoints}
-                isClaimable={false}
-                isConfirmingClaim={false}
-                presentation={presentation}
-                onTapClaim={onTapClaim}
-                onConfirmClaim={onConfirmClaim}
-                onCancelClaim={onCancelClaim}
-                onDelete={onDelete}
-              />
-            ))}
-          </RewardSection>
-        )}
-
-        {availableSuggestions.length === 0 ? null : (
-          <RewardSection title={isCatalogEmpty ? 'Get Started' : 'Discover More'}>
-            {isCatalogEmpty ? (
-              <p
-                className="m-0 px-1 text-sm"
-                style={{ color: colorVar('foreSecondary') }}
+        {showsCatalog ? (
+          <>
+            {claimableRewards.length === 0 ? null : (
+              <RewardSection
+                title="Available to Claim"
+                count={claimableRewards.length}
               >
-                Pick a reward to start working towards, or add your own with
-                the + button.
-              </p>
-            ) : null}
-            {availableSuggestions.map((suggestion) => (
-              <SuggestionRewardRow
-                key={suggestion.id}
-                reward={suggestion}
-                onAdd={onTapAddSuggestion}
-              />
-            ))}
-          </RewardSection>
+                {claimableRewards.map((reward) => (
+                  <RewardListRow
+                    key={reward.id}
+                    reward={reward}
+                    currentPoints={currentPoints}
+                    isClaimable
+                    isConfirmingClaim={claimingRewardId === reward.id}
+                    presentation={presentation}
+                    onTapClaim={onTapClaim}
+                    onConfirmClaim={onConfirmClaim}
+                    onCancelClaim={onCancelClaim}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </RewardSection>
+            )}
+
+            {lockedRewards.length === 0 ? null : (
+              <RewardSection title="Keep Earning" count={lockedRewards.length}>
+                {lockedRewards.map((reward) => (
+                  <RewardListRow
+                    key={reward.id}
+                    reward={reward}
+                    currentPoints={currentPoints}
+                    isClaimable={false}
+                    isConfirmingClaim={false}
+                    presentation={presentation}
+                    onTapClaim={onTapClaim}
+                    onConfirmClaim={onConfirmClaim}
+                    onCancelClaim={onCancelClaim}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </RewardSection>
+            )}
+
+            {availableSuggestions.length === 0 ? null : (
+              <RewardSection title={isCatalogEmpty ? 'Get Started' : 'Discover More'}>
+                {isCatalogEmpty ? (
+                  <p
+                    className="m-0 px-1 text-sm"
+                    style={{ color: colorVar('foreSecondary') }}
+                  >
+                    Pick a reward to start working towards, or add your own
+                    with the + button.
+                  </p>
+                ) : null}
+                {availableSuggestions.map((suggestion) => (
+                  <SuggestionRewardRow
+                    key={suggestion.id}
+                    reward={suggestion}
+                    onAdd={onTapAddSuggestion}
+                  />
+                ))}
+              </RewardSection>
+            )}
+          </>
+        ) : (
+          <p
+            data-testid="earn-catalog-pending"
+            className="m-0 px-1 text-sm"
+            style={{ color: colorVar('foreSecondary') }}
+          >
+            {errorMessage ?? 'Loading your rewards…'}
+          </p>
         )}
       </div>
 
-      <div
-        className="absolute z-10"
-        style={{ right: FAB_TRAILING_PADDING, bottom: FAB_BOTTOM_PADDING }}
-      >
-        <AddRewardForm
-          isOpen={isAddingReward}
-          draft={addRewardDraft}
-          presentation={presentation}
-          trigger={fab}
-          onChangeTitle={onChangeDraftTitle}
-          onChangeGlyph={onChangeDraftGlyph}
-          onChangePoints={onChangeDraftPoints}
-          onChangeNotes={onChangeDraftNotes}
-          onConfirm={onConfirmAddReward}
-          onCancel={onCancelAddReward}
-        />
-      </div>
+      {showsCatalog ? (
+        <div
+          className="absolute z-10"
+          style={{ right: FAB_TRAILING_PADDING, bottom: FAB_BOTTOM_PADDING }}
+        >
+          <AddRewardForm
+            isOpen={isAddingReward}
+            draft={addRewardDraft}
+            presentation={presentation}
+            trigger={fab}
+            onChangeTitle={onChangeDraftTitle}
+            onChangeGlyph={onChangeDraftGlyph}
+            onChangePoints={onChangeDraftPoints}
+            onChangeNotes={onChangeDraftNotes}
+            onConfirm={onConfirmAddReward}
+            onCancel={onCancelAddReward}
+          />
+        </div>
+      ) : null}
 
-      {presentation === 'sheet' ? (
+      {showsCatalog && presentation === 'sheet' ? (
         <ClaimRewardSheetDialog
           reward={claimingReward}
           onConfirm={onConfirmClaim}

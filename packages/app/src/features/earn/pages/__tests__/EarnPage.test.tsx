@@ -88,6 +88,27 @@ describe('EarnPage', () => {
     expect(screen.getByText(rewardMocks.bobaTea.title)).toBeTruthy()
   })
 
+  /**
+   * Bugbot (`KC-PR-#65` round 1): before this fix, the first paint showed
+   * the (empty) initial slice as a real catalog — "Discover More" with all
+   * fifteen starter suggestions and live Add buttons, racing the real load.
+   * The pending message must be what shows first, through the real mount
+   * effect, not a hand-built prop.
+   */
+  it('shows the pending message, never the starter suggestions, before the real load resolves', () => {
+    const store = makeSeededEarnStore()
+    render(
+      <StoreProvider store={store}>
+        <EarnPage />
+      </StoreProvider>,
+    )
+
+    expect(screen.getByTestId('earn-catalog-pending')).toBeTruthy()
+    expect(screen.queryByText('Discover More')).toBeNull()
+    expect(screen.queryByText('Get a PS5 Pro')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Add Reward' })).toBeNull()
+  })
+
   it('renders the empty state when the seeded catalog is empty', async () => {
     const store = makeSeededEarnStore({ withCatalog: false })
     render(

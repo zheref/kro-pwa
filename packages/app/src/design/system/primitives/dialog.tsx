@@ -63,8 +63,10 @@ export function DialogContent({
         // CSS, which beats every `@layer`-wrapped Tailwind utility
         // (including `.fixed`) regardless of specificity or source order, so
         // the className alone silently loses this fight and the dialog
-        // renders un-positioned. `KC-IS-#28`.
-        style={{ position: 'fixed', ...style }}
+        // renders un-positioned. `KC-IS-#28`. `position` is spread LAST,
+        // after any caller `style`, so a caller's own `style` prop can never
+        // reintroduce the bug (Copilot round 1).
+        style={{ ...style, position: 'fixed' }}
         {...rest}
       >
         {children}

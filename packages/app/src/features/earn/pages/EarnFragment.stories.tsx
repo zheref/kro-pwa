@@ -48,6 +48,16 @@ export const LoadedTypical = {
   ),
 }
 
+export const Loading = {
+  render: () => (
+    <Stage>
+      <EarnFragment
+        {...earnFragmentPropsFrom(earnStateMocks.loading, { isLoading: true })}
+      />
+    </Stage>
+  ),
+}
+
 export const LoadedEmpty = {
   render: () => (
     <Stage>

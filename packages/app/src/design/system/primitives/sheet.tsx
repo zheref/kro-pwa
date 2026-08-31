@@ -70,8 +70,11 @@ export function SheetContent({
         // silently wins instead, and the sheet renders off-screen. An inline
         // style is the one thing no stylesheet rule can out-rank. First real
         // consumer to hit this (`KC-IS-#28`); `dialog.tsx`'s `DialogContent`
-        // carries the identical fix for the same reason.
-        style={{ position: 'fixed', ...style }}
+        // carries the identical fix for the same reason. `position` is
+        // spread LAST, after any caller `style`, so a caller's own `style`
+        // prop can never reintroduce the bug this fix exists to close
+        // (Copilot round 1).
+        style={{ ...style, position: 'fixed' }}
         {...rest}
       >
         {/*

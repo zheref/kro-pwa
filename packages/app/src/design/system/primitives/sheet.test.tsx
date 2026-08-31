@@ -74,6 +74,24 @@ describe('Sheet', () => {
     expect(screen.getByRole('dialog').style.position).toBe('fixed')
   })
 
+  /**
+   * Copilot round 1 (`KC-PR-#65`): the first draft spread `position: 'fixed'`
+   * BEFORE `...style`, so a caller's own `style` prop could override it and
+   * reintroduce the exact bug this fix exists to close. `position` is now
+   * spread last.
+   */
+  it("cannot have position:fixed overridden by a caller's own style prop", () => {
+    render(
+      <Sheet defaultOpen>
+        <SheetContent style={{ position: 'relative' }}>
+          <SheetTitle>Inbox</SheetTitle>
+        </SheetContent>
+      </Sheet>,
+    )
+
+    expect(screen.getByRole('dialog').style.position).toBe('fixed')
+  })
+
   it('keeps the grabber out of the reading order — it is a shape, not a control', () => {
     render(<InboxSheet />)
 

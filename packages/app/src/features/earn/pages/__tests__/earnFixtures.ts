@@ -57,8 +57,10 @@ import {
   selectClaimingReward,
   selectClaimingRewardId,
   selectCurrentPoints,
+  selectEarnException,
   selectIsAddingReward,
   selectIsEarnCatalogEmpty,
+  selectIsEarnLoading,
   selectLockedRewards,
 } from '../../EarnSelectors'
 import type { EarnFragmentProps } from '../EarnFragment'
@@ -141,6 +143,8 @@ export const earnFragmentPropsFrom = (
     availableSuggestions: selectAvailableSuggestions(root),
     currentPoints: selectCurrentPoints(root),
     isCatalogEmpty: selectIsEarnCatalogEmpty(root),
+    isLoading: selectIsEarnLoading(root),
+    errorMessage: selectEarnException(root)?.message ?? null,
     isAddingReward: selectIsAddingReward(root),
     addRewardDraft: selectAddRewardDraft(root),
     claimingRewardId: selectClaimingRewardId(root),

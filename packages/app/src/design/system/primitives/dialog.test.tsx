@@ -63,6 +63,19 @@ describe('Dialog', () => {
     expect(screen.getByRole('dialog').style.position).toBe('fixed')
   })
 
+  /** Copilot round 1 (`KC-PR-#65`) — see `sheet.test.tsx`'s own copy. */
+  it("cannot have position:fixed overridden by a caller's own style prop", () => {
+    render(
+      <Dialog defaultOpen>
+        <DialogContent style={{ position: 'relative' }}>
+          <DialogTitle>Triage inbox</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    )
+
+    expect(screen.getByRole('dialog').style.position).toBe('fixed')
+  })
+
   it('offers a labelled close affordance rather than an unnamed glyph', () => {
     render(<TriageDialog />)
 

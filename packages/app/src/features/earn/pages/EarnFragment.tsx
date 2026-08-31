@@ -158,13 +158,20 @@ export function EarnFragment(props: EarnFragmentProps) {
     >
       {showsMobileEarnPreferencesGear ? (
         <ToolbarSlot placement="trailing">
+          {/*
+            Colour matches the shell's own toolbar controls
+            (`MainShellFragment.tsx`'s `ToolbarButton`: `text-kro-fore
+            hover:text-kro-accent`) rather than a hard-coded white, so the
+            gear stays legible and consistent across both themes and any
+            future header treatment (Copilot round 2).
+          */}
           <button
             type="button"
             aria-label="Earn Preferences"
             onClick={onTapEarnPreferences}
-            className="inline-flex size-11 items-center justify-center rounded-kro-field outline-none focus-visible:shadow-[var(--kro-ring)]"
+            className="inline-flex size-11 items-center justify-center rounded-kro-field text-kro-fore outline-none hover:text-kro-accent focus-visible:shadow-[var(--kro-ring)]"
           >
-            <Settings size={20} aria-hidden="true" className="text-white" />
+            <Settings size={20} aria-hidden="true" />
           </button>
         </ToolbarSlot>
       ) : null}

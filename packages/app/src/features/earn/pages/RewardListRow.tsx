@@ -154,7 +154,11 @@ export function RewardListRow({
                 Claim
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" style={{ width: 320 }}>
+            <PopoverContent
+              align="end"
+              style={{ width: 320 }}
+              aria-label={`Claim ${reward.title}`}
+            >
               <ClaimConfirmationBody
                 reward={reward}
                 onConfirm={onConfirmClaim}

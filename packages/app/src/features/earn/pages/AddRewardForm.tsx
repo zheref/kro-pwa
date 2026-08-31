@@ -83,7 +83,7 @@ export function AddRewardForm({
         }}
       >
         <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-        <PopoverContent align="end" style={{ width: 340 }}>
+        <PopoverContent align="end" style={{ width: 340 }} aria-label="New Reward">
           {fields}
         </PopoverContent>
       </Popover>

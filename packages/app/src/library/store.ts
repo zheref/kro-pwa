@@ -16,6 +16,7 @@
  */
 import type { LocalStore } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
+import { captureSlice } from '../features/capture/CaptureFeature'
 import { doSlice } from '../features/do/DoFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import {
@@ -66,6 +67,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
     reducer: {
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
+      capture: captureSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

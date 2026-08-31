@@ -1,5 +1,6 @@
 import { EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialCaptureState } from '../../capture/CaptureFeature'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import type { RootState } from '../../../library/store'
 import type { DoState } from '../DoFeature'
@@ -27,6 +28,9 @@ import { withVisibilityApplied } from '../DoShifters'
 const rootWith = (slice: DoState): RootState => ({
   greeting: greetingStateMocks.idle,
   do: slice,
+  // `capture` is present only because `RootState` gained a third slice (#23);
+  // this suite asserts nothing about it.
+  capture: initialCaptureState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

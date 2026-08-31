@@ -8,6 +8,11 @@
  * Layout:
  *   `library/`  the UZF runtime primitives every feature sits on — `Result`,
  *               `Exception`, `assertNever` (`RC-7`, `RC-8`, `RC-9`).
+ *   `domain/`   the Kro domain proper, ported from KroApple's `KroCore`:
+ *               `endeavor/` (the `Endeavor` value type, its enums, the
+ *               `RepeatConfig` codec, the kind-relevance matrix and the pure
+ *               `with…` helpers) and `shared/` (the vocabulary the rest of the
+ *               domain and the Triage/Earn/Auth features share).
  *   `models/`   domain models, their `…Exception` unions and Mappers, plus the
  *               `__mocks__` spread each model ships (`RC-13`, exported under the
  *               `@kro/core/mocks` subpath so production bundles never pull them).
@@ -17,6 +22,8 @@
  * the PR for #5 for that interpretation of `RC-50`.
  */
 
+export * from './domain/endeavor'
+export * from './domain/shared'
 export * from './library/assertNever'
 export * from './library/exception'
 export * from './library/result'

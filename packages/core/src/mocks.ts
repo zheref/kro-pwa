@@ -6,4 +6,9 @@
  * never rides along into a production bundle.
  */
 
+export * from './domain/endeavor/__mocks__/Endeavor.mocks'
+export * from './domain/endeavor/__mocks__/EndeavorRelations.mocks'
+export * from './domain/shared/__mocks__/EndeavorList.mocks'
+export * from './domain/shared/__mocks__/Reward.mocks'
+export * from './domain/shared/__mocks__/User.mocks'
 export * from './models/__mocks__/Greeting.mocks'

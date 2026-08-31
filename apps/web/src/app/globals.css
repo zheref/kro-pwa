@@ -195,9 +195,9 @@
 /* ==========================================================================
    Base layer.
 
-   Deliberately thin. Chakra still renders the `/session` surface and brings
-   its own reset, so anything opinionated here would fight it until #22 retires
-   that page. What is left is what both agree on.
+   Deliberately thin. `/session` is gone (KC-IS-#22), but Chakra still renders
+   `/`, `/settings` and `/integrations` and brings its own reset, so anything
+   opinionated here would still fight it. What is left is what both agree on.
    ========================================================================== */
 
 @layer base {

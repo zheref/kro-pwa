@@ -93,6 +93,12 @@ export * from './features/plan/pages'
  * dispatches `userDidRequestCapture`; it needs nothing from here.
  */
 export * from './features/capture/pages'
+/**
+ * The session's render tier (KC-IS-#22) — the Execute destination's body and
+ * the shell-level overlays (the pill and the raised sheet). The logic tier
+ * stays unexported: a surface reaches it through these two, never directly.
+ */
+export * from './features/session/pages'
 
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {

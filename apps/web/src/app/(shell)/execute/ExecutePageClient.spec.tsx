@@ -1,13 +1,13 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import ExecuteRoute from './page'
+import { ExecutePageClient } from './ExecutePageClient'
 
 /**
- * The route file is a passive Server Component (`RC-38`/`RC-57`), so this
- * asserts only what a route file can get wrong: that it mounts the session
- * surface rather than the shared placeholder, and that the shell's selection
- * still follows the URL.
+ * A Client Page Wrapper is a passive shell (`RC-39`/`RC-57`): it imports the
+ * Page and forwards props, and there is nothing else it could do wrong. This
+ * asserts exactly that — the wrapper mounts the shared Page, and adds no markup
+ * or decision of its own.
  */
 beforeEach(() => {
   Object.defineProperty(window, 'innerWidth', {
@@ -27,11 +27,11 @@ beforeEach(() => {
     }) as unknown as MediaQueryList) as typeof window.matchMedia
 })
 
-describe('/execute', () => {
-  it('mounts the session surface as the destination’s own column', async () => {
+describe('ExecutePageClient', () => {
+  it('mounts the shared session Page and nothing else', async () => {
     const { container } = render(
       <StoreProvider store={makeStore(stubbedThunkExtra)}>
-        <ExecuteRoute />
+        <ExecutePageClient />
       </StoreProvider>,
     )
 
@@ -39,20 +39,6 @@ describe('/execute', () => {
       expect(
         container.querySelector('[data-kro-session-surface="inline"]'),
       ).toBeTruthy()
-    })
-    expect(screen.getByText('READY')).toBeTruthy()
-  })
-
-  it('selects the Execute destination, so the shell highlight follows the URL', async () => {
-    const store = makeStore(stubbedThunkExtra)
-    render(
-      <StoreProvider store={store}>
-        <ExecuteRoute />
-      </StoreProvider>,
-    )
-
-    await waitFor(() => {
-      expect(store.getState().main.selected.kind).toBe('session')
     })
   })
 })

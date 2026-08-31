@@ -24,6 +24,7 @@ import {
 } from '../DoSelectors'
 import { withVisibilityApplied } from '../DoShifters'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
@@ -33,6 +34,7 @@ const rootWith = (slice: DoState): RootState => ({
   // this suite asserts nothing about Plan or Capture.
   plan: initialPlanState,
   capture: initialCaptureState,
+  triage: initialTriageState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

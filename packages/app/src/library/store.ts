@@ -20,6 +20,7 @@ import { captureSlice } from '../features/capture/CaptureFeature'
 import { doSlice } from '../features/do/DoFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
+import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type GreetingService,
   liveGreetingService,
@@ -69,6 +70,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
       capture: captureSlice.reducer,
+      triage: triageSlice.reducer,
       plan: planSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>

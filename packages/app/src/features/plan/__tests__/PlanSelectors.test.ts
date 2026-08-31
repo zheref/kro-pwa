@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
+import { initialTriageState } from '../../triage/TriageFeature'
 import type { RootState } from '../../../library/store'
 import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
 import { PlanViewMode } from '../PlanNavigation'
@@ -60,6 +61,7 @@ const rootWith = (plan: PlanState): RootState => ({
   // this suite asserts nothing about Do or Capture.
   do: initialDoState,
   capture: initialCaptureState,
+  triage: initialTriageState,
   plan,
 })
 

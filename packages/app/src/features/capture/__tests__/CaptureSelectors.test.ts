@@ -4,6 +4,7 @@ import type { RootState } from '../../../library/store'
 import { initialDoState } from '../../do/DoFeature'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import { CaptureExceptions } from '../CaptureException'
 import type { CaptureState } from '../CaptureFeature'
 import {
@@ -50,6 +51,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   do: initialDoState,
   plan: initialPlanState,
   capture: slice,
+  triage: initialTriageState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

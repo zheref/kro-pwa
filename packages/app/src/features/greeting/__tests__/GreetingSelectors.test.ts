@@ -4,6 +4,7 @@ import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import type { GreetingState } from '../GreetingFeature'
 import { greetingStateMocks } from '../GreetingMocks'
 import {
@@ -25,6 +26,7 @@ const rootWith = (greeting: GreetingState): RootState => ({
   do: initialDoState,
   plan: initialPlanState,
   capture: initialCaptureState,
+  triage: initialTriageState,
 })
 
 describe('selectGreeting', () => {

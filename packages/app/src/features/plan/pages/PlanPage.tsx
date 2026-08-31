@@ -106,6 +106,7 @@ import {
   updateEventTimeThunk,
 } from '../PlanProducer'
 import {
+  selectPlanMatrixEndeavors,
   selectPlanMatrixItems,
   selectPlanMatrixPickerCandidates,
   selectPlanVista,
@@ -234,6 +235,7 @@ export function PlanPage({
   const rowCapabilities = useAppSelector(selectPlanRowCapabilities)
   const matrixItems = useAppSelector(selectPlanMatrixItems)
   const pickerCandidates = useAppSelector(selectPlanMatrixPickerCandidates)
+  const endeavorPool = useAppSelector(selectPlanMatrixEndeavors)
 
   const [isVisibilityOpen, setIsVisibilityOpen] = useState(false)
   /**
@@ -373,15 +375,20 @@ export function PlanPage({
    * Everything Plan has fetched, by id — the pool the list rows, the matrix
    * cards and the picker all name their targets from.
    *
-   * The authoritative day comes first so an optimistically-edited row wins over
-   * the mirror's older copy of the same id.
+   * The WHOLE pool, not the picker's candidates: a list row may be a reminder
+   * or a habit due today, which the picker's task-only filter would have
+   * dropped, and a Detail request that could not name its row would silently
+   * do nothing.
+   *
+   * The authoritative day is written last so an optimistically-edited row wins
+   * over the mirror's older copy of the same id.
    */
   const endeavorsById = useMemo(() => {
     const index = new Map<string, Endeavor>()
-    for (const endeavor of pickerCandidates) index.set(endeavor.id, endeavor)
+    for (const endeavor of endeavorPool) index.set(endeavor.id, endeavor)
     for (const endeavor of authoritative) index.set(endeavor.id, endeavor)
     return index
-  }, [authoritative, pickerCandidates])
+  }, [authoritative, endeavorPool])
 
   const openDetailFor = useCallback(
     (endeavorId: string) => {
@@ -422,17 +429,21 @@ export function PlanPage({
       }
 
       if (operation === 'delete') {
-        void dispatch(
-          deletePlanEndeavorThunk({ endeavorId, now: new Date() }),
-        ).then(() => {
-          void dispatch(
-            loadPlanDayThunk({
-              day: selectedDate,
-              reason: PlanLoadReason.manual,
-            }),
-          )
-          void dispatch(loadPlanMatrixThunk())
-        })
+        void dispatch(deletePlanEndeavorThunk({ endeavorId, now: new Date() }))
+          .unwrap()
+          .then((result) => {
+            // Only a write that landed is worth re-reading for: a failed
+            // delete leaves the row where it was, and re-reading would spin
+            // the activity signal for nothing.
+            if (!result.ok) return
+            void dispatch(
+              loadPlanDayThunk({
+                day: selectedDate,
+                reason: PlanLoadReason.manual,
+              }),
+            )
+            void dispatch(loadPlanMatrixThunk())
+          })
         return
       }
 

@@ -326,7 +326,10 @@ function ModeRow({
               ? colorVar('accent')
               : colorVar('backInner'),
             color: option.isSelected ? colorVar('onAccent') : colorVar('fore'),
-            minHeight: 28,
+            // The 44px floor, same as Find's filter chips: these are the only
+            // controls between the day picker and the rows, and a 28px chip
+            // there is a miss on a phone.
+            minHeight: 'var(--kro-size-min-touch-target)',
           }}
         >
           {option.label}

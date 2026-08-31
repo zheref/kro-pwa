@@ -263,21 +263,31 @@ export function PickEndeavorFragment({
                       data-endeavor-id={endeavor.id}
                       className="flex items-center gap-kro-small"
                     >
-                      <button
-                        type="button"
-                        role="checkbox"
-                        aria-checked={isSelected}
-                        aria-label={name}
-                        data-testid="pick-endeavor-toggle"
-                        disabled={!isEnabled}
-                        onClick={() => onToggle(endeavor.id)}
+                      {/*
+                        A LABEL around a visually-hidden checkbox, not a
+                        `<button role="checkbox">` wrapping the row: a button's
+                        content model is phrasing content, and the kit's row is
+                        a `<div>`/`<p>` tree. The label is valid, gives the
+                        native space/enter handling for free, and keeps the
+                        whole row a hit target.
+                      */}
+                      <label
                         className={cn(
                           'flex min-w-0 flex-1 cursor-pointer items-center gap-kro-small',
-                          'border-none bg-transparent p-0 text-left outline-none',
-                          'focus-visible:shadow-[var(--kro-ring)]',
-                          'disabled:cursor-not-allowed disabled:opacity-[var(--kro-opacity-disabled)]',
+                          'text-left',
+                          !isEnabled &&
+                            'cursor-not-allowed opacity-[var(--kro-opacity-disabled)]',
                         )}
                       >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          data-testid="pick-endeavor-toggle"
+                          aria-label={name}
+                          checked={isSelected}
+                          disabled={!isEnabled}
+                          onChange={() => onToggle(endeavor.id)}
+                        />
                         <span
                           aria-hidden
                           className="flex size-5 shrink-0 items-center justify-center"
@@ -312,7 +322,7 @@ export function PickEndeavorFragment({
                             locale={locale}
                           />
                         </span>
-                      </button>
+                      </label>
                       <button
                         type="button"
                         data-testid="pick-endeavor-detail"

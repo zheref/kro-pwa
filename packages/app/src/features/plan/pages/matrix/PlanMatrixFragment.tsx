@@ -376,8 +376,11 @@ function QuadrantAddMenu({
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center justify-center rounded-kro-pill border-none bg-transparent outline-none focus-visible:shadow-[var(--kro-ring)]"
         style={{
-          minWidth: 'var(--kro-size-min-pointer-target)',
-          minHeight: 'var(--kro-size-min-pointer-target)',
+          // Canon's `.kroMinTouchTarget()`, and its own note says the header
+          // costs no extra height for it: the two-line title block beside this
+          // button is already 44pt tall.
+          minWidth: 'var(--kro-size-min-touch-target)',
+          minHeight: 'var(--kro-size-min-touch-target)',
           color: colorVar(foreground),
         }}
       >
@@ -475,7 +478,7 @@ function QuadrantAction({
       className="inline-flex items-center gap-1 border-none px-kro-small font-bold text-[11px] outline-none focus-visible:shadow-[var(--kro-ring)]"
       style={{
         borderRadius: radiusVar('pill'),
-        minHeight: 'var(--kro-size-min-pointer-target)',
+        minHeight: 'var(--kro-size-min-touch-target)',
         backgroundColor: `color-mix(in srgb, ${colorVar(tint)} ${
           MATRIX_TINT_ALPHA * 100
         }%, transparent)`,

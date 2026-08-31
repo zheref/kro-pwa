@@ -37,7 +37,9 @@ const mount = (
     />,
   )
 
-const toggles = () => screen.getAllByTestId('pick-endeavor-toggle')
+/** The visually-hidden checkbox inside each row's label. */
+const toggles = () =>
+  screen.getAllByTestId('pick-endeavor-toggle') as HTMLInputElement[]
 
 describe('PickEndeavorFragment — what it shows', () => {
   it('names the quadrant it is adding to, and repeats canon subtitle', () => {
@@ -103,12 +105,10 @@ describe('PickEndeavorFragment — the seven cap', () => {
     expect(screen.getByTestId('pick-endeavor-cap-notice').textContent).toContain(
       '7 tasks at a time',
     )
-    const remaining = toggles().filter(
-      (row) => row.getAttribute('aria-checked') === 'false',
-    )
+    const remaining = toggles().filter((row) => !row.checked)
     expect(remaining.length).toBeGreaterThan(0)
     for (const row of remaining) {
-      expect((row as HTMLButtonElement).disabled).toBe(true)
+      expect(row.disabled).toBe(true)
     }
   })
 
@@ -119,12 +119,10 @@ describe('PickEndeavorFragment — the seven cap', () => {
       await userEvent.click(rows[index]!)
     }
 
-    const chosen = toggles().filter(
-      (row) => row.getAttribute('aria-checked') === 'true',
-    )
+    const chosen = toggles().filter((row) => row.checked)
     expect(chosen).toHaveLength(PICK_ENDEAVOR_SELECTION_LIMIT)
     for (const row of chosen) {
-      expect((row as HTMLButtonElement).disabled).toBe(false)
+      expect(row.disabled).toBe(false)
     }
   })
 
@@ -137,9 +135,7 @@ describe('PickEndeavorFragment — the seven cap', () => {
     await userEvent.click(toggles()[0]!)
 
     expect(screen.queryByTestId('pick-endeavor-cap-notice')).toBeNull()
-    expect(
-      toggles().every((row) => !(row as HTMLButtonElement).disabled),
-    ).toBe(true)
+    expect(toggles().every((row) => !row.disabled)).toBe(true)
   })
 
   it('confirms at most seven ids even when the pool is larger', async () => {

@@ -176,6 +176,47 @@ describe('placement and the crossfade', () => {
     expect(layer.style.bottom).toBe(`${SESSION_PILL_BOX.bottom}px`)
   })
 
+  it('hugs its content at the trailing edge instead of stretching the layer', () => {
+    const { container } = renderPill(sessionPillMocks.running)
+    const layer = container.querySelector(
+      '[data-kro-session-pill-layer]',
+    ) as HTMLElement
+    const pill = container.querySelector(
+      '[data-kro-session-pill]',
+    ) as HTMLElement
+
+    expect(layer.style.justifyContent).toBe('flex-end')
+    expect(pill.className).toContain('max-w-full')
+  })
+
+  it('carries its capsule radius inline, because the utility class loses', () => {
+    const { container } = renderPill(sessionPillMocks.running)
+    const pill = container.querySelector(
+      '[data-kro-session-pill]',
+    ) as HTMLElement
+
+    // `.kro-glass` declares an unlayered `border-radius`, which beats every
+    // Tailwind utility regardless of specificity — so `rounded-kro-pill` would
+    // silently render at the 20px surface radius.
+    expect(pill.style.borderRadius).toBe('var(--kro-radius-pill)')
+    expect(pill.className).not.toContain('rounded-kro-pill')
+  })
+
+  it('never takes a pointer on the layer, so the chrome beneath stays clickable', () => {
+    const { container } = renderPill(sessionPillMocks.running)
+    const layer = container.querySelector(
+      '[data-kro-session-pill-layer]',
+    ) as HTMLElement
+    const pill = container.querySelector(
+      '[data-kro-session-pill]',
+    ) as HTMLElement
+
+    // The layer is a full-width box with no paint; only the capsule inside it
+    // may be hit-tested, or the sidebar and tab bar under it stop working.
+    expect(layer.style.pointerEvents).toBe('none')
+    expect(pill.style.pointerEvents).toBe('auto')
+  })
+
   it('matches the FAB’s height so the two share a baseline', () => {
     const { container } = renderPill(sessionPillMocks.running)
     expect(
@@ -196,8 +237,11 @@ describe('placement and the crossfade', () => {
     // and out of the accessibility tree.
     expect(layer).toBeTruthy()
     expect(layer.style.opacity).toBe('0')
-    expect(layer.style.pointerEvents).toBe('none')
     expect(layer.getAttribute('aria-hidden')).toBe('true')
+    expect(
+      (container.querySelector('[data-kro-session-pill]') as HTMLElement).style
+        .pointerEvents,
+    ).toBe('none')
     expect(layer.style.transitionDuration).toBe(`${TOAST_LIFT.ms}ms`)
     expect(screen.queryByRole('button', { name: 'Pause session' })).toBeNull()
   })

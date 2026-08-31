@@ -42,7 +42,8 @@
  * hue both are built from, so the two hosts cannot drift apart — the sheet and
  * the modal wash their glass with it, the inline column fades it downward.
  */
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { GlassSurface } from '../../../design/system/glass/GlassSurface'
 import {
   Dialog,
   DialogContent,
@@ -56,8 +57,10 @@ import {
 import { cn } from '../../../design/system/utils/cn'
 import type { SessionPhase } from '../SessionVocabulary'
 import {
+  SESSION_GLASS_OVERRIDES,
   SESSION_PRESENTATION_SIZE,
   SessionSurfacePresentation,
+  sessionSurfaceMaterial,
   sessionSurfaceTint,
 } from './sessionSheetModel'
 
@@ -88,24 +91,42 @@ export function SessionSurfaceFragment({
 }: SessionSurfaceFragmentProps) {
   const tint = sessionSurfaceTint(phase)
 
+  /**
+   * Canon's `glassSheetPresentation(material: .thin, tint:, colorScheme:
+   * .dark)`, as one style object: the dark material, and the forced scheme that
+   * makes the view's hardcoded-white copy legible. `data-theme` is the exact
+   * attribute the tokens key their overrides off (`THEME_ATTRIBUTE`), so this is
+   * the design system's own mechanism rather than a second one.
+   */
+  const material: CSSProperties = {
+    ['--kro-glass-surface' as string]: sessionSurfaceMaterial(tint),
+  }
+
   if (presentation === SessionSurfacePresentation.inline) {
     return (
-      <section
+      <GlassSurface
+        as="section"
+        material="surface"
+        data-theme="dark"
         data-kro-session-surface="inline"
         aria-label={SURFACE_TITLE}
         className={cn(
-          'relative mx-auto flex w-full flex-col',
+          'relative mx-auto flex w-full flex-col overflow-hidden',
           className,
         )}
         style={{
+          // The panel takes the material WITHOUT the tint: canon washes the
+          // side panel's hue with `presentationBackground`'s downward gradient
+          // instead (below), and layering both would double it.
+          ['--kro-glass-surface' as string]: sessionSurfaceMaterial(null),
           minWidth: SESSION_PRESENTATION_SIZE.session.minWidth,
           maxWidth: SESSION_PRESENTATION_SIZE.session.maxWidth,
         }}
       >
         {/*
-          Canon's `presentationBackground` — a top-down gradient from the
-          phase's `detailTint` into nothing. Decorative, so it is aria-hidden
-          and never intercepts a tap.
+          Canon's `presentationBackground` — the side panel's own top-down
+          gradient from the phase's `detailTint` into nothing, over the material
+          above. Decorative, so it is aria-hidden and never intercepts a tap.
         */}
         {tint === null ? null : (
           <div
@@ -116,7 +137,7 @@ export function SessionSurfaceFragment({
           />
         )}
         <div className="relative">{children}</div>
-      </section>
+      </GlassSurface>
     )
   }
 
@@ -130,6 +151,7 @@ export function SessionSurfaceFragment({
       >
         <SheetContent
           side="bottom"
+          data-theme="dark"
           data-kro-session-surface="sheet"
           aria-describedby={undefined}
           // The content brings canon's own close button in its header, with
@@ -137,7 +159,14 @@ export function SessionSurfaceFragment({
           // duplicate control announcing the wrong thing.
           hideClose
           className={cn('max-h-[92vh] overflow-y-auto px-0 pb-0', className)}
-          style={tint === null ? undefined : { backgroundColor: tint }}
+          // The positioning is inline because the class would lose — see
+          // `SESSION_GLASS_OVERRIDES`. Without it the sheet renders in flow and
+          // never appears at the bottom edge at all.
+          style={{
+            ...material,
+            ...SESSION_GLASS_OVERRIDES.sheet,
+            borderRadius: 'var(--kro-radius-surface) var(--kro-radius-surface) 0 0',
+          }}
         >
           <DialogTitle className="sr-only">{SURFACE_TITLE}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -157,13 +186,17 @@ export function SessionSurfaceFragment({
       }}
     >
       <DialogContent
+        data-theme="dark"
         data-kro-session-surface="modal"
         hideClose
         className={cn('max-h-[92vh] overflow-y-auto px-0 pb-0', className)}
+        // Same reason as the sheet above: `fixed top-1/2 left-1/2` loses to
+        // `.kro-glass { position: relative }`, and the modal drops into flow.
         style={{
+          ...material,
+          ...SESSION_GLASS_OVERRIDES.modal,
           minWidth: SESSION_PRESENTATION_SIZE.session.minWidth,
           maxWidth: SESSION_PRESENTATION_SIZE.session.maxWidth,
-          ...(tint === null ? {} : { backgroundColor: tint }),
         }}
       >
         <DialogTitle className="sr-only">{SURFACE_TITLE}</DialogTitle>

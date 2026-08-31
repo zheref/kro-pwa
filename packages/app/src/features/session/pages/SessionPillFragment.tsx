@@ -124,11 +124,22 @@ export function SessionPillFragment({
       className={className}
       style={{
         position,
+        // The layer spans from the leading inset to the trailing one; the pill
+        // inside it HUGS ITS CONTENT and is pushed to the trailing edge, which
+        // is what canon's `ZStack(alignment: .bottomTrailing)` does — the
+        // leading padding is a cap on how far a long title may reach, never a
+        // width. Stretching it instead produced a 1300px bar on desktop.
         left: SESSION_PILL_BOX.leading,
         right: pillTrailingPadding(),
         bottom: SESSION_PILL_BOX.bottom,
+        display: 'flex',
+        justifyContent: 'flex-end',
         opacity: isVisible ? 1 : 0,
-        pointerEvents: isVisible ? 'auto' : 'none',
+        // NEVER on the layer: it is a full-width box with no paint, so a
+        // pointer-transparent layer is the only thing that keeps the sidebar
+        // and the tab bar underneath it clickable. `ActiveToastLayer` makes the
+        // same split for the same reason.
+        pointerEvents: 'none',
         transitionProperty: 'opacity',
         transitionDuration: `${TOAST_LIFT.ms}ms`,
         transitionTimingFunction: TOAST_LIFT.easing,
@@ -138,9 +149,16 @@ export function SessionPillFragment({
       <GlassSurface
         material="surface"
         data-kro-session-pill={pill.tint}
-        className="flex items-center overflow-hidden rounded-kro-pill"
+        className="flex min-w-0 max-w-full items-center overflow-hidden"
         style={{
           height: SESSION_PILL_BOX.height,
+          // Inline, not `rounded-kro-pill`: `.kro-glass` declares its own
+          // `border-radius` **unlayered**, and an unlayered rule beats every
+          // Tailwind utility whatever the specificity — so the class loses and
+          // the capsule comes out at the 20px surface radius. Same cascade
+          // defect the two portalled hosts hit; see `SESSION_GLASS_OVERRIDES`.
+          borderRadius: 'var(--kro-radius-pill)',
+          pointerEvents: isVisible ? 'auto' : 'none',
           // `null` means "no custom tint" — the pill takes the plain glass.
           ...(tint === null ? {} : { backgroundColor: tint }),
         }}
@@ -151,7 +169,7 @@ export function SessionPillFragment({
           data-kro-session-pill-body=""
           aria-label={`${pill.title}, ${pill.clockLabel}`}
           title="Opens the session sheet"
-          className="flex min-w-0 flex-1 items-center gap-2.5 self-stretch pr-1.5 pl-4 text-left outline-none focus-visible:shadow-[var(--kro-ring)]"
+          className="flex min-w-0 items-center gap-2.5 self-stretch pr-1.5 pl-4 text-left outline-none focus-visible:shadow-[var(--kro-ring)]"
         >
           {pill.symbol.length > 0 ? (
             <span
@@ -163,7 +181,9 @@ export function SessionPillFragment({
             </span>
           ) : null}
 
-          <span className="min-w-0 flex-1 truncate font-semibold text-kro-fore text-sm">
+          {/* Canon's `Spacer(minLength: 8)` is the gap; the title is what
+              shrinks when the pill runs out of room. */}
+          <span className="min-w-0 truncate font-semibold text-kro-fore text-sm">
             {pill.title}
           </span>
 

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { ActiveToastLayer } from '../../../design/chrome/toast/ActiveToastLayer'
+import { toActiveToast } from '../../../design/chrome/toast/activeToast'
 import { SessionPillFragment } from './SessionPillFragment'
 import { sessionPillMocks } from './SessionSurfaceMocks'
 
@@ -32,10 +34,12 @@ const STAGE_BACKDROP =
 function Stage({
   theme,
   label,
+  height = 190,
   children,
 }: {
   readonly theme: 'light' | 'dark'
   readonly label: string
+  readonly height?: number
   readonly children: ReactNode
 }) {
   return (
@@ -43,7 +47,7 @@ function Stage({
       data-theme={theme}
       style={{
         position: 'relative',
-        height: 190,
+        height,
         overflow: 'hidden',
         background: STAGE_BACKDROP,
         fontFamily: 'system-ui, sans-serif',
@@ -99,12 +103,13 @@ function Stage({
 const bothSchemes = (
   label: string,
   render: (theme: 'light' | 'dark') => ReactNode,
+  height?: number,
 ) => (
   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-    <Stage theme="light" label={label}>
+    <Stage theme="light" label={label} height={height}>
       {render('light')}
     </Stage>
-    <Stage theme="dark" label={label}>
+    <Stage theme="dark" label={label} height={height}>
       {render('dark')}
     </Stage>
   </div>
@@ -179,6 +184,48 @@ export const FadedOut = {
         onTapComplete={noop}
       />
     )),
+}
+
+/**
+ * The toast lifted clear of the **real** pill — acceptance criterion 3.
+ *
+ * `#15` already ships a `LiftAbovePill` story, but it had to stand the pill in
+ * with a grey rectangle: the pill did not exist yet. This is the same layout
+ * with the real thing underneath, which is the only version that proves the two
+ * agree — both read their geometry from `CHROME_LAYOUT`, and the lift is
+ * `pillBottomPadding + pillHeight + pillToastSpacing − toastBottomPadding`,
+ * derived rather than measured.
+ *
+ * **This is also the only place the pairing can be seen at all today.** No
+ * merged surface mounts `ActiveToastHost` at shell level yet, so the built app
+ * has no toast to lift — reported as a cross-lane need rather than mounted from
+ * this lane, where it would have to be a sibling of the pill rather than an
+ * ancestor of the tree that raises toasts.
+ */
+export const ToastLiftAbovePill = {
+  name: 'Toast lifts clear of the pill (AC 3)',
+  render: () =>
+    bothSchemes(
+      'Toast + pill',
+      () => (
+        <>
+          <ActiveToastLayer
+            toast={toActiveToast({
+              message: 'Prepare slides marked complete',
+              icon: 'checkmark.circle.fill',
+              primaryAction: { title: 'Undo', onSelect: noop },
+            })}
+            isSessionPillVisible
+            position="absolute"
+          />
+          {pill(sessionPillMocks.running)}
+        </>
+      ),
+      // Tall enough to hold the lift: the toast rises
+      // `pillBottomPadding + pillHeight + pillToastSpacing − toastBottomPadding`
+      // clear of the pill, so a 190px stage clips the thing being demonstrated.
+      300,
+    ),
 }
 
 export const NoSession = {

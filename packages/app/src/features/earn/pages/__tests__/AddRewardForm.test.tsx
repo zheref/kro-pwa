@@ -134,10 +134,21 @@ describe('AddRewardForm', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
-  it('anchors the popover presentation to the trigger and shows the same fields', () => {
+  /**
+   * Closed, deliberately: mounting an OPEN `PopoverContent` under jsdom costs
+   * seconds per mount and trips Vitest's own worker RPC watchdog (measured in
+   * `design/system/primitives/__tests__/radixEnvironment.tsx`; reproduced by
+   * this file's own first draft in CI). This asserts the trigger anchors the
+   * popover (its own `PopoverTrigger`, correctly `aria-haspopup="dialog"`)
+   * without paying that cost — the form's actual on-screen content in the
+   * desktop idiom is `EarnFragment.stories.tsx`'s `AddRewardDesktop` story
+   * (a real browser) and this PR's real-browser screenshots, exactly the
+   * split `popover.test.tsx` already draws.
+   */
+  it('anchors the popover presentation to its own trigger, not opened by default', () => {
     render(
       <AddRewardForm
-        isOpen
+        isOpen={false}
         draft={baseDraft}
         presentation="popover"
         trigger={<button type="button">FAB</button>}
@@ -150,6 +161,9 @@ describe('AddRewardForm', () => {
       />,
     )
 
-    expect(screen.getByLabelText('What do you want to earn?')).toBeTruthy()
+    const trigger = screen.getByRole('button', { name: 'FAB' })
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(document.querySelector('[data-slot="popover-content"]')).toBeNull()
   })
 })

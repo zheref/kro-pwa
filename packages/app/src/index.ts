@@ -46,6 +46,14 @@ export {
  */
 export * from './features/main'
 
+/**
+ * The Capture & Inbox render tier (KC-IS-#24) — the capture prompt, the Inbox
+ * in all three of its presentations, and the `CaptureOverlays` mount the shell
+ * wrapper anchors in one line. A feature child that wants to open the prompt
+ * dispatches `userDidRequestCapture`; it needs nothing from here.
+ */
+export * from './features/capture/pages'
+
 // SCAFFOLDING — the demo feature proving the loop. Feature children replace it.
 export {
   type GreetingLoadState,

@@ -44,6 +44,7 @@ import {
 } from '../EarnSelectors'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 
 const rootWith = (earn: EarnState): RootState => ({
   greeting: initialGreetingState,
@@ -61,6 +62,7 @@ const rootWith = (earn: EarnState): RootState => ({
   settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 const loaded = earnStateMocks.loadedTypical

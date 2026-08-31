@@ -50,6 +50,7 @@ import {
 } from '../CaptureShifters'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: CaptureState): RootState => ({
@@ -69,6 +70,7 @@ const rootWith = (slice: CaptureState): RootState => ({
   settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 const loaded = rootWith(captureStateMocks.loadedPool)

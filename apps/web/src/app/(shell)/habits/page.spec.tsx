@@ -4,13 +4,15 @@ import { describe, expect, it } from 'vitest'
 import HabitsRoute from './page'
 
 describe('/habits', () => {
-  it("mounts the Habits destination inside the shell's store", () => {
+  it("mounts the Habits Thirst vote surface inside the shell's store", () => {
+    const store = makeStore(stubbedThunkExtra)
     render(
-      <StoreProvider store={makeStore(stubbedThunkExtra)}>
+      <StoreProvider store={store}>
         <HabitsRoute />
       </StoreProvider>,
     )
 
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Habits')
+    expect(store.getState().main.selected.kind).toBe('habits')
   })
 })

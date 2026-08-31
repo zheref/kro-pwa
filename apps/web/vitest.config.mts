@@ -35,6 +35,12 @@ export default defineConfig({
       '@kro/app/design': fileURLToPath(
         new URL('../../packages/app/src/design/index.ts', import.meta.url),
       ),
+      '@kro/app/thirst': fileURLToPath(
+        new URL(
+          '../../packages/app/src/features/thirst/index.ts',
+          import.meta.url,
+        ),
+      ),
       '@kro/app': fileURLToPath(
         new URL('../../packages/app/src/index.ts', import.meta.url),
       ),

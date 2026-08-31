@@ -1,5 +1,6 @@
 export * from './AppleRemindersRuleset'
 export * from './FieldOwnership'
+export * from './GoogleCalendarRuleset'
 export * from './IdentityIndex'
 export * from './KindPartition'
 export * from './KroEnhanced'

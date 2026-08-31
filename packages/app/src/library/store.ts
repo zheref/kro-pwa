@@ -36,6 +36,13 @@ import {
   makeLiveAuthService,
   stubbedAuthService,
 } from '../services/auth/AuthService'
+import type { PlanHost } from '../features/plan/PlanHosts'
+import {
+  type GoogleCalendarService,
+  makeGoogleCalendarPlanHost,
+  makeLiveGoogleCalendarService,
+  stubbedGoogleCalendarService,
+} from '../services/googleCalendar'
 import {
   type GreetingService,
   liveGreetingService,
@@ -126,6 +133,24 @@ export interface ThunkExtra {
    * gated behind `supabaseHosting`, which is OFF at `statusQuo`.
    */
   readonly endeavorSync: EndeavorSyncService
+  /**
+   * Google Calendar (#33) — connection state, the day-range read, the calendar
+   * inventory and session logging. The **browser's** binding: it calls this
+   * app's own `/api/google/*` routes, never Google, so no OAuth token exists on
+   * this side of the wire at all (`SEC-5`).
+   */
+  readonly googleCalendar: GoogleCalendarService
+  /**
+   * The same service, already adapted to #18's `PlanHost` port.
+   *
+   * A second field rather than an adapter built inside `planHostsFor`, because
+   * `check-uzf-boundaries.mjs` refuses a feature file that imports anything
+   * under `services/` (`RC-6`) — and `makeGoogleCalendarPlanHost` needs the
+   * Service's type. This file is the one the check exempts, so the adaptation
+   * happens here and `planHostsFor` reads a field. `GoogleCalendarPlanHost.ts`
+   * records the same reasoning from the other side.
+   */
+  readonly googleCalendarPlanHost: PlanHost
 }
 
 /**
@@ -136,6 +161,13 @@ export interface ThunkExtra {
  * same instance down when the composition root lands (#13).
  */
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
+
+/**
+ * The live Google binding, built once so the service and the `PlanHost` adapted
+ * from it are the same instance — a second construction would be a second
+ * in-flight cache the day the service grows one.
+ */
+const liveGoogleCalendar: GoogleCalendarService = makeLiveGoogleCalendarService()
 
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
@@ -157,6 +189,8 @@ export const liveThunkExtra: ThunkExtra = {
     transport: makeLiveEndeavorCloudTransport(liveSupabaseClientProvider),
     isCloudEnabled: supabaseHostingGate(liveFeatureFlags),
   }),
+  googleCalendar: liveGoogleCalendar,
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(liveGoogleCalendar),
 }
 
 /**
@@ -182,6 +216,12 @@ export const stubbedThunkExtra: ThunkExtra = {
   authService: stubbedAuthService,
   settingsSync: stubbedSettingsSyncService,
   endeavorSync: stubbedEndeavorSyncService,
+  // Disconnected by default, exactly like `supabaseHosting` being off: a suite
+  // asserting on shipping behaviour sees a day with no Google events, which is
+  // what a user who has never connected sees. A suite that wants events builds
+  // its own binding with `makeStubbedGoogleCalendarService({ connection: … })`.
+  googleCalendar: stubbedGoogleCalendarService,
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(stubbedGoogleCalendarService),
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>

@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./design": "./src/design/index.ts",
+    "./google": "./src/services/googleCalendar/index.ts",
     "./design/system/styles.css": "./src/design/system/styles.css",
     "./package.json": "./package.json"
   },

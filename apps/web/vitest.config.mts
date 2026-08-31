@@ -21,6 +21,20 @@ export default defineConfig({
       '@kro/core': fileURLToPath(
         new URL('../../packages/core/src/index.ts', import.meta.url),
       ),
+      // Subpath exports come FIRST: a string alias matches by prefix, so the
+      // bare `@kro/app` entry below would otherwise rewrite `@kro/app/google`
+      // to `…/src/index.ts/google`. Mirrors `exports` in
+      // `packages/app/package.json`, which is what Next and tsc resolve
+      // through. (KC-IS-#33)
+      '@kro/app/google': fileURLToPath(
+        new URL(
+          '../../packages/app/src/services/googleCalendar/index.ts',
+          import.meta.url,
+        ),
+      ),
+      '@kro/app/design': fileURLToPath(
+        new URL('../../packages/app/src/design/index.ts', import.meta.url),
+      ),
       '@kro/app': fileURLToPath(
         new URL('../../packages/app/src/index.ts', import.meta.url),
       ),

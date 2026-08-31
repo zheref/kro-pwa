@@ -1,3 +1,8 @@
+import {
+  PersistenceExceptions,
+  isPersistenceException,
+  persistenceExceptionKinds,
+} from '@kro/core'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'
 import {
@@ -204,5 +209,61 @@ describe('localStoreException — the DOMException names that matter', () => {
   it('never throws on a non-Error value', () => {
     expect(localStoreException('a string').kind).toBe('writeFailed')
     expect(localStoreException(null).kind).toBe('writeFailed')
+  })
+
+  it('PASSES THROUGH a value that is already a PersistenceException', () => {
+    // `openKroDatabase` rejects with this from its `onblocked` handler; no
+    // platform error expresses "another tab holds the old version".
+    const original = PersistenceExceptions.blocked('another tab holds v1')
+    expect(localStoreException(original)).toBe(original)
+  })
+
+  it('keeps `blocked`s recoverable remedy instead of flattening it', () => {
+    const mapped = localStoreException(PersistenceExceptions.blocked('v1 held'))
+    expect(mapped.kind).toBe('blocked')
+    expect(mapped.recoverable).toBe(true)
+  })
+
+  it('never yields the `[object Object]` message a re-wrap would produce', () => {
+    expect(
+      localStoreException(PersistenceExceptions.quotaExceeded('full')).message,
+    ).not.toContain('[object Object]')
+  })
+
+  it('does not mistake an ordinary Error for one of ours', () => {
+    // An Error has `message`, but no `kind` and no `recoverable`.
+    expect(localStoreException(new Error('plain')).kind).toBe('writeFailed')
+  })
+})
+
+describe('isPersistenceException — the guard the pass-through rests on', () => {
+  it('accepts every kind the union declares', () => {
+    for (const kind of persistenceExceptionKinds) {
+      expect(
+        isPersistenceException({ kind, message: 'x', recoverable: true }),
+      ).toBe(true)
+    }
+  })
+
+  it('rejects a look-alike whose kind names nothing in the union', () => {
+    expect(
+      isPersistenceException({
+        kind: 'networkFailed',
+        message: 'x',
+        recoverable: true,
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects a partial shape missing `recoverable`', () => {
+    expect(isPersistenceException({ kind: 'blocked', message: 'x' })).toBe(
+      false,
+    )
+  })
+
+  it('rejects an Error, a string and null', () => {
+    expect(isPersistenceException(new Error('x'))).toBe(false)
+    expect(isPersistenceException('blocked')).toBe(false)
+    expect(isPersistenceException(null)).toBe(false)
   })
 })

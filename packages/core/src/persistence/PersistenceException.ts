@@ -33,6 +33,43 @@ export type PersistenceException =
   | Exception<'readFailed'>
   | Exception<'writeFailed'>
 
+/** Every kind, so a narrowing guard cannot silently miss one. */
+export const persistenceExceptionKinds: readonly PersistenceException['kind'][] =
+  [
+    'unavailable',
+    'blocked',
+    'quotaExceeded',
+    'malformedRecord',
+    'notFound',
+    'readFailed',
+    'writeFailed',
+  ]
+
+/**
+ * Whether a caught value **already is** one of these.
+ *
+ * This exists because the boundary is not one-directional: some failures
+ * originate as a `PersistenceException` rather than as a `DOMException` —
+ * `openKroDatabase` rejects with `PersistenceExceptions.blocked(...)` from its
+ * `onblocked` handler, which no platform error can express. A `toException`
+ * mapper that did not check would re-wrap it, and `blocked` (recoverable —
+ * *close the other tab*) would arrive at the surface as `writeFailed` with a
+ * message of `[object Object]`: the one failure with a real, actionable remedy,
+ * stripped of it.
+ */
+export const isPersistenceException = (
+  value: unknown,
+): value is PersistenceException => {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Partial<PersistenceException>
+  return (
+    typeof candidate.kind === 'string' &&
+    typeof candidate.message === 'string' &&
+    typeof candidate.recoverable === 'boolean' &&
+    (persistenceExceptionKinds as readonly string[]).includes(candidate.kind)
+  )
+}
+
 export const PersistenceExceptions = {
   unavailable: (detail: string): PersistenceException =>
     exception('unavailable', `Local storage is unavailable: ${detail}`, false),

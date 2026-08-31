@@ -39,7 +39,7 @@
  * say) would make anonymous rows invisible to any query that used it. That is
  * why `allForOwner` and `countAnonymous` filter in JavaScript instead.
  */
-import { PersistenceExceptions } from '@kro/core'
+import { PersistenceExceptions, isPersistenceException } from '@kro/core'
 import type { PersistenceException } from '@kro/core'
 
 /** One database, as canon has one `ModelContainer`. */
@@ -150,6 +150,13 @@ export const applyKroSchema = (
  * same rule a Mapper's `toException` follows.
  */
 export const localStoreException = (error: unknown): PersistenceException => {
+  // Some failures are already one of ours — `openKroDatabase` rejects with
+  // `PersistenceExceptions.blocked(...)` from its `onblocked` handler, because
+  // no platform error expresses "another tab holds the old version". Re-wrapping
+  // it would turn the one failure with an actionable remedy into `writeFailed`
+  // with a message of `[object Object]`.
+  if (isPersistenceException(error)) return error
+
   const name =
     typeof error === 'object' && error !== null && 'name' in error
       ? String((error as { name: unknown }).name)

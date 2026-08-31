@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   type PersistenceException,
   PersistenceExceptions,
+  isPersistenceException,
   persistenceExceptionCopy,
+  persistenceExceptionKinds,
 } from '../PersistenceException'
 
 const everyKind: readonly PersistenceException[] = [
@@ -66,5 +68,42 @@ describe('persistenceExceptionCopy — user-facing, derived from kind alone', ()
     for (const value of everyKind) {
       expect(persistenceExceptionCopy(value).length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('isPersistenceException — so a mapper never re-wraps one of ours', () => {
+  it('lists every kind the union declares, and no more', () => {
+    expect([...persistenceExceptionKinds].sort()).toEqual(
+      [...new Set(everyKind.map((value) => value.kind))].sort(),
+    )
+  })
+
+  it('accepts every constructed member', () => {
+    for (const value of everyKind) {
+      expect(isPersistenceException(value)).toBe(true)
+    }
+  })
+
+  it('rejects a look-alike whose kind names nothing in the union', () => {
+    expect(
+      isPersistenceException({
+        kind: 'networkFailed',
+        message: 'x',
+        recoverable: true,
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects a shape missing `recoverable` — an Exception is all three fields', () => {
+    expect(isPersistenceException({ kind: 'blocked', message: 'x' })).toBe(
+      false,
+    )
+  })
+
+  it('rejects a raw Error, a string, null and an array', () => {
+    expect(isPersistenceException(new Error('blocked'))).toBe(false)
+    expect(isPersistenceException('blocked')).toBe(false)
+    expect(isPersistenceException(null)).toBe(false)
+    expect(isPersistenceException([])).toBe(false)
   })
 })

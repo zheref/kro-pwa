@@ -42,3 +42,11 @@ export * from './models/GreetingException'
 export * from './models/GreetingMapper'
 export * from './models/GreetingResponse'
 export * from './utils/durations'
+
+// --- vistas (#9) -----------------------------------------------------------
+// The Vista system: the declarative registry that gives every endeavor-listing
+// surface its query, its user-mutable lens, its ordered row capabilities and
+// its presentation. Appended as a block rather than folded into the sorted list
+// above so a parallel child appending after the `domain/` exports and this one
+// never contend for the same line.
+export * from './vistas'

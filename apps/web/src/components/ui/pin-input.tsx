@@ -1,5 +1,5 @@
-import { PinInput as ChakraPinInput, Group } from "@chakra-ui/react"
-import * as React from "react"
+import { PinInput as ChakraPinInput, Group } from '@chakra-ui/react'
+import * as React from 'react'
 
 export interface PinInputProps extends ChakraPinInput.RootProps {
   rootRef?: React.RefObject<HTMLDivElement | null>

@@ -1,4 +1,4 @@
-import type { IconButtonProps, StackProps } from "@chakra-ui/react"
+import type { IconButtonProps, StackProps } from '@chakra-ui/react'
 import {
   ColorPicker as ChakraColorPicker,
   For,
@@ -8,9 +8,9 @@ import {
   Stack,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import * as React from "react"
-import { LuCheck, LuPipette } from "react-icons/lu"
+} from '@chakra-ui/react'
+import * as React from 'react'
+import { LuCheck, LuPipette } from 'react-icons/lu'
 
 export const ColorPickerTrigger = React.forwardRef<
   HTMLButtonElement,
@@ -30,7 +30,7 @@ export const ColorPickerTrigger = React.forwardRef<
 
 export const ColorPickerInput = React.forwardRef<
   HTMLInputElement,
-  Omit<ChakraColorPicker.ChannelInputProps, "channel">
+  Omit<ChakraColorPicker.ChannelInputProps, 'channel'>
 >(function ColorHexInput(props, ref) {
   return <ChakraColorPicker.ChannelInput channel="hex" ref={ref} {...props} />
 })
@@ -121,14 +121,14 @@ export const ColorPickerChannelSlider = React.forwardRef<
 export const ColorPickerSwatchTrigger = React.forwardRef<
   HTMLButtonElement,
   ChakraColorPicker.SwatchTriggerProps & {
-    swatchSize?: ChakraColorPicker.SwatchTriggerProps["boxSize"]
+    swatchSize?: ChakraColorPicker.SwatchTriggerProps['boxSize']
   }
 >(function ColorPickerSwatchTrigger(props, ref) {
   const { swatchSize, children, ...rest } = props
   return (
     <ChakraColorPicker.SwatchTrigger
       ref={ref}
-      style={{ ["--color" as string]: props.value }}
+      style={{ ['--color' as string]: props.value }}
       {...rest}
     >
       {children || (
@@ -155,10 +155,10 @@ export const ColorPickerRoot = React.forwardRef<
 })
 
 const formatMap = {
-  rgba: ["red", "green", "blue", "alpha"],
-  hsla: ["hue", "saturation", "lightness", "alpha"],
-  hsba: ["hue", "saturation", "brightness", "alpha"],
-  hexa: ["hex", "alpha"],
+  rgba: ['red', 'green', 'blue', 'alpha'],
+  hsla: ['hue', 'saturation', 'lightness', 'alpha'],
+  hsba: ['hue', 'saturation', 'brightness', 'alpha'],
+  hexa: ['hex', 'alpha'],
 } as const
 
 export const ColorPickerChannelInputs = React.forwardRef<

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback } from 'react'
-import { SessionStatus, SessionStatusFocused } from '@kro/core'
+import { type SessionStatus, SessionStatusFocused } from '@kro/core'
 import DurationDial from '@/components/DurationDial'
 import { Text, VStack } from '@chakra-ui/react'
 
@@ -18,18 +18,18 @@ import { Text, VStack } from '@chakra-ui/react'
  * @property {function} [userDidDragDial] - Callback for when the user drags the dial
  */
 interface SessionDialProps {
-    // Define any props you need for the SessionDial component
-    status: SessionStatus
-    targetConfig: {
-        duration?: number
-    }
-    remainingDuration: number
-    timeRangeForDisplay: string
-    fragmentsCountForDisplay: string
-    isRunning?: boolean
+  // Define any props you need for the SessionDial component
+  status: SessionStatus
+  targetConfig: {
+    duration?: number
+  }
+  remainingDuration: number
+  timeRangeForDisplay: string
+  fragmentsCountForDisplay: string
+  isRunning?: boolean
 
-    // User Events
-    userDidDragDial?: (duration: number) => void
+  // User Events
+  userDidDragDial?: (duration: number) => void
 }
 
 /**
@@ -53,47 +53,51 @@ interface SessionDialProps {
  * @see SessionStatusFocused for focused session status
  * @see SessionDialProps for the properties of the SessionDial component
  */
-export default function SessionDial(
-    {
-        status,
-        targetConfig,
-        remainingDuration,
-        timeRangeForDisplay,
-        fragmentsCountForDisplay,
-        isRunning = false,
-        userDidDragDial = () => {},
-    }: SessionDialProps
-) {
-    const userDidDragDialCallback = useCallback(userDidDragDial, [])
+export default function SessionDial({
+  status,
+  targetConfig,
+  remainingDuration,
+  timeRangeForDisplay,
+  fragmentsCountForDisplay,
+  isRunning = false,
+  userDidDragDial = () => {},
+}: SessionDialProps) {
+  const userDidDragDialCallback = useCallback(userDidDragDial, [])
 
-    return (
-        <VStack gap={3}>
-            {status instanceof SessionStatusFocused ? (
-                <DurationDial
-                    duration={targetConfig.duration ?? 0}
-                    onDurationChange={userDidDragDialCallback}
-                    isRunning={isRunning}
-                />
-            ) : (
-                <DurationDial
-                    duration={remainingDuration}
-                    onDurationChange={userDidDragDialCallback}
-                    isRunning={isRunning}
-                />
-            )}
-            <VStack gap={1} minH="40px">
-                <Text fontWeight="500" fontSize="12px" color={{
-                    base: 'gray.600',
-                    _dark: 'gray.400',
-                }}>
-                    {isRunning
-                        ? timeRangeForDisplay
-                        : timeRangeForDisplay}
-                </Text>
-                <Text fontWeight="500" fontSize="12px" color={{base: 'gray.600', _dark: 'gray.400'}}>
-                    {fragmentsCountForDisplay}
-                </Text>
-            </VStack>
-        </VStack>
-    )
+  return (
+    <VStack gap={3}>
+      {status instanceof SessionStatusFocused ? (
+        <DurationDial
+          duration={targetConfig.duration ?? 0}
+          onDurationChange={userDidDragDialCallback}
+          isRunning={isRunning}
+        />
+      ) : (
+        <DurationDial
+          duration={remainingDuration}
+          onDurationChange={userDidDragDialCallback}
+          isRunning={isRunning}
+        />
+      )}
+      <VStack gap={1} minH="40px">
+        <Text
+          fontWeight="500"
+          fontSize="12px"
+          color={{
+            base: 'gray.600',
+            _dark: 'gray.400',
+          }}
+        >
+          {isRunning ? timeRangeForDisplay : timeRangeForDisplay}
+        </Text>
+        <Text
+          fontWeight="500"
+          fontSize="12px"
+          color={{ base: 'gray.600', _dark: 'gray.400' }}
+        >
+          {fragmentsCountForDisplay}
+        </Text>
+      </VStack>
+    </VStack>
+  )
 }

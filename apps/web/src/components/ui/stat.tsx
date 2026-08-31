@@ -3,9 +3,9 @@ import {
   type BadgeProps,
   Stat as ChakraStat,
   FormatNumber,
-} from "@chakra-ui/react"
-import { InfoTip } from "./toggle-tip"
-import * as React from "react"
+} from '@chakra-ui/react'
+import { InfoTip } from './toggle-tip'
+import * as React from 'react'
 
 interface StatLabelProps extends ChakraStat.LabelProps {
   info?: React.ReactNode

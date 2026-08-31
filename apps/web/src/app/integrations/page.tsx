@@ -4,5 +4,5 @@ export default function IntegrationsPage() {
       <h1>Integrations</h1>
       <p>This is the integrations page.</p>
     </div>
-  );
-} 
+  )
+}

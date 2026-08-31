@@ -1,6 +1,6 @@
-import { HStack, IconButton, NumberInput } from "@chakra-ui/react"
-import * as React from "react"
-import { LuMinus, LuPlus } from "react-icons/lu"
+import { HStack, IconButton, NumberInput } from '@chakra-ui/react'
+import * as React from 'react'
+import { LuMinus, LuPlus } from 'react-icons/lu'
 
 export interface StepperInputProps extends NumberInput.RootProps {
   label?: React.ReactNode

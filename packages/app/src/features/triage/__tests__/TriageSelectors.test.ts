@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import { initialPlanState } from '../../plan/PlanState'
 import type { TriageState } from '../TriageFeature'
@@ -55,11 +57,14 @@ import { initialTriageState } from '../TriageFeature'
 const rootWith = (slice: TriageState): RootState => ({
   greeting: greetingStateMocks.idle,
   // Present only because `RootState` names every registered slice (#16, #18,
-  // #23); this suite asserts nothing about Do, Capture or Plan.
+  // #23, #29); this suite asserts nothing about Do, Capture, Plan, Find or
+  // Endeavor Detail.
   do: initialDoState,
   capture: initialCaptureState,
   triage: slice,
   plan: initialPlanState,
+  find: initialFindState,
+  endeavorDetail: initialEndeavorDetailState,
 })
 
 describe('lifecycle selectors', () => {

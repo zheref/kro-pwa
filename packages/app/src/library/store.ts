@@ -18,6 +18,8 @@ import type { LocalStore } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { captureSlice } from '../features/capture/CaptureFeature'
 import { doSlice } from '../features/do/DoFeature'
+import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFeature'
+import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
@@ -72,6 +74,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       capture: captureSlice.reducer,
       triage: triageSlice.reducer,
       plan: planSlice.reducer,
+      find: findSlice.reducer,
+      endeavorDetail: endeavorDetailSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

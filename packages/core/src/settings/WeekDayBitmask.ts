@@ -14,6 +14,7 @@
  * value on every device.
  */
 import { WeekDay, weekDays } from '../domain/shared/WeekDay'
+import { assertNever } from '../library/assertNever'
 
 /**
  * `var bit: Int` — the stable bit position for the persisted bitmask. Monday is
@@ -36,6 +37,12 @@ export const weekDayBit = (day: WeekDay): number => {
       return 5
     case WeekDay.sunday:
       return 6
+    default:
+      // Closed with `assertNever` (`RC-9`) rather than left exhaustive: a value
+      // forced past the type by an unchecked decode would otherwise fall
+      // through as `undefined`, and `1 << undefined` is `1` — a silently wrong
+      // bitmask instead of a loud failure.
+      return assertNever(day)
   }
 }
 

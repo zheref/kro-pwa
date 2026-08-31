@@ -9,6 +9,7 @@ import {
   workingHoursStartOption,
 } from '../SettingOptions'
 import { makeTimeOfDay } from '../TimeOfDay'
+import { weekDaysFromBitmask } from '../WeekDayBitmask'
 
 describe('encodeSettingValue', () => {
   it('flattens a clock time to minutes from midnight before it is stored', () => {
@@ -42,6 +43,45 @@ describe('encodeSettingValue', () => {
     expect(encodeSettingValue(settingOptionMocks.duration, true)).toBeNull()
     expect(
       encodeSettingValue(workingHoursStartOption, 'nine o clock'),
+    ).toBeNull()
+  })
+
+  it('refuses a clock time whose fields are not real numbers', () => {
+    expect(
+      encodeSettingValue(workingHoursStartOption, {
+        hour: Number.NaN,
+        minute: 0,
+      }),
+    ).toBeNull()
+    expect(
+      encodeSettingValue(workingHoursStartOption, {
+        hour: 9,
+        minute: Number.POSITIVE_INFINITY,
+      }),
+    ).toBeNull()
+  })
+
+  it('refuses NaN and Infinity for every numeric option', () => {
+    expect(
+      encodeSettingValue(settingOptionMocks.duration, Number.NaN),
+    ).toBeNull()
+    expect(
+      encodeSettingValue(workingDaysOption, Number.POSITIVE_INFINITY),
+    ).toBeNull()
+  })
+
+  it('refuses an array of strings that are not weekdays, prototype keys included', () => {
+    expect(
+      // `'toString' in WeekDay` is true through the prototype chain; membership
+      // is tested against the case list so it cannot encode to a mask of 0.
+      encodeSettingValue(workingDaysOption, [
+        'toString',
+      ] as unknown as readonly WeekDay[]),
+    ).toBeNull()
+    expect(
+      encodeSettingValue(workingDaysOption, [
+        'funday',
+      ] as unknown as readonly WeekDay[]),
     ).toBeNull()
   })
 })
@@ -94,9 +134,13 @@ describe('decodeSettingValue', () => {
     expect(decodeSettingValue(planDayViewRangeOption, 'nocturnal')).toBe('full')
   })
 
-  it('discards a weekday bitmask carrying an impossible bit', () => {
+  it('keeps a weekday bitmask carrying an impossible bit, leaving the domain to ignore it', () => {
+    // Shape, not range: canon reads 255 back as all seven days rather than
+    // discarding a real selection, and `weekDaysFromBitmask` does the same.
+    // `isStorableSettingValue` is the stricter, editor-side check.
     expect(decodeSettingValue(workingDaysOption, 96)).toBe(96)
-    expect(decodeSettingValue(workingDaysOption, 255)).toBe(31)
+    expect(decodeSettingValue(workingDaysOption, 255)).toBe(255)
+    expect(weekDaysFromBitmask(255)).toHaveLength(7)
   })
 
   it('round-trips every mock option through encode and back', () => {

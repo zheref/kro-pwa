@@ -28,12 +28,19 @@
  * Ported here as a named gate rather than re-spelled at each call site, because
  * the failure mode is silent: a surface that checks only the flag ships a
  * control the user switched off, and one that checks only the preference ships
- * unfinished work. A `Gate` value makes both halves reviewable in one place, and
- * the truth table in `__tests__/FeatureFlagGating.test.ts` pins all four rows.
+ * unfinished work. A `FeatureGate` value makes both halves reviewable in one
+ * place, and the truth table in `__tests__/FeatureFlagGating.test.ts` pins all
+ * four rows.
  *
- * The evaluator takes the *answers* — `isFlagEnabled`, `isPreferenceEnabled` —
- * rather than reading a service and a store itself, so it stays pure and a
- * caller in `@kro/app` can wire it to a Selector.
+ * Two layers, on purpose:
+ *
+ * - `isCapabilityAvailable(isFlagEnabled, ...preferenceStates)` takes the
+ *   **answers**, so the rule itself is pure and testable as a truth table with
+ *   no service and no store in sight.
+ * - `isGateAvailable(gate, service, preferences)` is the convenience over it:
+ *   it *does* read a `FeatureFlagService` and a `Preferences`, because that is
+ *   the call a Selector in `@kro/app` actually wants to make. Both are
+ *   synchronous `Provider`-tier reads (`RC-47`), so a Selector may make it.
  */
 import type { SettingOption } from '../settings/SettingOption'
 import {

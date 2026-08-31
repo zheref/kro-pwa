@@ -17,13 +17,35 @@
  * Both are pure and take everything they need as arguments — no clock, no
  * store, no globals — so they are unit-testable without a persistence double
  * (`UZF-10`, and the #7/#8/#9 caller-supplies-everything precedent).
+ *
+ * ## The codec checks *shape*; the domain type checks *range*
+ *
+ * A numeric `timeOfDay` or `daysSet` value crosses this boundary unexamined
+ * beyond "is it a whole number", exactly as canon's does. That is not laxity —
+ * it is where the two responsibilities are split:
+ *
+ * - **shape** (is this a `number` at all?) is the codec's, because a `string`
+ *   where an `Int` belongs means a type migration or a corrupted store and
+ *   there is nothing sensible to derive from it;
+ * - **range** (0…1439, or bits 0…6) is the *domain type's*, and each one
+ *   already normalizes: `timeOfDayFromMinutesFromMidnight` wraps into a day,
+ *   `weekDaysFromBitmask` ignores bits no weekday owns. Rejecting an
+ *   out-of-range number here instead would substitute the option's default for
+ *   a value the user really did choose — for a stored `daysSet` of `255` canon
+ *   hands back all seven days, and so does this port.
+ *
+ * `isStorableSettingValue` (`SettingsValidity.ts`) is the *stricter*,
+ * editor-side predicate: a Settings surface asks it before offering to save,
+ * so an out-of-range value never gets written in the first place. The two are
+ * deliberately different questions, and the tests pin both.
  */
-import { WeekDay } from '../domain/shared/WeekDay'
+import type { WeekDay } from '../domain/shared/WeekDay'
+import { weekDays } from '../domain/shared/WeekDay'
 import { assertNever } from '../library/assertNever'
 import type { SettingOption, SettingValue } from './SettingOption'
 import type { TimeOfDay } from './TimeOfDay'
 import { timeOfDayMinutesFromMidnight } from './TimeOfDay'
-import { isValidWeekDaysBitmask, weekDaysBitmask } from './WeekDayBitmask'
+import { weekDaysBitmask } from './WeekDayBitmask'
 
 /**
  * What a caller may hand `encodeSettingValue`: the stored primitive itself, or
@@ -31,18 +53,38 @@ import { isValidWeekDaysBitmask, weekDaysBitmask } from './WeekDayBitmask'
  */
 export type SettingWriteValue = SettingValue | TimeOfDay | readonly WeekDay[]
 
+/**
+ * A structural `TimeOfDay` check. Both fields must be **finite numbers**: a
+ * `{ hour: NaN }` would otherwise encode to `NaN` and be persisted, which no
+ * later read could recover from.
+ */
 const isTimeOfDay = (value: SettingWriteValue): value is TimeOfDay =>
   typeof value === 'object' &&
   value !== null &&
   !Array.isArray(value) &&
   'hour' in value &&
-  'minute' in value
+  'minute' in value &&
+  typeof value.hour === 'number' &&
+  Number.isFinite(value.hour) &&
+  typeof value.minute === 'number' &&
+  Number.isFinite(value.minute)
 
+/**
+ * A weekday-array check. Membership is tested against `weekDays`, **not**
+ * `entry in WeekDay`: `in` walks the prototype chain, so `'toString'` and
+ * `'constructor'` would both pass it and encode to a bitmask of `0`.
+ */
 const isWeekDayArray = (
   value: SettingWriteValue,
 ): value is readonly WeekDay[] =>
   Array.isArray(value) &&
-  value.every((entry) => typeof entry === 'string' && entry in WeekDay)
+  value.every(
+    (entry) => typeof entry === 'string' && weekDays.includes(entry as WeekDay),
+  )
+
+/** A whole number, safe to persist. `NaN` and `Infinity` are neither. */
+const isStorableNumber = (value: SettingWriteValue): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
 
 /**
  * The `write` half. Returns `null` when `value` cannot be stored for `option` —
@@ -50,6 +92,10 @@ const isWeekDayArray = (
  * `defaults.set(value, forKey:)` in that case and persists a garbage object;
  * refusing is the stricter behaviour a typed port can afford, and the caller
  * surfaces it rather than corrupting the store.
+ *
+ * Shape, not range — see the header. A `timeOfDay` of `2000` minutes is stored
+ * and wraps to 09:20 on read, which is what canon does; a Settings surface
+ * that wants to refuse it asks `isStorableSettingValue` first.
  */
 export const encodeSettingValue = (
   option: SettingOption,
@@ -58,17 +104,17 @@ export const encodeSettingValue = (
   switch (option.type.kind) {
     case 'timeOfDay':
       if (isTimeOfDay(value)) return timeOfDayMinutesFromMidnight(value)
-      return typeof value === 'number' ? Math.trunc(value) : null
+      return isStorableNumber(value) ? Math.trunc(value) : null
     case 'daysSet':
       if (isWeekDayArray(value)) return weekDaysBitmask(value)
-      return typeof value === 'number' ? Math.trunc(value) : null
+      return isStorableNumber(value) ? Math.trunc(value) : null
     case 'bool':
       return typeof value === 'boolean' ? value : null
     case 'string':
     case 'enumeration':
       return typeof value === 'string' ? value : null
     case 'int':
-      return typeof value === 'number' ? Math.trunc(value) : null
+      return isStorableNumber(value) ? Math.trunc(value) : null
     default:
       return assertNever(option.type)
   }
@@ -109,8 +155,11 @@ export const decodeSettingValue = (
         ? Math.trunc(stored)
         : option.defaultValue
     case 'daysSet':
-      return typeof stored === 'number' && isValidWeekDaysBitmask(stored)
-        ? stored
+      // Shape only, as canon does: `weekDaysFromBitmask` ignores bits no
+      // weekday owns, so a mask of 255 yields all seven days rather than
+      // discarding a real selection. See the header.
+      return typeof stored === 'number' && Number.isFinite(stored)
+        ? Math.trunc(stored)
         : option.defaultValue
     default:
       return assertNever(option.type)

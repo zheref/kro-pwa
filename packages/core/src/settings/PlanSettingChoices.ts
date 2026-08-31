@@ -5,6 +5,7 @@
  * shape as `SettingChoices`: raw value == case name == what persists, arrays
  * stand in for `CaseIterable.allCases` in canon declaration order.
  */
+import { assertNever } from '../library/assertNever'
 
 /**
  * The band of hours the Day timeline shows. Consumed by the timeline surface
@@ -37,6 +38,8 @@ export const dayViewRangeLabel = (range: DayViewRange): string => {
       return 'Waking hours'
     case DayViewRange.business:
       return 'Business hours'
+    default:
+      return assertNever(range)
   }
 }
 
@@ -57,6 +60,8 @@ export const dayViewRangeHours = (
       return { start: 6, endExclusive: 24 }
     case DayViewRange.business:
       return { start: 8, endExclusive: 20 }
+    default:
+      return assertNever(range)
   }
 }
 
@@ -85,6 +90,8 @@ export const planListSortLabel = (sort: PlanListSort): string => {
       return 'Priority'
     case PlanListSort.title:
       return 'Title'
+    default:
+      return assertNever(sort)
   }
 }
 
@@ -121,5 +128,7 @@ export const planListGroupingLabel = (grouping: PlanListGrouping): string => {
       return 'Project'
     case PlanListGrouping.timeOfDay:
       return 'Time of day'
+    default:
+      return assertNever(grouping)
   }
 }

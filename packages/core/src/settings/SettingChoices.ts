@@ -17,6 +17,7 @@
  * domain tier is the same call `PointsFormula` already made: copy is derived
  * from a discriminant here, never assembled in a view.
  */
+import { assertNever } from '../library/assertNever'
 
 /**
  * App-wide color scheme preference. `system` follows the OS. **Local-only** —
@@ -47,6 +48,8 @@ export const appearanceModeLabel = (mode: AppearanceMode): string => {
       return 'Light'
     case AppearanceMode.dark:
       return 'Dark'
+    default:
+      return assertNever(mode)
   }
 }
 
@@ -90,6 +93,8 @@ export const accentChoiceLabel = (choice: AccentChoice): string => {
       return 'Pink'
     case AccentChoice.graphite:
       return 'Graphite'
+    default:
+      return assertNever(choice)
   }
 }
 
@@ -124,5 +129,7 @@ export const landingChoiceLabel = (choice: LandingChoice): string => {
       return 'Do'
     case LandingChoice.earn:
       return 'Earn'
+    default:
+      return assertNever(choice)
   }
 }

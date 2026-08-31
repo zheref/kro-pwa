@@ -28,6 +28,7 @@ import {
   preferencesHubSections,
   profileHubSection,
   selectIntegrationRows,
+  selectIsSettingsEditable,
   selectIsSettingsLoaded,
   selectOpenSection,
   selectSettingValues,
@@ -57,6 +58,30 @@ describe('the load lifecycle', () => {
 
   it('reports loaded once the values arrive', () => {
     expect(selectIsSettingsLoaded(rootWith(SettingsMocks.loaded))).toBe(true)
+  })
+
+  it('reports not-loaded when the read failed — the values never arrived', () => {
+    expect(selectIsSettingsLoaded(rootWith(SettingsMocks.loadFailed))).toBe(false)
+  })
+})
+
+describe('whether the form may be edited', () => {
+  it('locks the form before anything has been read', () => {
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.idle))).toBe(false)
+  })
+
+  it('locks it while a read is in flight — canon own pre-load guard', () => {
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loading))).toBe(false)
+  })
+
+  it('unlocks it once the values arrive', () => {
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loaded))).toBe(true)
+  })
+
+  it('unlocks it when the read FAILED — canon: defaults show and edits still save', () => {
+    // The guard exists to stop an in-flight load overwriting an edit. A failed
+    // load is not in flight, so there is nothing left to overwrite.
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loadFailed))).toBe(true)
   })
 })
 

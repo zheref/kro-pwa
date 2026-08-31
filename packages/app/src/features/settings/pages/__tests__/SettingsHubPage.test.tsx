@@ -191,6 +191,35 @@ describe('drilling into a pane', () => {
     expect(screen.getByTestId('settings-hub')).toBeTruthy()
   })
 
+  it('keeps the form editable when the preference store cannot be read', async () => {
+    // Canon's "load failed" state: defaults show and edits still save. The
+    // pre-load guard exists to stop an in-flight load overwriting an edit, and
+    // a failed load is not in flight. (Reported by Copilot on KC-PR-#70.)
+    const broken = makeInMemoryLocalStore({})
+    const { store } = renderPage({
+      ...stubbedThunkExtra,
+      localStore: {
+        ...broken,
+        preferences: {
+          ...broken.preferences,
+          get() {
+            throw new Error('storage disabled')
+          },
+        },
+      },
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: /General/ }))
+    await waitFor(() => {
+      expect(store.getState().settings.load.kind).toBe('failed')
+    })
+
+    const toggle = screen.getByRole('switch', { name: 'Overdue alerts' })
+    expect((toggle as HTMLButtonElement).disabled).toBe(false)
+    // And the declared default is what it shows.
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+  })
+
   it('writes a changed preference through to the store', async () => {
     const localStore = makeInMemoryLocalStore({})
     const { store } = renderPage({ ...stubbedThunkExtra, localStore })

@@ -79,6 +79,7 @@ export {
   selectGoogleIntegration,
   selectIntegrationRows,
   selectIsAuthPresented,
+  selectIsSettingsEditable,
   selectIsSettingsLoaded,
   selectOpenSection,
   selectSettingValues,

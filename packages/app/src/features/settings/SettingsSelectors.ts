@@ -45,16 +45,31 @@ export const selectSettingsLoad = createSelector(
   (settings): SettingsLoadState => settings.load,
 )
 
-/**
- * Whether the stored values have arrived.
- *
- * Canon disables the whole form until they have, *"so an edit made in the brief
- * pre-load window isn't dropped by the persistence guard and then overwritten
- * by the load"*. This is that guard's input.
- */
+/** Whether the stored values arrived. Strictly `loaded` — not `failed`. */
 export const selectIsSettingsLoaded = createSelector(
   [selectSettingsLoad],
   (load) => load.kind === 'loaded',
+)
+
+/**
+ * Whether the form may be edited — canon's `isLoaded` guard, read for what it
+ * is *for*.
+ *
+ * Canon disables the form until the values arrive, *"so an edit made in the
+ * brief pre-load window isn't dropped by the persistence guard and then
+ * overwritten by the load"*. The thing being guarded against is **a load still
+ * in flight**, so the predicate is "the read has settled", not "the read
+ * succeeded".
+ *
+ * That distinction is load-bearing: canon's own *Load failed* state says the
+ * screen *"falls back to defaults and stays fully editable; edits still save"*.
+ * Keying the form off `loaded` alone would contradict it — a device whose
+ * preference store cannot be read would show every default and let the user
+ * change none of them. (Reported by Copilot on KC-PR-#70.)
+ */
+export const selectIsSettingsEditable = createSelector(
+  [selectSettingsLoad],
+  (load) => load.kind === 'loaded' || load.kind === 'failed',
 )
 
 export const selectSettingsException = createSelector(

@@ -70,13 +70,24 @@ export const IntegrationId = {
 
 export type IntegrationId = (typeof IntegrationId)[keyof typeof IntegrationId]
 
-/** The Google row's subtitle, which is the only one that varies by state. */
+/**
+ * The Google row's subtitle, which is the only one that varies by state.
+ *
+ * `unknown` reads two ways and the difference matters: while an attempt is in
+ * flight it means *"still asking"*; once nothing is in flight it means *"we
+ * asked and could not find out"* — the state a failed first `/api/google/status`
+ * leaves behind. Saying "Checking…" forever there would be a lie about work
+ * that is not happening. (Reported by Copilot on KC-PR-#70.)
+ */
 export const googleIntegrationSubtitle = (
   connection: GoogleConnectionState,
+  isBusy = false,
 ): string => {
   switch (connection.kind) {
     case 'unknown':
-      return 'Checking your connection…'
+      return isBusy
+        ? 'Checking your connection…'
+        : 'We could not check your connection. Try connecting again.'
     case 'unconfigured':
       return 'Not available on this deployment — no Google client is configured.'
     case 'disconnected':
@@ -98,7 +109,16 @@ const googleAction = (
   if (isBusy) return IntegrationAction.busy
   switch (connection.kind) {
     case 'unknown':
-      return IntegrationAction.busy
+      // Not busy and still unknown means the read did not answer — the state a
+      // failed first status call leaves behind, because a failed *attempt* must
+      // not overwrite a connection it learned nothing about. Offering Connect
+      // is the recoverable move: the banner says what went wrong, and
+      // `connectGoogleThunk` re-reads the connection before it navigates, so a
+      // deployment that is in fact `unconfigured` reports that instead of
+      // sending the browser somewhere that can only fail. Returning `busy` here
+      // — the previous behaviour — left the row on a non-interactive "Working…"
+      // indefinitely. (Reported by Copilot on KC-PR-#70.)
+      return IntegrationAction.connect
     case 'unconfigured':
       return IntegrationAction.unavailable
     case 'disconnected':
@@ -141,7 +161,7 @@ export const integrationRows = (
     rows.push({
       id: IntegrationId.google,
       title: 'Google Calendar',
-      subtitle: googleIntegrationSubtitle(input.connection),
+      subtitle: googleIntegrationSubtitle(input.connection, input.isBusy),
       glyph: 'calendar.circle.fill',
       isConnected: input.connection.kind === 'connected',
       action: googleAction(input.connection, input.isBusy),

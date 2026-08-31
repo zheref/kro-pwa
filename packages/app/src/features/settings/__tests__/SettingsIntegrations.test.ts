@@ -119,12 +119,37 @@ describe('the Google row distinguishes all four connection states', () => {
     )
   })
 
-  it('shows the busy affordance before the first answer arrives', () => {
-    expect(googleRow({ kind: 'unknown' })?.action).toBe(IntegrationAction.busy)
+  it('shows the busy affordance while the first read is in flight', () => {
+    expect(googleRow({ kind: 'unknown' }, true)?.action).toBe(
+      IntegrationAction.busy,
+    )
+  })
+
+  it('never strands the row on "Working…" when the first read failed', () => {
+    // Not busy and still unknown: the read did not answer. The row must offer
+    // something pressable rather than a spinner over work that is not running.
+    const row = googleRow({ kind: 'unknown' })
+
+    expect(row?.action).toBe(IntegrationAction.connect)
+    expect(row?.subtitle).toBe(
+      'We could not check your connection. Try connecting again.',
+    )
   })
 })
 
 describe('the subtitle explains the state rather than repeating the title', () => {
+  it('says it is still asking while a read is in flight', () => {
+    expect(googleIntegrationSubtitle({ kind: 'unknown' }, true)).toBe(
+      'Checking your connection…',
+    )
+  })
+
+  it('says the read did not answer once nothing is in flight', () => {
+    expect(googleIntegrationSubtitle({ kind: 'unknown' })).toContain(
+      'could not check your connection',
+    )
+  })
+
   it('keeps canon copy for the disconnected case', () => {
     expect(googleIntegrationSubtitle({ kind: 'disconnected' })).toBe(
       'See all your events in one place.',

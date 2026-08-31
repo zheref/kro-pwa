@@ -69,7 +69,7 @@ import {
   preferencesHubSections,
   profileHubSection,
   selectIntegrationRows,
-  selectIsSettingsLoaded,
+  selectIsSettingsEditable,
   selectOpenSection,
   selectSettingValues,
   selectSettingsErrorCopy,
@@ -94,7 +94,7 @@ export function SettingsHubPage() {
 
   const openSection = useAppSelector(selectOpenSection)
   const values = useAppSelector(selectSettingValues)
-  const isLoaded = useAppSelector(selectIsSettingsLoaded)
+  const isEditable = useAppSelector(selectIsSettingsEditable)
   const isWorkingHoursValid = useAppSelector(selectWorkingHoursValid)
   const errorCopy = useAppSelector(selectSettingsErrorCopy)
   const syncFooter = useAppSelector(selectSettingsSyncFooter)
@@ -207,7 +207,7 @@ export function SettingsHubPage() {
               <PreferencesSectionFragment
                 group={section.settingGroup}
                 values={values}
-                isLoaded={isLoaded}
+                isLoaded={isEditable}
                 isWorkingHoursValid={isWorkingHoursValid}
                 errorCopy={errorCopy}
                 onChangeSetting={onChangeSetting}

@@ -33,6 +33,7 @@ import { useEffect } from 'react'
 import { useAppDispatch } from '../../../library/hooks'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { DestinationKind } from '../../main/SidebarDestination'
+import { TriageCarouselPage } from '../../triage/pages/TriageCarouselPage'
 import { loadCaptureContextThunk } from '../CaptureProducer'
 import { InboxFragment } from './InboxFragment'
 import { useInboxSurface } from './useInboxSurface'
@@ -53,5 +54,16 @@ export function InboxDestinationPage() {
 
   if (inbox.isOpen) return null
 
-  return <InboxFragment {...inbox} isOpen presentation="inline" />
+  return (
+    <InboxFragment
+      {...inbox}
+      isOpen
+      presentation="inline"
+      // The same carousel the overlay hosts (KC-IS-#26). Triage is a layer
+      // inside the Inbox surface in canon, so the destination presentation gets
+      // it too — otherwise Jot Down would be the one place a row's Triage
+      // button did nothing.
+      overlay={<TriageCarouselPage />}
+    />
+  )
 }

@@ -127,6 +127,19 @@ export interface InboxFragmentProps {
   readonly locale?: string
   /** Forces the row input grammar. Stories and tests only; production detects it. */
   readonly input?: InputCapability
+  /**
+   * A second layer inside the same surface, over the list.
+   *
+   * The **only** extension point this Fragment offers, added by KC-IS-#26 for
+   * the Triage carousel: canon presents Triage *"via the Inbox sheet's custom
+   * carousel transition (not a NavigationStack push)"*, so the Triage surface
+   * has to mount inside this one rather than beside it or on a route.
+   *
+   * It is a `ReactNode` slot rather than a Triage-shaped prop on purpose: this
+   * Fragment stays domain-less about what fills it, and the capture lane gains
+   * no knowledge of the triage lane beyond the two Pages that pass the slot in.
+   */
+  readonly overlay?: ReactNode
 
   readonly onDismiss: () => void
   readonly onTapTriage: (endeavorId: string) => void
@@ -149,9 +162,13 @@ export function InboxFragment(props: InboxFragmentProps) {
         data-testid="inbox-surface"
         data-kro-presentation="inline"
         aria-label="Inbox"
-        className="flex h-full min-h-0 w-full flex-col"
+        // `relative` so the `overlay` slot's own `absolute inset-0` resolves
+        // against this surface. The two dialog presentations already carry a
+        // containing block from Radix's `position: fixed`.
+        className="relative flex h-full min-h-0 w-full flex-col"
       >
         <InboxBody {...props} />
+        {props.overlay}
       </section>
     )
   }
@@ -183,6 +200,7 @@ export function InboxFragment(props: InboxFragmentProps) {
         >
           {heading}
           <InboxBody {...props} />
+          {props.overlay}
         </SheetContent>
       ) : (
         <DialogContent
@@ -203,6 +221,7 @@ export function InboxFragment(props: InboxFragmentProps) {
         >
           {heading}
           <InboxBody {...props} />
+          {props.overlay}
         </DialogContent>
       )}
     </Dialog>

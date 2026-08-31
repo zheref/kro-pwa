@@ -65,10 +65,6 @@
   );
 }
 
-.kro-gradient-backdrop--hard {
-  --kro-gradient-fade: 0px;
-}
-
 .kro-gradient-backdrop--hard::after {
   display: none;
 }

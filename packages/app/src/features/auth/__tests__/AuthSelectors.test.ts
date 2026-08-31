@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailFeature'
 import { initialFindState } from '../../find/FindFeature'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
@@ -48,6 +49,7 @@ const rootWith = (auth: AuthState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  earn: initialEarnState,
   auth,
 })
 

@@ -14,8 +14,14 @@
  * field in `ThunkExtra` per new Service (`RC-21`). There is no second injection
  * mechanism — no service locator, no ambient singleton import.
  */
-import type { LocalStore } from '@kro/core'
+import {
+  type FeatureFlagService,
+  type LocalStore,
+  type SignOutWipe,
+  makeHardcodedFeatureFlagService,
+} from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
+import { authSlice } from '../features/auth/AuthFeature'
 import { captureSlice } from '../features/capture/CaptureFeature'
 import { doSlice } from '../features/do/DoFeature'
 import { earnSlice } from '../features/earn/EarnFeature'
@@ -25,12 +31,31 @@ import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
+  type AuthService,
+  makeLiveAuthService,
+  stubbedAuthService,
+} from '../services/auth/AuthService'
+import {
   type GreetingService,
   liveGreetingService,
   stubbedGreetingService,
 } from '../services/greeting/GreetingService'
 import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
 import { liveLocalStore } from '../services/localStore/liveLocalStore'
+import { signOutWipe } from '../services/localStore/signOutWipe'
+import { liveSupabaseClientProvider } from '../services/supabase/SupabaseClientProvider'
+import { makeLiveEndeavorCloudTransport } from '../services/sync/EndeavorCloudTransport'
+import {
+  type EndeavorSyncService,
+  makeEndeavorSyncService,
+  stubbedEndeavorSyncService,
+  supabaseHostingGate,
+} from '../services/sync/EndeavorSyncService'
+import {
+  type SettingsSyncService,
+  makeLiveSettingsSyncService,
+  stubbedSettingsSyncService,
+} from '../services/sync/SettingsSyncService'
 
 /**
  * Every injectable Service in the app, in one closed manifest. A Producer reads
@@ -46,12 +71,56 @@ export interface ThunkExtra {
    * what keeps this interface readable as the store count grows.
    */
   readonly localStore: LocalStore
+  /**
+   * The sign-out wipe (#10). A field of its own rather than a method on
+   * `LocalStore`, because it is the one operation that spans every store and
+   * the port deliberately keeps it outside the per-store interfaces — see
+   * `SignOutWipe` in `@kro/core`. A Producer cannot import it directly
+   * (`RC-6`), so it arrives here.
+   */
+  readonly signOutWipe: SignOutWipe
+  /**
+   * The `UZF-22` flag registry (#11). A `Provider` in UZF terms (`RC-47`) —
+   * synchronous, so a Selector may read it — but injected rather than imported
+   * because it holds runtime overrides and a module-level singleton would make
+   * every suite in CI share one (the same objection `makeStore` answers).
+   */
+  readonly featureFlags: FeatureFlagService
+  /** Supabase Auth (#31): session, the provider flows, sign-out. */
+  readonly authService: AuthService
+  /** The cloud-scoped preference subset's transport (#31). */
+  readonly settingsSync: SettingsSyncService
+  /**
+   * The endeavor sync engine (#31) — push (tombstones included) then pull,
+   * gated behind `supabaseHosting`, which is OFF at `statusQuo`.
+   */
+  readonly endeavorSync: EndeavorSyncService
 }
+
+/**
+ * The live flag service.
+ *
+ * Built once here so the endeavor engine's gate and any Selector reading a flag
+ * see the same overrides within one browser session. `apps/web` will hand the
+ * same instance down when the composition root lands (#13).
+ */
+const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
 
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
   greetingService: liveGreetingService,
   localStore: liveLocalStore,
+  signOutWipe,
+  featureFlags: liveFeatureFlags,
+  authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
+  settingsSync: makeLiveSettingsSyncService({
+    clientProvider: liveSupabaseClientProvider,
+  }),
+  endeavorSync: makeEndeavorSyncService({
+    localStore: liveLocalStore,
+    transport: makeLiveEndeavorCloudTransport(liveSupabaseClientProvider),
+    isCloudEnabled: supabaseHostingGate(liveFeatureFlags),
+  }),
 }
 
 /**
@@ -65,6 +134,13 @@ export const liveThunkExtra: ThunkExtra = {
 export const stubbedThunkExtra: ThunkExtra = {
   greetingService: stubbedGreetingService,
   localStore: stubbedLocalStore,
+  signOutWipe,
+  // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
+  // shipping behaviour — `supabaseHosting` disabled, exactly like canon.
+  featureFlags: makeHardcodedFeatureFlagService(),
+  authService: stubbedAuthService,
+  settingsSync: stubbedSettingsSyncService,
+  endeavorSync: stubbedEndeavorSyncService,
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
@@ -78,6 +154,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       find: findSlice.reducer,
       endeavorDetail: endeavorDetailSlice.reducer,
       earn: earnSlice.reducer,
+      auth: authSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

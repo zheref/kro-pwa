@@ -11,8 +11,7 @@ import {
   endeavorRecordFromEndeavor,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   FIND_REFERENCE_NOW,
@@ -36,14 +35,14 @@ const storeWith = (records: readonly EndeavorRecord[] = recordsOf()) => {
   const localStore = makeInMemoryLocalStore({ endeavors: records })
   return {
     localStore,
-    store: makeStore({ greetingService: stubbedGreetingService, localStore }),
+    store: makeStore({ ...stubbedThunkExtra, localStore }),
   }
 }
 
 const failingStore = (message: string) => {
   const base = makeInMemoryLocalStore({ endeavors: recordsOf() })
   return makeStore({
-    greetingService: stubbedGreetingService,
+    ...stubbedThunkExtra,
     localStore: {
       ...base,
       endeavors: {
@@ -156,7 +155,7 @@ describe('the lens round-trip', () => {
   it('stays SILENT on a read failure — a filter preference is not an error', async () => {
     const base = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         lensSnapshots: {
@@ -176,7 +175,7 @@ describe('the lens round-trip', () => {
   it('swallows a write failure too — the session’s filters still work', async () => {
     const base = makeInMemoryLocalStore()
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore: {
         ...base,
         lensSnapshots: {

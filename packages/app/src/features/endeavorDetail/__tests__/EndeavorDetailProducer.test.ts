@@ -14,8 +14,7 @@ import {
   makeShadow,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore } from '../../../library/store'
-import { stubbedGreetingService } from '../../../services/greeting/GreetingService'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   DETAIL_REFERENCE_NOW,
@@ -45,14 +44,14 @@ const storeWith = (records: readonly EndeavorRecord[] = recordsOf()) => {
   const localStore = makeInMemoryLocalStore({ endeavors: records })
   return {
     localStore,
-    store: makeStore({ greetingService: stubbedGreetingService, localStore }),
+    store: makeStore({ ...stubbedThunkExtra, localStore }),
   }
 }
 
 const failingStore = () => {
   const base = makeInMemoryLocalStore({ endeavors: recordsOf() })
   return makeStore({
-    greetingService: stubbedGreetingService,
+    ...stubbedThunkExtra,
     localStore: {
       ...base,
       endeavors: {
@@ -99,7 +98,7 @@ describe('saveEndeavorThunk persists the working copy locally', () => {
       ],
     })
     const store = makeStore({
-      greetingService: stubbedGreetingService,
+      ...stubbedThunkExtra,
       localStore,
     })
     await store

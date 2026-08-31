@@ -142,19 +142,42 @@ export const applyKroSchema = (
 }
 
 /**
+ * Which side of the store an operation was on — the one thing the error itself
+ * cannot tell you.
+ *
+ * IndexedDB reports a failed `getAll` and a failed `put` with the *same*
+ * `DOMException`, so nothing in the caught value distinguishes them. The caller
+ * knows, and it is worth knowing: `readFailed` ("Kro could not read from this
+ * device") and `writeFailed` ("Kro could not save to this device") are
+ * different sentences, and telling a user their work was saved when the write
+ * is what failed is the worse of the two mistakes.
+ */
+export type LocalStoreOperation = 'read' | 'write'
+
+/**
  * Translate whatever IndexedDB threw into the domain's closed union.
  *
  * A Service is allowed to reject (`RC-33`); the `Result` boundary belongs to
  * the Producer. This is the one place that inspects a `DOMException`, so a
  * Producer's `catch` calls it rather than re-implementing the mapping — the
  * same rule a Mapper's `toException` follows.
+ *
+ * `operation` defaults to `'write'`: an unattributed failure is reported as the
+ * more consequential of the two, so a genuinely lost write is never dressed up
+ * as a merely unreadable one. The read helpers in `IndexedDbLocalStore` pass
+ * `'read'` explicitly, which is what makes `readFailed` a kind that actually
+ * occurs rather than one the union declares and never constructs.
  */
-export const localStoreException = (error: unknown): PersistenceException => {
+export const localStoreException = (
+  error: unknown,
+  operation: LocalStoreOperation = 'write',
+): PersistenceException => {
   // Some failures are already one of ours — `openKroDatabase` rejects with
   // `PersistenceExceptions.blocked(...)` from its `onblocked` handler, because
   // no platform error expresses "another tab holds the old version". Re-wrapping
   // it would turn the one failure with an actionable remedy into `writeFailed`
-  // with a message of `[object Object]`.
+  // with a message of `[object Object]`. It is also what lets a Producer call
+  // this on a value the store has already mapped, without a second guess.
   if (isPersistenceException(error)) return error
 
   const name =
@@ -172,7 +195,9 @@ export const localStoreException = (error: unknown): PersistenceException => {
   if (name === 'SecurityError' || name === 'NotSupportedError') {
     return PersistenceExceptions.unavailable(message)
   }
-  return PersistenceExceptions.writeFailed(message)
+  return operation === 'read'
+    ? PersistenceExceptions.readFailed(message)
+    : PersistenceExceptions.writeFailed(message)
 }
 
 /** Awaits one IndexedDB request. */

@@ -1,6 +1,7 @@
 import {
   PersistenceExceptions,
   isPersistenceException,
+  persistenceExceptionCopy,
   persistenceExceptionKinds,
 } from '@kro/core'
 import { IDBFactory } from 'fake-indexeddb'
@@ -233,6 +234,44 @@ describe('localStoreException — the DOMException names that matter', () => {
   it('does not mistake an ordinary Error for one of ours', () => {
     // An Error has `message`, but no `kind` and no `recoverable`.
     expect(localStoreException(new Error('plain')).kind).toBe('writeFailed')
+  })
+})
+
+describe('localStoreException — read and write are different sentences', () => {
+  it('maps an unrecognised failure on a READ to `readFailed`', () => {
+    // IndexedDB reports a failed getAll and a failed put with the same
+    // DOMException, so only the call site can tell them apart.
+    expect(localStoreException(new Error('aborted'), 'read').kind).toBe(
+      'readFailed',
+    )
+  })
+
+  it('maps an unrecognised failure on a WRITE to `writeFailed`', () => {
+    expect(localStoreException(new Error('aborted'), 'write').kind).toBe(
+      'writeFailed',
+    )
+  })
+
+  it('defaults to `writeFailed` — the more consequential of the two', () => {
+    // Telling the user their work was saved when the write is what failed is
+    // the worse mistake, so an unattributed failure takes that side.
+    expect(localStoreException(new Error('aborted')).kind).toBe('writeFailed')
+  })
+
+  it('still recognises a named DOMException regardless of the side', () => {
+    const quota = Object.assign(new Error('full'), {
+      name: 'QuotaExceededError',
+    })
+    expect(localStoreException(quota, 'read').kind).toBe('quotaExceeded')
+    expect(localStoreException(quota, 'write').kind).toBe('quotaExceeded')
+  })
+
+  it('gives the two sides distinct user copy', () => {
+    expect(
+      persistenceExceptionCopy(localStoreException(new Error('x'), 'read')),
+    ).not.toBe(
+      persistenceExceptionCopy(localStoreException(new Error('x'), 'write')),
+    )
   })
 })
 

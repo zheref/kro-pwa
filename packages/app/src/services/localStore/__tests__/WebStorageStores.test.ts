@@ -47,6 +47,34 @@ describe('the preference encoding — types survive localStorage`s strings', () 
     expect(makeWebPreferenceStorage(backing).get('kro:theme')).toBe('dark')
   })
 
+  it('a PRESENT key never reads as absent, whatever it holds', () => {
+    // `get` uses `null` for *unset*. Returning it for a key that is set makes a
+    // stored value indistinguishable from a missing one: the caller falls back
+    // to the default and the next write silently overwrites what was there.
+    for (const stored of ['null', '{}', '[]', '{"a":1}', '']) {
+      const backing = makeMemoryWebStorage({ 'kro:odd': stored })
+      expect(makeWebPreferenceStorage(backing).get('kro:odd')).not.toBeNull()
+    }
+  })
+
+  it('reads valid-but-non-scalar JSON as its raw text', () => {
+    const backing = makeMemoryWebStorage({ 'kro:legacyObject': '{"a":1}' })
+    expect(makeWebPreferenceStorage(backing).get('kro:legacyObject')).toBe(
+      '{"a":1}',
+    )
+  })
+
+  it('reads a stored JSON `null` as text, since SettingValue has no null', () => {
+    const backing = makeMemoryWebStorage({ 'kro:legacyNull': 'null' })
+    expect(makeWebPreferenceStorage(backing).get('kro:legacyNull')).toBe('null')
+  })
+
+  it('still answers null for a key that is genuinely unset', () => {
+    expect(
+      makeWebPreferenceStorage(makeMemoryWebStorage()).get('kro:absent'),
+    ).toBeNull()
+  })
+
   it('answers null for an unset key', () => {
     expect(
       makeWebPreferenceStorage(makeMemoryWebStorage()).get('kro:nothing'),

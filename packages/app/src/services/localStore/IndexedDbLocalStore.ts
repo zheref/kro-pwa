@@ -41,57 +41,88 @@ import {
   pendingSyncRecords,
   performanceRecordKey,
 } from '@kro/core'
-import { KroObjectStore, idbRequest, idbTransactionDone } from './KroDatabase'
+import {
+  type LocalStoreOperation,
+  KroObjectStore,
+  idbRequest,
+  idbTransactionDone,
+  localStoreException,
+} from './KroDatabase'
 
 /** How the stores reach the database. Lazy, so opening is not a side effect. */
 export type DatabaseProvider = () => Promise<IDBDatabase>
 
-const readAll = async <Value>(
-  provider: DatabaseProvider,
-  storeName: string,
-): Promise<readonly Value[]> => {
-  const database = await provider()
-  const transaction = database.transaction(storeName, 'readonly')
-  const rows = await idbRequest<Value[]>(
-    transaction.objectStore(storeName).getAll() as IDBRequest<Value[]>,
-  )
-  await idbTransactionDone(transaction)
-  return rows
+/**
+ * Run one store operation, mapping whatever fails to the domain's closed union
+ * **with the side it was on**.
+ *
+ * IndexedDB reports a failed `getAll` and a failed `put` with the same
+ * `DOMException`, so only the call site knows which it was. Attributing it here
+ * — rather than leaving every Producer to guess — is what makes `readFailed` a
+ * kind that actually occurs. `localStoreException` passes an already-mapped
+ * value straight through, so a Producer calling it again on the rejection is a
+ * no-op rather than a second, worse guess.
+ */
+const attributed = async <Value>(
+  operation: LocalStoreOperation,
+  run: () => Promise<Value>,
+): Promise<Value> => {
+  try {
+    return await run()
+  } catch (error) {
+    throw localStoreException(error, operation)
+  }
 }
 
-const readByIndex = async <Value>(
+const readAll = <Value>(
+  provider: DatabaseProvider,
+  storeName: string,
+): Promise<readonly Value[]> =>
+  attributed('read', async () => {
+    const database = await provider()
+    const transaction = database.transaction(storeName, 'readonly')
+    const rows = await idbRequest<Value[]>(
+      transaction.objectStore(storeName).getAll() as IDBRequest<Value[]>,
+    )
+    await idbTransactionDone(transaction)
+    return rows as readonly Value[]
+  })
+
+const readByIndex = <Value>(
   provider: DatabaseProvider,
   storeName: string,
   indexName: string,
   key: IDBValidKey,
-): Promise<readonly Value[]> => {
-  const database = await provider()
-  const transaction = database.transaction(storeName, 'readonly')
-  const rows = await idbRequest<Value[]>(
-    transaction
-      .objectStore(storeName)
-      .index(indexName)
-      .getAll(key) as IDBRequest<Value[]>,
-  )
-  await idbTransactionDone(transaction)
-  return rows
-}
+): Promise<readonly Value[]> =>
+  attributed('read', async () => {
+    const database = await provider()
+    const transaction = database.transaction(storeName, 'readonly')
+    const rows = await idbRequest<Value[]>(
+      transaction
+        .objectStore(storeName)
+        .index(indexName)
+        .getAll(key) as IDBRequest<Value[]>,
+    )
+    await idbTransactionDone(transaction)
+    return rows as readonly Value[]
+  })
 
-const readOne = async <Value>(
+const readOne = <Value>(
   provider: DatabaseProvider,
   storeName: string,
   key: IDBValidKey,
-): Promise<Value | undefined> => {
-  const database = await provider()
-  const transaction = database.transaction(storeName, 'readonly')
-  const row = await idbRequest<Value | undefined>(
-    transaction.objectStore(storeName).get(key) as IDBRequest<
-      Value | undefined
-    >,
-  )
-  await idbTransactionDone(transaction)
-  return row
-}
+): Promise<Value | undefined> =>
+  attributed('read', async () => {
+    const database = await provider()
+    const transaction = database.transaction(storeName, 'readonly')
+    const row = await idbRequest<Value | undefined>(
+      transaction.objectStore(storeName).get(key) as IDBRequest<
+        Value | undefined
+      >,
+    )
+    await idbTransactionDone(transaction)
+    return row
+  })
 
 /**
  * Run a read-modify-write inside **one** transaction.
@@ -101,42 +132,46 @@ const readOne = async <Value>(
  * different (or no) transaction. That is the single most common IndexedDB bug,
  * so the type signature forbids it rather than a comment asking nicely.
  */
-const write = async (
+const write = (
   provider: DatabaseProvider,
   storeNames: string | readonly string[],
   mutate: (transaction: IDBTransaction) => void,
-): Promise<void> => {
-  const database = await provider()
-  const transaction = database.transaction(
-    storeNames as string | string[],
-    'readwrite',
-  )
-  mutate(transaction)
-  await idbTransactionDone(transaction)
-}
+): Promise<void> =>
+  attributed('write', async () => {
+    const database = await provider()
+    const transaction = database.transaction(
+      storeNames as string | string[],
+      'readwrite',
+    )
+    mutate(transaction)
+    await idbTransactionDone(transaction)
+  })
 
 /** Read every row, apply `change`, write the changed ones back — one pass. */
-const rewriteAll = async <Value>(
+const rewriteAll = <Value>(
   provider: DatabaseProvider,
   storeName: string,
   change: (row: Value) => Value | null,
   keyOf?: (row: Value) => IDBValidKey,
-): Promise<number> => {
-  const database = await provider()
-  const transaction = database.transaction(storeName, 'readwrite')
-  const store = transaction.objectStore(storeName)
-  const rows = await idbRequest<Value[]>(store.getAll() as IDBRequest<Value[]>)
-  let changed = 0
-  for (const row of rows) {
-    const next = change(row)
-    if (next === null) continue
-    if (keyOf === undefined) store.put(next)
-    else store.put(next, keyOf(next))
-    changed += 1
-  }
-  await idbTransactionDone(transaction)
-  return changed
-}
+): Promise<number> =>
+  attributed('write', async () => {
+    const database = await provider()
+    const transaction = database.transaction(storeName, 'readwrite')
+    const store = transaction.objectStore(storeName)
+    const rows = await idbRequest<Value[]>(
+      store.getAll() as IDBRequest<Value[]>,
+    )
+    let changed = 0
+    for (const row of rows) {
+      const next = change(row)
+      if (next === null) continue
+      if (keyOf === undefined) store.put(next)
+      else store.put(next, keyOf(next))
+      changed += 1
+    }
+    await idbTransactionDone(transaction)
+    return changed
+  })
 
 // MARK: - Endeavors
 
@@ -171,31 +206,33 @@ export const makeIndexedDbEndeavorStore = (
         (record) => ownerUserId === null || record.ownerUserId === ownerUserId,
       ),
 
-    softDelete: async (id, nowMillis) => {
-      const database = await provider()
-      const transaction = database.transaction(store, 'readwrite')
-      const table = transaction.objectStore(store)
-      const record = await idbRequest<EndeavorRecord | undefined>(
-        table.get(id) as IDBRequest<EndeavorRecord | undefined>,
-      )
-      if (record !== undefined) {
-        table.put(markRecordSoftDeleted(record, nowMillis))
-      }
-      await idbTransactionDone(transaction)
-    },
+    softDelete: (id, nowMillis) =>
+      attributed('write', async () => {
+        const database = await provider()
+        const transaction = database.transaction(store, 'readwrite')
+        const table = transaction.objectStore(store)
+        const record = await idbRequest<EndeavorRecord | undefined>(
+          table.get(id) as IDBRequest<EndeavorRecord | undefined>,
+        )
+        if (record !== undefined) {
+          table.put(markRecordSoftDeleted(record, nowMillis))
+        }
+        await idbTransactionDone(transaction)
+      }),
 
-    markSynced: async (id, atMillis) => {
-      const database = await provider()
-      const transaction = database.transaction(store, 'readwrite')
-      const table = transaction.objectStore(store)
-      const record = await idbRequest<EndeavorRecord | undefined>(
-        table.get(id) as IDBRequest<EndeavorRecord | undefined>,
-      )
-      if (record !== undefined) {
-        table.put(markRecordSynced(record, atMillis))
-      }
-      await idbTransactionDone(transaction)
-    },
+    markSynced: (id, atMillis) =>
+      attributed('write', async () => {
+        const database = await provider()
+        const transaction = database.transaction(store, 'readwrite')
+        const table = transaction.objectStore(store)
+        const record = await idbRequest<EndeavorRecord | undefined>(
+          table.get(id) as IDBRequest<EndeavorRecord | undefined>,
+        )
+        if (record !== undefined) {
+          table.put(markRecordSynced(record, atMillis))
+        }
+        await idbTransactionDone(transaction)
+      }),
 
     pendingSync: async (ownerUserId) =>
       pendingSyncRecords(
@@ -254,30 +291,32 @@ export const makeIndexedDbProjectStore = (
       write(provider, store, (transaction) => {
         transaction.objectStore(store).clear()
       }),
-    softDelete: async (id, nowMillis) => {
-      const database = await provider()
-      const transaction = database.transaction(store, 'readwrite')
-      const table = transaction.objectStore(store)
-      const record = await idbRequest<ProjectRecord | undefined>(
-        table.get(id) as IDBRequest<ProjectRecord | undefined>,
-      )
-      if (record !== undefined) {
-        table.put(markRecordSoftDeleted(record, nowMillis))
-      }
-      await idbTransactionDone(transaction)
-    },
-    markSynced: async (id, atMillis) => {
-      const database = await provider()
-      const transaction = database.transaction(store, 'readwrite')
-      const table = transaction.objectStore(store)
-      const record = await idbRequest<ProjectRecord | undefined>(
-        table.get(id) as IDBRequest<ProjectRecord | undefined>,
-      )
-      if (record !== undefined) {
-        table.put(markRecordSynced(record, atMillis))
-      }
-      await idbTransactionDone(transaction)
-    },
+    softDelete: (id, nowMillis) =>
+      attributed('write', async () => {
+        const database = await provider()
+        const transaction = database.transaction(store, 'readwrite')
+        const table = transaction.objectStore(store)
+        const record = await idbRequest<ProjectRecord | undefined>(
+          table.get(id) as IDBRequest<ProjectRecord | undefined>,
+        )
+        if (record !== undefined) {
+          table.put(markRecordSoftDeleted(record, nowMillis))
+        }
+        await idbTransactionDone(transaction)
+      }),
+    markSynced: (id, atMillis) =>
+      attributed('write', async () => {
+        const database = await provider()
+        const transaction = database.transaction(store, 'readwrite')
+        const table = transaction.objectStore(store)
+        const record = await idbRequest<ProjectRecord | undefined>(
+          table.get(id) as IDBRequest<ProjectRecord | undefined>,
+        )
+        if (record !== undefined) {
+          table.put(markRecordSynced(record, atMillis))
+        }
+        await idbTransactionDone(transaction)
+      }),
     pendingSync: async () => pendingSyncRecords(await everything()),
   }
 }

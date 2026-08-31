@@ -144,7 +144,25 @@ export const resolveWebStorage = (): WebStorageLike => {
  */
 const encodePreference = (value: SettingValue): string => JSON.stringify(value)
 
-const decodePreference = (raw: string): SettingValue | null => {
+/**
+ * The inverse. **Never answers `null`** — a present key must not read as an
+ * absent one.
+ *
+ * `KeyValueStore.get` uses `null` to mean *unset*, so returning it for a key
+ * that is set would make a stored value indistinguishable from a missing one:
+ * the caller falls back to the option's default and the next write silently
+ * overwrites whatever was really there. That is a lost preference, from a read.
+ *
+ * There are exactly two ways a stored string is not one of this port's three
+ * scalars, and both take the same route — read it loosely as the string it is:
+ *
+ * - **Unparseable** — written by an older, un-encoded build, or by another
+ *   script sharing the origin.
+ * - **Valid JSON, but not a scalar** — `"null"`, `"{}"`, `"[]"`. `SettingValue`
+ *   has no member that can hold any of them, so the raw text is the only
+ *   representation that keeps the key's *presence* true.
+ */
+const decodePreference = (raw: string): SettingValue => {
   try {
     const parsed: unknown = JSON.parse(raw)
     if (
@@ -154,11 +172,8 @@ const decodePreference = (raw: string): SettingValue | null => {
     ) {
       return parsed
     }
-    return null
+    return raw
   } catch {
-    // A value written by something else (or by an older, un-encoded build) is
-    // read back as the string it is, rather than dropped: losing a preference
-    // is worse than reading one loosely.
     return raw
   }
 }

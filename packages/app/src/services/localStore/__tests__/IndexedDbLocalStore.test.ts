@@ -15,6 +15,11 @@ import {
 } from '@kro/core/mocks'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  type DatabaseProvider,
+  makeIndexedDbDeferStore,
+  makeIndexedDbEndeavorStore,
+} from '../IndexedDbLocalStore'
 import { KroObjectStore, idbRequest, openKroDatabase } from '../KroDatabase'
 import { makeLiveLocalStore } from '../liveLocalStore'
 import { makeMemoryWebStorage } from '../WebStorageStores'
@@ -151,6 +156,47 @@ describe('the endeavorId index the child reads use', () => {
     expect(
       await store.defers.forEndeavor(deferRecordMocks.noTarget.endeavorId),
     ).toHaveLength(1)
+  })
+})
+
+describe('a rejection out of a store is ALREADY a PersistenceException', () => {
+  /** A database whose every transaction fails, so the mapping is observable. */
+  const failing =
+    (error: unknown): DatabaseProvider =>
+    async () =>
+      ({
+        transaction: () => {
+          throw error
+        },
+      }) as unknown as IDBDatabase
+
+  it('attributes a failed READ to `readFailed`, not the write default', async () => {
+    const store = makeIndexedDbEndeavorStore(failing(new Error('aborted')))
+    await expect(store.all()).rejects.toMatchObject({ kind: 'readFailed' })
+  })
+
+  it('attributes a failed WRITE to `writeFailed`', async () => {
+    const store = makeIndexedDbEndeavorStore(failing(new Error('aborted')))
+    await expect(
+      store.put(endeavorRecordMocks.plannedTask),
+    ).rejects.toMatchObject({ kind: 'writeFailed' })
+  })
+
+  it('keeps a named DOMException`s own kind over the side it was on', async () => {
+    const quota = Object.assign(new Error('full'), {
+      name: 'QuotaExceededError',
+    })
+    const store = makeIndexedDbEndeavorStore(failing(quota))
+    await expect(
+      store.put(endeavorRecordMocks.plannedTask),
+    ).rejects.toMatchObject({ kind: 'quotaExceeded', recoverable: false })
+  })
+
+  it('attributes a failed child-row read to `readFailed` too', async () => {
+    const store = makeIndexedDbDeferStore(failing(new Error('aborted')))
+    await expect(store.forEndeavor('endeavor-1')).rejects.toMatchObject({
+      kind: 'readFailed',
+    })
   })
 })
 

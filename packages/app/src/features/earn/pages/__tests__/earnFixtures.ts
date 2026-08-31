@@ -21,6 +21,7 @@
  *    DOM" rule the issue states for the screenshot pass, applied identically
  *    to the automated suite.
  */
+import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
 import {
   type PerformanceRecord,
@@ -80,6 +81,7 @@ export const rootWith = (earn: EarnState): RootState => ({
   session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
+  settings: initialSettingsState,
   thirst: initialThirstState,
 })
 

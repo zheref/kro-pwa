@@ -27,10 +27,14 @@
 export {
   CHROME_LAYOUT,
   FAB_INSETS,
+  SHELL_BOTTOM_INSET_FALLBACK,
+  SHELL_BOTTOM_INSET_VAR,
   TOAST_DURATION_SECONDS,
   type FabInsetVariant,
   clampToastDuration,
+  pillBottomOffset,
   pillTrailingPadding,
+  toastBottomOffset,
   toastLiftAbovePill,
 } from './layout/chromeLayout'
 export {

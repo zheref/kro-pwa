@@ -32,6 +32,25 @@
  * the same reason the transform lags: the finger leaves the content element
  * mid-swipe, and without capture the release lands somewhere else entirely.
  *
+ * ## Capture is taken at the THRESHOLD, never at `pointerdown`
+ *
+ * A captured pointer retargets the subsequent `click` to the capturing element.
+ * Capturing on `pointerdown` therefore ate every tap that landed on a control
+ * INSIDE the row — canon's in-row Triage and Add for Today buttons never fired
+ * in a real browser, on any touch device. Releasing the capture in the
+ * `pointerup` handler does not help: by then `pointerup` has already been
+ * dispatched at the capturing element, and that is what the browser builds the
+ * click's target from.
+ *
+ * So capture is deferred until the drag has actually crossed
+ * `SWIPE_DRAG_THRESHOLD_PX` in a direction the row can move. A tap captures
+ * nothing and its click reaches the button it landed on; a real swipe captures
+ * on its first meaningful move, which is still well before the finger can leave
+ * the content element. jsdom implements no pointer capture at all, which is why
+ * the kit's suite was green throughout — the regression is proven in Chromium
+ * by `apps/web/e2e-kit/action-surface.spec.ts` and pinned here by the capture
+ * log in `__tests__/pointerEnvironment.ts`.
+ *
  * ## Why the strip is not `display: none` until hover
  *
  * It is `opacity-0` + `pointer-events-none`, revealed by `group-hover` and by
@@ -45,7 +64,7 @@
  * It raises `onOperation(operation, endeavorId)` and stops.
  */
 
-import { type ReactNode, useCallback, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useCallback, useRef, useState } from 'react'
 import type { EndeavorCapabilities, EndeavorOperationBinding } from '@kro/core'
 import {
   DropdownMenu,
@@ -79,6 +98,68 @@ export const SWIPE_COMMIT_PX = 140
  * zero-distance swipe and snaps the row shut under the finger.
  */
 export const SWIPE_DRAG_THRESHOLD_PX = 4
+
+/**
+ * The pointer chrome's geometry — the numbers the classes below actually use.
+ *
+ * Read off this file, not guessed: `right-2` is 8, `gap-1` is 4, the hover
+ * buttons are rendered at `size={28}`, and the menu trigger is `size-7` at
+ * `right-1`. They live here as named values so `pointerChromeGutterPx` derives
+ * the reserved gutter from the same numbers the chrome is drawn with, instead
+ * of a literal at a call site that nobody re-measures when a class changes.
+ */
+export const POINTER_CHROME = {
+  /** `endeavor-hover-actions` — `right-2`. */
+  stripInset: 8,
+  /** One hover button — `<ActionButton size={28}>`. */
+  stripButton: 28,
+  /** `gap-1` between two hover buttons. */
+  stripGap: 4,
+  /** The context-menu trigger — `right-1`. */
+  triggerInset: 4,
+  /** The context-menu trigger — `size-7`. */
+  triggerSize: 28,
+} as const
+
+/**
+ * The custom property the surface publishes its reserved gutter on.
+ *
+ * PUBLISHED, not imposed. The surface wraps arbitrary children and cannot know
+ * what is at their trailing edge, so it states how much room its own chrome
+ * needs and the child decides. `EndeavorRow` reserves it whenever it renders
+ * trailing content; a child that has nothing at that edge ignores it and is
+ * unchanged. The `0px` fallback means a row rendered OUTSIDE a surface reads
+ * the same as it always did.
+ */
+export const POINTER_GUTTER_VAR = '--kro-endeavor-pointer-gutter'
+
+/**
+ * How much room, in px, the pointer chrome needs at the row's trailing edge.
+ *
+ * The hover strip and the menu trigger are both anchored to that edge and both
+ * become clickable on hover, so anything underneath them is covered — which on
+ * an Inbox row is exactly where canon puts Triage and Add for Today. The wider
+ * of the two extents wins because they overlap rather than sit side by side.
+ */
+export function pointerChromeGutterPx(options: {
+  readonly hoverActionCount: number
+  readonly hasContextMenu: boolean
+}): number {
+  const { hoverActionCount, hasContextMenu } = options
+
+  const strip =
+    hoverActionCount === 0
+      ? 0
+      : POINTER_CHROME.stripInset +
+        hoverActionCount * POINTER_CHROME.stripButton +
+        (hoverActionCount - 1) * POINTER_CHROME.stripGap
+
+  const trigger = hasContextMenu
+    ? POINTER_CHROME.triggerInset + POINTER_CHROME.triggerSize
+    : 0
+
+  return Math.max(strip, trigger)
+}
 
 const Ellipsis = endeavorIcon('ellipsis')
 
@@ -114,6 +195,9 @@ export function EndeavorActionSurface({
   const [isDragging, setIsDragging] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const dragStart = useRef<number | null>(null)
+  // Whether THIS drag has taken the capture yet. A ref, not state: it is one
+  // gesture's bookkeeping and painting it would be a wasted render (`RC-4`).
+  const hasCaptured = useRef(false)
 
   const perform = useCallback(
     (binding: EndeavorOperationBinding) => {
@@ -148,22 +232,39 @@ export function EndeavorActionSurface({
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canSwipe) return
     dragStart.current = event.clientX
+    hasCaptured.current = false
     setIsDragging(true)
-    // CAPTURE, so the gesture cannot be lost mid-swipe. The row's transform is
-    // one React frame behind the finger, so the pointer routinely leaves the
-    // content element while the drag is still running; without capture the
-    // remaining moves and the release land on whatever is underneath and the
-    // row stays open with nothing to close it.
-    const target = event.currentTarget
-    if (typeof target.setPointerCapture === 'function') {
-      target.setPointerCapture(event.pointerId)
-    }
+    // NO capture here. See the header note: a captured pointer retargets the
+    // click, so capturing on `pointerdown` swallows every tap aimed at a
+    // control inside the row. Capture is taken by the first move that crosses
+    // the drag threshold instead.
   }
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const start = dragStart.current
     if (start === null) return
-    setOffset(boundDelta(event.clientX - start))
+
+    const delta = boundDelta(event.clientX - start)
+
+    // CAPTURE, so the gesture cannot be lost mid-swipe — but only once this is
+    // demonstrably a swipe. The row's transform is one React frame behind the
+    // finger, so the pointer routinely leaves the content element while the
+    // drag is still running; without capture the remaining moves and the
+    // release land on whatever is underneath and the row stays open with
+    // nothing to close it.
+    //
+    // The gate reads the BOUNDED delta: an edge with no bindings does not
+    // move, so a drag in that direction is still a tap as far as the row is
+    // concerned and must not eat the click either.
+    if (!hasCaptured.current && Math.abs(delta) >= SWIPE_DRAG_THRESHOLD_PX) {
+      const target = event.currentTarget
+      if (typeof target.setPointerCapture === 'function') {
+        target.setPointerCapture(event.pointerId)
+        hasCaptured.current = true
+      }
+    }
+
+    setOffset(delta)
   }
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -178,11 +279,13 @@ export function EndeavorActionSurface({
 
     const target = event.currentTarget
     if (
+      hasCaptured.current &&
       typeof target.hasPointerCapture === 'function' &&
       target.hasPointerCapture(event.pointerId)
     ) {
       target.releasePointerCapture(event.pointerId)
     }
+    hasCaptured.current = false
 
     // The decision reads THE POINTER, never the last-rendered `offset`.
     // `pointermove` is continuous, so the final `setOffset` has usually not
@@ -209,12 +312,31 @@ export function EndeavorActionSurface({
     setOffset(0)
   }
 
+  /**
+   * The room the pointer chrome needs, published for the children to reserve.
+   *
+   * Zero on touch, where the chrome is not rendered at all — so a touch row is
+   * byte-for-byte what it was.
+   */
+  const pointerGutter = isPointer
+    ? pointerChromeGutterPx({
+        hoverActionCount: resolved.hoverActions.length,
+        hasContextMenu: resolved.contextMenu.length > 0,
+      })
+    : 0
+
+  const surfaceStyle = {
+    borderRadius: radiusVar('surface'),
+    [POINTER_GUTTER_VAR]: `${pointerGutter}px`,
+  } as CSSProperties
+
   return (
     <div
       data-slot="endeavor-action-surface"
       data-input={isPointer ? 'pointer' : 'touch'}
+      data-pointer-gutter={pointerGutter}
       className={cn('group relative isolate w-full overflow-hidden', className)}
-      style={{ borderRadius: radiusVar('surface') }}
+      style={surfaceStyle}
       onContextMenu={
         resolved.contextMenu.length === 0
           ? undefined

@@ -32,7 +32,7 @@ import type { EndeavorCapabilities, EndeavorKind, EndeavorStatus } from '@kro/co
 import type { ReactNode } from 'react'
 import { colorVar, radiusVar, shadowVar } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
-import { EndeavorActionSurface } from './EndeavorActionSurface'
+import { EndeavorActionSurface, POINTER_GUTTER_VAR } from './EndeavorActionSurface'
 import { RewardBadge, UrgencyBadge } from './CardBadge'
 import { KroChip, semanticTint } from './KroChip'
 import type { EndeavorCardModel, EndeavorUrgency } from './endeavorCardModel'
@@ -212,6 +212,20 @@ export function EndeavorRow({
   const leftBadges = preset.badgesPosition === 'belowTitle' ? badges : []
   const rightBadges = preset.badgesPosition === 'trailing' ? badges : []
 
+  /**
+   * Whether anything of ours sits at the trailing edge — and therefore under
+   * `EndeavorActionSurface`'s hover strip and menu trigger, which are anchored
+   * to that same edge and become clickable on hover. The surface publishes how
+   * much room its chrome needs; this is the row deciding to reserve it.
+   *
+   * Scoped to rows that HAVE trailing content on purpose: a row with nothing
+   * there loses no control to the overlay, and indenting it would be a layout
+   * change with no defect behind it. The fallback in the `var()` keeps a row
+   * rendered outside a surface exactly as it was.
+   */
+  const hasTrailingContent =
+    rightBadges.length > 0 || (trailing !== undefined && trailing !== null)
+
   const body = (
     <div
       data-slot="endeavor-row"
@@ -221,6 +235,11 @@ export function EndeavorRow({
         gap: preset.rowSpacing,
         minHeight: preset.minHeight,
         padding: `${preset.verticalPadding}px ${preset.horizontalPadding}px`,
+        ...(hasTrailingContent
+          ? {
+              paddingRight: `calc(${preset.horizontalPadding}px + var(${POINTER_GUTTER_VAR}, 0px))`,
+            }
+          : {}),
         borderRadius: preset.cornerRadius,
         backgroundColor: colorVar('absolute'),
         boxShadow: shadowVar('card'),

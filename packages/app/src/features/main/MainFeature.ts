@@ -88,6 +88,25 @@ export interface ShellRouteContext {
   readonly highlight: boolean
   /** Open the day in the chronological list rather than the timeline. */
   readonly listMode: boolean
+  /**
+   * Whether performing this route CHANGES WHERE THE USER IS.
+   *
+   * The capture rules are explicit that only one branch does: an event goes to
+   * Plan and *"this is the only path that auto-navigates a captured endeavor
+   * away from the Inbox"*, while *"everything else opens the Inbox and never
+   * auto-navigates, even when it would apply to today"*. On iOS that sentence
+   * is enforced by the presentation — the Inbox is a sheet over whatever tab
+   * you were on, so nothing moves. The web shell has no such guarantee: a
+   * destination is a route, and delivering the inbox branch as one both pushed
+   * `/inbox` and re-selected the Inbox tab, taking the user off the surface
+   * they captured from.
+   *
+   * So the shell carries the answer as data. `false` still DELIVERS the route
+   * — the capture slice's one-shot must be consumed for the Inbox overlay to
+   * open with its Just Created row — it simply does not move the user to get
+   * there.
+   */
+  readonly autoNavigates: boolean
 }
 
 /**

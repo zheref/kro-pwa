@@ -196,7 +196,16 @@ export const selectIsSelectionReachable = createSelector(
  *
  * Composed from capture's own Selector, then reshaped: the destination the
  * shell would select, the payload the surface will want (canon seeds exactly
- * these onto `PlanFeature.State`), and the absolute instant the wait is over.
+ * these onto `PlanFeature.State`), whether performing it may move the user, and
+ * the absolute instant the wait is over.
+ *
+ * `autoNavigates` is the Plan branch and only the Plan branch, which is the
+ * capture rules' own sentence: an event going to Plan is *"the only path that
+ * auto-navigates a captured endeavor away from the Inbox"*, and everything else
+ * *"opens the Inbox and never auto-navigates"*. The distinction has to be made
+ * HERE because this is the one place that still knows which branch the intent
+ * came from — one step later it is a `SidebarDestination` like any other, and
+ * the Inbox is also an ordinary destination a user can navigate to on purpose.
  */
 export const selectPendingShellRoute = createSelector(
   [selectCaptureNavigationIntent],
@@ -214,6 +223,7 @@ export const selectPendingShellRoute = createSelector(
       scrollTarget: isPlan ? route.scrollTarget : null,
       highlight: isPlan ? route.highlight : false,
       listMode: isPlan ? route.listMode : false,
+      autoNavigates: isPlan,
     }
 
     return {

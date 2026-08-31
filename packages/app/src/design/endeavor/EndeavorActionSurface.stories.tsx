@@ -13,10 +13,12 @@
  */
 
 import { EndeavorsVistas } from '@kro/core'
+import { useState } from 'react'
 import { EndeavorActionSurface } from './EndeavorActionSurface'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
 import { EndeavorRow, endeavorRowPropsFromCardModel } from './EndeavorRow'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import type { InputCapability } from './useInputCapability'
 
 export default {
   title: 'Endeavor/EndeavorActionSurface',
@@ -97,6 +99,92 @@ export const SideBySide = {
         </Stage>
       ))}
     </div>
+  ),
+}
+
+/**
+ * The Inbox's own row: two explicit in-row buttons at the trailing edge, wrapped
+ * by the surface. This is the arrangement that carried two defects at once —
+ * the surface captured the pointer on `pointerdown`, which retargeted the click
+ * away from whichever button the tap landed on, and its hover chrome sat
+ * exactly on top of them. Both are browser-only, so this story is also the
+ * fixture `apps/web/e2e-kit/action-surface.spec.ts` drives in Chromium.
+ */
+function InboxTrailingButtons({
+  input,
+}: {
+  readonly input: InputCapability
+}) {
+  const [tapped, setTapped] = useState<readonly string[]>([])
+
+  return (
+    <div style={{ width: 460, display: 'grid', gap: 12 }}>
+      <EndeavorActionSurface
+        endeavorId={model.id}
+        capabilities={EndeavorsVistas.inbox.capabilities}
+        onOperation={() => undefined}
+        input={input}
+        label={model.title}
+      >
+        <EndeavorRow
+          {...endeavorRowPropsFromCardModel(model)}
+          config="inbox"
+          now={NOW}
+          locale="en-US"
+          trailing={
+            <div
+              data-testid="inbox-row-buttons"
+              style={{ display: 'grid', gap: 8, width: 130 }}
+            >
+              {['Triage', 'Add for Today'].map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  data-testid={`row-button-${label.replace(/\s+/g, '-')}`}
+                  onClick={() => setTapped((all) => [...all, label])}
+                  style={{
+                    minHeight: 'var(--kro-size-min-touch-target)',
+                    borderRadius: 'var(--kro-radius-field)',
+                    border: '1px solid var(--kro-color-hairline)',
+                    background: 'var(--kro-color-back-inner)',
+                    color: 'var(--kro-color-fore)',
+                    font: 'inherit',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          }
+        />
+      </EndeavorActionSurface>
+
+      <p data-testid="tap-log" style={{ margin: 0, color: 'var(--kro-color-fore-secondary)' }}>
+        {tapped.length === 0 ? 'No button tapped yet' : tapped.join(', ')}
+      </p>
+    </div>
+  )
+}
+
+export const TouchWithTrailingButtons = {
+  name: 'Touch · in-row buttons must still fire',
+  render: () => (
+    <Stage width={520}>
+      <Cell label="Tap Triage. A swipe still swipes; a tap must reach the button.">
+        <InboxTrailingButtons input="touch" />
+      </Cell>
+    </Stage>
+  ),
+}
+
+export const PointerWithTrailingButtons = {
+  name: 'Pointer · the chrome gets its own gutter',
+  render: () => (
+    <Stage width={560}>
+      <Cell label="Hover the row: the strip and the ⋯ trigger sit BESIDE the buttons, not on them.">
+        <InboxTrailingButtons input="pointer" />
+      </Cell>
+    </Stage>
   ),
 }
 

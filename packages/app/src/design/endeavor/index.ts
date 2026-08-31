@@ -99,10 +99,14 @@ export {
   selectOverflowAction,
 } from './endeavorOverflow'
 export {
+  POINTER_CHROME,
+  POINTER_GUTTER_VAR,
   SWIPE_COMMIT_PX,
+  SWIPE_DRAG_THRESHOLD_PX,
   SWIPE_REVEAL_PX,
   type EndeavorActionSurfaceProps,
   EndeavorActionSurface,
+  pointerChromeGutterPx,
 } from './EndeavorActionSurface'
 
 // Motion

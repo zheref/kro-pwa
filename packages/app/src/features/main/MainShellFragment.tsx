@@ -30,12 +30,17 @@
  * `ToolbarOutlet`, never hardcoded here.
  */
 import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { GlassSurface } from '../../design/system/glass/GlassSurface'
 import { GradientBackdrop } from '../../design/system/gradient/GradientBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
-import type { DoSurfaceLayout, ShellShape } from './DoSurfaceLayout'
+import {
+  type DoSurfaceLayout,
+  type ShellShape,
+  shellBottomInset,
+} from './DoSurfaceLayout'
 import type { NavigationElement, NavigationSection } from './NavigationSections'
 import {
   DestinationKind,
@@ -83,11 +88,27 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     ...sidebar
   } = props
 
+  /**
+   * What the shell's own bottom chrome reserves, published for the design
+   * system's bottom-anchored surfaces (the Active Toast today, the Session
+   * Pill when `#22` lands) to clear.
+   *
+   * A custom property rather than a prop: the toast host is mounted by whoever
+   * owns the overlay anchor, which is not this Fragment, and threading a
+   * number through every surface in between would give four files a chance to
+   * forget. The kit names the property and falls back to `0px`, so it never
+   * learns that a shell exists.
+   */
+  const shellStyle = {
+    [SHELL_BOTTOM_INSET_VAR]: `${shellBottomInset(shape, layout)}px`,
+  } as CSSProperties
+
   return shape === 'sidebar' ? (
     <div
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
       className="flex h-dvh w-full overflow-hidden bg-kro-back"
+      style={shellStyle}
     >
       {isSidebarVisible && (
         <SidebarFragment
@@ -133,6 +154,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
       data-testid="shell-tab-bar-shape"
       data-shell-shape="tabBar"
       className="flex h-dvh w-full flex-col overflow-hidden bg-kro-back"
+      style={shellStyle}
     >
       <GradientBackdrop height="180px" fixed />
 

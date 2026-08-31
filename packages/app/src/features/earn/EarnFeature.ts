@@ -58,7 +58,14 @@ import {
   withRewardRemoved,
 } from './EarnShifters'
 
-/** The one lifecycle field (`RC-24`, `UZF-9`) — the catalog read only. */
+/**
+ * The one lifecycle field (`RC-24`, `UZF-9`). `loading`/`loaded` describe only
+ * the catalog read (`loadEarnCatalogThunk`'s `.pending`/`.fulfilled`); `failed`
+ * is shared more widely — every load (including `loadEarnPreferencesThunk`)
+ * and every mutation (add/delete/claim) lands here on its own failure too, via
+ * the single `withException` Shifter (`EarnShifters.ts`). There is no second
+ * lifecycle field for those; `load` is Earn's one advisory signal.
+ */
 export type EarnLoadState =
   | { readonly kind: 'idle' }
   | { readonly kind: 'loading' }

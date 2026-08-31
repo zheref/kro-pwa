@@ -18,7 +18,7 @@
  *   RC-1   `createSlice(` appears only in a `…Feature.ts` file.
  *   RC-3   `createAsyncThunk(` appears only in a `…Producer.ts` file.
  *   RC-5   `createSelector(` appears only in a `…Selectors.ts` file.
- *   RC-50  nothing in this package imports `next/*` — the shell owns Next.js.
+ *   RC-40  nothing in this package imports `next/*` — the shell owns Next.js.
  *
  * Run: `node packages/app/scripts/check-uzf-boundaries.mjs` (cwd may be anywhere).
  */
@@ -95,7 +95,7 @@ for (const file of collectFiles(sourceRoot)) {
 
   for (const specifier of importsOf(source)) {
     if (specifier === 'next' || specifier.startsWith('next/')) {
-      violations.push(`${where}: imports '${specifier}' — Next.js belongs to apps/web (RC-50)`)
+      violations.push(`${where}: imports '${specifier}' — Next.js belongs to apps/web (RC-40)`)
     }
 
     if (specifier === 'react-redux' && !REACT_REDUX_FILES.includes(where)) {

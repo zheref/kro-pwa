@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest'
 import {
   CHROME_LAYOUT,
   FAB_INSETS,
+  SHELL_BOTTOM_INSET_FALLBACK,
+  SHELL_BOTTOM_INSET_VAR,
   TOAST_DURATION_SECONDS,
   clampToastDuration,
+  pillBottomOffset,
   pillTrailingPadding,
+  toastBottomOffset,
   toastLiftAbovePill,
 } from './chromeLayout'
 
@@ -82,6 +86,41 @@ describe('the lift-above-pill rule', () => {
 
   it('equals MainScreen.toastLiftAbovePill`s own arithmetic', () => {
     expect(toastLiftAbovePill()).toBe(61 + 62 + 15 - 24)
+  })
+})
+
+describe('the shell’s bottom inset — canon measures inside the tab, the web does not', () => {
+  it('raises the toast off the viewport edge by whatever the tab bar reserves', () => {
+    expect(toastBottomOffset(0)).toBe(CHROME_LAYOUT.toastBottomPadding)
+    expect(toastBottomOffset(60)).toBe(CHROME_LAYOUT.toastBottomPadding + 60)
+  })
+
+  it('raises the pill by exactly the same amount — it is the same chrome', () => {
+    expect(pillBottomOffset(0)).toBe(CHROME_LAYOUT.pillBottomPadding)
+    expect(pillBottomOffset(60)).toBe(CHROME_LAYOUT.pillBottomPadding + 60)
+  })
+
+  it('leaves the lift UNCHANGED, because it is a gap between the two', () => {
+    // Stated as a test rather than left as a belief: a shell that raises its
+    // bottom chrome raises both surfaces, so the distance between them cannot
+    // depend on the inset. If a future shell ever insets only one of the two,
+    // this is the assertion that fails first.
+    for (const inset of [0, 8, 34, 60, 96]) {
+      expect(toastLiftAbovePill(inset)).toBe(toastLiftAbovePill(0))
+    }
+  })
+
+  it('keeps canon’s gap at every inset, measured from the shared baseline', () => {
+    const inset = 60
+    const pillTop = pillBottomOffset(inset) + CHROME_LAYOUT.pillHeight
+    const toastBottom = toastBottomOffset(inset) + toastLiftAbovePill(inset)
+
+    expect(toastBottom - pillTop).toBe(CHROME_LAYOUT.pillToastSpacing)
+  })
+
+  it('names the property a shell publishes, with a zero fallback', () => {
+    expect(SHELL_BOTTOM_INSET_VAR).toBe('--kro-shell-bottom-inset')
+    expect(SHELL_BOTTOM_INSET_FALLBACK).toBe(`var(${SHELL_BOTTOM_INSET_VAR}, 0px)`)
   })
 })
 

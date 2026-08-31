@@ -257,6 +257,21 @@ describe('deliverCaptureRouteThunk — the capture one-shot', () => {
       scrollTarget: new Date('2026-08-31T09:30:00.000Z'),
       highlight: true,
       listMode: true,
+      autoNavigates: true,
+    },
+    deliverAtMs: now.getTime() + 500,
+  } as const
+
+  /** The branch the capture rules say never auto-navigates. */
+  const pendingInbox = {
+    context: {
+      destination: { kind: DestinationKind.inbox },
+      endeavorId: 'e-2',
+      day: null,
+      scrollTarget: null,
+      highlight: false,
+      listMode: false,
+      autoNavigates: false,
     },
     deliverAtMs: now.getTime() + 500,
   } as const
@@ -296,5 +311,26 @@ describe('deliverCaptureRouteThunk — the capture one-shot', () => {
     await store.dispatch(deliverCaptureRouteThunk({ pending: null, now }))
 
     expect(navigation.calls).toEqual([])
+  })
+
+  it('DELIVERS an Inbox route without navigating anywhere', async () => {
+    // THE REGRESSION. `CaptureRules`: "everything else opens the Inbox and
+    // never auto-navigates". The one-shot must still be consumed — that is
+    // what opens the Inbox with its Just Created row — but the router is not
+    // called and the user stays on the surface they captured from.
+    const navigation = makeRecordingNavigationService()
+    const store = makeStore({ ...stubbedThunkExtra, navigation })
+    const before = store.getState().main.selected
+
+    await store.dispatch(
+      deliverCaptureRouteThunk({
+        pending: pendingInbox,
+        now: new Date(pendingInbox.deliverAtMs),
+      }),
+    )
+
+    expect(navigation.calls).toEqual([])
+    expect(store.getState().main.routeContext).toMatchObject({ endeavorId: 'e-2' })
+    expect(store.getState().main.selected).toEqual(before)
   })
 })

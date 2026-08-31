@@ -8,9 +8,29 @@
    Order matters in exactly one place: `tokens.css` declares the custom
    properties every other file reads. Beyond that the files are independent —
    they define disjoint class names and no cascade between them.
+
+   ONE OF THEM IS LAYERED, AND ONLY ONE (KC-IS-#30).
+   `glass.css` is the only file here whose rules a caller is meant to
+   OVERRIDE with a utility class. `.kro-glass` sets `position: relative` and
+   `border-radius`, and its consumers say otherwise: `sheet.tsx` asks for
+   `fixed inset-x-0 bottom-0 rounded-t-kro-surface`, `dialog.tsx` for
+   `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`, and
+   `dropdown-menu.tsx` for `rounded-kro-field`.
+
+   Unlayered rules beat layered ones, and Tailwind emits every utility inside
+   `@layer utilities` — so an unlayered `.kro-glass` silently won all three,
+   and every glass OVERLAY rendered inline in the document flow instead of
+   over it. jsdom applies no CSS, so the primitives' own suites could not see
+   it; the first build to put a sheet on screen did (KC-IS-#30's Detail
+   overlay). Importing this one file into `components` restores the intended
+   cascade: the material is the default, a utility on the element wins.
+
+   The other three stay unlayered on purpose — `tokens.css` declares custom
+   properties (which no utility competes with) and the motion/gradient files
+   define behaviour a caller is not meant to override.
    ========================================================================== */
 
 @import "./tokens/tokens.css";
 @import "./motion/motion.css";
-@import "./glass/glass.css";
+@import "./glass/glass.css" layer(components);
 @import "./gradient/gradient.css";

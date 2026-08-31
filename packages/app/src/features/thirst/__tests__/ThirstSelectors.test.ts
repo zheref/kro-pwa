@@ -1,4 +1,5 @@
 /** Selectors run against a hand-built root state, never a live store (`RC-55`). */
+import { initialSettingsState } from '../../settings/SettingsState'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
@@ -39,6 +40,7 @@ const rootWith = (thirst: ThirstState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  settings: initialSettingsState,
   main: initialMainState,
   thirst,
 })

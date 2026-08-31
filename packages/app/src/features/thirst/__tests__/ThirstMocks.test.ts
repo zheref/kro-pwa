@@ -1,3 +1,4 @@
+import { initialSettingsState } from '../../settings/SettingsState'
 import { describe, expect, it } from 'vitest'
 import { thirstEntryMocks, thirstStateMocks, THIRST_MOCK_FEATURE_KEY } from '../ThirstMocks'
 import { selectThirstVoteStatus } from '../ThirstSelectors'
@@ -28,6 +29,7 @@ const rootWith = (thirst: ThirstState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   auth: initialAuthState,
+  settings: initialSettingsState,
   main: initialMainState,
   thirst,
 })

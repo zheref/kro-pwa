@@ -13,3 +13,5 @@ export * from './EarnRewardsStorage'
 export * from './EarnRules'
 export * from './EarnSelectors'
 export * from './EarnShifters'
+// The render tier (`#28`) — `EarnPage` and the components it composes.
+export * from './pages'

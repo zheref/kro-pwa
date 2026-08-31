@@ -71,12 +71,18 @@ export interface ActiveToastHostProps {
   /** Whether the Session Pill is on screen — drives the lift-above-pill rule. */
   readonly isSessionPillVisible?: boolean
   readonly position?: 'fixed' | 'absolute'
+  /**
+   * The shell's bottom chrome inset, forwarded to the layer. Omit it and the
+   * layer reads `var(--kro-shell-bottom-inset, 0px)` — see `ActiveToastLayer`.
+   */
+  readonly bottomInset?: number | string
 }
 
 export function ActiveToastHost({
   children,
   isSessionPillVisible = false,
   position = 'fixed',
+  bottomInset,
 }: ActiveToastHostProps) {
   const [toast, setToast] = useState<ActiveToastModel | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -129,6 +135,7 @@ export function ActiveToastHost({
         toast={toast}
         isSessionPillVisible={isSessionPillVisible}
         position={position}
+        {...(bottomInset === undefined ? {} : { bottomInset })}
       />
     </ActiveToastContext.Provider>
   )

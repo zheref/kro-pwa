@@ -7,7 +7,7 @@ here disagrees with something you read elsewhere, this file wins.
 
 | Tool | Version | How you get it |
 |---|---|---|
-| Node.js | `>= 20` (developed against 22) | nvm / fnm / Homebrew |
+| Node.js | `>= 20.19.0` (developed against 22; CI runs 22) | nvm / fnm / Homebrew |
 | pnpm | `9.15.9` | `corepack enable` — the version is pinned by `packageManager` in the root `package.json`, so Corepack fetches exactly this one |
 | Turborepo | `^2.5` | installed by `pnpm install` (root devDependency) |
 | Make | any | ships with macOS and every Linux |
@@ -60,7 +60,7 @@ even have typings there.
 
 Workspace packages are consumed as TypeScript **source**, not as a build
 artifact: their `exports` point at `src/index.ts`, Next.js compiles them via
-`transpilePackages`, and Jest resolves them via `moduleNameMapper`. There is no
+`transpilePackages`, and Vitest resolves them via aliases. There is no
 per-package bundling step to keep in sync.
 
 ## Verbs
@@ -72,9 +72,9 @@ Both columns do the same thing. `make` is the interface; pnpm is the mechanism.
 | `make setup` | `corepack enable && pnpm install` | install the toolchain and all dependencies |
 | `make dev` | `turbo run dev` | Next dev server on :3000 |
 | `make build` | `turbo run build` | production build of every member |
-| `make lint` | `turbo run lint` | ESLint on the app + the `@kro/core` platform-free check |
+| `make lint` | `turbo run lint` | Biome repo-wide + the `@kro/core` platform-free and UZF boundary checks |
 | `make typecheck` | `pnpm -r exec tsc --noEmit` | type-check every member |
-| `make test` | `turbo run test` | Jest suites |
+| `make test` | `turbo run test` | Vitest suites in every member (`make test-e2e` runs Playwright locally) |
 | `make analyze` | `turbo run analyze` | production build with `@next/bundle-analyzer` |
 | `make codegen` | — | reserved; no generator wired yet |
 | `make tokens` | — | reserved; wired by the design-system child |
@@ -83,11 +83,9 @@ Both columns do the same thing. `make` is the interface; pnpm is the mechanism.
 
 ### Build and lint are separate verbs
 
-`next build` runs ESLint by default; here it does not (`eslint.ignoreDuringBuilds`
-in `apps/web/next.config.ts`). Lint is its own Turborepo task, so `make build`
-answers *"does it compile and bundle"* and `make lint` answers *"does it match
-the style rules"* — one failing no longer masks the other. Type errors still
-fail the build.
+Lint is its own Turborepo task, so `make build` answers *"does it compile and
+bundle"* and `make lint` answers *"does it match the style rules"* — one failing
+never masks the other. Type errors still fail the build.
 
 ### What is green today
 
@@ -95,14 +93,11 @@ fail the build.
 |---|---|---|
 | `make build` | ✅ green | |
 | `make typecheck` | ✅ green | all three members, `noUncheckedIndexedAccess` on |
-| `make test` | ✅ green | 3 suites / 41 tests |
-| `make lint` | ❌ **red, and was red before this layout existed** | ~490 `semi` errors: `eslint.config.mjs` sets `semi: ["error", "never"]` and the codebase is being converted to that style file by file. Clearing it wholesale would rewrite 100+ files that the feature children of #1 are about to own, and Biome replaces ESLint in #3 anyway. |
+| `make test` | ✅ green | 160 tests: `@kro/core` 44 · `@kro/app` 75 · `@kro/web` 41 |
+| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome currently excludes `packages/` and `scripts/` (added in a parallel lane) and the vendored `apps/web/src/components/ui/**` (deleted by #6) — the follow-up is: remove the exclusions, run one `make format`. |
 
-`turbo run lint` still runs the `@kro/core` platform-free check as its own task,
-so that gate is readable on its own: `pnpm --filter @kro/core lint`.
-
-Note that `next lint` only sees `apps/web`. `packages/core` and `packages/app`
-have no ESLint config of their own — repo-wide coverage arrives with Biome (#3).
+The `@kro/core` platform-free gate stays readable on its own:
+`pnpm --filter @kro/core lint`.
 
 ## TypeScript
 
@@ -116,15 +111,19 @@ member extends it and overrides nothing but `lib`, `jsx`, `types` and `paths`.
 
 ## Current state vs. target
 
-This is the shape after the monorepo restructure. Two axes are deliberately
-still on their pre-migration tools and are swapped by the next child issue:
+After #2 (monorepo) and #3 (toolchain):
 
-| Axis | Today | Target |
+| Axis | Today | Remaining target |
 |---|---|---|
-| Lint / format | ESLint (`eslint-config-next`) in `apps/web` | Biome, repo-wide |
-| Tests | Jest + ts-jest + Testing Library | Vitest + Testing Library, Playwright, Storybook |
-| Git hooks | none | lefthook + commitlint |
-| CI | none | `pr.yml` + `bankai.yml` |
+| Lint / format | Biome repo-wide (see exclusions above) | drop the exclusions after the parallel lanes land |
+| Tests | Vitest everywhere; Playwright via `make test-e2e` (not in CI yet); Storybook **10** wired, story-less | stories + snapshot minimums arrive with the feature children; Playwright in CI once a browser step is wired |
+| Git hooks | lefthook + commitlint + `.bankai/hooks/guard.sh`, active | — |
+| CI | `pr.yml` (install → lint → typecheck → test → build, Node 22) | `bankai.yml` (#4) |
+
+Note: the bankai-core stack canon still names Storybook **8**; SB 8's Next
+builder crashes on Next 15.3 (upstream storybookjs/storybook#32301, fixed in
+9.x), so this repo runs Storybook 10 — the canon correction is tracked in
+bankai-core.
 
 Nothing above changes the verbs: `make lint` and `make test` keep working across
-that swap, which is the point of routing through the Makefile.
+every swap, which is the point of routing through the Makefile.

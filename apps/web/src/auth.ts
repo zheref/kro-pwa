@@ -1,40 +1,41 @@
-import { AuthOptions, getServerSession } from "next-auth"
-import GoogleProvider from "next-auth/providers/google";
+import { type AuthOptions, getServerSession } from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
 
 const authOptions: AuthOptions = {
-    // Configure one or more authentication providers
-    providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID ?? '',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-            authorization: {
-                params: {
-                    scope: 'openid email profile https://www.googleapis.com/auth/calendar'
-                }
-            }
-        }),
-        // ...add more providers here
-    ],
-    callbacks: {
-        jwt: async ({ token, account }) => {
-            // Initial sign in
-            if (account) {
-                return {
-                    ...token,
-                    provider: account.provider,
-                    accessToken: account.access_token,
-                }
-            }
-            return token
+  // Configure one or more authentication providers
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      authorization: {
+        params: {
+          scope:
+            'openid email profile https://www.googleapis.com/auth/calendar',
         },
-        session: async ({ session, token }) => {
-            return {
-                ...session,
-                accessToken: token.accessToken,
-                provider: token.provider,
-            }
-        },
+      },
+    }),
+    // ...add more providers here
+  ],
+  callbacks: {
+    jwt: async ({ token, account }) => {
+      // Initial sign in
+      if (account) {
+        return {
+          ...token,
+          provider: account.provider,
+          accessToken: account.access_token,
+        }
+      }
+      return token
     },
+    session: async ({ session, token }) => {
+      return {
+        ...session,
+        accessToken: token.accessToken,
+        provider: token.provider,
+      }
+    },
+  },
 }
 
 /**

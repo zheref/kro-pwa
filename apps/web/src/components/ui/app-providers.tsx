@@ -6,8 +6,8 @@ import { Global } from '@emotion/react'
 import { SessionProvider } from 'next-auth/react'
 
 interface ProvidersProps {
-    session: any
-    children: React.ReactNode
+  session: any
+  children: React.ReactNode
 }
 
 export function AppProviders({ session, children }: ProvidersProps) {
@@ -28,13 +28,11 @@ export function AppProviders({ session, children }: ProvidersProps) {
           }
         `}
       />
-        <SessionProvider session={session}>
-            <ChakraProvider>
-                <ColorModeProvider>
-                    {children}
-                </ColorModeProvider>
-            </ChakraProvider>
-        </SessionProvider>
+      <SessionProvider session={session}>
+        <ChakraProvider>
+          <ColorModeProvider>{children}</ColorModeProvider>
+        </ChakraProvider>
+      </SessionProvider>
     </>
   )
-} 
+}

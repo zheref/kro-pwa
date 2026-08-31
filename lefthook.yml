@@ -1,0 +1,29 @@
+# Git hooks for kro-pwa. Installed by `pnpm install` (root `prepare` script)
+# or explicitly with `pnpm exec lefthook install`.
+#
+# The hooks are the local half of the same gates CI runs in
+# `.github/workflows/pr.yml`: nothing here is advisory, and nothing here may be
+# skipped with `--no-verify` (bankai canon SEC-14).
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: '*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,css}'
+      run: pnpm exec biome check --no-errors-on-unmatched --staged
+
+    - name: typecheck
+      run: pnpm -r exec tsc --noEmit
+
+    - name: guard
+      run: .bankai/hooks/guard.sh
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: test
+      run: pnpm turbo run test

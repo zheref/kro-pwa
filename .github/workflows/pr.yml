@@ -1,0 +1,71 @@
+name: pr
+
+# CON-19: the same gate runs on the pull request AND on the branch it targets,
+# so a merge queue, a direct push or a force-push to `main` can never land work
+# that the PR check never saw.
+on:
+  push:
+    branches:
+      - main
+      - 'integration/**'
+  pull_request:
+    branches:
+      - main
+      - 'integration/**'
+
+# One run per ref. A new push supersedes the previous run instead of queueing
+# behind it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# SEC-14: least privilege. This workflow only reads the tree.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: lint · typecheck · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # SEC-14: third-party actions are pinned to a reviewed commit SHA. The
+      # trailing comment records which release that SHA is, so a bump is a
+      # visible, reviewable diff rather than a silent tag re-point.
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm
+        # Version comes from `packageManager` in the root package.json.
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # Current LTS. The support floor in `engines.node` is 20.19.0 (Vite 7
+          # needs ^20.19); CI deliberately runs a version comfortably above it.
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The four verbs below are the Makefile's, not ad-hoc commands: CI and a
+      # human on a fresh clone run exactly the same thing (see TOOLCHAIN.md).
+      - name: Lint
+        run: make lint
+
+      - name: Typecheck
+        run: make typecheck
+
+      - name: Test
+        run: make test
+
+      - name: Build
+        run: make build
+
+      # Not run here yet: `make test-e2e`. Playwright needs a browser download
+      # step (`playwright install --with-deps chromium`, ~300 MB) and there is
+      # exactly one smoke test to justify it today. The child that adds real
+      # E2E coverage adds the step and the cache along with it.

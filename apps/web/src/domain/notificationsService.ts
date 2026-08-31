@@ -1,21 +1,21 @@
 interface INotificationManager {
-    requestPermission: () => Promise<NotificationPermission>;
-    permission: NotificationPermission;
+  requestPermission: () => Promise<NotificationPermission>
+  permission: NotificationPermission
 }
 
 interface INotification {
-    title: string;
-    img: string | undefined;
-    body: string | undefined;
+  title: string
+  img: string | undefined
+  body: string | undefined
 }
 
 function getNotificationManager(): INotificationManager | null {
-    if (!("Notification" in window)) {
-        console.log("This browser does not support notifications.");
-        return null;
-    }
+  if (!('Notification' in window)) {
+    console.log('This browser does not support notifications.')
+    return null
+  }
 
-    return window.Notification as INotificationManager;
+  return window.Notification as INotificationManager
 }
 
 /**
@@ -24,14 +24,19 @@ function getNotificationManager(): INotificationManager | null {
  * @param {Function} callback - A callback function that will be executed once the permission request is resolved.
  * @return {void} This method does not return a value.
  */
-function requestNotificationsPermission(callback: (r: NotificationPermission) => void) {
-    const manager = getNotificationManager();
+function requestNotificationsPermission(
+  callback: (r: NotificationPermission) => void,
+) {
+  const manager = getNotificationManager()
 
-    console.log("Requesting notifications permission...");
-    manager?.requestPermission().then((result) => {
-        callback(result);
-    }).catch((err) => {
-        console.error("Error while requesting permission", err);
+  console.log('Requesting notifications permission...')
+  manager
+    ?.requestPermission()
+    .then((result) => {
+      callback(result)
+    })
+    .catch((err) => {
+      console.error('Error while requesting permission', err)
     })
 }
 
@@ -44,9 +49,9 @@ function requestNotificationsPermission(callback: (r: NotificationPermission) =>
  * @return {boolean} Returns true if the notifications permission has not been requested, otherwise false.
  */
 function hasNotificationsPermissionBeenRequested(): boolean {
-    const permissionVal = getNotificationManager()?.permission;
-    console.log("Permissions value has been found to be:", permissionVal);
-    return permissionVal !== "default";
+  const permissionVal = getNotificationManager()?.permission
+  console.log('Permissions value has been found to be:', permissionVal)
+  return permissionVal !== 'default'
 }
 
 /**
@@ -55,7 +60,7 @@ function hasNotificationsPermissionBeenRequested(): boolean {
  * @return {boolean} Returns true if the notifications permission is granted, otherwise false.
  */
 function isNotificationsPermissionGranted(): boolean {
-    return getNotificationManager()?.permission === "granted";
+  return getNotificationManager()?.permission === 'granted'
 }
 
 /**
@@ -65,17 +70,17 @@ function isNotificationsPermissionGranted(): boolean {
  * @return {Notification} The created Notification instance.
  */
 function postNotification(_: INotification): Notification {
-    const options: NotificationOptions = {
-        body: _.body,
-        icon: _.img,
-    };
-    return new Notification(_.title, options);
+  const options: NotificationOptions = {
+    body: _.body,
+    icon: _.img,
+  }
+  return new Notification(_.title, options)
 }
 
-export type { INotification, INotificationManager };
+export type { INotification, INotificationManager }
 export {
-    hasNotificationsPermissionBeenRequested,
-    isNotificationsPermissionGranted,
-    postNotification,
-    requestNotificationsPermission
-};
+  hasNotificationsPermissionBeenRequested,
+  isNotificationsPermissionGranted,
+  postNotification,
+  requestNotificationsPermission,
+}

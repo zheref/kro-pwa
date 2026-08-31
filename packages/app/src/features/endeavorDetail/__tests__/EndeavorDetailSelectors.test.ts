@@ -54,6 +54,7 @@ import {
 } from '../EndeavorDetailSelectors'
 import type { EndeavorDetailState } from '../EndeavorDetailState'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   greeting: initialGreetingState,
@@ -67,6 +68,7 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
 })

@@ -41,6 +41,7 @@ import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
 import { AuthFlow, type AuthState } from '../AuthState'
 import { signOutIntents } from '../SignOutIntents'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (auth: AuthState): RootState => ({
   greeting: initialGreetingState,
@@ -55,6 +56,7 @@ const rootWith = (auth: AuthState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth,
   main: initialMainState,
 })

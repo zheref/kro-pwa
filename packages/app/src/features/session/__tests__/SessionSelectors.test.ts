@@ -66,6 +66,7 @@ import {
   withException,
 } from '../SessionShifters'
 import { SessionPhase, SessionPillAffordance, SessionTint } from '../SessionVocabulary'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (session: SessionState): RootState => ({
@@ -83,6 +84,7 @@ const rootWith = (session: SessionState): RootState => ({
   session,
   auth: initialAuthState,
   main: initialMainState,
+  settings: initialSettingsState,
 })
 
 const running = rootWith(sessionStateMocks.running)

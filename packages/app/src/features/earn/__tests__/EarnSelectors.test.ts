@@ -43,6 +43,7 @@ import {
   selectTotalEarnedPoints,
 } from '../EarnSelectors'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (earn: EarnState): RootState => ({
   greeting: initialGreetingState,
@@ -57,6 +58,7 @@ const rootWith = (earn: EarnState): RootState => ({
   earn,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
 })

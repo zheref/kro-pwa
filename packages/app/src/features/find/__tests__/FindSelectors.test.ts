@@ -56,6 +56,7 @@ import {
   selectTasksVista,
 } from '../FindSelectors'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (find: FindState): RootState => ({
   greeting: initialGreetingState,
@@ -70,6 +71,7 @@ const rootWith = (find: FindState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
 })

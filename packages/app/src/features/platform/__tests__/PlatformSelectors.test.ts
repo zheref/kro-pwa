@@ -31,6 +31,7 @@ import {
   selectPlatformException,
   selectShouldOfferNotificationPrompt,
 } from '../PlatformSelectors'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (platform: PlatformState): RootState => ({
   greeting: initialGreetingState,
@@ -46,6 +47,7 @@ const rootWith = (platform: PlatformState): RootState => ({
   auth: initialAuthState,
   main: initialMainState,
   session: initialSessionState,
+  settings: initialSettingsState,
   platform,
 })
 

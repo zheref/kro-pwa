@@ -32,6 +32,7 @@ import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { platformSlice } from '../features/platform/PlatformFeature'
 import { sessionSlice } from '../features/session/SessionFeature'
+import { settingsSlice } from '../features/settings/SettingsFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type AuthService,
@@ -274,6 +275,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       session: sessionSlice.reducer,
       auth: authSlice.reducer,
       main: mainSlice.reducer,
+      settings: settingsSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

@@ -87,10 +87,17 @@ Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing p
 | A Service module imported only by `store.ts` + tests | same | `RC-6`, `RC-21` |
 | `fetch(` only under `src/services/**` | same | `RC-3` |
 | `createSlice` / `createAsyncThunk` / `createSelector` only in `…Feature.ts` / `…Producer.ts` / `…Selectors.ts` | same | `RC-1`, `RC-3`, `RC-5` |
-| `@kro/app` imports no `next/*` | same | `RC-50` |
+| `@kro/app` imports no `next/*` | same | `RC-40` |
 
 Both scripts run as their package's `lint` task, so `make lint` (and therefore `pr.yml`) fails
 on a violation. That is what makes "components cannot fetch" a structural fact.
+
+> **Citation note.** The last row is `RC-40` — *"the shared Page never imports a Next.js API"* —
+> because the rule governs `packages/app`, the shared render layer. `RC-50` is the neighbouring
+> rule that `packages/core` carries **zero** platform imports (the first row), which is why the
+> two are easy to confuse. `check-uzf-boundaries.mjs` currently prints `RC-50` in that one
+> violation message; correcting the string is a one-word fix in `packages/app/**`, outside this
+> issue's file lane, and belongs to whichever child next touches that script.
 
 **Divergence from `RC-50`, recorded.** The canon puts the whole `library/` runtime — including
 `store.ts` and `hooks.ts` — inside `{{CORE_PACKAGE}}`. Here `result.ts` / `exception.ts` /

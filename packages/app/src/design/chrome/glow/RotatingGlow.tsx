@@ -273,7 +273,11 @@ export function RotatingGlow({
     inset: -outerInset,
     padding: spread,
     borderRadius: radius,
-    overflow: 'hidden',
+    // NO `overflow: hidden`. The blur is the reach control, and a filter's
+    // plume paints OUTSIDE the element's own box — clipping it flush turns the
+    // falloff into a hard-edged ring, which is the exact failure canon's
+    // `.padding(-margin)` exists to avoid. The oversized sweep child does not
+    // need clipping either: the mask below already confines it to the ring.
     // The cut-out. Both spellings: `mask-composite` is the standard, and
     // WebKit still needs the prefixed `xor` form.
     WebkitMaskImage: 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)',

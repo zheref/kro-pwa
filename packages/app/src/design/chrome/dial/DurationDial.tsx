@@ -77,6 +77,22 @@ export const DEFAULT_STEP_SECONDS = 60
 export const DEFAULT_DIAMETER = 180
 /** `DurationDial.indicatorLength` — the tick ring's stroke width. */
 export const TICK_RING_WIDTH = 18
+/** 60 ticks round the dial — the seed component's `TICK_COUNT`, and one per minute. */
+export const TICK_COUNT = 60
+
+const TICK_DEGREES = 360 / TICK_COUNT
+
+/**
+ * The two mask layers that turn a full conic disc into a dashed ring.
+ *
+ * Declared once, at module scope, because it depends on nothing that changes
+ * per render — and because a mask string assembled inline is the kind of thing
+ * that quietly loses its `closest-side` in a refactor.
+ */
+const TICK_MASK = [
+  `radial-gradient(circle closest-side at 50% 50%, transparent 0 calc(100% - ${TICK_RING_WIDTH}px), #000 calc(100% - ${TICK_RING_WIDTH}px))`,
+  `repeating-conic-gradient(from 0deg, #000 0 ${TICK_DEGREES / 2}deg, transparent ${TICK_DEGREES / 2}deg ${TICK_DEGREES}deg)`,
+].join(', ')
 
 /** Canon's `formatDigital` — `MM:SS`, never negative. */
 export function formatDigital(seconds: number): string {
@@ -242,10 +258,20 @@ export function DurationDial({
       >
         {/*
           The tick ring. Canon strokes a dashed circle at `indicatorLength`
-          width and overlays a trimmed copy in the covered colour; a conic
-          gradient masked to an annulus is the same two layers in one paint,
-          and — unlike 60 rotated elements, which is what the seed did — it
-          costs one node whatever the step count is.
+          width and overlays a trimmed copy in the covered colour; here one
+          conic gradient carries both halves and two mask layers cut it into
+          the ring's shape:
+
+            1. an ANNULUS — `closest-side` so 100% is the box's radius, which
+               is the whole reason for that keyword: without it a `circle`
+               gradient measures to the farthest CORNER and the hole lands at
+               ~71% of where it should.
+            2. the DASHES — a repeating conic gradient at 6deg per tick, 60
+               round the dial, matching the tick count the seed component drew
+               with 60 rotated elements. `intersect` keeps only what is inside
+               both, which is a dashed annulus.
+
+          One node rather than 60, whatever the step count.
         */}
         <div
           aria-hidden="true"
@@ -255,11 +281,39 @@ export function DurationDial({
             inset: 0,
             borderRadius: '50%',
             background: `conic-gradient(var(--kro-color-accent) 0deg ${ratio * 360}deg, var(--kro-color-hairline) ${ratio * 360}deg 360deg)`,
-            WebkitMaskImage: `radial-gradient(circle at 50% 50%, transparent 0 calc(50% - ${TICK_RING_WIDTH}px), #000 calc(50% - ${TICK_RING_WIDTH}px))`,
-            maskImage: `radial-gradient(circle at 50% 50%, transparent 0 calc(50% - ${TICK_RING_WIDTH}px), #000 calc(50% - ${TICK_RING_WIDTH}px))`,
+            WebkitMaskImage: TICK_MASK,
+            WebkitMaskComposite: 'source-in',
+            maskImage: TICK_MASK,
+            maskComposite: 'intersect',
           }}
         />
-        {/* The covered disc — canon's `RadialCircle` under the tick ring. */}
+        {/*
+          The disc, in canon's two layers — a base fill with the covered wedge
+          TINTED OVER it, not a single conic that swaps one colour for another.
+
+          Canon stacks `Circle().fill(circleColor)` and `RadialCircle(angle:,
+          fillColor: coveredCircleColor)`, and `coveredCircleColor` is
+          `.accentColor.opacity(0.30)` — a wash, which only means anything if
+          there is an opaque fill underneath it. Collapsing the two into one
+          gradient composites that 30% against the PAGE instead, so the covered
+          wedge reads as a hole rather than as a tint. Two nodes, correct.
+
+          `back-inner` rather than canon's `.absolute`: `.absolute` is pure
+          white in light mode, which canon can afford because this control only
+          ever appears on a forced-dark session sheet. A recessed field colour
+          is the same intent on a surface that has to work in both schemes.
+        */}
+        <div
+          aria-hidden="true"
+          data-kro-dial-base=""
+          style={{
+            position: 'absolute',
+            width: innerDiameter,
+            height: innerDiameter,
+            borderRadius: '50%',
+            background: 'var(--kro-color-back-inner)',
+          }}
+        />
         <div
           aria-hidden="true"
           data-kro-dial-fill=""
@@ -268,7 +322,7 @@ export function DurationDial({
             width: innerDiameter,
             height: innerDiameter,
             borderRadius: '50%',
-            background: `conic-gradient(color-mix(in srgb, var(--kro-color-accent) 30%, transparent) 0deg ${ratio * 360}deg, var(--kro-color-back-inner) ${ratio * 360}deg 360deg)`,
+            background: `conic-gradient(color-mix(in srgb, var(--kro-color-accent) 30%, transparent) 0deg ${ratio * 360}deg, transparent ${ratio * 360}deg 360deg)`,
           }}
         />
         <span

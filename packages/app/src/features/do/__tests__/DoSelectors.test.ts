@@ -23,6 +23,7 @@ import {
   selectIsDoLoading,
 } from '../DoSelectors'
 import { withVisibilityApplied } from '../DoShifters'
+import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import { initialPlanState } from '../../plan/PlanState'
@@ -40,6 +41,7 @@ const rootWith = (slice: DoState): RootState => ({
   triage: initialTriageState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  earn: initialEarnState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

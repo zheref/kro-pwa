@@ -2,6 +2,7 @@ import { greetingMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import type { RootState } from '../../../library/store'
@@ -32,6 +33,7 @@ const rootWith = (greeting: GreetingState): RootState => ({
   triage: initialTriageState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  earn: initialEarnState,
 })
 
 describe('selectGreeting', () => {

@@ -13,6 +13,7 @@ import {
 import { describe, expect, it } from 'vitest'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
@@ -67,6 +68,7 @@ const rootWith = (plan: PlanState): RootState => ({
   plan,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  earn: initialEarnState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

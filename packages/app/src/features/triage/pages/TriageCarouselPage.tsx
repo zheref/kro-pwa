@@ -219,6 +219,27 @@ export function TriageCarouselPage({
     [],
   )
 
+  /**
+   * Hold an effect's abort handle for as long as the effect is actually
+   * running, and not one moment longer.
+   *
+   * The register is the Page's, so a settled handle has to be dropped as it
+   * settles — otherwise an Inbox session that triages twenty rows unmounts by
+   * aborting forty resolved promises and holding forty references it will never
+   * use. `finally` rather than `then`: a handle is spent whichever way its
+   * effect ended, cancellation included.
+   */
+  const track = useCallback(
+    <T extends { abort: () => void } & PromiseLike<unknown>>(effect: T): T => {
+      inFlight.current.push(effect)
+      void Promise.resolve(effect).finally(() => {
+        inFlight.current = inFlight.current.filter((held) => held !== effect)
+      })
+      return effect
+    },
+    [],
+  )
+
   // --- opening ----------------------------------------------------------
 
   useEffect(() => {
@@ -238,14 +259,13 @@ export function TriageCarouselPage({
         ? TRIAGE_DEFAULT_SYMBOL
         : computedSymbol(known.title)
 
-    const flag = dispatch(resolveTriageEditReachabilityThunk())
-    inFlight.current.push(flag)
+    const flag = track(dispatch(resolveTriageEditReachabilityThunk()))
 
     void flag.then((action) => {
       const result = resolveTriageEditReachabilityThunk.fulfilled.match(action)
         ? action.payload
         : null
-      inFlight.current.push(
+      track(
         dispatch(
           openTriageThunk({
             endeavorId: request.endeavorId,
@@ -260,7 +280,7 @@ export function TriageCarouselPage({
       // The one-shot is spent the moment Triage has been asked to present.
       dispatch(onTriageRequestConsumed())
     })
-  }, [dispatch, request, pendingTriage, justCreated])
+  }, [dispatch, track, request, pendingTriage, justCreated])
 
   // The next request may be for the same row, so the latch releases as soon as
   // the Inbox has taken its one-shot back.

@@ -76,6 +76,7 @@ import {
   withExpiryPicked,
   withFetchStarted,
   withQuadrantPicked,
+  withRewardPointsPicked,
   withSessionOpened,
   withValueRatingTapped,
 } from '../../TriageShifters'
@@ -337,6 +338,12 @@ export const triagePageStateMocks = {
     triageStateMocks.scheduled,
     triageMockAt(24, 11, 9),
   ),
+
+  /** The reward stepper at canon's floor — its minus control is spent. */
+  rewardAtFloor: withRewardPointsPicked(openedWith(), 1),
+
+  /** And at canon's ceiling — its plus control is spent. */
+  rewardAtCeiling: withRewardPointsPicked(openedWith(), 999),
 
   /** The dark-launched inline Edit affordance, reachable. */
   editReachable: withQuadrantPicked(

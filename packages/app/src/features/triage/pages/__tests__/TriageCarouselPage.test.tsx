@@ -135,6 +135,35 @@ describe('the hand-off from the Inbox', () => {
   })
 })
 
+describe('a long-lived surface, triaging several rows in a row', () => {
+  it('opens each row cleanly on a surface that is never remounted', async () => {
+    // The scenario the in-flight register exists for: the Inbox stays mounted
+    // for as long as the app runs, so every hand-off adds handles to it. They
+    // are dropped as their effects settle, and the third open has to be as
+    // clean as the first.
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mount(store)
+
+    for (const endeavor of [
+      triageEndeavorFixtures.unscheduledTask,
+      triageEndeavorFixtures.touristReminder,
+      triageEndeavorFixtures.habit,
+    ]) {
+      await seedTriageRequest(store, endeavor.id)
+      await waitFor(() => {
+        expect(store.getState().triage.session?.endeavorId).toBe(endeavor.id)
+      })
+      expect(await screen.findByText(endeavor.title)).toBeTruthy()
+      // Back out, so the next row arrives on a closed surface exactly as it
+      // would in the browser.
+      fireEvent.click(screen.getByTestId('triage-back'))
+      await waitFor(() => {
+        expect(store.getState().triage.session).toBeNull()
+      })
+    }
+  })
+})
+
 describe('the confirm gate, end to end', () => {
   it('disables Complete and names the missing quadrant on a pristine form', async () => {
     await openedOn(triageEndeavorFixtures.unscheduledTask.id)

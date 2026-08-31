@@ -64,7 +64,11 @@ import {
   type TriageExpiryToken,
   triageExpiryPresetLabel,
 } from '../TriageExpiry'
-import type { TriageSecondaryAction } from '../TriageRules'
+import {
+  MAXIMUM_TRIAGE_REWARD_POINTS,
+  MINIMUM_TRIAGE_REWARD_POINTS,
+  type TriageSecondaryAction,
+} from '../TriageRules'
 import type { TriageRewardStepDirection } from '../TriageState'
 import { type LucideIcon, triageIcon, triageIconFor } from './triageIcons'
 import {
@@ -394,9 +398,14 @@ function SectionLabel({ children }: { readonly children: ReactNode }) {
  *
  * The **grain is not here** — `triageRewardStep` decides ±5 below 50 and ±10
  * at or above it, one tier down, and this only says which control was pressed.
- * That is why the bounds are read off the value rather than re-derived: a
- * control disabled at 1 and at 999 matches canon's `.disabled(points <=
- * lowerBound)` without this file knowing what the bounds mean.
+ *
+ * The **bounds** are canon's own constants, imported rather than retyped, so a
+ * control is genuinely `disabled` at 1 and at 999 exactly as canon's
+ * `.disabled(points <= lowerBound)` / `.disabled(points >= upperBound)` are —
+ * the same shape `CapturePromptFragment` already uses for its own stepper. A
+ * real `disabled` attribute, not only the class: without it the control keeps
+ * its click, the `disabled:` utility never applies, and the 1–999 range is a
+ * claim the UI never makes.
  */
 function RewardStepper({
   points,
@@ -423,11 +432,12 @@ function RewardStepper({
         <button
           type="button"
           aria-label="Decrease reward points"
+          disabled={points <= MINIMUM_TRIAGE_REWARD_POINTS}
           onClick={() => onStep('decrement')}
           className={cn(
             'inline-flex items-center justify-center rounded-kro-field',
             'outline-none focus-visible:shadow-[var(--kro-ring)]',
-            'disabled:opacity-[var(--kro-opacity-disabled)]',
+            'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
           )}
           style={{
             width: 'var(--kro-size-min-touch-target)',
@@ -448,10 +458,12 @@ function RewardStepper({
         <button
           type="button"
           aria-label="Increase reward points"
+          disabled={points >= MAXIMUM_TRIAGE_REWARD_POINTS}
           onClick={() => onStep('increment')}
           className={cn(
             'inline-flex items-center justify-center rounded-kro-field',
             'outline-none focus-visible:shadow-[var(--kro-ring)]',
+            'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
           )}
           style={{
             width: 'var(--kro-size-min-touch-target)',

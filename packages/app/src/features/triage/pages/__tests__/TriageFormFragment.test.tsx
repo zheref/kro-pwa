@@ -303,6 +303,49 @@ describe('the intents the form raises', () => {
     expect(onSelectDuration).toHaveBeenCalledWith(25)
   })
 
+  it('spends the minus control at the floor and the plus control at the ceiling', () => {
+    // Canon's `.disabled(points <= lowerBound)` / `.disabled(points >=
+    // upperBound)`. A real `disabled` attribute, not only the class: without it
+    // the control keeps its click and the 1–999 range is a claim the UI never
+    // makes.
+    mount(triagePageStateMocks.rewardAtFloor)
+    expect(
+      screen.getByLabelText('Decrease reward points').hasAttribute('disabled'),
+    ).toBe(true)
+    expect(
+      screen.getByLabelText('Increase reward points').hasAttribute('disabled'),
+    ).toBe(false)
+
+    cleanup()
+
+    mount(triagePageStateMocks.rewardAtCeiling)
+    expect(
+      screen.getByLabelText('Decrease reward points').hasAttribute('disabled'),
+    ).toBe(false)
+    expect(
+      screen.getByLabelText('Increase reward points').hasAttribute('disabled'),
+    ).toBe(true)
+  })
+
+  it('leaves both controls live between the bounds', () => {
+    mount(triageStateMocks.pristine)
+    expect(
+      screen.getByLabelText('Decrease reward points').hasAttribute('disabled'),
+    ).toBe(false)
+    expect(
+      screen.getByLabelText('Increase reward points').hasAttribute('disabled'),
+    ).toBe(false)
+  })
+
+  it('raises no step from a spent control', () => {
+    const onStepReward = vi.fn()
+    mount(triagePageStateMocks.rewardAtFloor, { onStepReward })
+
+    fireEvent.click(screen.getByLabelText('Decrease reward points'))
+
+    expect(onStepReward).not.toHaveBeenCalled()
+  })
+
   it('raises the stepper direction and lets the slice decide the grain', () => {
     const onStepReward = vi.fn()
     mount(triageStateMocks.pristine, { onStepReward })

@@ -18,6 +18,7 @@ import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
+import { initialThirstState } from '../../thirst/ThirstFeature'
 import type { MainState } from '../MainFeature'
 import { MainMocks, handheldSurface, projectMocks } from '../MainMocks'
 import {
@@ -49,6 +50,7 @@ const rootWith = (main: MainState): RootState => ({
   platform: initialPlatformState,
   session: initialSessionState,
   main,
+  thirst: initialThirstState,
 })
 
 describe('the shell shape', () => {

@@ -32,6 +32,7 @@ import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { platformSlice } from '../features/platform/PlatformFeature'
 import { sessionSlice } from '../features/session/SessionFeature'
+import { thirstSlice } from '../features/thirst/ThirstFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type AuthService,
@@ -90,6 +91,11 @@ import {
   makeLiveSettingsSyncService,
   stubbedSettingsSyncService,
 } from '../services/sync/SettingsSyncService'
+import {
+  type ThirstService,
+  makeLiveThirstService,
+  stubbedThirstService,
+} from '../services/thirst/ThirstService'
 
 /**
  * Every injectable Service in the app, in one closed manifest. A Producer reads
@@ -176,6 +182,14 @@ export interface ThunkExtra {
    * records the same reasoning from the other side.
    */
   readonly googleCalendarPlanHost: PlanHost
+  /**
+   * Thirst feature-demand voting (#35) — reads/writes the canon
+   * `public.votes`/`public.features` tables + the `get_feature_vote_counts`
+   * RPC directly, tagged `web`. Behind `SupabaseClientProvider` the same way
+   * `authService`/`settingsSync` are: an unconfigured project degrades to
+   * "no counts, sign-in required to vote" rather than a crash.
+   */
+  readonly thirstService: ThirstService
 }
 
 /**
@@ -221,6 +235,7 @@ export const liveThunkExtra: ThunkExtra = {
   navigation: stubbedNavigationService,
   googleCalendar: liveGoogleCalendar,
   googleCalendarPlanHost: makeGoogleCalendarPlanHost(liveGoogleCalendar),
+  thirstService: makeLiveThirstService({ clientProvider: liveSupabaseClientProvider }),
 }
 
 /**
@@ -257,6 +272,11 @@ export const stubbedThunkExtra: ThunkExtra = {
   // its own binding with `makeStubbedGoogleCalendarService({ connection: … })`.
   googleCalendar: stubbedGoogleCalendarService,
   googleCalendarPlanHost: makeGoogleCalendarPlanHost(stubbedGoogleCalendarService),
+  // Signed out, no counts anywhere — a suite that asserts on shipping
+  // behaviour sees the same "sign in to vote" state a fresh visitor does. A
+  // suite that wants a votable/voted surface builds its own binding with
+  // `makeStubbedThirstService({ signedIn: true, ... })`.
+  thirstService: stubbedThirstService,
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
@@ -274,6 +294,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       session: sessionSlice.reducer,
       auth: authSlice.reducer,
       main: mainSlice.reducer,
+      thirst: thirstSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

@@ -1,14 +1,14 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import BoardRoute from './page'
+import { BoardPageClient } from './BoardPageClient'
 
-describe('/board', () => {
-  it("mounts the Board Thirst vote surface inside the shell's store", () => {
+describe('BoardPageClient', () => {
+  it('mounts the Thirst destination page for the board feature key', () => {
     const store = makeStore(stubbedThunkExtra)
     render(
       <StoreProvider store={store}>
-        <BoardRoute />
+        <BoardPageClient />
       </StoreProvider>,
     )
 

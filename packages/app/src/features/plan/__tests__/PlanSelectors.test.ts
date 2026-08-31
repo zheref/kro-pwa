@@ -16,6 +16,7 @@ import { initialDoState } from '../../do/DoFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
+import { initialTriageState } from '../../triage/TriageFeature'
 import type { RootState } from '../../../library/store'
 import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
 import { PlanViewMode } from '../PlanNavigation'
@@ -62,6 +63,7 @@ const rootWith = (plan: PlanState): RootState => ({
   // #29); this suite asserts nothing about Do, Capture, Find or Detail.
   do: initialDoState,
   capture: initialCaptureState,
+  triage: initialTriageState,
   plan,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,

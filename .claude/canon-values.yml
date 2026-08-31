@@ -1,0 +1,89 @@
+# .claude/canon-values.yml — the {{TOKEN}} -> literal-value binding for this repo's
+# canon mirror (CON-13).
+#
+# bankai-core's `scripts/sync_canon.py` substitutes every {{TOKEN}} in
+# `handbooks/stacks/react-uzf-v1/rules/*.md` from this file to regenerate
+# `.claude/rules/react-uzf-v1/`. A token used in the canon with no binding here
+# fails the generator loudly (exit 2) — never a silent gap. Keep this in lockstep
+# with that stack's `rules/placeholders.md`, which is the token registry; adding or
+# renaming a token upstream is a Naruto G4 change.
+#
+# kro-pwa is the FIRST `react-uzf-v1` consumer, so this file binds that schema's
+# placeholders for the first time. Every value below is a literal that exists in
+# this repo today unless its note says otherwise.
+#
+# Reader caveat: `parse_canon_values()` is a minimal line reader, not YAML. It
+# strips an inline ` #` comment and takes the rest of the line verbatim, so a value
+# must stay on one line and must not contain " #".
+
+scenario: react-uzf-v1
+
+values:
+  # The npm workspace scope AND the brand prefix. placeholders.md gives this token
+  # both roles with one literal; the mechanically-checkable role wins, because
+  # `@kro/core`, `@kro/app` and `@kro/web` are the real package names on disk and an
+  # npm scope cannot be capitalised. Read it as "Kro" wherever the canon uses it as
+  # prose (e.g. the forbidden `Kro…`-prefixed type names inside packages/core).
+  PROJECT_NAME: kro
+
+  # The platform-free domain tier: Result/Exception/assertNever, domain models,
+  # Mappers and the `__mocks__` spread. Enforced free of react/next/DOM/Node by
+  # `scripts/check-platform-free.mjs` (wired as @kro/core's `lint` task) and by
+  # `lib: ["ES2022"]` + `types: []` in its tsconfig.
+  #
+  # DIVERGENCE from placeholders.md, recorded rather than hidden: the canon puts the
+  # whole `library/` runtime (result.ts, assertNever.ts, store.ts, hooks.ts) in this
+  # package. Here only result.ts / exception.ts / assertNever.ts live in
+  # packages/core/src/library; store.ts and hooks.ts live in packages/app/src/library
+  # because they import `react-redux`, which would breach this package's
+  # platform-free contract. Ruled that way in the PR for #5; see
+  # spec/architecture/web.md § 2.
+  CORE_PACKAGE: packages/core
+
+  # The shared UZF state + feature tier: makeStore(extra), the ThunkExtra manifest,
+  # the typed hooks, StoreProvider, Services and feature slices. May import react;
+  # never `next/*` — enforced by `packages/app/scripts/check-uzf-boundaries.mjs`.
+  #
+  # DIVERGENCE: RC-51 defines this package as the shared Tamagui + Solito RENDER
+  # layer for two render targets. kro-pwa is Stack Matrix Scenario 5 (web-only) on
+  # the locked Next.js + Tailwind v4 + shadcn/ui stack, so there is no Tamagui and no
+  # second render target; the folder keeps its canonical name and its "shared,
+  # emitted once, consumed by the app shell" role. Tracked upstream as the same
+  # topology question as MOBILE_APP below (BC-IS-#900).
+  APP_PACKAGE: packages/app
+
+  # The Next.js 15 App Router workspace member — the one render target.
+  WEB_APP: apps/web
+
+  # There is no Expo/React Native target in this repo and there will not be one:
+  # Stack Matrix Scenario 5 is Web Only. RC-49 nevertheless fixes a four-member
+  # topology including this token, which is the open handbook question BC-IS-#900
+  # ("does RC-49's four-member workspace topology bind Scenario 5 repos?"). Until
+  # that is ruled, the binding says plainly that the member is absent rather than
+  # naming a directory that does not exist — a reader of the generated mirror learns
+  # the truth at every one of the 61 substitution sites.
+  MOBILE_APP: apps/mobile (absent, this repo is web-only)
+
+  # Where design tokens and theme definitions live. RESERVED, not yet created: the
+  # design-system foundation is issue #6. Nested under APP_PACKAGE per
+  # placeholders.md's token-reconciliation ruling. This repo's theme is KroTokens +
+  # KroGlass over Tailwind v4 + shadcn/ui, not Tamagui — the token names the
+  # location, not the library.
+  THEME_ROOT: packages/app/theme
+
+  # UZF-21 feature specs for THIS repo. Not to be confused with the product canon:
+  # business rules and UX defer to zheref/KroApple's own docs/Features at the latest
+  # tip of main (see spec/00-product-brief.md).
+  DOCS_ROOT: docs/Features
+
+  # The repo's own CI gate: install -> make lint -> make typecheck -> make test ->
+  # make build on ubuntu-latest, on both the PR and the branch it targets (CON-19).
+  # This repo has one workflow for that, `pr.yml`, not the canon's illustrative
+  # `test.yml`.
+  CI_TEST_WORKFLOW: .github/workflows/pr.yml
+
+  # The UZF-22 platform feature-flag registry. RESERVED: the 28-flag registry with
+  # the `statusQuoSet` defaults is issue #11. The filename is this repo's adopted
+  # convention, matching the canon's illustrative form
+  # (`export const FeatureFlags = { … } as const`).
+  FLAG_ENUM: featureFlags.ts

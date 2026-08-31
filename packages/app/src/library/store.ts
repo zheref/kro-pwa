@@ -14,6 +14,7 @@
  * field in `ThunkExtra` per new Service (`RC-21`). There is no second injection
  * mechanism — no service locator, no ambient singleton import.
  */
+import type { LocalStore } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import {
@@ -21,6 +22,8 @@ import {
   liveGreetingService,
   stubbedGreetingService,
 } from '../services/greeting/GreetingService'
+import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
+import { liveLocalStore } from '../services/localStore/liveLocalStore'
 
 /**
  * Every injectable Service in the app, in one closed manifest. A Producer reads
@@ -28,19 +31,33 @@ import {
  */
 export interface ThunkExtra {
   readonly greetingService: GreetingService
+  /**
+   * On-device storage (#10) — the eight ports in one bundle rather than eight
+   * fields, because they are always wired together (one database, one sign-out)
+   * and a Producer needing two of them should not have to declare both.
+   * `RC-21`'s single closed manifest is satisfied either way; the bundle is
+   * what keeps this interface readable as the store count grows.
+   */
+  readonly localStore: LocalStore
 }
 
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
   greetingService: liveGreetingService,
+  localStore: liveLocalStore,
 }
 
 /**
  * The fixture-backed bindings every test and story uses. Exported here, beside
  * the manifest, so a suite never has to reach into `services/` itself.
+ *
+ * `stubbedLocalStore` is **empty**. A suite that needs rows builds its own with
+ * `makeInMemoryLocalStore({ endeavors: [...] })` and passes it in, so no two
+ * suites can see each other's fixtures through a shared module-level store.
  */
 export const stubbedThunkExtra: ThunkExtra = {
   greetingService: stubbedGreetingService,
+  localStore: stubbedLocalStore,
 }
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>

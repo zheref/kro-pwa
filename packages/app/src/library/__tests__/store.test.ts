@@ -24,7 +24,10 @@ describe('makeStore', () => {
       signature: '— Kro',
       issued_at: '2026-01-15T08:00:00.000Z',
     }))
-    const extra: ThunkExtra = { greetingService: { fetchGreeting } satisfies GreetingService }
+    const extra: ThunkExtra = {
+      ...stubbedThunkExtra,
+      greetingService: { fetchGreeting } satisfies GreetingService,
+    }
 
     await makeStore(extra).dispatch(fetchGreetingThunk({ recipient: 'ada' }))
 

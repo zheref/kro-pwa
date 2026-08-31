@@ -79,3 +79,15 @@ export * from './flags'
 // settings/flags block landed first; merging `main` into this branch is that
 // moment, so the two blocks sit in the order both asked for.
 export * from './domain/reconciliation'
+
+// --- local persistence (#10) ------------------------------------------------
+// The on-device storage tier's platform-free half: the flattened record shapes
+// that mirror KroApple's SwiftData rows column for column, their codecs, the
+// sync bookkeeping (`isDirty`, soft delete, last-write-wins) and the store
+// PORTS. The IndexedDB / localStorage implementations live in
+// `@kro/app`'s `services/localStore` — this package may not touch a DOM global.
+//
+// Appended as its own block, after `domain/reconciliation`, for the same
+// anti-contention reason the two blocks above give: a parallel child appending
+// after this one never contends for the same line.
+export * from './persistence'

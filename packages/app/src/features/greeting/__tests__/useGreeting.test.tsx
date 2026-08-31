@@ -15,7 +15,10 @@ function wrapperFor(store: AppStore) {
 }
 
 const storeWith = (fetchGreeting: GreetingService['fetchGreeting']) =>
-  makeStore({ greetingService: { fetchGreeting } } satisfies ThunkExtra)
+  makeStore({
+    ...stubbedThunkExtra,
+    greetingService: { fetchGreeting },
+  } satisfies ThunkExtra)
 
 describe('useGreeting', () => {
   it('runs the whole loop on mount and exposes the greeting — a returning user opens the page', async () => {

@@ -9,7 +9,10 @@ afterEach(() => {
 })
 
 const storeWith = (fetchGreeting: GreetingService['fetchGreeting']) =>
-  makeStore({ greetingService: { fetchGreeting } } satisfies ThunkExtra)
+  makeStore({
+    ...stubbedThunkExtra,
+    greetingService: { fetchGreeting },
+  } satisfies ThunkExtra)
 
 describe('fetchGreetingThunk', () => {
   it('resolves ok with the mapped domain greeting — the fixture-backed happy path', async () => {

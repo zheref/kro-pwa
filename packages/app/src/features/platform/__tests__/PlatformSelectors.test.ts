@@ -12,6 +12,7 @@ import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailS
 import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialSessionState } from '../../session/SessionState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import type { PlatformState } from '../PlatformFeature'
 import { PlatformMocks } from '../PlatformMocks'
@@ -42,6 +43,7 @@ const rootWith = (platform: PlatformState): RootState => ({
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,
   auth: initialAuthState,
+  session: initialSessionState,
   platform,
 })
 

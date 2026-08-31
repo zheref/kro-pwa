@@ -30,6 +30,7 @@ import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { platformSlice } from '../features/platform/PlatformFeature'
+import { sessionSlice } from '../features/session/SessionFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type AuthService,
@@ -45,16 +46,19 @@ import { stubbedLocalStore } from '../services/localStore/InMemoryLocalStore'
 import { liveLocalStore } from '../services/localStore/liveLocalStore'
 import {
   type AudioFeedbackService,
+  type DocumentTitleService,
   type InstallService,
   type NotificationsService,
   type VibrationService,
   type WakeLockService,
   liveAudioFeedbackService,
+  liveDocumentTitleService,
   liveInstallService,
   liveNotificationsService,
   liveVibrationService,
   liveWakeLockService,
   stubbedAudioFeedbackService,
+  stubbedDocumentTitleService,
   stubbedInstallService,
   stubbedNotificationsService,
   stubbedVibrationService,
@@ -103,6 +107,14 @@ export interface ThunkExtra {
   readonly vibrationService: VibrationService
   readonly installService: InstallService
   /**
+   * The browser tab's title (#21) — the web's stand-in for KroApple's macOS
+   * menu-bar extra, per epic #1. A sixth field rather than a member of the
+   * platform bundle above for the same reason those five are separate: it
+   * shares no handle and no lifecycle with them. #34 shipped no such binding,
+   * so the session lane declares it; see `DocumentTitleService`'s header.
+   */
+  readonly documentTitleService: DocumentTitleService
+  /**
    * The sign-out wipe (#10). A field of its own rather than a method on
    * `LocalStore`, because it is the one operation that spans every store and
    * the port deliberately keeps it outside the per-store interfaces — see
@@ -146,6 +158,7 @@ export const liveThunkExtra: ThunkExtra = {
   wakeLockService: liveWakeLockService,
   vibrationService: liveVibrationService,
   installService: liveInstallService,
+  documentTitleService: liveDocumentTitleService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
   authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
@@ -175,6 +188,7 @@ export const stubbedThunkExtra: ThunkExtra = {
   wakeLockService: stubbedWakeLockService,
   vibrationService: stubbedVibrationService,
   installService: stubbedInstallService,
+  documentTitleService: stubbedDocumentTitleService,
   signOutWipe,
   // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
   // shipping behaviour — `supabaseHosting` disabled, exactly like canon.
@@ -196,6 +210,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       endeavorDetail: endeavorDetailSlice.reducer,
       earn: earnSlice.reducer,
       platform: platformSlice.reducer,
+      session: sessionSlice.reducer,
       auth: authSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>

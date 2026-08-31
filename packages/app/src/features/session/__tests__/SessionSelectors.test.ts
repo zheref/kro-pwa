@@ -40,7 +40,7 @@ import {
   selectIsStopwatchAvailable,
   selectLastAwardedPoints,
   selectPendingSessionOutcome,
-  selectSessionCalendarEvent,
+  selectSessionCalendarLog,
   selectSessionClockLabel,
   selectSessionCueSchedule,
   selectSessionDocumentTitle,
@@ -349,22 +349,22 @@ describe('conclusion selectors', () => {
   })
 })
 
-describe('selectSessionCalendarEvent', () => {
-  it('derives the canon event for a concluded session', () => {
-    const event = selectSessionCalendarEvent(concluded, 'Europe/Madrid')
-    expect(event?.title).toBe('Session: 📊 Prepare slides')
-    expect(event?.timezone).toBe('Europe/Madrid')
+describe('selectSessionCalendarLog', () => {
+  it('derives the log inputs for a concluded session', () => {
+    const log = selectSessionCalendarLog(concluded, 'Europe/Madrid')
+    expect(log?.intention).toBe('📊 Prepare slides')
+    expect(log?.timeZone).toBe('Europe/Madrid')
   })
 
   it('spans the whole session — the first start to the last end', () => {
-    const event = selectSessionCalendarEvent(concluded, 'UTC')
-    expect(event?.end.getTime()! - event?.start.getTime()!).toBe(
+    const log = selectSessionCalendarLog(concluded, 'UTC')
+    expect(log!.end.getTime() - log!.start.getTime()).toBe(
       SESSION_MOCK_TARGET * 1_000,
     )
   })
 
   it('derives nothing while a session is still running', () => {
-    expect(selectSessionCalendarEvent(running, 'UTC')).toBeNull()
+    expect(selectSessionCalendarLog(running, 'UTC')).toBeNull()
   })
 })
 

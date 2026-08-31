@@ -35,8 +35,8 @@ import type { RootState } from '../../library/store'
 import { type SessionCueMark, sessionCueSchedule } from './SessionCues'
 import type { SessionException } from './SessionException'
 import type { SessionIdentity } from './SessionIdentity'
-import type { SessionCalendarEvent, SessionOutcome } from './SessionOutcome'
-import { sessionCalendarEventFor } from './SessionOutcome'
+import type { SessionCalendarLog, SessionOutcome } from './SessionOutcome'
+import { sessionCalendarLogFor } from './SessionOutcome'
 import type { SessionState } from './SessionState'
 import {
   type SessionPillAffordance,
@@ -354,20 +354,23 @@ export const selectLastAwardedPoints = createSelector(
 )
 
 /**
- * The calendar event the concluded session would log — `Session: <intention>`
- * from the first fragment's start to the last fragment's end.
+ * What the concluded session hands Google Calendar — the intention and the
+ * span from the first fragment's start to the last fragment's end.
  *
- * Derived rather than sent: `services/googleCalendar` (KC-IS-#33) does not
- * exist on `main` at this build's rebase point, so the intent is exposed for
- * the surface (and for #33's binding) instead of being invented. `timezone` is
- * the caller's — reading `Intl` here would put a platform global in a Selector.
+ * `recordSessionPerformanceThunk` already sends this; the Selector exists so a
+ * surface can *show* what would be logged (a Settings preview, an "added to
+ * your calendar" confirmation) without re-deriving the span. `timeZone` is the
+ * caller's — reading `Intl` here would put a platform global in a Selector.
+ *
+ * Not a `createSelector`: it takes a second argument, and a memoized selector
+ * with an argument would cache on the last one only.
  */
-export const selectSessionCalendarEvent = (
+export const selectSessionCalendarLog = (
   state: RootState,
-  timezone: string,
-): SessionCalendarEvent | null => {
+  timeZone: string,
+): SessionCalendarLog | null => {
   const outcome = selectPendingSessionOutcome(state)
-  return outcome === null ? null : sessionCalendarEventFor(outcome, timezone)
+  return outcome === null ? null : sessionCalendarLogFor(outcome, timeZone)
 }
 
 // ---------------------------------------------------------------------------

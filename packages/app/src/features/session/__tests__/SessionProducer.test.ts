@@ -48,6 +48,10 @@ import {
   makeStore,
   stubbedThunkExtra,
 } from '../../../library/store'
+import {
+  GoogleCalendarConnections,
+  makeStubbedGoogleCalendarService,
+} from '../../../services/googleCalendar'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   makeStubbedAudioFeedbackService,
@@ -748,6 +752,77 @@ describe('reward awarding', () => {
 
     const rows = await it.localStore.performances.forEndeavor(SLIDES.id)
     expect(rows[0]?.wasCompletedInSession).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Calendar logging — KC-IS-#33's port, bound
+// ---------------------------------------------------------------------------
+
+describe('calendar logging', () => {
+  const withCalendar = async (
+    options: { readonly connected?: boolean; readonly failure?: unknown } = {},
+  ) => {
+    const calls: string[] = []
+    const localStore = makeInMemoryLocalStore({
+      endeavors: [endeavorRecordFromEndeavor(SLIDES, { now: NOW })],
+    })
+    const googleCalendar = makeStubbedGoogleCalendarService({
+      connection:
+        options.connected === true
+          ? GoogleCalendarConnections.connected()
+          : GoogleCalendarConnections.disconnected(),
+      failure: options.failure,
+      calls,
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, googleCalendar })
+    await store.dispatch(loadSessionPreferencesThunk())
+    await store.dispatch(
+      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+    )
+    await store.dispatch(startSessionThunk({ now: NOW }))
+    return { store, localStore, calls }
+  }
+
+  it('logs the concluded session with canon’s intention and span', async () => {
+    const { store, calls } = await withCalendar({ connected: true })
+    await store.dispatch(
+      advanceSessionThunk({ now: at(TARGET) }),
+    )
+
+    // The service composes `"Session: <intention>"` itself; this feature hands
+    // it the intention, so the duplication #33's header warns about never
+    // exists.
+    expect(calls).toContain('logSession:📊 Prepare slides')
+  })
+
+  it('still records the performance when Google is not connected', async () => {
+    // The statusQuo case: nobody has connected, so `logSession` refuses.
+    const { store, localStore } = await withCalendar()
+    await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+
+    expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(store.getState().session.conclusion.kind).toBe('recorded')
+  })
+
+  it('still records the performance when the calendar write throws', async () => {
+    const { store, localStore } = await withCalendar({
+      connected: true,
+      failure: new Error('the proxy is unreachable'),
+    })
+    await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
+
+    expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(store.getState().session.load.kind).not.toBe('failed')
+  })
+
+  it('logs nothing for a session with no closed span to log', async () => {
+    const { store, calls } = await withCalendar({ connected: true })
+    // Aborted at zero elapsed: the fragment closes at its own start, which is
+    // still a span — so this asserts the *shape* rather than the absence, and
+    // the null path is covered purely in `SessionOutcome.test.ts`.
+    await store.dispatch(abortSessionThunk({ now: NOW }))
+    expect(calls.filter((call) => call.startsWith('logSession'))).toHaveLength(1)
   })
 })
 

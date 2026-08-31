@@ -12,7 +12,7 @@ import {
   type SessionOutcome,
   SessionOutcomeReason,
   makeSessionOutcome,
-  sessionCalendarEventFor,
+  sessionCalendarLogFor,
 } from '../SessionOutcome'
 
 const START = new Date(2026, 2, 17, 9, 0, 0)
@@ -38,34 +38,37 @@ const outcome = (
     ...overrides,
   })
 
-describe('sessionCalendarEventFor', () => {
+describe('sessionCalendarLogFor', () => {
   it('spans the whole session, pauses included — first start to last end', () => {
-    const event = sessionCalendarEventFor(outcome(), 'Europe/Madrid')
-    expect(event?.start).toEqual(START)
-    expect(event?.end).toEqual(END)
+    const log = sessionCalendarLogFor(outcome(), 'Europe/Madrid')
+    expect(log?.start).toEqual(START)
+    expect(log?.end).toEqual(END)
   })
 
-  it('titles the event the way canon does', () => {
-    expect(sessionCalendarEventFor(outcome(), 'UTC')?.title).toBe(
-      'Session: Prepare slides',
-    )
+  it('carries the intention, leaving the title format to #33’s service', () => {
+    // Canon's `"Session: <intention>"` is composed once, in
+    // `sessionCalendarEventTitle` — duplicating it here is the exact thing
+    // that module's header exists to prevent.
+    const log = sessionCalendarLogFor(outcome(), 'UTC')
+    expect(log?.intention).toBe('Prepare slides')
+    expect(log).not.toHaveProperty('title')
   })
 
-  it('carries the caller’s timezone — this tier reads no Intl of its own', () => {
-    expect(sessionCalendarEventFor(outcome(), 'America/Bogota')?.timezone).toBe(
+  it('carries the caller’s time zone — this tier reads no Intl of its own', () => {
+    expect(sessionCalendarLogFor(outcome(), 'America/Bogota')?.timeZone).toBe(
       'America/Bogota',
     )
   })
 
   it('answers null for a session with no fragments at all', () => {
-    expect(sessionCalendarEventFor(outcome({ fragments: [] }), 'UTC')).toBeNull()
+    expect(sessionCalendarLogFor(outcome({ fragments: [] }), 'UTC')).toBeNull()
   })
 
   it('answers null when the trailing fragment is still open', () => {
     const open = outcome({
       fragments: [makeFocusSessionFragment({ start: START })],
     })
-    expect(sessionCalendarEventFor(open, 'UTC')).toBeNull()
+    expect(sessionCalendarLogFor(open, 'UTC')).toBeNull()
   })
 
   it('logs an aborted attempt too — the span happened either way', () => {
@@ -73,8 +76,8 @@ describe('sessionCalendarEventFor', () => {
       resolution: PerformResolution.aborted,
       reason: SessionOutcomeReason.belowThreshold,
     })
-    expect(sessionCalendarEventFor(aborted, 'UTC')?.title).toBe(
-      'Session: Prepare slides',
+    expect(sessionCalendarLogFor(aborted, 'UTC')?.intention).toBe(
+      'Prepare slides',
     )
   })
 })

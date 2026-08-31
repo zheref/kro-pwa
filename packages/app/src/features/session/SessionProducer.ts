@@ -126,10 +126,10 @@ import {
   trimSessionTitle,
 } from './SessionIdentity'
 import {
-  type SessionCalendarEvent,
+  type SessionCalendarLog,
   type SessionOutcome,
   SessionOutcomeReason,
-  sessionCalendarEventFor,
+  sessionCalendarLogFor,
 } from './SessionOutcome'
 import type {
   SessionAvailability,
@@ -734,12 +734,17 @@ export interface SessionRecordingReport {
   readonly performance: Perform
   readonly rewardPoints: number
   readonly completedSessionsCount: number
+  /** What was sent to Google Calendar, or `null` when there was no span to log. */
+  readonly calendarLog: SessionCalendarLog | null
   /**
-   * The calendar event this session *would* log. Google Calendar is KC-IS-#33
-   * and has not landed, so the intent is returned rather than sent — see the
-   * seam note at the call site below.
+   * Whether the calendar event actually landed.
+   *
+   * `false` covers the ordinary case as well as the exceptional one: at
+   * `statusQuo` nobody has connected Google, so `logSession` refuses with
+   * `notConnected` and this is simply `false`. It is **not** a failure of the
+   * recording — see the call site.
    */
-  readonly calendarEvent: SessionCalendarEvent | null
+  readonly wasCalendarLogged: boolean
 }
 
 /**
@@ -774,11 +779,11 @@ export interface SessionRecordingReport {
  */
 export const recordSessionPerformanceThunk = createAsyncThunk<
   SessionResult<SessionRecordingReport>,
-  { readonly now: Date; readonly timezone?: string },
+  { readonly now: Date; readonly timeZone?: string },
   { extra: ThunkExtra; state: RootState }
 >(
   'session/onSessionPerformanceRecordCompleted',
-  async ({ now, timezone }, { extra, getState }) => {
+  async ({ now, timeZone }, { extra, getState }) => {
     const conclusion = sessionOf(getState).conclusion
     // `.pending` has already moved the claim to `recording`; anything else
     // means the claim was consumed elsewhere.
@@ -846,24 +851,38 @@ export const recordSessionPerformanceThunk = createAsyncThunk<
       const withPerformance = withAddedPerformance(endeavor, performance)
       await persistEndeavor(extra.localStore, withPerformance, now)
 
-      // ---- Calendar logging (KC-IS-#33) — a documented seam, not a stub -----
-      // Canon logs the session through `systemCalendar.registerSession(summary)`,
-      // whose event is `"Session: <intention>"` from the first fragment's start
-      // to the last fragment's end. `services/googleCalendar` does not exist on
-      // `main` at this build's rebase point, so there is nothing to bind and
-      // nothing is invented: the intent is *derived* here and returned, and #33
-      // wires `extra.googleCalendar.logSession(calendarEvent)` at this exact
-      // line. Same posture #31 took for the host write-backs it could not make.
-      const calendarEvent = sessionCalendarEventFor(
-        outcome,
-        timezone ?? 'UTC',
-      )
+      // ---- Calendar logging (KC-IS-#33) -----------------------------------
+      // Canon logs a concluded session through
+      // `systemCalendar.registerSession(summary)`, inside a `do/catch` that
+      // reports the failure and leaves the recorded performance alone. #33
+      // landed its Google binding while this issue was in flight, so the seam
+      // is **bound** rather than parked: `logSession` takes exactly the four
+      // values `sessionCalendarLogFor` derives, and composes canon's
+      // `"Session: <intention>"` title itself.
+      //
+      // It runs **after** the two writes above and can never undo them. At
+      // `statusQuo` nobody has connected Google, so this refuses with
+      // `notConnected` every time — an ordinary state of an unconfigured
+      // integration, not an error the user can act on, and certainly not a
+      // reason to lose the performance they just earned. The outcome is
+      // reported rather than thrown, exactly as canon's `catch` does.
+      const calendarLog = sessionCalendarLogFor(outcome, timeZone ?? 'UTC')
+      let wasCalendarLogged = false
+      if (calendarLog !== null) {
+        try {
+          await extra.googleCalendar.logSession(calendarLog)
+          wasCalendarLogged = true
+        } catch {
+          wasCalendarLogged = false
+        }
+      }
 
       return ok({
         performance,
         rewardPoints,
         completedSessionsCount: tomatoCountFor(withPerformance),
-        calendarEvent,
+        calendarLog,
+        wasCalendarLogged,
       })
     } catch (error) {
       return err(

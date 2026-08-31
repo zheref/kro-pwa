@@ -1,13 +1,12 @@
-import { DestinationPageClient } from '../DestinationPageClient'
+import { TasksPageClient } from './TasksPageClient'
 
 /**
  * `/tasks` — the All Tasks destination.
  *
- * A passive Server Component (`RC-38`): it names its destination and renders
- * the client wrapper. No hook, no store read, no markup. The surface itself
- * lives in `packages/app`, so the feature child that builds All Tasks replaces
- * a Page there and never touches this file.
+ * A passive Server Component (`RC-38`): it renders the client wrapper and
+ * nothing else. The surface lives in `packages/app`; the `tasksDefault` vista
+ * is the selection this route names.
  */
 export default function TasksRoute() {
-  return <DestinationPageClient kind="allTasks" />
+  return <TasksPageClient />
 }

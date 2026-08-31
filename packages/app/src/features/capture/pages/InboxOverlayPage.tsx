@@ -39,6 +39,7 @@ import {
   loadCaptureContextThunk,
   undoScheduleForTodayThunk,
 } from '../CaptureProducer'
+import { ADD_FOR_TODAY_UNDO_WINDOW_MS } from '../CaptureRules'
 import {
   selectSchedulingUndo,
   selectUndoSnapshot,
@@ -88,9 +89,13 @@ export function InboxOverlayPage() {
       icon: 'calendar',
       iconColor: 'green',
       iconSize: 16,
-      // The host clamps into its documented 3–12 s reading window; 8 is canon's
-      // `duration: 8` and sits inside it, so the two agree without a cast.
-      duration: (undoExpiresAtMs - Date.now()) / 1000,
+      // Canon's `duration: 8`, read from the constant the slice sizes its own
+      // window with — never `expiresAt - Date.now()`. That subtraction takes a
+      // second clock reading, so it drifts from the deadline the slice already
+      // fixed and goes NEGATIVE if the effect is re-run after the window has
+      // closed. The host clamps into its documented 3–12 s reading window
+      // either way, so a negative would silently become 3.
+      duration: ADD_FOR_TODAY_UNDO_WINDOW_MS / 1000,
       primaryAction: {
         title: 'Undo',
         onSelect: () => {

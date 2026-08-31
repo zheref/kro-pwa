@@ -193,9 +193,20 @@ export const schedulingToastMessage = (
 ): string =>
   `"${displayTitle(title)}" scheduled for ${formatCaptureTime(scheduledAt, locale)}`
 
-/** The Inbox header's subtitle — canon's `"\(totalCount) endeavors"`. */
-export const inboxCountCaption = (totalCount: number): string | undefined =>
-  totalCount > 0 ? `${totalCount} endeavors` : undefined
+/**
+ * The Inbox header's subtitle — canon's `"\(totalCount) endeavors"`, with the
+ * singular fixed.
+ *
+ * **A deliberate divergence.** Canon's format string has no plural rule, so an
+ * Inbox holding one row reads *"1 endeavors"* on iOS. That is an English bug in
+ * canon's copy rather than a product decision — the string is user-facing and,
+ * here, also the dialog's accessible description, so it is not reproduced.
+ * Upstream candidate for KroApple; noted in the delivery PR.
+ */
+export const inboxCountCaption = (totalCount: number): string | undefined => {
+  if (totalCount <= 0) return undefined
+  return totalCount === 1 ? '1 endeavor' : `${totalCount} endeavors`
+}
 
 // ---------------------------------------------------------------------------
 // Recurrence presets

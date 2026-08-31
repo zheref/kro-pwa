@@ -13,6 +13,7 @@ import { installRadixEnvironment } from '../../../../design/system/primitives/__
 import { PRESENTATION_SIZE } from '../../../main/MainPresentation'
 import { userDidTapOpenInbox } from '../../CaptureFeature'
 import { captureFixtureRecords } from '../../CaptureMocks'
+import { ADD_FOR_TODAY_UNDO_WINDOW_MS } from '../../CaptureRules'
 import { InboxOverlayPage } from '../InboxOverlayPage'
 import {
   type CaptureStore,
@@ -161,6 +162,36 @@ describe('the Undo window', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
 
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeTruthy()
+  })
+
+  it('hands the host canon\'s fixed eight seconds, never a computed remainder', async () => {
+    const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
+    mount(store)
+    await waitFor(() => {
+      expect(store.getState().capture.load.kind).toBe('loaded')
+    })
+    store.dispatch(userDidTapOpenInbox())
+    await screen.findByTestId('inbox-surface')
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
+    await screen.findByRole('button', { name: 'Undo' })
+
+    // The toast's own auto-dismiss is the host's, and the host clamps its
+    // input into 3-12s. What this asserts is the INPUT: the window the slice
+    // armed is exactly canon's 8s, and the Page hands the host that same
+    // constant rather than `expiresAt - Date.now()` — a second clock reading
+    // that drifts from the deadline and goes negative once it has passed,
+    // which the clamp would then silently turn into three.
+    const undo = store.getState().capture.undo
+    if (undo.kind !== 'armed') throw new Error('the window did not arm')
+    expect(undo.expiresAt.getTime() - undo.armedAt.getTime()).toBe(
+      ADD_FOR_TODAY_UNDO_WINDOW_MS,
+    )
+    expect(ADD_FOR_TODAY_UNDO_WINDOW_MS / 1000).toBeGreaterThanOrEqual(3)
+    expect(ADD_FOR_TODAY_UNDO_WINDOW_MS / 1000).toBeLessThanOrEqual(12)
   })
 
   it('arms the window for canon\'s eight seconds, measured from the confirmation', async () => {

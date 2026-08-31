@@ -174,8 +174,8 @@ describe('inboxCountCaption — canon\'s "N endeavors" subtitle', () => {
     expect(inboxCountCaption(0)).toBeUndefined()
   })
 
-  it('still names a single row rather than hiding it', () => {
-    expect(inboxCountCaption(1)).toBe('1 endeavors')
+  it('singularizes one row — canon\'s own string reads "1 endeavors"', () => {
+    expect(inboxCountCaption(1)).toBe('1 endeavor')
   })
 })
 

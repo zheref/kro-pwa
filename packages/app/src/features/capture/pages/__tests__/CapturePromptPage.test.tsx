@@ -170,4 +170,60 @@ describe('every edit goes through the slice, never through local state', () => {
       'Water the plants',
     )
   })
+
+  it('captures once for one intent, however fast Add is pressed twice', async () => {
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-title')
+    await userEvent.type(screen.getByTestId('capture-title'), 'Book the flights')
+
+    // Two presses inside one frame — the shape a double-click takes, and the
+    // one an awaited `userEvent.click` can never produce because it lets the
+    // write settle in between. Add stays enabled on purpose (a failed capture
+    // must be retryable without re-typing), so the guard is what stops the
+    // second press minting a second id.
+    const add = screen.getByTestId<HTMLButtonElement>('capture-add')
+    add.click()
+    add.click()
+
+    await waitFor(() => {
+      expect(store.getState().capture.endeavors).toHaveLength(1)
+    })
+    // …and the prompt is gone, so there is nothing left to press either.
+    expect(store.getState().capture.prompt).toBeNull()
+  })
+})
+
+describe('the clock it reads "Today" against', () => {
+  it('comes from the slice\'s anchor, not from the wall clock', async () => {
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+
+    // The prompt is opened with an instant a day behind the wall clock, which
+    // is what `clockAnchor` then holds and what the draft's own date is built
+    // from. A Page reading `new Date()` in render would compare the draft's
+    // yesterday against today and print a medium date; reading the anchor makes
+    // the two agree and the chip reads "Today".
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    store.dispatch(
+      userDidRequestCapture({ kind: CaptureKind.task, now: yesterday }),
+    )
+
+    expect(
+      await screen.findByRole('button', { name: 'Date: Today' }),
+    ).toBeTruthy()
+  })
+
+  it('still answers before anything has stamped an anchor', async () => {
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+    open(store)
+
+    // `userDidRequestCapture` stamps the anchor itself, so this is the ordinary
+    // path; what it proves is that the fallback never leaves the chip blank.
+    expect(
+      await screen.findByRole('button', { name: 'Date: Today' }),
+    ).toBeTruthy()
+  })
 })

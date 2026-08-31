@@ -53,7 +53,7 @@ import {
   type SidebarFragmentProps,
 } from './SidebarFragment'
 import { TabBarFragment } from './TabBarFragment'
-import { ToolbarOutlet } from './ToolbarSlots'
+import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
 
 export interface MainShellFragmentProps
   extends Omit<SidebarFragmentProps, 'layout' | 'sections' | 'selected'> {
@@ -226,13 +226,7 @@ function ContentToolbar({
         </ToolbarButton>
 
         {layout.showsProfileControl && (
-          <ToolbarButton
-            label="Profile"
-            layout={layout}
-            onClick={onTapProfile}
-          >
-            <User size={ICON_SIZE.medium} aria-hidden="true" />
-          </ToolbarButton>
+          <ProfileControl layout={layout} onTapProfile={onTapProfile} />
         )}
 
         <ToolbarOutlet
@@ -308,9 +302,7 @@ function TabBarToolbar({
         className="flex items-center"
         style={{ gap: `${layout.minimumControlSpacing}px` }}
       >
-        <ToolbarButton label="Profile" layout={layout} onClick={onTapProfile}>
-          <User size={ICON_SIZE.medium} aria-hidden="true" />
-        </ToolbarButton>
+        <ProfileControl layout={layout} onTapProfile={onTapProfile} />
 
         {!isPrimaryTab && (
           <ToolbarButton
@@ -346,6 +338,40 @@ function TabBarToolbar({
         </ToolbarButton>
       </div>
     </GlassSurface>
+  )
+}
+
+/**
+ * The Profile control — the shell's placement, a feature's content.
+ *
+ * The outlet is always rendered, so a feature's `ToolbarSlot placement="profile"`
+ * has somewhere to portal into. The shell's own button renders **only while no
+ * feature has supplied one**, which is what keeps the flag-off path
+ * byte-identical to what shipped: with nothing slotted this is the same
+ * `ToolbarButton` calling the same `onTapProfile`, in the same position.
+ *
+ * The settings child (KC-IS-#32) fills the slot with canon's
+ * `ProfilePopoverView` trigger; the comment in `MainShellPage` that said the
+ * popover "belongs to the settings child" is the contract this implements.
+ */
+function ProfileControl({
+  layout,
+  onTapProfile,
+}: {
+  readonly layout: DoSurfaceLayout
+  readonly onTapProfile: () => void
+}) {
+  const isSlotted = useToolbarSlotFilled('profile')
+
+  return (
+    <>
+      <ToolbarOutlet placement="profile" className="flex items-center" />
+      {isSlotted ? null : (
+        <ToolbarButton label="Profile" layout={layout} onClick={onTapProfile}>
+          <User size={ICON_SIZE.medium} aria-hidden="true" />
+        </ToolbarButton>
+      )}
+    </>
   )
 }
 

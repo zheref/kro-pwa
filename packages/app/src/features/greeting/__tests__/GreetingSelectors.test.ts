@@ -21,6 +21,7 @@ import {
   selectIsGreetingLoading,
 } from '../GreetingSelectors'
 import { initialMainState } from '../../main/MainFeature'
+import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
 
 /**
@@ -41,6 +42,7 @@ const rootWith = (greeting: GreetingState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,

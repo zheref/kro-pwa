@@ -89,3 +89,41 @@ export {
   selectIsGreetingLoading,
 } from './features/greeting/GreetingSelectors'
 export { type GreetingViewModel, useGreeting } from './features/greeting/useGreeting'
+
+/**
+ * Auth + Settings UI (KC-IS-#32) — the Settings hub and its panes, the profile
+ * popover, and the auth surface.
+ *
+ * Appended as its own block rather than folded above, for the same
+ * anti-contention reason `features/main`'s block gives: a parallel child adds
+ * its own block below instead of contending for a line in an existing one.
+ *
+ * Only `SettingsHubPage` is reachable from `apps/web` (the `/adjust` route
+ * mounts it); everything else is exported because a story, a test or the shell
+ * composes it. The auth *slice* stays KC-IS-#31's and is not re-exported here.
+ */
+export {
+  type AccountPane,
+  type AccountSectionFragmentProps,
+  type IntegrationsSectionFragmentProps,
+  type PreferencesSectionFragmentProps,
+  type ProfilePopoverFragmentProps,
+  type SettingsHubFragmentProps,
+  AccountSectionFragment,
+  IntegrationsSectionFragment,
+  PreferencesSectionFragment,
+  ProfileControlPage,
+  ProfilePopoverFragment,
+  SettingsHubFragment,
+  SettingsHubPage,
+  SettingsSectionId,
+  settingsSections,
+} from './features/settings'
+export {
+  type AuthSurfaceFragmentProps,
+  type AuthSurfacePageProps,
+  type LocalDataDialogFragmentProps,
+  AuthSurfaceFragment,
+  AuthSurfacePage,
+  LocalDataDialogFragment,
+} from './features/auth/pages'

@@ -66,6 +66,7 @@ import {
   withException,
 } from '../SessionShifters'
 import { SessionPhase, SessionPillAffordance, SessionTint } from '../SessionVocabulary'
+import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
@@ -84,6 +85,7 @@ const rootWith = (session: SessionState): RootState => ({
   session,
   auth: initialAuthState,
   main: initialMainState,
+  settings: initialSettingsState,
   thirst: initialThirstState,
 })
 

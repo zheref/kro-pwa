@@ -34,6 +34,7 @@ import {
   selectTabBarElements,
 } from '../MainSelectors'
 import { DestinationKind } from '../SidebarDestination'
+import { initialSettingsState } from '../../settings/SettingsState'
 
 const rootWith = (main: MainState): RootState => ({
   greeting: initialGreetingState,
@@ -49,6 +50,7 @@ const rootWith = (main: MainState): RootState => ({
   auth: initialAuthState,
   platform: initialPlatformState,
   session: initialSessionState,
+  settings: initialSettingsState,
   main,
   thirst: initialThirstState,
 })

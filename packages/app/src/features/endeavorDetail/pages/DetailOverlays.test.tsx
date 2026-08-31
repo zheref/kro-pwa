@@ -371,21 +371,31 @@ describe('a relation write commits on its own, through the real Producer', () =>
     })
   })
 
-  it('refuses to attach a provider this build has no adapter for, and says why', async () => {
-    const store = mountPresented(detailEndeavorMocks.event, (each) => {
+  it('offers no Attach control this build can honour, and says why per provider', () => {
+    mountPresented(detailEndeavorMocks.event, (each) => {
       each.dispatch(userDidTapManageRelation({ relation: 'hosts' }))
-      each.dispatch(
-        userDidChangeRelationDraft({
-          draft: { relation: 'hosts', host: 'outlookCalendar' },
-        }),
-      )
     })
 
-    // The Attach control is disabled, so the commit path is the one the form's
-    // submit takes — the refusal is the Producer's, not the button's.
-    await waitFor(() => {
-      expect(store.getState().endeavorDetail.relationDraft).not.toBeNull()
+    // Every provider is listed rather than hidden — a hidden control makes the
+    // gap invisible — and every one of them is disabled with its reason.
+    const attach = screen.getAllByRole('button', { name: /^Attach / })
+    expect(attach.length).toBeGreaterThan(0)
+    for (const button of attach) {
+      expect(button.hasAttribute('disabled')).toBe(true)
+    }
+    expect(
+      screen.getByText('Outlook mirroring is off in this build.'),
+    ).toBeTruthy()
+  })
+
+  it('refuses a DETACH this build has no adapter for, and surfaces the reason', async () => {
+    const store = mountPresented(detailEndeavorMocks.event, (each) => {
+      each.dispatch(userDidTapManageRelation({ relation: 'hosts' }))
     })
+
+    // Detach is the one host control that is enabled today, so it is the one
+    // that actually reaches the Producer — which refuses, because no provider
+    // adapter is wired (KC-IS-#29 / KC-IS-#33).
     await userEvent.click(
       screen.getByRole('button', { name: 'Detach Google Calendar' }),
     )

@@ -173,17 +173,17 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
     void dispatch(saveEndeavorThunk({ endeavor: working, now: new Date() }))
   }, [dispatch, working])
 
+  /**
+   * Commit the open add form.
+   *
+   * `hosts` is deliberately absent: that screen has no form at all — a provider
+   * is attached by its own row control, so the commit path never sees one. A
+   * branch for it would be code no interaction can reach.
+   */
   const onCommitDraft = useCallback(() => {
     if (endeavor === null || relationDraft === null) return
+    if (relationDraft.relation === 'hosts') return
     const now = new Date()
-
-    if (relationDraft.relation === 'hosts') {
-      if (relationDraft.host === null) return
-      void dispatch(
-        attachHostThunk({ endeavorId: endeavor.id, host: relationDraft.host }),
-      )
-      return
-    }
 
     const entry = relationEntryFromDraft(relationDraft, now)
     if (entry === null) return

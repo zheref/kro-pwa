@@ -7,19 +7,26 @@
  * `useAppDispatch`. It selects through named Selectors, dispatches intents, and
  * renders exactly one Fragment.
  *
- * ## Mount is three dispatches, in this order
+ * ## Mount is three dispatches, and the ORDER is load-bearing
  *
- * 1. **the capability flags** — resolved through a Producer, because a Service
+ * 1. **the capability flags**, resolved through a Producer because a Service
  *    reaches a Producer and nothing else (`RC-6`), then handed to
  *    `onViewLoaded` so `selectFindCapabilities` can gate the vista's bindings
  *    without a Selector ever seeing a flag;
- * 2. **the persisted lens** — restored before the first paint is judged, which
- *    is what `isLensRestored` exists to let the surface wait for;
+ * 2. **the persisted lens**, restored once the surface is installed;
  * 3. **the fetch**.
  *
- * `onViewLoaded` is dispatched *after* the flag read resolves rather than
- * optimistically with an empty list, because installing the surface twice would
- * reset `clockAnchor` and re-stamp the lens mid-restore.
+ * The restore and the fetch wait for `onViewLoaded` rather than racing it, and
+ * both failure modes are real. `withFindViewLoaded` sets `isLensRestored` back
+ * to `false` and re-stamps `clockAnchor`; `withLensSnapshotRestored` refuses to
+ * run twice. So a restore that landed FIRST would be un-flagged by the install
+ * and never re-run — `selectIsFindLensLoading` would stay true forever — and an
+ * install landing after the fetch would move the anchor the rows were already
+ * classified against.
+ *
+ * The lens is likewise persisted only **after** the restore has landed: writing
+ * before then saves the vista's defaults over the user's own filters, which
+ * destroys the snapshot the mount was about to read.
  *
  * ## The shell's sidebar field seeds this surface, once per value
  *
@@ -113,6 +120,9 @@ export function FindPage({ input, locale }: FindPageProps) {
   // caption and the filter that let it through agree by construction.
   const lens = useAppSelector((state) => state.find.find.lens)
   const clockAnchor = useAppSelector((state) => state.find.find.clockAnchor)
+  const isLensRestored = useAppSelector(
+    (state) => state.find.find.isLensRestored,
+  )
 
   // The URL is the authority for the shell's selection (`RC-63`).
   useEffect(() => {
@@ -124,15 +134,9 @@ export function FindPage({ input, locale }: FindPageProps) {
   useEffect(() => {
     let cancelled = false
     const flags = dispatch(resolveCapabilityFlagsThunk())
-    const lensRestore = dispatch(
-      restoreFindLensThunk({
-        surface: FindSurface.find,
-        vistaId: EndeavorsVistas.find.id,
-      }),
-    )
-    const fetch = dispatch(
-      fetchFindEndeavorsThunk({ surface: FindSurface.find, now: new Date() }),
-    )
+    // The two effects the flag read starts, so unmount can cancel them —
+    // cancellation is the one silent exit (`UZF-14`).
+    const started: { abort: () => void }[] = []
 
     void flags.then((action) => {
       if (cancelled) return
@@ -146,13 +150,26 @@ export function FindPage({ input, locale }: FindPageProps) {
           enabledFlags: result !== null && result.ok ? result.value : [],
         }),
       )
+      started.push(
+        dispatch(
+          restoreFindLensThunk({
+            surface: FindSurface.find,
+            vistaId: EndeavorsVistas.find.id,
+          }),
+        ),
+        dispatch(
+          fetchFindEndeavorsThunk({
+            surface: FindSurface.find,
+            now: new Date(),
+          }),
+        ),
+      )
     })
 
     return () => {
       cancelled = true
       flags.abort()
-      lensRestore.abort()
-      fetch.abort()
+      for (const effect of started) effect.abort()
     }
   }, [dispatch])
 
@@ -167,9 +184,16 @@ export function FindPage({ input, locale }: FindPageProps) {
     )
   }, [dispatch, shellQuery])
 
-  // Canon persists the lens whenever it changes; a failure is swallowed by the
-  // Producer, so this never needs a result.
+  /*
+    Canon persists the lens whenever it changes; a failure is swallowed by the
+    Producer, so this never needs a result.
+
+    It is GATED on the restore having landed. Writing before then would save the
+    vista's defaults over the user's own saved filters — the snapshot would be
+    destroyed by the very mount that was about to read it.
+  */
   useEffect(() => {
+    if (!isLensRestored) return
     const effect = dispatch(
       persistFindLensThunk({
         surface: FindSurface.find,
@@ -178,7 +202,7 @@ export function FindPage({ input, locale }: FindPageProps) {
       }),
     )
     return () => effect.abort()
-  }, [dispatch, lens])
+  }, [dispatch, isLensRestored, lens])
 
   const onChangeQuery = useCallback(
     (next: string) => {

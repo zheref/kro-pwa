@@ -25,6 +25,7 @@ import type {
   Endeavor,
   EndeavorCapabilities,
   EndeavorGroupingCriteria as EndeavorGroupingCriteriaType,
+  EndeavorsLensSnapshot,
   Project,
 } from '@kro/core'
 import {
@@ -59,6 +60,8 @@ export interface HarnessOptions {
   readonly endeavors?: readonly Endeavor[]
   /** The Lists the shell loads — a list destination resolves its title here. */
   readonly projects?: readonly Project[]
+  /** Saved lens snapshots, by vista id — what a returning user's device holds. */
+  readonly lensSnapshots?: Readonly<Record<string, EndeavorsLensSnapshot>>
   /** Defaults to the shipping baseline, where `endeavorDetail` is OFF. */
   readonly featureFlags?: FeatureFlagService
   /** The instant every record is stamped at, so a scene never reads a clock. */
@@ -72,6 +75,7 @@ export interface HarnessOptions {
 export const makeSeededStore = ({
   endeavors = [],
   projects = [],
+  lensSnapshots = {},
   featureFlags = stubbedThunkExtra.featureFlags,
   now = new Date(2026, 5, 18, 9, 40),
 }: HarnessOptions = {}): AppStore => {
@@ -96,6 +100,7 @@ export const makeSeededStore = ({
           }),
         ),
       ),
+      lensSnapshots,
       performances: endeavors.flatMap((endeavor) =>
         endeavor.performances.map((entry) =>
           performanceRecordFromPerform(entry, {

@@ -3,11 +3,20 @@
  * over a seeded in-memory database (`RC-22`, `RC-35`) — never a hand-assembled
  * second store, never the live services.
  */
+import { EndeavorsVistas, makeEndeavorsLensSnapshot } from '@kro/core'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
+import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import { userDidChangeSearchQuery } from '../../main/MainFeature'
 import { allFindEndeavorMocks, findEndeavorMocks } from '../FindMocks'
+import { selectIsFindLensLoading } from '../FindSelectors'
+import { initialFindLens } from '../FindState'
 import { FindPage } from './FindPage'
 import {
   Harness,
@@ -66,6 +75,67 @@ describe('mount', () => {
     await waitFor(() => {
       expect(store.getState().main.selected.kind).toBe('search')
     })
+  })
+})
+
+describe('the saved lens survives the mount that reads it', () => {
+  it('restores the user\'s filters instead of the vista\'s defaults', async () => {
+    const store = mount(
+      makeSeededStore({
+        endeavors: allFindEndeavorMocks,
+        lensSnapshots: {
+          [EndeavorsVistas.find.id]: makeEndeavorsLensSnapshot({
+            ...initialFindLens,
+            hiddenKinds: ['calendarEvent'],
+            showArchived: true,
+          }),
+        },
+      }),
+    )
+
+    await waitFor(() => {
+      expect(store.getState().find.find.lens.showArchived).toBe(true)
+    })
+    expect(store.getState().find.find.lens.hiddenKinds).toEqual([
+      'calendarEvent',
+    ])
+  })
+
+  it('settles the restore flag, so the surface never reports it as loading forever', async () => {
+    const store = mount()
+
+    await waitFor(() => {
+      expect(store.getState().find.find.isLensRestored).toBe(true)
+    })
+    expect(selectIsFindLensLoading(store.getState())).toBe(false)
+  })
+
+  it('never writes the defaults back over the snapshot it is about to read', async () => {
+    const saved = makeEndeavorsLensSnapshot({
+      ...initialFindLens,
+      hiddenKinds: ['calendarEvent'],
+    })
+    const extra: ThunkExtra = {
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore({
+        lensSnapshots: { [EndeavorsVistas.find.id]: saved },
+      }),
+    }
+    const store = makeStore(extra)
+
+    render(
+      <Harness store={store}>
+        <FindPage input="touch" locale="en-US" />
+      </Harness>,
+    )
+
+    await waitFor(() => {
+      expect(store.getState().find.find.isLensRestored).toBe(true)
+    })
+    const onDisk = await extra.localStore.lensSnapshots.read(
+      EndeavorsVistas.find.id,
+    )
+    expect([...(onDisk?.hiddenKinds ?? [])]).toEqual(['calendarEvent'])
   })
 })
 

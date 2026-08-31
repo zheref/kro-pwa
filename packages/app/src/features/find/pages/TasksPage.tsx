@@ -11,6 +11,13 @@
  * three near-copies — which is the same argument `FindState`'s own header makes
  * for one slice carrying two surfaces.
  *
+ * ## Mount order, and the two races it avoids
+ *
+ * The restore and the fetch wait for `onViewLoaded`, and the lens is persisted
+ * only once the restore has landed. Both are `FindPage`'s reasoning verbatim —
+ * see its header — and both matter more here, because a Lists destination
+ * re-runs this whole sequence every time the route's identity changes.
+ *
  * ## The selection is re-declared whenever the route's identity changes
  *
  * `userDidSelectTasksVista` reseeds the lens from the new vista's defaults and
@@ -95,6 +102,9 @@ export function TasksPage({
   // O(1) field reads, exactly as `FindPage` does and for the same two reasons.
   const lens = useAppSelector((state) => state.find.tasks.lens)
   const clockAnchor = useAppSelector((state) => state.find.tasks.clockAnchor)
+  const isLensRestored = useAppSelector(
+    (state) => state.find.tasks.isLensRestored,
+  )
 
   const listId = selection.kind === 'list' ? selection.listId : null
   const seededQuery = selection.kind === 'search' ? selection.query : null
@@ -155,12 +165,9 @@ export function TasksPage({
   useEffect(() => {
     let cancelled = false
     const flags = dispatch(resolveCapabilityFlagsThunk())
-    const lensRestore = dispatch(
-      restoreFindLensThunk({ surface: FindSurface.tasks, vistaId }),
-    )
-    const fetch = dispatch(
-      fetchFindEndeavorsThunk({ surface: FindSurface.tasks, now: new Date() }),
-    )
+    // The two effects the flag read starts, so unmount can cancel them —
+    // cancellation is the one silent exit (`UZF-14`).
+    const started: { abort: () => void }[] = []
 
     void flags.then((action) => {
       if (cancelled) return
@@ -174,22 +181,33 @@ export function TasksPage({
           enabledFlags: result !== null && result.ok ? result.value : [],
         }),
       )
+      started.push(
+        dispatch(restoreFindLensThunk({ surface: FindSurface.tasks, vistaId })),
+        dispatch(
+          fetchFindEndeavorsThunk({
+            surface: FindSurface.tasks,
+            now: new Date(),
+          }),
+        ),
+      )
     })
 
     return () => {
       cancelled = true
       flags.abort()
-      lensRestore.abort()
-      fetch.abort()
+      for (const effect of started) effect.abort()
     }
   }, [dispatch, vistaId])
 
+  // Gated on the restore, exactly as `FindPage` is and for the same reason:
+  // an ungated write saves the vista's defaults over the user's own filters.
   useEffect(() => {
+    if (!isLensRestored) return
     const effect = dispatch(
       persistFindLensThunk({ surface: FindSurface.tasks, vistaId, lens }),
     )
     return () => effect.abort()
-  }, [dispatch, vistaId, lens])
+  }, [dispatch, isLensRestored, vistaId, lens])
 
   const onOperation = useCallback(
     (operation: EndeavorOperation, endeavorId: string) => {

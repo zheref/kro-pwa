@@ -7,13 +7,18 @@
  * lens rather than carrying the previous list's grouping onto the next one's
  * rows.
  */
-import { EndeavorGroupingCriteria, makeProject } from '@kro/core'
+import {
+  EndeavorGroupingCriteria,
+  EndeavorsVistas,
+  makeEndeavorsLensSnapshot,
+  makeProject,
+} from '@kro/core'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { loadShellThunk } from '../../main/MainProducer'
 import { allFindEndeavorMocks, findEndeavorMocks, nineOpenTasks } from '../FindMocks'
-import type { TasksVistaSelection } from '../FindState'
+import { type TasksVistaSelection, initialTasksLens } from '../FindState'
 import { TasksPage } from './TasksPage'
 import { Harness, makeSeededStore } from './__tests__/pagesHarness'
 
@@ -114,6 +119,29 @@ describe('mount', () => {
         listId: 'proj-2',
       })
     })
+  })
+})
+
+describe('the saved lens survives the mount that reads it', () => {
+  it('restores the list\'s own saved grouping rather than the vista default', async () => {
+    const store = makeSeededStore({
+      endeavors: nineOpenTasks,
+      lensSnapshots: {
+        [EndeavorsVistas.tasksDefault.id]: makeEndeavorsLensSnapshot({
+          ...initialTasksLens,
+          grouping: EndeavorGroupingCriteria.dueSection,
+        }),
+      },
+    })
+
+    mount({ kind: 'default' }, store)
+
+    await waitFor(() => {
+      expect(store.getState().find.tasks.lens.grouping).toBe(
+        EndeavorGroupingCriteria.dueSection,
+      )
+    })
+    expect(store.getState().find.tasks.isLensRestored).toBe(true)
   })
 })
 

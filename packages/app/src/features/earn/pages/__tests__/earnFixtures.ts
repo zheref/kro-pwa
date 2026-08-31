@@ -21,6 +21,7 @@
  *    DOM" rule the issue states for the screenshot pass, applied identically
  *    to the automated suite.
  */
+import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
 import {
   type PerformanceRecord,
@@ -43,7 +44,6 @@ import { initialMainState } from '../../../main/MainFeature'
 import { initialPlanState } from '../../../plan/PlanState'
 import { initialPlatformState } from '../../../platform/PlatformFeature'
 import { initialSessionState } from '../../../session/SessionState'
-import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialTriageState } from '../../../triage/TriageFeature'
 import type { RootState } from '../../../../library/store'
 import {
@@ -81,11 +81,6 @@ export const rootWith = (earn: EarnState): RootState => ({
   session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
-  // TRUNK REPAIR, not this issue's work: KC-IS-#32 added the `settings` slice
-  // to `RootState` after KC-IS-#28's fixture was written, and the two merged
-  // within a minute of each other — so `main` went red at 37e7522 on this one
-  // missing key, blocking every PR behind it. One line, in the sibling's file,
-  // because leaving the trunk red is not a state a PR can be verified against.
   settings: initialSettingsState,
   thirst: initialThirstState,
 })

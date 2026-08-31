@@ -21,6 +21,7 @@
  *    DOM" rule the issue states for the screenshot pass, applied identically
  *    to the automated suite.
  */
+import { initialThirstState } from '../../../thirst/ThirstFeature'
 import {
   type PerformanceRecord,
   performanceRecordFromPerform,
@@ -79,6 +80,7 @@ export const rootWith = (earn: EarnState): RootState => ({
   session: initialSessionState,
   auth: initialAuthState,
   main: initialMainState,
+  thirst: initialThirstState,
 })
 
 /** `EARN_MOCK_NOW` in epoch millis — the fixture performances' recorded time. */

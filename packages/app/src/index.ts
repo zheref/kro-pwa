@@ -139,3 +139,19 @@ export {
   AuthSurfacePage,
   LocalDataDialogFragment,
 } from './features/auth/pages'
+
+/**
+ * The Triage render tier (KC-IS-#26) — the carousel that mounts **inside** the
+ * Inbox surface, its form, and the two pure modules they sit on.
+ *
+ * Appended as its own block rather than folded above, for the same
+ * anti-contention reason the `features/main` and Settings blocks give: a
+ * parallel child adds its own block below instead of contending for a line in
+ * an existing one.
+ *
+ * `apps/web` reaches none of it. Triage has no route by canon's own decision,
+ * and the Inbox's two Pages mount `TriageCarouselPage` into their `overlay`
+ * slot — so the barrel exists for stories, tests, and a sibling that composes
+ * one of the pieces.
+ */
+export * from './features/triage/pages'

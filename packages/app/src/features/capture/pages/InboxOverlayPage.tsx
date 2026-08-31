@@ -44,6 +44,7 @@ import {
   selectSchedulingUndo,
   selectUndoSnapshot,
 } from '../CaptureSelectors'
+import { TriageCarouselPage } from '../../triage/pages/TriageCarouselPage'
 import { InboxFragment } from './InboxFragment'
 import { schedulingToastMessage } from './capturePresentation'
 import { useInboxSurface } from './useInboxSurface'
@@ -134,6 +135,11 @@ export function InboxOverlayPage() {
           ? 'popover'
           : 'sheet'
       }
+      // KC-IS-#26's Triage carousel, inside this surface rather than beside it
+      // — canon presents Triage through the Inbox's own carousel transition,
+      // never a navigation push. It renders nothing until a row's Triage button
+      // parks a request, so mounting it costs an unopened Inbox nothing.
+      overlay={<TriageCarouselPage />}
     />
   )
 }

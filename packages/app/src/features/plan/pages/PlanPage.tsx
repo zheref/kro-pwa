@@ -47,7 +47,11 @@
  * Server Page's prefetch. See the PR body for what a slice-resident connection
  * would add, and why it belongs to the child that owns those files.
  */
-import type { Endeavor } from '@kro/core'
+import type { Endeavor, EndeavorOperation, PlanListGrouping, PlanListSort } from '@kro/core'
+import {
+  planListGroupingOption,
+  planListSortOption,
+} from '@kro/core'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FABMenuEntry } from '../../../design/chrome'
 import { presentationFor } from '../../main/MainPresentation'
@@ -68,11 +72,17 @@ import { CaptureKind, captureKindLabel } from '../../capture/CaptureRules'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
+import { navigateToDestinationThunk } from '../../main/MainProducer'
 import { DestinationKind } from '../../main/SidebarDestination'
+import {
+  loadSettingsThunk,
+  updateSettingThunk,
+} from '../../settings/SettingsProducer'
 import { vibrateForTimelineHoldThunk } from '../../platform/PlatformProducer'
 import {
   onViewLoaded,
   onClockTicked,
+  userDidAssignToQuadrant,
   userDidDragEditHandle,
   userDidGrabEditHandle,
   userDidHoldEventBlock,
@@ -96,6 +106,9 @@ import {
   updateEventTimeThunk,
 } from '../PlanProducer'
 import {
+  selectPlanMatrixItems,
+  selectPlanMatrixPickerCandidates,
+  selectPlanVista,
   selectCanRefreshPlan,
   selectIsPlanActivityIndicated,
   selectIsPlanFabAvailable,
@@ -117,12 +130,26 @@ import {
 } from '../PlanSelectors'
 import { PlanLoadReason } from '../PlanState'
 import { timelineSlotStart } from '../TimelineSlots'
+import { PlanListFragment } from './list/PlanListFragment'
+import { deletePlanEndeavorThunk } from './list/PlanListProducer'
+import {
+  selectPlanListGrouping,
+  selectPlanListSections,
+  selectPlanListSort,
+  selectPlanRowCapabilities,
+} from './list/PlanListSelectors'
+import { PlanMatrixFragment } from './matrix/PlanMatrixFragment'
+import {
+  type PlanMatrixQuadrant,
+  eisenhowerQuadrantFor,
+} from './matrix/planMatrixPresentation'
+import { PickEndeavorFragment } from './picker/PickEndeavorFragment'
+import { PlanVisibilityFragment } from './visibility/PlanVisibilityFragment'
 import {
   DAY_PICKER_HEIGHT,
   PlanDayPickerFragment,
 } from './PlanDayPickerFragment'
 import { PLAN_SCROLL_BOTTOM_INSET, PlanFragment } from './PlanFragment'
-import { PlanVisibilityPanelFragment } from './PlanVisibilityPanelFragment'
 import { TimelineFragment } from './timeline/TimelineFragment'
 
 /** `PlanLayoutMetrics.dayPickerTopGap` + `topBreathingRoom`, canon's two gaps. */
@@ -198,8 +225,29 @@ export function PlanPage({
   const isFabAvailable = useAppSelector(selectIsPlanFabAvailable)
   const isFabGlowActive = useAppSelector(selectIsPlanFabGlowActive)
   const visibility = useAppSelector((state) => state.plan.visibility)
+  const vista = useAppSelector(selectPlanVista)
+
+  // KC-IS-#20's destinations.
+  const listSections = useAppSelector(selectPlanListSections)
+  const listGrouping = useAppSelector(selectPlanListGrouping)
+  const listSort = useAppSelector(selectPlanListSort)
+  const rowCapabilities = useAppSelector(selectPlanRowCapabilities)
+  const matrixItems = useAppSelector(selectPlanMatrixItems)
+  const pickerCandidates = useAppSelector(selectPlanMatrixPickerCandidates)
 
   const [isVisibilityOpen, setIsVisibilityOpen] = useState(false)
+  /**
+   * Which quadrant the add-existing picker is open for, or `null`.
+   *
+   * Presentation state, exactly like `isVisibilityOpen` above: canon models the
+   * picker as a *presented* child (`@Presents var pickEndeavor`) whose lifetime
+   * is the sheet's, and the search string and selection inside it live in the
+   * Fragment for the same reason (see its header). Nothing derived from either
+   * survives dismissal.
+   */
+  const [pickerQuadrant, setPickerQuadrant] = useState<PlanMatrixQuadrant | null>(
+    null,
+  )
 
   /**
    * The route mounted.
@@ -264,13 +312,44 @@ export function PlanPage({
     }
   }, [dispatch, selectedDate])
 
-  // The matrix keeps its own query — canon's reason: *"the matrix must receive
-  // fresh recurrence evidence on every visit"*.
+  /*
+    The endeavor POOL — the whole local mirror, read fresh on entry.
+
+    Canon's reason for the matrix having its own query is *"the matrix must
+    receive fresh recurrence evidence on every visit"*, and the LIST needs the
+    same pool for a different reason: the day's own fetch is start-driven and
+    cannot return an untimed task due today (`PlanHosts`: *"Endeavors with no
+    `start` are not returned"*), while canon's list is explicitly timed rows
+    **plus** those. The picker draws its candidates from the same pool. So the
+    one load serves three consumers, and the timeline — which wants only the
+    day's range — still does not pay for it.
+  */
   useEffect(() => {
-    if (viewMode !== PlanViewMode.priorityMatrix) return
+    if (
+      viewMode !== PlanViewMode.priorityMatrix &&
+      viewMode !== PlanViewMode.list
+    ) {
+      return
+    }
     const effect = dispatch(loadPlanMatrixThunk())
     return () => effect.abort()
   }, [dispatch, viewMode])
+
+  /*
+    The two Plan list preferences.
+
+    Canon reads them at `.started` from the preferences provider
+    (`provider.pick(.planListSort)`). On this stack the provider is the settings
+    slice, and `loadSettingsThunk` is idempotent — it re-reads the whole
+    snapshot from the local store — so dispatching it here costs one read and
+    means the list opens on the user's saved modes rather than on the declared
+    defaults. `selectPlanListSort` / `selectPlanListGrouping` fall back to those
+    defaults until it lands, so nothing renders undefined in the meantime.
+  */
+  useEffect(() => {
+    const effect = dispatch(loadSettingsThunk())
+    return () => effect.abort()
+  }, [dispatch])
 
   const onTapRefresh = useCallback(() => {
     // Canon's `guard !state.isRefreshing`, read before dispatching rather than
@@ -286,6 +365,151 @@ export function PlanPage({
       dispatch(onDetailRequested({ endeavor }))
     },
     [dispatch],
+  )
+
+  /* --------------------------------------------------- KC-IS-#20 wiring */
+
+  /**
+   * Everything Plan has fetched, by id — the pool the list rows, the matrix
+   * cards and the picker all name their targets from.
+   *
+   * The authoritative day comes first so an optimistically-edited row wins over
+   * the mirror's older copy of the same id.
+   */
+  const endeavorsById = useMemo(() => {
+    const index = new Map<string, Endeavor>()
+    for (const endeavor of pickerCandidates) index.set(endeavor.id, endeavor)
+    for (const endeavor of authoritative) index.set(endeavor.id, endeavor)
+    return index
+  }, [authoritative, pickerCandidates])
+
+  const openDetailFor = useCallback(
+    (endeavorId: string) => {
+      const endeavor = endeavorsById.get(endeavorId)
+      if (endeavor === undefined) return
+      dispatch(onDetailRequested({ endeavor }))
+    },
+    [dispatch, endeavorsById],
+  )
+
+  /**
+   * A row gesture, routed to the one place that serves it.
+   *
+   * `.planDay` declares three operations and each has a different owner:
+   *
+   *  - **viewDetail** — `endeavorDetail`'s own entry point, the same one the
+   *    timeline's card tap uses.
+   *  - **delete** — `deletePlanEndeavorThunk`, then a re-read of the two arrays
+   *    that hold the row. The thunk has no reducer arm on purpose (see its
+   *    header): re-reading is what keeps the day and the pool from disagreeing
+   *    about what still exists.
+   *  - **startSession** — canon sends `.main(.onUserWantsToStartEvent(endeavor,
+   *    nil))` and Main presents the Session surface for that endeavor. The web
+   *    has the destination but not the hand-off — session setup takes its
+   *    identity from KC-IS-#22's surface, which is in flight — so this
+   *    navigates to Execute and the endeavor is **not** carried. Named as a
+   *    divergence in the PR body and reported as a cross-lane need; a control
+   *    that goes to the right screen is honest, a control that does nothing is
+   *    not.
+   *
+   * Anything else the registry grows is ignored rather than guessed at.
+   */
+  const onRowOperation = useCallback(
+    (operation: EndeavorOperation, endeavorId: string) => {
+      if (operation === 'viewDetail') {
+        openDetailFor(endeavorId)
+        return
+      }
+
+      if (operation === 'delete') {
+        void dispatch(
+          deletePlanEndeavorThunk({ endeavorId, now: new Date() }),
+        ).then(() => {
+          void dispatch(
+            loadPlanDayThunk({
+              day: selectedDate,
+              reason: PlanLoadReason.manual,
+            }),
+          )
+          void dispatch(loadPlanMatrixThunk())
+        })
+        return
+      }
+
+      if (operation === 'startSession') {
+        void dispatch(
+          navigateToDestinationThunk({
+            destination: { kind: DestinationKind.session },
+          }),
+        )
+      }
+    },
+    [dispatch, openDetailFor, selectedDate],
+  )
+
+  /** One preference write, through the same Producer the Settings pane uses. */
+  const onSelectGrouping = useCallback(
+    (grouping: PlanListGrouping) => {
+      void dispatch(
+        updateSettingThunk({ key: planListGroupingOption.key, value: grouping }),
+      )
+    },
+    [dispatch],
+  )
+
+  const onSelectSort = useCallback(
+    (sort: PlanListSort) => {
+      void dispatch(
+        updateSettingThunk({ key: planListSortOption.key, value: sort }),
+      )
+    },
+    [dispatch],
+  )
+
+  /**
+   * Canon's `onAddNewToMatrixQuadrant: onAddNewTask` — the capture prompt,
+   * pre-set to Task. The quadrant is deliberately NOT carried: canon does not
+   * carry it either, because the new task lands in the quadrant its due date
+   * and value put it in, and inventing a pre-assignment would make the board
+   * disagree with `PlanMatrixResolution`.
+   */
+  const onAddNewToQuadrant = useCallback(() => {
+    dispatch(
+      userDidRequestCapture({
+        kind: CaptureKind.task,
+        now,
+        initialStart: null,
+      }),
+    )
+  }, [dispatch, now])
+
+  /**
+   * Confirming the picker — canon's `.picked(endeavors, quadrant)` arm, one
+   * dispatch per row.
+   *
+   * `userDidAssignToQuadrant` resolves each endeavor into the quadrant with
+   * #18's deterministic assignment (the due date and value that make the
+   * *derived* classification come out as that quadrant) and replaces every
+   * fetched copy together. Canon follows it with a persist effect
+   * (`produceMatrixResolvedEffect`); no such Producer exists in this feature
+   * yet, so the assignment is in-memory until the next write — reported as a
+   * cross-lane need in the PR body.
+   */
+  const onConfirmPicker = useCallback(
+    (endeavorIds: readonly string[]) => {
+      const quadrant = pickerQuadrant
+      if (quadrant === null) return
+      for (const endeavorId of endeavorIds) {
+        dispatch(
+          userDidAssignToQuadrant({
+            endeavorId,
+            quadrant: eisenhowerQuadrantFor(quadrant),
+          }),
+        )
+      }
+      setPickerQuadrant(null)
+    },
+    [dispatch, pickerQuadrant],
   )
 
   const onHoldBlock = useCallback(
@@ -427,8 +651,17 @@ export function PlanPage({
 
   const presentation = presentationFor('visibility', surface)
 
+  /*
+    The lens panel, now driven by the vista rather than by a fixed section list.
+
+    `PlanVisibilityFragment` renders exactly what `.planDay` declares in
+    `lens.exposes` (kinds · hosts · calendars · computed states) and reuses
+    KC-IS-#19's own rows to do it — see its header. The swap is what makes
+    acceptance criterion 3 structural instead of coincidental.
+  */
   const panel = (
-    <PlanVisibilityPanelFragment
+    <PlanVisibilityFragment
+      vista={vista}
       visibility={visibility}
       onToggle={(toggle) => dispatch(userDidToggleVisibility(toggle))}
     />
@@ -462,6 +695,18 @@ export function PlanPage({
       </Sheet>
     )
 
+  /* The five-day picker, shared by the two day-scoped destinations. */
+  const dayPicker = (
+    <PlanDayPickerFragment
+      dates={dayPickerDates}
+      selectedDate={selectedDate}
+      now={now}
+      onSelectDate={(date) => dispatch(userDidSelectDate({ date }))}
+      onStepDay={(days) => dispatch(userDidStepDay({ days }))}
+      className="pt-kro-small"
+    />
+  )
+
   const timeline = (
     <TimelineFragment
       placements={placements}
@@ -475,16 +720,7 @@ export function PlanPage({
       editingEndeavorId={editingEndeavorId}
       topInsetPx={PLAN_TIMELINE_TOP_INSET}
       bottomInsetPx={PLAN_SCROLL_BOTTOM_INSET}
-      overlay={
-        <PlanDayPickerFragment
-          dates={dayPickerDates}
-          selectedDate={selectedDate}
-          now={now}
-          onSelectDate={(date) => dispatch(userDidSelectDate({ date }))}
-          onStepDay={(days) => dispatch(userDidStepDay({ days }))}
-          className="pt-kro-small"
-        />
-      }
+      overlay={dayPicker}
       onViewDetail={onViewDetail}
       onHoldBlock={onHoldBlock}
       onGrabHandle={onGrabHandle}
@@ -495,15 +731,113 @@ export function PlanPage({
     />
   )
 
+  const list = (
+    <PlanListFragment
+      sections={listSections}
+      capabilities={rowCapabilities}
+      grouping={listGrouping}
+      sort={listSort}
+      now={now}
+      topInsetPx={PLAN_TIMELINE_TOP_INSET}
+      bottomInsetPx={PLAN_SCROLL_BOTTOM_INSET}
+      overlay={dayPicker}
+      onSelectGrouping={onSelectGrouping}
+      onSelectSort={onSelectSort}
+      onOperation={onRowOperation}
+      onOpenDetail={openDetailFor}
+    />
+  )
+
+  /*
+    The matrix carries NO day picker: it is not a day view. Canon keeps its
+    query separate for the same reason, and #18's `selectPlanMatrixItems` reads
+    the whole pool rather than the selected day.
+  */
+  const matrix = (
+    <PlanMatrixFragment
+      items={matrixItems}
+      onAddNew={onAddNewToQuadrant}
+      onAddExisting={setPickerQuadrant}
+      onTapItem={openDetailFor}
+    />
+  )
+
+  /*
+    The add-existing picker, presented the way this shell presents a browsing
+    list: a sheet on the handheld shell, a popover-sized panel on the desktop
+    one. `PresentationSurface.inbox` is the frame borrowed — canon has no Mac
+    popover for the picker (it pushes a navigation destination), and the Inbox
+    is the shell constant for *"a list you pick from"*. Adding a `pickEndeavor`
+    surface to `MainPresentation.ts` is a cross-lane follow-up.
+  */
+  const pickerPresentation = presentationFor('inbox', surface)
+
+  const pickerContent =
+    pickerQuadrant === null ? null : (
+      <PickEndeavorFragment
+        quadrant={pickerQuadrant}
+        endeavors={pickerCandidates}
+        grouping={listGrouping}
+        now={now}
+        onConfirm={onConfirmPicker}
+        onDismiss={() => setPickerQuadrant(null)}
+        onViewDetail={openDetailFor}
+      />
+    )
+
+  const picker =
+    pickerQuadrant === null ? null : pickerPresentation.kind === 'popover' ? (
+      <Popover
+        open
+        onOpenChange={(open) => {
+          if (!open) setPickerQuadrant(null)
+        }}
+      >
+        <PopoverAnchor className="absolute top-0 right-kro-medium" />
+        <PopoverContent
+          align="end"
+          data-testid="plan-picker-popover"
+          style={{
+            width: pickerPresentation.size?.width,
+            maxHeight: pickerPresentation.size?.height,
+            overflowY: 'auto',
+          }}
+        >
+          {pickerContent}
+        </PopoverContent>
+      </Popover>
+    ) : (
+      <Sheet
+        open
+        onOpenChange={(open) => {
+          if (!open) setPickerQuadrant(null)
+        }}
+      >
+        <SheetContent
+          side="bottom"
+          data-testid="plan-picker-sheet"
+          className="max-h-[85vh] overflow-y-auto"
+        >
+          <SheetTitle>Add existing</SheetTitle>
+          <SheetDescription>
+            Choose tasks to move into this quadrant.
+          </SheetDescription>
+          {pickerContent}
+        </SheetContent>
+      </Sheet>
+    )
+
   return (
+    <>
+    {picker}
     <PlanFragment
       selectedDate={selectedDate}
       eventCount={events.length}
       viewMode={viewMode}
       onSelectViewMode={(mode) => dispatch(userDidSelectViewMode({ mode }))}
-      // KC-IS-#20 supplies `list` and `matrix` here; nothing under
-      // `pages/timeline/**` moves when it does.
-      destinations={{ timeline }}
+      // The seam KC-IS-#19 left: two props, one call site, and nothing under
+      // `pages/timeline/**` moved to fill it.
+      destinations={{ timeline, list, matrix }}
       staleSyncLabel={staleSyncLabel}
       needsReconnect={googleNeedsReconnect}
       reconnectDetail={googleReconnectDetail}
@@ -518,5 +852,6 @@ export function PlanPage({
       isFabGlowActive={isFabGlowActive}
       fabItems={fabItems}
     />
+    </>
   )
 }

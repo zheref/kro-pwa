@@ -53,7 +53,7 @@ import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
 import { cn } from '../../../design/system/utils/cn'
 import type { PlanVisibility, PlanVisibilityToggle } from '../PlanState'
 
-interface VisibilityRow {
+export interface VisibilityRow {
   readonly id: string
   readonly label: string
   readonly toggle: PlanVisibilityToggle
@@ -61,7 +61,7 @@ interface VisibilityRow {
 }
 
 /** Canon's `VisibilityStateFilter.allCases`, in canon's order. */
-const stateRows: readonly VisibilityRow[] = [
+export const stateRows: readonly VisibilityRow[] = [
   {
     id: 'state-expired',
     label: 'Expired',
@@ -97,7 +97,7 @@ const kindRow = (
 })
 
 /** Canon's `VisibilityKindFilter.allCases`, in canon's order. */
-const kindRows: readonly VisibilityRow[] = [
+export const kindRows: readonly VisibilityRow[] = [
   kindRow('kind-events', 'Events', Kind.calendarEvent),
   kindRow('kind-tasks', 'Tasks', Kind.task),
   kindRow('kind-habits', 'Habits', Kind.habit),
@@ -116,7 +116,7 @@ const hostRow = (
 })
 
 /** Canon's `VisibilityHostFilter`, minus the two Apple hosts the epic excludes. */
-const hostRows: readonly VisibilityRow[] = [
+export const hostRows: readonly VisibilityRow[] = [
   hostRow('host-kro-cloud', 'Kro Cloud', Host.supabase),
   hostRow('host-local', 'This device', Host.local),
   hostRow('host-google', 'Google Calendar', Host.googleCalendar),
@@ -161,21 +161,29 @@ export function PlanVisibilityPanelFragment({
       data-testid="plan-visibility-panel"
       className={cn('flex flex-col gap-kro-medium', className)}
     >
-      <Section title="Show" rows={stateRows} visibility={visibility} onToggle={onToggle} />
-      <Section title="Kinds" rows={kindRows} visibility={visibility} onToggle={onToggle} />
-      <Section title="Sources" rows={hostRows} visibility={visibility} onToggle={onToggle} />
+      <VisibilityFilterSection title="Show" rows={stateRows} visibility={visibility} onToggle={onToggle} />
+      <VisibilityFilterSection title="Kinds" rows={kindRows} visibility={visibility} onToggle={onToggle} />
+      <VisibilityFilterSection title="Sources" rows={hostRows} visibility={visibility} onToggle={onToggle} />
     </div>
   )
 }
 
-function Section({
+export function VisibilityFilterSection({
   title,
   rows,
+  emptyMessage,
   visibility,
   onToggle,
 }: {
   readonly title: string
   readonly rows: readonly VisibilityRow[]
+  /**
+   * What a section with no rows says instead of drawing nothing — canon's own
+   * `emptyState(...)`, needed by the Calendars family whose inventory no slice
+   * holds yet (KC-IS-#20). Omitting it keeps the pre-existing behaviour: a
+   * row-less section renders as a bare heading.
+   */
+  readonly emptyMessage?: string
   readonly visibility: PlanVisibility
   readonly onToggle: (toggle: PlanVisibilityToggle) => void
 }) {
@@ -186,6 +194,14 @@ function Section({
       <h3 className="px-kro-tiny font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide">
         {title}
       </h3>
+      {rows.length === 0 && emptyMessage !== undefined ? (
+        <p
+          data-testid="plan-visibility-empty"
+          className="m-0 px-kro-small py-kro-small text-kro-fore-secondary text-sm"
+        >
+          {emptyMessage}
+        </p>
+      ) : null}
       {rows.map((row) => {
         const isShown = !row.isHidden(visibility)
         return (

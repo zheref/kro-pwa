@@ -2,21 +2,20 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+This is a pnpm + Turborepo monorepo. **[`TOOLCHAIN.md`](./TOOLCHAIN.md) is the
+authoritative reference** for versions, layout and commands; if anything below
+disagrees with it, that file wins. Never run `npm install` here.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+corepack enable
+pnpm install   # or: make setup
+pnpm dev       # or: make dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The Next.js app lives in `apps/web`; you can start editing the page by modifying
+`apps/web/src/app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

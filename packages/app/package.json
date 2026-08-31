@@ -1,0 +1,24 @@
+{
+  "name": "@kro/app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared feature + design tier (UI that is not app-shell specific). Skeleton — populated by the design-system and feature children of #1.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kro/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

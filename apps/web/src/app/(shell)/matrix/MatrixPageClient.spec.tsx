@@ -1,20 +1,20 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import BlueprintsRoute from './page'
+import { MatrixPageClient } from './MatrixPageClient'
 
-describe('/blueprints', () => {
-  it("mounts the Blueprints Thirst vote surface inside the shell's store", () => {
+describe('MatrixPageClient', () => {
+  it('mounts the Thirst destination page for the matrix feature key', () => {
     const store = makeStore(stubbedThunkExtra)
     render(
       <StoreProvider store={store}>
-        <BlueprintsRoute />
+        <MatrixPageClient />
       </StoreProvider>,
     )
 
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
-      'Blueprints',
+      'Priority Matrix',
     )
-    expect(store.getState().main.selected.kind).toBe('blueprints')
+    expect(store.getState().main.selected.kind).toBe('matrix')
   })
 })

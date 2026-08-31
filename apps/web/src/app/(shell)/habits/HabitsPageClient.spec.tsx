@@ -1,14 +1,14 @@
 import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import HabitsRoute from './page'
+import { HabitsPageClient } from './HabitsPageClient'
 
-describe('/habits', () => {
-  it("mounts the Habits Thirst vote surface inside the shell's store", () => {
+describe('HabitsPageClient', () => {
+  it('mounts the Thirst destination page for the habits feature key', () => {
     const store = makeStore(stubbedThunkExtra)
     render(
       <StoreProvider store={store}>
-        <HabitsRoute />
+        <HabitsPageClient />
       </StoreProvider>,
     )
 

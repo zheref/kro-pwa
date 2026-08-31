@@ -1,5 +1,6 @@
 import { EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
+import { initialCaptureState } from '../../capture/CaptureFeature'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import type { RootState } from '../../../library/store'
 import type { DoState } from '../DoFeature'
@@ -28,9 +29,10 @@ import { initialPlanState } from '../../plan/PlanState'
 const rootWith = (slice: DoState): RootState => ({
   greeting: greetingStateMocks.idle,
   do: slice,
-  // Present only because `RootState` names every registered slice (#18); this
-  // suite asserts nothing about Plan.
+  // Present only because `RootState` names every registered slice (#18, #23);
+  // this suite asserts nothing about Plan or Capture.
   plan: initialPlanState,
+  capture: initialCaptureState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

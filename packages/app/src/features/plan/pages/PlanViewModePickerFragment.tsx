@@ -262,11 +262,35 @@ export function PlanViewModePickerFragment({
     [settle],
   )
 
-  const onPointerCancel = useCallback(() => {
-    origin.current = null
-    isDragging.current = false
-    setDragTranslation(0)
-  }, [])
+  /**
+   * The OS took the gesture — a system edge-swipe, scroll arbitration, a
+   * cancelled touch.
+   *
+   * Capture is released here for the same reason `pointerup` releases it: a
+   * pointer captured and never given back keeps routing to this element, and
+   * the control stops answering the next drag. `pointercancel` is the *only*
+   * other way a captured gesture ends, so it is the only other place it can
+   * be released.
+   *
+   * The settle timer and `isSettling` are deliberately NOT touched. A settle
+   * owns the translation and its own completion; clearing either here would
+   * cut the animation short and rebase without it, and dropping `isSettling`
+   * would let a new drag interleave with a settle still in flight — which is
+   * precisely what that flag exists to prevent. The timer cannot leak: it
+   * always fires (its `rebase` clears the flag), and unmount clears it.
+   */
+  const onPointerCancel = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const wasDragging = isDragging.current
+      origin.current = null
+      isDragging.current = false
+      releasePointer(event.currentTarget, event.pointerId)
+      // Only a drag's own translation is discarded. A cancel that arrives
+      // mid-settle must leave the settle's translation alone.
+      if (wasDragging) setDragTranslation(0)
+    },
+    [],
+  )
 
   const onKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>) => {

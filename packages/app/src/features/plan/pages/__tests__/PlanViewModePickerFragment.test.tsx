@@ -136,6 +136,42 @@ describe('PlanViewModePickerFragment', () => {
     expect(onSelect).toHaveBeenCalledWith(PlanViewMode.list)
   })
 
+  it('gives the pointer back when the OS cancels the gesture, so the next drag works', () => {
+    const onSelect = vi.fn()
+    mount({ onSelect })
+    const control = screen.getByTestId('plan-view-mode-picker')
+
+    const released: number[] = []
+    // jsdom implements no pointer capture, so the calls are recorded rather
+    // than inferred — a capture never released is invisible in the DOM and
+    // only shows up as a control that stops answering.
+    Object.assign(control, {
+      setPointerCapture: () => {},
+      hasPointerCapture: () => true,
+      releasePointerCapture: (id: number) => released.push(id),
+    })
+
+    pointer('pointerDown', control, { clientX: 100, clientY: 0 })
+    pointer('pointerMove', control, { clientX: 60, clientY: 0 })
+    pointer('pointerCancel', control, { clientX: 60, clientY: 0 })
+
+    expect(released).toEqual([1])
+    // A cancelled gesture commits nothing.
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(onSelect).not.toHaveBeenCalled()
+
+    // And the control still answers a fresh drag afterwards.
+    pointer('pointerDown', control, { clientX: 100, clientY: 0 })
+    pointer('pointerMove', control, { clientX: 60, clientY: 0 })
+    pointer('pointerUp', control, { clientX: 60, clientY: 0 })
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(onSelect).toHaveBeenCalledWith(PlanViewMode.list)
+  })
+
   it('does not commit a drag that never reaches the intent margin', () => {
     const onSelect = vi.fn()
     mount({ onSelect })

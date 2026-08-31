@@ -273,8 +273,34 @@ describe('PlanFragment', () => {
   it('draws those controls in place when there is no shell, so they are never lost', () => {
     mount()
 
-    expect(screen.getByTestId('plan-refresh-slot')).toBeTruthy()
+    const refresh = screen.getByTestId('plan-refresh-slot')
+    expect(refresh).toBeTruthy()
     expect(screen.getByTestId('plan-visibility-slot')).toBeTruthy()
+    // The fallback row is visible, because it is carrying them.
+    expect(refresh.parentElement?.classList.contains('hidden')).toBe(false)
+  })
+
+  it('collapses the fallback row explicitly once BOTH controls have portalled', () => {
+    // Not left to `:empty`: a portalled slot renders nothing here, but one
+    // stray text node would keep the row occupying layout while looking empty.
+    // The row asks the same question its children ask.
+    mount({}, (node) => (
+      <ToolbarSlotsProvider>
+        <ToolbarOutlet placement="leading" />
+        <ToolbarOutlet placement="trailing" />
+        {node}
+      </ToolbarSlotsProvider>
+    ))
+
+    const row = screen
+      .getByTestId('plan-surface')
+      .querySelector('.justify-end.px-kro-medium')
+    expect(row).not.toBeNull()
+    // `classList` rather than a substring: `empty:hidden` also *contains*
+    // "hidden", so a substring assertion would pass against the brittle form
+    // this replaced.
+    expect(row?.classList.contains('hidden')).toBe(true)
+    expect(row?.classList.contains('empty:hidden')).toBe(false)
   })
 
   it('stacks the two status banners above the destination when both apply', () => {

@@ -168,6 +168,20 @@ export function PlanFragment({
 
   const allFiltersEnabled = areAllPlanFiltersEnabled(visibility)
 
+  /*
+    Where each toolbar control ends up, resolved ONCE here.
+
+    The shell exposes four placements but a given shell renders only two of
+    them — `navigation`/`primary` on the sidebar, `leading`/`trailing` on the
+    tab bar. Asking `useToolbarOutletPresent` rather than branching on the
+    shell shape keeps this Fragment from reading another feature's Selector
+    for a layout question. Resolving here rather than inside each control is
+    what lets the fallback row below decide its own presence from the same
+    fact, instead of inferring it from an empty DOM.
+  */
+  const refreshPlacement = useToolbarPlacement('navigation', 'leading')
+  const visibilityPlacement = useToolbarPlacement('primary', 'trailing')
+
   return (
     <section
       data-testid="plan-surface"
@@ -214,17 +228,31 @@ export function PlanFragment({
 
       {/*
         The two controls Plan contributes to the shell's toolbar. When the
-        shell is present each portals into its outlet and this row collapses to
-        nothing; with no shell — a story, a render test — they draw here.
+        shell is present each portals into its outlet and this row is not
+        rendered at all; with no shell — a story, a render test — they draw
+        here.
+
+        The condition is COMPUTED, not left to `:empty`. A portalled
+        `ToolbarSlot` renders `null` at this position, but `:empty` is a
+        statement about DOM child nodes, and one stray text node — a formatting
+        change, a future sibling, an added comment that JSX does not strip —
+        would silently un-collapse a row that is supposed to be gone. Asking
+        the same question the controls ask (`useToolbarOutletPresent`) makes
+        the row's presence follow from the same fact its children do.
       */}
-      <div className="flex shrink-0 items-center justify-end gap-kro-small px-kro-medium empty:hidden">
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-end gap-kro-small px-kro-medium',
+          refreshPlacement !== null && visibilityPlacement !== null && 'hidden',
+        )}
+      >
       {/*
         The leading refresh control — canon's `ToolbarItem(placement:
         .topBarLeading)`. It IS the activity signal: while anything is in
         flight it becomes a spinner, and canon's own label swaps with it.
       */}
       <ToolbarControl
-        placements={['navigation', 'leading']}
+        placement={refreshPlacement}
         testId="plan-refresh-slot"
       >
         <button
@@ -254,7 +282,7 @@ export function PlanFragment({
 
       {/* The visibility eye — canon's `ToolbarItemGroup(placement: .topBarTrailing)`. */}
       <ToolbarControl
-        placements={['primary', 'trailing']}
+        placement={visibilityPlacement}
         testId="plan-visibility-slot"
       >
         <button
@@ -374,28 +402,36 @@ function useModeEntryEdge(mode: PlanViewMode): PlanModeEdge {
 }
 
 /**
- * A control that finds its own outlet.
+ * Which of two placements this shell actually renders, or `null` for neither.
  *
- * The first placement the shell actually renders wins; with no shell at all —
- * a story, a render test — it draws in place, so the control is always
- * reachable and a test never has to mount the whole shell to assert on it.
+ * A hook rather than a branch inside the control, so the fallback row can read
+ * the same answer — see the note at its call site.
+ */
+function useToolbarPlacement(
+  first: ToolbarPlacement,
+  second: ToolbarPlacement,
+): ToolbarPlacement | null {
+  const hasFirst = useToolbarOutletPresent(first)
+  const hasSecond = useToolbarOutletPresent(second)
+  return hasFirst ? first : hasSecond ? second : null
+}
+
+/**
+ * A control placed into the shell's toolbar, or drawn where it stands.
+ *
+ * With no shell at all — a story, a render test — `placement` is `null` and
+ * the control renders in place, so it is always reachable and a test never has
+ * to mount the whole shell to assert on it.
  */
 function ToolbarControl({
-  placements,
+  placement,
   testId,
   children,
 }: {
-  readonly placements: readonly ToolbarPlacement[]
+  readonly placement: ToolbarPlacement | null
   readonly testId: string
   readonly children: ReactNode
 }) {
-  const first = placements[0] as ToolbarPlacement
-  const second = placements[1] as ToolbarPlacement
-  const hasFirst = useToolbarOutletPresent(first)
-  const hasSecond = useToolbarOutletPresent(second)
-
-  const placement = hasFirst ? first : hasSecond ? second : null
-
   if (placement === null) return <span data-testid={testId}>{children}</span>
 
   return (

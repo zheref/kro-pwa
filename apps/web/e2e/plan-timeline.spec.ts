@@ -94,6 +94,25 @@ const REALISTIC_DAY: readonly SeedEvent[] = [
   },
 ]
 
+/**
+ * Compile `/plan` once per worker, before any test's clock starts.
+ *
+ * The `webServer` Playwright waits for is the dev server's *base* URL; a route
+ * is only compiled the first time it is requested, and on a cold cache that
+ * can take longer than a whole test's 30 s budget. Left alone it makes
+ * whichever test a worker happens to run first flaky — a failure that is about
+ * the toolchain and says nothing about the timeline, which is the worst kind
+ * to have in a suite that exists as evidence.
+ *
+ * `beforeAll` runs per worker, so each pays the compile once and no test pays
+ * it at all.
+ */
+test.beforeAll(async ({ browser }) => {
+  const page = await browser.newPage()
+  await page.goto('/plan', { waitUntil: 'domcontentloaded', timeout: 120_000 })
+  await page.close()
+})
+
 test.describe('Plan timeline — pointer (mouse) path', () => {
   test.use({ viewport: DESKTOP, colorScheme: 'light' })
 

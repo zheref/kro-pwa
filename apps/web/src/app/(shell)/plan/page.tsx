@@ -5,6 +5,7 @@ import {
   makeGoogleRouteDependencies,
   resolveGoogleConnection,
 } from '@kro/app/google'
+import { firstForwardedValue } from './forwardedHeaders'
 import { PlanPageClient } from './PlanPageClient'
 
 /**
@@ -50,8 +51,11 @@ export default async function PlanRoute() {
     // scheme half is what decides whether a cookie may be `Secure`, so a
     // fabricated `http://…` here would be a real answer to a real question,
     // and the wrong one behind TLS.
-    const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host')
-    const proto = headerStore.get('x-forwarded-proto') ?? 'http'
+    const host =
+      firstForwardedValue(headerStore.get('x-forwarded-host')) ??
+      firstForwardedValue(headerStore.get('host'))
+    const proto =
+      firstForwardedValue(headerStore.get('x-forwarded-proto')) ?? 'http'
     const connection = await resolveGoogleConnection(
       {
         url:

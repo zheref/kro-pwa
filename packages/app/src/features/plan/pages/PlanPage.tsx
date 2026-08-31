@@ -355,6 +355,27 @@ export function PlanPage({
         endeavor,
         start: preview.start,
         end: preview.end,
+        /*
+          `new Date()`, NOT the injected `now` — and the difference is the
+          point, so it is written here rather than left to look like an
+          oversight.
+
+          Two different clocks are in play. `PlanState.now` is **domain time**:
+          it ticks on the minute and every surface that renders "when" reads
+          it, which is why the ghost, the now line and the is-this-past test
+          all take it and therefore always agree with one another. This
+          argument is **write time** — it becomes the row's
+          `updatedAtEpochMillis`, the watermark last-write-wins sync compares
+          (`SyncBookkeeping`). A watermark taken from a minute-ticked clock can
+          be up to 60 s stale, and two edits made a minute apart could stamp
+          the *same* value, which is precisely the comparison sync must not be
+          handed.
+
+          `MainShellPage` supplies `new Date()` to `createProjectThunk` and
+          `deleteProjectThunk` for the same reason, and the Producer takes the
+          instant as an argument (rather than reading one) so a test still
+          asserts on the write it asked for.
+        */
         now: new Date(),
       }),
     )

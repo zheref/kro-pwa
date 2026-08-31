@@ -18,7 +18,10 @@ const reduce = greetingSlice.reducer
 
 /** A store wired to a service that behaves however the scenario needs (`RC-22`). */
 const storeWith = (fetchGreeting: GreetingService['fetchGreeting']) =>
-  makeStore({ greetingService: { fetchGreeting } } satisfies ThunkExtra)
+  makeStore({
+    ...stubbedThunkExtra,
+    greetingService: { fetchGreeting },
+  } satisfies ThunkExtra)
 
 describe('onViewLoaded', () => {
   it('stamps the recipient and starts loading on first mount', () => {

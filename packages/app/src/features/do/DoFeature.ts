@@ -216,6 +216,7 @@ export const doSlice = createSlice({
       state,
       action: PayloadAction<{ capacity: FeaturedNowCapacity }>,
     ) {
+      if (state.featuredCapacity === action.payload.capacity) return
       state.featuredCapacity = action.payload.capacity
     },
 

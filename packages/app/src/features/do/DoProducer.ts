@@ -187,8 +187,8 @@ export const loadDoPreferencesThunk = createAsyncThunk<
  * of the same snapshot, which is what lets the reducer install them together
  * and lets the lanes and the rings *"update together without repeated
  * whole-screen regrouping"*. Reconciliation runs here so the reducer receives
- * an already-collapsed list, honouring `#12`'s reconcile-before-grouping
- * contract at the earliest point that has the data.
+ * the raw stored list; `withEndeavorsInstalled` reconciles exactly once at
+ * install (`#12`'s reconcile-before-grouping contract, single pass).
  */
 export const fetchDoEndeavorsThunk = createAsyncThunk<
   Result<DoDaySnapshot, DoException>,
@@ -196,9 +196,10 @@ export const fetchDoEndeavorsThunk = createAsyncThunk<
   { extra: ThunkExtra }
 >('do/onEndeavorsFetchCompleted', async ({ now }, { extra }) => {
   try {
-    const context = makeReconciliationContext({ now })
     const stored = await readStoredEndeavors(extra.localStore)
-    return ok({ endeavors: reconcile(stored, context), now })
+    // Raw pass-through: the install shifter owns the single reconcile pass
+    // (#12's reconcile-before-grouping contract, applied exactly once).
+    return ok({ endeavors: stored, now })
   } catch (error) {
     return err(DoExceptions.fetchFailed(messageOf(error)))
   }
@@ -257,7 +258,7 @@ export const clearExpiredThunk = createAsyncThunk<
 
   try {
     const refreshed = await readStoredEndeavors(extra.localStore)
-    return ok({ endeavors: reconcile(refreshed, context), now })
+    return ok({ endeavors: refreshed, now })
   } catch {
     return err(DoExceptions.clearExpiredRefreshFailed())
   }

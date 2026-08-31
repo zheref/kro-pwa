@@ -44,7 +44,7 @@ import {
   type Shadow,
   assertNever,
 } from '@kro/core'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { CompactPresentationHeader } from '../../../design/endeavor/CompactPresentationHeader'
 import {
   Dialog,
@@ -123,6 +123,10 @@ export interface DetailOverlaysProps {
 
 export function DetailOverlays({ locale }: DetailOverlaysProps) {
   const dispatch = useAppDispatch()
+  // The instant an unopened draft seeds itself from — stable for the life of
+  // one presented screen (RC-5: never a per-render clock). Event-time reads
+  // stay inside the callbacks, where the clock belongs.
+  const seededAt = useMemo(() => new Date(), [])
 
   const request = useAppSelector(selectDetailIntentRequest)
   const endeavor = useAppSelector(selectDetailEndeavor)
@@ -320,7 +324,7 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
         isDraftCommittable={isDraftCommittable}
         attachedHosts={attachedHosts}
         hostCandidates={hostCandidates}
-        now={new Date()}
+        now={seededAt}
         locale={locale}
         onChangeDraft={(draft) => dispatch(userDidChangeRelationDraft({ draft }))}
         onCommitDraft={onCommitDraft}

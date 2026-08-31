@@ -17,6 +17,7 @@ import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailS
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import {
   FIND_REFERENCE_NOW,
   allFindEndeavorMocks,
@@ -55,9 +56,10 @@ import {
 const rootWith = (find: FindState): RootState => ({
   greeting: initialGreetingState,
   // Present only because `RootState` names every registered slice; this suite
-  // asserts nothing about Do, Capture, Plan or Endeavor Detail.
+  // asserts nothing about Do, Capture, Triage, Plan or Endeavor Detail.
   do: initialDoState,
   capture: initialCaptureState,
+  triage: initialTriageState,
   plan: initialPlanState,
   find,
   endeavorDetail: initialEndeavorDetailState,

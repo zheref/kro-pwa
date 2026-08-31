@@ -12,6 +12,7 @@ import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import {
   detailEndeavorMocks,
   detailStateMocks,
@@ -55,6 +56,7 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   // Present only because `RootState` names every registered slice.
   do: initialDoState,
   capture: initialCaptureState,
+  triage: initialTriageState,
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail,

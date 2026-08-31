@@ -7,6 +7,7 @@ import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailS
 import { initialFindState } from '../../find/FindState'
 import { greetingStateMocks } from '../../greeting/GreetingMocks'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import { CaptureExceptions } from '../CaptureException'
 import type { CaptureState } from '../CaptureFeature'
 import {
@@ -49,10 +50,12 @@ import {
 const rootWith = (slice: CaptureState): RootState => ({
   greeting: greetingStateMocks.idle,
   // Present only because `RootState` names every registered slice (#16, #18,
-  // #29); this suite asserts nothing about Do, Plan, Find or Detail.
+  // #25, #29); this suite asserts nothing about Do, Plan, Triage, Find or
+  // Detail.
   do: initialDoState,
   plan: initialPlanState,
   capture: slice,
+  triage: initialTriageState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,

@@ -7,6 +7,7 @@ import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailS
 import { initialFindState } from '../../find/FindState'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
+import { initialTriageState } from '../../triage/TriageFeature'
 import type { GreetingState } from '../GreetingFeature'
 import { greetingStateMocks } from '../GreetingMocks'
 import {
@@ -19,15 +20,17 @@ import {
 
 /**
  * Selectors are exercised against a hand-built root state, never a live store.
- * `do` (#16), `plan` (#18), `capture` (#23), `find` and `endeavorDetail` (#29)
- * are filled from their own initial states only because `RootState` names every
- * registered slice; this suite asserts nothing about any of them.
+ * `do` (#16), `plan` (#18), `capture` (#23), `triage` (#25), `find` and
+ * `endeavorDetail` (#29) are filled from their own initial states only because
+ * `RootState` names every registered slice; this suite asserts nothing about
+ * any of them.
  */
 const rootWith = (greeting: GreetingState): RootState => ({
   greeting,
   do: initialDoState,
   plan: initialPlanState,
   capture: initialCaptureState,
+  triage: initialTriageState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
   earn: initialEarnState,

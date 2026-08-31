@@ -23,6 +23,7 @@ import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFe
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
 import { planSlice } from '../features/plan/PlanFeature'
+import { triageSlice } from '../features/triage/TriageFeature'
 import {
   type GreetingService,
   liveGreetingService,
@@ -72,6 +73,7 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
       capture: captureSlice.reducer,
+      triage: triageSlice.reducer,
       plan: planSlice.reducer,
       find: findSlice.reducer,
       endeavorDetail: endeavorDetailSlice.reducer,

@@ -118,7 +118,12 @@ export const shouldUseSecureCookies = (requestUrl: string): boolean => {
   try {
     const parsed = new URL(requestUrl)
     if (parsed.protocol === 'https:') return true
-    return !(parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')
+    return !(
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '127.0.0.1' ||
+      // WHATWG URL keeps the brackets on an IPv6 host.
+      parsed.hostname === '[::1]'
+    )
   } catch {
     // An unparseable URL is not a reason to downgrade a cookie.
     return true

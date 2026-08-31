@@ -347,7 +347,11 @@ describe('resolving an access token', () => {
     )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value).toBe('stub-access-token')
+    expect(result.value.accessToken).toBe('stub-access-token')
+    // The sliding lifetime is real only if a successful use re-arms it.
+    expect(result.value.renewedCookie).toContain('kro_gcal=')
+    expect(result.value.renewedCookie).toContain('Max-Age=')
+    expect(result.value.renewedCookie).toContain('HttpOnly')
   })
 
   it('reports notConnected when there is no credential cookie', async () => {

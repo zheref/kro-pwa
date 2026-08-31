@@ -30,6 +30,12 @@
  * for a support log. It is a closed union, not free text — a reason string
  * assembled from a response body would be the one place a token could ride
  * into the UI (`SEC-5`).
+ *
+ * Today the server emits only `revoked` and `scopeChanged`: Google's
+ * `invalid_grant` does not distinguish an expired refresh token from a
+ * revoked one, so `expired` is RESERVED for a caller that knows better
+ * (e.g. a testing-mode client whose seven-day expiry is configuration,
+ * not inference). Nothing may guess it from a response body.
  */
 import { assertNever } from '@kro/core'
 import type { GoogleCalendarException } from './GoogleCalendarException'

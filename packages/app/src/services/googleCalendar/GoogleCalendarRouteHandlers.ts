@@ -118,6 +118,12 @@ export interface GoogleRouteDependencies {
   readonly crypto: CryptoSource
 }
 
+/** The `setCookies` extras carrying a sliding renewal, when one was minted. */
+const renewalExtras = (
+  access: GoogleResolvedAccess,
+): Partial<GoogleRouteSuccess> =>
+  access.renewedCookie === null ? {} : { setCookies: [access.renewedCookie] }
+
 const json = (
   body: unknown,
   extras: Partial<GoogleRouteSuccess> = {},
@@ -356,11 +362,25 @@ export const completeGoogleAuthorization = async (
 // The shared credential path
 // ---------------------------------------------------------------------------
 
+/** A live access token, plus the best-effort sliding-renewal cookie. */
+export interface GoogleResolvedAccess {
+  readonly accessToken: string
+  /**
+   * A fresh `Set-Cookie` for the SAME sealed refresh token with a full
+   * `Max-Age` — the sliding 180-day lifetime is real only if every
+   * successful use re-arms it; the cookie was otherwise written once at the
+   * callback and silently dropped by the browser at expiry while Google
+   * still honoured the token. `null` when re-sealing failed: renewal is
+   * best-effort and never fails a request that already has its token.
+   */
+  readonly renewedCookie: string | null
+}
+
 /** A live access token, or the failure that explains why there is none. */
 export const resolveGoogleAccessToken = async (
   request: GoogleRouteRequest,
   deps: GoogleRouteDependencies,
-): Promise<Result<string, GoogleCalendarException>> => {
+): Promise<Result<GoogleResolvedAccess, GoogleCalendarException>> => {
   const configuration = configurationOf(deps)
   if (!configuration.ok) return configuration
 
@@ -385,12 +405,25 @@ export const resolveGoogleAccessToken = async (
     )
   }
 
+  let accessToken: string
   try {
     const tokens = await deps.oauth.refresh(refreshToken)
-    return ok(tokens.access_token)
+    accessToken = tokens.access_token
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))
   }
+
+  let renewedCookie: string | null = null
+  try {
+    const resealed = await deps.vault.seal(refreshToken)
+    renewedCookie = setCookieHeader(GOOGLE_TOKEN_COOKIE, resealed, {
+      maxAge: GOOGLE_TOKEN_COOKIE_MAX_AGE,
+      secure: shouldUseSecureCookies(request.url),
+    })
+  } catch {
+    // Renewal is best-effort; the request proceeds on the existing cookie.
+  }
+  return ok({ accessToken, renewedCookie })
 }
 
 // ---------------------------------------------------------------------------
@@ -503,16 +536,16 @@ export const listGoogleEvents = async (
   const window = parseGoogleEventsQuery(request.url)
   if (!window.ok) return window
 
-  const accessToken = await resolveGoogleAccessToken(request, deps)
-  if (!accessToken.ok) return accessToken
+  const access = await resolveGoogleAccessToken(request, deps)
+  if (!access.ok) return access
 
   try {
     const events = await deps.api.listEvents({
-      accessToken: accessToken.value,
+      accessToken: access.value.accessToken,
       from: window.value.from,
       to: window.value.to,
     })
-    return ok(json({ events }))
+    return ok(json({ events }, renewalExtras(access.value)))
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))
   }
@@ -526,14 +559,16 @@ export const listGoogleCalendars = async (
   request: GoogleRouteRequest,
   deps: GoogleRouteDependencies,
 ): Promise<GoogleRouteResult> => {
-  const accessToken = await resolveGoogleAccessToken(request, deps)
-  if (!accessToken.ok) return accessToken
+  const access = await resolveGoogleAccessToken(request, deps)
+  if (!access.ok) return access
 
   try {
     const entries = await deps.api.listCalendars({
-      accessToken: accessToken.value,
+      accessToken: access.value.accessToken,
     })
-    return ok(json({ calendars: googleCalendarSummariesFrom(entries) }))
+    return ok(
+      json({ calendars: googleCalendarSummariesFrom(entries) }, renewalExtras(access.value)),
+    )
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))
   }
@@ -569,12 +604,12 @@ export const logGoogleSession = async (
   const built = sessionCalendarEventRequest(input)
   if (!built.ok) return err(built.error)
 
-  const accessToken = await resolveGoogleAccessToken(request, deps)
-  if (!accessToken.ok) return accessToken
+  const access = await resolveGoogleAccessToken(request, deps)
+  if (!access.ok) return access
 
   try {
     const created = await deps.api.createEvent({
-      accessToken: accessToken.value,
+      accessToken: access.value.accessToken,
       request: built.request,
     })
     const envelope: GoogleCalendarEventEnvelope = {
@@ -582,7 +617,9 @@ export const logGoogleSession = async (
       calendarId: 'primary',
       calendarName: null,
     }
-    return ok(json({ events: [envelope] }, { status: 201 }))
+    return ok(
+      json({ events: [envelope] }, { status: 201, ...renewalExtras(access.value) }),
+    )
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))
   }

@@ -5,7 +5,6 @@ import {
   hours,
   secondsFromMinutes,
 } from '../../utils/durations'
-import '../../utils/numberEnhancements'
 
 /**
  * Represents the mode of the session timer.

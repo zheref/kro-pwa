@@ -6,9 +6,14 @@
  */
 import type { EndeavorRecord } from '@kro/core'
 import {
+  EndeavorHost,
+  EndeavorKind,
   EndeavorOperation,
   EndeavorStatus,
   endeavorRecordFromEndeavor,
+  makeEndeavor,
+  makeProject,
+  projectRecordFromProject,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
@@ -18,6 +23,7 @@ import {
   allFindEndeavorMocks,
   findEndeavorMocks,
 } from '../FindMocks'
+import { FindSurface } from '../FindOperations'
 import {
   fetchFindEndeavorsThunk,
   performBulkOperationThunk,
@@ -434,5 +440,116 @@ describe('performBulkOperationThunk applies to exactly the visible rows', () => 
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('bulkOperationFailed')
+  })
+})
+
+/**
+ * The list, hydrated (KC-IS-#71 item 11).
+ *
+ * `EndeavorRecord` has no list column — the row keeps `projectId` and the list
+ * is looked up from `ProjectStore` — and nothing looked it up, so every
+ * hydrated endeavor came back `list: null`. `tasksForList(id)` filters on
+ * `endeavor.list?.id`, so every Lists destination in the app showed
+ * **Nothing Here** while holding rows. These cases are the join.
+ */
+describe('the fetch hydrates each row’s list from the project store', () => {
+  const FINANCES = makeProject({ id: 'project-finances', title: 'Finances' })
+
+  const filedRecord = (id: string, projectId: string | null) =>
+    endeavorRecordFromEndeavor(
+      makeEndeavor({
+        id,
+        title: id,
+        kind: EndeavorKind.task,
+        projectId,
+        hostedBy: [EndeavorHost.local],
+      }),
+      { now: FIND_REFERENCE_NOW },
+    )
+
+  const storeWithProject = (records: readonly EndeavorRecord[]) => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: records,
+      projects: [
+        projectRecordFromProject(FINANCES, { now: FIND_REFERENCE_NOW }),
+      ],
+    })
+    return {
+      localStore,
+      store: makeStore({ ...stubbedThunkExtra, localStore }),
+    }
+  }
+
+  const fetched = async (records: readonly EndeavorRecord[]) => {
+    const { store } = storeWithProject(records)
+    const action = await store.dispatch(
+      fetchFindEndeavorsThunk({
+        surface: FindSurface.tasks,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = fetchFindEndeavorsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return payload.value.endeavors
+  }
+
+  it('carries the project a row is filed under, so a Lists vista can match it', async () => {
+    const rows = await fetched([filedRecord('filed', FINANCES.id)])
+
+    const filed = rows.find((row) => row.id === 'filed')
+    expect(filed?.list?.id).toBe(FINANCES.id)
+    expect(filed?.list?.title).toBe('Finances')
+  })
+
+  it('leaves an unfiled row unfiled rather than inventing a list', async () => {
+    const rows = await fetched([filedRecord('loose', null)])
+
+    expect(rows.find((row) => row.id === 'loose')?.list).toBeNull()
+  })
+
+  it('leaves a row pointing at a project that is gone unfiled, never half-filed', async () => {
+    // The project was deleted while the row kept pointing at it. An unfiled row
+    // is what that is; a dangling half-list would be a lie the UI then prints.
+    const rows = await fetched([filedRecord('orphan', 'project-vanished')])
+
+    const orphan = rows.find((row) => row.id === 'orphan')
+    expect(orphan).toBeDefined()
+    expect(orphan?.list).toBeNull()
+    expect(orphan?.projectId).toBe('project-vanished')
+  })
+
+  it('reads the project table once, not once per row', async () => {
+    const { localStore, store } = storeWithProject([
+      filedRecord('a', FINANCES.id),
+      filedRecord('b', FINANCES.id),
+      filedRecord('c', FINANCES.id),
+    ])
+    let reads = 0
+    const all = localStore.projects.all.bind(localStore.projects)
+    const counted = {
+      ...localStore,
+      projects: {
+        ...localStore.projects,
+        all: async () => {
+          reads += 1
+          return all()
+        },
+      },
+    }
+    const counting = makeStore({ ...stubbedThunkExtra, localStore: counted })
+    void store
+
+    await counting.dispatch(
+      fetchFindEndeavorsThunk({
+        surface: FindSurface.tasks,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+
+    // A per-row lookup would be three round-trips here and a hundred on a real
+    // list — the same reason the defers and performances are read whole.
+    expect(reads).toBe(1)
   })
 })

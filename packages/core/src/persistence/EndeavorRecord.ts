@@ -18,7 +18,7 @@
  * | Domain field | Fate | Why |
  * |---|---|---|
  * | `hostedBy` | → `[]` | No column exists. `toEndeavor` decodes `hostedBy = []` unconditionally; hosting is re-derived from the shadows + the reconciliation pass (#12), not stored. |
- * | `list` | → `null` | No column. The row keeps `projectId`; the list itself is looked up from `ProjectStore`. |
+ * | `list` | → `EndeavorRelations.list` | No column. The row keeps `projectId`; the list itself is looked up from `ProjectStore` and handed to the reader. |
  * | `errorMessages` | → `[]` | Transient UI bookkeeping — `Endeavor.ts` says "never persisted". |
  * | `inActivity` | → `false` | Same. |
  * | `tags: []` | → `null` | The CSV column cannot tell an empty list from an absent one. See `RecordEncodings.encodeTagsCsv`. |
@@ -51,6 +51,7 @@ import { makeEndeavor } from '../domain/endeavor/Endeavor'
 import type { EndeavorKind } from '../domain/endeavor/EndeavorKind'
 import { endeavorKindFromRawValue } from '../domain/endeavor/EndeavorKind'
 import { endeavorStatusFromRawValue } from '../domain/endeavor/EndeavorStatus'
+import type { AnyEndeavorList } from '../domain/shared/EndeavorList'
 import type { Defer } from '../domain/endeavor/Defer'
 import type { Perform } from '../domain/endeavor/Perform'
 import type { Owner } from '../domain/shared/Owner'
@@ -118,6 +119,17 @@ export interface EndeavorRecord extends SoftDeletable {
 export interface EndeavorRelations {
   readonly defers: readonly Defer[]
   readonly performances: readonly Perform[]
+  /**
+   * The row's list, looked up by the caller from `ProjectStore`.
+   *
+   * The table at the top of this file has always said the row keeps
+   * `projectId` and *"the list itself is looked up from `ProjectStore`"*. It
+   * arrives here rather than through `withProject` because hydration is not an
+   * edit: `withProject` is guarded by the kind-relevance matrix, so a kind that
+   * may not be filed by hand — a calendar event mirrored into a list by its
+   * provider — would silently come back unfiled (KC-IS-#71 item 11).
+   */
+  readonly list?: AnyEndeavorList | null
 }
 
 const NO_RELATIONS: EndeavorRelations = { defers: [], performances: [] }
@@ -254,7 +266,8 @@ export const endeavorFromRecord = (
       shadows: decodeShadowsJson(record.shadowsJson),
       owner: ownerFromRecord(record),
       // No column exists for either — see the table at the top of this file.
-      list: null,
+      // The list is looked up by the caller and handed over in `relations`.
+      list: relations.list ?? null,
       hostedBy: [],
     }),
   )

@@ -49,13 +49,16 @@ describe('find', () => {
     expect(vista.query.includeArchived).toBe(false)
   })
 
-  it('binds Start then Edit leading, Delete then Archive trailing, Detail on tap — that order IS the button order', () => {
+  it('binds Start then Edit leading, Delete then Archive trailing, Detail on tap AND long-press — that order IS the button order', () => {
     expect(capabilityOrder(vista)).toEqual([
       'startSession@swipeLeading',
       'edit@swipeLeading',
       'delete@swipeTrailing',
       'archive@swipeTrailing',
       'viewDetail@tap',
+      // The long-press half of the same operation (KC-IS-#71 item 12): a
+      // whole-row tap is undiscoverable and unreachable without a pointer.
+      'viewDetail@contextMenu',
     ])
   })
 
@@ -72,7 +75,7 @@ describe('find', () => {
 
   it('tints Start green, Edit blue and Archive orange, leaving Delete to the destructive default', () => {
     const tints = vista.capabilities.operations.map((binding) => binding.tint)
-    expect(tints).toEqual(['green', 'blue', null, 'orange', null])
+    expect(tints).toEqual(['green', 'blue', null, 'orange', null, null])
   })
 
   it('dark-launches the Detail tap behind `endeavorDetail`, and gates nothing else', () => {
@@ -241,14 +244,27 @@ describe('planDay', () => {
     expect(vista.query.includeArchived).toBe(false)
   })
 
-  it('binds Start Session and Delete on both a swipe and the context menu, plus the Detail tap', () => {
+  it('binds Start Session and Delete on both a swipe and the context menu, plus Detail on both', () => {
     expect(capabilityOrder(vista)).toEqual([
       'startSession@swipeLeading',
       'delete@swipeTrailing',
       'startSession@contextMenu',
       'delete@contextMenu',
       'viewDetail@tap',
+      'viewDetail@contextMenu',
     ])
+  })
+
+  it('gates both halves of Detail on the same flag, so they appear together', () => {
+    // A menu row for an operation the tap cannot perform would be the worse of
+    // the two inconsistencies (KC-IS-#71 item 12).
+    const detail = vista.capabilities.operations.filter(
+      (binding) => binding.operation === 'viewDetail',
+    )
+    expect(detail).toHaveLength(2)
+    expect(
+      detail.every((binding) => binding.requires === 'endeavorDetail'),
+    ).toBe(true)
   })
 
   it('binds no Edit — canon has no endeavor editor, so a tap-to-edit would do nothing', () => {

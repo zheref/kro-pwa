@@ -75,6 +75,7 @@ Both columns do the same thing. `make` is the interface; pnpm is the mechanism.
 | `make lint` | `turbo run lint` | Biome repo-wide + the `@kro/core` platform-free and UZF boundary checks |
 | `make typecheck` | `pnpm -r exec tsc --noEmit` | type-check every member |
 | `make test` | `turbo run test` | Vitest suites in every member (`make test-e2e` runs Playwright locally) |
+| `make test-coverage` | each member's `test:coverage` | The same suites, instrumented. Kept out of `make test` and out of `pr.yml`: instrumentation roughly doubles the longest job, and the ≥80%-on-touched-files floor is a per-PR measurement no gate reads (KC-IS-#50). |
 | `make analyze` | `turbo run analyze` | production build with `@next/bundle-analyzer` |
 | `make codegen` | — | reserved; no generator wired yet |
 | `make tokens` | — | reserved; wired by the design-system child |
@@ -93,7 +94,8 @@ never masks the other. Type errors still fail the build.
 |---|---|---|
 | `make build` | ✅ green | |
 | `make typecheck` | ✅ green | all three members, `noUncheckedIndexedAccess` on |
-| `make test` | ✅ green | 160 tests: `@kro/core` 44 · `@kro/app` 75 · `@kro/web` 41 |
+| `make test` | ✅ green | 9 264 tests: `@kro/core` 1 843 · `@kro/app` 7 288 · `@kro/web` 133 |
+| `make test-coverage` | ✅ green | Line coverage across the whole tree: `@kro/core` **97.54 %** · `@kro/app` **95.67 %** · `@kro/web` reported by its own `test` script. The per-PR bar is ≥80 % on *touched* files (`UZF-19`); these are the whole-package numbers the verb prints. |
 | `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome now covers the whole repo; the vendored `apps/web/src/components/ui/**` set stays excluded until #6's kit deletes it. |
 
 The `@kro/core` platform-free gate stays readable on its own:

@@ -5,7 +5,7 @@
 # underlying tool (npm -> pnpm, Jest -> Vitest, ...) never changes the interface.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev build lint format typecheck analyze test test-e2e codegen tokens deploy publish clean
+.PHONY: help setup dev build lint format typecheck analyze test test-coverage test-e2e codegen tokens deploy publish clean
 
 PNPM ?= pnpm
 
@@ -20,6 +20,7 @@ help:
 	@echo "  typecheck tsc --noEmit across every workspace member"
 	@echo "  analyze   production build with the bundle analyzer enabled"
 	@echo "  test      run every workspace member's test suite (Vitest in apps/web)"
+	@echo "  test-coverage  the same suites, instrumented, printing per-file coverage"
 	@echo "  test-e2e  run the Playwright end-to-end suite (needs browsers installed)"
 	@echo "  codegen   generate derived sources (no-op today)"
 	@echo "  tokens    generate design tokens (no-op today)"
@@ -60,6 +61,17 @@ analyze:
 ## test: run every workspace member's test suite
 test:
 	$(PNPM) turbo run test
+
+## test-coverage: run every member's suite with coverage instrumentation
+#
+# Separate from `test` on purpose: instrumentation roughly doubles the run, and
+# the >=80%-on-touched-files floor is a per-PR measurement rather than a
+# per-commit tax. `pr.yml` therefore runs `test`; a PR author runs this and
+# quotes the number (KC-IS-#50).
+test-coverage:
+	$(PNPM) --filter @kro/core test:coverage
+	$(PNPM) --filter @kro/app test:coverage
+	$(PNPM) --filter @kro/web test
 
 ## test-e2e: run the Playwright end-to-end suite
 test-e2e:

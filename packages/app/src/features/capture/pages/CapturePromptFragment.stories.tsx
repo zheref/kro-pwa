@@ -53,6 +53,7 @@ const prompt = (
     onEditTitle={noop}
     onSelectKind={noop}
     onPickDate={noop}
+    onClearDate={noop}
     onBeginTimeEdit={noop}
     onPickTime={noop}
     onEndTimeEdit={noop}
@@ -144,6 +145,19 @@ export const HabitHasNoDate = {
   render: () => (
     <ThemeScope theme="light">
       {prompt(captureDraftFixtures.titledHabit, 'sheet')}
+    </ThemeScope>
+  ),
+}
+
+/**
+ * A Task with its date cleared — the `KC-IS-#75` fix. The chip reads "No
+ * date" and its Clear button is gone; Add stays enabled, so this is exactly
+ * what submits a Task into Pending Triage.
+ */
+export const SheetTaskDateCleared = {
+  render: () => (
+    <ThemeScope theme="light">
+      {prompt(captureDraftFixtures.titledTaskNoDate, 'sheet')}
     </ThemeScope>
   ),
 }

@@ -9,8 +9,9 @@ import {
   captureStateMocks,
 } from '../CaptureMocks'
 import {
-  captureBlocker,
   canSubmitCapture,
+  captureBlocker,
+  captureResultFromDraft,
   nearestQuarterHourSlot,
   nextQuarterHourSlot,
 } from '../CaptureRules'
@@ -88,6 +89,19 @@ describe('the draft fixtures', () => {
 
   it('include the one event shape that may be submitted', () => {
     expect(canSubmitCapture(captureDraftFixtures.completeEvent)).toBe(true)
+  })
+
+  it('include a dateless Task and Reminder — the KC-IS-#75 fix — both still submittable', () => {
+    expect(canSubmitCapture(captureDraftFixtures.titledTaskNoDate)).toBe(true)
+    expect(canSubmitCapture(captureDraftFixtures.titledReminderNoDate)).toBe(
+      true,
+    )
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledTaskNoDate)?.date,
+    ).toBeNull()
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledReminderNoDate)?.date,
+    ).toBeNull()
   })
 })
 

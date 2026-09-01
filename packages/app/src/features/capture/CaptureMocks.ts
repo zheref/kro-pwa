@@ -43,6 +43,7 @@ import {
   withAddForTodayRequested,
   withCaptureCommitted,
   withContextLoaded,
+  withDateCleared,
   withException,
   withFetchStarted,
   withPromptOpened,
@@ -229,10 +230,25 @@ export const captureDraftFixtures = {
     title: 'Write the retro',
     hasTime: true,
   })),
+  /**
+   * Titled task, date cleared — `KC-IS-#75`: still valid (only events require
+   * a date), and it is what submits a Task that lands in Pending Triage.
+   */
+  titledTaskNoDate: draftOf(CaptureKind.task, (draft) => ({
+    ...draft,
+    title: 'Sort the garage',
+    hasDate: false,
+  })),
   /** Titled reminder — valid without a time. */
   titledReminder: draftOf(CaptureKind.reminder, (draft) => ({
     ...draft,
     title: 'Bins out',
+  })),
+  /** Titled reminder, date cleared — the same dateless path, for a Reminder. */
+  titledReminderNoDate: draftOf(CaptureKind.reminder, (draft) => ({
+    ...draft,
+    title: 'Ping the landlord',
+    hasDate: false,
   })),
   /** Titled habit — valid, and its date is dropped on submission. */
   titledHabit: draftOf(CaptureKind.habit, (draft) => ({
@@ -363,6 +379,22 @@ export const captureStateMocks = {
       initialStart: null,
     }),
     'Book the flights',
+  ),
+
+  /**
+   * The prompt open on Task, titled, date cleared — `KC-IS-#75`: still valid
+   * (only events require a date), and this IS the dateless-capture affordance
+   * the date chip's Clear button unlocks.
+   */
+  promptTaskDateCleared: withDateCleared(
+    withTitleEdited(
+      withPromptOpened(loadedPool, {
+        kind: CaptureKind.task,
+        now: CAPTURE_MOCK_NOW,
+        initialStart: null,
+      }),
+      'Sort the garage',
+    ),
   ),
 
   /** The prompt open on Event with a title but no times — Add still disabled. */

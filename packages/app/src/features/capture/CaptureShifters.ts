@@ -25,7 +25,7 @@ import {
   ADD_FOR_TODAY_UNDO_WINDOW_MS,
   type CaptureDestination,
   type CaptureDraft,
-  type CaptureKind,
+  CaptureKind,
   type CaptureRecurrence,
   type CaptureSchedulingSnapshot,
   captureIntentFor,
@@ -170,6 +170,11 @@ export function withTitleEdited(
  * *"close any open editors when switching kinds"* — the draft's committed
  * values are kept, so a user who typed a time and then switched from Task to
  * Event still has it.
+ *
+ * **`hasDate` is forced back to `true` when the new kind is an Event**
+ * (`KC-IS-#75`) — an event has no way to represent a missing start, and the
+ * Clear-date affordance is only ever offered on Task/Reminder, so this is the
+ * one seam a dateless draft could otherwise carry into an Event.
  */
 export function withKindSelected(
   state: CaptureState,
@@ -180,16 +185,39 @@ export function withKindSelected(
   return {
     ...state,
     prompt: {
-      draft: { ...prompt.draft, kind },
+      draft: {
+        ...prompt.draft,
+        kind,
+        hasDate: kind === CaptureKind.event ? true : prompt.draft.hasDate,
+      },
       startEdit: null,
       endEdit: null,
     },
   }
 }
 
-/** One concern: the date chip picked a day. */
+/** One concern: the date chip picked a day. Picking one always commits it. */
 export function withDatePicked(state: CaptureState, date: Date): CaptureState {
-  return withDraft(state, (draft) => ({ ...draft, date }))
+  return withDraft(state, (draft) => ({ ...draft, date, hasDate: true }))
+}
+
+/**
+ * One concern: the date chip's Clear button (`KC-IS-#75`).
+ *
+ * The one affordance canon's own date chip never offers — see `CaptureDraft`'s
+ * `hasDate` doc. A no-op for an Event (dates are mandatory; the button is
+ * never rendered for one, but the invariant is enforced here too, not only in
+ * the view) and for an already-dateless draft.
+ */
+export function withDateCleared(state: CaptureState): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  if (prompt.draft.kind === CaptureKind.event) return state
+  if (!prompt.draft.hasDate) return state
+  return {
+    ...state,
+    prompt: { ...prompt, draft: { ...prompt.draft, hasDate: false } },
+  }
 }
 
 /**

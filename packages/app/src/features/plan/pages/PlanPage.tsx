@@ -294,6 +294,15 @@ export function PlanPage({
     const today = new Date()
     const effect = dispatch(resolvePlanFlagsThunk())
     void effect.then((action) => {
+      /*
+        Cancellation is the ONE silent exit (`UZF-14`). A superseded mount —
+        React's development double-invoke is the everyday one — must not stamp
+        the day on its way out: the abort would otherwise land `onViewLoaded`
+        with the flags off, racing the live mount's own answer for the last
+        write and taking quick create down with it.
+      */
+      if (resolvePlanFlagsThunk.rejected.match(action) && action.meta.aborted)
+        return
       const result = resolvePlanFlagsThunk.fulfilled.match(action)
         ? action.payload
         : null

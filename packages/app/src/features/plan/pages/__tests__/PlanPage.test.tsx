@@ -29,6 +29,7 @@ import {
 } from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { PLAN_REFERENCE_DAY, planAt } from '../../PlanMocks'
+import { initialPlanState } from '../../PlanState'
 import { PlanPage } from '../PlanPage'
 import { installPointerEvents, pointer } from './pointerEvents'
 
@@ -403,6 +404,21 @@ describe('PlanPage', () => {
       expect(screen.queryByTestId('pick-endeavor')).toBeNull(),
     )
     vi.useRealTimers()
+  })
+
+  it('stamps nothing when the mount is superseded before the flags resolve', async () => {
+    // Cancellation is the one silent exit. The abort used to land
+    // `onViewLoaded` with the flags off, which races the live mount for the
+    // last write — `PLAN_EPOCH` still standing is the proof it stayed quiet.
+    const store = storeWith()
+    const { unmount } = mount(store)
+    unmount()
+
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    expect(store.getState().plan.now.getTime()).toBe(
+      initialPlanState.now.getTime(),
+    )
   })
 
   it('shows the reconnect banner the route resolved, and nothing when healthy', () => {

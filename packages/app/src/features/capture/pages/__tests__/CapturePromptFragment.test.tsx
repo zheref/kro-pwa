@@ -63,6 +63,7 @@ const renderPrompt = (
       onEditTitle={noop}
       onSelectKind={noop}
       onPickDate={noop}
+      onClearDate={noop}
       onBeginTimeEdit={noop}
       onPickTime={noop}
       onEndTimeEdit={noop}
@@ -170,6 +171,26 @@ describe('the chip strip follows the kind', () => {
 
     expect(screen.getByRole('button', { name: 'Date: Today' })).toBeTruthy()
   })
+
+  it('offers a Clear button on a dated Task, the KC-IS-#75 affordance', () => {
+    renderPrompt(captureDraftFixtures.titledTask)
+
+    expect(screen.getByRole('button', { name: 'Clear date' })).toBeTruthy()
+  })
+
+  it('reads "No date" once the date is cleared, and drops the Clear button', () => {
+    renderPrompt(captureDraftFixtures.titledTaskNoDate)
+
+    expect(screen.getByRole('button', { name: 'Date: No date' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Clear date' })).toBeNull()
+  })
+
+  it('never offers a date Clear button on an Event — it has no way to be dateless', () => {
+    renderPrompt(captureDraftFixtures.completeEvent)
+
+    expect(screen.getByRole('button', { name: /^Date:/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Clear date' })).toBeNull()
+  })
 })
 
 describe('the two presentations', () => {
@@ -230,6 +251,15 @@ describe('intent leaves through callbacks only (RC-15)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Time' }))
 
     expect(onBeginTimeEdit).toHaveBeenCalledWith('start')
+  })
+
+  it('raises onClearDate from the date chip’s Clear button, never a local flag', async () => {
+    const onClearDate = vi.fn()
+    renderPrompt(captureDraftFixtures.titledTask, { onClearDate })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear date' }))
+
+    expect(onClearDate).toHaveBeenCalledTimes(1)
   })
 
   it('offers Discard, Clear and Done while an edit is in flight', async () => {

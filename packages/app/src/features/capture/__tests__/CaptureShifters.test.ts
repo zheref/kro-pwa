@@ -21,6 +21,7 @@ import {
   withAddForTodayTimeAdjusted,
   withCaptureCommitted,
   withContextLoaded,
+  withDateCleared,
   withDatePicked,
   withDestinationSelected,
   withException,
@@ -223,6 +224,20 @@ describe('withKindSelected', () => {
   it('is a no-op after the prompt has been dismissed', () => {
     expect(withKindSelected(loaded, CaptureKind.event)).toBe(loaded)
   })
+
+  it('forces the date back on when the new kind is an Event (KC-IS-#75)', () => {
+    const dateless = withDateCleared(openPrompt)
+    expect(dateless.prompt?.draft.hasDate).toBe(false)
+
+    const switched = withKindSelected(dateless, CaptureKind.event)
+    expect(switched.prompt?.draft.hasDate).toBe(true)
+  })
+
+  it('leaves a Task’s cleared date cleared when switching to Reminder', () => {
+    const dateless = withDateCleared(openPrompt)
+    const switched = withKindSelected(dateless, CaptureKind.reminder)
+    expect(switched.prompt?.draft.hasDate).toBe(false)
+  })
 })
 
 describe('withDatePicked', () => {
@@ -239,8 +254,40 @@ describe('withDatePicked', () => {
     ).toBe(false)
   })
 
+  it('re-commits the date, undoing a prior Clear', () => {
+    const dateless = withDateCleared(openPrompt)
+    expect(dateless.prompt?.draft.hasDate).toBe(false)
+
+    const picked = withDatePicked(dateless, captureMockAt(18, 0, 0))
+    expect(picked.prompt?.draft.hasDate).toBe(true)
+  })
+
   it('is a no-op after the prompt has been dismissed', () => {
     expect(withDatePicked(loaded, captureMockAt(18, 0, 0))).toBe(loaded)
+  })
+})
+
+describe('withDateCleared', () => {
+  it('unsets the date on a Task, the KC-IS-#75 affordance', () => {
+    const cleared = withDateCleared(openPrompt)
+    expect(cleared.prompt?.draft.hasDate).toBe(false)
+    // The candidate day itself is untouched — only the commit flag flips, so
+    // re-opening the picker still has something sensible to show.
+    expect(cleared.prompt?.draft.date).toEqual(openPrompt.prompt?.draft.date)
+  })
+
+  it('refuses to clear an Event’s date — it has no way to represent one missing', () => {
+    const event = withKindSelected(openPrompt, CaptureKind.event)
+    expect(withDateCleared(event)).toBe(event)
+  })
+
+  it('is a no-op on an already-dateless draft', () => {
+    const cleared = withDateCleared(openPrompt)
+    expect(withDateCleared(cleared)).toBe(cleared)
+  })
+
+  it('is a no-op after the prompt has been dismissed', () => {
+    expect(withDateCleared(loaded)).toBe(loaded)
   })
 })
 

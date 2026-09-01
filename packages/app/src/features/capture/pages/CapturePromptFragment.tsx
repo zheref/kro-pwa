@@ -121,6 +121,8 @@ export interface CapturePromptFragmentProps {
   readonly onEditTitle: (title: string) => void
   readonly onSelectKind: (kind: CaptureKind) => void
   readonly onPickDate: (date: Date) => void
+  /** The date chip's Clear button — never offered for an Event (`KC-IS-#75`). */
+  readonly onClearDate: () => void
   readonly onBeginTimeEdit: (field: CaptureTimeField) => void
   readonly onPickTime: (field: CaptureTimeField, time: Date) => void
   readonly onEndTimeEdit: (
@@ -213,6 +215,7 @@ function PromptForm({
   onEditTitle,
   onSelectKind,
   onPickDate,
+  onClearDate,
   onBeginTimeEdit,
   onPickTime,
   onEndTimeEdit,
@@ -324,14 +327,32 @@ function PromptForm({
           ) : null}
 
           {isHabit ? null : (
-            <PromptChip
-              glyph={<CalendarGlyph size={12} aria-hidden />}
-              label={formatCaptureDate(draft.date, now, locale)}
-              isSet
-              isExpanded={panel === 'date'}
-              accessibilityLabel={`Date: ${formatCaptureDate(draft.date, now, locale)}`}
-              onSelect={() => togglePanel('date')}
-            />
+            <>
+              <PromptChip
+                glyph={<CalendarGlyph size={12} aria-hidden />}
+                label={
+                  draft.hasDate
+                    ? formatCaptureDate(draft.date, now, locale)
+                    : 'No date'
+                }
+                isSet={draft.hasDate}
+                isExpanded={panel === 'date'}
+                accessibilityLabel={
+                  draft.hasDate
+                    ? `Date: ${formatCaptureDate(draft.date, now, locale)}`
+                    : 'Date: No date'
+                }
+                onSelect={() => togglePanel('date')}
+              />
+              {/*
+                Never offered for an Event — canon's `Endeavor.event(...)` has
+                no way to represent one without a start, and `withDateCleared`
+                enforces the same invariant at the state layer (`KC-IS-#75`).
+              */}
+              {!isEvent && draft.hasDate ? (
+                <ClearButton label="Clear date" onSelect={onClearDate} />
+              ) : null}
+            </>
           )}
 
           <PromptChip

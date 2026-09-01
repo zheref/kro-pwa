@@ -177,6 +177,26 @@ describe('every edit goes through the slice, never through local state', () => {
     )
   })
 
+  it('the KC-IS-#75 regression, through the mounted Page: clearing the date captures a dateless Task', async () => {
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-title')
+
+    await userEvent.type(screen.getByTestId('capture-title'), 'Sort the garage')
+    await userEvent.click(screen.getByRole('button', { name: 'Clear date' }))
+    expect(screen.getByRole('button', { name: 'Date: No date' })).toBeTruthy()
+
+    await userEvent.click(screen.getByTestId('capture-add'))
+
+    await waitFor(() => {
+      expect(store.getState().capture.endeavors).toHaveLength(1)
+    })
+    const captured = store.getState().capture.endeavors[0]
+    expect(captured?.due).toBeNull()
+    expect(captured?.start).toBeNull()
+  })
+
   it('captures once for one intent, however fast Add is pressed twice', async () => {
     const store = makeCaptureStore({ endeavors: [] })
     mount(store)

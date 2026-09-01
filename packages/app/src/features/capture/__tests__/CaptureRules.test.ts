@@ -175,8 +175,22 @@ describe('what blocks the Add button', () => {
       reason: null,
     },
     {
+      scenario:
+        'a titled Task with its date cleared needs no date either (KC-IS-#75)',
+      draft: captureDraftFixtures.titledTaskNoDate,
+      blocker: null,
+      reason: null,
+    },
+    {
       scenario: 'a titled Reminder needs no time either',
       draft: captureDraftFixtures.titledReminder,
+      blocker: null,
+      reason: null,
+    },
+    {
+      scenario:
+        'a titled Reminder with its date cleared is just as valid (KC-IS-#75)',
+      draft: captureDraftFixtures.titledReminderNoDate,
       blocker: null,
       reason: null,
     },
@@ -237,6 +251,9 @@ describe('the draft the prompt opens with', () => {
 
     expect(draft.hasTime).toBe(false)
     expect(draft.hasEndTime).toBe(false)
+    // A fresh draft still opens dated, matching canon's own seed — the
+    // dateless path (`KC-IS-#75`) is reached only through an explicit Clear.
+    expect(draft.hasDate).toBe(true)
     expect(draft.time).toEqual(captureMockAt(17, 10, 0))
     expect(draft.date).toEqual(captureMockAt(17, 0, 0))
   })
@@ -417,6 +434,23 @@ describe('what a confirmed prompt emits', () => {
     ).toBeNull()
   })
 
+  it('drops a Task’s date once the date chip is cleared — the KC-IS-#75 fix', () => {
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledTaskNoDate)?.date,
+    ).toBeNull()
+    // A cleared date still submits with its title and every other field —
+    // clearing the date is not "as if habit": rewards survive.
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledTaskNoDate)?.rewards,
+    ).toBe(10)
+  })
+
+  it('drops a Reminder’s date the same way — Pending Triage has no kind exception', () => {
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledReminderNoDate)?.date,
+    ).toBeNull()
+  })
+
   it('refuses an event result that is missing a boundary at the domain edge', () => {
     const result = resultOf(captureDraftFixtures.completeEvent)
     expect(isCaptureResultValidForCreation(result)).toBe(true)
@@ -483,6 +517,24 @@ describe('building the endeavor a capture stores', () => {
       destination: CaptureDestination.kroCloud,
     })
     expect(event.hostedBy).toEqual([EndeavorHost.supabase])
+  })
+
+  it('gives a dateless Task no due date at all — the KC-IS-#75 regression', () => {
+    const task = build(captureDraftFixtures.titledTaskNoDate)
+    expect(task.due).toBeNull()
+    expect(task.start).toBeNull()
+  })
+
+  it('the KC-IS-#75 regression, end to end: capture a dateless Task → it appears in Pending Triage', () => {
+    const task = build(captureDraftFixtures.titledTaskNoDate)
+    const rows = pendingTriageEndeavors([task], null)
+    expect(rows.map((row) => row.id)).toContain(task.id)
+  })
+
+  it('the same regression for a Reminder — Pending Triage is kind-agnostic', () => {
+    const reminder = build(captureDraftFixtures.titledReminderNoDate)
+    const rows = pendingTriageEndeavors([reminder], null)
+    expect(rows.map((row) => row.id)).toContain(reminder.id)
   })
 })
 

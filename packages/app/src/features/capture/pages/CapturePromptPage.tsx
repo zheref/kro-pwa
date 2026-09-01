@@ -24,6 +24,7 @@ import type {
 } from '../CaptureFeature'
 import {
   userDidBeginTimeEdit,
+  userDidClearDate,
   userDidDiscardCapture,
   userDidEditTitle,
   userDidEndTimeEdit,
@@ -132,6 +133,7 @@ export function CapturePromptPage() {
         dispatch(userDidSelectKind({ kind }))
       }
       onPickDate={(date: Date) => dispatch(userDidPickDate({ date }))}
+      onClearDate={() => dispatch(userDidClearDate())}
       onBeginTimeEdit={(field: CaptureTimeField) =>
         dispatch(userDidBeginTimeEdit({ field }))
       }

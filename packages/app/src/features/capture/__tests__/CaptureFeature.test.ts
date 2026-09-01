@@ -21,6 +21,7 @@ import {
   userDidAdjustAddForTodayTime,
   userDidBeginTimeEdit,
   userDidCancelAddForToday,
+  userDidClearDate,
   userDidDiscardCapture,
   userDidDismissInbox,
   userDidEditTitle,
@@ -200,6 +201,26 @@ describe('userDidPickDate', () => {
     expect(
       reduce(loaded, userDidPickDate({ date: captureMockAt(18, 0, 0) })),
     ).toEqual(loaded)
+  })
+})
+
+describe('userDidClearDate', () => {
+  it('unsets the date on a Task — the KC-IS-#75 dateless-capture affordance', () => {
+    expect(reduce(openPrompt, userDidClearDate()).prompt?.draft.hasDate).toBe(
+      false,
+    )
+  })
+
+  it('leaves an Event dated — it has no way to represent one missing', () => {
+    const event = reduce(
+      openPrompt,
+      userDidSelectKind({ kind: CaptureKind.event }),
+    )
+    expect(reduce(event, userDidClearDate()).prompt?.draft.hasDate).toBe(true)
+  })
+
+  it('is harmless when no prompt is open', () => {
+    expect(reduce(loaded, userDidClearDate())).toEqual(loaded)
   })
 })
 
@@ -663,6 +684,23 @@ describe('submitting a capture', () => {
     const slice = store.getState().capture
     expect(slice.endeavors.map((value) => value.id)).toContain('new-task')
     expect(slice.prompt).toBeNull()
+  })
+
+  it('the KC-IS-#75 regression, through the real thunk: a dateless Task submits with no due date', async () => {
+    const store = await loadedStore()
+    await store.dispatch(
+      submitCaptureThunk({
+        draft: captureDraftFixtures.titledTaskNoDate,
+        id: 'dateless-task',
+        now: CAPTURE_MOCK_NOW,
+      }),
+    )
+
+    const endeavor = store
+      .getState()
+      .capture.endeavors.find((value) => value.id === 'dateless-task')
+    expect(endeavor?.due).toBeNull()
+    expect(endeavor?.start).toBeNull()
   })
 
   it('sends a task to the Inbox and an event to Plan', async () => {

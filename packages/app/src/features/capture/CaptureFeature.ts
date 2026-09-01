@@ -55,6 +55,7 @@ import {
   withAddForTodayTimeAdjusted,
   withCaptureCommitted,
   withContextLoaded,
+  withDateCleared,
   withDatePicked,
   withDestinationSelected,
   withException,
@@ -251,6 +252,17 @@ export const captureSlice = createSlice({
 
     userDidPickDate(state, action: PayloadAction<{ date: Date }>) {
       Object.assign(state, withDatePicked(state, action.payload.date))
+    },
+
+    /**
+     * User intent: the date chip's Clear button (`KC-IS-#75`).
+     *
+     * The affordance canon's own date chip never offers — see `CaptureDraft`'s
+     * `hasDate` doc in `CaptureRules.ts`. It is what lets a Task or Reminder
+     * submit dateless, so it reaches Pending Triage.
+     */
+    userDidClearDate(state) {
+      Object.assign(state, withDateCleared(state))
     },
 
     /**
@@ -548,6 +560,7 @@ export const {
   userDidAdjustAddForTodayTime,
   userDidBeginTimeEdit,
   userDidCancelAddForToday,
+  userDidClearDate,
   userDidDiscardCapture,
   userDidDismissInbox,
   userDidEditTitle,

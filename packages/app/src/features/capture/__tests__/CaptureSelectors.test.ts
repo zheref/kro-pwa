@@ -15,10 +15,15 @@ import { CaptureExceptions } from '../CaptureException'
 import type { CaptureState } from '../CaptureFeature'
 import {
   CAPTURE_MOCK_NOW,
+  captureDraftFixtures,
   captureMockAt,
   captureStateMocks,
 } from '../CaptureMocks'
-import { CaptureDestination } from '../CaptureRules'
+import {
+  CaptureDestination,
+  captureResultFromDraft,
+  endeavorFromCaptureResult,
+} from '../CaptureRules'
 import {
   selectAddForToday,
   selectAddForTodayPrefill,
@@ -44,8 +49,10 @@ import {
   selectUndoSnapshot,
 } from '../CaptureSelectors'
 import {
+  withCaptureCommitted,
   withDestinationSelected,
   withException,
+  withInboxOpened,
   withTriageRequested,
 } from '../CaptureShifters'
 import { initialMainState } from '../../main/MainFeature'
@@ -371,6 +378,28 @@ describe('selectPendingTriageEndeavors', () => {
     for (const row of selectPendingTriageEndeavors(loaded)) {
       expect(vistaStatuses?.has(row.status)).toBe(true)
     }
+  })
+
+  it('surfaces a captured dateless Task — the KC-IS-#75 regression, end to end through this selector', () => {
+    const result = captureResultFromDraft(captureDraftFixtures.titledTaskNoDate)
+    if (result === null) throw new Error('expected a valid capture result')
+    const endeavor = endeavorFromCaptureResult(result, {
+      id: 'dateless-task',
+      now: CAPTURE_MOCK_NOW,
+    })
+
+    const committed = withCaptureCommitted(captureStateMocks.loadedPool, {
+      endeavor,
+      destination: CaptureDestination.local,
+      now: CAPTURE_MOCK_NOW,
+    })
+    // Reopening the Inbox drains the Just Created slot into Pending Triage
+    // (`withInboxOpened`) — the same second-open the user performs in the app.
+    const reopened = withInboxOpened(committed)
+
+    expect(
+      selectPendingTriageEndeavors(rootWith(reopened)).map((row) => row.id),
+    ).toContain('dateless-task')
   })
 })
 

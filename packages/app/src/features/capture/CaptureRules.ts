@@ -499,8 +499,28 @@ export const nextFreeSlotToday = (
 export interface CaptureDraft {
   readonly title: string
   readonly kind: CaptureKind
-  /** Due / start **day**. Time-of-day here is never read. */
+  /**
+   * Due / start **day**. Time-of-day here is never read.
+   *
+   * Always a real candidate instant, exactly like `time`/`endTime` — so the
+   * date panel has something to open on even while `hasDate` is `false`.
+   */
   readonly date: Date
+  /**
+   * Whether the user has committed to `date`, mirroring `hasTime`.
+   *
+   * **KC-IS-#75.** Canon's `EndeavorInputPrompt` draft has no equivalent
+   * flag — its date chip is always `isSet: true` and offers no clear
+   * affordance — so a Task built from it can never reach Pending Triage
+   * (`start === null && due === null`), even though canon's own Inbox spec
+   * defines Pending Triage as "every unscheduled non-event endeavor". This
+   * flag is what makes that state reachable: `false` for a Task or Reminder
+   * means the capture submits with no due date. An Event forces this back to
+   * `true` the moment its kind is selected (`withKindSelected`) and its own
+   * Clear affordance is never offered — `Endeavor.event(...)` has no way to
+   * represent an event without a start.
+   */
+  readonly hasDate: boolean
   readonly hasTime: boolean
   readonly time: Date
   readonly hasEndTime: boolean
@@ -539,6 +559,10 @@ export const makeCaptureDraft = (params: {
     title: '',
     kind: params.kind,
     date,
+    // Matches canon's own `isSet: true` seed — a fresh capture still opens
+    // dated by default. `hasDate` only ever turns false through an explicit
+    // Clear (`withDateCleared`).
+    hasDate: true,
     hasTime: initialStart !== null,
     time: base,
     hasEndTime: initialStart !== null,
@@ -658,9 +682,14 @@ export interface CaptureResult {
  * `commitIfValid()` — the result, or `null` when the draft may not be
  * submitted.
  *
- * The three per-kind projections are canon's, verbatim: habits drop the date,
- * only tasks and habits carry rewards, and only an event with a committed end
- * carries `endTime`.
+ * The per-kind projections are canon's, verbatim, plus one this repo adds:
+ * habits drop the date, only tasks and habits carry rewards, and only an
+ * event with a committed end carries `endTime`. **`date` also drops to `null`
+ * whenever `hasDate` is `false`** (`KC-IS-#75`) — canon's own draft has no
+ * such flag and always emits `draft.dueDate`, which is exactly why a Task
+ * built through its prompt can never reach Pending Triage. `hasDate` stays
+ * pinned `true` for an event (`withKindSelected`, `withDateCleared`), so this
+ * branch never drops an event's date.
  */
 export const captureResultFromDraft = (
   draft: CaptureDraft,
@@ -670,7 +699,12 @@ export const captureResultFromDraft = (
   return {
     title: trimmedCaptureTitle(draft),
     kind: draft.kind,
-    date: draft.kind === CaptureKind.habit ? null : draft.date,
+    date:
+      draft.kind === CaptureKind.habit
+        ? null
+        : draft.hasDate
+          ? draft.date
+          : null,
     time: draft.hasTime ? draft.time : null,
     endTime: isEvent && draft.hasEndTime ? draft.endTime : null,
     destination: draft.destination,

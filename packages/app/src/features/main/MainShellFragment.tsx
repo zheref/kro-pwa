@@ -35,6 +35,10 @@ import type { CSSProperties, ReactNode } from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { GlassSurface } from '../../design/system/glass/GlassSurface'
 import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
+import {
+  GradientBackdrop,
+  LARGE_TITLE_SLAB_HEIGHT,
+} from '../../design/system/gradient/GradientBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import {
@@ -109,7 +113,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     >
       <DetailBackdrop />
 
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small p-kro-small">
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small py-kro-small pl-kro-small">
         {isSidebarVisible && (
           <SidebarFragment
             {...sidebar}
@@ -119,7 +123,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
           />
         )}
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <ContentColumn>
           <ContentToolbar
             layout={layout}
             selected={selected}
@@ -128,10 +132,10 @@ export function MainShellFragment(props: MainShellFragmentProps) {
             onTapInbox={onTapInbox}
           />
 
-          <main className="relative min-h-0 flex-1 overflow-y-auto">
+          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
             {children}
           </main>
-        </div>
+        </ContentColumn>
       </div>
     </div>
   ) : (
@@ -143,7 +147,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     >
       <DetailBackdrop />
 
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-kro-small p-kro-small">
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-kro-small py-kro-small">
         <TabBarToolbar
           layout={layout}
           selected={selected}
@@ -152,18 +156,51 @@ export function MainShellFragment(props: MainShellFragmentProps) {
           onTapSettings={onTapSettings}
         />
 
-        <main className="relative min-h-0 flex-1 overflow-y-auto">
-          {children}
-        </main>
+        <ContentColumn>
+          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </ContentColumn>
 
-        <TabBarFragment
-          elements={tabs}
-          selected={selected}
-          layout={layout}
-          searchDestination={searchDestination}
-          onSelectDestination={sidebar.onSelectDestination}
-        />
+        <div className="relative z-10 px-kro-small">
+          <TabBarFragment
+            elements={tabs}
+            selected={selected}
+            layout={layout}
+            searchDestination={searchDestination}
+            onSelectDestination={sidebar.onSelectDestination}
+          />
+        </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * The content column — LargeScreenTitle's slab lives here, not on the page
+ * field.
+ *
+ * Canon paints a diagonal indigo→grape fill behind the 34pt title, clipped to
+ * a 50px bottom-trailing round, and on a split view that fill starts at the
+ * sidebar's trailing edge (it does **not** run under the sidebar — that is
+ * `extendsGradientToWindowLeadingEdge`, which the user does not want) and
+ * reaches the window's trailing edge. Dropping the shell's right gutter is
+ * what lets the slab hit that edge; the glass toolbar keeps a trailing inset
+ * so it still floats.
+ */
+function ContentColumn({ children }: { readonly children: ReactNode }) {
+  return (
+    <div
+      data-testid="shell-content-column"
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+    >
+      <GradientBackdrop
+        hardEdge
+        clip="bottomTrailing"
+        height={LARGE_TITLE_SLAB_HEIGHT}
+        data-testid="shell-large-title-slab"
+      />
+      {children}
     </div>
   )
 }
@@ -194,7 +231,7 @@ function ContentToolbar({
       as="header"
       material="surface"
       data-testid="shell-content-toolbar"
-      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
+      className="relative z-10 mr-kro-small flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 16}px`,
@@ -288,7 +325,7 @@ function TabBarToolbar({
       as="header"
       material="surface"
       data-testid="shell-tab-bar-toolbar"
-      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
+      className="relative z-10 mx-kro-small flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 8}px`,

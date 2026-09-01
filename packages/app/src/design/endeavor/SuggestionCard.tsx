@@ -10,12 +10,17 @@
  *
  * | Canon                        | Here                     |
  * |------------------------------|--------------------------|
- * | `frame(height: 80)`          | `h-20`                   |
- * | `padding(16)`                | `p-kro-medium`           |
+ * | `frame(minHeight: 112)`      | `min-h-28`               |
+ * | `padding(24)`                | `p-kro-large`            |
  * | icon `36×36`, `size: 26`     | `size-9`, `size={26}`    |
  * | carousel `minWidth 280 / maxWidth 340` | `min-w-70 max-w-85` |
  * | `layoutPriority(1)` on text  | `grow shrink-0 basis-0`  |
  * | `Spacer(minLength: 0)`       | the flex gap             |
+ *
+ * Canon pins the carousel card at exactly 80pt, which clips a two-line
+ * subtitle against a 44pt CTA. The web card is a *minimum* of 112px with 24px
+ * padding so title, subtitle and action have room, and `fillsWidth` on a
+ * regular-width surface stacks it instead of squeezing it into a carousel.
  *
  * ## `layoutPriority(1)`, and the way it is easy to get backwards
  *
@@ -163,7 +168,7 @@ export function SuggestionCard({
     <div
       data-slot="suggestion-card"
       className={cn(
-        'flex h-20 items-center gap-kro-small overflow-hidden p-kro-medium',
+        'flex min-h-28 items-center gap-kro-medium overflow-hidden p-kro-large',
         fillsWidth ? 'w-full' : 'w-70 min-w-70 max-w-85 shrink-0',
         className,
       )}

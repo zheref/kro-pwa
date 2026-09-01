@@ -216,3 +216,47 @@ describe('the empty day', () => {
     expect(renderedLaneOrder()).toEqual([])
   })
 })
+
+describe('the Suggestions lane', () => {
+  it('carousels the cards on a compact surface', () => {
+    render(
+      <DoLanesFragment
+        {...propsFor(doSurfaceMocks.suggestionOffered, {
+          fillsSuggestionWidth: false,
+        })}
+      />,
+    )
+
+    const lane = screen.getByTestId('do-lane-suggestions')
+    expect(lane.querySelector('[data-testid="do-carousel"]')).not.toBeNull()
+    expect(
+      lane.querySelector('[data-testid="do-suggestions-stack"]'),
+    ).toBeNull()
+  })
+
+  it('stacks them full-width on a regular surface so they can breathe', () => {
+    render(
+      <DoLanesFragment
+        {...propsFor(doSurfaceMocks.suggestionOffered, {
+          fillsSuggestionWidth: true,
+        })}
+      />,
+    )
+
+    const lane = screen.getByTestId('do-lane-suggestions')
+    expect(
+      lane.querySelector('[data-testid="do-suggestions-stack"]'),
+    ).not.toBeNull()
+    expect(lane.querySelector('[data-testid="do-carousel"]')).toBeNull()
+    const card = lane.querySelector(
+      '[data-slot="suggestion-card"]',
+    ) as HTMLElement
+    expect(card.className).toContain('w-full')
+  })
+
+  it('keeps a named dismiss next to every suggestion', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    expect(screen.getByRole('button', { name: /Dismiss/ })).toBeTruthy()
+  })
+})

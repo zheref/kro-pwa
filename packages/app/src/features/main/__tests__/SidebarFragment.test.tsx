@@ -110,21 +110,37 @@ describe('the shipping sidebar', () => {
   })
 })
 
-describe('control sizing follows the decision table', () => {
-  it('draws 28px rows on a pointer surface', () => {
+describe('control sizing follows the iOS list floor', () => {
+  it('draws 44px rows on a pointer desktop, matching iOS rather than Mac 28', () => {
     renderSidebar()
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
-      '28px',
+      '44px',
     )
   })
 
-  it('draws 44px rows when the same sidebar is touch-driven', () => {
+  it('keeps the same 44px rows when the sidebar is touch-driven', () => {
     renderSidebar({ layout: doSurfaceLayout(handheldSurface) })
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
       '44px',
     )
+  })
+
+  it('sizes the search field to the same 44px row', () => {
+    renderSidebar()
+
+    expect(screen.getByRole('search').style.minHeight).toBe('44px')
+  })
+})
+
+describe('the app title', () => {
+  it('paints Kro at iOS title size, not a caption', () => {
+    renderSidebar()
+
+    const title = screen.getByTestId('sidebar-app-title')
+    expect(title.textContent).toBe('Kro')
+    expect(title.style.fontSize).toBe('28px')
   })
 })
 

@@ -149,6 +149,11 @@ export interface DoLanesFragmentProps {
   readonly handlers: DoCardHandlers
   readonly suggestionHandlers: DoSuggestionHandlers
   readonly className?: string
+  /**
+   * Regular-width surfaces stack suggestions full-width; compact ones keep the
+   * horizontal carousel. Matches Plan's `fillsWidth` banner placement.
+   */
+  readonly fillsSuggestionWidth?: boolean
 }
 
 export function DoLanesFragment(props: DoLanesFragmentProps) {
@@ -164,6 +169,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     locale,
     onCreateEndeavor,
     suggestionHandlers,
+    fillsSuggestionWidth = false,
     className,
   } = props
 
@@ -198,6 +204,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
         <SuggestionsLane
           suggestions={suggestions}
           handlers={suggestionHandlers}
+          fillsWidth={fillsSuggestionWidth}
         />
       ) : null}
 
@@ -359,55 +366,74 @@ const badgeStyle = {
 function SuggestionsLane({
   suggestions,
   handlers,
+  fillsWidth,
 }: {
   readonly suggestions: readonly (SuggestionCardModel & {
     readonly source: DoSuggestionSource
   })[]
   readonly handlers: DoSuggestionHandlers
+  readonly fillsWidth: boolean
 }) {
+  const cards = suggestions.map((suggestion) => (
+    <div
+      key={suggestion.source}
+      className={cn(
+        'flex items-center gap-kro-small',
+        fillsWidth ? 'w-full' : 'shrink-0',
+      )}
+    >
+      <SuggestionCard
+        model={suggestion}
+        fillsWidth={fillsWidth}
+        onAction={() => handlers.onAction(suggestion.source)}
+      />
+      {/*
+        Canon dismisses with a swipe-up gesture and a swipe action. On
+        the web a gesture with no visible control is unreachable by
+        keyboard and invisible to a pointer, so the same intent is a
+        real button — the swipe stays available through the card kit's
+        own action surface where a surface opts into it.
+      */}
+      <button
+        type="button"
+        aria-label={`Dismiss ${suggestion.title}`}
+        onClick={() => handlers.onDismiss(suggestion.source)}
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
+          'kro-on-gradient outline-none focus-visible:shadow-[var(--kro-ring)]',
+        )}
+        style={{
+          minWidth: 'var(--kro-size-min-touch-target)',
+          minHeight: 'var(--kro-size-min-touch-target)',
+        }}
+      >
+        <span aria-hidden className="text-lg leading-none">
+          ×
+        </span>
+      </button>
+    </div>
+  ))
+
   return (
     <section data-testid="do-lane-suggestions" aria-label="Suggestions">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-kro-medium">
         <SectionHeader
           title="Suggestions"
           glyph="suggestions"
           badgeText={null}
         />
-        <Carousel>
-          {suggestions.map((suggestion) => (
-            <div key={suggestion.source} className="flex items-center gap-2">
-              <SuggestionCard
-                model={suggestion}
-                onAction={() => handlers.onAction(suggestion.source)}
-              />
-              {/*
-                Canon dismisses with a swipe-up gesture and a swipe action. On
-                the web a gesture with no visible control is unreachable by
-                keyboard and invisible to a pointer, so the same intent is a
-                real button — the swipe stays available through the card kit's
-                own action surface where a surface opts into it.
-              */}
-              <button
-                type="button"
-                aria-label={`Dismiss ${suggestion.title}`}
-                onClick={() => handlers.onDismiss(suggestion.source)}
-                className={cn(
-                  'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
-                  'outline-none focus-visible:shadow-[var(--kro-ring)]',
-                )}
-                style={{
-                  minWidth: 'var(--kro-size-min-touch-target)',
-                  minHeight: 'var(--kro-size-min-touch-target)',
-                  color: colorVar('foreSecondary'),
-                }}
-              >
-                <span aria-hidden className="text-lg leading-none">
-                  ×
-                </span>
-              </button>
-            </div>
-          ))}
-        </Carousel>
+        {fillsWidth ? (
+          <div
+            data-testid="do-suggestions-stack"
+            className="flex flex-col gap-kro-medium px-kro-large"
+          >
+            {cards}
+          </div>
+        ) : (
+          <Carousel className="overflow-y-visible py-kro-small">
+            {cards}
+          </Carousel>
+        )}
       </div>
     </section>
   )

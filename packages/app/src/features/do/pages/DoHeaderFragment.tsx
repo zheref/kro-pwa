@@ -9,14 +9,14 @@
  * the compact/regular composition be a table test rather than a rendered
  * assertion about which branch a media query took.
  *
- * ## The gradient is NOT painted here
+ * ## The gradient IS painted here — on the content column
  *
- * Canon's `LargeScreenTitle` carries its own `LinearGradient` because SwiftUI
- * has no shared slab above it. The web shell already renders the page field
- * (`MainShellFragment`'s `DetailBackdrop`), and white ink is the on-gradient
- * colour that field is measured for. Painting a second gradient here would
- * double the ramp. So this header is transparent and draws its copy in the
- * on-gradient ink.
+ * Canon's `LargeScreenTitle` carries its own `LinearGradient` clipped to a
+ * 50px bottom-trailing round. The web shell paints that slab on the content
+ * column (`shell-large-title-slab`), from the sidebar's trailing edge to the
+ * window's trailing edge. This header stays transparent and draws its copy in
+ * the on-gradient ink so the two do not double the ramp — the page field
+ * (`DetailBackdrop`) is a vertical mesh; the title slab is the diagonal clip.
  *
  * ## Ink
  *

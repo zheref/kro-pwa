@@ -1,6 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { GradientBackdrop, GradientContent } from './GradientBackdrop'
+import {
+  GradientBackdrop,
+  GradientContent,
+  LARGE_TITLE_SLAB_HEIGHT,
+  LARGE_TITLE_TRAILING_RADIUS_PX,
+} from './GradientBackdrop'
 
 afterEach(cleanup)
 
@@ -51,6 +56,29 @@ describe('GradientBackdrop', () => {
     expect(screen.getByTestId('slab').className).toContain(
       'kro-gradient-backdrop--hard',
     )
+  })
+
+  it('clips to a bottom-trailing round when asked — LargeScreenTitle`s slab', () => {
+    const { rerender } = render(<GradientBackdrop data-testid="slab" />)
+    expect(screen.getByTestId('slab').className).not.toContain(
+      'kro-gradient-backdrop--large-title',
+    )
+
+    rerender(<GradientBackdrop clip="bottomTrailing" data-testid="slab" />)
+    const slab = screen.getByTestId('slab')
+    expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(slab.dataset.gradientClip).toBe('bottomTrailing')
+  })
+
+  it('defaults to an unclipped slab so existing callers do not change shape', () => {
+    render(<GradientBackdrop data-testid="slab" />)
+
+    expect(screen.getByTestId('slab').dataset.gradientClip).toBe('none')
+  })
+
+  it('names the LargeScreenTitle geometry as constants, matching canon`s 50pt round', () => {
+    expect(LARGE_TITLE_TRAILING_RADIUS_PX).toBe(50)
+    expect(LARGE_TITLE_SLAB_HEIGHT).toBe('360px')
   })
 
   it('keeps a caller’s inline style alongside its own custom property', () => {

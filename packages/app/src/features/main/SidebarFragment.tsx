@@ -16,16 +16,21 @@
  *   · the Lists section: one row per project, an inline "New project…" row,
  *     and a per-row delete.
  *
- * **The decision table drives the pixels.** Row height and the gap between
- * adjacent controls come from `layout.minimumControlSide` /
- * `minimumControlSpacing`, so a touch tablet gets 44/8 and a Mac 28/4 without
- * this component knowing which it is on.
+ * **Row height is the iOS list default, not the pointer chrome.** Canon's Mac
+ * sidebar uses `minimumControlSide` (28 on a pointer desktop), which reads as
+ * a dense utility list in a 200px glass column. The web sidebar is a phone
+ * `List` in a split view, so rows, the search field and the inline draft
+ * stay at the 44pt HIG floor even when the rest of the chrome is compact.
  */
 import { Plus, Search, Trash2, X } from 'lucide-react'
 import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
-import type { DoSurfaceLayout } from './DoSurfaceLayout'
+import {
+  TOUCH_CONTROL_SIDE,
+  TOUCH_CONTROL_SPACING,
+  type DoSurfaceLayout,
+} from './DoSurfaceLayout'
 import type { NavigationSection } from './NavigationSections'
 import {
   type SidebarDestination,
@@ -38,6 +43,15 @@ import {
 /** Canon's `navigationSplitViewColumnWidth(min: 180, ideal: 200)`. */
 export const SIDEBAR_MIN_WIDTH = 180
 export const SIDEBAR_IDEAL_WIDTH = 200
+
+/**
+ * iOS HIG list-row / search-field height. Used for every tappable row in this
+ * column, including on a pointer desktop — see the file header.
+ */
+export const SIDEBAR_ROW_HEIGHT = TOUCH_CONTROL_SIDE
+
+/** iOS `.title` — 28pt bold. Canon's `.navigationTitle("Kro")` in this column. */
+export const SIDEBAR_APP_TITLE_SIZE_PX = 28
 
 export interface SidebarFragmentProps {
   readonly sections: readonly NavigationSection[]
@@ -92,8 +106,8 @@ export function SidebarFragment(props: SidebarFragmentProps) {
       style={{
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,
         width: `${SIDEBAR_IDEAL_WIDTH}px`,
-        gap: `${layout.minimumControlSpacing}px`,
-        padding: `${layout.minimumControlSpacing}px`,
+        gap: `${TOUCH_CONTROL_SPACING}px`,
+        padding: `${TOUCH_CONTROL_SPACING}px`,
       }}
     >
       {/*
@@ -103,8 +117,17 @@ export function SidebarFragment(props: SidebarFragmentProps) {
         before the first project exists, and that is the only way the section
         ever appears.
       */}
-      <div className="flex items-center justify-between px-kro-small">
-        <span className="font-semibold text-kro-fore text-sm">Kro</span>
+      <div className="flex items-center justify-between px-kro-small py-kro-tiny">
+        <span
+          data-testid="sidebar-app-title"
+          className="font-bold tracking-tight text-kro-fore"
+          style={{
+            fontSize: `${SIDEBAR_APP_TITLE_SIZE_PX}px`,
+            lineHeight: 1.1,
+          }}
+        >
+          Kro
+        </span>
         {canManageProjects && (
           <button
             type="button"
@@ -112,8 +135,8 @@ export function SidebarFragment(props: SidebarFragmentProps) {
             onClick={onTapAddProject}
             className="rounded-kro-small text-kro-fore-secondary hover:text-kro-fore"
             style={{
-              minWidth: `${layout.minimumControlSide}px`,
-              minHeight: `${layout.minimumControlSide}px`,
+              minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+              minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
             }}
           >
             <Plus size={ICON_SIZE.small} className="mx-auto" />
@@ -122,7 +145,6 @@ export function SidebarFragment(props: SidebarFragmentProps) {
       </div>
 
       <SidebarSearchField
-        layout={layout}
         query={searchQuery}
         onChange={onChangeSearchQuery}
         onSubmit={onSubmitSearch}
@@ -156,12 +178,10 @@ export function SidebarFragment(props: SidebarFragmentProps) {
 }
 
 function SidebarSearchField({
-  layout,
   query,
   onChange,
   onSubmit,
 }: {
-  readonly layout: DoSurfaceLayout
   readonly query: string
   readonly onChange: (query: string) => void
   readonly onSubmit: () => void
@@ -177,7 +197,7 @@ function SidebarSearchField({
         'flex items-center gap-kro-small rounded-kro-field',
         'bg-kro-absolute/40 px-kro-small',
       )}
-      style={{ minHeight: `${layout.minimumControlSide}px` }}
+      style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
     >
       <Search
         size={ICON_SIZE.small}
@@ -256,7 +276,6 @@ function SidebarSection({
         {isLists && isAddingProject && (
           <li>
             <NewProjectRow
-              layout={layout}
               title={draftProjectTitle}
               onEdit={onEditDraftProjectTitle}
               onCommit={onCommitDraftProject}
@@ -304,7 +323,7 @@ function SidebarRow({
             ? 'bg-kro-accent font-semibold text-kro-on-accent'
             : 'hover:bg-kro-absolute/25',
         )}
-        style={{ minHeight: `${layout.minimumControlSide}px` }}
+        style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
       >
         <Icon size={ICON_SIZE.small} aria-hidden="true" className="shrink-0" />
         <span className="truncate">{title}</span>
@@ -321,8 +340,8 @@ function SidebarRow({
             'group-hover:opacity-100',
           )}
           style={{
-            minWidth: `${layout.minimumControlSide}px`,
-            minHeight: `${layout.minimumControlSide}px`,
+            minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+            minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
           }}
         >
           <Trash2 size={ICON_SIZE.small} className="mx-auto" />
@@ -333,13 +352,11 @@ function SidebarRow({
 }
 
 function NewProjectRow({
-  layout,
   title,
   onEdit,
   onCommit,
   onCancel,
 }: {
-  readonly layout: DoSurfaceLayout
   readonly title: string
   readonly onEdit: (title: string) => void
   readonly onCommit: () => void
@@ -352,7 +369,7 @@ function NewProjectRow({
         onCommit()
       }}
       className="flex items-center gap-kro-small px-kro-small"
-      style={{ minHeight: `${layout.minimumControlSide}px` }}
+      style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
     >
       <input
         // biome-ignore lint/a11y/noAutofocus: the row exists only because the user just asked for it; focusing anywhere else makes them click twice to type a name
@@ -376,8 +393,8 @@ function NewProjectRow({
         onClick={onCancel}
         className="rounded-kro-small text-kro-fore-secondary hover:text-kro-fore"
         style={{
-          minWidth: `${layout.minimumControlSide}px`,
-          minHeight: `${layout.minimumControlSide}px`,
+          minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+          minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
         }}
       >
         <X size={ICON_SIZE.small} className="mx-auto" />

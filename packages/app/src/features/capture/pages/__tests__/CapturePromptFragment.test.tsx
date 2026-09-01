@@ -210,12 +210,49 @@ describe('the two presentations', () => {
     const panel = screen.getByTestId('capture-prompt')
     expect(panel.getAttribute('data-kro-presentation')).toBe('popover')
     expect(panel.style.width).toBe(`${CAPTURE_PROMPT_POPOVER_WIDTH}px`)
+    expect(panel.style.padding).toBe('0px')
   })
 
   it('renders nothing at all while it is closed', () => {
     renderPrompt(captureDraftFixtures.emptyTask, { isOpen: false })
 
     expect(screen.queryByTestId('capture-prompt')).toBeNull()
+  })
+})
+
+describe('desktop density is compact', () => {
+  it('marks the popover form compact and the sheet form as touch', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+    const compact = document.querySelector('[data-slot="capture-prompt-form"]')
+    expect(compact?.getAttribute('data-kro-density')).toBe('compact')
+
+    cleanup()
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'sheet' })
+    const touch = document.querySelector('[data-slot="capture-prompt-form"]')
+    expect(touch?.getAttribute('data-kro-density')).toBe('touch')
+  })
+
+  it('shrinks kind chips to the pointer target on the desktop popover', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+
+    expect(screen.getByRole('button', { name: 'Task' }).style.minHeight).toBe(
+      'var(--kro-size-min-pointer-target)',
+    )
+  })
+
+  it('keeps the 44px touch floor on the phone sheet', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'sheet' })
+
+    expect(screen.getByRole('button', { name: 'Task' }).style.minHeight).toBe(
+      'var(--kro-size-min-touch-target)',
+    )
+  })
+
+  it('sets the title field to compact type on the popover', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+
+    expect(screen.getByTestId('capture-title').className).toContain('text-sm')
+    expect(screen.getByTestId('capture-title').className).toContain('py-2')
   })
 })
 

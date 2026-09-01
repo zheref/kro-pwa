@@ -2,7 +2,9 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  DEFAULT_GLOW_BLUR_RADIUS,
   DEFAULT_GLOW_HUES,
+  DEFAULT_GLOW_SPREAD,
   GLOW_SHAPES,
   RotatingGlow,
   conicSweep,
@@ -26,6 +28,36 @@ describe('the sweep is two hues, and closes on itself', () => {
     // The reason the pair matters is in the component's header: one hue rotates
     // invisibly, so a single-colour glow reads as a pulse, not as travel.
     expect(DEFAULT_GLOW_HUES).toEqual(['ringEmerald', 'glowLime'])
+  })
+
+  it('blooms the band instead of outlining it — blur carries farther than spread', () => {
+    expect(DEFAULT_GLOW_BLUR_RADIUS).toBeGreaterThan(DEFAULT_GLOW_SPREAD)
+    expect(DEFAULT_GLOW_SPREAD).toBeGreaterThan(3)
+    expect(DEFAULT_GLOW_BLUR_RADIUS).toBeGreaterThan(5)
+  })
+
+  it('casts a soft lime bloom around the host so the band is not a hairline', () => {
+    render(
+      <RotatingGlow>
+        <button type="button">Quick add</button>
+      </RotatingGlow>,
+    )
+
+    const host = document.querySelector('[data-kro-glow]') as HTMLElement
+    expect(host.style.boxShadow).toContain('glow-lime')
+    expect(host.style.boxShadow).toContain(`${DEFAULT_GLOW_BLUR_RADIUS}px`)
+  })
+
+  it('applies that bloom on the painted band by default', () => {
+    render(
+      <RotatingGlow>
+        <button type="button">Quick add</button>
+      </RotatingGlow>,
+    )
+
+    const band = document.querySelector('[data-kro-glow-band]') as HTMLElement
+    expect(band.style.filter).toBe(`blur(${DEFAULT_GLOW_BLUR_RADIUS}px)`)
+    expect(band.style.padding).toBe(`${DEFAULT_GLOW_SPREAD}px`)
   })
 
   it('repeats the first stop so the ramp has no seam at 0 degrees', () => {

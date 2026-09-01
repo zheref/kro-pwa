@@ -142,6 +142,16 @@ export const DEFAULT_GLOW_HUES = [
 ] as const satisfies readonly ColorRole[]
 
 /**
+ * Web-adapted bloom. Canon uses spread 3 / blur 5, which reads as a hairline
+ * ring on CSS `filter: blur` — the band stays a hard outline instead of light
+ * falling off the disc. These defaults keep the band thin enough that the
+ * cut-out still protects the glass, and push the blur far enough that the
+ * two-hue sweep reads as a spinning glow.
+ */
+export const DEFAULT_GLOW_SPREAD = 10
+export const DEFAULT_GLOW_BLUR_RADIUS = 24
+
+/**
  * Canon draws the band three times: "a band that thin, blurred that far, is
  * faint on its own — repeating it deepens the light without thickening the
  * band, so the falloff survives. Widening the band to gain the same intensity
@@ -224,8 +234,8 @@ export function RotatingGlow({
   hues = DEFAULT_GLOW_HUES,
   shape = GLOW_SHAPES.circle,
   secondsPerRevolution = 4,
-  spread = 3,
-  blurRadius = 5,
+  spread = DEFAULT_GLOW_SPREAD,
+  blurRadius = DEFAULT_GLOW_BLUR_RADIUS,
   inset = 0,
   isActive = true,
   className,
@@ -308,6 +318,12 @@ export function RotatingGlow({
         // behind an ancestor's background and disappear.
         isolation: 'isolate',
         display: 'inline-flex',
+        // A second, unmasked bloom so the spinning band does not read as a
+        // 1px outline. The cut-out band still carries the hue travel; this
+        // shadow is the light that falls off the disc.
+        boxShadow: isActive
+          ? `0 0 ${DEFAULT_GLOW_BLUR_RADIUS}px ${DEFAULT_GLOW_SPREAD}px color-mix(in srgb, ${colorVar('glowLime')} 55%, transparent)`
+          : undefined,
         ...style,
       }}
     >

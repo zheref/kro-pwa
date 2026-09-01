@@ -43,7 +43,28 @@ export interface GradientBackdropProps
    * line across the app the moment content scrolls up to it.
    */
   readonly hardEdge?: boolean
+  /**
+   * How the slab is clipped. `bottomTrailing` is LargeScreenTitle's
+   * `UnevenRoundedRectangle(bottomTrailingRadius: 50)` — the header that sits
+   * on the content column and rounds only its bottom-trailing corner.
+   */
+  readonly clip?: 'none' | 'bottomTrailing'
 }
+
+/**
+ * How tall the LargeScreenTitle slab is when it is the content column's own
+ * header, not a full-window field.
+ *
+ * Canon paints a 1000pt gradient anchored at the title's bottom edge so it
+ * always fills past the toolbar. On the web the content column already starts
+ * below the window chrome, so 360px is enough to cover the glass toolbar, the
+ * 34pt title and the first stretch of content, with the 50px trailing round
+ * still visible.
+ */
+export const LARGE_TITLE_SLAB_HEIGHT = '360px'
+
+/** Canon's `UnevenRoundedRectangle(bottomTrailingRadius: 50)`. */
+export const LARGE_TITLE_TRAILING_RADIUS_PX = 50
 
 /**
  * The `indigoGrape` header slab, installed as the content's top inset.
@@ -59,6 +80,7 @@ export function GradientBackdrop({
   height = '220px',
   fixed = false,
   hardEdge = false,
+  clip = 'none',
   className,
   style,
   ...rest
@@ -67,10 +89,12 @@ export function GradientBackdrop({
     <div
       aria-hidden="true"
       data-gradient-variant={variant}
+      data-gradient-clip={clip}
       className={cn(
         'kro-gradient-backdrop',
         fixed && 'kro-gradient-backdrop--fixed',
         hardEdge && 'kro-gradient-backdrop--hard',
+        clip === 'bottomTrailing' && 'kro-gradient-backdrop--large-title',
         className,
       )}
       style={{

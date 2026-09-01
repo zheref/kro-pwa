@@ -341,3 +341,31 @@ describe('the bottom inset the shell publishes for the design system', () => {
     expect(shellBottomInset('sidebar', doSurfaceLayout(desktopSurface))).toBe(0)
   })
 })
+
+describe('the LargeScreenTitle slab', () => {
+  it('paints the diagonal clipped slab on the content column of a sidebar shell', () => {
+    renderShell(desktopSurface)
+
+    const slab = screen.getByTestId('shell-large-title-slab')
+    const column = screen.getByTestId('shell-content-column')
+    expect(column.contains(slab)).toBe(true)
+    expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(slab.className).toContain('kro-gradient-backdrop--hard')
+  })
+
+  it('does not run the slab under the sidebar — it starts at the content column', () => {
+    renderShell(desktopSurface)
+
+    const sidebar = screen.getByTestId('shell-sidebar')
+    const slab = screen.getByTestId('shell-large-title-slab')
+    expect(sidebar.contains(slab)).toBe(false)
+  })
+
+  it('still paints the slab on the tab-bar shell, edge to edge above the dock', () => {
+    renderShell(handheldSurface)
+
+    const slab = screen.getByTestId('shell-large-title-slab')
+    expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(screen.getByTestId('shell-tab-bar')).toBeTruthy()
+  })
+})

@@ -53,7 +53,9 @@ export {
 export { useDisclosure } from './useDisclosure'
 
 export {
+  DEFAULT_GLOW_BLUR_RADIUS,
   DEFAULT_GLOW_HUES,
+  DEFAULT_GLOW_SPREAD,
   GLOW_SHAPES,
   type RotatingGlowProps,
   type RotatingGlowShape,

@@ -78,7 +78,7 @@ describe('SuggestionCard', () => {
     expect(card().className).toContain('w-full')
   })
 
-  it('keeps the 80px height canon fixes for the carousel row', () => {
+  it('is at least 112px tall and padded so the copy can breathe', () => {
     const { container } = render(
       <SuggestionCard model={model} onAction={() => undefined} />,
     )
@@ -86,7 +86,9 @@ describe('SuggestionCard', () => {
     const card = container.querySelector(
       '[data-slot="suggestion-card"]',
     ) as HTMLElement
-    expect(card.className).toContain('h-20')
+    expect(card.className).toContain('min-h-28')
+    expect(card.className).toContain('p-kro-large')
+    expect(card.className).toContain('gap-kro-medium')
   })
 
   it('lets the button yield before the title does — the layout priority canon calls out', () => {

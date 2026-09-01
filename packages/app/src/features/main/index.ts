@@ -131,8 +131,10 @@ export {
   MainShellFragment,
 } from './MainShellFragment'
 export {
+  SIDEBAR_APP_TITLE_SIZE_PX,
   SIDEBAR_IDEAL_WIDTH,
   SIDEBAR_MIN_WIDTH,
+  SIDEBAR_ROW_HEIGHT,
   type SidebarFragmentProps,
   SidebarFragment,
 } from './SidebarFragment'

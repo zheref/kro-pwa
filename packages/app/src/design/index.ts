@@ -115,6 +115,8 @@ export {
   type GradientStyle,
   GradientBackdrop,
   GradientContent,
+  LARGE_TITLE_SLAB_HEIGHT,
+  LARGE_TITLE_TRAILING_RADIUS_PX,
 } from './system/gradient/GradientBackdrop'
 export {
   type DetailBackdropProps,

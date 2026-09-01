@@ -367,6 +367,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
             onCreateEndeavor={props.onCreateEndeavor}
             handlers={handlers}
             suggestionHandlers={suggestionHandlers}
+            fillsSuggestionWidth={layout.width === 'regular'}
           />
 
           {/* Canon's `Spacer(minLength: 80)` — the last lane clears the FAB. */}
@@ -427,7 +428,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
                 onSelect: props.onStartSession,
               },
             ]}
-            glow={{ hues: ['ringEmerald', 'glowLime'] }}
+            glow={{ hues: ['glowLime', 'ringEmerald'] }}
           />
         </div>
       </div>

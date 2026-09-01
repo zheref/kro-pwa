@@ -70,6 +70,17 @@
 }
 
 /**
+ * LargeScreenTitle's own slab — a diagonal indigo→grape fill clipped to a
+ * 50px bottom-trailing round, with no fade into a page colour. The page field
+ * (`DetailBackdrop`) shows through around the round; fading to `--kro-color-back`
+ * here would paint a grey band on top of it.
+ */
+.kro-gradient-backdrop--large-title {
+  overflow: hidden;
+  border-end-end-radius: 50px;
+}
+
+/**
  * The content that sits over the slab. Establishes the stacking order once, so
  * a surface does not have to remember to raise itself above a decoration.
  */

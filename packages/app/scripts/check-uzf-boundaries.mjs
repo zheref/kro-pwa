@@ -31,7 +31,10 @@ const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceRoot = join(packageRoot, 'src')
 
 const STORE_FILE = 'src/library/store.ts'
-const REACT_REDUX_FILES = ['src/library/hooks.ts', 'src/library/StoreProvider.tsx']
+const REACT_REDUX_FILES = [
+  'src/library/hooks.ts',
+  'src/library/StoreProvider.tsx',
+]
 
 const IMPORT_RE = /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s*['"]([^'"]+)['"]/g
 const BARE_IMPORT_RE = /(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g
@@ -48,21 +51,26 @@ function collectFiles(dir) {
 
 /** Strips line and block comments so commented-out code is not flagged. */
 function stripComments(source) {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
 function importsOf(source) {
   const found = []
   for (const re of [IMPORT_RE, BARE_IMPORT_RE]) {
     re.lastIndex = 0
-    let match
-    while ((match = re.exec(source)) !== null) found.push(match[1])
+    // `matchAll` rather than a `while ((m = re.exec(...)))` loop: the same
+    // walk over a sticky/global regex, without an assignment inside the
+    // condition. Both regexes are `g`, which is what `matchAll` requires.
+    for (const match of source.matchAll(re)) found.push(match[1])
   }
   return found
 }
 
 const isTestFile = (where) =>
-  /(\.test\.tsx?|\.stories\.tsx?|\.mocks\.ts)$/.test(where) || where.includes('/__tests__/')
+  /(\.test\.tsx?|\.stories\.tsx?|\.mocks\.ts)$/.test(where) ||
+  where.includes('/__tests__/')
 const isServiceFile = (where) => where.startsWith('src/services/')
 const isServiceSpecifier = (specifier) =>
   /(^|\/)services\//.test(specifier) || /Service(\.js)?$/.test(specifier)
@@ -74,28 +82,43 @@ for (const file of collectFiles(sourceRoot)) {
   const source = stripComments(readFileSync(file, 'utf8'))
 
   if (where !== STORE_FILE && /\bconfigureStore\s*\(/.test(source)) {
-    violations.push(`${where}: calls configureStore() — the only store path is makeStore() (RC-22)`)
+    violations.push(
+      `${where}: calls configureStore() — the only store path is makeStore() (RC-22)`,
+    )
   }
 
   if (!isServiceFile(where) && /(?<![.\w$])fetch\s*\(/.test(source)) {
-    violations.push(`${where}: calls fetch() outside services/ — go through a Service (RC-3)`)
+    violations.push(
+      `${where}: calls fetch() outside services/ — go through a Service (RC-3)`,
+    )
   }
 
   if (/\bcreateSlice\s*\(/.test(source) && !where.endsWith('Feature.ts')) {
-    violations.push(`${where}: calls createSlice() outside a …Feature.ts file (RC-1)`)
+    violations.push(
+      `${where}: calls createSlice() outside a …Feature.ts file (RC-1)`,
+    )
   }
 
-  if (/\bcreateAsyncThunk\s*\(/.test(source) && !where.endsWith('Producer.ts')) {
-    violations.push(`${where}: calls createAsyncThunk() outside a …Producer.ts file (RC-3)`)
+  if (
+    /\bcreateAsyncThunk\s*\(/.test(source) &&
+    !where.endsWith('Producer.ts')
+  ) {
+    violations.push(
+      `${where}: calls createAsyncThunk() outside a …Producer.ts file (RC-3)`,
+    )
   }
 
   if (/\bcreateSelector\s*\(/.test(source) && !where.endsWith('Selectors.ts')) {
-    violations.push(`${where}: calls createSelector() outside a …Selectors.ts file (RC-5)`)
+    violations.push(
+      `${where}: calls createSelector() outside a …Selectors.ts file (RC-5)`,
+    )
   }
 
   for (const specifier of importsOf(source)) {
     if (specifier === 'next' || specifier.startsWith('next/')) {
-      violations.push(`${where}: imports '${specifier}' — Next.js belongs to apps/web (RC-40)`)
+      violations.push(
+        `${where}: imports '${specifier}' — Next.js belongs to apps/web (RC-40)`,
+      )
     }
 
     if (specifier === 'react-redux' && !REACT_REDUX_FILES.includes(where)) {
@@ -126,4 +149,6 @@ if (violations.length > 0) {
   process.exit(1)
 }
 
-console.log('@kro/app holds its UZF boundaries: one store, one hooks surface, services behind DI.')
+console.log(
+  '@kro/app holds its UZF boundaries: one store, one hooks surface, services behind DI.',
+)

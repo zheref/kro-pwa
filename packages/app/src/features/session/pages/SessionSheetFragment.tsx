@@ -108,7 +108,7 @@ import { SessionPhase } from '../SessionVocabulary'
 import {
   SESSION_SLOT_HEIGHT,
   type SessionSuggestion,
-  SessionSurfacePresentation,
+  type SessionSurfacePresentation,
   areSessionSuggestionsInteractive,
   formatSessionDurationShort,
   sessionDialState,
@@ -435,7 +435,9 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
       <EmojiPickerPopover
         selection={symbol}
         open={isEditingSymbol}
-        onOpenChange={(open) => (open ? onTapSymbol() : onDismissSymbolPicker())}
+        onOpenChange={(open) =>
+          open ? onTapSymbol() : onDismissSymbolPicker()
+        }
         onPick={onPickSymbol}
       >
         <button
@@ -464,9 +466,7 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
             <input
               // Canon's `TextField("Session Title", …)` — return commits,
               // tapping outside commits, Escape reverts.
-              // biome-ignore lint/a11y/noAutofocus: the field REPLACES the
-              // title the user just tapped; landing focus anywhere else loses
-              // the edit they explicitly started.
+              // biome-ignore lint/a11y/noAutofocus: the field REPLACES the title the user just tapped; landing focus anywhere else loses the edit they explicitly started
               autoFocus
               data-kro-session-title-field=""
               aria-label="Session title"
@@ -519,12 +519,16 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
               data-kro-session-tomatoes=""
               className="m-0 flex items-center pt-1"
               style={{ gap: 2 }}
+              // The row IS one graphic: every glyph inside is `aria-hidden`,
+              // so the count only reaches assistive technology through this
+              // name — and a `<p>`'s name is ignored without a role that
+              // supports one.
+              role="img"
               aria-label={`${completedSessionsCount} completed sessions`}
             >
               {Array.from({ length: tomatoGlyphs }, (_, index) => (
                 <span
-                  // biome-ignore lint/suspicious/noArrayIndexKey: the glyphs are
-                  // identical and positional; there is no id to key on.
+                  // biome-ignore lint/suspicious/noArrayIndexKey: the glyphs are identical and positional; there is no id to key on
                   key={index}
                   aria-hidden="true"
                   style={{ fontSize: 16, lineHeight: 1 }}
@@ -630,7 +634,8 @@ function StableControlSlot({
 // ---------------------------------------------------------------------------
 
 function ReadyControls(props: SessionSheetFragmentProps) {
-  const { mode, presentation, presets, targetDuration, onAdjustDuration } = props
+  const { mode, presentation, presets, targetDuration, onAdjustDuration } =
+    props
   const isCountdown = mode === FocusTimerMode.countdown
 
   return (

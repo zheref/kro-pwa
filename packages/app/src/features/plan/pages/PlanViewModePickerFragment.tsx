@@ -48,7 +48,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import { springEasing, settleMs } from '../../../design/chrome/layout/chromeMotion'
+import {
+  springEasing,
+  settleMs,
+} from '../../../design/chrome/layout/chromeMotion'
 import { cn } from '../../../design/system/utils/cn'
 import {
   type PlanViewMode,
@@ -143,7 +146,9 @@ function ModeGlyph({ mode }: { readonly mode: PlanViewMode }) {
   switch (mode) {
     case 'timeline':
       return (
-        <svg {...common}>
+        // `aria-hidden` is in `common` too; repeated literally because the
+        // rule cannot see through a spread.
+        <svg {...common} aria-hidden="true">
           <path d="M3 6h3M3 12h3M3 18h3" />
           <rect x="9" y="4" width="12" height="6" rx="1.5" />
           <rect x="9" y="14" width="8" height="6" rx="1.5" />
@@ -151,17 +156,38 @@ function ModeGlyph({ mode }: { readonly mode: PlanViewMode }) {
       )
     case 'list':
       return (
-        <svg {...common}>
+        <svg {...common} aria-hidden="true">
           <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
         </svg>
       )
     default:
       return (
-        <svg {...common}>
+        <svg {...common} aria-hidden="true">
           <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
-          <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
-          <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" />
-          <rect x="13" y="13" width="8" height="8" rx="1.5" fill="currentColor" />
+          <rect
+            x="13"
+            y="3"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="currentColor"
+          />
+          <rect
+            x="3"
+            y="13"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="currentColor"
+          />
+          <rect
+            x="13"
+            y="13"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="currentColor"
+          />
         </svg>
       )
   }
@@ -226,11 +252,14 @@ export function PlanViewModePickerFragment({
     [isSettling, reduceMotion, rebase],
   )
 
-  const onPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 && event.pointerType === 'mouse') return
-    origin.current = event.clientX
-    isDragging.current = false
-  }, [])
+  const onPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0 && event.pointerType === 'mouse') return
+      origin.current = event.clientX
+      isDragging.current = false
+    },
+    [],
+  )
 
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -325,6 +354,7 @@ export function PlanViewModePickerFragment({
       data-selection={selection}
       role="group"
       aria-label="Plan view"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: the lens IS keyboard-operable — the arrow keys below advance the selection, so it has to be reachable by tab
       tabIndex={0}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -369,6 +399,7 @@ export function PlanViewModePickerFragment({
         const offset = relativeIndex * MODE_ITEM_SPACING + visualTranslation
 
         const content = (
+          // biome-ignore lint/correctness/useJsxKeyInIterable: not the iterated element — it is embedded in the keyed <button>/<span> returned below, each of which carries `key`
           <span
             style={{
               display: 'grid',

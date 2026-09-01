@@ -234,7 +234,11 @@ export function RotatingGlow({
 }: RotatingGlowProps) {
   const sweepsRef = useRef<Array<HTMLDivElement | null>>([])
   const reduceMotion = useReducedMotion()
-  const animate = shouldGlowAnimate({ isActive, reduceMotion, secondsPerRevolution })
+  const animate = shouldGlowAnimate({
+    isActive,
+    reduceMotion,
+    secondsPerRevolution,
+  })
 
   useEffect(() => {
     if (!animate) return
@@ -310,8 +314,7 @@ export function RotatingGlow({
       {isActive
         ? Array.from({ length: LAYERS }, (_, layer) => (
             <div
-              // The layers are identical and purely positional — the index is
-              // the only identity there is, and the count is a constant.
+              // biome-ignore lint/suspicious/noArrayIndexKey: the layers are identical, purely positional and constant in number — the index IS the identity
               key={`glow-layer-${layer}`}
               aria-hidden="true"
               data-kro-glow-band=""

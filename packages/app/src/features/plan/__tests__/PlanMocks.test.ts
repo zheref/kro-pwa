@@ -4,7 +4,7 @@
  * and a state variant is only worth something if it is internally consistent.
  * These tests hold both.
  */
-import { EndeavorKind } from '@kro/core'
+import { type Endeavor, EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { planDayKey, startOfPlanDay } from '../PlanCalendar'
 import { isPastTimelineEvent } from '../PlanEditSession'
@@ -34,8 +34,12 @@ describe('the reference day', () => {
 
   it('puts "now" mid-morning, with events both behind and ahead of it', () => {
     expect(PLAN_REFERENCE_NOW.getHours()).toBe(9)
-    expect(isPastTimelineEvent(planDayFixtures.pastEvent[0] as never, PLAN_REFERENCE_NOW))
-      .toBe(true)
+    expect(
+      isPastTimelineEvent(
+        planDayFixtures.pastEvent[0] as never,
+        PLAN_REFERENCE_NOW,
+      ),
+    ).toBe(true)
     expect(
       isPastTimelineEvent(
         planDayFixtures.longBlockWithShortOverlaps[0] as never,
@@ -61,36 +65,59 @@ describe('planAt', () => {
   })
 })
 
+/**
+ * The fixture at `index`, refusing rather than reading through `undefined`.
+ *
+ * The assertions below all want a *timed* event — a `start` and a `duration`
+ * that exist. Reaching for them as `(event?.start as Date).getTime()` reads as
+ * a guard but is not one: the optional chain short-circuits and the member
+ * access then throws on `undefined`, so a fixture renamed out from under this
+ * suite fails with a `TypeError` several lines from the cause. This says what
+ * is missing, once.
+ */
+const timedEventAt = (
+  events: readonly Endeavor[],
+  index: number,
+): { readonly start: Date; readonly duration: number } => {
+  const event = events[index]
+  if (event === undefined) {
+    throw new Error(`the fixture has no event at index ${index}`)
+  }
+  if (event.start === null || event.duration === null) {
+    throw new Error(`fixture "${event.id}" is not a timed event`)
+  }
+  return { start: event.start, duration: event.duration }
+}
+
+const endOf = (event: { readonly start: Date; readonly duration: number }) =>
+  event.start.getTime() + event.duration * 1000
+
 describe('the day fixtures cover the shapes the layout was tuned against', () => {
   it('nests two short events strictly inside one long one', () => {
-    const [long, shortA, shortB] = planDayFixtures.longBlockWithShortOverlaps
-    const longEnd = (long?.start as Date).getTime() + (long?.duration as number) * 1000
-    for (const short of [shortA, shortB]) {
-      expect((short?.start as Date).getTime()).toBeGreaterThan(
-        (long?.start as Date).getTime(),
-      )
-      expect(
-        (short?.start as Date).getTime() + (short?.duration as number) * 1000,
-      ).toBeLessThan(longEnd)
+    const events = planDayFixtures.longBlockWithShortOverlaps
+    const long = timedEventAt(events, 0)
+
+    for (const index of [1, 2]) {
+      const short = timedEventAt(events, index)
+      expect(short.start.getTime()).toBeGreaterThan(long.start.getTime())
+      expect(endOf(short)).toBeLessThan(endOf(long))
     }
   })
 
   it('overlaps two long blocks without nesting either inside the other', () => {
-    const [first, second] = planDayFixtures.overlappingLongBlocks
-    expect((second?.start as Date).getTime()).toBeLessThan(
-      (first?.start as Date).getTime() + (first?.duration as number) * 1000,
-    )
-    expect((second?.start as Date).getTime()).toBeGreaterThan(
-      (first?.start as Date).getTime(),
-    )
+    const events = planDayFixtures.overlappingLongBlocks
+    const first = timedEventAt(events, 0)
+    const second = timedEventAt(events, 1)
+
+    expect(second.start.getTime()).toBeLessThan(endOf(first))
+    expect(second.start.getTime()).toBeGreaterThan(first.start.getTime())
   })
 
   it('makes all three of the dense cluster mutually overlapping', () => {
     const events = planDayFixtures.denseOverlapCluster
-    const endOf = (index: number) =>
-      (events[index]?.start as Date).getTime() +
-      (events[index]?.duration as number) * 1000
-    expect((events[2]?.start as Date).getTime()).toBeLessThan(endOf(0))
+    expect(timedEventAt(events, 2).start.getTime()).toBeLessThan(
+      endOf(timedEventAt(events, 0)),
+    )
   })
 
   it('includes a card short enough to need the 30px floor', () => {
@@ -101,10 +128,8 @@ describe('the day fixtures cover the shapes the layout was tuned against', () =>
   })
 
   it('includes an event that begins the night before the day it renders', () => {
-    const overnight = planDayFixtures.spillingFromYesterday[0]
-    expect((overnight?.start as Date).getDate()).toBe(
-      PLAN_REFERENCE_DAY.getDate() - 1,
-    )
+    const overnight = timedEventAt(planDayFixtures.spillingFromYesterday, 0)
+    expect(overnight.start.getDate()).toBe(PLAN_REFERENCE_DAY.getDate() - 1)
   })
 })
 
@@ -122,7 +147,9 @@ describe('the matrix fixtures cover the whole admission table', () => {
   })
 
   it('includes every kind admission must refuse', () => {
-    expect(planMatrixFixtures.calendarEvent.kind).toBe(EndeavorKind.calendarEvent)
+    expect(planMatrixFixtures.calendarEvent.kind).toBe(
+      EndeavorKind.calendarEvent,
+    )
     expect(planMatrixFixtures.habit.kind).toBe(EndeavorKind.habit)
     expect(planMatrixFixtures.reminder.kind).toBe(EndeavorKind.reminder)
   })
@@ -149,7 +176,9 @@ describe('the state variants are internally consistent', () => {
   })
 
   it('never files the authoritative day into the buffer', () => {
-    const authoritative = planDayKey(planStateMocks.loadedWithPreload.selectedDate)
+    const authoritative = planDayKey(
+      planStateMocks.loadedWithPreload.selectedDate,
+    )
     expect(planPreloadedDaysFixture[authoritative]).toBeUndefined()
   })
 

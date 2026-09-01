@@ -107,7 +107,9 @@ export interface EndeavorCardMetrics {
   readonly titleClassName: string
 }
 
-export const CARD_METRICS: Readonly<Record<EndeavorCardSize, EndeavorCardMetrics>> = {
+export const CARD_METRICS: Readonly<
+  Record<EndeavorCardSize, EndeavorCardMetrics>
+> = {
   small: {
     primaryButton: 44,
     secondaryButton: 30,
@@ -174,7 +176,10 @@ export interface EndeavorCardProps {
   /** A short tap on a `do`-intent card: the parent flips `isSelected`. */
   readonly onPrepare?: (id: string) => void
   readonly onExecute?: () => void
-  readonly onMarkComplete?: (model: EndeavorCardModel, completedAt: Date) => void
+  readonly onMarkComplete?: (
+    model: EndeavorCardModel,
+    completedAt: Date,
+  ) => void
   readonly onSkip?: () => void
   readonly onDefer?: (target: Date) => void
   readonly onDelegate?: () => void
@@ -208,7 +213,9 @@ export function EndeavorCard(props: EndeavorCardProps) {
   // `button` itself, and the keyboard route into preparation mode is the title,
   // which is a real button. No action here is pointer-only.
   const prepareOnTap =
-    intent === 'do' && onPrepare !== undefined ? () => onPrepare(model.id) : undefined
+    intent === 'do' && onPrepare !== undefined
+      ? () => onPrepare(model.id)
+      : undefined
 
   return (
     <div
@@ -234,6 +241,7 @@ export function EndeavorCard(props: EndeavorCardProps) {
       {layout === 'vertical' && model.showWarning && !isSelected ? (
         <span
           data-slot="endeavor-card-warning"
+          role="img"
           aria-label="Due soon"
           className="absolute top-0 left-0 z-10 inline-flex items-center justify-center rounded-kro-pill"
           style={{
@@ -317,7 +325,10 @@ function VerticalCard({
 
         <div className="flex flex-1 flex-col items-center justify-center gap-1 px-1 text-center">
           <span className="relative inline-flex">
-            <span aria-hidden style={{ fontSize: metrics.emojiSize, lineHeight: 1 }}>
+            <span
+              aria-hidden
+              style={{ fontSize: metrics.emojiSize, lineHeight: 1 }}
+            >
               {model.symbol}
             </span>
             {isInMarkCompleteMode ? (
@@ -403,7 +414,10 @@ function VerticalCard({
           <Play size={metrics.primaryIconSize} aria-hidden />
         </CircleAction>
 
-        <div className="flex items-center" style={{ gap: metrics.stackSpacing }}>
+        <div
+          className="flex items-center"
+          style={{ gap: metrics.stackSpacing }}
+        >
           <OverflowMenu
             model={model}
             diameter={metrics.secondaryButton}
@@ -459,7 +473,8 @@ function HorizontalCard({
   onDefer,
   onDelete,
 }: EndeavorCardProps & { readonly showsOverlay: boolean }) {
-  const overdue = model.dueTime !== null && model.dueTime.getTime() < now.getTime()
+  const overdue =
+    model.dueTime !== null && model.dueTime.getTime() < now.getTime()
 
   return (
     <div
@@ -554,6 +569,7 @@ function HorizontalCard({
         {model.showWarning && !isSelected && !isInMarkCompleteMode ? (
           <span
             data-slot="endeavor-card-warning"
+            role="img"
             aria-label="Due soon"
             className="inline-flex shrink-0 items-center justify-center rounded-kro-pill"
             style={{
@@ -590,51 +606,51 @@ function HorizontalCard({
         }}
       >
         <div className="kro-glass flex size-full items-center justify-center gap-3.5">
-        <MarkCompleteControl
-          model={model}
-          diameter={40}
-          glyphSize={16}
-          tabbable={showsOverlay}
-          onMarkComplete={onMarkComplete}
-          onSkip={onSkip}
-        />
-        <DeferControl
-          model={model}
-          diameter={40}
-          glyphSize={16}
-          tabbable={showsOverlay}
-          now={now}
-          onDefer={onDefer}
-        />
-        <CircleAction
-          label="Start"
-          diameter={52}
-          glyphSize={20}
-          fill="badgeGreen"
-          tabbable={showsOverlay}
-          onPress={() => onExecute?.()}
-        >
-          <Play size={20} aria-hidden />
-        </CircleAction>
-        {model.isEvent ? null : (
-          <CircleAction
-            label="Skip"
+          <MarkCompleteControl
+            model={model}
             diameter={40}
             glyphSize={16}
-            fill="badgeNeutral"
             tabbable={showsOverlay}
-            onPress={() => onSkip?.()}
+            onMarkComplete={onMarkComplete}
+            onSkip={onSkip}
+          />
+          <DeferControl
+            model={model}
+            diameter={40}
+            glyphSize={16}
+            tabbable={showsOverlay}
+            now={now}
+            onDefer={onDefer}
+          />
+          <CircleAction
+            label="Start"
+            diameter={52}
+            glyphSize={20}
+            fill="badgeGreen"
+            tabbable={showsOverlay}
+            onPress={() => onExecute?.()}
           >
-            <Skip size={16} aria-hidden />
+            <Play size={20} aria-hidden />
           </CircleAction>
-        )}
-        <DeleteControl
-          model={model}
-          diameter={40}
-          glyphSize={16}
-          tabbable={showsOverlay}
-          onDelete={onDelete}
-        />
+          {model.isEvent ? null : (
+            <CircleAction
+              label="Skip"
+              diameter={40}
+              glyphSize={16}
+              fill="badgeNeutral"
+              tabbable={showsOverlay}
+              onPress={() => onSkip?.()}
+            >
+              <Skip size={16} aria-hidden />
+            </CircleAction>
+          )}
+          <DeleteControl
+            model={model}
+            diameter={40}
+            glyphSize={16}
+            tabbable={showsOverlay}
+            onDelete={onDelete}
+          />
         </div>
       </div>
 
@@ -669,7 +685,10 @@ function Caption({
     <span
       className="inline-flex items-center gap-1 text-[11px]"
       style={{
-        color: emphasis === undefined ? colorVar('foreSecondary') : colorVar(emphasis),
+        color:
+          emphasis === undefined
+            ? colorVar('foreSecondary')
+            : colorVar(emphasis),
       }}
     >
       {glyph}
@@ -690,7 +709,13 @@ function CircleAction({
   readonly label: string
   readonly diameter: number
   readonly glyphSize: number
-  readonly fill: 'badgeGreen' | 'badgeNeutral' | 'completeBlue' | 'badgeOrange' | 'badgeRed' | 'charcoal'
+  readonly fill:
+    | 'badgeGreen'
+    | 'badgeNeutral'
+    | 'completeBlue'
+    | 'badgeOrange'
+    | 'badgeRed'
+    | 'charcoal'
   readonly tabbable?: boolean
   readonly onPress: () => void
   readonly children: React.ReactNode
@@ -746,7 +771,10 @@ function MarkCompleteControl({
   readonly diameter: number
   readonly glyphSize: number
   readonly tabbable?: boolean
-  readonly onMarkComplete?: (model: EndeavorCardModel, completedAt: Date) => void
+  readonly onMarkComplete?: (
+    model: EndeavorCardModel,
+    completedAt: Date,
+  ) => void
   readonly onSkip?: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -789,7 +817,10 @@ function MarkCompleteControl({
           <Check size={glyphSize} strokeWidth={3} aria-hidden />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" onClick={(event) => event.stopPropagation()}>
+      <PopoverContent
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
         <MarkCompletePopover
           initialDate={new Date()}
           onConfirm={(completedAt) => {
@@ -845,7 +876,10 @@ function DeferControl({
           <DeferGlyph size={glyphSize} aria-hidden />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" onClick={(event) => event.stopPropagation()}>
+      <PopoverContent
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
         <DeferPopover
           initialTarget={defaultDeferTarget(model.dueTime, now)}
           onConfirm={(target) => {
@@ -904,7 +938,10 @@ function DeleteControl({
           <Trash size={glyphSize} aria-hidden />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" onClick={(event) => event.stopPropagation()}>
+      <PopoverContent
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
         <DeleteConfirmationPopover
           title={model.title}
           onConfirm={() => {
@@ -1032,7 +1069,10 @@ function OverflowMenu({
           </DropdownMenu>
         </span>
       </PopoverAnchor>
-      <PopoverContent align="start" onClick={(event) => event.stopPropagation()}>
+      <PopoverContent
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
         {flow === 'delete' ? (
           <DeleteConfirmationPopover
             title={model.title}

@@ -43,7 +43,11 @@
 import type { ColorRole } from '../system/tokens/roles'
 import { colorVar } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
-import { EndeavorUrgency, urgencyDisplayTitle, urgencyIconSymbol } from './endeavorCardModel'
+import {
+  EndeavorUrgency,
+  urgencyDisplayTitle,
+  urgencyIconSymbol,
+} from './endeavorCardModel'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
 
 export interface CardBadgeProps {
@@ -82,6 +86,11 @@ export function CardBadge({
   if (compact) {
     return (
       <span
+        // `role="img"`: the badge is a single graphic whose accessible name
+        // replaces its contents. Without a role, a `<span>`'s `aria-label` is
+        // simply ignored — the circle form announced nothing at all, because
+        // the glyph inside it is `aria-hidden`.
+        role="img"
         aria-label={accessibleName ?? title}
         className={cn(
           'inline-flex size-5 shrink-0 items-center justify-center rounded-kro-pill',
@@ -89,14 +98,21 @@ export function CardBadge({
         )}
         style={style}
       >
-        {Icon === null ? null : <Icon size={10} strokeWidth={2.75} aria-hidden />}
+        {Icon === null ? null : (
+          <Icon size={10} strokeWidth={2.75} aria-hidden />
+        )}
       </span>
     )
   }
 
   return (
     <span
-      aria-label={accessibleName}
+      // `role="img"` for the same reason as the circle form above — and with
+      // the same `?? title` fallback, because a named role with no name
+      // announces LESS than a bare `<span>`: it hides the visible label from
+      // assistive technology and puts nothing in its place.
+      role="img"
+      aria-label={accessibleName ?? title}
       className={cn(
         'inline-flex h-5 shrink-0 items-center gap-0.5 rounded-kro-pill px-1.5 py-[3px]',
         'text-[11px] font-bold leading-none',

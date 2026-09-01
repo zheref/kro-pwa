@@ -94,10 +94,28 @@ never masks the other. Type errors still fail the build.
 | `make build` | ✅ green | |
 | `make typecheck` | ✅ green | all three members, `noUncheckedIndexedAccess` on |
 | `make test` | ✅ green | 160 tests: `@kro/core` 44 · `@kro/app` 75 · `@kro/web` 41 |
-| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome currently excludes `packages/` and `scripts/` (added in a parallel lane) and the vendored `apps/web/src/components/ui/**` (deleted by #6) — the follow-up is: remove the exclusions, run one `make format`. |
+| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome now covers the whole repo; the vendored `apps/web/src/components/ui/**` set stays excluded until #6's kit deletes it. |
 
 The `@kro/core` platform-free gate stays readable on its own:
 `pnpm --filter @kro/core lint`.
+
+### Rules that are not at their preset severity, and why
+
+The `packages/` and `scripts/` exclusions were lifted in KC-IS-#47, which put
+~40 000 lines under the linter for the first time. Everything the formatter and
+Biome's safe fixes could settle was settled in that pass; three rules were
+adjusted rather than satisfied, and each one is a decision rather than a
+deferral:
+
+| Rule | Severity | Why |
+|---|---|---|
+| `correctness/useExhaustiveDependencies` | `warn` (repo-wide) | Predates #47. A mount-only effect is a legitimate shape; the rule cannot see the intent, so it advises rather than blocks. |
+| `a11y/useSemanticElements` | `off` (repo-wide) | Its advice is wrong for this codebase. It reports every `role="group"` and asks for `<fieldset>` — a form-control grouping element with UA styling, not a general container — and every `<form role="search">` and asks for `<search>`, which is a landmark wrapper, not a replacement for the `<form>` that owns submit. `role="group"` and `<form role="search">` are both correct ARIA. |
+| `a11y/noStaticElementInteractions`, `a11y/useKeyWithClickEvents` | `warn` (`packages/app/src/**` only) | **Real findings, tracked, not accepted.** 15 ported surfaces attach a pointer handler to a non-interactive element. Each needs a keyboard affordance *designed* — canon's own gestures have no keyboard equivalent — which is a UI change per surface, not a suppression. They stay visible on every `make lint` run and are owned by [KC-IS-#77](https://github.com/zheref/kro-pwa/issues/77). The downgrade is scoped to the render tier so anything new outside it still fails. |
+
+Everything else Biome reports today is a warning at its own preset severity
+(`noNonNullAssertion` in tests, `useOptionalChain`, …) and is left alone: the
+run is green, and the warnings are the backlog.
 
 ## TypeScript
 
@@ -115,7 +133,7 @@ After #2 (monorepo) and #3 (toolchain):
 
 | Axis | Today | Remaining target |
 |---|---|---|
-| Lint / format | Biome repo-wide (see exclusions above) | drop the exclusions after the parallel lanes land |
+| Lint / format | Biome over the whole repo bar the vendored Chakra set | delete that exclusion with the vendored files (#6); clear the 15 tracked a11y findings (KC-IS-#77) |
 | Tests | Vitest everywhere; Playwright via `make test-e2e` (not in CI yet); Storybook **10** wired, story-less | stories + snapshot minimums arrive with the feature children; Playwright in CI once a browser step is wired |
 | Git hooks | lefthook + commitlint + `.bankai/hooks/guard.sh`, active | — |
 | CI | `pr.yml` (install → lint → typecheck → test → build, Node 22) | `bankai.yml` (#4) |

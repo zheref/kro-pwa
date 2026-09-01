@@ -121,7 +121,7 @@ describe('mount', () => {
   })
 })
 
-describe('navigation is a Producer\'s, never a component\'s (RC-17)', () => {
+describe("navigation is a Producer's, never a component's (RC-17)", () => {
   it('navigates when a sidebar row is tapped, and selects it immediately', async () => {
     const navigation = makeRecordingNavigationService()
     const { store } = renderShell({ ...stubbedThunkExtra, navigation })
@@ -154,7 +154,7 @@ describe('navigation is a Producer\'s, never a component\'s (RC-17)', () => {
     })
   })
 
-  it('sends the sidebar\'s search field to the Search destination', async () => {
+  it("sends the sidebar's search field to the Search destination", async () => {
     const navigation = makeRecordingNavigationService()
     renderShell({ ...stubbedThunkExtra, navigation })
 
@@ -200,9 +200,7 @@ describe('the Lists section', () => {
       expect(store.getState().main.load.kind).toBe('loaded')
     })
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Add Project' }),
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Add Project' }))
     await userEvent.type(
       screen.getByRole('textbox', { name: 'New project' }),
       'Garden',
@@ -233,7 +231,6 @@ describe('the Lists section', () => {
   })
 })
 
-
 /**
  * The Active Toast host lives at the shell (KC-IS-#71 item 15).
  *
@@ -246,8 +243,7 @@ describe('the Active Toast host, mounted once at the shell', () => {
   /** A destination that raises a toast the moment it mounts. */
   function ToastingDestination({ message }: { readonly message: string }) {
     const { enqueue } = useActiveToasts()
-    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only —
-    // re-enqueueing on every render would restart the dismissal timer forever.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only — re-enqueueing on every render would restart the dismissal timer forever
     useEffect(() => {
       enqueue({ message })
     }, [])

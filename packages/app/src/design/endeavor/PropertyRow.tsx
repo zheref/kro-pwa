@@ -33,7 +33,13 @@
 import type { ReactNode } from 'react'
 import { colorVar } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
-import { ChipFlow, type ChipTint, KroChip, chipTintVar, colorTint } from './KroChip'
+import {
+  ChipFlow,
+  type ChipTint,
+  KroChip,
+  chipTintVar,
+  colorTint,
+} from './KroChip'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
 
 /** One chip in a `chips` value. */
@@ -112,7 +118,12 @@ export interface PropertyRowProps {
   readonly className?: string
 }
 
-export function PropertyRow({ label, value, icon, className }: PropertyRowProps) {
+export function PropertyRow({
+  label,
+  value,
+  icon,
+  className,
+}: PropertyRowProps) {
   const Icon = icon === undefined ? null : endeavorIcon(icon)
   const stacked = wantsStackedValue(value)
 
@@ -123,7 +134,10 @@ export function PropertyRow({ label, value, icon, className }: PropertyRowProps)
           size={14}
           aria-hidden
           className="shrink-0"
-          style={{ color: colorVar('foreSecondary'), width: 'var(--kro-size-row-icon-column)' }}
+          style={{
+            color: colorVar('foreSecondary'),
+            width: 'var(--kro-size-row-icon-column)',
+          }}
         />
       )}
       <span className="text-sm" style={{ color: colorVar('foreSecondary') }}>
@@ -176,7 +190,11 @@ export function PropertyRow({ label, value, icon, className }: PropertyRowProps)
   )
 }
 
-function PropertyRowValueView({ value }: { readonly value: PropertyRowValue }): ReactNode {
+function PropertyRowValueView({
+  value,
+}: {
+  readonly value: PropertyRowValue
+}): ReactNode {
   switch (value.kind) {
     case 'text':
       return (
@@ -186,7 +204,10 @@ function PropertyRowValueView({ value }: { readonly value: PropertyRowValue }): 
       )
     case 'emphasis':
       return (
-        <span className="text-sm font-semibold" style={{ color: colorVar('fore') }}>
+        <span
+          className="text-sm font-semibold"
+          style={{ color: colorVar('fore') }}
+        >
           {value.text}
         </span>
       )
@@ -208,7 +229,12 @@ function PropertyRowValueView({ value }: { readonly value: PropertyRowValue }): 
       )
     case 'chip':
       return (
-        <KroChip title={value.title} icon={value.icon} tint={value.tint} size="small" />
+        <KroChip
+          title={value.title}
+          icon={value.icon}
+          tint={value.tint}
+          size="small"
+        />
       )
     case 'chips':
       return value.chips.length === 0 ? (
@@ -227,11 +253,13 @@ function PropertyRowValueView({ value }: { readonly value: PropertyRowValue }): 
         </ChipFlow>
       )
     case 'rating': {
-      const Symbol = endeavorIcon(value.symbol)
+      // Not `Symbol`: that shadows the global, and a reader two screens down
+      // cannot tell which one a bare `Symbol` is.
+      const RatingGlyph = endeavorIcon(value.symbol)
       return (
         <span className="inline-flex items-center gap-[3px]">
           {Array.from({ length: Math.max(value.outOf, 0) }, (_, index) => (
-            <Symbol
+            <RatingGlyph
               // biome-ignore lint/suspicious/noArrayIndexKey: the glyphs are positional — index IS the identity
               key={index}
               size={13}
@@ -275,7 +303,9 @@ function Placeholder({ text }: { readonly text: string }) {
   return (
     <span
       className="text-sm"
-      style={{ color: `color-mix(in srgb, ${colorVar('foreSecondary')} 70%, transparent)` }}
+      style={{
+        color: `color-mix(in srgb, ${colorVar('foreSecondary')} 70%, transparent)`,
+      }}
     >
       {text}
     </span>

@@ -46,11 +46,18 @@ const storeWith = (localStore: LocalStore): AppStore =>
 const seeded = () =>
   makeInMemoryLocalStore({ endeavors: captureFixtureRecords() })
 
-/** Narrows a resolved `Result`, failing the test rather than returning `null`. */
-const valueOf = <T>(payload: unknown): T => {
+/**
+ * Narrows a resolved `Result`, failing the test rather than returning `null`.
+ *
+ * Not `valueOf`: that shadows `Object.prototype.valueOf`, which every object in
+ * the file already answers to.
+ */
+const okValueOf = <T>(payload: unknown): T => {
   const result = payload as Result<T, CaptureException>
   if (!result.ok) {
-    throw new Error(`expected ok, got ${result.error.kind}: ${result.error.message}`)
+    throw new Error(
+      `expected ok, got ${result.error.kind}: ${result.error.message}`,
+    )
   }
   return result.value
 }
@@ -72,7 +79,7 @@ describe('loadCaptureContextThunk', () => {
       loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
     )
 
-    const context = valueOf<CaptureContext>(action.payload)
+    const context = okValueOf<CaptureContext>(action.payload)
     expect(context.endeavors.map((value) => value.id)).toContain('fresh-task')
     expect(context.now).toEqual(CAPTURE_MOCK_NOW)
   })
@@ -83,7 +90,7 @@ describe('loadCaptureContextThunk', () => {
       loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
     )
 
-    const context = valueOf<CaptureContext>(action.payload)
+    const context = okValueOf<CaptureContext>(action.payload)
     expect(context.availableDestinations).toEqual([CaptureDestination.local])
     expect(context.lastUsedDestination).toBe(CaptureDestination.local)
   })
@@ -98,7 +105,7 @@ describe('loadCaptureContextThunk', () => {
     )
 
     expect(
-      valueOf<CaptureContext>(action.payload).availableDestinations,
+      okValueOf<CaptureContext>(action.payload).availableDestinations,
     ).toContain(CaptureDestination.kroCloud)
   })
 
@@ -132,7 +139,7 @@ describe('loadCaptureContextThunk', () => {
       loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
     )
 
-    const context = valueOf<CaptureContext>(action.payload)
+    const context = okValueOf<CaptureContext>(action.payload)
     expect(context.endeavors.map((value) => value.id)).not.toContain(first.id)
     expect(context.endeavors.length).toBe(rest.length)
   })
@@ -201,7 +208,9 @@ describe('submitCaptureThunk', () => {
     expect(localStore.preferences.get(LAST_USED_DESTINATION_KEY)).toBe(
       'kroCloud',
     )
-    expect(localStore.preferences.get('kro:lastEndeavorHostingDestination')).toBeNull()
+    expect(
+      localStore.preferences.get('kro:lastEndeavorHostingDestination'),
+    ).toBeNull()
   })
 
   it('refuses an event that is missing a boundary, and writes nothing', async () => {
@@ -263,9 +272,9 @@ describe('submitCaptureThunk', () => {
       }),
     )
 
-    expect(valueOf<{ endeavor: { id: string } }>(action.payload).endeavor.id).toBe(
-      'new-task',
-    )
+    expect(
+      okValueOf<{ endeavor: { id: string } }>(action.payload).endeavor.id,
+    ).toBe('new-task')
     expect(await localStore.endeavors.get('new-task')).not.toBeNull()
   })
 
@@ -348,7 +357,7 @@ describe('scheduleForTodayThunk', () => {
       }),
     )
 
-    expect(valueOf<CaptureScheduling>(action.payload).snapshot).toEqual(
+    expect(okValueOf<CaptureScheduling>(action.payload).snapshot).toEqual(
       schedulingSnapshotOf(captureEndeavorFixtures.freshTask, scheduledAt),
     )
   })
@@ -404,7 +413,7 @@ describe('undoScheduleForTodayThunk', () => {
     return {
       localStore,
       store,
-      snapshot: valueOf<CaptureScheduling>(action.payload).snapshot,
+      snapshot: okValueOf<CaptureScheduling>(action.payload).snapshot,
     }
   }
 
@@ -467,7 +476,7 @@ describe('undoScheduleForTodayThunk', () => {
         now: CAPTURE_MOCK_NOW,
       }),
     )
-    const snapshot = valueOf<CaptureScheduling>(action.payload).snapshot
+    const snapshot = okValueOf<CaptureScheduling>(action.payload).snapshot
 
     await store.dispatch(
       undoScheduleForTodayThunk({ snapshot, now: CAPTURE_MOCK_NOW }),
@@ -497,7 +506,7 @@ describe('applyInboxOperationThunk', () => {
     )
 
     expect(
-      valueOf<CaptureOperationOutcome>(action.payload).endeavor?.status,
+      okValueOf<CaptureOperationOutcome>(action.payload).endeavor?.status,
     ).toBe(EndeavorStatus.closed)
     const stored = await localStore.endeavors.get('fresh-task')
     expect(stored?.completed).toEqual(CAPTURE_MOCK_NOW)
@@ -515,15 +524,17 @@ describe('applyInboxOperationThunk', () => {
       }),
     )
 
-    expect(valueOf<CaptureOperationOutcome>(action.payload).endeavor).toBeNull()
+    expect(
+      okValueOf<CaptureOperationOutcome>(action.payload).endeavor,
+    ).toBeNull()
     expect(await localStore.endeavors.get('fresh-task')).toBeNull()
 
     const tombstoned = (await localStore.endeavors.allIncludingRemoved()).find(
       (record) => record.id === 'fresh-task',
     )
-    expect(tombstoned === undefined ? false : isRecordSoftDeleted(tombstoned)).toBe(
-      true,
-    )
+    expect(
+      tombstoned === undefined ? false : isRecordSoftDeleted(tombstoned),
+    ).toBe(true)
   })
 
   it('refuses an operation another feature owns', async () => {

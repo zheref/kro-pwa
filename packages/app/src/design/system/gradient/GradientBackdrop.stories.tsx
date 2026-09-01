@@ -20,6 +20,7 @@ function Day({ rows = 24 }: { rows?: number }) {
     <div style={{ display: 'grid', gap: 'var(--kro-space-small)' }}>
       {Array.from({ length: rows }, (_, index) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: filler rows generated from a fixed count — nothing reorders and there is no id
           key={`row-${index}`}
           style={{
             background: 'var(--kro-color-absolute)',
@@ -41,12 +42,23 @@ function Headline() {
     <div style={{ paddingBottom: 'var(--kro-space-large)' }}>
       <p
         className="kro-gradient-headline"
-        style={{ margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: '0.06em' }}
+        style={{
+          margin: 0,
+          fontSize: 13,
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+        }}
       >
         FRIDAY 30 AUGUST
       </p>
       <h1 style={{ margin: '4px 0 0', fontSize: 30, color: '#fff' }}>My Day</h1>
-      <p style={{ margin: '6px 0 0', color: 'rgb(255 255 255 / 0.85)', fontSize: 15 }}>
+      <p
+        style={{
+          margin: '6px 0 0',
+          color: 'rgb(255 255 255 / 0.85)',
+          fontSize: 15,
+        }}
+      >
         4 left today
       </p>
     </div>

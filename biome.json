@@ -30,6 +30,9 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
+      "a11y": {
+        "useSemanticElements": "off"
+      },
       "correctness": {
         "useExhaustiveDependencies": "warn"
       }
@@ -62,6 +65,17 @@
       "includes": ["apps/web/src/components/ui/**"],
       "linter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/app/src/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "warn",
+            "useKeyWithClickEvents": "warn"
+          }
+        }
       }
     }
   ]

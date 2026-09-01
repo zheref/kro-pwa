@@ -48,8 +48,8 @@ export const NoClose = {
         <DialogHeader>
           <DialogTitle>Finish setting up Kro</DialogTitle>
           <DialogDescription>
-            Choose where your endeavors live before you start. This one has no dismissal
-            because leaving it half-done has no meaning.
+            Choose where your endeavors live before you start. This one has no
+            dismissal because leaving it half-done has no meaning.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -68,7 +68,8 @@ export const Destructive = {
         <DialogHeader>
           <DialogTitle>Delete “Write the KroTokens port”?</DialogTitle>
           <DialogDescription>
-            Its three logged sessions and 240 points go with it. This cannot be undone.
+            Its three logged sessions and 240 points go with it. This cannot be
+            undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -89,11 +90,16 @@ export const LongContent = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Session history</DialogTitle>
-          <DialogDescription>Everything logged against this endeavor.</DialogDescription>
+          <DialogDescription>
+            Everything logged against this endeavor.
+          </DialogDescription>
         </DialogHeader>
-        <div style={{ maxHeight: 320, overflow: 'auto', display: 'grid', gap: 8 }}>
+        <div
+          style={{ maxHeight: 320, overflow: 'auto', display: 'grid', gap: 8 }}
+        >
           {Array.from({ length: 14 }, (_, index) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: filler rows generated from a constant length — nothing reorders and there is no id
               key={`session-${index}`}
               style={{
                 padding: 'var(--kro-space-small)',

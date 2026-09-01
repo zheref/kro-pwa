@@ -24,7 +24,12 @@
 import { assertNever } from '@kro/core'
 
 /** The five entries canon's overflow menu carries, in canon's order. */
-export type OverflowAction = 'defer' | 'skip' | 'delegate' | 'details' | 'delete'
+export type OverflowAction =
+  | 'defer'
+  | 'skip'
+  | 'delegate'
+  | 'details'
+  | 'delete'
 
 /** The two entries that open a flow instead of acting. */
 export type OverflowFlow = 'defer' | 'delete'
@@ -70,7 +75,10 @@ export function overflowFlowFor(action: OverflowAction): OverflowFlow | null {
     case 'details':
       return null
     default:
-      return assertNever(action)
+      // `assertNever` returns `never`, so this is unreachable — but the
+      // function's own return type is `void`, and returning a `never`
+      // expression from it reads as returning a value.
+      assertNever(action)
   }
 }
 
@@ -100,6 +108,9 @@ export function selectOverflowAction(
     case 'delete':
       return
     default:
-      return assertNever(action)
+      // `assertNever` returns `never`, so this is unreachable — but this
+      // function returns `void`, and `return assertNever(...)` reads as
+      // returning a value from it.
+      assertNever(action)
   }
 }

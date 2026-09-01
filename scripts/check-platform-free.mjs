@@ -74,7 +74,9 @@ function isBanned(specifier) {
 
 /** Strips line and block comments so commented-out code is not flagged. */
 function stripComments(source) {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
 const violations = []
@@ -85,8 +87,9 @@ for (const file of collectFiles(coreSrc)) {
 
   for (const re of [IMPORT_RE, BARE_IMPORT_RE, REQUIRE_RE]) {
     re.lastIndex = 0
-    let match
-    while ((match = re.exec(source)) !== null) {
+    // `matchAll` rather than a `while ((m = re.exec(...)))` loop: the same
+    // walk over a global regex, without an assignment inside the condition.
+    for (const match of source.matchAll(re)) {
       if (isBanned(match[1])) {
         violations.push(`${where}: imports platform module '${match[1]}'`)
       }
@@ -102,10 +105,16 @@ for (const file of collectFiles(coreSrc)) {
 }
 
 const manifest = JSON.parse(readFileSync(corePackageJson, 'utf8'))
-for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
+for (const field of [
+  'dependencies',
+  'peerDependencies',
+  'optionalDependencies',
+]) {
   for (const name of Object.keys(manifest[field] ?? {})) {
     if (isBanned(name)) {
-      violations.push(`packages/core/package.json: declares platform ${field} '${name}'`)
+      violations.push(
+        `packages/core/package.json: declares platform ${field} '${name}'`,
+      )
     }
   }
 }
@@ -119,4 +128,6 @@ if (violations.length > 0) {
   process.exit(1)
 }
 
-console.log('@kro/core is platform-free: no react/next/DOM/Node imports or globals.')
+console.log(
+  '@kro/core is platform-free: no react/next/DOM/Node imports or globals.',
+)

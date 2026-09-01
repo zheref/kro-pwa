@@ -312,6 +312,99 @@ describe('PlanPage', () => {
     vi.useRealTimers()
   })
 
+  it('writes a quadrant assignment to disk, so the move survives the next pool read', async () => {
+    /*
+      KC-IS-#71 item 20. The reducer had the assignment and nothing wrote it, so
+      picking a task into a quadrant lasted exactly until the pool was re-read.
+      This is the whole path — matrix → picker → confirm → disk — because the
+      Producer's own cases can't prove the Page reaches them.
+    */
+    const task = makeEndeavor({
+      id: 'rewrite-the-brief',
+      title: 'rewrite-the-brief',
+      kind: EndeavorKind.task,
+      hostedBy: [EndeavorHost.local],
+    })
+    const localStore = makeInMemoryLocalStore({
+      endeavors: [
+        endeavorRecordFromEndeavor(task, { now: PLAN_REFERENCE_DAY }),
+      ],
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore })
+    // The rotary settles on a real timer before it commits the mode, so the
+    // swap needs the same clock the destination-switch case above uses.
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    mount(store)
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Priority Matrix' }),
+    )
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+
+    // No due date and no value, so the task is a picker candidate and NOT yet a
+    // card — every quadrant draws its empty pair.
+    const addExisting = await vi.waitFor(() =>
+      screen.getAllByTestId('plan-matrix-empty-add-existing'),
+    )
+    await userEvent.click(addExisting[0] as HTMLElement)
+
+    await userEvent.click(
+      await vi.waitFor(() =>
+        screen.getByRole('checkbox', { name: 'rewrite-the-brief' }),
+      ),
+    )
+    await userEvent.click(screen.getByTestId('pick-endeavor-confirm'))
+
+    await vi.waitFor(async () => {
+      const stored = await localStore.endeavors.get('rewrite-the-brief')
+      expect(stored?.value).toBeTruthy()
+      expect(stored?.due).toBeTruthy()
+    })
+    // And the picker closes behind the confirm rather than waiting on the write.
+    expect(screen.queryByTestId('pick-endeavor')).toBeNull()
+    vi.useRealTimers()
+  })
+
+  it('closes the picker on Escape, leaving the quadrant untouched', async () => {
+    // The sheet's own dismissal, which is a different path from the picker's
+    // Close button: the frame reports it, and the Page has to take the state
+    // back down or the next open finds it already open.
+    const task = makeEndeavor({
+      id: 'draft-the-memo',
+      title: 'draft-the-memo',
+      kind: EndeavorKind.task,
+      hostedBy: [EndeavorHost.local],
+    })
+    const store = storeWith([
+      endeavorRecordFromEndeavor(task, { now: PLAN_REFERENCE_DAY }),
+    ])
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    mount(store)
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Priority Matrix' }),
+    )
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    const addExisting = await vi.waitFor(() =>
+      screen.getAllByTestId('plan-matrix-empty-add-existing'),
+    )
+    await userEvent.click(addExisting[0] as HTMLElement)
+    expect(
+      await vi.waitFor(() => screen.getByTestId('pick-endeavor')),
+    ).toBeTruthy()
+
+    await userEvent.keyboard('{Escape}')
+
+    await vi.waitFor(() =>
+      expect(screen.queryByTestId('pick-endeavor')).toBeNull(),
+    )
+    vi.useRealTimers()
+  })
+
   it('shows the reconnect banner the route resolved, and nothing when healthy', () => {
     const { rerender } = mount(storeWith(), { googleNeedsReconnect: true })
     expect(screen.getByTestId('plan-reconnect-banner')).toBeTruthy()

@@ -100,27 +100,6 @@ const Check = captureIcon('checkmark')
 export const captureRewardStep = (points: number): number =>
   points >= 50 ? 10 : 5
 
-/**
- * `position: fixed`, inline, because the class cannot win.
- *
- * `glass.css`'s `.kro-glass { position: relative }` is **unlayered** CSS, and
- * unlayered rules beat every `@layer utilities` rule regardless of source
- * order — so Tailwind's `fixed`, which `SheetContent` and `DialogContent`
- * already carry, is overridden on any glass panel. The panel then lays out in
- * normal flow at the end of the portal, which puts an 85vh sheet entirely below
- * the fold. An inline style is the one declaration that outranks an unlayered
- * class, so it is what pins the panel here.
- *
- * This is a **design-system defect, not a capture one** — it makes every
- * `Sheet` and `Dialog` in the repo mis-position, and it was invisible until now
- * because those primitives' own suites deliberately never put a panel on screen
- * (`design/system/primitives/__tests__/radixEnvironment.tsx`). The real fix is
- * one line in `glass.css` (`@layer components`, or dropping `position` from the
- * base rule); it belongs to KC-IS-#6's lane and is reported with this PR. When
- * it lands, this constant and its two uses delete cleanly.
- */
-const PINNED_TO_VIEWPORT = { position: 'fixed' } as const
-
 /** Which inline panel is expanded. Only one at a time, exactly as canon. */
 type PromptPanel = 'date' | 'rewards' | 'repeat' | 'destination' | null
 
@@ -190,7 +169,6 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           data-testid="capture-prompt"
           data-kro-presentation="sheet"
           className="h-auto gap-0 p-0"
-          style={PINNED_TO_VIEWPORT}
         >
           {heading}
           <PromptForm {...props} />
@@ -206,7 +184,6 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
             'flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-y-auto p-0',
           )}
           style={{
-            ...PINNED_TO_VIEWPORT,
             width: `${CAPTURE_PROMPT_POPOVER_WIDTH}px`,
             maxWidth: 'calc(100vw - 3rem)',
           }}

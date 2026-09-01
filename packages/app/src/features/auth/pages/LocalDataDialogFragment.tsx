@@ -60,12 +60,6 @@ export function LocalDataDialogFragment({
       <DialogContent
         hideClose
         data-testid="local-data-dialog"
-        // `.kro-glass` sets `position: relative` from an unlayered stylesheet
-        // and beats the kit's `fixed` utility, so every glass dialog computes
-        // to `relative` and lands after the shell in normal flow. The inline
-        // style is the one declaration that outranks it. The fix belongs in
-        // `design/system/` — outside this issue's lane; named in the PR body.
-        style={{ position: 'fixed' }}
         className="top-[8dvh] max-h-[84dvh] max-w-[420px] translate-y-0 overflow-y-auto"
         onInteractOutside={(event) => event.preventDefault()}
       >

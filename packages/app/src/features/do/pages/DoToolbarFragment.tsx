@@ -456,14 +456,16 @@ function AnchoredPanel({
   }, [id, onDismiss])
 
   /*
-    `kro-glass` MUST NOT sit on the positioned element — the same trap
-    `EndeavorCard` documents. `glass.css` declares `.kro-glass { position:
-    relative }` as UNLAYERED css, and unlayered css outranks every `@layer`,
-    Tailwind's utilities included. So `absolute top-full … kro-glass` silently
-    resolves to `position: relative`, the panel rejoins the flow, and it grows
-    the toolbar it is anchored to — measured at ~600px of extra bar height,
-    which pushed the whole title row down the page. The material therefore
-    lives on an inner element that fills this one.
+    The material lives on an INNER element that fills this one.
+
+    It had to, once: `glass.css` declared `.kro-glass { position: relative }`
+    from an unlayered stylesheet, so `absolute top-full … kro-glass` resolved
+    to `relative`, the panel rejoined the flow and grew the toolbar it was
+    anchored to — measured at ~600px of extra bar height. KC-IS-#30 moved the
+    import into `layer(components)` and KC-IS-#71 item 17 pinned that in a
+    browser, so a utility on the same element wins now and the split is no
+    longer load-bearing. It is kept because it also gives the panel its own
+    rounded surface independent of this positioned box.
   */
   return (
     <div

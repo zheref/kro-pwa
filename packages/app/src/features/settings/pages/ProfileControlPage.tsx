@@ -147,12 +147,7 @@ export function ProfileControlPage() {
             <SheetTrigger asChild>
               <ProfileTrigger initials={initials} isSignedIn={user !== null} />
             </SheetTrigger>
-            {/* Same `.kro-glass` position override as the auth modal below. */}
-            <SheetContent
-              side="bottom"
-              style={{ position: 'fixed' }}
-              className="p-0"
-            >
+            <SheetContent side="bottom" className="p-0">
               <SheetTitle className="sr-only">Profile</SheetTitle>
               {content}
             </SheetContent>
@@ -191,23 +186,10 @@ export function ProfileControlPage() {
           hideClose
           data-testid="auth-modal"
           /*
-            Two local overrides, both measured on the built app rather than
-            guessed:
-
-            1. `position: fixed` inline. The kit's `DialogContent` asks for it
-               with Tailwind's `fixed` utility, but `.kro-glass` sets
-               `position: relative` from an UNLAYERED stylesheet, and unlayered
-               CSS beats `@layer utilities` — so every glass dialog in the app
-               computes to `relative` and lands after the shell in normal flow
-               (measured: `top: 869px` in an 844px viewport). An inline style is
-               the one declaration that outranks both. The fix belongs in
-               `design/system/` — outside this issue's lane — and is named in the
-               PR body as a cross-lane finding.
-            2. A height cap, a scroll and top-anchoring, so the panel cannot run
-               off the bottom on a short viewport (a laptop in landscape, a
-               phone with the keyboard up).
+            A height cap, a scroll and top-anchoring, so the panel cannot run
+            off the bottom on a short viewport (a laptop in landscape, a phone
+            with the keyboard up). Measured on the built app.
           */
-          style={{ position: 'fixed' }}
           className={cn(
             'top-[3dvh] max-h-[94dvh] translate-y-0 overflow-y-auto',
             'max-w-[420px] border-0 bg-transparent p-0 shadow-none',

@@ -23,11 +23,24 @@
  *   a platform-bound Service, and the shape `RC-41`'s own canon example shows.
  *   Producers then reach the router through `extra.navigation`, and no
  *   component ever navigates (`RC-17`).
+ *
+ *   **The auth-state observer** — `observeAuthState`, KC-IS-#71 item 7. It is
+ *   here for the same reason navigation is: it needs the `ThunkExtra` this
+ *   file builds, and a component may not reach one (`RC-6`). The *launch*
+ *   restore is `ProfileControlPage`'s, because that is the surface that shows
+ *   who you are; this is the LIVE subscription — a token refresh, a sign-out
+ *   in a second tab, the PKCE exchange on the way back from a provider — and
+ *   none of those has a surface to hang off.
  */
-import { StoreProvider, liveThunkExtra, makeStore } from '@kro/app'
+import {
+  StoreProvider,
+  liveThunkExtra,
+  makeStore,
+  observeAuthState,
+} from '@kro/app'
 import { ThemeProvider } from 'next-themes'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { makeLiveNavigationService } from './liveNavigationService'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -37,11 +50,35 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // router. A `useState` initialiser rather than a module-level singleton: a
   // singleton could only ever be wired to the live bindings, which is how a
   // suite ends up talking to the network (`RC-22`).
-  const [store] = useState(() =>
-    makeStore({
+  //
+  // The extra is kept beside the store rather than rebuilt, because the
+  // observer below has to be handed the SAME bindings the store's Producers
+  // read — a second `liveThunkExtra` spread would subscribe to a different
+  // Supabase client than the one every thunk uses.
+  const [{ store, extra }] = useState(() => {
+    const extra = {
       ...liveThunkExtra,
       navigation: makeLiveNavigationService(router),
-    }),
+    }
+    return { store: makeStore(extra), extra }
+  })
+
+  /*
+    The `onAuthStateChange` subscription, started once and stopped on unmount.
+
+    `observeAuthState` returns its own teardown, which is why it is a
+    subscription rather than a thunk (`RC-27`): the caller must be able to stop
+    it, and React's effect cleanup is that caller. Nothing here decides
+    anything — every event it sees is turned into a dispatch by the Producer.
+  */
+  useEffect(
+    () =>
+      observeAuthState({
+        dispatch: store.dispatch,
+        extra,
+        now: () => new Date(),
+      }),
+    [store, extra],
   )
 
   return (

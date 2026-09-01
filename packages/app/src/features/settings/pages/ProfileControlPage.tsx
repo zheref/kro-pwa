@@ -100,8 +100,7 @@ export function ProfileControlPage() {
     `observeAuthState` — the `onAuthStateChange` subscription that catches a
     token refresh or a sign-out in a second tab — is deliberately NOT wired
     here: it needs `ThunkExtra`, which a component may not reach (`RC-6`), so it
-    belongs to `apps/web`'s composition root. Named in the PR body as an open
-    cross-lane need.
+    belongs to `apps/web`'s composition root, where KC-IS-#71 item 7 wired it.
   */
   useEffect(() => {
     const effect = dispatch(restoreSessionThunk({ now: new Date() }))

@@ -28,8 +28,6 @@ export {
   weekDayFromDate,
 } from './capturePresentation'
 export {
-  CAPTURE_SF_SYMBOL_TO_LUCIDE,
-  type CaptureSfSymbolName,
   type CaptureSymbolName,
   captureIcon,
   captureIconFor,

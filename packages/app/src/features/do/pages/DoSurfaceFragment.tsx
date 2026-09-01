@@ -376,16 +376,10 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
       </div>
 
       {/*
-        `MainScreen.quickActionFAB`'s `.doTab` branch.
-
-        GLYPH SUBSTITUTION, named rather than hidden: canon's four rows use
-        `checkmark.circle`, `clock.badge.xmark`, `plus` and `play.fill`, and the
-        disc itself uses `bolt.fill`. `LiquidGlassFABMenu` types its glyphs as
-        `SfSymbolName` — the design SYSTEM's table — and that table carries
-        neither `bolt.fill` nor `clock.badge.xmark` (the endeavor kit's own
-        table does carry `bolt.fill`, and the two are asserted disjoint, so it
-        cannot simply be added here). The nearest system symbols are used and
-        the gap is filed as a cross-lane need in this PR.
+        `MainScreen.quickActionFAB`'s `.doTab` branch — canon's own glyphs, all
+        five of them, since KC-IS-#71 item 16 folded `bolt.fill` and
+        `clock.badge.xmark` into the design system's table. Until then the disc
+        drew `target` and Clear Expired drew a bare `clock`.
       */}
       <div
         className="pointer-events-none absolute right-0 bottom-0 z-20 flex justify-end p-0"
@@ -406,7 +400,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
       >
         <div className="pointer-events-auto">
           <LiquidGlassFABMenu
-            mainGlyph="target"
+            mainGlyph="bolt.fill"
             mainAccessibilityLabel="Quick action"
             items={[
               {
@@ -418,7 +412,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
               {
                 id: 'clear-expired',
                 label: 'Clear Expired',
-                glyph: 'clock',
+                glyph: 'clock.badge.xmark',
                 onSelect: props.onClearExpired,
               },
               {
@@ -430,7 +424,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
               {
                 id: 'start-session',
                 label: 'Start Session',
-                glyph: 'play',
+                glyph: 'play.fill',
                 onSelect: props.onStartSession,
               },
             ]}

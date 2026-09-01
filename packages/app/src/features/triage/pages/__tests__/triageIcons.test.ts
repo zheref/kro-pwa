@@ -1,45 +1,25 @@
 /**
  * The Triage glyph seam.
  *
- * Two properties are worth asserting and they are the two that keep this file
- * from becoming a fork: the key sets above it are **disjoint** from its own (so
- * it can never shadow a more general answer), and every symbol `@kro/core`
- * names for a quadrant **resolves to a real drawing** (so a tile can never
- * reach a user as a blank or the help fallback).
+ * The lane's own rows folded into the shared table (KC-IS-#71 item 13), so
+ * there is no third map left to prove disjoint. The property that mattered
+ * remains: every symbol `@kro/core` names for a quadrant **resolves to a real
+ * drawing**, so a tile can never reach a user as a blank or a fallback.
  */
 import { eisenhowerQuadrants, quadrantIcon } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { ENDEAVOR_SF_SYMBOL_TO_LUCIDE } from '../../../../design/endeavor/endeavorIcons'
 import { SF_SYMBOL_TO_LUCIDE } from '../../../../design/system/icons/icons'
-import {
-  TRIAGE_SF_SYMBOL_TO_LUCIDE,
-  isTriageMappedSymbol,
-  triageIcon,
-  triageIconFor,
-} from '../triageIcons'
+import { isTriageMappedSymbol, triageIcon, triageIconFor } from '../triageIcons'
 
-describe('the map never shadows a more general one', () => {
-  it("shares no key with the design system's map", () => {
-    const system = Object.keys(SF_SYMBOL_TO_LUCIDE)
-    const overlap = Object.keys(TRIAGE_SF_SYMBOL_TO_LUCIDE).filter((key) =>
-      system.includes(key),
-    )
-    expect(overlap).toEqual([])
-  })
-
-  it("shares no key with the endeavor kit's extension", () => {
-    const kit = Object.keys(ENDEAVOR_SF_SYMBOL_TO_LUCIDE)
-    const overlap = Object.keys(TRIAGE_SF_SYMBOL_TO_LUCIDE).filter((key) =>
-      kit.includes(key),
-    )
-    expect(overlap).toEqual([])
-  })
-
-  it("resolves a shared name from the more general file (bolt.fill is the kit's)", () => {
-    expect(triageIcon('bolt.fill')).toBe(
-      ENDEAVOR_SF_SYMBOL_TO_LUCIDE['bolt.fill'],
-    )
+describe('the resolver is the shared one', () => {
+  it('answers from the shared table, including the promoted rows', () => {
+    expect(triageIcon('bolt.fill')).toBe(SF_SYMBOL_TO_LUCIDE['bolt.fill'])
     expect(triageIcon('plus')).toBe(SF_SYMBOL_TO_LUCIDE.plus)
+    // `star.slash` and `person.2.fill` were this lane's own rows.
+    expect(triageIcon('star.slash')).toBe(SF_SYMBOL_TO_LUCIDE['star.slash'])
+    expect(triageIcon('person.2.fill')).toBe(
+      SF_SYMBOL_TO_LUCIDE['person.2.fill'],
+    )
   })
 })
 
@@ -54,9 +34,17 @@ describe('every symbol the surface draws resolves', () => {
     }
   })
 
-  it('draws every row this file adds', () => {
-    for (const name of Object.keys(TRIAGE_SF_SYMBOL_TO_LUCIDE)) {
-      expect(isTriageMappedSymbol(name)).toBe(true)
+  it('draws every row this lane used to add', () => {
+    for (const name of [
+      'chevron.backward',
+      'star.fill',
+      'bolt.slash',
+      'star.slash',
+      'minus',
+      'person.2.fill',
+      'square.and.arrow.up',
+    ]) {
+      expect(isTriageMappedSymbol(name), name).toBe(true)
     }
   })
 

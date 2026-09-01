@@ -1,11 +1,11 @@
 /**
  * The capture surfaces' icon seam.
  *
- * The two properties that make a third map safe rather than a fork: the key
- * sets are disjoint, so no row here can shadow a more general answer; and every
- * glyph the logic tier names resolves to a real drawing rather than the help
- * fallback, so an unmapped symbol fails here instead of showing a user a
- * question mark.
+ * The lane's own rows folded into the shared table (KC-IS-#71 item 13), so
+ * there is no third map left to prove disjoint. The property that mattered
+ * remains: every glyph the logic tier names resolves to a real drawing rather
+ * than the help fallback, so an unmapped symbol fails here instead of showing a
+ * user a question mark.
  */
 import { describe, expect, it } from 'vitest'
 import { ENDEAVOR_SF_SYMBOL_TO_LUCIDE } from '../../../../design/endeavor/endeavorIcons'
@@ -18,30 +18,20 @@ import {
   inboxRowButtons,
 } from '../../CaptureRules'
 import {
-  CAPTURE_SF_SYMBOL_TO_LUCIDE,
   captureIcon,
   captureIconFor,
   isCaptureMappedSymbol,
 } from '../captureIcons'
 
-describe('the three maps stay disjoint', () => {
-  it("shadows no row of the design system's map", () => {
-    const collisions = Object.keys(CAPTURE_SF_SYMBOL_TO_LUCIDE).filter(
-      (name) => name in SF_SYMBOL_TO_LUCIDE,
-    )
-    expect(collisions).toEqual([])
-  })
-
-  it("shadows no row of the endeavor kit's extension map", () => {
-    const collisions = Object.keys(CAPTURE_SF_SYMBOL_TO_LUCIDE).filter(
-      (name) => name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE,
-    )
-    expect(collisions).toEqual([])
-  })
-
-  it('lets the more general map win for a symbol it already answers', () => {
+describe('the resolver is the shared one', () => {
+  it('answers from the shared tables, system first', () => {
     expect(captureIcon('calendar')).toBe(SF_SYMBOL_TO_LUCIDE.calendar)
     expect(captureIcon('tray')).toBe(ENDEAVOR_SF_SYMBOL_TO_LUCIDE.tray)
+  })
+
+  it('answers the rows this lane used to own from the shared table', () => {
+    expect(captureIcon('tray.full')).toBe(SF_SYMBOL_TO_LUCIDE['tray.full'])
+    expect(captureIcon('cloud.fill')).toBe(SF_SYMBOL_TO_LUCIDE['cloud.fill'])
   })
 })
 
@@ -70,7 +60,7 @@ describe('every glyph the logic tier names resolves to a real drawing', () => {
 describe('captureIconFor — the resolver that can fail', () => {
   it('answers a mapped symbol with its own component', () => {
     expect(captureIconFor('rectangle.split.2x2.fill')).toBe(
-      CAPTURE_SF_SYMBOL_TO_LUCIDE['rectangle.split.2x2.fill'],
+      SF_SYMBOL_TO_LUCIDE['rectangle.split.2x2.fill'],
     )
   })
 

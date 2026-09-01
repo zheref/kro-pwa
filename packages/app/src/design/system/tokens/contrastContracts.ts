@@ -11,7 +11,9 @@
  * This module is that idea made explicit and exhaustive. Every declared colour
  * role lands in exactly one of three places:
  *
- *   1. a CONTRACT below, asserted at 4.5:1 (AA text) in both schemes;
+ *   1. a CONTRACT below, asserted at 4.5:1 (AA text) in both schemes —
+ *      including `LABEL_ON_FILL_ROLES`, the saturated action fills that carry
+ *      a word directly;
  *   2. `NON_TEXT_ROLES`, asserted at 3:1 (SC 1.4.11, UI boundaries);
  *   3. `UNMEASURED_ROLES`, with a written reason it carries no contrast duty.
  *
@@ -69,6 +71,10 @@ export const TEXT_ON_SURFACE: ReadonlyArray<{
 /**
  * Roles that bound or fill an interactive element without carrying a label.
  * SC 1.4.11's 3:1 applies; SC 1.4.3's 4.5:1 does not.
+ *
+ * `completeBlue` used to sit here alone with the fill duty. It has moved to
+ * `LABEL_ON_FILL_ROLES` below, because the session sheet paints a word on it —
+ * and a role sits in exactly one bucket.
  */
 export const NON_TEXT_ROLES: ReadonlyArray<{
   readonly role: ColorRole
@@ -80,10 +86,44 @@ export const NON_TEXT_ROLES: ReadonlyArray<{
     on: 'back',
     why: 'destructive affordance fill — always paired with an icon and a word',
   },
+]
+
+/**
+ * Saturated fills that DO carry a label, and the label colour they carry.
+ *
+ * The session sheet's three primary actions (KC-IS-#22) paint a word directly
+ * on a saturated fill, which is the one thing `CHIP_ROLES` and `BANNER_ROLES`
+ * between them did not describe: a chip's label is white in light and black in
+ * dark, and a banner's is always white — these are always **black**, in both
+ * schemes, because white does not clear the floor on any of the three.
+ * Measured from `tokens.css`: white gives 3.65 : 1 on `completeBlue`,
+ * 1.92 : 1 on `focusGreen` and 2.27 : 1 on `pastryGreen`; black gives 5.76,
+ * 10.9 and 10.3.
+ *
+ * That is why `focusGreen` and `pastryGreen` are no longer in
+ * `UNMEASURED_ROLES`: their old reasons ("the sheet reads its numbers from text
+ * roles", "its label is a chip role") stopped being true the moment the sheet
+ * shipped (KC-IS-#71 item 16).
+ */
+export const LABEL_ON_FILL_ROLES: ReadonlyArray<{
+  readonly role: ColorRole
+  readonly label: string
+  readonly why: string
+}> = [
   {
     role: 'completeBlue',
-    on: 'back',
-    why: 'the canonical "mark complete" control fill, shared by every surface',
+    label: BLACK_LABEL,
+    why: 'the session conclusion’s "Complete Task" action',
+  },
+  {
+    role: 'focusGreen',
+    label: BLACK_LABEL,
+    why: 'the session sheet’s "Start Focus Session" / "Start New" action',
+  },
+  {
+    role: 'pastryGreen',
+    label: BLACK_LABEL,
+    why: 'the conclusion’s "Break" action, and the break phase’s own primary',
   },
 ]
 
@@ -107,10 +147,7 @@ export const UNMEASURED_ROLES: Readonly<Record<string, string>> = {
     'decorative endeavor-list tint; the label on it comes from a chip role',
   melon:
     'decorative endeavor-list tint; the label on it comes from a chip role',
-  focusGreen:
-    'session ring stroke; the sheet reads its numbers from text roles',
   breakBeige: 'break-session ring stroke; carries no label',
-  pastryGreen: 'break-action fill; its label is a chip role',
   ringGold:
     'activity-ring stroke; rings are paired with a text counter (epic AC 9)',
   ringEmerald: 'activity-ring stroke; paired with a text counter',
@@ -252,6 +289,17 @@ export function measuredPairs(): MeasuredPair[] {
         floor: AA_NON_TEXT_FLOOR,
       })
     }
+
+    for (const { role, label } of LABEL_ON_FILL_ROLES) {
+      pairs.push({
+        contract: 'saturated action fill, black label',
+        label: role,
+        theme,
+        foreground: label,
+        background: colorValue(role, theme),
+        floor: AA_TEXT_FLOOR,
+      })
+    }
   }
 
   return pairs
@@ -299,6 +347,7 @@ export function rolesUnderContract(): Set<ColorRole> {
     note(COLOR_ROLE_VARS[fg])
     for (const surface of on) note(COLOR_ROLE_VARS[surface])
   }
+  for (const { role } of LABEL_ON_FILL_ROLES) note(COLOR_ROLE_VARS[role])
 
   return covered
 }

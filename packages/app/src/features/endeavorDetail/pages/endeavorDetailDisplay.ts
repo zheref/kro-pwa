@@ -22,14 +22,14 @@
  * for the same reason: a `de-DE` browser printing "Jul 22, 2026" beside German
  * chrome is a bug the iOS app cannot have.
  *
- * ## Five SF Symbols canon names that neither symbol map carries
+ * ## The five substituted symbols are gone (KC-IS-#71 item 13)
  *
  * `textformat`, `circle.lefthalf.filled`, `star.fill`, `flame.fill` and
- * `folder` are in neither `system/icons/icons.ts` nor the endeavor kit's map,
- * and both are merged lanes this issue does not own. Each row below therefore
- * carries the nearest mapped neighbour and names canon's own symbol beside it,
- * exactly as `findPresentation` does for the two empty states. Folding the real
- * rows upstream is a one-line-per-row follow-up.
+ * `folder` were in neither symbol map when this file was written, so each row
+ * carried the nearest mapped neighbour and named canon's symbol beside it.
+ * The rows are in `system/icons/icons.ts` now and the tables below name canon's
+ * own symbols directly. Three substitutions survive further down — they stand
+ * in for symbols lucide has no counterpart for at all, and still say so.
  */
 import {
   type Defer,
@@ -109,15 +109,17 @@ export const fieldLabel = (field: EndeavorField): string => {
 }
 
 /**
- * `EndeavorField.detailIcon`. Five rows carry a substitute; canon's own symbol
- * is named in the comment beside each, per the header note.
+ * `EndeavorField.detailIcon`. Canon's own symbols now, all of them: the five
+ * substitutes this table used to carry were waiting on rows the shared map
+ * could not take while its lane was closed, and KC-IS-#71 item 13 folded them
+ * in.
  */
 export const fieldIcon = (field: EndeavorField): KitSymbolName => {
   switch (field) {
     case EndeavorField.title:
-      return 'pencil' // canon: textformat
+      return 'textformat'
     case EndeavorField.status:
-      return 'circle' // canon: circle.lefthalf.filled
+      return 'circle.lefthalf.filled'
     case EndeavorField.due:
       return 'calendar'
     case EndeavorField.start:
@@ -127,9 +129,9 @@ export const fieldIcon = (field: EndeavorField): KitSymbolName => {
     case EndeavorField.sessionPoints:
       return 'bolt.fill'
     case EndeavorField.value:
-      return 'star' // canon: star.fill
+      return 'star.fill'
     case EndeavorField.effort:
-      return 'target' // canon: flame.fill
+      return 'flame.fill'
     case EndeavorField.expiry:
       return 'hourglass'
     case EndeavorField.tags:
@@ -137,7 +139,7 @@ export const fieldIcon = (field: EndeavorField): KitSymbolName => {
     case EndeavorField.associatedColor:
       return 'paintpalette'
     case EndeavorField.project:
-      return 'checklist' // canon: folder
+      return 'folder'
     case EndeavorField.repeatConfig:
       return 'repeat'
     default:
@@ -530,7 +532,7 @@ export const resolutionIcon = (
     case PerformResolution.aborted:
       return 'xmark' // canon: xmark.circle.fill
     case PerformResolution.finished:
-      return 'flag' // canon: flag.checkered
+      return 'flag.checkered'
     default:
       return assertNever(resolution)
   }
@@ -632,7 +634,7 @@ export const shadowChips = (shadow: Shadow): readonly PropertyRowChip[] => {
     chips.push({
       id: 'group',
       title: group,
-      icon: 'checklist', // canon: folder
+      icon: 'folder',
       tint: semanticTint('chipNeutral'),
     })
   }

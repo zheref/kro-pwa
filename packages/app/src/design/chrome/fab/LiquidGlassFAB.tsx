@@ -36,7 +36,16 @@ import { CHROME_LAYOUT } from '../layout/chromeLayout'
  */
 
 export interface LiquidGlassFABProps {
-  /** The SF Symbol name, resolved through the design system's lucide mapping. */
+  /**
+   * The SF Symbol name, resolved through the design system's lucide mapping.
+   *
+   * Stays `SfSymbolName` — the SYSTEM's table — rather than widening to the
+   * endeavor kit's `KitSymbolName`, which KC-IS-#71 item 1 proposed. The
+   * widening was a way to reach `bolt.fill` and `clock.badge.xmark` while
+   * `icons.ts` was a closed lane; both rows are in the system table now
+   * (item 16), so the FAB can name canon's own glyphs without the chrome kit
+   * taking a dependency on the domain-bound kit above it.
+   */
   readonly glyph: SfSymbolName
   /** Spoken name for the action. Required — a bare glyph names nothing. */
   readonly accessibilityLabel: string

@@ -28,15 +28,12 @@
  * carry the contrast-verified semantic roles instead, which is the same
  * substitution the merged kit made for the row badges.
  *
- * ## Two SF Symbols canon names that this build cannot draw
+ * ## The two substituted symbols are gone (KC-IS-#71 item 13)
  *
- * `line.3.horizontal.decrease.circle` and `slider.horizontal.3` are in neither
- * the design system's map nor the endeavor kit's, and both maps are merged
- * lanes this issue does not own. Rather than fork a third symbol table for two
- * glyphs, the two empty states below use the nearest mapped neighbours —
- * `line.3.horizontal` and `eye.circle.fill` — and say so here. Folding the two
- * real rows into `system/icons/icons.ts` is a one-line-per-row follow-up for
- * whichever child next touches that file.
+ * `line.3.horizontal.decrease.circle` and `slider.horizontal.3` were in neither
+ * symbol map when this file was written, so the two empty states drew the
+ * nearest mapped neighbours and said so here. Both rows are in
+ * `system/icons/icons.ts` now, and the states below name canon's own symbols.
  */
 import {
   type Endeavor,
@@ -280,8 +277,7 @@ export const findEmptyCopy = (state: FindEmptyState): FindEmptyCopy => {
       }
     case 'noFilters':
       return {
-        // Canon: `line.3.horizontal.decrease.circle` — see the header note.
-        icon: 'line.3.horizontal',
+        icon: 'line.3.horizontal.decrease.circle',
         title: 'No Filters Selected',
         message: 'Select at least one filter above to browse your endeavors.',
       }
@@ -293,8 +289,7 @@ export const findEmptyCopy = (state: FindEmptyState): FindEmptyCopy => {
       }
     case 'filteredOut':
       return {
-        // Canon: `slider.horizontal.3` — see the header note.
-        icon: 'eye.circle.fill',
+        icon: 'slider.horizontal.3',
         title: 'Nothing Here',
         message: 'Try adjusting your filters to see more endeavors.',
       }

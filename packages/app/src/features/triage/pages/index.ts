@@ -25,8 +25,6 @@ export {
   TriageFormFragment,
 } from './TriageFormFragment'
 export {
-  TRIAGE_SF_SYMBOL_TO_LUCIDE,
-  type TriageSfSymbolName,
   type TriageSymbolName,
   isTriageMappedSymbol,
   triageIcon,

@@ -11,8 +11,9 @@ import type { Preview } from '@storybook/nextjs'
  *
  * Still no provider decorator. Design-system components are presentation only
  * (`RC-14`) and take no store; the shell child (#13) owns the app-level
- * providers, and Chakra — which still renders `/session` until #22 — is
- * deliberately absent so nothing new can quietly start depending on it.
+ * providers. Chakra was deliberately absent here so nothing new could quietly
+ * start depending on it while it was still installed; KC-IS-#79 uninstalled
+ * it, so its absence is no longer a choice this file has to keep making.
  *
  * No theme toolbar either. Every story that needs both schemes renders them
  * SIDE BY SIDE, which is what the tokens' `[data-theme]` attribute selectors

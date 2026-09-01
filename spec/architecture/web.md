@@ -72,8 +72,22 @@ packages/app/        @kro/app    — shared UZF state + feature tier
 
 apps/web/            @kro/web    — the Next.js 15 App Router shell
   src/app/           routes, layout, manifest, API route handlers
-  src/components/    presentation (today: Chakra-era `ui/` vendored set — replaced by #6)
+  src/progressive/   service-worker registration, push subscriptions, actions
 ```
+
+`apps/web` owns **no reusable presentation** any more — no Component (`RC-14`), no Fragment
+(`RC-15`), no Page (`RC-37`). `src/components/ui/` held 56 vendored Chakra snippets serving the
+pre-parity routes; the design system (#6) replaced them in `packages/app/src/design/`, and #79
+deleted them with the `(legacy)` group that was their last importer. A **new** Component,
+Fragment or Page belongs in `packages/app`, never here.
+
+What `apps/web` does still own is what the platform mandates and canon puts here on purpose:
+the passive Server Pages (`RC-38`), the ≤10-line client wrappers (`RC-39`), the root layout and
+the composition root (`RC-41`), and the three redirects. Some of those render JSX — `layout.tsx`
+is the document, `providers.tsx` is the provider tree, and `(shell)/AppShellClient.tsx` mounts
+`MainShellPage` plus the global overlay list. They are **compositions**, not components: each
+one wires or forwards, and none is reusable or has a body worth lifting. The distinction is the
+`RC-62` "apps are thin shells" line, not "no `.tsx` under `apps/web`".
 
 Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing points back.
 
@@ -242,16 +256,25 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
 
 ## 8. Project specifics
 
-- **Route map:** two groups under one passive root layout, and a route group changes no URL.
+- **Route map:** one group under one passive root layout, and a route group changes no URL.
   `(shell)` is the parity set — `/my-day` · `/tasks` · `/inbox` · `/matrix` · `/plan` ·
   `/habits` · `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
   `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared ≤10-line client
-  wrapper, wrapped by `providers.tsx` and the shell. `(legacy)` is the pre-parity set — `/` ·
-  `/session` · `/settings` · `/integrations` — which keeps the Chakra provider tree in its own
-  group layout until #22 retires it. Route files are the shell child's (#13) exclusively; a
-  feature child replaces a destination's Page in `packages/app` instead. The macOS names are
-  what keep the two sets apart without a prefix: canon calls the session destination "Execute"
-  and the settings one "Adjust".
+  wrapper, wrapped by `providers.tsx` and the shell. Beside it sit three **redirects**, directly
+  under the root layout because they render nothing and so need no providers: `/` → `/my-day`
+  (307 — the landing destination is a product call that can change, and `/` is the installed
+  app's `start_url`), `/settings` → `/adjust`, `/integrations` → `/adjust` (calendar-connect is
+  a pane inside the Settings hub, not a destination). The second group, `(legacy)`, held those
+  three plus `/session` and the Chakra provider tree; #22 retired `/session` and #79 retired the
+  group, the tree, the 56 vendored Chakra components and the Chakra/emotion/react-icons
+  dependencies with it. Route files are the shell child's (#13) exclusively; a feature child
+  replaces a destination's Page in `packages/app` instead. The macOS names are what keep the
+  parity set unambiguous without a prefix: canon calls the session destination "Execute" and the
+  settings one "Adjust".
+- **Offline shell:** `public/sw.js` precaches the landing **document** (`/my-day`), never `/`.
+  `cache.add('/')` follows the redirect and stores a redirected response; per Fetch, answering a
+  navigation (redirect mode `manual`) with a response whose URL list has more than one entry is
+  a network error, so precaching `/` would break the offline cold start rather than serve it.
 - **Responsive contract:** web mobile mirrors iPhone (flat tab bar), web desktop mirrors macOS
   (sidebar shell, popover-first). The binding decision table is KroApple's
   `KroUI/Do/DoSurfaceLayout.swift` idiom×width matrix, ported by #13 as

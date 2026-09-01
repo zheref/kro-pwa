@@ -2,9 +2,10 @@ import withBundleAnalyzer from '@next/bundle-analyzer'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    optimizePackageImports: ['@chakra-ui/react'],
-  },
+  // `experimental.optimizePackageImports: ['@chakra-ui/react']` lived here
+  // until KC-IS-#79. Chakra is no longer installed, and naming an absent
+  // package in that list is a barrel-optimisation rule that can never fire.
+  //
   // Workspace members ship TypeScript source rather than a build artifact, so
   // Next has to run them through its own compiler.
   transpilePackages: ['@kro/core', '@kro/app'],

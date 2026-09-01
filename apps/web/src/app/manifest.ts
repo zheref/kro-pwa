@@ -7,6 +7,15 @@
  * - **`id`** pins the app's identity across deploys. Without it the browser
  *   derives identity from `start_url`, so a later change to the start route
  *   would look like a *different* app and orphan every existing install.
+ * - **`start_url` stays `/`, which redirects.** Since KC-IS-#79 `/` is a
+ *   passive redirect into the shell's landing destination rather than a page.
+ *   A launch therefore costs one in-scope hop, which is deliberate: `/` is the
+ *   app's front door, and pinning `start_url` to whichever destination is
+ *   currently the landing one would have to be re-decided every time that
+ *   product call changes. In-scope redirects do not affect installability, and
+ *   `id` already carries identity, so this is a free choice rather than a
+ *   constrained one. The offline half is the service worker's, and it does NOT
+ *   precache `/` — see `SHELL_DOCUMENT` in `public/sw.js`.
  * - **`theme_color`** is `--kro-color-header-gradient-indigo` (`#5856d6`), the
  *   first stop of canon's `indigoGrape` header slab, so the browser/OS chrome
  *   continues the header rather than fighting it.

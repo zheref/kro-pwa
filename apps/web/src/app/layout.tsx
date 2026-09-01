@@ -5,21 +5,22 @@ import { Geist, Geist_Mono } from 'next/font/google'
 /**
  * The root layout — passive, and nothing else (`RC-41`).
  *
- * It sets the document up (fonts, the one stylesheet, the metadata) and
- * renders its children. Everything stateful moved out, because there are now
- * two shells under this one document and they do not share a provider tree:
+ * It sets the document up (fonts, the one stylesheet, the metadata) and renders
+ * its children. Everything stateful lives one level down, in `(shell)` — the
+ * parity shell's Store + theme + navigation, wired in `providers.tsx`, which is
+ * the one client composition root.
  *
- *   `(shell)`   the parity shell — Store + theme + navigation, wired in
- *               `providers.tsx`, which is the one client composition root.
- *   `(legacy)`  the pre-parity surfaces (`/`, `/settings`, `/integrations`)
- *               that Chakra still renders. They keep their own provider tree,
- *               in their own group's layout, so nothing new can quietly start
- *               depending on it. `/session` was the fourth and is gone —
- *               KC-IS-#22 retired it; the parity shell serves the surface at
- *               `/execute`, canon's own name for that destination.
+ * There used to be a second group beside it. `(legacy)` held the pre-parity
+ * surfaces (`/`, `/session`, `/settings`, `/integrations`) and its own Chakra
+ * provider tree, so that tree wrapped only those routes and nothing new could
+ * quietly start depending on it. KC-IS-#22 took `/session` out of the set;
+ * KC-IS-#79 retired the rest. The three addresses survive as passive redirects
+ * (`RC-38`) sitting directly under this layout — they render nothing, so they
+ * need no providers at all — and the Chakra dependency is gone with the group.
  *
- * A route group changes no URL: `/settings` is still `/settings`. The split is
- * about which providers wrap a route, not about where it lives.
+ * A route group changes no URL: `/settings` was `/settings` inside `(legacy)`
+ * and is `/settings` outside it. The group only ever decided which providers
+ * wrapped a route.
  */
 
 const geistSans = Geist({

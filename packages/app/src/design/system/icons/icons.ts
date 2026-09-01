@@ -13,9 +13,10 @@
  *     centring — are the same conventions SF Symbols draws to, so a KroApple
  *     screen and its web counterpart read as the same product. A filled set
  *     (Material Symbols, Font Awesome solid) would not.
- *   · `react-icons` is already a dependency of `apps/web`, but it ships
- *     bundles of whole families and has no SF-Symbols-shaped subset; it stays
- *     only until the Chakra surfaces it serves are retired (#22).
+ *   · `react-icons` was a dependency of `apps/web` when this was decided, but
+ *     it ships bundles of whole families and has no SF-Symbols-shaped subset,
+ *     so it was never a candidate here — it stayed only for the Chakra
+ *     surfaces it served, and #79 uninstalled it with them.
  *
  * WHAT THIS FILE IS. KroApple names glyphs as SF Symbols strings all over its
  * views (`"checkmark.circle.fill"`, `"tray.and.arrow.down"`). Porting a screen

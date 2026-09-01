@@ -21,12 +21,14 @@ describe('the retired /settings address', () => {
     expect(redirect).toHaveBeenCalledWith('/adjust')
   })
 
-  it('resolves rather than 404s — the address survives its stub', async () => {
+  it('does not point at itself — a self-redirect would loop forever', async () => {
     redirect.mockClear()
     const { default: SettingsRoute } = await import('./page')
 
-    expect(() => SettingsRoute()).not.toThrow()
+    SettingsRoute()
+
     expect(redirect).toHaveBeenCalledTimes(1)
+    expect(redirect).not.toHaveBeenCalledWith('/settings')
   })
 
   it('renders nothing of its own — the stub content is gone', async () => {

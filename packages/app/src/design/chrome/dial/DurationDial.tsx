@@ -13,12 +13,15 @@ import { cn } from '../../system/utils/cn'
  * preset.
  *
  * TWO ANCESTORS, ONE COMPONENT. The drag mechanics are seeded by this repo's
- * own `apps/web/src/components/DurationDial/index.tsx` (the Chakra-era control
- * still rendering `/session`, which `#22` retires); the geometry, the range and
- * the readout come from `KroUI/Components/DurationDial.swift`; the preset pills
- * come from `KroUI/Session/SessionSetupView.swift`'s `presetPillsArea`, backed
- * by `SessionSetupFeature.availablePresets`. The seed is left where it is — the
- * legacy page still imports it.
+ * own Chakra-era control, which used to live at
+ * `apps/web/src/components/DurationDial/index.tsx` and rendered the pre-parity
+ * `/session`; the geometry, the range and the readout come from
+ * `KroUI/Components/DurationDial.swift`; the preset pills come from
+ * `KroUI/Session/SessionSetupView.swift`'s `presetPillsArea`, backed by
+ * `SessionSetupFeature.availablePresets`. The seed is gone: `#22` retired
+ * `/session` and KC-IS-#79 deleted the last of `apps/web`'s presentation with
+ * the `(legacy)` group, so this file is the only DurationDial there is. Read it
+ * against git history, not against a path that no longer exists.
  *
  * ==========================================================================
  * A REAL TENSION IN CANON: 90 MINUTES DOES NOT FIT ON A 60-MINUTE DIAL

@@ -44,9 +44,9 @@ Every destination is a link people can paste, bookmark or reload:
 
 **The bare address is the front door.** Opening Kro Web with no destination in
 the address — the site's root, and what the installed app opens on — lands on
-**Today**, the same destination the Mac's sidebar and the iPad's navigation open
-on first launch. It is a hand-off, not a page: nothing is shown at the root
-itself.
+**My Day** (the destination the sidebar labels *Today*), the same one the Mac's
+sidebar and the iPad's navigation open on first launch. It is a hand-off, not a
+page: nothing is shown at the root itself.
 
 Two addresses from before the shell existed still resolve, so an old bookmark or
 a link someone shared never lands on nothing:
@@ -182,6 +182,6 @@ sequenceDiagram
 - Profile currently opens Adjust; the panel it should open belongs to the
   settings work. Owner: maintainer, 2026-08-31.
 
-*(Settled 2026-09-01: the root address does land on Today, and the hand-off is
+*(Settled 2026-09-01: the root address does land on My Day, and the hand-off is
 described under **Entry points**. The pre-parity landing page it was waiting on
 is gone.)*

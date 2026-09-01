@@ -195,9 +195,12 @@
 /* ==========================================================================
    Base layer.
 
-   Deliberately thin. `/session` is gone (KC-IS-#22), but Chakra still renders
-   `/`, `/settings` and `/integrations` and brings its own reset, so anything
-   opinionated here would still fight it. What is left is what both agree on.
+   Deliberately thin. It was thin because Chakra rendered the pre-parity routes
+   and brought its own reset, so anything opinionated here would have fought it.
+   KC-IS-#79 removed Chakra entirely — those routes are redirects now — so that
+   constraint is gone and this layer MAY grow. It has not been grown in the same
+   change: widening the base reset is a visual decision across every shipped
+   surface, and it belongs to whoever makes it deliberately, with screenshots.
    ========================================================================== */
 
 @layer base {

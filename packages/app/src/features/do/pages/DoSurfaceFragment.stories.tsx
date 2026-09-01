@@ -1,11 +1,16 @@
 import type { ReactNode } from 'react'
+import { ActiveToastHost } from '../../../design/chrome/toast/ActiveToastHost'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { DoSurfaceFragment } from './DoSurfaceFragment'
 import { doSurfaceMocks, doSurfaceProps } from './doSurfaceMocks'
 
 /**
- * The whole surface — header, lanes, FAB and the Active Toast host — at both
- * widths, in both schemes, in each of the states the slice can reach.
+ * The whole surface — header, lanes and FAB — at both widths, in both schemes,
+ * in each of the states the slice can reach.
+ *
+ * `Stage` supplies the Active Toast host, because the shell does in the app
+ * (`MainShellPage`, KC-IS-#71 item 15) and this Fragment no longer mounts one
+ * of its own.
  *
  * Every story is `doSurfaceProps(state, surface)`: the real projection of the
  * Do slice's own state mocks (`RC-31`), so nothing here is a hand-drawn day.
@@ -40,7 +45,9 @@ function Stage({
       }}
     >
       <GradientBackdrop height="220px" />
-      <div style={{ position: 'relative', height: '100%' }}>{children}</div>
+      <ActiveToastHost position="absolute">
+        <div style={{ position: 'relative', height: '100%' }}>{children}</div>
+      </ActiveToastHost>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { StoreProvider, makeStore, stubbedThunkExtra } from '@kro/app'
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { AppShellClient } from './AppShellClient'
+import { installShellMatchMedia } from './__tests__/shellTestEnvironment'
 
 /**
  * The wrapper is a passive shell (`RC-57`), so this asserts only what a
@@ -9,21 +10,7 @@ import { AppShellClient } from './AppShellClient'
  * inside the real shell.
  */
 beforeEach(() => {
-  Object.defineProperty(window, 'innerWidth', {
-    value: 1440,
-    configurable: true,
-  })
-  window.matchMedia = ((query: string) =>
-    ({
-      matches: query.includes('min-width'),
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => true,
-      onchange: null,
-    }) as unknown as MediaQueryList) as typeof window.matchMedia
+  installShellMatchMedia()
 })
 
 describe('AppShellClient', () => {

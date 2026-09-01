@@ -29,7 +29,6 @@
  */
 import type { ActivityRing } from '../../../design/chrome'
 import {
-  ActiveToastHost,
   CHROME_LAYOUT,
   FAB_INSETS,
   LiquidGlassFABMenu,
@@ -127,14 +126,19 @@ export interface DoSurfaceFragmentProps
 }
 
 /**
- * The surface, with the Active Toast host mounted around it.
+ * The surface.
  *
- * The host is a Component that keeps the toast in React state behind a context
- * (`RC-14` — it may not know a store exists), and `useActiveToasts()` throws
- * outside one. The shell mounts none, and canon's `.activeToast(...)` modifier
- * sits on `DoScreen`'s content rather than on `MainScreen`, so this is where it
- * belongs. `position="absolute"` keeps it inside the surface's own bounds,
- * which is what the `relative` wrapper below is for.
+ * It used to mount its own `ActiveToastHost` (`position="absolute"`, inside the
+ * `relative` wrapper below), because at the time the shell mounted none and
+ * canon's `.activeToast(...)` modifier sits on `DoScreen`'s content rather than
+ * on `MainScreen`. That is no longer true: `MainShellPage` mounts the one host
+ * for the whole app (KC-IS-#71 item 15), so a completion toast raised here now
+ * shares a lifetime with every other surface's — which is what canon's one-deep
+ * replace means — and rises above the Session Pill, which a host scoped to this
+ * surface could never be told about.
+ *
+ * `useActiveToasts()` still throws outside a host, so a story or a test that
+ * mounts this Fragment on its own wraps it in one.
  */
 export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
   return (
@@ -146,9 +150,7 @@ export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
         props.className,
       )}
     >
-      <ActiveToastHost position="absolute">
-        <DoSurfaceBody {...props} />
-      </ActiveToastHost>
+      <DoSurfaceBody {...props} />
     </div>
   )
 }

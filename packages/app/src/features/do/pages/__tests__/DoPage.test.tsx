@@ -3,6 +3,7 @@ import { EndeavorStatus } from '@kro/core'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import {
   type AppStore,
@@ -55,8 +56,12 @@ const mountPage = (
     store.dispatch(onSurfaceChanged({ surface: options.surface }))
   }
   render(
+    // The shell's two providers, as far as this Page can tell: the store, and
+    // the one Active Toast host `MainShellPage` mounts (KC-IS-#71 item 15).
     <StoreProvider store={store}>
-      <DoPage now={DO_MOCK_NOW} locale="en-US" initialLaneWidth={1120} />
+      <ActiveToastHost position="absolute">
+        <DoPage now={DO_MOCK_NOW} locale="en-US" initialLaneWidth={1120} />
+      </ActiveToastHost>
     </StoreProvider>,
   )
   return { store, localStore }

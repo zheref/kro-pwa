@@ -10,6 +10,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
 import { onCaptureRouteDelivered, userDidTapOpenInbox } from '../../CaptureFeature'
 import { captureFixtureRecords } from '../../CaptureMocks'
@@ -38,10 +39,18 @@ afterEach(() => {
   teardownCapture()
 })
 
+/**
+ * The shell, as far as these overlays can tell: the store, and the one Active
+ * Toast host `MainShellPage` mounts around everything (KC-IS-#71 item 15).
+ * `CaptureOverlays` used to mount that host itself, which is why this stage did
+ * not need one.
+ */
 const mount = (store: CaptureStore) =>
   render(
     <CaptureStoreStage store={store}>
-      <CaptureOverlays />
+      <ActiveToastHost position="absolute">
+        <CaptureOverlays />
+      </ActiveToastHost>
     </CaptureStoreStage>,
   )
 

@@ -76,6 +76,11 @@ export interface ActiveToastHostProps {
    * layer reads `var(--kro-shell-bottom-inset, 0px)` — see `ActiveToastLayer`.
    */
   readonly bottomInset?: number | string
+  /**
+   * The shell's leading chrome inset (its sidebar), forwarded to the layer.
+   * Omit it and the toast sits against the viewport's own leading edge.
+   */
+  readonly leadingInset?: number | string
 }
 
 export function ActiveToastHost({
@@ -83,6 +88,7 @@ export function ActiveToastHost({
   isSessionPillVisible = false,
   position = 'fixed',
   bottomInset,
+  leadingInset,
 }: ActiveToastHostProps) {
   const [toast, setToast] = useState<ActiveToastModel | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -133,6 +139,7 @@ export function ActiveToastHost({
         isSessionPillVisible={isSessionPillVisible}
         position={position}
         {...(bottomInset === undefined ? {} : { bottomInset })}
+        {...(leadingInset === undefined ? {} : { leadingInset })}
       />
     </ActiveToastContext.Provider>
   )

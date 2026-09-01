@@ -21,6 +21,13 @@ import { ActiveToastView } from './ActiveToastView'
  * 24pt off the bottom, then lifted 15pt so its centre lines up with the FAB's.
  * Every one of those numbers comes from `CHROME_LAYOUT`, never a literal here.
  *
+ * THE SHELL'S LEADING INSET, for the same reason as the bottom one. Canon
+ * anchors the toast 16pt in from the leading edge of the CONTENT column; the
+ * sidebar shell's window edge is further left than that column, so a
+ * viewport-anchored layer starts underneath the sidebar and the message is
+ * clipped by it. `leadingInset` is what the shell hands over, defaulting to
+ * nothing so a shell with no sidebar is exactly where it was.
+ *
  * THE SHELL'S BOTTOM INSET. Canon's 24pt is measured inside a tab, where
  * SwiftUI's safe area has already excluded the tab bar. The web shell's tab bar
  * is an ordinary flex child, so the viewport bottom is BELOW it and 24pt alone
@@ -70,6 +77,19 @@ export interface ActiveToastLayerProps {
    * shell may hand over `env(safe-area-inset-bottom)` or a custom property.
    */
   readonly bottomInset?: number | string
+  /**
+   * How far the shell's own LEADING chrome (the sidebar) reaches in from the
+   * viewport edge.
+   *
+   * Canon anchors the toast bottom-leading, 16pt in — and canon's leading edge
+   * is the CONTENT column's, because its toast lives inside a tab. A
+   * viewport-anchored layer on the sidebar shell starts under the sidebar and
+   * the message is clipped by it, which is what a capture of the built app
+   * showed (KC-IS-#71 item 15). The companion of `bottomInset`, and it defaults
+   * to nothing for the same reason: a shell with no sidebar, or no shell at
+   * all, is exactly where it was.
+   */
+  readonly leadingInset?: number | string
   readonly className?: string
   readonly style?: CSSProperties
 }
@@ -99,6 +119,7 @@ export function ActiveToastLayer({
   isSessionPillVisible = false,
   position = 'fixed',
   bottomInset = SHELL_BOTTOM_INSET_FALLBACK,
+  leadingInset = 0,
   className,
   style,
 }: ActiveToastLayerProps) {
@@ -107,6 +128,7 @@ export function ActiveToastLayer({
   // so where the arithmetic lives, and its suite proves it.
   const lift = isSessionPillVisible ? toastLiftAbovePill() : 0
   const inset = asLength(bottomInset)
+  const leading = asLength(leadingInset)
 
   return (
     <div
@@ -115,7 +137,7 @@ export function ActiveToastLayer({
       className={className}
       style={{
         position,
-        left: 0,
+        left: leading,
         right: 0,
         bottom: `calc(${CHROME_LAYOUT.toastBottomPadding}px + ${inset})`,
         paddingLeft: CHROME_LAYOUT.toastLeadingPadding,

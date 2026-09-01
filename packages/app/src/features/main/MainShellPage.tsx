@@ -76,6 +76,7 @@ import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { searchDestination } from './NavigationSections'
 import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
+import { SIDEBAR_IDEAL_WIDTH } from './SidebarFragment'
 import { ToolbarSlotsProvider } from './ToolbarSlots'
 import { useSurfaceLayout } from './useSurfaceLayout'
 
@@ -219,6 +220,16 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
         exactly this case.
       */
       bottomInset={shellBottomInset(shape, layout)}
+      /*
+        And the leading one. Canon anchors the toast 16pt in from the leading
+        edge of the CONTENT column; on the sidebar shell the window's edge is
+        further left, and a viewport-anchored layer starts underneath the
+        sidebar with its message clipped by it — which is what the first
+        capture of the built app showed.
+      */
+      leadingInset={
+        shape === 'sidebar' && isSidebarVisible ? SIDEBAR_IDEAL_WIDTH : 0
+      }
     >
       <ToolbarSlotsProvider>
         <MainShellFragment

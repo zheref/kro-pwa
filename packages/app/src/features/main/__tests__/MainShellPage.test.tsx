@@ -34,6 +34,7 @@ import {
   toastLiftAbovePill,
 } from '../../../design/chrome'
 import { shellBottomInset } from '../DoSurfaceLayout'
+import { SIDEBAR_IDEAL_WIDTH } from '../SidebarFragment'
 import { selectLayout } from '../MainSelectors'
 import { resetSurfaceCache } from '../useSurfaceLayout'
 
@@ -296,6 +297,38 @@ describe('the Active Toast host, mounted once at the shell', () => {
     // The layer writes `calc(24px + 60px)`; jsdom folds a same-unit sum, so
     // what is asserted is the value that matters — canon's 24pt plus the bar.
     expect(layer.style.bottom).toBe(`calc(${toastBottomOffset(inset)}px)`)
+  })
+
+  it('starts the toast at the content column, not under the sidebar', async () => {
+    // Canon anchors it 16pt in from the leading edge of the CONTENT column. A
+    // viewport-anchored layer on the sidebar shell begins under the sidebar and
+    // the message is clipped by it — which is what the first capture of the
+    // built app showed (KC-IS-#71 item 15).
+    const { store } = renderShell()
+
+    await waitFor(() => {
+      expect(store.getState().main.load.kind).toBe('loaded')
+    })
+    expect(screen.getByTestId('shell-sidebar')).toBeTruthy()
+
+    const layer = document.querySelector(
+      '[data-kro-toast-layer]',
+    ) as HTMLElement
+    expect(layer.style.left).toBe(`${SIDEBAR_IDEAL_WIDTH}px`)
+  })
+
+  it('sits against the viewport edge on the shell that has no sidebar', async () => {
+    installMatchMedia(true, 390)
+    const { store } = renderShell()
+
+    await waitFor(() => {
+      expect(store.getState().main.load.kind).toBe('loaded')
+    })
+
+    const layer = document.querySelector(
+      '[data-kro-toast-layer]',
+    ) as HTMLElement
+    expect(layer.style.left).toBe('0px')
   })
 
   it('does not lift while no session is running', () => {

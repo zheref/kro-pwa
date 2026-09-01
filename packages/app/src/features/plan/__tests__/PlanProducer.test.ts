@@ -4,7 +4,7 @@
  * (`RC-54`, `RC-35`). The assertions are on the resolved `Result`, because a
  * Producer's contract is what it resolves, not what it leaves in state.
  */
-import type { Endeavor, EndeavorRecord } from '@kro/core'
+import type { Endeavor, EndeavorRecord, FeatureFlagService } from '@kro/core'
 import {
   EndeavorHost,
   EndeavorKind,
@@ -24,6 +24,7 @@ import {
   loadPlanMatrixThunk,
   planHostsFor,
   preloadPlanDaysThunk,
+  resolvePlanFlagsThunk,
   updateEventTimeThunk,
 } from '../PlanProducer'
 import { PlanLoadReason } from '../PlanState'

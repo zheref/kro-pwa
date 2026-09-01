@@ -102,9 +102,11 @@ import {
 } from '../PlanEditSession'
 import { PlanViewMode } from '../PlanNavigation'
 import {
+  deletePlanEndeavorThunk,
   loadPlanDayThunk,
   loadPlanMatrixThunk,
   preloadPlanDaysThunk,
+  resolvePlanFlagsThunk,
   updateEventTimeThunk,
 } from '../PlanProducer'
 import {
@@ -127,6 +129,10 @@ import {
   selectPlanQuickCreateDraft,
   selectPlanSelectedDate,
   selectPlanSlotCount,
+  selectPlanListGrouping,
+  selectPlanListSections,
+  selectPlanListSort,
+  selectPlanRowCapabilities,
   selectPlanTimelineEvents,
   selectPlanTimelinePlacements,
   selectPlanViewMode,
@@ -134,13 +140,6 @@ import {
 import { PlanLoadReason } from '../PlanState'
 import { timelineSlotStart } from '../TimelineSlots'
 import { PlanListFragment } from './list/PlanListFragment'
-import { deletePlanEndeavorThunk } from './list/PlanListProducer'
-import {
-  selectPlanListGrouping,
-  selectPlanListSections,
-  selectPlanListSort,
-  selectPlanRowCapabilities,
-} from './list/PlanListSelectors'
 import { PlanMatrixFragment } from './matrix/PlanMatrixFragment'
 import {
   type PlanMatrixQuadrant,
@@ -278,21 +277,38 @@ export function PlanPage({
     )
   }, [dispatch])
 
-  // Mount: stamp the clock and the day, then read the authoritative day and
-  // its read-ahead window. Canon's `.task { store.send(.started) }`.
+  /*
+    Mount: resolve the flags, then stamp the clock and the day. Canon's
+    `.task { store.send(.started) }`.
+
+    The flags are cached in the slice at `onViewLoaded` exactly as canon caches
+    them, so no Selector ever reaches for a flag Service. Reading them here
+    would need the Service this Page may not import (`RC-6`), so a Producer
+    resolves them and the Page dispatches the plain event with the answer —
+    the same shape Find uses (KC-IS-#71 item 22). Until it landed, this passed
+    `true` and a `() => false` capability baseline.
+  */
   useEffect(() => {
     const today = new Date()
-    dispatch(
-      onViewLoaded({
-        now: today,
-        selectedDate: today,
-        // The flag is cached in the slice at `onViewLoaded` exactly as canon
-        // caches it, so no Selector ever reaches for a flag service. Reading
-        // it here would need the Service this Page may not import (`RC-6`);
-        // the slice's own default is `statusQuo`, which ships it enabled.
-        isQuickEventCreationEnabled: true,
-      }),
-    )
+    const effect = dispatch(resolvePlanFlagsThunk())
+    void effect.then((action) => {
+      const result = resolvePlanFlagsThunk.fulfilled.match(action)
+        ? action.payload
+        : null
+      dispatch(
+        onViewLoaded({
+          now: today,
+          selectedDate: today,
+          isQuickEventCreationEnabled:
+            result?.ok === true
+              ? result.value.isQuickEventCreationEnabled
+              : false,
+          enabledCapabilityFlags:
+            result?.ok === true ? result.value.enabledCapabilityFlags : [],
+        }),
+      )
+    })
+    return () => effect.abort()
   }, [dispatch])
 
   // The minute clock. A dispatched tick rather than a `new Date()` at render,

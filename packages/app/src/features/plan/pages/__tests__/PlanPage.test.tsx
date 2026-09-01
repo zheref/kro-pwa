@@ -341,6 +341,7 @@ describe('PlanPage', () => {
           now: new Date(),
           selectedDate: new Date(),
           isQuickEventCreationEnabled: false,
+          enabledCapabilityFlags: [],
         },
       })
     })

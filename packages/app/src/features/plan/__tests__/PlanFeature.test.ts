@@ -21,7 +21,6 @@ import {
   childCreationPromptDelegatedClose,
   onClockTicked,
   onLensSnapshotRestored,
-  onPlanPreferencesLoaded,
   onViewLoaded,
   planSlice,
   userDidAssignToQuadrant,
@@ -81,6 +80,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.now).toEqual(PLAN_REFERENCE_NOW)
@@ -94,6 +94,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: false,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.isQuickEventCreationEnabled).toBe(false)
@@ -106,6 +107,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.dayLoad.kind).toBe('idle')
@@ -138,41 +140,6 @@ describe('onClockTicked', () => {
     expect(next.preloadedDays).toEqual(
       planStateMocks.loadedWithPreload.preloadedDays,
     )
-  })
-})
-
-describe('onPlanPreferencesLoaded', () => {
-  it('narrows the band to Business hours when the preference says so', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.business,
-        showCompletedInTimeline: true,
-      }),
-    )
-    expect(next.dayViewRange).toBe(DayViewRange.business)
-  })
-
-  it('hides completed items from the timeline when asked', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.full,
-        showCompletedInTimeline: false,
-      }),
-    )
-    expect(next.showCompletedInTimeline).toBe(false)
-  })
-
-  it('leaves the loaded day untouched', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.waking,
-        showCompletedInTimeline: true,
-      }),
-    )
-    expect(next.dayLoad).toEqual(planStateMocks.loaded.dayLoad)
   })
 })
 
@@ -209,7 +176,7 @@ describe('onLensSnapshotRestored', () => {
       }),
     )
     expect(next.visibility.searchQuery).toBe('demo')
-    expect(next.dayViewRange).toBe(planStateMocks.loaded.dayViewRange)
+    expect(next.now).toBe(planStateMocks.loaded.now)
   })
 })
 
@@ -304,6 +271,7 @@ describe('userDidPressTimelineSlot', () => {
     const gated = {
       ...planStateMocks.loaded,
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     }
     expect(
       reducer(gated, userDidPressTimelineSlot({ index: 4, startHour: 8 }))
@@ -334,6 +302,7 @@ describe('userDidRequestQuickCreateAt', () => {
     const gated = {
       ...planStateMocks.loaded,
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     }
     expect(
       reducer(gated, userDidRequestQuickCreateAt({ moment: planAt(12) }))
@@ -747,6 +716,7 @@ describe('preloadPlanDaysThunk lifecycle', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     await store.dispatch(
@@ -778,6 +748,7 @@ describe('preloadPlanDaysThunk lifecycle', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     const inFlight = store.dispatch(preloadPlanDaysThunk({ center: today }))
@@ -839,6 +810,7 @@ describe('the defensive .rejected arms', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     const inFlight = store.dispatch(preloadPlanDaysThunk({ center: today }))

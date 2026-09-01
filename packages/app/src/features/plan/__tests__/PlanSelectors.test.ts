@@ -3,12 +3,19 @@
  * (`RC-55`). The `greeting` slice is filled from its own initial state — this
  * suite has no opinion about any slice but Plan's.
  */
-import type { Endeavor } from '@kro/core'
+import type { Endeavor, SettingValue } from '@kro/core'
 import {
   DayViewRange,
   EndeavorKind,
+  FeatureFlags,
   EndeavorStatus,
+  PlanListGrouping,
+  PlanListSort,
   makeEndeavor,
+  planDayViewRangeOption,
+  planListGroupingOption,
+  planListSortOption,
+  planShowCompletedInTimelineOption,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
@@ -45,10 +52,15 @@ import {
   selectPlanDayPickerDates,
   selectPlanEditPreview,
   selectPlanEditingEndeavorId,
+  selectPlanDayViewRange,
   selectPlanHourBand,
+  selectPlanListGrouping,
+  selectPlanListSort,
   selectPlanMatrixItems,
   selectPlanMatrixPickerCandidates,
   selectPlanQuickCreateDraft,
+  selectPlanRowCapabilities,
+  selectPlanShowsCompleted,
   selectPlanSlotCount,
   selectPlanTimelineEvents,
   selectPlanTimelinePlacements,
@@ -64,7 +76,19 @@ import { initialThirstState } from '../../thirst/ThirstFeature'
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const tomorrow = addingPlanDays(today, 1)
 
-const rootWith = (plan: PlanState): RootState => ({
+/**
+ * A root state with the Plan slice supplied and, optionally, a settings
+ * snapshot.
+ *
+ * The band and the completed filter are PREFERENCES, read from the settings
+ * slice (KC-IS-#71 item 19) rather than mirrored onto `PlanState` — so a test
+ * that wants the Business band sets the preference the user would set, and the
+ * assertion covers the whole path the app takes.
+ */
+const rootWith = (
+  plan: PlanState,
+  settingValues: Readonly<Record<string, SettingValue | null>> = {},
+): RootState => ({
   greeting: initialGreetingState,
   // Present only because `RootState` names every registered slice (#16, #23,
   // #29); this suite asserts nothing about Do, Capture, Find or Detail.
@@ -77,7 +101,7 @@ const rootWith = (plan: PlanState): RootState => ({
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,
-  settings: initialSettingsState,
+  settings: { ...initialSettingsState, values: settingValues },
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
@@ -137,27 +161,25 @@ describe('selectPlanHourBand / selectPlanSlotCount', () => {
   })
 
   it('renders 6am to midnight on the Waking range', () => {
-    const waking = {
-      ...planStateMocks.loaded,
-      dayViewRange: DayViewRange.waking,
-    }
-    expect(selectPlanHourBand(rootWith(waking))).toEqual({
+    const waking = rootWith(planStateMocks.loaded, {
+      [planDayViewRangeOption.key]: DayViewRange.waking,
+    })
+    expect(selectPlanHourBand(waking)).toEqual({
       start: 6,
       endExclusive: 24,
     })
-    expect(selectPlanSlotCount(rootWith(waking))).toBe(72)
+    expect(selectPlanSlotCount(waking)).toBe(72)
   })
 
   it('renders 8am to 8pm on the Business range', () => {
-    const business = {
-      ...planStateMocks.loaded,
-      dayViewRange: DayViewRange.business,
-    }
-    expect(selectPlanHourBand(rootWith(business))).toEqual({
+    const business = rootWith(planStateMocks.loaded, {
+      [planDayViewRangeOption.key]: DayViewRange.business,
+    })
+    expect(selectPlanHourBand(business)).toEqual({
       start: 8,
       endExclusive: 20,
     })
-    expect(selectPlanSlotCount(rootWith(business))).toBe(48)
+    expect(selectPlanSlotCount(business)).toBe(48)
   })
 })
 
@@ -282,13 +304,10 @@ describe('selectPlanTimelinePlacements', () => {
   })
 
   it('anchors offsets to the rendered band, not to midnight', () => {
-    const business = {
-      ...planStateMocks.loaded,
-      dayViewRange: DayViewRange.business,
-    }
-    expect(selectPlanTimelinePlacements(rootWith(business))[0]?.yOffset).toBe(
-      60,
-    )
+    const business = rootWith(planStateMocks.loaded, {
+      [planDayViewRangeOption.key]: DayViewRange.business,
+    })
+    expect(selectPlanTimelinePlacements(business)[0]?.yOffset).toBe(60)
   })
 
   it('places nothing on an empty day', () => {
@@ -499,5 +518,85 @@ describe('matrix reads', () => {
   it('reports an empty board before the rows have loaded', () => {
     expect(selectIsPlanMatrixEmpty(rootWith(planStateMocks.loaded))).toBe(true)
     expect(selectIsPlanMatrixEmpty(rootWith(planStateMocks.matrix))).toBe(false)
+  })
+})
+
+/**
+ * The four Plan preferences, read from the ONE place they are stored
+ * (KC-IS-#71 item 19).
+ *
+ * `dayViewRange` and `showCompletedInTimeline` used to be mirrored onto
+ * `PlanState` and the mirror was never filled — `onPlanPreferencesLoaded` had
+ * no dispatcher anywhere in the repo — so whatever the user chose in Settings,
+ * the timeline drew the Full band with completed items shown. These are the
+ * cases that make the choice reach the surface.
+ */
+describe('the Plan preferences come from the settings snapshot', () => {
+  it('falls back to the option defaults while the snapshot is empty', () => {
+    const root = rootWith(planStateMocks.loaded)
+
+    expect(selectPlanDayViewRange(root)).toBe(DayViewRange.full)
+    expect(selectPlanShowsCompleted(root)).toBe(true)
+    expect(selectPlanListSort(root)).toBe(PlanListSort.time)
+    expect(selectPlanListGrouping(root)).toBe(PlanListGrouping.none)
+  })
+
+  it('follows the user’s choice once the snapshot carries one', () => {
+    const root = rootWith(planStateMocks.loaded, {
+      [planDayViewRangeOption.key]: DayViewRange.business,
+      [planShowCompletedInTimelineOption.key]: false,
+      [planListSortOption.key]: PlanListSort.title,
+      [planListGroupingOption.key]: PlanListGrouping.project,
+    })
+
+    expect(selectPlanDayViewRange(root)).toBe(DayViewRange.business)
+    expect(selectPlanShowsCompleted(root)).toBe(false)
+    expect(selectPlanListSort(root)).toBe(PlanListSort.title)
+    expect(selectPlanListGrouping(root)).toBe(PlanListGrouping.project)
+  })
+
+  it('refuses a stored value the enumeration does not know, taking canon’s fallback', () => {
+    // A hand-edited preference file, or a value written by a newer build.
+    const root = rootWith(planStateMocks.loaded, {
+      [planDayViewRangeOption.key]: 'nocturnal',
+      [planListSortOption.key]: 'by-vibes',
+      [planListGroupingOption.key]: 'by-vibes',
+      [planShowCompletedInTimelineOption.key]: 'yes please',
+    })
+
+    expect(selectPlanDayViewRange(root)).toBe(DayViewRange.full)
+    expect(selectPlanShowsCompleted(root)).toBe(true)
+    expect(selectPlanListSort(root)).toBe(PlanListSort.time)
+    expect(selectPlanListGrouping(root)).toBe(PlanListGrouping.none)
+  })
+})
+
+/**
+ * The row capabilities, resolved against the flags the surface cached
+ * (KC-IS-#71 item 22) rather than against the `() => false` stand-in
+ * `resolveEndeavorCapabilities` documents for a dark-launched flag.
+ */
+describe('selectPlanRowCapabilities', () => {
+  const operationsWith = (enabledCapabilityFlags: readonly string[]) =>
+    selectPlanRowCapabilities(
+      rootWith({ ...planStateMocks.loaded, enabledCapabilityFlags }),
+    ).operations.map((binding) => binding.operation)
+
+  it('withholds the gated Detail tap while its flag is unresolved — the shipping baseline', () => {
+    expect(operationsWith([])).not.toContain('viewDetail')
+  })
+
+  it('offers it once the flag is cached as enabled', () => {
+    expect(operationsWith([FeatureFlags.endeavorDetail.name])).toContain(
+      'viewDetail',
+    )
+  })
+
+  it('still affords the two ungated swipe operations either way', () => {
+    for (const flags of [[], [FeatureFlags.endeavorDetail.name]]) {
+      const operations = operationsWith(flags)
+      expect(operations).toContain('startSession')
+      expect(operations).toContain('delete')
+    }
   })
 })

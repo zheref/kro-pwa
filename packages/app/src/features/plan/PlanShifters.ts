@@ -58,6 +58,7 @@ export function withPlanViewLoaded(
     readonly now: Date
     readonly selectedDate: Date
     readonly isQuickEventCreationEnabled: boolean
+    readonly enabledCapabilityFlags: readonly string[]
   },
 ): PlanState {
   return {
@@ -65,6 +66,7 @@ export function withPlanViewLoaded(
     now: args.now,
     selectedDate: args.selectedDate,
     isQuickEventCreationEnabled: args.isQuickEventCreationEnabled,
+    enabledCapabilityFlags: args.enabledCapabilityFlags,
     dayPickerCenter: planDayPickerCenter({
       currentCenter: null,
       selectedDate: args.selectedDate,
@@ -96,21 +98,6 @@ export function withPlanClockAdvanced(
       now: args.now,
       authoritativeEvents: holdsPreviousDay ? authoritativeEventsOf(state) : [],
     }),
-  }
-}
-
-/** One concern: the two Plan preferences the timeline consumes arrived. */
-export function withPlanPreferencesApplied(
-  state: PlanState,
-  args: {
-    readonly dayViewRange: PlanState['dayViewRange']
-    readonly showCompletedInTimeline: boolean
-  },
-): PlanState {
-  return {
-    ...state,
-    dayViewRange: args.dayViewRange,
-    showCompletedInTimeline: args.showCompletedInTimeline,
   }
 }
 

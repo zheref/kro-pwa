@@ -10,27 +10,27 @@
 import type { SettingValue } from '@kro/core'
 import { PlanListGrouping, PlanListSort } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import type { RootState } from '../../../../../library/store'
-import { initialAuthState } from '../../../../auth/AuthState'
-import { initialCaptureState } from '../../../../capture/CaptureFeature'
-import { initialDoState } from '../../../../do/DoFeature'
-import { initialEarnState } from '../../../../earn/EarnFeature'
-import { initialEndeavorDetailState } from '../../../../endeavorDetail/EndeavorDetailState'
-import { initialFindState } from '../../../../find/FindState'
-import { initialGreetingState } from '../../../../greeting/GreetingFeature'
-import { initialMainState } from '../../../../main/MainFeature'
-import { initialPlatformState } from '../../../../platform/PlatformFeature'
-import { initialSessionState } from '../../../../session/SessionState'
-import { initialSettingsState } from '../../../../settings/SettingsState'
-import { initialThirstState } from '../../../../thirst/ThirstFeature'
-import { initialTriageState } from '../../../../triage/TriageFeature'
-import { planDayKey, startOfPlanDay } from '../../../PlanCalendar'
+import type { RootState } from '../../../library/store'
+import { initialAuthState } from '../../auth/AuthState'
+import { initialCaptureState } from '../../capture/CaptureFeature'
+import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
+import { initialGreetingState } from '../../greeting/GreetingFeature'
+import { initialMainState } from '../../main/MainFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
+import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialTriageState } from '../../triage/TriageFeature'
+import { planDayKey, startOfPlanDay } from '../PlanCalendar'
 import {
   PLAN_REFERENCE_DAY,
   PLAN_REFERENCE_NOW,
   planStateMocks,
-} from '../../../PlanMocks'
-import type { PlanState } from '../../../PlanState'
+} from '../PlanMocks'
+import type { PlanState } from '../PlanState'
 import {
   selectIsPlanListEmpty,
   selectPlanListEndeavors,
@@ -38,12 +38,12 @@ import {
   selectPlanListSections,
   selectPlanListSort,
   selectPlanRowCapabilities,
-} from '../PlanListSelectors'
+} from '../PlanSelectors'
 import {
   planListBucketFixtures,
   planListMixedDay,
   planListProjectDay,
-} from '../planListMocks'
+} from '../pages/list/planListMocks'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const dayKey = planDayKey(today)

@@ -29,11 +29,15 @@
  * `updateEventTimeThunk` needs an instant to stamp the record's write
  * watermark. It takes one rather than calling `Date.now()`, so the write a test
  * asserts on is the write it asked for.
+ *
+ * `deletePlanEndeavorThunk` at the foot of the file folded in from
+ * `pages/list/PlanListProducer.ts` (KC-IS-#71 item 23).
  */
 import type { Endeavor, Result } from '@kro/core'
 import {
   FeatureFlags,
   endeavorRecordFromEndeavor,
+  epochMillisFromDate,
   err,
   ok,
   withRescheduled,
@@ -206,3 +210,114 @@ export const updateEventTimeThunk = createAsyncThunk<
     }
   },
 )
+
+/**
+ * The row deletion `.planDay`'s capability set declares.
+ *
+ * `.planDay` declares two row operations — Start Session on the leading edge
+ * and **Delete** on the trailing one — and a declared binding that reaches
+ * nothing is a control the user can press to no effect.
+ *
+ * The deletion is SOFT: `softDelete` is the same door Find's operation Producer
+ * uses, so a row deleted from Plan and a row deleted from Find leave the store
+ * in the same state (a tombstone the next sync can carry). It has no reducer
+ * arm of its own — the Plan slice's arrays are owned by `loadPlanDayThunk` and
+ * `loadPlanMatrixThunk`, and re-reading them is both the smaller change and the
+ * one that cannot leave the two arrays disagreeing about what still exists.
+ * `PlanPage` does that re-read on success.
+ *
+ * It lived under `pages/list/PlanListProducer.ts` until KC-IS-#71 item 23,
+ * because this file was a closed lane while KC-IS-#20 was in flight.
+ */
+
+/** Which row was removed, so a caller can assert on the write it asked for. */
+export interface PlanEndeavorDeletion {
+  readonly endeavorId: string
+}
+
+export const deletePlanEndeavorThunk = createAsyncThunk<
+  Result<PlanEndeavorDeletion, PlanException>,
+  { readonly endeavorId: string; readonly now: Date },
+  { extra: ThunkExtra }
+>(
+  'plan/onPlanEndeavorDeletionCompleted',
+  async ({ endeavorId, now }, { extra }) => {
+    try {
+      await extra.localStore.endeavors.softDelete(
+        endeavorId,
+        epochMillisFromDate(now),
+      )
+      return ok({ endeavorId })
+    } catch (error) {
+      return err(planExceptionFrom(error))
+    }
+  },
+)
+
+/**
+ * The flags the Plan surface caches at `onViewLoaded` (KC-IS-#71 item 22).
+ *
+ * `onViewLoaded` takes them as arguments — deliberately, so capability gating
+ * stays a pure Selector read and no Selector ever reaches for a flag Service.
+ * That leaves somebody to *supply* them, and a Page cannot: a Service reaches a
+ * Producer through `extra` and nowhere else (`RC-6`). So this is that Producer,
+ * and it is the same shape Find's `resolveCapabilityFlagsThunk` already has.
+ *
+ * Until now the Page passed literals — `isQuickEventCreationEnabled: true` and,
+ * through `selectPlanRowCapabilities`, a `() => false` baseline — so the two
+ * gates answered the same way whatever the registry said. `resolveEndeavorCapabilities`'
+ * own doc sanctions the `() => false` call shape *"until it lands"*; this is it
+ * landing.
+ *
+ * ## No reducer arm, on purpose
+ *
+ * Nothing handles this thunk's three lifecycle actions: the values' only
+ * consumer is the `onViewLoaded` payload the Page assembles from them. Adding
+ * arms would put the flag list in `State` twice, and the second copy is the one
+ * that goes stale.
+ *
+ * ## A flag read that fails resolves to "nothing enabled"
+ *
+ * A capability whose flag cannot be resolved is simply not offered, which is
+ * the safe direction: the surface renders without the dark-launched gesture
+ * rather than refusing to render.
+ */
+
+/**
+ * The flags a `.planDay` binding can wait on.
+ *
+ * One entry today — `endeavorDetail`, the flag the registry's `viewDetail` tap
+ * binding declares. A list rather than a boolean because
+ * `EndeavorCapabilities.requires` is a flag *name*.
+ */
+export const PLAN_CAPABILITY_FLAGS = [FeatureFlags.endeavorDetail] as const
+
+/** What `onViewLoaded` needs resolved before the surface installs its vista. */
+export interface PlanResolvedFlags {
+  readonly isQuickEventCreationEnabled: boolean
+  readonly enabledCapabilityFlags: readonly string[]
+}
+
+export const resolvePlanFlagsThunk = createAsyncThunk<
+  Result<PlanResolvedFlags, PlanException>,
+  void,
+  { extra: ThunkExtra }
+>('plan/onPlanFlagsResolved', async (_unused, { extra }) => {
+  try {
+    return ok({
+      isQuickEventCreationEnabled: extra.featureFlags.isEnabled(
+        FeatureFlags.timelineQuickEventCreation,
+      ),
+      enabledCapabilityFlags: PLAN_CAPABILITY_FLAGS.filter((flag) =>
+        extra.featureFlags.isEnabled(flag),
+      ).map((flag) => flag.name),
+    })
+  } catch {
+    // See the header: an unreadable flag hides its capability, it never breaks
+    // the surface that was going to offer it.
+    return ok({
+      isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
+    })
+  }
+})

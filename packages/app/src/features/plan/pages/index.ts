@@ -132,6 +132,11 @@ export {
   planListRowSymbol,
   planListRowTimeInfo,
 } from './list/planListPresentation'
+/*
+  The list's Selectors and its one Producer folded into the feature's own
+  suffixed files (KC-IS-#71 item 23); they are re-exported from here so the
+  render tier's barrel keeps one shape.
+*/
 export {
   selectIsPlanListEmpty,
   selectPlanListEndeavors,
@@ -139,11 +144,13 @@ export {
   selectPlanListSections,
   selectPlanListSort,
   selectPlanRowCapabilities,
-} from './list/PlanListSelectors'
+} from '../PlanSelectors'
 export {
   type PlanEndeavorDeletion,
+  type PlanResolvedFlags,
   deletePlanEndeavorThunk,
-} from './list/PlanListProducer'
+  resolvePlanFlagsThunk,
+} from '../PlanProducer'
 export {
   type PlanListFragmentProps,
   PlanListFragment,

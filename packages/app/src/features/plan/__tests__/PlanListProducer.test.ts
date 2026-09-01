@@ -14,14 +14,10 @@ import {
   makeEndeavor,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { makeStore, stubbedThunkExtra } from '../../../../../library/store'
-import { makeInMemoryLocalStore } from '../../../../../services/localStore/InMemoryLocalStore'
-import {
-  PLAN_REFERENCE_DAY,
-  PLAN_REFERENCE_NOW,
-  planAt,
-} from '../../../PlanMocks'
-import { deletePlanEndeavorThunk } from '../PlanListProducer'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
+import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { PLAN_REFERENCE_DAY, PLAN_REFERENCE_NOW, planAt } from '../PlanMocks'
+import { deletePlanEndeavorThunk } from '../PlanProducer'
 
 const task = (id: string): Endeavor =>
   makeEndeavor({

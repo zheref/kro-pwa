@@ -58,7 +58,6 @@ import {
   withPlanDayLoadStarted,
   withPlanDayLoaded,
   withPlanMatrixLoad,
-  withPlanPreferencesApplied,
   withPlanPreloadInstalled,
   withPlanPreloadSettled,
   withPlanPreloadStarted,
@@ -95,6 +94,7 @@ export const planSlice = createSlice({
         now: Date
         selectedDate: Date
         isQuickEventCreationEnabled: boolean
+        enabledCapabilityFlags: readonly string[]
       }>,
     ) {
       Object.assign(
@@ -112,18 +112,6 @@ export const planSlice = createSlice({
     },
 
     /** Lifecycle: the two Plan preferences the timeline consumes arrived. */
-    onPlanPreferencesLoaded(
-      state,
-      action: PayloadAction<{
-        dayViewRange: PlanState['dayViewRange']
-        showCompletedInTimeline: boolean
-      }>,
-    ) {
-      Object.assign(
-        state,
-        withPlanPreferencesApplied(state as PlanState, action.payload),
-      )
-    },
 
     /**
      * Lifecycle: the persisted lens snapshot came back. `null` means there was
@@ -490,7 +478,6 @@ export const {
   childCreationPromptDelegatedClose,
   onClockTicked,
   onLensSnapshotRestored,
-  onPlanPreferencesLoaded,
   onViewLoaded,
   userDidAssignToQuadrant,
   userDidDismissEditMode,

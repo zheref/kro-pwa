@@ -26,7 +26,6 @@ import {
   withPlanDayLoadStarted,
   withPlanDayLoaded,
   withPlanMatrixLoad,
-  withPlanPreferencesApplied,
   withPlanPreloadCleared,
   withPlanPreloadInstalled,
   withPlanPreloadSettled,
@@ -50,6 +49,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: today,
       isQuickEventCreationEnabled: true,
+      enabledCapabilityFlags: [],
     })
     expect(next.now).toBe(PLAN_REFERENCE_NOW)
     expect(next.selectedDate).toBe(today)
@@ -61,6 +61,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: addingPlanDays(today, 1),
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     })
     expect(planDayKey(next.dayPickerCenter as Date)).toBe(todayKey)
   })
@@ -70,6 +71,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: today,
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     })
     expect(next.isQuickEventCreationEnabled).toBe(false)
   })
@@ -110,32 +112,6 @@ describe('withPlanClockAdvanced', () => {
       now: new Date(tomorrow.getTime() + 60_000),
     })
     expect(next.preloadedDays[todayKey]).toEqual([])
-  })
-})
-
-describe('withPlanPreferencesApplied', () => {
-  it('narrows the rendered band to the chosen range', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.business,
-      showCompletedInTimeline: true,
-    })
-    expect(next.dayViewRange).toBe(DayViewRange.business)
-  })
-
-  it('hides completed items when the preference says so', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.full,
-      showCompletedInTimeline: false,
-    })
-    expect(next.showCompletedInTimeline).toBe(false)
-  })
-
-  it('changes nothing else about the day', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.waking,
-      showCompletedInTimeline: true,
-    })
-    expect(next.dayLoad).toBe(planStateMocks.loaded.dayLoad)
   })
 })
 

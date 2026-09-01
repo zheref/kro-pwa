@@ -53,7 +53,6 @@ import {
 } from '../PlanMocks'
 import { PlanExceptions } from '../PlanException'
 import { PlanLoadReason, initialPlanState } from '../PlanState'
-import { DayViewRange } from '@kro/core'
 
 const reducer = planSlice.reducer
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)

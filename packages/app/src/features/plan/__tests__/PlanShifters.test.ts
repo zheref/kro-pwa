@@ -1,6 +1,5 @@
 import type { Endeavor } from '@kro/core'
 import {
-  DayViewRange,
   EndeavorHost,
   EndeavorKind,
   EndeavorStatus,

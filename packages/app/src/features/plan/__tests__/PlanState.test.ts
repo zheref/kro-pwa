@@ -1,4 +1,4 @@
-import { DayViewRange, EndeavorsVistas } from '@kro/core'
+import { EndeavorsVistas } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { PlanViewMode } from '../PlanNavigation'
 import {

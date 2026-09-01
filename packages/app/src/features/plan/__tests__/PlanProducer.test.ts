@@ -306,3 +306,78 @@ describe('updateEventTimeThunk', () => {
     if (!result.ok) expect(result.error.message).toBe('QuotaExceededError')
   })
 })
+
+/**
+ * The flag resolver (KC-IS-#71 item 22).
+ *
+ * `onViewLoaded` takes both gates as arguments so no Selector ever reaches for
+ * a flag Service; this is the Producer that supplies them. Four cases in the
+ * `RC-54` shape: the shipping baseline, an override in each direction, and the
+ * unreadable-service path.
+ */
+describe('resolvePlanFlagsThunk', () => {
+  const resolveWith = async (featureFlags: FeatureFlagService) => {
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore(),
+      featureFlags,
+    })
+    const action = await store.dispatch(resolvePlanFlagsThunk())
+    const payload = resolvePlanFlagsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return payload.value
+  }
+
+  it('reports the shipping baseline: quick-create on, Detail dark-launched', async () => {
+    const resolved = await resolveWith(makeHardcodedFeatureFlagService())
+
+    expect(resolved.isQuickEventCreationEnabled).toBe(true)
+    // `endeavorDetail` is OFF at `statusQuo` while iOS dark-launches Detail, so
+    // the row's `viewDetail` tap stays unoffered — which is what the labelled
+    // `Open` control beside the gesture surface exists for.
+    expect(resolved.enabledCapabilityFlags).toEqual([])
+  })
+
+  it('offers the Detail capability once its flag is turned on', async () => {
+    const flags = makeHardcodedFeatureFlagService()
+    flags.change(FeatureFlags.endeavorDetail, FeatureFlagState.enabled)
+
+    const resolved = await resolveWith(flags)
+
+    expect(resolved.enabledCapabilityFlags).toEqual([
+      FeatureFlags.endeavorDetail.name,
+    ])
+  })
+
+  it('takes the quick-create canvas away when its flag is turned off', async () => {
+    const flags = makeHardcodedFeatureFlagService()
+    flags.change(
+      FeatureFlags.timelineQuickEventCreation,
+      FeatureFlagState.disabled,
+    )
+
+    const resolved = await resolveWith(flags)
+
+    expect(resolved.isQuickEventCreationEnabled).toBe(false)
+  })
+
+  it('resolves to "nothing enabled" when the flag service throws, never an error', async () => {
+    const throwing: FeatureFlagService = {
+      ...makeHardcodedFeatureFlagService(),
+      isEnabled: () => {
+        throw new Error('flag store unavailable')
+      },
+    }
+
+    const resolved = await resolveWith(throwing)
+
+    // A capability whose flag cannot be read is simply not offered: the surface
+    // renders without the dark-launched gesture rather than refusing to render.
+    expect(resolved).toEqual({
+      isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
+    })
+  })
+})

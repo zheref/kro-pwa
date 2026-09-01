@@ -173,8 +173,12 @@ describe('selectPlanListEndeavors', () => {
   it('leaves an untimed row due on ANOTHER day out of this day list', () => {
     const otherDay = {
       ...planListBucketFixtures.untimedDueToday,
+      // The fixture is a due-today row by construction; the suite's own
+      // `planListBucketFixtures` test asserts that, so this is a read rather
+      // than an assumption.
       due: new Date(
-        planListBucketFixtures.untimedDueToday.due!.getTime() + 86_400_000,
+        (planListBucketFixtures.untimedDueToday.due as Date).getTime() +
+          86_400_000,
       ),
     }
     const root = rootWith(

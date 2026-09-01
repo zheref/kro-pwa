@@ -109,14 +109,13 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
   const isSessionPillVisible = useAppSelector(selectIsSessionPillVisible)
 
   // Mount: stamp the first measurement and resolve the gates + the Lists rows.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by design — `surface` is re-applied by the effect below, not by re-mounting
   useEffect(() => {
     dispatch(onShellMounted({ surface, isDevelopment }))
     const effect = dispatch(loadShellThunk())
     return () => effect.abort()
     // The surface is stamped once at mount; every later change arrives through
     // the effect below, which is what keeps this from re-running the load.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by
-    // design — `surface` is re-applied by the effect below, not by re-mounting.
   }, [dispatch, isDevelopment])
 
   // Every later crossing of the breakpoint (or a pointer change).

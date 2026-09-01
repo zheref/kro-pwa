@@ -149,6 +149,7 @@ export {
   type PlanEndeavorDeletion,
   type PlanResolvedFlags,
   deletePlanEndeavorThunk,
+  persistQuadrantAssignmentsThunk,
   resolvePlanFlagsThunk,
 } from '../PlanProducer'
 export {

@@ -400,6 +400,36 @@ describe('the intents this surface hands to other features', () => {
     expect(store.getState().endeavorDetail.endeavor?.id).toBe(target.id)
   })
 
+  it('Start on a prepared card carries the endeavor into the session', async () => {
+    // KC-IS-#71 item 21: canon's `.onUserWantsToStartEvent(endeavor, nil)`.
+    // The navigation used to be the whole hand-off, so Execute opened on the
+    // anonymous `Focus Session` however you got there.
+    const navigation = makeRecordingNavigationService()
+    const { store } = mountPage({ navigation })
+    await waitFor(() => {
+      expect(store.getState().do.load.kind).toBe('loaded')
+    })
+
+    const lane = screen.getByTestId('do-lane-overdue')
+    const target = store.getState().do.lanes.overdue[0]
+    if (target === undefined) throw new Error('the Overdue lane is empty')
+
+    const title = lane.querySelector<HTMLButtonElement>(
+      '[data-slot="endeavor-card"] button',
+    )
+    if (title === null) throw new Error('the Overdue lane rendered no card')
+    await userEvent.click(title)
+    const start = lane.querySelector<HTMLButtonElement>(
+      '[data-slot="endeavor-card-prep-overlay"] button[aria-label="Start"]',
+    )
+    if (start === null) throw new Error('the prepared card offers no Start')
+    await userEvent.click(start)
+
+    await waitFor(() => {
+      expect(store.getState().session.identity?.title).toBe(target.title)
+    })
+  })
+
   it('Start on a prepared card routes to the session surface', async () => {
     const navigation = makeRecordingNavigationService()
     const { store } = mountPage({ navigation })

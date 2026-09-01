@@ -43,7 +43,7 @@ import {
   withRescheduled,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import type { ThunkExtra } from '../../library/store'
+import type { RootState, ThunkExtra } from '../../library/store'
 import type { PlanDayKey } from './PlanCalendar'
 import { planDayKey, startOfNextPlanDay, startOfPlanDay } from './PlanCalendar'
 import { planPreloadWindow } from './PlanDayCache'
@@ -321,3 +321,57 @@ export const resolvePlanFlagsThunk = createAsyncThunk<
     })
   }
 })
+
+/**
+ * `produceMatrixResolvedEffect` — the write behind a quadrant assignment
+ * (KC-IS-#71 item 20).
+ *
+ * Canon follows `.picked(endeavors, quadrant)` with an effect that persists the
+ * resolved copies. The web had the reducer arm and not the effect, so
+ * `userDidAssignToQuadrant` rewrote the rows **in memory only** and the move was
+ * lost on the next pool read — an assignment that visibly worked and silently
+ * did not.
+ *
+ * ## It reads the resolved rows back, rather than re-deriving them
+ *
+ * `resolveIntoQuadrant` is pure and the reducer has already applied it, so the
+ * slice holds the exact rows the surface is showing. Taking the ids and reading
+ * `getState()` is the one shape in which the row on screen and the row on disk
+ * cannot come from two different derivations — re-deriving here would compute
+ * the due date against a second `now`. This is the narrow, named `getState`
+ * read `UZF-15` allows, not a Producer taking the whole `State`.
+ *
+ * No reducer arm: the arrays already carry the resolved rows, so an arm would
+ * apply the same change twice. A row whose id is not in the pool is skipped
+ * rather than failing the batch — it was filtered out by a lens or removed
+ * between the pick and the confirm, and neither is an error.
+ */
+export const persistQuadrantAssignmentsThunk = createAsyncThunk<
+  Result<readonly Endeavor[], PlanException>,
+  { readonly endeavorIds: readonly string[]; readonly now: Date },
+  { extra: ThunkExtra; state: RootState }
+>(
+  'plan/onQuadrantAssignmentsPersisted',
+  async ({ endeavorIds, now }, { extra, getState }) => {
+    const plan = getState().plan
+    const pool = [
+      ...(plan.matrixLoad.kind === 'loaded' ? plan.matrixLoad.endeavors : []),
+      ...(plan.dayLoad.kind === 'loaded' ? plan.dayLoad.events : []),
+    ]
+
+    const resolved = endeavorIds
+      .map((id) => pool.find((candidate) => candidate.id === id))
+      .filter((endeavor): endeavor is Endeavor => endeavor !== undefined)
+
+    try {
+      for (const endeavor of resolved) {
+        await extra.localStore.endeavors.put(
+          endeavorRecordFromEndeavor(endeavor, { now }),
+        )
+      }
+      return ok(resolved)
+    } catch (error) {
+      return err(planExceptionFrom(error))
+    }
+  },
+)

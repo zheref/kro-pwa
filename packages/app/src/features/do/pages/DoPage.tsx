@@ -45,6 +45,7 @@ import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { navigateToDestinationThunk } from '../../main/MainProducer'
+import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import { selectLayout, selectShellShape } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
@@ -314,14 +315,30 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
         dispatch(userDidTapCard({ section, endeavorId }))
       },
       onDeselect: () => dispatch(userDidDeselectCard()),
-      onExecute: () => {
-        // The session hand-off carrying the endeavor is `KC-IS-#22`'s; the
-        // navigation to the surface that will receive it exists today.
+      onExecute: (card) => {
+        /*
+          Canon's `.onUserWantsToStartEvent(endeavor, nil)` — the card's own
+          endeavor is carried into the session's launch preparation, so Execute
+          opens already showing its title, glyph and recommended duration
+          (KC-IS-#71 item 21). The navigation waits for the preparation:
+          arriving first would paint one frame of the anonymous `Focus Session`
+          before the identity landed. A preparation that fails still navigates,
+          because a control that goes to the right screen is honest and one
+          that appears to do nothing is not.
+        */
         void dispatch(
-          navigateToDestinationThunk({
-            destination: { kind: DestinationKind.session },
+          prepareSessionLaunchThunk({
+            endeavorId: card.id,
+            // Identity is the composition site's to supply, never a Producer's.
+            sessionId: crypto.randomUUID(),
           }),
-        )
+        ).finally(() => {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.session },
+            }),
+          )
+        })
       },
       onMarkComplete: (card, completedAt) => {
         dispatch(

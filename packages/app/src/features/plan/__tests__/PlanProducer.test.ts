@@ -6,6 +6,7 @@
  */
 import type { Endeavor, EndeavorRecord, FeatureFlagService } from '@kro/core'
 import {
+  EisenhowerQuadrant,
   EndeavorHost,
   EndeavorKind,
   FeatureFlagState,
@@ -22,11 +23,13 @@ import { PLAN_REFERENCE_DAY, planAt } from '../PlanMocks'
 import {
   loadPlanDayThunk,
   loadPlanMatrixThunk,
+  persistQuadrantAssignmentsThunk,
   planHostsFor,
   preloadPlanDaysThunk,
   resolvePlanFlagsThunk,
   updateEventTimeThunk,
 } from '../PlanProducer'
+import { userDidAssignToQuadrant } from '../PlanFeature'
 import { PlanLoadReason } from '../PlanState'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
@@ -379,5 +382,140 @@ describe('resolvePlanFlagsThunk', () => {
       isQuickEventCreationEnabled: false,
       enabledCapabilityFlags: [],
     })
+  })
+})
+
+/**
+ * `produceMatrixResolvedEffect`'s web counterpart (KC-IS-#71 item 20).
+ *
+ * The reducer had the assignment and nothing wrote it, so a quadrant move
+ * survived until the next pool read and no further. These cases are about the
+ * write: what lands on disk, that it is the row the slice resolved, and that a
+ * missing row is skipped rather than failing the batch.
+ */
+describe('persistQuadrantAssignmentsThunk', () => {
+  const admissible = (id: string): Endeavor =>
+    makeEndeavor({
+      id,
+      title: id,
+      kind: EndeavorKind.task,
+      due: planAt(9),
+      value: 1,
+      hostedBy: [EndeavorHost.local],
+    })
+
+  /** A store whose matrix pool is loaded with `rows`. */
+  const storeWithPool = async (rows: readonly Endeavor[]) => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: rows.map((row) => recordOf(row)),
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore })
+    await store.dispatch(loadPlanMatrixThunk())
+    return { store, localStore }
+  }
+
+  it('writes the row the reducer resolved, not a second derivation', async () => {
+    const { store, localStore } = await storeWithPool([admissible('a')])
+    store.dispatch(
+      userDidAssignToQuadrant({
+        endeavorId: 'a',
+        quadrant: EisenhowerQuadrant.prioritize,
+      }),
+    )
+    const inState = (
+      store.getState().plan.matrixLoad as { endeavors: readonly Endeavor[] }
+    ).endeavors.find((row) => row.id === 'a')
+
+    await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+
+    const stored = await localStore.endeavors.get('a')
+    expect(stored?.value).toBe(inState?.value)
+    expect(stored?.due?.getTime()).toBe(inState?.due?.getTime())
+  })
+
+  it('writes every id it was given, in one batch', async () => {
+    const { store, localStore } = await storeWithPool([
+      admissible('a'),
+      admissible('b'),
+    ])
+    for (const id of ['a', 'b']) {
+      store.dispatch(
+        userDidAssignToQuadrant({
+          endeavorId: id,
+          quadrant: EisenhowerQuadrant.decide,
+        }),
+      )
+    }
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a', 'b'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(true)
+    if (payload?.ok)
+      expect(payload.value.map((row) => row.id)).toEqual(['a', 'b'])
+    expect(await localStore.endeavors.get('a')).toBeTruthy()
+    expect(await localStore.endeavors.get('b')).toBeTruthy()
+  })
+
+  it('skips an id the pool no longer holds rather than failing the batch', async () => {
+    const { store } = await storeWithPool([admissible('a')])
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a', 'vanished'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    // Filtered out by a lens, or removed between the pick and the confirm.
+    // Neither is an error, and neither should cost the row that IS there.
+    expect(payload?.ok).toBe(true)
+    if (payload?.ok) expect(payload.value.map((row) => row.id)).toEqual(['a'])
+  })
+
+  it('resolves an error rather than throwing when the write fails', async () => {
+    const broken = makeInMemoryLocalStore({
+      endeavors: [recordOf(admissible('a'))],
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore: broken })
+    await store.dispatch(loadPlanMatrixThunk())
+    store.dispatch(
+      userDidAssignToQuadrant({
+        endeavorId: 'a',
+        quadrant: EisenhowerQuadrant.prioritize,
+      }),
+    )
+    // Broken only AFTER the pool is loaded, so the failure is the write's.
+    broken.endeavors.put = () => Promise.reject(new Error('QuotaExceededError'))
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(false)
+    if (payload?.ok === false) {
+      expect(payload.error.message).toBe('QuotaExceededError')
+    }
   })
 })

@@ -81,6 +81,7 @@ import {
   updateSettingThunk,
 } from '../../settings/SettingsProducer'
 import { vibrateForTimelineHoldThunk } from '../../platform/PlatformProducer'
+import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import {
   onViewLoaded,
   onClockTicked,
@@ -105,6 +106,7 @@ import {
   deletePlanEndeavorThunk,
   loadPlanDayThunk,
   loadPlanMatrixThunk,
+  persistQuadrantAssignmentsThunk,
   preloadPlanDaysThunk,
   resolvePlanFlagsThunk,
   updateEventTimeThunk,
@@ -433,12 +435,13 @@ export function PlanPage({
    *    about what still exists.
    *  - **startSession** — canon sends `.main(.onUserWantsToStartEvent(endeavor,
    *    nil))` and Main presents the Session surface for that endeavor. The web
-   *    has the destination but not the hand-off — session setup takes its
-   *    identity from KC-IS-#22's surface, which is in flight — so this
-   *    navigates to Execute and the endeavor is **not** carried. Named as a
-   *    divergence in the PR body and reported as a cross-lane need; a control
-   *    that goes to the right screen is honest, a control that does nothing is
-   *    not.
+   *    prepares the launch with that endeavor's identity and THEN navigates, so
+   *    Execute opens already showing the row's title, glyph and recommended
+   *    duration (KC-IS-#71 item 21). The navigation waits for the preparation:
+   *    arriving first would paint one frame of the anonymous `Focus Session`
+   *    before the identity landed. A preparation that fails still navigates —
+   *    the surface opens blank, which is what it does with no row at all, and
+   *    is better than a control that appears to do nothing.
    *
    * Anything else the registry grows is ignored rather than guessed at.
    */
@@ -470,10 +473,19 @@ export function PlanPage({
 
       if (operation === 'startSession') {
         void dispatch(
-          navigateToDestinationThunk({
-            destination: { kind: DestinationKind.session },
+          prepareSessionLaunchThunk({
+            endeavorId,
+            // The session's own id, minted here: identity is the composition
+            // site's to supply, never a Producer's.
+            sessionId: crypto.randomUUID(),
           }),
-        )
+        ).finally(() => {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.session },
+            }),
+          )
+        })
       }
     },
     [dispatch, openDetailFor, selectedDate],
@@ -520,20 +532,26 @@ export function PlanPage({
 
   /**
    * Confirming the picker — canon's `.picked(endeavors, quadrant)` arm, one
-   * dispatch per row.
+   * dispatch per row, **then** canon's `produceMatrixResolvedEffect`.
    *
    * `userDidAssignToQuadrant` resolves each endeavor into the quadrant with
    * #18's deterministic assignment (the due date and value that make the
    * *derived* classification come out as that quadrant) and replaces every
-   * fetched copy together. Canon follows it with a persist effect
-   * (`produceMatrixResolvedEffect`); no such Producer exists in this feature
-   * yet, so the assignment is in-memory until the next write — reported as a
-   * cross-lane need in the PR body.
+   * fetched copy together. `persistQuadrantAssignmentThunk` then writes that
+   * resolved copy (KC-IS-#71 item 20) — without it the move was in memory only
+   * and vanished on the next pool read.
+   *
+   * The endeavor handed to the write is READ BACK from the slice rather than
+   * re-derived here, so the row on screen and the row on disk cannot come from
+   * two different derivations. `getState` is why this needs the store rather
+   * than `dispatch` alone; a Page may read it, and `RC-15` only forbids a
+   * Fragment from dispatching at all.
    */
   const onConfirmPicker = useCallback(
     (endeavorIds: readonly string[]) => {
       const quadrant = pickerQuadrant
       if (quadrant === null) return
+      const now = new Date()
       for (const endeavorId of endeavorIds) {
         dispatch(
           userDidAssignToQuadrant({
@@ -542,6 +560,7 @@ export function PlanPage({
           }),
         )
       }
+      dispatch(persistQuadrantAssignmentsThunk({ endeavorIds, now }))
       setPickerQuadrant(null)
     },
     [dispatch, pickerQuadrant],

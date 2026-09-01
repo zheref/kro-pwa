@@ -62,12 +62,6 @@
   },
   "overrides": [
     {
-      "includes": ["apps/web/src/components/ui/**"],
-      "linter": {
-        "enabled": false
-      }
-    },
-    {
       "includes": ["packages/app/src/**"],
       "linter": {
         "rules": {

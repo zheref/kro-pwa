@@ -29,9 +29,10 @@
  *   · `/icons/**`, `/sounds/**` — bundled assets that change only with a deploy.
  *
  * CACHED (network-first, cache as fallback):
- *   · navigations — the offline load falls back to the precached app shell at
- *     `/`, so a cold offline start reaches a working document rather than the
- *     browser's dinosaur.
+ *   · navigations — the offline load falls back to the precached app shell
+ *     (`SHELL_DOCUMENT`, the landing destination — see the note there for why
+ *     it is not `/`), so a cold offline start reaches a working document rather
+ *     than the browser's dinosaur.
  *
  * NOT CACHED, EVER:
  *   · anything that is not a same-origin `GET` — a `POST` to a Server Action,
@@ -48,7 +49,32 @@
  * current one.
  */
 
-const CACHE_VERSION = 'kro-shell-v1'
+const CACHE_VERSION = 'kro-shell-v2'
+
+/**
+ * The document precached as the offline shell — the landing destination itself,
+ * NOT `/`.
+ *
+ * `/` answers a redirect since KC-IS-#79 (it sends the visitor to the shell's
+ * landing destination), and `cache.add('/')` fetches with redirect mode
+ * `follow`: it would store a *redirected* response under the key `/`. A
+ * navigation request has redirect mode `manual`, and per Fetch a response whose
+ * URL list has more than one entry is a **network error** when the request's
+ * redirect mode is not `follow` — so serving that entry to an offline
+ * navigation fails outright rather than showing the app. Precaching the real
+ * document instead stores a plain 200 with a single-entry URL list, which any
+ * navigation can be answered with.
+ *
+ * The online path never had this problem and still does not: a navigation to
+ * `/` reaches `networkFirstDocument`, `fetch` returns an `opaqueredirect`
+ * (status 0, so `response.ok` is false), nothing is cached, and the browser
+ * follows the redirect itself.
+ *
+ * `CACHE_VERSION` moved to `v2` in the same change: an install from before it
+ * has the old create-next-app `/` document cached, and only a version bump
+ * evicts it.
+ */
+const SHELL_DOCUMENT = '/my-day'
 
 /**
  * The minimum set that makes a cold offline start work: the shell document and
@@ -58,7 +84,7 @@ const CACHE_VERSION = 'kro-shell-v1'
  * install if a single entry 404s — one missing icon must not leave the app with
  * no worker at all.
  */
-const APP_SHELL = ['/', '/icons/Kro192.png', '/icons/Kro512.png']
+const APP_SHELL = [SHELL_DOCUMENT, '/icons/Kro192.png', '/icons/Kro512.png']
 
 /** Prefixes served cache-first. Everything here is immutable per deploy. */
 const IMMUTABLE_PREFIXES = ['/_next/static/', '/icons/', '/sounds/']
@@ -133,7 +159,7 @@ const networkFirstDocument = async (request) => {
   } catch (error) {
     const lastKnown = await caches.match(request)
     if (lastKnown) return lastKnown
-    const shell = await caches.match('/')
+    const shell = await caches.match(SHELL_DOCUMENT)
     if (shell) return shell
     throw error
   }

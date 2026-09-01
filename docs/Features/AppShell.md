@@ -42,6 +42,20 @@ Every destination is a link people can paste, bookmark or reload:
 `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
 `/search` · `/lists/<project>`
 
+**The bare address is the front door.** Opening Kro Web with no destination in
+the address — the site's root, and what the installed app opens on — lands on
+**Today**, the same destination the Mac's sidebar and the iPad's navigation open
+on first launch. It is a hand-off, not a page: nothing is shown at the root
+itself.
+
+Two addresses from before the shell existed still resolve, so an old bookmark or
+a link someone shared never lands on nothing:
+
+| Old address | Lands on | Why |
+| --- | --- | --- |
+| `/settings` | **Adjust** | Adjust *is* the settings surface. |
+| `/integrations` | **Adjust** | Connecting a calendar is a pane inside the settings hub, not a place of its own. |
+
 The shell also arrives at a destination on its own when a capture routes there
 — see *Interactions with other features*.
 
@@ -140,7 +154,10 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> MyDay: app opens
+    [*] --> MyDay: someone opens the bare address
+    [*] --> Adjust: someone opens a retired settings link
     MyDay --> Earn: person picks Earn
+    Adjust --> Earn: person picks Earn
     Earn --> Earn: window narrows (frame swaps, selection stays)
     Earn --> Earn: window widens (frame swaps back)
     Earn --> Plan: a capture routes to Plan
@@ -162,7 +179,9 @@ sequenceDiagram
 
 ## Open questions
 
-- Should the app's root address redirect to My Day once the pre-parity landing
-  page is retired? Owner: maintainer, 2026-08-31.
 - Profile currently opens Adjust; the panel it should open belongs to the
   settings work. Owner: maintainer, 2026-08-31.
+
+*(Settled 2026-09-01: the root address does land on Today, and the hand-off is
+described under **Entry points**. The pre-parity landing page it was waiting on
+is gone.)*

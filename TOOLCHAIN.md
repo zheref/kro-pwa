@@ -96,7 +96,7 @@ never masks the other. Type errors still fail the build.
 | `make typecheck` | ✅ green | all three members, `noUncheckedIndexedAccess` on |
 | `make test` | ✅ green | 9 264 tests: `@kro/core` 1 843 · `@kro/app` 7 288 · `@kro/web` 133 |
 | `make test-coverage` | ✅ green | Line coverage across the whole tree: `@kro/core` **97.54 %** · `@kro/app` **95.67 %** · `@kro/web` reported by its own `test` script. The per-PR bar is ≥80 % on *touched* files (`UZF-19`); these are the whole-package numbers the verb prints. |
-| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome now covers the whole repo; the vendored `apps/web/src/components/ui/**` set stays excluded until #6's kit deletes it. |
+| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome now covers the whole repo with **no lint exclusion at all**: the last one, the vendored `apps/web/src/components/ui/**` set, went with those files in KC-IS-#79. |
 
 The `@kro/core` platform-free gate stays readable on its own:
 `pnpm --filter @kro/core lint`.
@@ -135,7 +135,7 @@ After #2 (monorepo) and #3 (toolchain):
 
 | Axis | Today | Remaining target |
 |---|---|---|
-| Lint / format | Biome over the whole repo bar the vendored Chakra set | delete that exclusion with the vendored files (#6); clear the 15 tracked a11y findings (KC-IS-#77) |
+| Lint / format | Biome over the whole repo, no exclusions | clear the 15 tracked a11y findings (KC-IS-#77) |
 | Tests | Vitest everywhere; Playwright via `make test-e2e` (not in CI yet); Storybook **10** wired, story-less | stories + snapshot minimums arrive with the feature children; Playwright in CI once a browser step is wired |
 | Git hooks | lefthook + commitlint + `.bankai/hooks/guard.sh`, active | — |
 | CI | `pr.yml` (install → lint → typecheck → test → build, Node 22) | `bankai.yml` (#4) |

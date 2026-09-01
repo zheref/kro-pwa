@@ -61,7 +61,11 @@ describe('the stubbed service as a vote-state machine', () => {
     await service.hasVoted('matrix')
     await service.castVote('matrix', 'vote-1')
     await service.fetchCounts('matrix')
-    expect(service.operations()).toEqual(['hasVoted', 'castVote', 'fetchCounts'])
+    expect(service.operations()).toEqual([
+      'hasVoted',
+      'castVote',
+      'fetchCounts',
+    ])
   })
 
   it('can be scripted to fail one operation and not the others', async () => {
@@ -69,13 +73,17 @@ describe('the stubbed service as a vote-state machine', () => {
       signedIn: true,
       failures: { fetchCounts: new Error('rpc unavailable') },
     })
-    await expect(service.fetchCounts('matrix')).rejects.toThrow('rpc unavailable')
+    await expect(service.fetchCounts('matrix')).rejects.toThrow(
+      'rpc unavailable',
+    )
     await expect(service.hasVoted('matrix')).resolves.toBe(false)
   })
 
   it('starts from a seeded counts fixture', async () => {
     const service = makeStubbedThirstService({
-      initialCounts: { matrix: { featureKey: 'matrix', total: 5, perPlatform: { ios: 5 } } },
+      initialCounts: {
+        matrix: { featureKey: 'matrix', total: 5, perPlatform: { ios: 5 } },
+      },
     })
     expect((await service.fetchCounts('matrix')).total).toBe(5)
   })
@@ -116,8 +124,13 @@ describe('the live service with no project configured', () => {
 // ---------------------------------------------------------------------------
 
 interface FakeClientConfig {
-  readonly session?: { readonly user: { readonly id: string; readonly email: string | null } } | null
-  readonly insertError?: { readonly code?: string; readonly message: string } | null
+  readonly session?: {
+    readonly user: { readonly id: string; readonly email: string | null }
+  } | null
+  readonly insertError?: {
+    readonly code?: string
+    readonly message: string
+  } | null
   readonly onInsert?: (payload: unknown) => void
   readonly selectRows?: readonly { readonly id: string }[]
   readonly selectError?: { readonly message: string } | null
@@ -144,6 +157,7 @@ const fakeQuery = (
       onAbortSignal?.(signal)
       return query
     },
+    // biome-ignore lint/suspicious/noThenProperty: the double IS a thenable — supabase-js's PostgrestBuilder is awaited directly, so a fake without `then` is not the same object
     then(
       resolve: (value: typeof result) => void,
       reject?: (reason: unknown) => void,
@@ -165,12 +179,18 @@ const fakeClient = (config: FakeClientConfig): SupabaseClient => {
     from: (_table: string) => ({
       insert: (payload: unknown) => {
         config.onInsert?.(payload)
-        return fakeQuery({ error: config.insertError ?? null }, config.onAbortSignal)
+        return fakeQuery(
+          { error: config.insertError ?? null },
+          config.onAbortSignal,
+        )
       },
       select: (_columns: string) => ({
         eq: (_column: string, _value: string) =>
           fakeQuery(
-            { data: config.selectRows ?? [], error: config.selectError ?? null },
+            {
+              data: config.selectRows ?? [],
+              error: config.selectError ?? null,
+            },
             config.onAbortSignal,
           ),
       }),
@@ -185,7 +205,10 @@ const fakeClient = (config: FakeClientConfig): SupabaseClient => {
 }
 
 const providerFor = (client: SupabaseClient): SupabaseClientProvider => ({
-  availability: () => ({ kind: 'configured', configuration: { url: 'https://x', anonKey: 'x' } }),
+  availability: () => ({
+    kind: 'configured',
+    configuration: { url: 'https://x', anonKey: 'x' },
+  }),
   client: () => client,
 })
 
@@ -197,11 +220,15 @@ describe('requireSignedInClient — getSession() failing is a transport error, n
       auth: {
         getSession: async () => ({
           data: { session: null },
-          error: Object.assign(new Error('network unreachable'), { code: 'unreachable' }),
+          error: Object.assign(new Error('network unreachable'), {
+            code: 'unreachable',
+          }),
         }),
       },
     } as unknown as SupabaseClient
-    const service = makeLiveThirstService({ clientProvider: providerFor(client) })
+    const service = makeLiveThirstService({
+      clientProvider: providerFor(client),
+    })
     await expect(service.castVote('matrix', 'vote-1')).rejects.toMatchObject({
       kind: 'unknown',
       message: 'network unreachable',
@@ -227,10 +254,13 @@ describe('the live service, configured, signed in', () => {
     )
   })
 
-  it('a unique-constraint conflict (23505) converges quietly — the server\'s own vote-once guarantee', async () => {
+  it("a unique-constraint conflict (23505) converges quietly — the server's own vote-once guarantee", async () => {
     const service = makeLiveThirstService({
       clientProvider: providerFor(
-        fakeClient({ session: SESSION, insertError: { code: '23505', message: 'dup' } }),
+        fakeClient({
+          session: SESSION,
+          insertError: { code: '23505', message: 'dup' },
+        }),
       ),
     })
     await expect(service.castVote('matrix', 'vote-1')).resolves.toBeUndefined()
@@ -264,11 +294,13 @@ describe('the live service, configured, signed in', () => {
     })
   })
 
-  it('forwards the caller\'s AbortSignal to the insert — a cancelled thunk actually cancels the request', async () => {
+  it("forwards the caller's AbortSignal to the insert — a cancelled thunk actually cancels the request", async () => {
     const controller = new AbortController()
     const onAbortSignal = vi.fn()
     const service = makeLiveThirstService({
-      clientProvider: providerFor(fakeClient({ session: SESSION, onAbortSignal })),
+      clientProvider: providerFor(
+        fakeClient({ session: SESSION, onAbortSignal }),
+      ),
     })
     await service.castVote('matrix', 'vote-1', { signal: controller.signal })
     expect(onAbortSignal).toHaveBeenCalledWith(controller.signal)
@@ -276,14 +308,18 @@ describe('the live service, configured, signed in', () => {
 
   it('hasVoted reports true when RLS returns a matching row', async () => {
     const service = makeLiveThirstService({
-      clientProvider: providerFor(fakeClient({ session: SESSION, selectRows: [{ id: 'v1' }] })),
+      clientProvider: providerFor(
+        fakeClient({ session: SESSION, selectRows: [{ id: 'v1' }] }),
+      ),
     })
     await expect(service.hasVoted('matrix')).resolves.toBe(true)
   })
 
   it('hasVoted reports false when no row matches', async () => {
     const service = makeLiveThirstService({
-      clientProvider: providerFor(fakeClient({ session: SESSION, selectRows: [] })),
+      clientProvider: providerFor(
+        fakeClient({ session: SESSION, selectRows: [] }),
+      ),
     })
     await expect(service.hasVoted('matrix')).resolves.toBe(false)
   })
@@ -294,14 +330,18 @@ describe('the live service, configured, signed in', () => {
         fakeClient({ session: SESSION, selectError: { message: 'timeout' } }),
       ),
     })
-    await expect(service.hasVoted('matrix')).rejects.toMatchObject({ kind: 'unknown' })
+    await expect(service.hasVoted('matrix')).rejects.toMatchObject({
+      kind: 'unknown',
+    })
   })
 
-  it('forwards the caller\'s AbortSignal to the select', async () => {
+  it("forwards the caller's AbortSignal to the select", async () => {
     const controller = new AbortController()
     const onAbortSignal = vi.fn()
     const service = makeLiveThirstService({
-      clientProvider: providerFor(fakeClient({ session: SESSION, onAbortSignal })),
+      clientProvider: providerFor(
+        fakeClient({ session: SESSION, onAbortSignal }),
+      ),
     })
     await service.hasVoted('matrix', { signal: controller.signal })
     expect(onAbortSignal).toHaveBeenCalledWith(controller.signal)
@@ -314,8 +354,18 @@ describe('the live service, fetchCounts (public, no session required)', () => {
       clientProvider: providerFor(
         fakeClient({
           rpcRows: [
-            { feature_key: 'matrix', platform: 'ios', vote_count: 30, total_count: 42 },
-            { feature_key: 'matrix', platform: 'android', vote_count: 12, total_count: 42 },
+            {
+              feature_key: 'matrix',
+              platform: 'ios',
+              vote_count: 30,
+              total_count: 42,
+            },
+            {
+              feature_key: 'matrix',
+              platform: 'android',
+              vote_count: 12,
+              total_count: 42,
+            },
           ],
         }),
       ),
@@ -332,8 +382,18 @@ describe('the live service, fetchCounts (public, no session required)', () => {
       clientProvider: providerFor(
         fakeClient({
           rpcRows: [
-            { feature_key: 'matrix', platform: 'ios', vote_count: 1, total_count: 2 },
-            { feature_key: 'matrix', platform: 'linux', vote_count: 1, total_count: 2 },
+            {
+              feature_key: 'matrix',
+              platform: 'ios',
+              vote_count: 1,
+              total_count: 2,
+            },
+            {
+              feature_key: 'matrix',
+              platform: 'linux',
+              vote_count: 1,
+              total_count: 2,
+            },
           ],
         }),
       ),
@@ -355,12 +415,16 @@ describe('the live service, fetchCounts (public, no session required)', () => {
 
   it('an RPC failure degrades to a typed exception', async () => {
     const service = makeLiveThirstService({
-      clientProvider: providerFor(fakeClient({ rpcError: { message: 'function not found' } })),
+      clientProvider: providerFor(
+        fakeClient({ rpcError: { message: 'function not found' } }),
+      ),
     })
-    await expect(service.fetchCounts('matrix')).rejects.toMatchObject({ kind: 'unknown' })
+    await expect(service.fetchCounts('matrix')).rejects.toMatchObject({
+      kind: 'unknown',
+    })
   })
 
-  it('forwards the caller\'s AbortSignal to the RPC call', async () => {
+  it("forwards the caller's AbortSignal to the RPC call", async () => {
     const controller = new AbortController()
     const onAbortSignal = vi.fn()
     const service = makeLiveThirstService({
@@ -376,7 +440,11 @@ describe('the live service, fetchCounts (public, no session required)', () => {
         throw new TypeError('Failed to fetch')
       },
     } as unknown as SupabaseClient
-    const service = makeLiveThirstService({ clientProvider: providerFor(client) })
-    await expect(service.fetchCounts('matrix')).rejects.toMatchObject({ kind: 'offline' })
+    const service = makeLiveThirstService({
+      clientProvider: providerFor(client),
+    })
+    await expect(service.fetchCounts('matrix')).rejects.toMatchObject({
+      kind: 'offline',
+    })
   })
 })

@@ -55,7 +55,9 @@ describe('withPreferencesLoaded', () => {
 
   it('replaces rather than merges, so a wiped key does not survive on screen', () => {
     const first = withPreferencesLoaded(base, { 'general.haptics': true })
-    const second = withPreferencesLoaded(first, { 'general.streakReminders': false })
+    const second = withPreferencesLoaded(first, {
+      'general.streakReminders': false,
+    })
 
     expect('general.haptics' in second.values).toBe(false)
   })
@@ -176,7 +178,9 @@ describe('the auth presentation', () => {
   it('hides it, and is a no-op when already hidden', () => {
     const shown = withAuthPresented(base, 'settingsHub')
 
-    expect(withAuthDismissed(shown).authPresentation).toEqual({ kind: 'hidden' })
+    expect(withAuthDismissed(shown).authPresentation).toEqual({
+      kind: 'hidden',
+    })
     expect(withAuthDismissed(base).authPresentation).toEqual({ kind: 'hidden' })
   })
 })

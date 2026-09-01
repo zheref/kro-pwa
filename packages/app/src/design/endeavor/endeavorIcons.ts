@@ -57,14 +57,11 @@ import {
   Network,
   OctagonAlert,
   Palette,
-  Play,
   Repeat2,
   SkipForward,
-  Timer,
   Undo2,
   UserCheck,
   WandSparkles,
-  Zap,
 } from 'lucide-react'
 import { SF_SYMBOL_TO_LUCIDE, type SfSymbolName } from '../system/icons/icons'
 
@@ -84,10 +81,8 @@ export const ENDEAVOR_SF_SYMBOL_TO_LUCIDE = {
   'clock.badge.exclamationmark.fill': CircleAlert,
   'arrow.down': ArrowDown,
 
-  // Reward + duration
-  'bolt.fill': Zap,
-  bolt: Zap,
-  timer: Timer,
+  // Reward + duration. `bolt`, `bolt.fill`, `timer` and `play.fill` moved UP
+  // into the system map (KC-IS-#71 item 16); the two sets stay disjoint by test.
   'clock.arrow.circlepath': History,
 
   // Do-mode actions
@@ -113,7 +108,6 @@ export const ENDEAVOR_SF_SYMBOL_TO_LUCIDE = {
 
   // Endeavor statuses (KroUI `Endeavor.Status.glyphName`)
   circle: Circle,
-  'play.fill': Play,
   'play.circle': CirclePlay,
   'play.circle.fill': CirclePlay,
   'pause.circle.fill': CirclePause,
@@ -176,15 +170,15 @@ export function endeavorIcon(name: KitSymbolName): LucideIcon {
 export function iconForBindingSymbol(name: string): LucideIcon {
   const fromSystem = (SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[name]
   if (fromSystem !== undefined) return fromSystem
-  const fromKit = (ENDEAVOR_SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[name]
+  const fromKit = (ENDEAVOR_SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[
+    name
+  ]
   return fromKit ?? CircleHelp
 }
 
 /** Whether `name` resolves to a real drawing rather than the help fallback. */
 export function isMappedSymbol(name: string): boolean {
-  return (
-    name in SF_SYMBOL_TO_LUCIDE || name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE
-  )
+  return name in SF_SYMBOL_TO_LUCIDE || name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE
 }
 
 export type { LucideIcon }

@@ -15,7 +15,13 @@ afterEach(cleanup)
 
 describe('CardBadge geometry — a cross-platform contract, not a style choice', () => {
   it('is a 20px capsule with canon’s 6/3 padding and 2px gap', () => {
-    render(<CardBadge backgroundRole="athensGray" foregroundRole="payneGray" title="High" />)
+    render(
+      <CardBadge
+        backgroundRole="athensGray"
+        foregroundRole="payneGray"
+        title="High"
+      />,
+    )
 
     const className = screen.getByText('High').className
     expect(className).toContain('h-5')

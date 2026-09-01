@@ -11,7 +11,10 @@ describe('readRewardsCatalog / writeRewardsCatalog', () => {
   it('round-trips a catalog exactly', () => {
     const store = makeInMemoryKeyValueStore()
     writeRewardsCatalog(store, [rewardMocks.bobaTea, rewardMocks.movieNight])
-    expect(readRewardsCatalog(store)).toEqual([rewardMocks.bobaTea, rewardMocks.movieNight])
+    expect(readRewardsCatalog(store)).toEqual([
+      rewardMocks.bobaTea,
+      rewardMocks.movieNight,
+    ])
   })
 
   it('reads an unset key as an empty catalog, never a throw', () => {
@@ -19,7 +22,9 @@ describe('readRewardsCatalog / writeRewardsCatalog', () => {
   })
 
   it('treats a corrupt value as empty rather than fatal', () => {
-    const store = makeInMemoryKeyValueStore({ 'kro:earn.rewards.catalog': 'not json' })
+    const store = makeInMemoryKeyValueStore({
+      'kro:earn.rewards.catalog': 'not json',
+    })
     expect(readRewardsCatalog(store)).toEqual([])
   })
 
@@ -91,7 +96,10 @@ describe('readRewardsCatalog / writeRewardsCatalog', () => {
 describe('readClaimedRewardIds / writeClaimedRewardIds', () => {
   it('round-trips a claimed set exactly', () => {
     const store = makeInMemoryKeyValueStore()
-    writeClaimedRewardIds(store, [rewardMocks.bobaTea.id, rewardMocks.movieNight.id])
+    writeClaimedRewardIds(store, [
+      rewardMocks.bobaTea.id,
+      rewardMocks.movieNight.id,
+    ])
     expect(readClaimedRewardIds(store)).toEqual([
       rewardMocks.bobaTea.id,
       rewardMocks.movieNight.id,

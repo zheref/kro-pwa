@@ -60,9 +60,9 @@ describe('TaskRow', () => {
     // button.
     render(<TaskRow model={model} />)
 
-    expect(screen.getByRole('checkbox', { name: 'Mark Clean the house complete' })).toBe(
-      screen.getByRole('checkbox'),
-    )
+    expect(
+      screen.getByRole('checkbox', { name: 'Mark Clean the house complete' }),
+    ).toBe(screen.getByRole('checkbox'))
   })
 
   it('flips that name with the state, so it always says what the click will do', () => {
@@ -74,16 +74,16 @@ describe('TaskRow', () => {
   })
 
   it('names the endeavor, because a row is one of many', () => {
-    expect(completionLabel({ title: 'Clean the house', isCompleted: false })).toBe(
-      'Mark Clean the house complete',
-    )
-    expect(completionLabel({ title: 'Clean the house', isCompleted: true })).toBe(
-      'Mark Clean the house incomplete',
-    )
+    expect(
+      completionLabel({ title: 'Clean the house', isCompleted: false }),
+    ).toBe('Mark Clean the house complete')
+    expect(
+      completionLabel({ title: 'Clean the house', isCompleted: true }),
+    ).toBe('Mark Clean the house incomplete')
     // Same shape as the Start button's name, so one row reads as one convention.
-    expect(completionLabel({ title: '山田 太郎 🌸', isCompleted: false })).toContain(
-      '山田 太郎 🌸',
-    )
+    expect(
+      completionLabel({ title: '山田 太郎 🌸', isCompleted: false }),
+    ).toContain('山田 太郎 🌸')
   })
 
   it('raises the start intent without also selecting the row', async () => {
@@ -91,7 +91,9 @@ describe('TaskRow', () => {
     const onSelect = vi.fn()
     render(<TaskRow model={model} onStart={onStart} onSelect={onSelect} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Start Clean the house' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Start Clean the house' }),
+    )
 
     expect(onStart).toHaveBeenCalledWith('clean')
     expect(onSelect).not.toHaveBeenCalled()
@@ -111,9 +113,9 @@ describe('TaskRow', () => {
   it('strikes a completed title through, so completion is not colour alone', () => {
     render(<TaskRow model={{ ...model, isCompleted: true }} />)
 
-    expect(screen.getByRole('button', { name: 'Clean the house' }).className).toContain(
-      'line-through',
-    )
+    expect(
+      screen.getByRole('button', { name: 'Clean the house' }).className,
+    ).toContain('line-through')
   })
 
   it('re-themes its subtree when selected, rather than inverting each child', () => {
@@ -144,7 +146,8 @@ describe('TaskRow', () => {
     render(<TaskRow model={model} onStart={() => undefined} />)
 
     expect(
-      screen.getByRole('button', { name: 'Start Clean the house' }).style.minWidth,
+      screen.getByRole('button', { name: 'Start Clean the house' }).style
+        .minWidth,
     ).toBe('var(--kro-size-min-pointer-target)')
   })
 })

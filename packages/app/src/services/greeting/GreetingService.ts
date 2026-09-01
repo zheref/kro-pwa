@@ -16,12 +16,18 @@ import type { GreetingResponse } from '@kro/core'
 import fixtures from './greeting.fixtures.json'
 
 export interface GreetingService {
-  fetchGreeting(recipient: string, options?: { signal?: AbortSignal }): Promise<GreetingResponse>
+  fetchGreeting(
+    recipient: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<GreetingResponse>
 }
 
 const GREETINGS_ENDPOINT = 'https://greetings.kro.invalid/greetings'
 
-const fixtureGreetings = fixtures.greetings as Record<string, GreetingResponse | undefined>
+const fixtureGreetings = fixtures.greetings as Record<
+  string,
+  GreetingResponse | undefined
+>
 
 /** Shapes a transport failure the way `GreetingMapper.toException` reads it. */
 function httpError(status: number, message: string): Error {
@@ -30,10 +36,14 @@ function httpError(status: number, message: string): Error {
 
 export const liveGreetingService: GreetingService = {
   async fetchGreeting(recipient, options = {}) {
-    const response = await fetch(`${GREETINGS_ENDPOINT}/${encodeURIComponent(recipient)}`, {
-      signal: options.signal,
-    })
-    if (!response.ok) throw httpError(response.status, `HTTP ${response.status}`)
+    const response = await fetch(
+      `${GREETINGS_ENDPOINT}/${encodeURIComponent(recipient)}`,
+      {
+        signal: options.signal,
+      },
+    )
+    if (!response.ok)
+      throw httpError(response.status, `HTTP ${response.status}`)
     return (await response.json()) as GreetingResponse
   },
 }
@@ -41,7 +51,8 @@ export const liveGreetingService: GreetingService = {
 export const stubbedGreetingService: GreetingService = {
   async fetchGreeting(recipient, _options = {}) {
     const found = fixtureGreetings[recipient]
-    if (found === undefined) throw httpError(404, `no greeting fixture for "${recipient}"`)
+    if (found === undefined)
+      throw httpError(404, `no greeting fixture for "${recipient}"`)
     return found
   },
 }

@@ -12,19 +12,24 @@ import { resetActiveToastSequence, toActiveToast } from './activeToast'
 beforeEach(resetActiveToastSequence)
 afterEach(cleanup)
 
-const layer = () => document.querySelector('[data-kro-toast-layer]') as HTMLElement
+const layer = () =>
+  document.querySelector('[data-kro-toast-layer]') as HTMLElement
 
 describe('placement — ActiveToast.md § Positioning', () => {
   it('keeps 96pt of trailing padding so the toast never overlaps the FAB', () => {
     render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} />)
 
-    expect(layer().style.paddingRight).toBe(`${CHROME_LAYOUT.toastTrailingPadding}px`)
+    expect(layer().style.paddingRight).toBe(
+      `${CHROME_LAYOUT.toastTrailingPadding}px`,
+    )
   })
 
   it('sits 16pt off the leading edge and 24pt off the bottom', () => {
     render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} />)
 
-    expect(layer().style.paddingLeft).toBe(`${CHROME_LAYOUT.toastLeadingPadding}px`)
+    expect(layer().style.paddingLeft).toBe(
+      `${CHROME_LAYOUT.toastLeadingPadding}px`,
+    )
     // Canon's 24 plus whatever the shell reserves. With nothing published the
     // property resolves to its own `0px` fallback, which is where the toast
     // has always sat.
@@ -42,10 +47,17 @@ describe('placement — ActiveToast.md § Positioning', () => {
   })
 
   it('pins to the viewport by default, and to a box when a story asks it to', () => {
-    const { rerender } = render(<ActiveToastLayer toast={toActiveToast({ message: 'a' })} />)
+    const { rerender } = render(
+      <ActiveToastLayer toast={toActiveToast({ message: 'a' })} />,
+    )
     expect(layer().style.position).toBe('fixed')
 
-    rerender(<ActiveToastLayer toast={toActiveToast({ message: 'a' })} position="absolute" />)
+    rerender(
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'a' })}
+        position="absolute"
+      />,
+    )
     expect(layer().style.position).toBe('absolute')
   })
 })
@@ -53,7 +65,10 @@ describe('placement — ActiveToast.md § Positioning', () => {
 describe('the lift-above-pill rule', () => {
   it('lifts fully clear of the Session Pill while a session is running', () => {
     render(
-      <ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} isSessionPillVisible />,
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        isSessionPillVisible
+      />,
     )
 
     const expected = CHROME_LAYOUT.toastVerticalOffset + toastLiftAbovePill()
@@ -63,7 +78,10 @@ describe('the lift-above-pill rule', () => {
 
   it('drops back down when the session ends and the pill goes', () => {
     const { rerender } = render(
-      <ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} isSessionPillVisible />,
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        isSessionPillVisible
+      />,
     )
     rerender(
       <ActiveToastLayer
@@ -77,7 +95,10 @@ describe('the lift-above-pill rule', () => {
 
   it('moves the lift on a plain ease, so it does not overshoot back into the pill', () => {
     render(
-      <ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} isSessionPillVisible />,
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        isSessionPillVisible
+      />,
     )
 
     expect(layer().style.transitionProperty).toBe('transform')
@@ -89,7 +110,10 @@ describe('the lift-above-pill rule', () => {
     // the two — which is all the lift is — is unchanged. `chromeLayout.ts`
     // takes the inset as a parameter precisely so this is checkable.
     const { rerender } = render(
-      <ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} isSessionPillVisible />,
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        isSessionPillVisible
+      />,
     )
     const withoutShell = layer().style.transform
 
@@ -109,7 +133,12 @@ describe('the shell’s bottom inset — canon’s 24pt is measured inside the t
   it('clears a tab bar the shell tells it about', () => {
     // The web tab bar is an ordinary flex child, so the viewport bottom is
     // below it: without this the toast lands underneath the bar.
-    render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} bottomInset={60} />)
+    render(
+      <ActiveToastLayer
+        toast={toActiveToast({ message: 'Saved' })}
+        bottomInset={60}
+      />,
+    )
 
     // Either shape is correct CSS, and which one a parser hands back is its
     // own business: jsdom folds a `calc()` of two absolute lengths into their
@@ -159,10 +188,14 @@ describe('announcement', () => {
 
   it('puts the message inside that region when a toast arrives', () => {
     render(
-      <ActiveToastLayer toast={toActiveToast({ message: '"Buy groceries" marked complete' })} />,
+      <ActiveToastLayer
+        toast={toActiveToast({ message: '"Buy groceries" marked complete' })}
+      />,
     )
 
-    expect(screen.getByRole('status').textContent).toBe('"Buy groceries" marked complete')
+    expect(screen.getByRole('status').textContent).toBe(
+      '"Buy groceries" marked complete',
+    )
   })
 
   it('announces the message ONLY — never the action buttons alongside it', () => {
@@ -174,7 +207,11 @@ describe('announcement', () => {
         toast={toActiveToast({
           message: '"Team meeting" deferred to 3:00 PM',
           primaryAction: { title: 'Undo', onSelect: () => {} },
-          secondaryAction: { title: 'View', style: 'prominent', onSelect: () => {} },
+          secondaryAction: {
+            title: 'View',
+            style: 'prominent',
+            onSelect: () => {},
+          },
         })}
       />,
     )
@@ -184,7 +221,9 @@ describe('announcement', () => {
     expect(region.querySelector('button')).toBeNull()
     // The buttons are still on screen — they just are not inside the region.
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDefined()
-    expect(document.querySelector('[data-kro-toast]')?.closest('[role="status"]')).toBeNull()
+    expect(
+      document.querySelector('[data-kro-toast]')?.closest('[role="status"]'),
+    ).toBeNull()
   })
 
   it('hides the region from sight without hiding it from a screen reader', () => {
@@ -204,7 +243,10 @@ describe('announcement', () => {
   it('re-enables pointers on the toast itself, so its Undo is clickable', () => {
     render(
       <ActiveToastLayer
-        toast={toActiveToast({ message: 'Saved', primaryAction: { title: 'Undo', onSelect: () => {} } })}
+        toast={toActiveToast({
+          message: 'Saved',
+          primaryAction: { title: 'Undo', onSelect: () => {} },
+        })}
       />,
     )
 
@@ -214,7 +256,8 @@ describe('announcement', () => {
 })
 
 describe('entry motion', () => {
-  const toastEl = () => document.querySelector('[data-kro-toast]') as HTMLElement
+  const toastEl = () =>
+    document.querySelector('[data-kro-toast]') as HTMLElement
 
   it('starts off-stage, so the trailing slide has somewhere to come from', () => {
     render(<ActiveToastLayer toast={toActiveToast({ message: 'Saved' })} />)

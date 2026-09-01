@@ -94,7 +94,10 @@ const makeHarness = async (
       FeatureFlags.sessionBreak.name,
       true,
     )
-    makePreferences(localStore.preferences).write(sessionEnableBreaksOption, true)
+    makePreferences(localStore.preferences).write(
+      sessionEnableBreaksOption,
+      true,
+    )
     makePreferences(localStore.preferences).write(
       sessionEnableStopwatchOption,
       false,
@@ -104,7 +107,10 @@ const makeHarness = async (
   const store = makeStore({ ...stubbedThunkExtra, localStore })
   await store.dispatch(loadSessionPreferencesThunk())
   await store.dispatch(
-    prepareSessionLaunchThunk({ endeavorId: ENDEAVOR_ID, sessionId: 'session-1' }),
+    prepareSessionLaunchThunk({
+      endeavorId: ENDEAVOR_ID,
+      sessionId: 'session-1',
+    }),
   )
   return store
 }
@@ -217,7 +223,9 @@ describe('start → pause → resume → conclude → Complete Task', () => {
     expect(screen.getByText('Paused')).toBeTruthy()
 
     // -- Resume -------------------------------------------------------------
-    await userEvent.click(screen.getByRole('button', { name: 'Resume session' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Resume session' }),
+    )
     await waitFor(() => {
       expect(store.getState().session.phase).toBe(SessionPhase.running)
     })
@@ -236,9 +244,7 @@ describe('start → pause → resume → conclude → Complete Task', () => {
     expect(store.getState().session.conclusion.kind).toBe('recorded')
 
     // -- Complete Task ------------------------------------------------------
-    await userEvent.click(
-      screen.getByRole('button', { name: /Complete Task/ }),
-    )
+    await userEvent.click(screen.getByRole('button', { name: /Complete Task/ }))
     await waitFor(() => {
       expect(store.getState().session.phase).toBe(SessionPhase.ready)
     })

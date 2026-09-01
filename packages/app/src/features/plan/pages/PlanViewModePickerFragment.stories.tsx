@@ -59,5 +59,7 @@ export const EveryDestination = {
 
 /** Both schemes — the control forces its own dark environment, as canon does. */
 export const BothSchemesDayView = {
-  render: () => <BothSchemes gradient>{picker(PlanViewMode.timeline)}</BothSchemes>,
+  render: () => (
+    <BothSchemes gradient>{picker(PlanViewMode.timeline)}</BothSchemes>
+  ),
 }

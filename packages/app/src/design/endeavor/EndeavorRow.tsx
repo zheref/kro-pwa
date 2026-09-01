@@ -28,11 +28,18 @@
  * is what a read-only vista wants.
  */
 
-import type { EndeavorCapabilities, EndeavorKind, EndeavorStatus } from '@kro/core'
+import type {
+  EndeavorCapabilities,
+  EndeavorKind,
+  EndeavorStatus,
+} from '@kro/core'
 import type { ReactNode } from 'react'
 import { colorVar, radiusVar, shadowVar } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
-import { EndeavorActionSurface, POINTER_GUTTER_VAR } from './EndeavorActionSurface'
+import {
+  EndeavorActionSurface,
+  POINTER_GUTTER_VAR,
+} from './EndeavorActionSurface'
 import { RewardBadge, UrgencyBadge } from './CardBadge'
 import { KroChip, semanticTint } from './KroChip'
 import type { EndeavorCardModel, EndeavorUrgency } from './endeavorCardModel'
@@ -59,7 +66,11 @@ const TimerGlyph = endeavorIcon('timer')
 
 /** Canon's `EndeavorRowTimeInfo`. */
 export type EndeavorRowTimeInfo =
-  | { readonly kind: 'dueTime'; readonly date: Date; readonly duration: number | null }
+  | {
+      readonly kind: 'dueTime'
+      readonly date: Date
+      readonly duration: number | null
+    }
   | { readonly kind: 'timeRange'; readonly start: Date; readonly end: Date }
   | { readonly kind: 'duration'; readonly seconds: number }
 
@@ -290,7 +301,11 @@ export function EndeavorRow({
     </div>
   )
 
-  if (capabilities === undefined || onOperation === undefined || endeavorId === undefined) {
+  if (
+    capabilities === undefined ||
+    onOperation === undefined ||
+    endeavorId === undefined
+  ) {
     return body
   }
 
@@ -371,7 +386,9 @@ function TimeInfoRow({
   const caption = (glyph: ReactNode, text: string, overdue = false) => (
     <span
       className="inline-flex items-center gap-1 text-xs"
-      style={{ color: overdue ? colorVar('bannerWarning') : colorVar('foreSecondary') }}
+      style={{
+        color: overdue ? colorVar('bannerWarning') : colorVar('foreSecondary'),
+      }}
     >
       {glyph}
       {text}
@@ -390,7 +407,10 @@ function TimeInfoRow({
           )}
           {info.duration === null
             ? null
-            : caption(<TimerGlyph size={12} aria-hidden />, formatDuration(info.duration))}
+            : caption(
+                <TimerGlyph size={12} aria-hidden />,
+                formatDuration(info.duration),
+              )}
         </div>
       )
     }
@@ -406,7 +426,10 @@ function TimeInfoRow({
     case 'duration':
       return (
         <div className="flex flex-wrap items-center gap-3">
-          {caption(<TimerGlyph size={12} aria-hidden />, formatDuration(info.seconds))}
+          {caption(
+            <TimerGlyph size={12} aria-hidden />,
+            formatDuration(info.seconds),
+          )}
         </div>
       )
   }

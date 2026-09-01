@@ -89,7 +89,10 @@ export function DialogContent({
   )
 }
 
-export function DialogHeader({ className, ...rest }: ComponentPropsWithoutRef<'div'>) {
+export function DialogHeader({
+  className,
+  ...rest
+}: ComponentPropsWithoutRef<'div'>) {
   return (
     <div
       data-slot="dialog-header"
@@ -99,7 +102,10 @@ export function DialogHeader({ className, ...rest }: ComponentPropsWithoutRef<'d
   )
 }
 
-export function DialogFooter({ className, ...rest }: ComponentPropsWithoutRef<'div'>) {
+export function DialogFooter({
+  className,
+  ...rest
+}: ComponentPropsWithoutRef<'div'>) {
   return (
     <div
       data-slot="dialog-footer"

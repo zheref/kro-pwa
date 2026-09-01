@@ -119,7 +119,10 @@ export {
   selectIsGreetingDetailOpen,
   selectIsGreetingLoading,
 } from './features/greeting/GreetingSelectors'
-export { type GreetingViewModel, useGreeting } from './features/greeting/useGreeting'
+export {
+  type GreetingViewModel,
+  useGreeting,
+} from './features/greeting/useGreeting'
 
 /**
  * Auth + Settings UI (KC-IS-#32) — the Settings hub and its panes, the profile
@@ -158,6 +161,19 @@ export {
   AuthSurfacePage,
   LocalDataDialogFragment,
 } from './features/auth/pages'
+/**
+ * The one auth artifact `apps/web` reaches, and the only Producer export on
+ * this barrel.
+ *
+ * `observeAuthState` is a subscription, not a thunk: supabase-js emits a
+ * session change when a token refreshes, when a second tab signs out, or when
+ * the PKCE code comes back from a provider, and none of those is a dispatch.
+ * It needs `ThunkExtra`, which a component may not reach (`RC-6`), so it
+ * belongs to the composition root — the one place that builds the extra
+ * (`RC-41`). Its own header always said so; KC-IS-#71 item 7 is the line that
+ * lets the root say it.
+ */
+export { observeAuthState } from './features/auth/AuthProducer'
 
 /**
  * The Triage render tier (KC-IS-#26) — the carousel that mounts **inside** the

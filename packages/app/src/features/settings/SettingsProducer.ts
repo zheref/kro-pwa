@@ -28,10 +28,7 @@ import {
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
-import {
-  type SettingsException,
-  SettingsExceptions,
-} from './SettingsException'
+import { type SettingsException, SettingsExceptions } from './SettingsException'
 import type { GoogleConnectionState } from './SettingsState'
 
 const messageOf = (error: unknown): string =>
@@ -101,7 +98,9 @@ export const loadSettingsThunk = createAsyncThunk<
     }
     return ok({
       values,
-      isGoogleEnabled: extra.featureFlags.isEnabled(FeatureFlags.googleCalendar),
+      isGoogleEnabled: extra.featureFlags.isEnabled(
+        FeatureFlags.googleCalendar,
+      ),
     })
   } catch (error) {
     return err(SettingsExceptions.preferencesUnavailable(messageOf(error)))
@@ -127,7 +126,9 @@ export const updateSettingThunk = createAsyncThunk<
 >('settings/onPreferenceWriteCompleted', async ({ key, value }, { extra }) => {
   const option = settingOptionForKey(key)
   if (option === null) {
-    return err(SettingsExceptions.preferenceRejected(`no option declares ${key}`))
+    return err(
+      SettingsExceptions.preferenceRejected(`no option declares ${key}`),
+    )
   }
   try {
     const preferences = makePreferences(extra.localStore.preferences)
@@ -155,13 +156,18 @@ export const loadGoogleConnectionThunk = createAsyncThunk<
   Result<GoogleConnectionState, SettingsException>,
   void,
   { extra: ThunkExtra }
->('settings/onGoogleConnectionLoadCompleted', async (_argument, { extra, signal }) => {
-  try {
-    return ok(toConnectionState(await extra.googleCalendar.connection({ signal })))
-  } catch (error) {
-    return err(SettingsExceptions.integrationUnavailable(messageOf(error)))
-  }
-})
+>(
+  'settings/onGoogleConnectionLoadCompleted',
+  async (_argument, { extra, signal }) => {
+    try {
+      return ok(
+        toConnectionState(await extra.googleCalendar.connection({ signal })),
+      )
+    } catch (error) {
+      return err(SettingsExceptions.integrationUnavailable(messageOf(error)))
+    }
+  },
+)
 
 /**
  * Canon's `userDidTapConnect("google")` — start (or repeat) authorization.
@@ -184,7 +190,9 @@ export const connectGoogleThunk = createAsyncThunk<
     const connection = await extra.googleCalendar.connection({ signal })
     if (connection.kind === 'unconfigured') {
       return err(
-        SettingsExceptions.integrationUnconfigured(connection.missing.join(', ')),
+        SettingsExceptions.integrationUnconfigured(
+          connection.missing.join(', '),
+        ),
       )
     }
     extra.navigation.navigate(extra.googleCalendar.authorizationPath())
@@ -205,11 +213,16 @@ export const disconnectGoogleThunk = createAsyncThunk<
   Result<GoogleConnectionState, SettingsException>,
   void,
   { extra: ThunkExtra }
->('settings/onGoogleDisconnectCompleted', async (_argument, { extra, signal }) => {
-  try {
-    await extra.googleCalendar.disconnect({ signal })
-    return ok(toConnectionState(await extra.googleCalendar.connection({ signal })))
-  } catch (error) {
-    return err(SettingsExceptions.integrationUnavailable(messageOf(error)))
-  }
-})
+>(
+  'settings/onGoogleDisconnectCompleted',
+  async (_argument, { extra, signal }) => {
+    try {
+      await extra.googleCalendar.disconnect({ signal })
+      return ok(
+        toConnectionState(await extra.googleCalendar.connection({ signal })),
+      )
+    } catch (error) {
+      return err(SettingsExceptions.integrationUnavailable(messageOf(error)))
+    }
+  },
+)

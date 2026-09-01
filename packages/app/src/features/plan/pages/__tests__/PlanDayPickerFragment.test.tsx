@@ -104,7 +104,9 @@ describe('PlanDayPickerFragment', () => {
 
     expect(screen.getAllByTestId('plan-day-chip')).toHaveLength(5)
     expect(
-      screen.getAllByTestId('plan-day-chip').filter((c) => c.dataset.selected === 'true'),
+      screen
+        .getAllByTestId('plan-day-chip')
+        .filter((c) => c.dataset.selected === 'true'),
     ).toHaveLength(1)
   })
 })

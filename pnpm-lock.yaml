@@ -203,11 +203,14 @@ importers:
         specifier: ^5
         version: 5.9.3
       vitest:
-        specifier: ^3.2.4
+        specifier: ^3.2.7
         version: 3.2.7(@types/node@20.19.43)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(terser@5.51.2)
 
   packages/core:
     devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^3.2.7
+        version: 3.2.7(vitest@3.2.7(@types/node@20.19.43)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(terser@5.51.2))
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -215,7 +218,7 @@ importers:
         specifier: ^5
         version: 5.9.3
       vitest:
-        specifier: ^3.2.4
+        specifier: ^3.2.7
         version: 3.2.7(@types/node@20.19.43)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(terser@5.51.2)
 
 packages:

@@ -21,7 +21,6 @@ import {
   childCreationPromptDelegatedClose,
   onClockTicked,
   onLensSnapshotRestored,
-  onPlanPreferencesLoaded,
   onViewLoaded,
   planSlice,
   userDidAssignToQuadrant,
@@ -54,7 +53,6 @@ import {
 } from '../PlanMocks'
 import { PlanExceptions } from '../PlanException'
 import { PlanLoadReason, initialPlanState } from '../PlanState'
-import { DayViewRange } from '@kro/core'
 
 const reducer = planSlice.reducer
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
@@ -81,6 +79,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.now).toEqual(PLAN_REFERENCE_NOW)
@@ -94,6 +93,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: false,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.isQuickEventCreationEnabled).toBe(false)
@@ -106,6 +106,7 @@ describe('onViewLoaded', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     expect(next.dayLoad.kind).toBe('idle')
@@ -114,7 +115,10 @@ describe('onViewLoaded', () => {
 
 describe('onClockTicked', () => {
   it('advances the "now" indicator', () => {
-    const next = reducer(planStateMocks.loaded, onClockTicked({ now: planAt(11) }))
+    const next = reducer(
+      planStateMocks.loaded,
+      onClockTicked({ now: planAt(11) }),
+    )
     expect(next.now).toEqual(planAt(11))
   })
 
@@ -132,42 +136,9 @@ describe('onClockTicked', () => {
       planStateMocks.loadedWithPreload,
       onClockTicked({ now: planAt(11) }),
     )
-    expect(next.preloadedDays).toEqual(planStateMocks.loadedWithPreload.preloadedDays)
-  })
-})
-
-describe('onPlanPreferencesLoaded', () => {
-  it('narrows the band to Business hours when the preference says so', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.business,
-        showCompletedInTimeline: true,
-      }),
+    expect(next.preloadedDays).toEqual(
+      planStateMocks.loadedWithPreload.preloadedDays,
     )
-    expect(next.dayViewRange).toBe(DayViewRange.business)
-  })
-
-  it('hides completed items from the timeline when asked', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.full,
-        showCompletedInTimeline: false,
-      }),
-    )
-    expect(next.showCompletedInTimeline).toBe(false)
-  })
-
-  it('leaves the loaded day untouched', () => {
-    const next = reducer(
-      planStateMocks.loaded,
-      onPlanPreferencesLoaded({
-        dayViewRange: DayViewRange.waking,
-        showCompletedInTimeline: true,
-      }),
-    )
-    expect(next.dayLoad).toEqual(planStateMocks.loaded.dayLoad)
   })
 })
 
@@ -197,11 +168,14 @@ describe('onLensSnapshotRestored', () => {
     const next = reducer(
       planStateMocks.loaded,
       onLensSnapshotRestored({
-        visibility: { ...planStateMocks.loaded.visibility, searchQuery: 'demo' },
+        visibility: {
+          ...planStateMocks.loaded.visibility,
+          searchQuery: 'demo',
+        },
       }),
     )
     expect(next.visibility.searchQuery).toBe('demo')
-    expect(next.dayViewRange).toBe(planStateMocks.loaded.dayViewRange)
+    expect(next.now).toBe(planStateMocks.loaded.now)
   })
 })
 
@@ -209,7 +183,10 @@ describe('onLensSnapshotRestored', () => {
 
 describe('userDidSelectDate', () => {
   it('moves the timeline to the picked day', () => {
-    const next = reducer(planStateMocks.loaded, userDidSelectDate({ date: tomorrow }))
+    const next = reducer(
+      planStateMocks.loaded,
+      userDidSelectDate({ date: tomorrow }),
+    )
     expect(next.selectedDate.getTime()).toBe(tomorrow.getTime())
   })
 
@@ -222,7 +199,10 @@ describe('userDidSelectDate', () => {
   })
 
   it('disarms an edit session left over from the day being left', () => {
-    const next = reducer(planStateMocks.editing, userDidSelectDate({ date: tomorrow }))
+    const next = reducer(
+      planStateMocks.editing,
+      userDidSelectDate({ date: tomorrow }),
+    )
     expect(next.editSession).toBeNull()
   })
 })
@@ -235,7 +215,9 @@ describe('userDidStepDay', () => {
 
   it('steps back a day', () => {
     const next = reducer(planStateMocks.loaded, userDidStepDay({ days: -1 }))
-    expect(next.selectedDate.getTime()).toBe(addingPlanDays(today, -1).getTime())
+    expect(next.selectedDate.getTime()).toBe(
+      addingPlanDays(today, -1).getTime(),
+    )
   })
 
   it('stands still for a step of zero', () => {
@@ -285,7 +267,11 @@ describe('userDidPressTimelineSlot', () => {
   })
 
   it('does nothing when the timelineQuickEventCreation flag is off', () => {
-    const gated = { ...planStateMocks.loaded, isQuickEventCreationEnabled: false }
+    const gated = {
+      ...planStateMocks.loaded,
+      isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
+    }
     expect(
       reducer(gated, userDidPressTimelineSlot({ index: 4, startHour: 8 }))
         .quickCreate,
@@ -294,8 +280,10 @@ describe('userDidPressTimelineSlot', () => {
 
   it('does nothing while a card is armed — the slot layer is inert then', () => {
     expect(
-      reducer(planStateMocks.editing, userDidPressTimelineSlot({ index: 4, startHour: 8 }))
-        .quickCreate,
+      reducer(
+        planStateMocks.editing,
+        userDidPressTimelineSlot({ index: 4, startHour: 8 }),
+      ).quickCreate,
     ).toBeNull()
   })
 })
@@ -310,16 +298,23 @@ describe('userDidRequestQuickCreateAt', () => {
   })
 
   it('respects the same flag gate as a press', () => {
-    const gated = { ...planStateMocks.loaded, isQuickEventCreationEnabled: false }
+    const gated = {
+      ...planStateMocks.loaded,
+      isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
+    }
     expect(
-      reducer(gated, userDidRequestQuickCreateAt({ moment: planAt(12) })).quickCreate,
+      reducer(gated, userDidRequestQuickCreateAt({ moment: planAt(12) }))
+        .quickCreate,
     ).toBeNull()
   })
 
   it('is refused while a card is armed', () => {
     expect(
-      reducer(planStateMocks.editing, userDidRequestQuickCreateAt({ moment: planAt(12) }))
-        .quickCreate,
+      reducer(
+        planStateMocks.editing,
+        userDidRequestQuickCreateAt({ moment: planAt(12) }),
+      ).quickCreate,
     ).toBeNull()
   })
 })
@@ -342,7 +337,8 @@ describe('childCreationPromptDelegatedClose', () => {
 
   it('is harmless when no ghost was showing', () => {
     expect(
-      reducer(planStateMocks.loaded, childCreationPromptDelegatedClose()).quickCreate,
+      reducer(planStateMocks.loaded, childCreationPromptDelegatedClose())
+        .quickCreate,
     ).toBeNull()
   })
 })
@@ -376,8 +372,10 @@ describe('userDidHoldEventBlock', () => {
 
   it('ignores a hold on a card that is not on the day', () => {
     expect(
-      reducer(planStateMocks.loaded, userDidHoldEventBlock({ endeavorId: 'ghost' }))
-        .editSession,
+      reducer(
+        planStateMocks.loaded,
+        userDidHoldEventBlock({ endeavorId: 'ghost' }),
+      ).editSession,
     ).toBeNull()
   })
 })
@@ -416,7 +414,10 @@ describe('the drag arms', () => {
 
   it('releases the base on lift, keeping the draft', () => {
     const grabbed = reducer(armed, userDidGrabEditHandle({ handle: 'body' }))
-    const dragged = reducer(grabbed, userDidDragEditHandle({ translationPx: 60 }))
+    const dragged = reducer(
+      grabbed,
+      userDidDragEditHandle({ translationPx: 60 }),
+    )
     const released = reducer(dragged, userDidReleaseEditHandle())
     expect(released.editSession?.drag).toBeNull()
     expect(released.editSession?.draftStart).toEqual(planAt(10))
@@ -428,8 +429,10 @@ describe('the drag arms', () => {
         .editSession,
     ).toBeNull()
     expect(
-      reducer(planStateMocks.loaded, userDidDragEditHandle({ translationPx: 90 }))
-        .editSession,
+      reducer(
+        planStateMocks.loaded,
+        userDidDragEditHandle({ translationPx: 90 }),
+      ).editSession,
     ).toBeNull()
     expect(
       reducer(planStateMocks.loaded, userDidReleaseEditHandle()).editSession,
@@ -495,8 +498,9 @@ describe('userDidDismissEditMode', () => {
   })
 
   it('is harmless when nothing is armed', () => {
-    expect(reducer(planStateMocks.loaded, userDidDismissEditMode()).editSession)
-      .toBeNull()
+    expect(
+      reducer(planStateMocks.loaded, userDidDismissEditMode()).editSession,
+    ).toBeNull()
   })
 
   it('leaves the selected day alone', () => {
@@ -575,7 +579,10 @@ describe('userDidToggleVisibility', () => {
   it('hides a host', () => {
     const next = reducer(
       planStateMocks.loaded,
-      userDidToggleVisibility({ axis: 'host', value: EndeavorHost.googleCalendar }),
+      userDidToggleVisibility({
+        axis: 'host',
+        value: EndeavorHost.googleCalendar,
+      }),
     )
     expect(next.visibility.hiddenHosts).toEqual([EndeavorHost.googleCalendar])
   })
@@ -583,11 +590,17 @@ describe('userDidToggleVisibility', () => {
   it('reveals it again on a second toggle', () => {
     const hidden = reducer(
       planStateMocks.loaded,
-      userDidToggleVisibility({ axis: 'host', value: EndeavorHost.googleCalendar }),
+      userDidToggleVisibility({
+        axis: 'host',
+        value: EndeavorHost.googleCalendar,
+      }),
     )
     const shown = reducer(
       hidden,
-      userDidToggleVisibility({ axis: 'host', value: EndeavorHost.googleCalendar }),
+      userDidToggleVisibility({
+        axis: 'host',
+        value: EndeavorHost.googleCalendar,
+      }),
     )
     expect(shown.visibility.hiddenHosts).toEqual([])
   })
@@ -702,6 +715,7 @@ describe('preloadPlanDaysThunk lifecycle', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     await store.dispatch(
@@ -733,6 +747,7 @@ describe('preloadPlanDaysThunk lifecycle', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     const inFlight = store.dispatch(preloadPlanDaysThunk({ center: today }))
@@ -756,7 +771,11 @@ describe('the defensive .rejected arms', () => {
   it('degrades a genuinely unexpected day-read throw to a generic exception', () => {
     const next = reducer(
       planStateMocks.loading,
-      loadPlanDayThunk.rejected(new Error('serialisation blew up'), 'req-1', dayArg),
+      loadPlanDayThunk.rejected(
+        new Error('serialisation blew up'),
+        'req-1',
+        dayArg,
+      ),
     )
     expect(next.dayLoad.kind).toBe('failed')
     if (next.dayLoad.kind === 'failed') {
@@ -776,7 +795,9 @@ describe('the defensive .rejected arms', () => {
   it('settles the preload marker on an unexpected throw', () => {
     const started = reducer(
       planStateMocks.everythingLoading,
-      preloadPlanDaysThunk.rejected(new Error('boom'), 'req-2', { center: today }),
+      preloadPlanDaysThunk.rejected(new Error('boom'), 'req-2', {
+        center: today,
+      }),
     )
     expect(started.activity.preloadCenterDayKey).toBeNull()
   })
@@ -788,6 +809,7 @@ describe('the defensive .rejected arms', () => {
         now: PLAN_REFERENCE_NOW,
         selectedDate: today,
         isQuickEventCreationEnabled: true,
+        enabledCapabilityFlags: [],
       }),
     )
     const inFlight = store.dispatch(preloadPlanDaysThunk({ center: today }))
@@ -855,7 +877,9 @@ describe('loadPlanMatrixThunk lifecycle', () => {
     const { matrixLoad } = store.getState().plan
     expect(matrixLoad.kind).toBe('loaded')
     if (matrixLoad.kind === 'loaded') {
-      expect(matrixLoad.endeavors.map((e) => e.id)).toEqual(['matrix-prioritize'])
+      expect(matrixLoad.endeavors.map((e) => e.id)).toEqual([
+        'matrix-prioritize',
+      ])
     }
   })
 

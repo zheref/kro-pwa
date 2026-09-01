@@ -14,7 +14,10 @@
  * Silently shadowing it in the `@kro/core` barrel would be the worse of the
  * two evils. Session domain proper is #8.
  */
-import { type TimeIntervalSeconds, secondsBetween } from '../shared/TimeInterval'
+import {
+  type TimeIntervalSeconds,
+  secondsBetween,
+} from '../shared/TimeInterval'
 
 /** How a performance ended. */
 export const PerformResolution = {

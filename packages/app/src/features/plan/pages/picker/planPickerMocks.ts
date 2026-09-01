@@ -51,8 +51,18 @@ const pickable = (params: {
  * value, which is canon's definition of the third band.
  */
 export const planPickerPool: readonly Endeavor[] = [
-  pickable({ id: 'pick-today-a', title: '🧾 File the expenses', due: planAt(16), value: 4 }),
-  pickable({ id: 'pick-today-b', title: 'Book the courier', due: planAt(18), value: 2 }),
+  pickable({
+    id: 'pick-today-a',
+    title: '🧾 File the expenses',
+    due: planAt(16),
+    value: 4,
+  }),
+  pickable({
+    id: 'pick-today-b',
+    title: 'Book the courier',
+    due: planAt(18),
+    value: 2,
+  }),
   pickable({
     id: 'pick-triaged-a',
     title: 'Draft the roadmap',
@@ -83,4 +93,5 @@ export const planPickerPool: readonly Endeavor[] = [
  * The admission set the board itself uses — reused so the picker's task-only
  * filter is asserted against the same rows the matrix suite asserts against.
  */
-export const planPickerAdmissionPool: readonly Endeavor[] = planMatrixFixtureList
+export const planPickerAdmissionPool: readonly Endeavor[] =
+  planMatrixFixtureList

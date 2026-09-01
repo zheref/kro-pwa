@@ -184,9 +184,7 @@ describe('PlanFragment', () => {
   it('unfurls the kind menu, one row per capture kind', async () => {
     const onSelect = vi.fn()
     mount({
-      fabItems: [
-        { id: 'event', label: 'Event', glyph: 'calendar', onSelect },
-      ],
+      fabItems: [{ id: 'event', label: 'Event', glyph: 'calendar', onSelect }],
     })
 
     await userEvent.click(screen.getByRole('button', { name: 'Add' }))

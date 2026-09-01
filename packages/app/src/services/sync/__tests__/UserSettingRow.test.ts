@@ -25,7 +25,9 @@ const optionOfType = (type: SettingOption['type']): SettingOption =>
   makeSettingOption({ key: 'probe', type, glyph: null, defaultValue: null })
 
 /** A cloud-scoped option of each storage type, taken from the real registry. */
-const boolOption = cloudSyncOptions.find((option) => option.type.kind === 'bool')
+const boolOption = cloudSyncOptions.find(
+  (option) => option.type.kind === 'bool',
+)
 const intOption = cloudSyncOptions.find((option) => option.type.kind === 'int')
 const enumOption = cloudSyncOptions.find(
   (option) => option.type.kind === 'enumeration',
@@ -40,7 +42,9 @@ describe('storageValueTypeFor', () => {
 
   it('maps int, timeOfDay and daysSet to int — minutes and bitmasks are both integers', () => {
     for (const kind of ['int', 'timeOfDay', 'daysSet'] as const) {
-      expect(storageValueTypeFor(optionOfType({ kind }))).toBe(SettingValueType.int)
+      expect(storageValueTypeFor(optionOfType({ kind }))).toBe(
+        SettingValueType.int,
+      )
     }
   })
 
@@ -49,7 +53,9 @@ describe('storageValueTypeFor', () => {
       { kind: 'string' } as const,
       { kind: 'enumeration', cases: ['a', 'b'] } as const,
     ]) {
-      expect(storageValueTypeFor(optionOfType(type))).toBe(SettingValueType.string)
+      expect(storageValueTypeFor(optionOfType(type))).toBe(
+        SettingValueType.string,
+      )
     }
   })
 })
@@ -131,7 +137,11 @@ describe('UserSettingRowMapper.toDomain', () => {
 
   it('refuses a row whose text does not parse for its declared type', () => {
     expect(
-      UserSettingRowMapper.toDomain({ key: 'k', value: 'maybe', value_type: 'bool' }),
+      UserSettingRowMapper.toDomain({
+        key: 'k',
+        value: 'maybe',
+        value_type: 'bool',
+      }),
     ).toBeNull()
   })
 
@@ -147,7 +157,10 @@ describe('UserSettingRowMapper.toDomain', () => {
 })
 
 describe('UserSettingRowMapper.fromDomain', () => {
-  const entryFor = (key: string, value: CloudSettingEntry['value']): CloudSettingEntry => ({
+  const entryFor = (
+    key: string,
+    value: CloudSettingEntry['value'],
+  ): CloudSettingEntry => ({
     key,
     value,
     updatedAt: null,
@@ -155,19 +168,31 @@ describe('UserSettingRowMapper.fromDomain', () => {
 
   it('pins user_id explicitly, so the upsert has a conflict target and satisfies the RLS with_check', () => {
     const option = boolOption ?? optionFor('general.overdueAlerts')
-    const row = UserSettingRowMapper.fromDomain(entryFor(option.key, true), option, 'u-1')
+    const row = UserSettingRowMapper.fromDomain(
+      entryFor(option.key, true),
+      option,
+      'u-1',
+    )
     expect(row?.user_id).toBe('u-1')
   })
 
   it('omits updated_at, leaving the account clock to the server trigger', () => {
     const option = boolOption ?? optionFor('general.overdueAlerts')
-    const row = UserSettingRowMapper.fromDomain(entryFor(option.key, true), option, 'u-1')
+    const row = UserSettingRowMapper.fromDomain(
+      entryFor(option.key, true),
+      option,
+      'u-1',
+    )
     expect(row?.updated_at).toBeUndefined()
   })
 
   it('writes the declared value_type for an integer option', () => {
     if (intOption === undefined) return
-    const row = UserSettingRowMapper.fromDomain(entryFor(intOption.key, 25), intOption, 'u-1')
+    const row = UserSettingRowMapper.fromDomain(
+      entryFor(intOption.key, 25),
+      intOption,
+      'u-1',
+    )
     expect(row?.value_type).toBe(SettingValueType.int)
     expect(row?.value).toBe('25')
   })
@@ -175,8 +200,14 @@ describe('UserSettingRowMapper.fromDomain', () => {
   it('writes an enumeration as its raw string value', () => {
     if (enumOption === undefined) return
     const raw =
-      enumOption.type.kind === 'enumeration' ? (enumOption.type.cases[0] ?? 'x') : 'x'
-    const row = UserSettingRowMapper.fromDomain(entryFor(enumOption.key, raw), enumOption, 'u-1')
+      enumOption.type.kind === 'enumeration'
+        ? (enumOption.type.cases[0] ?? 'x')
+        : 'x'
+    const row = UserSettingRowMapper.fromDomain(
+      entryFor(enumOption.key, raw),
+      enumOption,
+      'u-1',
+    )
     expect(row?.value_type).toBe(SettingValueType.string)
     expect(row?.value).toBe(raw)
   })
@@ -184,7 +215,11 @@ describe('UserSettingRowMapper.fromDomain', () => {
   it('refuses to build a row whose value does not match the option type — the option is simply not pushed', () => {
     const option = boolOption ?? optionFor('general.overdueAlerts')
     expect(
-      UserSettingRowMapper.fromDomain(entryFor(option.key, 'true'), option, 'u-1'),
+      UserSettingRowMapper.fromDomain(
+        entryFor(option.key, 'true'),
+        option,
+        'u-1',
+      ),
     ).toBeNull()
   })
 })

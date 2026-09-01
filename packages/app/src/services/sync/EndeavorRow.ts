@@ -255,9 +255,12 @@ export const EndeavorRowMapper = {
       minimum_duration: endeavor.minimumDuration,
       maximum_duration: endeavor.maximumDuration,
       repeatConfig:
-        endeavor.repeatConfig === null ? null : encodeRepeatConfig(endeavor.repeatConfig),
+        endeavor.repeatConfig === null
+          ? null
+          : encodeRepeatConfig(endeavor.repeatConfig),
       tags: endeavor.tags === null ? null : [...endeavor.tags],
-      shadows: endeavor.shadows === null ? null : endeavor.shadows.map(encodeShadow),
+      shadows:
+        endeavor.shadows === null ? null : endeavor.shadows.map(encodeShadow),
       // Canon: `list`, when set, is the authoritative project assignment and
       // overrides `projectId`.
       project_id: endeavor.list?.id ?? endeavor.projectId,

@@ -81,7 +81,9 @@ const loaded = rootWith(captureStateMocks.loadedPool)
 
 describe('selectIsCaptureLoading', () => {
   it('is true while the first read is in flight', () => {
-    expect(selectIsCaptureLoading(rootWith(captureStateMocks.loading))).toBe(true)
+    expect(selectIsCaptureLoading(rootWith(captureStateMocks.loading))).toBe(
+      true,
+    )
   })
 
   it('is false once the pool has landed', () => {
@@ -152,7 +154,8 @@ describe('selectCaptureDraft', () => {
 
   it('exposes the live draft the prompt renders', () => {
     expect(
-      selectCaptureDraft(rootWith(captureStateMocks.promptReadyToSubmit))?.title,
+      selectCaptureDraft(rootWith(captureStateMocks.promptReadyToSubmit))
+        ?.title,
     ).toBe('Book the flights')
   })
 
@@ -469,7 +472,8 @@ describe('selectAddForToday', () => {
 
   it('names the row the popover is anchored to', () => {
     expect(
-      selectAddForToday(rootWith(captureStateMocks.addForTodayOpen))?.endeavorId,
+      selectAddForToday(rootWith(captureStateMocks.addForTodayOpen))
+        ?.endeavorId,
     ).toBe('fresh-task')
   })
 
@@ -497,7 +501,9 @@ describe('selectAddForTodayPrefill', () => {
         pickedTime: captureMockAt(17, 18, 30),
       },
     })
-    expect(selectAddForTodayPrefill(adjusted)).toEqual(captureMockAt(17, 18, 30))
+    expect(selectAddForTodayPrefill(adjusted)).toEqual(
+      captureMockAt(17, 18, 30),
+    )
   })
 })
 
@@ -507,12 +513,14 @@ describe('selectSchedulingUndo', () => {
   })
 
   it('carries what the toast needs while the window is open', () => {
-    expect(selectSchedulingUndo(rootWith(captureStateMocks.undoArmed))).toEqual({
-      endeavorId: 'fresh-task',
-      title: 'Draft the announcement',
-      scheduledAt: captureMockAt(17, 10, 15),
-      expiresAt: new Date(CAPTURE_MOCK_NOW.getTime() + 8_000),
-    })
+    expect(selectSchedulingUndo(rootWith(captureStateMocks.undoArmed))).toEqual(
+      {
+        endeavorId: 'fresh-task',
+        title: 'Draft the announcement',
+        scheduledAt: captureMockAt(17, 10, 15),
+        expiresAt: new Date(CAPTURE_MOCK_NOW.getTime() + 8_000),
+      },
+    )
   })
 
   it('is null the moment the window expires', () => {
@@ -555,6 +563,8 @@ describe('selectUndoSnapshot', () => {
   })
 
   it('is null once expired, so a late tap has nothing to dispatch', () => {
-    expect(selectUndoSnapshot(rootWith(captureStateMocks.undoExpired))).toBeNull()
+    expect(
+      selectUndoSnapshot(rootWith(captureStateMocks.undoExpired)),
+    ).toBeNull()
   })
 })

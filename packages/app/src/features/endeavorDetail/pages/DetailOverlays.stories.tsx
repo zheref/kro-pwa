@@ -12,7 +12,10 @@ import {
 } from '../../find/pages/__tests__/pagesHarness'
 import { onDetailRequested, onEditRequested } from '../EndeavorDetailFeature'
 import { detailEndeavorMocks } from '../EndeavorDetailMocks'
-import { userDidTapField, userDidTapManageRelation } from '../EndeavorDetailFeature'
+import {
+  userDidTapField,
+  userDidTapManageRelation,
+} from '../EndeavorDetailFeature'
 import { DetailOverlays } from './DetailOverlays'
 import type { AppStore } from '../../../library/store'
 
@@ -48,7 +51,9 @@ export const EditOverDetail = {
     <Stage width={900}>
       <Harness
         store={presented(detailEndeavorMocks.event, (store) => {
-          store.dispatch(onEditRequested({ endeavor: detailEndeavorMocks.event }))
+          store.dispatch(
+            onEditRequested({ endeavor: detailEndeavorMocks.event }),
+          )
         })}
       >
         <DetailOverlays locale="en-US" />

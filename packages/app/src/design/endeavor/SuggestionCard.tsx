@@ -44,7 +44,12 @@
  */
 
 import type { ColorRole, SemanticRole } from '../system/tokens/roles'
-import { colorVar, radiusVar, semanticVar, shadowVar } from '../system/tokens/roles'
+import {
+  colorVar,
+  radiusVar,
+  semanticVar,
+  shadowVar,
+} from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
 
@@ -103,9 +108,10 @@ export function suggestionActionIcon(source: SuggestionSource): KitSymbolName {
  * `endeavorProjections` does — the CTA capsule paints its label white on this
  * colour, and a raw system tint under white text measures ≈2.2:1.
  */
-export function suggestionTint(
-  source: SuggestionSource,
-): { readonly color?: ColorRole; readonly semantic?: SemanticRole } {
+export function suggestionTint(source: SuggestionSource): {
+  readonly color?: ColorRole
+  readonly semantic?: SemanticRole
+} {
   switch (source) {
     case SuggestionSource.appleReminders:
       return { color: 'badgeBlue' }
@@ -167,7 +173,12 @@ export function SuggestionCard({
         boxShadow: shadowVar('subtle'),
       }}
     >
-      <Icon size={26} aria-hidden className="size-9 shrink-0" style={{ color: tint }} />
+      <Icon
+        size={26}
+        aria-hidden
+        className="size-9 shrink-0"
+        style={{ color: tint }}
+      />
 
       {/* The text column yields LAST — see the layoutPriority note above. It
           grows into the free space and then refuses to shrink; the CTA below

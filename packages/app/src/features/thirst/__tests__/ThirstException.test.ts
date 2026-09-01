@@ -43,7 +43,9 @@ describe('toThirstException', () => {
   })
 
   it('maps a browser transport TypeError to offline', () => {
-    expect(toThirstException(new TypeError('Failed to fetch')).kind).toBe('offline')
+    expect(toThirstException(new TypeError('Failed to fetch')).kind).toBe(
+      'offline',
+    )
   })
 
   it('degrades any other caught value to unknown, keeping its message for logs', () => {
@@ -55,9 +57,9 @@ describe('toThirstException', () => {
 
 describe('thirstExceptionCopy', () => {
   it('derives copy from kind, never from a raw server message', () => {
-    expect(thirstExceptionCopy(ThirstExceptions.unknown('pg error 23514'))).toBe(
-      'Something went wrong while voting.',
-    )
+    expect(
+      thirstExceptionCopy(ThirstExceptions.unknown('pg error 23514')),
+    ).toBe('Something went wrong while voting.')
   })
 
   it('reads the sign-in prompt for notSignedIn', () => {

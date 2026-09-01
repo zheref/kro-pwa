@@ -12,9 +12,34 @@
  * than markup: the provider holds the outlet elements a destination's
  * `ToolbarSlot` portals into, and it has to sit above both the shell's
  * toolbars and the destination that fills them.
+ *
+ * ## The Active Toast host, and why it is mounted HERE (KC-IS-#71 item 15)
+ *
+ * `ActiveToastHost` is a Component (`RC-14`): it keeps the toast in React state
+ * behind a context and may not learn that a store exists. `useActiveToasts()`
+ * throws outside a host, so the host must be an ANCESTOR of everything that
+ * enqueues — every destination, and every overlay in `AppShellClient`'s anchor.
+ * Both arrive here as `children`, so this is the highest point that is still
+ * inside the store's Provider.
+ *
+ * Two hosts used to be mounted further down — one in `CaptureOverlays`, one in
+ * `DoSurfaceFragment` — each `position="absolute"` inside its own subtree. That
+ * had three consequences the built app showed: a toast raised on the Do surface
+ * and one raised from the Inbox were different toasts (so neither replaced the
+ * other, which is the one-deep contract), neither was anchored to the viewport,
+ * and **the lift-above-pill rule was unreachable** because no host was told
+ * whether the Session Pill was on screen. One host, at the shell, fixes all
+ * three: it is `position="fixed"`, it is handed the shell's own bottom inset,
+ * and it reads the pill's visibility from the session slice.
+ *
+ * Reading `session` and `main` together is a root-level composition of two
+ * Selectors, which is exactly what `RC-20` sanctions and what this Page already
+ * does for the capture slice below.
  */
 import { useCallback, useEffect, type ReactNode } from 'react'
+import { ActiveToastHost } from '../../design/chrome/toast/ActiveToastHost'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
+import { selectIsSessionPillVisible } from '../session/SessionSelectors'
 import { MainShellFragment } from './MainShellFragment'
 import {
   onShellMounted,
@@ -49,10 +74,9 @@ import {
 import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { searchDestination } from './NavigationSections'
-import {
-  DestinationKind,
-  type SidebarDestination,
-} from './SidebarDestination'
+import { DestinationKind, type SidebarDestination } from './SidebarDestination'
+import { shellBottomInset } from './DoSurfaceLayout'
+import { SIDEBAR_IDEAL_WIDTH } from './SidebarFragment'
 import { ToolbarSlotsProvider } from './ToolbarSlots'
 import { useSurfaceLayout } from './useSurfaceLayout'
 
@@ -67,10 +91,7 @@ export interface MainShellPageProps {
   readonly children?: ReactNode
 }
 
-export function MainShellPage({
-  isDevelopment,
-  children,
-}: MainShellPageProps) {
+export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
   const dispatch = useAppDispatch()
   const surface = useSurfaceLayout()
 
@@ -85,16 +106,16 @@ export function MainShellPage({
   const isSidebarVisible = useAppSelector(selectIsSidebarVisible)
   const canManageProjects = useAppSelector(selectCanManageProjects)
   const pendingRoute = useAppSelector(selectPendingShellRoute)
+  const isSessionPillVisible = useAppSelector(selectIsSessionPillVisible)
 
   // Mount: stamp the first measurement and resolve the gates + the Lists rows.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by design — `surface` is re-applied by the effect below, not by re-mounting
   useEffect(() => {
     dispatch(onShellMounted({ surface, isDevelopment }))
     const effect = dispatch(loadShellThunk())
     return () => effect.abort()
     // The surface is stamped once at mount; every later change arrives through
     // the effect below, which is what keeps this from re-running the load.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by
-    // design — `surface` is re-applied by the effect below, not by re-mounting.
   }, [dispatch, isDevelopment])
 
   // Every later crossing of the breakpoint (or a pointer change).
@@ -168,84 +189,109 @@ export function MainShellPage({
     (projectId: string) => {
       const wasSelected =
         selected.kind === 'list' && selected.listId === projectId
-      void dispatch(deleteProjectThunk({ id: projectId, now: new Date() })).then(
-        () => {
-          // The shifter already moves `selected` to My Day; the URL must
-          // follow, or the route remount re-selects the deleted list and the
-          // highlight snaps back.
-          if (wasSelected) {
-            void dispatch(
-              navigateToDestinationThunk({
-                destination: { kind: DestinationKind.myDay },
-              }),
-            )
-          }
-        },
-      )
+      void dispatch(
+        deleteProjectThunk({ id: projectId, now: new Date() }),
+      ).then(() => {
+        // The shifter already moves `selected` to My Day; the URL must
+        // follow, or the route remount re-selects the deleted list and the
+        // highlight snaps back.
+        if (wasSelected) {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.myDay },
+            }),
+          )
+        }
+      })
     },
     [dispatch, selected],
   )
 
   return (
-    <ToolbarSlotsProvider>
-      <MainShellFragment
-        shape={shape}
-        layout={layout}
-        selected={selected}
-        sections={sections}
-        tabs={tabs}
-        searchDestination={searchDestination}
-        searchQuery={searchQuery}
-        isAddingProject={isAddingProject}
-        draftProjectTitle={draftProjectTitle}
-        canManageProjects={canManageProjects}
-        isSidebarVisible={isSidebarVisible}
-        onSelectDestination={onSelectDestination}
-        onChangeSearchQuery={(query) =>
-          dispatch(userDidChangeSearchQuery({ query }))
-        }
-        onSubmitSearch={onSubmitSearch}
-        onTapAddProject={() => dispatch(userDidTapAddProject())}
-        onEditDraftProjectTitle={(title) =>
-          dispatch(userDidEditDraftProjectTitle({ title }))
-        }
-        onCommitDraftProject={onCommitDraftProject}
-        onCancelDraftProject={() => dispatch(userDidCancelAddProject())}
-        onDeleteProject={onDeleteProject}
-        onToggleSidebar={() => dispatch(userDidToggleSidebar())}
-        /*
-          Profile opens Adjust for now. Canon's `ProfilePopoverView` is a
-          popover whose primary action is `userDidTapOpenSettings(.profile)`
-          — the popover itself belongs to the settings child (KC-IS-#32), so
-          the shell routes straight to the destination that action targets
-          rather than shipping a control that does nothing.
-        */
-        onTapProfile={() =>
-          onSelectDestination({ kind: DestinationKind.settings })
-        }
-        onTapInbox={() => onSelectDestination({ kind: DestinationKind.inbox })}
-        onTapSettings={() =>
-          onSelectDestination({ kind: DestinationKind.settings })
-        }
-      >
-        {/*
-          The Profile control's CONTENT, mounted shell-wide (KC-IS-#32).
+    <ActiveToastHost
+      isSessionPillVisible={isSessionPillVisible}
+      /*
+        The shell's own bottom chrome, handed over rather than read from
+        `--kro-shell-bottom-inset`. The host renders the layer as a SIBLING of
+        the shell's root element, and a custom property inherits downward only
+        — so the variable `MainShellFragment` publishes on that root would not
+        reach the layer. The prop is the seam the kit already declares for
+        exactly this case.
+      */
+      bottomInset={shellBottomInset(shape, layout)}
+      /*
+        And the leading one. Canon anchors the toast 16pt in from the leading
+        edge of the CONTENT column; on the sidebar shell the window's edge is
+        further left, and a viewport-anchored layer starts underneath the
+        sidebar with its message clipped by it — which is what the first
+        capture of the built app showed.
+      */
+      leadingInset={
+        shape === 'sidebar' && isSidebarVisible ? SIDEBAR_IDEAL_WIDTH : 0
+      }
+    >
+      <ToolbarSlotsProvider>
+        <MainShellFragment
+          shape={shape}
+          layout={layout}
+          selected={selected}
+          sections={sections}
+          tabs={tabs}
+          searchDestination={searchDestination}
+          searchQuery={searchQuery}
+          isAddingProject={isAddingProject}
+          draftProjectTitle={draftProjectTitle}
+          canManageProjects={canManageProjects}
+          isSidebarVisible={isSidebarVisible}
+          onSelectDestination={onSelectDestination}
+          onChangeSearchQuery={(query) =>
+            dispatch(userDidChangeSearchQuery({ query }))
+          }
+          onSubmitSearch={onSubmitSearch}
+          onTapAddProject={() => dispatch(userDidTapAddProject())}
+          onEditDraftProjectTitle={(title) =>
+            dispatch(userDidEditDraftProjectTitle({ title }))
+          }
+          onCommitDraftProject={onCommitDraftProject}
+          onCancelDraftProject={() => dispatch(userDidCancelAddProject())}
+          onDeleteProject={onDeleteProject}
+          onToggleSidebar={() => dispatch(userDidToggleSidebar())}
+          /*
+            Profile opens Adjust for now. Canon's `ProfilePopoverView` is a
+            popover whose primary action is `userDidTapOpenSettings(.profile)`
+            — the popover itself belongs to the settings child (KC-IS-#32), so
+            the shell routes straight to the destination that action targets
+            rather than shipping a control that does nothing.
+          */
+          onTapProfile={() =>
+            onSelectDestination({ kind: DestinationKind.settings })
+          }
+          onTapInbox={() =>
+            onSelectDestination({ kind: DestinationKind.inbox })
+          }
+          onTapSettings={() =>
+            onSelectDestination({ kind: DestinationKind.settings })
+          }
+        >
+          {/*
+            The Profile control's CONTENT, mounted shell-wide (KC-IS-#32).
 
-          It fills the shell's `profile` toolbar slot with canon's
-          `ProfilePopoverView`, and it hosts the two surfaces that must be
-          reachable from anywhere rather than from one destination: the auth
-          sheet, and the existing-local-data dialog — which appears after a
-          sign-in that may have completed via an OAuth redirect landing on any
-          route at all.
+            It fills the shell's `profile` toolbar slot with canon's
+            `ProfilePopoverView`, and it hosts the two surfaces that must be
+            reachable from anywhere rather than from one destination: the auth
+            sheet, and the existing-local-data dialog — which appears after a
+            sign-in that may have completed via an OAuth redirect landing on any
+            route at all.
 
-          Mounted here rather than inside `/adjust` for exactly that reason, and
-          composed by the shell's Page rather than imported by its Fragment: a
-          Page is the artifact allowed to reach across features (`RC-37`), the
-          same way this one already dispatches into the capture slice above.
-        */}
-        <ProfileControlPage />
-        {children}
-      </MainShellFragment>
-    </ToolbarSlotsProvider>
+            Mounted here rather than inside `/adjust` for exactly that reason, and
+            composed by the shell's Page rather than imported by its Fragment: a
+            Page is the artifact allowed to reach across features (`RC-37`), the
+            same way this one already dispatches into the capture slice above.
+          */}
+          <ProfileControlPage />
+          {children}
+        </MainShellFragment>
+      </ToolbarSlotsProvider>
+    </ActiveToastHost>
   )
 }

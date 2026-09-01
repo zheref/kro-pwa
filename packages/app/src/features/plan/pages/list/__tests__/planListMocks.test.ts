@@ -106,9 +106,9 @@ describe('planListTimeOfDayDay', () => {
   })
 
   it('gives every band row a start, so the band is read from the row itself', () => {
-    expect(planListTimeOfDayDay.every((endeavor) => endeavor.start !== null)).toBe(
-      true,
-    )
+    expect(
+      planListTimeOfDayDay.every((endeavor) => endeavor.start !== null),
+    ).toBe(true)
   })
 })
 
@@ -130,6 +130,8 @@ describe('planListSortDay', () => {
   })
 
   it('gives no row a start, so Time falls through to its title tiebreak', () => {
-    expect(planListSortDay.every((endeavor) => endeavor.start === null)).toBe(true)
+    expect(planListSortDay.every((endeavor) => endeavor.start === null)).toBe(
+      true,
+    )
   })
 })

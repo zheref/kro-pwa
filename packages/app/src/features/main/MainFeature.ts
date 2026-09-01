@@ -24,10 +24,7 @@
  */
 import type { Project } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
-import {
-  type DoSurface,
-  SSR_DEFAULT_SURFACE,
-} from './DoSurfaceLayout'
+import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
 import {
@@ -40,10 +37,7 @@ import {
   type DestinationGates,
   closedDestinationGates,
 } from './NavigationSections'
-import {
-  DestinationKind,
-  type SidebarDestination,
-} from './SidebarDestination'
+import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import {
   withCaptureRouteConsumed,
   withDestinationSelected,
@@ -181,10 +175,7 @@ export const mainSlice = createSlice({
         isDevelopment: boolean
       }>,
     ) {
-      Object.assign(
-        state,
-        withSurfaceChanged(state, action.payload.surface),
-      )
+      Object.assign(state, withSurfaceChanged(state, action.payload.surface))
       state.isDevelopment = action.payload.isDevelopment
     },
 
@@ -238,14 +229,8 @@ export const mainSlice = createSlice({
     },
 
     /** User intent: typing in the sidebar's search field. */
-    userDidChangeSearchQuery(
-      state,
-      action: PayloadAction<{ query: string }>,
-    ) {
-      Object.assign(
-        state,
-        withSearchQueryChanged(state, action.payload.query),
-      )
+    userDidChangeSearchQuery(state, action: PayloadAction<{ query: string }>) {
+      Object.assign(state, withSearchQueryChanged(state, action.payload.query))
     },
 
     /** User intent: the "+" in the sidebar's Lists section. */

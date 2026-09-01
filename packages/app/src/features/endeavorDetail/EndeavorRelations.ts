@@ -146,9 +146,8 @@ export const isExternalHost = (host: EndeavorHost): boolean =>
   !isKroOwnedHost(host)
 
 /** Canon's `attachedHostsSelector` — the external hosts this endeavor is on. */
-export const attachedHostsOf = (
-  endeavor: Endeavor,
-): readonly EndeavorHost[] => endeavor.hostedBy.filter(isExternalHost)
+export const attachedHostsOf = (endeavor: Endeavor): readonly EndeavorHost[] =>
+  endeavor.hostedBy.filter(isExternalHost)
 
 /**
  * One attach candidate, and whether this build can actually attach it.
@@ -187,9 +186,7 @@ export const hostAttachCandidatesOf = (
   endeavor: Endeavor,
 ): readonly HostAttachCandidate[] =>
   endeavorHosts
-    .filter(
-      (host) => isExternalHost(host) && !endeavor.hostedBy.includes(host),
-    )
+    .filter((host) => isExternalHost(host) && !endeavor.hostedBy.includes(host))
     .map((host) => ({
       host,
       label: endeavorHostDisplayName(host),

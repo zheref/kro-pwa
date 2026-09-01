@@ -119,7 +119,11 @@ export const AuthMocks = {
   signUpReady: {
     ...base,
     mode: AuthMode.signUp,
-    form: { email: 'new@example.com', password: 'correct-horse', name: 'New User' },
+    form: {
+      email: 'new@example.com',
+      password: 'correct-horse',
+      name: 'New User',
+    },
   } satisfies AuthState,
 
   /** The existing-local-data dialog, with canon's count in it. */

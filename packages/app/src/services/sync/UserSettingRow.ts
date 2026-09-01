@@ -64,7 +64,9 @@ export interface UserSettingRow {
  * `timeOfDay` (minutes) and `daysSet` (bitmask) are both `int`; `enumeration`
  * is a `string` raw value.
  */
-export const storageValueTypeFor = (option: SettingOption): SettingValueType => {
+export const storageValueTypeFor = (
+  option: SettingOption,
+): SettingValueType => {
   switch (option.type.kind) {
     case 'bool':
       return SettingValueType.bool
@@ -125,7 +127,9 @@ export const encodeSettingPrimitive = (
     case SettingValueType.bool:
       return typeof value === 'boolean' ? (value ? 'true' : 'false') : null
     case SettingValueType.int:
-      return typeof value === 'number' && Number.isInteger(value) ? String(value) : null
+      return typeof value === 'number' && Number.isInteger(value)
+        ? String(value)
+        : null
     case SettingValueType.string:
       return typeof value === 'string' ? value : null
   }

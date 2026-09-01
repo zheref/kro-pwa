@@ -7,7 +7,9 @@ const TARGET = new Date(2026, 0, 13, 9, 0, 0)
 
 describe('makeDefer', () => {
   it('carries made, reason and target through unchanged', () => {
-    expect(makeDefer({ made: MADE, reason: 'Courier', target: TARGET })).toEqual({
+    expect(
+      makeDefer({ made: MADE, reason: 'Courier', target: TARGET }),
+    ).toEqual({
       made: MADE,
       reason: 'Courier',
       target: TARGET,
@@ -19,7 +21,9 @@ describe('makeDefer', () => {
   })
 
   it('keeps an empty-string reason distinct from an absent one', () => {
-    expect(makeDefer({ made: MADE, reason: '', target: TARGET }).reason).toBe('')
+    expect(makeDefer({ made: MADE, reason: '', target: TARGET }).reason).toBe(
+      '',
+    )
     expect(deferMocks.zeroLength.reason).toBe('')
     expect(deferMocks.noReason.reason).toBeNull()
   })

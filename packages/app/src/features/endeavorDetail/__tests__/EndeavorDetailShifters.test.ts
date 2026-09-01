@@ -5,10 +5,7 @@
 import { EndeavorField, EndeavorRelation, EndeavorStatus } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { EndeavorDetailExceptions } from '../EndeavorDetailException'
-import {
-  detailEndeavorMocks,
-  detailStateMocks,
-} from '../EndeavorDetailMocks'
+import { detailEndeavorMocks, detailStateMocks } from '../EndeavorDetailMocks'
 import {
   withDestinationDismissed,
   withDetailDismissed,
@@ -101,9 +98,12 @@ describe('a Detail row tap opens the right editor, and only when allowed', () =>
 
 describe('a relation’s manage affordance obeys the same matrix', () => {
   it('opens the relation screen for a kind that can manage it', () => {
-    const next = withRelationManagementRequested(detailStateMocks.presentedTask, {
-      relation: EndeavorRelation.performances,
-    })
+    const next = withRelationManagementRequested(
+      detailStateMocks.presentedTask,
+      {
+        relation: EndeavorRelation.performances,
+      },
+    )
     expect(next.destination).toEqual({
       kind: 'relation',
       relation: EndeavorRelation.performances,
@@ -124,9 +124,12 @@ describe('a relation’s manage affordance obeys the same matrix', () => {
   })
 
   it('opens hosts read-only on a habit', () => {
-    const next = withRelationManagementRequested(detailStateMocks.presentedHabit, {
-      relation: EndeavorRelation.hosts,
-    })
+    const next = withRelationManagementRequested(
+      detailStateMocks.presentedHabit,
+      {
+        relation: EndeavorRelation.hosts,
+      },
+    )
     expect(next.destination).toEqual({
       kind: 'relation',
       relation: EndeavorRelation.hosts,
@@ -134,9 +137,12 @@ describe('a relation’s manage affordance obeys the same matrix', () => {
   })
 
   it('clears the editor drafts when a relation screen takes over', () => {
-    const next = withRelationManagementRequested(detailStateMocks.durationOpen, {
-      relation: EndeavorRelation.performances,
-    })
+    const next = withRelationManagementRequested(
+      detailStateMocks.durationOpen,
+      {
+        relation: EndeavorRelation.performances,
+      },
+    )
     expect(next.edit).toBeNull()
     expect(next.duration).toBeNull()
   })
@@ -157,7 +163,9 @@ describe('dismissing the presented editor discards the working copy', () => {
   })
 
   it('is harmless when nothing was presented', () => {
-    expect(withDestinationDismissed(detailStateMocks.presentedTask).edit).toBeNull()
+    expect(
+      withDestinationDismissed(detailStateMocks.presentedTask).edit,
+    ).toBeNull()
   })
 })
 

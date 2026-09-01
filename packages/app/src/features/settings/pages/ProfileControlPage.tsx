@@ -61,7 +61,11 @@ import { ICON_SIZE } from '../../../design/system/icons/icons'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
-import { PRESENTATION_SIZE, PresentationSurface, presentationFor } from '../../main/MainPresentation'
+import {
+  PRESENTATION_SIZE,
+  PresentationSurface,
+  presentationFor,
+} from '../../main/MainPresentation'
 import { navigateToDestinationThunk } from '../../main/MainProducer'
 import { selectSurface } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
@@ -96,8 +100,7 @@ export function ProfileControlPage() {
     `observeAuthState` — the `onAuthStateChange` subscription that catches a
     token refresh or a sign-out in a second tab — is deliberately NOT wired
     here: it needs `ThunkExtra`, which a component may not reach (`RC-6`), so it
-    belongs to `apps/web`'s composition root. Named in the PR body as an open
-    cross-lane need.
+    belongs to `apps/web`'s composition root, where KC-IS-#71 item 7 wired it.
   */
   useEffect(() => {
     const effect = dispatch(restoreSessionThunk({ now: new Date() }))
@@ -124,7 +127,9 @@ export function ProfileControlPage() {
       accountEmail={user === null ? null : primaryEmail(user)}
       accountInitials={initials}
       planName={SUBSCRIPTION_PLAN_NAME}
-      onTapSignIn={() => dispatch(userDidTapSignIn({ origin: 'profilePopover' }))}
+      onTapSignIn={() =>
+        dispatch(userDidTapSignIn({ origin: 'profilePopover' }))
+      }
       onTapAllEndeavors={() => goTo('tasks')}
       onTapSettings={() => goTo('settings')}
       onTapSignOut={() => {
@@ -141,12 +146,7 @@ export function ProfileControlPage() {
             <SheetTrigger asChild>
               <ProfileTrigger initials={initials} isSignedIn={user !== null} />
             </SheetTrigger>
-            {/* Same `.kro-glass` position override as the auth modal below. */}
-            <SheetContent
-              side="bottom"
-              style={{ position: 'fixed' }}
-              className="p-0"
-            >
+            <SheetContent side="bottom" className="p-0">
               <SheetTitle className="sr-only">Profile</SheetTitle>
               {content}
             </SheetContent>
@@ -185,23 +185,10 @@ export function ProfileControlPage() {
           hideClose
           data-testid="auth-modal"
           /*
-            Two local overrides, both measured on the built app rather than
-            guessed:
-
-            1. `position: fixed` inline. The kit's `DialogContent` asks for it
-               with Tailwind's `fixed` utility, but `.kro-glass` sets
-               `position: relative` from an UNLAYERED stylesheet, and unlayered
-               CSS beats `@layer utilities` — so every glass dialog in the app
-               computes to `relative` and lands after the shell in normal flow
-               (measured: `top: 869px` in an 844px viewport). An inline style is
-               the one declaration that outranks both. The fix belongs in
-               `design/system/` — outside this issue's lane — and is named in the
-               PR body as a cross-lane finding.
-            2. A height cap, a scroll and top-anchoring, so the panel cannot run
-               off the bottom on a short viewport (a laptop in landscape, a
-               phone with the keyboard up).
+            A height cap, a scroll and top-anchoring, so the panel cannot run
+            off the bottom on a short viewport (a laptop in landscape, a phone
+            with the keyboard up). Measured on the built app.
           */
-          style={{ position: 'fixed' }}
           className={cn(
             'top-[3dvh] max-h-[94dvh] translate-y-0 overflow-y-auto',
             'max-w-[420px] border-0 bg-transparent p-0 shadow-none',
@@ -217,10 +204,14 @@ export function ProfileControlPage() {
 
       <LocalDataDialogFragment
         isPresented={localData.kind === 'shown'}
-        anonymousCount={localData.kind === 'shown' ? localData.anonymousCount : 0}
+        anonymousCount={
+          localData.kind === 'shown' ? localData.anonymousCount : 0
+        }
         isResolving={localData.kind === 'resolving'}
         onChoose={(choice: LocalDataChoice) => {
-          void dispatch(resolveLocalDataChoiceThunk({ choice, now: new Date() }))
+          void dispatch(
+            resolveLocalDataChoiceThunk({ choice, now: new Date() }),
+          )
         }}
         // Canon routes swipe-to-dismiss into the same arm as Cancel; this only
         // hides the prompt and touches no rows, which is what the slice's own

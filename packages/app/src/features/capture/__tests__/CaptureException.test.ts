@@ -35,9 +35,9 @@ describe('the capture failures a user can act on', () => {
     expect(canRetry(CaptureExceptions.endeavorNotFound('fresh-task'))).toBe(
       false,
     )
-    expect(
-      CaptureExceptions.endeavorNotFound('fresh-task').recoverable,
-    ).toBe(false)
+    expect(CaptureExceptions.endeavorNotFound('fresh-task').recoverable).toBe(
+      false,
+    )
   })
 
   it('offers no retry for an operation this surface does not implement', () => {

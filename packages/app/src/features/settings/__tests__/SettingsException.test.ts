@@ -11,7 +11,8 @@ import { SettingsExceptions } from '../SettingsException'
 
 describe('the four cases', () => {
   it('names an unreadable preference store, and offers a retry', () => {
-    const exception = SettingsExceptions.preferencesUnavailable('quota exceeded')
+    const exception =
+      SettingsExceptions.preferencesUnavailable('quota exceeded')
 
     expect(exception.kind).toBe('preferencesUnavailable')
     expect(exception.recoverable).toBe(true)
@@ -24,22 +25,25 @@ describe('the four cases', () => {
   })
 
   it('marks an unconfigured deployment unrecoverable — retrying supplies no client', () => {
-    const exception = SettingsExceptions.integrationUnconfigured('GOOGLE_CLIENT_ID')
+    const exception =
+      SettingsExceptions.integrationUnconfigured('GOOGLE_CLIENT_ID')
 
     expect(exception.kind).toBe('integrationUnconfigured')
     expect(exception.recoverable).toBe(false)
   })
 
   it('marks a failed connect attempt recoverable — the next one may work', () => {
-    expect(SettingsExceptions.integrationUnavailable('502').recoverable).toBe(true)
+    expect(SettingsExceptions.integrationUnavailable('502').recoverable).toBe(
+      true,
+    )
   })
 })
 
 describe('the developer message stays developer-facing', () => {
   it('keeps what it was given, for a log', () => {
-    expect(SettingsExceptions.preferencesUnavailable('quota exceeded').message).toBe(
-      'quota exceeded',
-    )
+    expect(
+      SettingsExceptions.preferencesUnavailable('quota exceeded').message,
+    ).toBe('quota exceeded')
   })
 
   it('defaults to empty rather than to a sentence a surface might print', () => {

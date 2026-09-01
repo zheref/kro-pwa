@@ -23,7 +23,9 @@ describe('GradientBackdrop', () => {
     render(<GradientBackdrop height="320px" data-testid="slab" />)
 
     expect(
-      screen.getByTestId('slab').style.getPropertyValue('--kro-gradient-height'),
+      screen
+        .getByTestId('slab')
+        .style.getPropertyValue('--kro-gradient-height'),
     ).toBe('320px')
   })
 
@@ -65,13 +67,17 @@ describe('GradientBackdrop', () => {
     // inline-style object every DOM element already has.
     render(<GradientBackdrop variant="indigoGrape" data-testid="slab" />)
 
-    expect(screen.getByTestId('slab').dataset.gradientVariant).toBe('indigoGrape')
+    expect(screen.getByTestId('slab').dataset.gradientVariant).toBe(
+      'indigoGrape',
+    )
   })
 })
 
 describe('GradientContent', () => {
   it('raises content above the slab so a surface never has to remember to', () => {
-    render(<GradientContent data-testid="content">Good morning</GradientContent>)
+    render(
+      <GradientContent data-testid="content">Good morning</GradientContent>,
+    )
 
     const content = screen.getByTestId('content')
     expect(content.className).toContain('kro-gradient-content')

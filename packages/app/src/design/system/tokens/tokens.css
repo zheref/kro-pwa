@@ -178,7 +178,8 @@
     transparent
   );
   /** Focus ring, drawn from the live accent so re-tinting carries through. */
-  --kro-ring: 0 0 0 3px color-mix(in srgb, var(--kro-color-accent) 35%, transparent);
+  --kro-ring: 0 0 0 3px
+    color-mix(in srgb, var(--kro-color-accent) 35%, transparent);
 
   /* ==================================================================
      Semantic roles — "what colour is a Habit" has exactly one answer.
@@ -274,7 +275,11 @@
      ================================================================== */
 
   /** The translucent elevated fill. `absolute` is our `--bg-elevated`. */
-  --kro-glass-surface: color-mix(in srgb, var(--kro-color-absolute) 24%, transparent);
+  --kro-glass-surface: color-mix(
+    in srgb,
+    var(--kro-color-absolute) 24%,
+    transparent
+  );
   --kro-glass-surface-hover: color-mix(
     in srgb,
     var(--kro-color-absolute) 85%,
@@ -291,7 +296,8 @@
   /** The inner top highlight. */
   --kro-glass-hi: rgb(255 255 255 / 0.55);
   /** The specular sheen: a radial hotspot over a top-down linear falloff. */
-  --kro-glass-sheen: radial-gradient(
+  --kro-glass-sheen:
+    radial-gradient(
       120% 80% at 30% 15%,
       rgb(255 255 255 / 0.4),
       transparent 55%
@@ -359,7 +365,8 @@
     --kro-color-timeline-selection-outline: #cf8dff;
     --kro-color-on-accent: #000000;
     --kro-glass-hi: rgb(255 255 255 / 0.2);
-    --kro-glass-sheen: radial-gradient(
+    --kro-glass-sheen:
+      radial-gradient(
         120% 80% at 30% 15%,
         rgb(255 255 255 / 0.18),
         transparent 55%
@@ -429,7 +436,8 @@
   --kro-color-timeline-selection-outline: #cf8dff;
   --kro-color-on-accent: #000000;
   --kro-glass-hi: rgb(255 255 255 / 0.2);
-  --kro-glass-sheen: radial-gradient(
+  --kro-glass-sheen:
+    radial-gradient(
       120% 80% at 30% 15%,
       rgb(255 255 255 / 0.18),
       transparent 55%

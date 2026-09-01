@@ -3,6 +3,7 @@ import {
   EndeavorStatus,
   type LocalStore,
   type Result,
+  ShareOutcome,
   isRecordDirty,
   pendingSyncRecords,
 } from '@kro/core'
@@ -13,6 +14,11 @@ import {
   stubbedThunkExtra,
 } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import {
+  type ShareService,
+  makeStubbedShareService,
+} from '../../../services/platform/share/ShareService'
+import { selectTriageShareNotice } from '../TriageSelectors'
 import type { TriageException } from '../TriageException'
 import {
   TRIAGE_MOCK_NOW,
@@ -24,6 +30,7 @@ import {
   type TriageSaveResult,
   openTriageThunk,
   saveTriageDecisionThunk,
+  shareTriageBlurbThunk,
 } from '../TriageProducer'
 import type { TriageDecision } from '../TriageRules'
 import { TRIAGE_RETRIES_PUSH_AUTOMATICALLY } from '../TriageSave'
@@ -457,5 +464,76 @@ describe('saveTriageDecisionThunk — the sync watermark', () => {
 
     const stored = await localStore.endeavors.get(target.id)
     expect(isRecordDirty(stored as NonNullable<typeof stored>)).toBe(true)
+  })
+})
+
+/**
+ * The share hand-off, as a Producer (KC-IS-#71 item 18).
+ *
+ * It used to be a module the Page called directly with an injected gateway
+ * prop. Now the Service arrives through `extra` and the outcome comes back in
+ * the `Result`, which is what lets the reducer hold it and a story render every
+ * case from a mock.
+ */
+describe('shareTriageBlurbThunk', () => {
+  const storeSharing = (service: ShareService) =>
+    makeStore({
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore(),
+      shareService: service,
+    })
+
+  const outcomeOf = async (service: ShareService) => {
+    const store = storeSharing(service)
+    const action = await store.dispatch(
+      shareTriageBlurbThunk({ text: 'hand this off' }),
+    )
+    const payload = shareTriageBlurbThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return { outcome: payload.value, store }
+  }
+
+  it('resolves what the Service reports, and records it on the slice', async () => {
+    const service = makeStubbedShareService()
+    const { outcome, store } = await outcomeOf(service)
+
+    expect(outcome).toBe(ShareOutcome.shared)
+    expect(store.getState().triage.shareOutcome).toBe(ShareOutcome.shared)
+    expect(service.sharedTexts()).toEqual(['hand this off'])
+  })
+
+  it('carries the clipboard fallback through, so the surface can say so', async () => {
+    const { outcome, store } = await outcomeOf(
+      makeStubbedShareService({ canShare: false }),
+    )
+
+    expect(outcome).toBe(ShareOutcome.copied)
+    expect(selectTriageShareNotice(store.getState())).toContain('clipboard')
+  })
+
+  it('reports unavailable when the platform offers neither capability', async () => {
+    const { outcome, store } = await outcomeOf(
+      makeStubbedShareService({ canShare: false, canWriteText: false }),
+    )
+
+    expect(outcome).toBe(ShareOutcome.unavailable)
+    expect(selectTriageShareNotice(store.getState())).toContain(
+      'could not be copied',
+    )
+  })
+
+  it('resolves unavailable rather than throwing when the Service throws', async () => {
+    // The Service is written not to throw; a Producer must not require its
+    // caller to know which ones do not (`RC-7`).
+    const throwing: ShareService = {
+      isSupported: () => true,
+      share: () => Promise.reject(new Error('boom')),
+    }
+
+    const { outcome } = await outcomeOf(throwing)
+
+    expect(outcome).toBe(ShareOutcome.unavailable)
   })
 })

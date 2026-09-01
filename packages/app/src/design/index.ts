@@ -124,7 +124,11 @@ export {
 
 // Primitives
 export { cn } from './system/utils/cn'
-export { type ButtonProps, Button, buttonVariants } from './system/primitives/button'
+export {
+  type ButtonProps,
+  Button,
+  buttonVariants,
+} from './system/primitives/button'
 export { type InputProps, Input } from './system/primitives/input'
 export {
   type DialogContentProps,
@@ -170,4 +174,9 @@ export {
   DropdownMenuSub,
   DropdownMenuTrigger,
 } from './system/primitives/dropdown-menu'
-export { Tabs, TabsContent, TabsList, TabsTrigger } from './system/primitives/tabs'
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from './system/primitives/tabs'

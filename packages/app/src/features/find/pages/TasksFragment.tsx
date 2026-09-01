@@ -186,7 +186,10 @@ export function TasksFragment(props: TasksFragmentProps) {
           />
         </form>
 
-        <GroupingControl grouping={grouping} onSelectGrouping={onSelectGrouping} />
+        <GroupingControl
+          grouping={grouping}
+          onSelectGrouping={onSelectGrouping}
+        />
 
         {exception === null ? null : (
           <InlineBanner
@@ -365,7 +368,10 @@ function TasksGroupBlock({
                   Outside the surface, the control is reachable by both input
                   types and the swipe still owns the row itself.
                 */
-                <li key={adapter.id} className="flex items-center gap-kro-small">
+                <li
+                  key={adapter.id}
+                  className="flex items-center gap-kro-small"
+                >
                   <div className="min-w-0 flex-1">
                     <EndeavorRow
                       endeavorId={adapter.id}

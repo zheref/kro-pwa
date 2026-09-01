@@ -35,30 +35,28 @@ describe('the palette is KroApple`s defaultCategories', () => {
 
   it('carries canon`s 60 glyphs in each — six full rows of seven, plus change', () => {
     for (const category of DEFAULT_EMOJI_CATEGORIES) {
-      expect(category.emojis, `${category.id} lost or gained a glyph`).toHaveLength(60)
+      expect(
+        category.emojis,
+        `${category.id} lost or gained a glyph`,
+      ).toHaveLength(60)
     }
   })
 
   it('has no duplicate inside a category', () => {
     for (const category of DEFAULT_EMOJI_CATEGORIES) {
-      expect(new Set(category.emojis).size, `${category.id} repeats a glyph`).toBe(
-        category.emojis.length,
-      )
+      expect(
+        new Set(category.emojis).size,
+        `${category.id} repeats a glyph`,
+      ).toBe(category.emojis.length)
     }
   })
 
   it('opens each category with the glyph canon opens it with', () => {
     // A spot check on the first entry of every category: a copy-paste that
     // shifted a block would move these before it changed a length.
-    expect(DEFAULT_EMOJI_CATEGORIES.map((category) => category.emojis[0])).toEqual([
-      '😀',
-      '💼',
-      '💻',
-      '🍎',
-      '❤️',
-      '🚗',
-      '🐶',
-    ])
+    expect(
+      DEFAULT_EMOJI_CATEGORIES.map((category) => category.emojis[0]),
+    ).toEqual(['😀', '💼', '💻', '🍎', '❤️', '🚗', '🐶'])
   })
 
   it('renders seven columns, as canon`s GridItem count does', () => {

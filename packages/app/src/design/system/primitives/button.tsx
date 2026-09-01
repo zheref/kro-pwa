@@ -34,19 +34,22 @@ const buttonVariants = cva(
     variants: {
       variant: {
         /** The one primary action on a surface. Reads on the live accent. */
-        primary: 'bg-kro-accent text-kro-on-accent shadow-kro-subtle hover:brightness-110',
+        primary:
+          'bg-kro-accent text-kro-on-accent shadow-kro-subtle hover:brightness-110',
         /** Everything alongside it. */
         secondary:
           'bg-kro-back-inner text-kro-fore shadow-kro-subtle hover:bg-kro-back-next',
         /** Low-emphasis, inline with content. */
         ghost: 'text-kro-fore hover:bg-kro-back-inner',
         /** Destructive. Paired with a word — never colour alone (epic AC 9). */
-        destructive: 'bg-kro-banner-danger text-white shadow-kro-subtle hover:brightness-110',
+        destructive:
+          'bg-kro-banner-danger text-white shadow-kro-subtle hover:brightness-110',
         /**
          * The KroGlass control. The material lives in `glass.css`, including
          * the Safari fix and every fallback, so this variant only asks for it.
          */
-        glass: 'kro-glass kro-glass--control kro-glass--interactive px-kro-medium',
+        glass:
+          'kro-glass kro-glass--control kro-glass--interactive px-kro-medium',
       },
       size: {
         /** Desktop-only chrome: the 28px pointer target. */

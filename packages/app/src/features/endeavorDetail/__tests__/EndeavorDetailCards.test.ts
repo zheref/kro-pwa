@@ -27,13 +27,13 @@ import { detailEndeavorMocks } from '../EndeavorDetailMocks'
 
 describe('the grouped cards follow the matrix’s visibility answer', () => {
   it('shows every section for a task', () => {
-    expect(visibleSections(EndeavorKind.task).map((model) => model.section)).toEqual(
-      [
-        EndeavorDetailSection.core,
-        EndeavorDetailSection.enrichment,
-        EndeavorDetailSection.recurrence,
-      ],
-    )
+    expect(
+      visibleSections(EndeavorKind.task).map((model) => model.section),
+    ).toEqual([
+      EndeavorDetailSection.core,
+      EndeavorDetailSection.enrichment,
+      EndeavorDetailSection.recurrence,
+    ])
   })
 
   it('hides `due` on a calendar event and keeps `start`', () => {

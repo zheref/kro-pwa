@@ -97,7 +97,8 @@ export const makeLiveWakeLockService = (
 ): WakeLockService => {
   const wakeLock =
     options.wakeLock === undefined ? defaultWakeLock() : options.wakeLock
-  const doc = options.document === undefined ? defaultDocument() : options.document
+  const doc =
+    options.document === undefined ? defaultDocument() : options.document
   const log = options.log ?? defaultLog
 
   let requested = false

@@ -28,7 +28,11 @@ import {
   findStateMocks,
 } from '../FindMocks'
 import type { FindState } from '../FindState'
-import { withFilterToggled, withSearchQuery, withShowArchivedToggled } from '../FindShifters'
+import {
+  withFilterToggled,
+  withSearchQuery,
+  withShowArchivedToggled,
+} from '../FindShifters'
 import {
   selectFindAreAllKindsHidden,
   selectFindCapabilities,
@@ -180,7 +184,9 @@ describe('Find’s displayed rows follow canon’s lens and sort', () => {
   })
 
   it('short-circuits to empty when every filter is off', () => {
-    expect(selectFindRows(rootWith(findStateMocks.everythingHidden))).toEqual([])
+    expect(selectFindRows(rootWith(findStateMocks.everythingHidden))).toEqual(
+      [],
+    )
   })
 
   it('reports the visible count and ids the bulk menu acts on', () => {
@@ -265,7 +271,10 @@ describe('the four empty states are told apart, in canon’s branch order', () =
         surface: 'find',
         toggle: { axis: 'status', value: EndeavorStatus.ongoing },
       }),
-      { surface: 'find', toggle: { axis: 'status', value: EndeavorStatus.planned } },
+      {
+        surface: 'find',
+        toggle: { axis: 'status', value: EndeavorStatus.planned },
+      },
     )
     expect(selectFindEmptyState(rootWith(alsoHidden))).toEqual({
       kind: 'filteredOut',
@@ -306,9 +315,9 @@ describe('All Tasks groups, limits and expands', () => {
   it('adapts every visible row against the tasks capabilities', () => {
     const [first] = selectTasksGroupAdapters(tasks)
     expect(first?.rows).toHaveLength(7)
-    expect(first?.rows[0]?.trailingSwipeActions.map((a) => a.operation)).toEqual(
-      ['markComplete', 'delete'],
-    )
+    expect(
+      first?.rows[0]?.trailingSwipeActions.map((a) => a.operation),
+    ).toEqual(['markComplete', 'delete'])
   })
 
   it('tells its own empty states apart', () => {
@@ -348,7 +357,9 @@ describe('the All Tasks heading follows canon’s fallback ladder', () => {
     })
     expect(selectTasksHeading(rootWith(searching))).toBe('Searching: "slides"')
     expect(selectTasksTitle(rootWith(searching))).toBe('Search')
-    expect(selectTasksHeading(rootWith(findStateMocks.tasksLoaded))).toBe('Tasks')
+    expect(selectTasksHeading(rootWith(findStateMocks.tasksLoaded))).toBe(
+      'Tasks',
+    )
     expect(selectTasksTitle(rootWith(findStateMocks.tasksLoaded))).toBe('')
   })
 
@@ -364,9 +375,9 @@ describe('the All Tasks heading follows canon’s fallback ladder', () => {
 describe('lifecycle and intents', () => {
   it('reports the loading and failed lifecycles', () => {
     expect(selectIsFindLoading(rootWith(findStateMocks.loading))).toBe(true)
-    expect(selectFindException(rootWith(findStateMocks.failedAfterLoad))?.kind).toBe(
-      'fetchFailed',
-    )
+    expect(
+      selectFindException(rootWith(findStateMocks.failedAfterLoad))?.kind,
+    ).toBe('fetchFailed')
   })
 
   it('suppresses a filter-driven empty hint until the saved lens has landed', () => {

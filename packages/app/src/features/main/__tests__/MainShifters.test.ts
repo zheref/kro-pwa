@@ -185,8 +185,7 @@ describe('withProjectDeleted', () => {
 describe('withSearchQueryChanged / withCaptureRouteConsumed', () => {
   it('records what is being searched for', () => {
     expect(
-      withSearchQueryChanged(MainMocks.desktopLoaded, 'groceries')
-        .searchQuery,
+      withSearchQueryChanged(MainMocks.desktopLoaded, 'groceries').searchQuery,
     ).toBe('groceries')
   })
 

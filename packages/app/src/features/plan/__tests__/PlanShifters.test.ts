@@ -1,6 +1,5 @@
 import type { Endeavor } from '@kro/core'
 import {
-  DayViewRange,
   EndeavorHost,
   EndeavorKind,
   EndeavorStatus,
@@ -26,7 +25,6 @@ import {
   withPlanDayLoadStarted,
   withPlanDayLoaded,
   withPlanMatrixLoad,
-  withPlanPreferencesApplied,
   withPlanPreloadCleared,
   withPlanPreloadInstalled,
   withPlanPreloadSettled,
@@ -50,6 +48,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: today,
       isQuickEventCreationEnabled: true,
+      enabledCapabilityFlags: [],
     })
     expect(next.now).toBe(PLAN_REFERENCE_NOW)
     expect(next.selectedDate).toBe(today)
@@ -61,6 +60,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: addingPlanDays(today, 1),
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     })
     expect(planDayKey(next.dayPickerCenter as Date)).toBe(todayKey)
   })
@@ -70,6 +70,7 @@ describe('withPlanViewLoaded', () => {
       now: PLAN_REFERENCE_NOW,
       selectedDate: today,
       isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
     })
     expect(next.isQuickEventCreationEnabled).toBe(false)
   })
@@ -77,7 +78,9 @@ describe('withPlanViewLoaded', () => {
 
 describe('withPlanClockAdvanced', () => {
   it('advances the clock without touching anything else mid-day', () => {
-    const next = withPlanClockAdvanced(planStateMocks.loaded, { now: planAt(10) })
+    const next = withPlanClockAdvanced(planStateMocks.loaded, {
+      now: planAt(10),
+    })
     expect(next.now).toEqual(planAt(10))
     expect(next.preloadedDays).toBe(planStateMocks.loaded.preloadedDays)
   })
@@ -108,32 +111,6 @@ describe('withPlanClockAdvanced', () => {
       now: new Date(tomorrow.getTime() + 60_000),
     })
     expect(next.preloadedDays[todayKey]).toEqual([])
-  })
-})
-
-describe('withPlanPreferencesApplied', () => {
-  it('narrows the rendered band to the chosen range', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.business,
-      showCompletedInTimeline: true,
-    })
-    expect(next.dayViewRange).toBe(DayViewRange.business)
-  })
-
-  it('hides completed items when the preference says so', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.full,
-      showCompletedInTimeline: false,
-    })
-    expect(next.showCompletedInTimeline).toBe(false)
-  })
-
-  it('changes nothing else about the day', () => {
-    const next = withPlanPreferencesApplied(planStateMocks.loaded, {
-      dayViewRange: DayViewRange.waking,
-      showCompletedInTimeline: true,
-    })
-    expect(next.dayLoad).toBe(planStateMocks.loaded.dayLoad)
   })
 })
 
@@ -175,7 +152,10 @@ describe('withPlanVisibility / withPlanVisibilityToggled', () => {
       axis: 'status',
       value: EndeavorStatus.closed,
     })
-    next = withPlanVisibilityToggled(next, { axis: 'calendar', value: 'personal' })
+    next = withPlanVisibilityToggled(next, {
+      axis: 'calendar',
+      value: 'personal',
+    })
     expect(next.visibility.hiddenHosts).toEqual([EndeavorHost.googleCalendar])
     expect(next.visibility.hiddenStatuses).toEqual([EndeavorStatus.closed])
     expect(next.visibility.hiddenCalendarIds).toEqual(['personal'])
@@ -196,7 +176,9 @@ describe('withSelectedDay', () => {
   })
 
   it('drops an uncommitted quick-create ghost for the same reason', () => {
-    const next = withSelectedDay(planStateMocks.quickCreating, { date: tomorrow })
+    const next = withSelectedDay(planStateMocks.quickCreating, {
+      date: tomorrow,
+    })
     expect(next.quickCreate).toBeNull()
   })
 
@@ -381,20 +363,23 @@ describe('withPlanPreloadCleared', () => {
   })
 
   it('leaves the authoritative day untouched', () => {
-    expect(withPlanPreloadCleared(planStateMocks.loadedWithPreload).dayLoad).toBe(
-      planStateMocks.loadedWithPreload.dayLoad,
-    )
+    expect(
+      withPlanPreloadCleared(planStateMocks.loadedWithPreload).dayLoad,
+    ).toBe(planStateMocks.loadedWithPreload.dayLoad)
   })
 
   it('is safe to run when the buffer is already empty', () => {
-    expect(withPlanPreloadCleared(planStateMocks.loaded).preloadedDays).toEqual({})
+    expect(withPlanPreloadCleared(planStateMocks.loaded).preloadedDays).toEqual(
+      {},
+    )
   })
 })
 
 describe('withPlanMatrixLoad', () => {
   it('moves to loading', () => {
     expect(
-      withPlanMatrixLoad(planStateMocks.loaded, { kind: 'loading' }).matrixLoad.kind,
+      withPlanMatrixLoad(planStateMocks.loaded, { kind: 'loading' }).matrixLoad
+        .kind,
     ).toBe('loading')
   })
 
@@ -425,8 +410,9 @@ describe('withQuickCreateDraft', () => {
   })
 
   it('clears it when the prompt closes, however it closed', () => {
-    expect(withQuickCreateDraft(planStateMocks.quickCreating, null).quickCreate)
-      .toBeNull()
+    expect(
+      withQuickCreateDraft(planStateMocks.quickCreating, null).quickCreate,
+    ).toBeNull()
   })
 
   it('touches nothing else', () => {

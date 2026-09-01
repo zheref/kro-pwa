@@ -83,7 +83,8 @@ const endeavor = (params: {
     due: params.due ?? null,
     duration: params.duration ?? null,
     completed: params.completed ?? null,
-    createdAt: params.createdAt === undefined ? CAPTURE_MOCK_NOW : params.createdAt,
+    createdAt:
+      params.createdAt === undefined ? CAPTURE_MOCK_NOW : params.createdAt,
     hostedBy: [EndeavorHost.local],
   })
 

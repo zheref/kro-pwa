@@ -127,7 +127,9 @@ export function FindPage({ input, locale }: FindPageProps) {
   // The URL is the authority for the shell's selection (`RC-63`).
   useEffect(() => {
     dispatch(
-      onDestinationRouteMounted({ destination: { kind: DestinationKind.search } }),
+      onDestinationRouteMounted({
+        destination: { kind: DestinationKind.search },
+      }),
     )
   }, [dispatch])
 

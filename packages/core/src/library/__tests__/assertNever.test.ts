@@ -24,7 +24,9 @@ describe('assertNever', () => {
   it('throws when a value outside the union reaches the default arm — a stale payload from an older build', () => {
     const rogue = { kind: 'pause' } as unknown as Signal
 
-    expect(() => describeSignal(rogue)).toThrow(/Unhandled discriminated-union case/)
+    expect(() => describeSignal(rogue)).toThrow(
+      /Unhandled discriminated-union case/,
+    )
   })
 
   it('names the offending value so the log says which member was missed', () => {

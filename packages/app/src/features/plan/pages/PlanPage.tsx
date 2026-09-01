@@ -47,11 +47,13 @@
  * Server Page's prefetch. See the PR body for what a slice-resident connection
  * would add, and why it belongs to the child that owns those files.
  */
-import type { Endeavor, EndeavorOperation, PlanListGrouping, PlanListSort } from '@kro/core'
-import {
-  planListGroupingOption,
-  planListSortOption,
+import type {
+  Endeavor,
+  EndeavorOperation,
+  PlanListGrouping,
+  PlanListSort,
 } from '@kro/core'
+import { planListGroupingOption, planListSortOption } from '@kro/core'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FABMenuEntry } from '../../../design/chrome'
 import { presentationFor } from '../../main/MainPresentation'
@@ -79,6 +81,7 @@ import {
   updateSettingThunk,
 } from '../../settings/SettingsProducer'
 import { vibrateForTimelineHoldThunk } from '../../platform/PlatformProducer'
+import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import {
   onViewLoaded,
   onClockTicked,
@@ -100,9 +103,12 @@ import {
 } from '../PlanEditSession'
 import { PlanViewMode } from '../PlanNavigation'
 import {
+  deletePlanEndeavorThunk,
   loadPlanDayThunk,
   loadPlanMatrixThunk,
+  persistQuadrantAssignmentsThunk,
   preloadPlanDaysThunk,
+  resolvePlanFlagsThunk,
   updateEventTimeThunk,
 } from '../PlanProducer'
 import {
@@ -125,6 +131,10 @@ import {
   selectPlanQuickCreateDraft,
   selectPlanSelectedDate,
   selectPlanSlotCount,
+  selectPlanListGrouping,
+  selectPlanListSections,
+  selectPlanListSort,
+  selectPlanRowCapabilities,
   selectPlanTimelineEvents,
   selectPlanTimelinePlacements,
   selectPlanViewMode,
@@ -132,13 +142,6 @@ import {
 import { PlanLoadReason } from '../PlanState'
 import { timelineSlotStart } from '../TimelineSlots'
 import { PlanListFragment } from './list/PlanListFragment'
-import { deletePlanEndeavorThunk } from './list/PlanListProducer'
-import {
-  selectPlanListGrouping,
-  selectPlanListSections,
-  selectPlanListSort,
-  selectPlanRowCapabilities,
-} from './list/PlanListSelectors'
 import { PlanMatrixFragment } from './matrix/PlanMatrixFragment'
 import {
   type PlanMatrixQuadrant,
@@ -217,7 +220,9 @@ export function PlanPage({
   const placements = useAppSelector(selectPlanTimelinePlacements)
   const events = useAppSelector(selectPlanTimelineEvents)
   const authoritative = useAppSelector(selectPlanAuthoritativeEvents)
-  const isQuickCreateAvailable = useAppSelector(selectIsPlanQuickCreateAvailable)
+  const isQuickCreateAvailable = useAppSelector(
+    selectIsPlanQuickCreateAvailable,
+  )
   const quickCreate = useAppSelector(selectPlanQuickCreateDraft)
   const editingEndeavorId = useAppSelector(selectPlanEditingEndeavorId)
   const editPreview = useAppSelector(selectPlanEditPreview)
@@ -247,9 +252,8 @@ export function PlanPage({
    * Fragment for the same reason (see its header). Nothing derived from either
    * survives dismissal.
    */
-  const [pickerQuadrant, setPickerQuadrant] = useState<PlanMatrixQuadrant | null>(
-    null,
-  )
+  const [pickerQuadrant, setPickerQuadrant] =
+    useState<PlanMatrixQuadrant | null>(null)
 
   /**
    * The route mounted.
@@ -269,25 +273,53 @@ export function PlanPage({
    */
   useEffect(() => {
     dispatch(
-      onDestinationRouteMounted({ destination: { kind: DestinationKind.plan } }),
+      onDestinationRouteMounted({
+        destination: { kind: DestinationKind.plan },
+      }),
     )
   }, [dispatch])
 
-  // Mount: stamp the clock and the day, then read the authoritative day and
-  // its read-ahead window. Canon's `.task { store.send(.started) }`.
+  /*
+    Mount: resolve the flags, then stamp the clock and the day. Canon's
+    `.task { store.send(.started) }`.
+
+    The flags are cached in the slice at `onViewLoaded` exactly as canon caches
+    them, so no Selector ever reaches for a flag Service. Reading them here
+    would need the Service this Page may not import (`RC-6`), so a Producer
+    resolves them and the Page dispatches the plain event with the answer —
+    the same shape Find uses (KC-IS-#71 item 22). Until it landed, this passed
+    `true` and a `() => false` capability baseline.
+  */
   useEffect(() => {
     const today = new Date()
-    dispatch(
-      onViewLoaded({
-        now: today,
-        selectedDate: today,
-        // The flag is cached in the slice at `onViewLoaded` exactly as canon
-        // caches it, so no Selector ever reaches for a flag service. Reading
-        // it here would need the Service this Page may not import (`RC-6`);
-        // the slice's own default is `statusQuo`, which ships it enabled.
-        isQuickEventCreationEnabled: true,
-      }),
-    )
+    const effect = dispatch(resolvePlanFlagsThunk())
+    void effect.then((action) => {
+      /*
+        Cancellation is the ONE silent exit (`UZF-14`). A superseded mount —
+        React's development double-invoke is the everyday one — must not stamp
+        the day on its way out: the abort would otherwise land `onViewLoaded`
+        with the flags off, racing the live mount's own answer for the last
+        write and taking quick create down with it.
+      */
+      if (resolvePlanFlagsThunk.rejected.match(action) && action.meta.aborted)
+        return
+      const result = resolvePlanFlagsThunk.fulfilled.match(action)
+        ? action.payload
+        : null
+      dispatch(
+        onViewLoaded({
+          now: today,
+          selectedDate: today,
+          isQuickEventCreationEnabled:
+            result?.ok === true
+              ? result.value.isQuickEventCreationEnabled
+              : false,
+          enabledCapabilityFlags:
+            result?.ok === true ? result.value.enabledCapabilityFlags : [],
+        }),
+      )
+    })
+    return () => effect.abort()
   }, [dispatch])
 
   // The minute clock. A dispatched tick rather than a `new Date()` at render,
@@ -412,12 +444,13 @@ export function PlanPage({
    *    about what still exists.
    *  - **startSession** — canon sends `.main(.onUserWantsToStartEvent(endeavor,
    *    nil))` and Main presents the Session surface for that endeavor. The web
-   *    has the destination but not the hand-off — session setup takes its
-   *    identity from KC-IS-#22's surface, which is in flight — so this
-   *    navigates to Execute and the endeavor is **not** carried. Named as a
-   *    divergence in the PR body and reported as a cross-lane need; a control
-   *    that goes to the right screen is honest, a control that does nothing is
-   *    not.
+   *    prepares the launch with that endeavor's identity and THEN navigates, so
+   *    Execute opens already showing the row's title, glyph and recommended
+   *    duration (KC-IS-#71 item 21). The navigation waits for the preparation:
+   *    arriving first would paint one frame of the anonymous `Focus Session`
+   *    before the identity landed. A preparation that fails still navigates —
+   *    the surface opens blank, which is what it does with no row at all, and
+   *    is better than a control that appears to do nothing.
    *
    * Anything else the registry grows is ignored rather than guessed at.
    */
@@ -449,10 +482,19 @@ export function PlanPage({
 
       if (operation === 'startSession') {
         void dispatch(
-          navigateToDestinationThunk({
-            destination: { kind: DestinationKind.session },
+          prepareSessionLaunchThunk({
+            endeavorId,
+            // The session's own id, minted here: identity is the composition
+            // site's to supply, never a Producer's.
+            sessionId: crypto.randomUUID(),
           }),
-        )
+        ).finally(() => {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.session },
+            }),
+          )
+        })
       }
     },
     [dispatch, openDetailFor, selectedDate],
@@ -462,7 +504,10 @@ export function PlanPage({
   const onSelectGrouping = useCallback(
     (grouping: PlanListGrouping) => {
       void dispatch(
-        updateSettingThunk({ key: planListGroupingOption.key, value: grouping }),
+        updateSettingThunk({
+          key: planListGroupingOption.key,
+          value: grouping,
+        }),
       )
     },
     [dispatch],
@@ -496,20 +541,26 @@ export function PlanPage({
 
   /**
    * Confirming the picker — canon's `.picked(endeavors, quadrant)` arm, one
-   * dispatch per row.
+   * dispatch per row, **then** canon's `produceMatrixResolvedEffect`.
    *
    * `userDidAssignToQuadrant` resolves each endeavor into the quadrant with
    * #18's deterministic assignment (the due date and value that make the
    * *derived* classification come out as that quadrant) and replaces every
-   * fetched copy together. Canon follows it with a persist effect
-   * (`produceMatrixResolvedEffect`); no such Producer exists in this feature
-   * yet, so the assignment is in-memory until the next write — reported as a
-   * cross-lane need in the PR body.
+   * fetched copy together. `persistQuadrantAssignmentThunk` then writes that
+   * resolved copy (KC-IS-#71 item 20) — without it the move was in memory only
+   * and vanished on the next pool read.
+   *
+   * The endeavor handed to the write is READ BACK from the slice rather than
+   * re-derived here, so the row on screen and the row on disk cannot come from
+   * two different derivations. `getState` is why this needs the store rather
+   * than `dispatch` alone; a Page may read it, and `RC-15` only forbids a
+   * Fragment from dispatching at all.
    */
   const onConfirmPicker = useCallback(
     (endeavorIds: readonly string[]) => {
       const quadrant = pickerQuadrant
       if (quadrant === null) return
+      const now = new Date()
       for (const endeavorId of endeavorIds) {
         dispatch(
           userDidAssignToQuadrant({
@@ -518,6 +569,7 @@ export function PlanPage({
           }),
         )
       }
+      dispatch(persistQuadrantAssignmentsThunk({ endeavorIds, now }))
       setPickerQuadrant(null)
     },
     [dispatch, pickerQuadrant],
@@ -853,29 +905,29 @@ export function PlanPage({
 
   return (
     <>
-    {picker}
-    <PlanFragment
-      selectedDate={selectedDate}
-      eventCount={events.length}
-      viewMode={viewMode}
-      onSelectViewMode={(mode) => dispatch(userDidSelectViewMode({ mode }))}
-      // The seam KC-IS-#19 left: two props, one call site, and nothing under
-      // `pages/timeline/**` moved to fill it.
-      destinations={{ timeline, list, matrix }}
-      staleSyncLabel={staleSyncLabel}
-      needsReconnect={googleNeedsReconnect}
-      reconnectDetail={googleReconnectDetail}
-      onTapReconnect={onTapReconnect}
-      isActivityIndicated={isActivityIndicated}
-      onTapRefresh={onTapRefresh}
-      visibility={visibility}
-      isVisibilityOpen={isVisibilityOpen}
-      onToggleVisibilityPanel={setIsVisibilityOpen}
-      visibilityPanel={visibilityPanel}
-      isFabAvailable={isFabAvailable}
-      isFabGlowActive={isFabGlowActive}
-      fabItems={fabItems}
-    />
+      {picker}
+      <PlanFragment
+        selectedDate={selectedDate}
+        eventCount={events.length}
+        viewMode={viewMode}
+        onSelectViewMode={(mode) => dispatch(userDidSelectViewMode({ mode }))}
+        // The seam KC-IS-#19 left: two props, one call site, and nothing under
+        // `pages/timeline/**` moved to fill it.
+        destinations={{ timeline, list, matrix }}
+        staleSyncLabel={staleSyncLabel}
+        needsReconnect={googleNeedsReconnect}
+        reconnectDetail={googleReconnectDetail}
+        onTapReconnect={onTapReconnect}
+        isActivityIndicated={isActivityIndicated}
+        onTapRefresh={onTapRefresh}
+        visibility={visibility}
+        isVisibilityOpen={isVisibilityOpen}
+        onToggleVisibilityPanel={setIsVisibilityOpen}
+        visibilityPanel={visibilityPanel}
+        isFabAvailable={isFabAvailable}
+        isFabGlowActive={isFabGlowActive}
+        fabItems={fabItems}
+      />
     </>
   )
 }

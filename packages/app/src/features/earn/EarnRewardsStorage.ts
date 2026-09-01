@@ -38,7 +38,11 @@
  * of device-stored state must not do; this port closes that gap rather than
  * reproducing it.
  */
-import { PREFERENCES_NAMESPACE, type KeyValueStore, type Reward } from '@kro/core'
+import {
+  PREFERENCES_NAMESPACE,
+  type KeyValueStore,
+  type Reward,
+} from '@kro/core'
 import { makeReward } from '@kro/core'
 
 const REWARDS_CATALOG_KEY = `${PREFERENCES_NAMESPACE}earn.rewards.catalog`

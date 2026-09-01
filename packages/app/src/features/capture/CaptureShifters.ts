@@ -12,11 +12,7 @@
  * land one tick after a dismiss and the slice must not invent a prompt to hold
  * it.
  */
-import {
-  type Endeavor,
-  makeReconciliationContext,
-  reconcile,
-} from '@kro/core'
+import { type Endeavor, makeReconciliationContext, reconcile } from '@kro/core'
 import type { CaptureException } from './CaptureException'
 import type {
   CaptureAddForTodayState,

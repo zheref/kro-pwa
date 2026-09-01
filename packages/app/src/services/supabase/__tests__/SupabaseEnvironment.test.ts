@@ -15,7 +15,9 @@ const configured = {
 
 describe('resolving a project from the environment', () => {
   it('reports a configured project when both variables are set (a deploy with its env in place)', () => {
-    const availability = supabaseAvailabilityFrom(makeRecordEnvironment(configured))
+    const availability = supabaseAvailabilityFrom(
+      makeRecordEnvironment(configured),
+    )
     expect(availability).toEqual({
       kind: 'configured',
       configuration: {
@@ -35,7 +37,9 @@ describe('resolving a project from the environment', () => {
 
   it('names only the missing one when half the pair is set (a half-finished setup)', () => {
     const availability = supabaseAvailabilityFrom(
-      makeRecordEnvironment({ [SUPABASE_URL_VARIABLE]: configured[SUPABASE_URL_VARIABLE] }),
+      makeRecordEnvironment({
+        [SUPABASE_URL_VARIABLE]: configured[SUPABASE_URL_VARIABLE],
+      }),
     )
     expect(availability).toEqual({
       kind: 'unconfigured',
@@ -45,7 +49,10 @@ describe('resolving a project from the environment', () => {
 
   it('treats a blank value as absent — a .env line with nothing after the =', () => {
     const availability = supabaseAvailabilityFrom(
-      makeRecordEnvironment({ ...configured, [SUPABASE_ANON_KEY_VARIABLE]: '   ' }),
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_ANON_KEY_VARIABLE]: '   ',
+      }),
     )
     expect(availability).toEqual({
       kind: 'unconfigured',
@@ -71,7 +78,10 @@ describe('resolving a project from the environment', () => {
 
   it('rejects a URL that is not http(s) — a CI secret that failed to interpolate', () => {
     const availability = supabaseAvailabilityFrom(
-      makeRecordEnvironment({ ...configured, [SUPABASE_URL_VARIABLE]: 'project.supabase.co' }),
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_URL_VARIABLE]: 'project.supabase.co',
+      }),
     )
     expect(availability).toEqual({
       kind: 'unconfigured',
@@ -81,7 +91,10 @@ describe('resolving a project from the environment', () => {
 
   it('rejects a non-HTTP scheme rather than letting new URL() accept it', () => {
     const availability = supabaseAvailabilityFrom(
-      makeRecordEnvironment({ ...configured, [SUPABASE_URL_VARIABLE]: 'mailto:ops@example.com' }),
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_URL_VARIABLE]: 'mailto:ops@example.com',
+      }),
     )
     expect(availability.kind).toBe('unconfigured')
   })
@@ -98,12 +111,18 @@ describe('the ambient process environment', () => {
   it('answers undefined in a runtime with no process rather than throwing', () => {
     // jsdom has no `process`… except under Vitest, which does. Either way the
     // read must not throw, which is the property under test.
-    expect(() => processEnvironment.read('DEFINITELY_NOT_SET_ANYWHERE')).not.toThrow()
-    expect(processEnvironment.read('DEFINITELY_NOT_SET_ANYWHERE')).toBeUndefined()
+    expect(() =>
+      processEnvironment.read('DEFINITELY_NOT_SET_ANYWHERE'),
+    ).not.toThrow()
+    expect(
+      processEnvironment.read('DEFINITELY_NOT_SET_ANYWHERE'),
+    ).toBeUndefined()
   })
 
   it('reads a variable that is set', () => {
-    const host = globalThis as { process?: { env?: Record<string, string | undefined> } }
+    const host = globalThis as {
+      process?: { env?: Record<string, string | undefined> }
+    }
     if (host.process?.env !== undefined) {
       host.process.env.KRO_TEST_PROBE = 'present'
       expect(processEnvironment.read('KRO_TEST_PROBE')).toBe('present')

@@ -92,7 +92,8 @@ describe('selectEarnException', () => {
 
   it('surfaces the exception on a failed state', () => {
     expect(
-      selectEarnException(rootWith(earnStateMocks.failedRefreshKeepingCatalog))?.kind,
+      selectEarnException(rootWith(earnStateMocks.failedRefreshKeepingCatalog))
+        ?.kind,
     ).toBe('catalogLoadFailed')
   })
 
@@ -115,7 +116,9 @@ describe('selectTotalEarnedPoints / selectSpentPoints / selectCurrentPoints', ()
   it('deducts the claimed reward from the balance', () => {
     const claiming = rootWith(earnStateMocks.loadedWithClaim)
     expect(selectSpentPoints(claiming)).toBe(rewardMocks.bobaTea.pointsRequired)
-    expect(selectCurrentPoints(claiming)).toBe(130 - rewardMocks.bobaTea.pointsRequired)
+    expect(selectCurrentPoints(claiming)).toBe(
+      130 - rewardMocks.bobaTea.pointsRequired,
+    )
   })
 
   it('is zero on an empty catalog and no performances', () => {
@@ -153,7 +156,9 @@ describe('selectClaimableRewards / selectLockedRewards', () => {
 describe('selectAvailableSuggestions / selectIsEarnCatalogEmpty', () => {
   it('excludes suggestions already in the catalog', () => {
     const suggestions = selectAvailableSuggestions(rootWith(loaded))
-    expect(suggestions.some((s) => s.title === rewardMocks.bobaTea.title)).toBe(false)
+    expect(suggestions.some((s) => s.title === rewardMocks.bobaTea.title)).toBe(
+      false,
+    )
   })
 
   it('reports the catalog non-empty when loaded with rewards', () => {
@@ -161,7 +166,9 @@ describe('selectAvailableSuggestions / selectIsEarnCatalogEmpty', () => {
   })
 
   it('reports the catalog empty once loaded with nothing in it', () => {
-    expect(selectIsEarnCatalogEmpty(rootWith(earnStateMocks.loadedEmpty))).toBe(true)
+    expect(selectIsEarnCatalogEmpty(rootWith(earnStateMocks.loadedEmpty))).toBe(
+      true,
+    )
   })
 })
 
@@ -198,11 +205,16 @@ describe('selectIsAddingReward / selectAddRewardDraft', () => {
   })
 
   it('is true once the sheet opens', () => {
-    expect(selectIsAddingReward(rootWith(earnStateMocks.addingReward))).toBe(true)
+    expect(selectIsAddingReward(rootWith(earnStateMocks.addingReward))).toBe(
+      true,
+    )
   })
 
   it('reflects the draft prefilled from the default threshold', () => {
-    expect(selectAddRewardDraft(rootWith(earnStateMocks.addingReward)).pointsRequired).toBe(100)
+    expect(
+      selectAddRewardDraft(rootWith(earnStateMocks.addingReward))
+        .pointsRequired,
+    ).toBe(100)
   })
 })
 
@@ -213,15 +225,15 @@ describe('selectClaimingRewardId / selectClaimingReward', () => {
   })
 
   it('resolves the id once the confirm sheet opens', () => {
-    expect(selectClaimingRewardId(rootWith(earnStateMocks.claimingReward))).toBe(
-      rewardMocks.bobaTea.id,
-    )
+    expect(
+      selectClaimingRewardId(rootWith(earnStateMocks.claimingReward)),
+    ).toBe(rewardMocks.bobaTea.id)
   })
 
   it('resolves the full reward from the catalog', () => {
-    expect(selectClaimingReward(rootWith(earnStateMocks.claimingReward))?.id).toBe(
-      rewardMocks.bobaTea.id,
-    )
+    expect(
+      selectClaimingReward(rootWith(earnStateMocks.claimingReward))?.id,
+    ).toBe(rewardMocks.bobaTea.id)
   })
 })
 
@@ -244,7 +256,12 @@ const mulberry32 = (seed: number) => {
   }
 }
 
-const catalog = [rewardMocks.bobaTea, rewardMocks.movieNight, rewardMocks.weekendTrip, rewardMocks.plain]
+const catalog = [
+  rewardMocks.bobaTea,
+  rewardMocks.movieNight,
+  rewardMocks.weekendTrip,
+  rewardMocks.plain,
+]
 
 type Operation =
   | { readonly kind: 'earn'; readonly points: number }

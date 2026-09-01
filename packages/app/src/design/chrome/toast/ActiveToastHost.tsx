@@ -76,6 +76,11 @@ export interface ActiveToastHostProps {
    * layer reads `var(--kro-shell-bottom-inset, 0px)` — see `ActiveToastLayer`.
    */
   readonly bottomInset?: number | string
+  /**
+   * The shell's leading chrome inset (its sidebar), forwarded to the layer.
+   * Omit it and the toast sits against the viewport's own leading edge.
+   */
+  readonly leadingInset?: number | string
 }
 
 export function ActiveToastHost({
@@ -83,6 +88,7 @@ export function ActiveToastHost({
   isSessionPillVisible = false,
   position = 'fixed',
   bottomInset,
+  leadingInset,
 }: ActiveToastHostProps) {
   const [toast, setToast] = useState<ActiveToastModel | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -93,17 +99,14 @@ export function ActiveToastHost({
     timerRef.current = null
   }, [])
 
-  const dismiss = useCallback(
-    (id?: string) => {
-      setToast((showing) => {
-        // A stale dismiss — an undo handler firing after a newer toast replaced
-        // the one it belonged to — must not take the newer toast down with it.
-        if (id !== undefined && showing?.id !== id) return showing
-        return null
-      })
-    },
-    [],
-  )
+  const dismiss = useCallback((id?: string) => {
+    setToast((showing) => {
+      // A stale dismiss — an undo handler firing after a newer toast replaced
+      // the one it belonged to — must not take the newer toast down with it.
+      if (id !== undefined && showing?.id !== id) return showing
+      return null
+    })
+  }, [])
 
   const enqueue = useCallback((input: ActiveToastInput) => {
     const next = toActiveToast(input)
@@ -136,6 +139,7 @@ export function ActiveToastHost({
         isSessionPillVisible={isSessionPillVisible}
         position={position}
         {...(bottomInset === undefined ? {} : { bottomInset })}
+        {...(leadingInset === undefined ? {} : { leadingInset })}
       />
     </ActiveToastContext.Provider>
   )

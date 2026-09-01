@@ -15,7 +15,9 @@ afterEach(cleanup)
 const day = doSurfaceProps(doSurfaceMocks.typicalDay)
 const overdue = { title: 'Overdue', tag: 'overdue' } as const
 
-const list = (overrides: Partial<Parameters<typeof DoTasksListFragment>[0]> = {}) => (
+const list = (
+  overrides: Partial<Parameters<typeof DoTasksListFragment>[0]> = {},
+) => (
   <DoTasksListFragment
     destination={overdue}
     tasks={day.lanes.overdue}
@@ -64,7 +66,7 @@ describe('leaving the list', () => {
 })
 
 describe('preparation inside the list', () => {
-  it('prepares a card under this section\'s own tag', async () => {
+  it("prepares a card under this section's own tag", async () => {
     const onPrepare = vi.fn()
     render(list({ handlers: { ...noopDoCardHandlers, onPrepare } }))
 

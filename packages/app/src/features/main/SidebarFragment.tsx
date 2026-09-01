@@ -356,10 +356,8 @@ function NewProjectRow({
       className="flex items-center gap-kro-small px-kro-small"
       style={{ minHeight: `${layout.minimumControlSide}px` }}
     >
-      {/* biome-ignore lint/a11y/noAutofocus: the row exists only because the
-          user just asked for it; focusing anywhere else would make them click
-          twice to type a name. */}
       <input
+        // biome-ignore lint/a11y/noAutofocus: the row exists only because the user just asked for it; focusing anywhere else makes them click twice to type a name
         autoFocus
         aria-label="New project"
         placeholder="New project…"

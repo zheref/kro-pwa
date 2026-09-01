@@ -229,6 +229,7 @@ function RelationList(
             <CardRowStack>
               {endeavor.performances.map((entry, index) => (
                 <PerformanceRow
+                  // biome-ignore lint/suspicious/noArrayIndexKey: the entry has no id; the index only disambiguates two performances stamped at the same instant
                   key={`${entry.date.getTime()}-${index}`}
                   entry={entry}
                   index={index}
@@ -261,6 +262,7 @@ function RelationList(
             <CardRowStack>
               {endeavor.defers.map((entry, index) => (
                 <DeferRow
+                  // biome-ignore lint/suspicious/noArrayIndexKey: the entry has no id; the index only disambiguates two defers stamped at the same instant
                   key={`${entry.made.getTime()}-${index}`}
                   entry={entry}
                   index={index}
@@ -335,6 +337,7 @@ function RelationList(
             <CardRowStack>
               {shadows.map((shadow, index) => (
                 <ShadowRow
+                  // biome-ignore lint/suspicious/noArrayIndexKey: the index only disambiguates two shadows sharing one source identifier
                   key={`${shadow.sourceIdentifier}-${index}`}
                   shadow={shadow}
                   index={index}
@@ -378,7 +381,10 @@ function PerformanceRow({
   return (
     <div className="flex items-start gap-kro-small px-kro-medium py-2.5">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="m-0 font-semibold text-sm" style={{ color: colorVar('fore') }}>
+        <p
+          className="m-0 font-semibold text-sm"
+          style={{ color: colorVar('fore') }}
+        >
           {when}
         </p>
         <ChipFlow>
@@ -393,7 +399,10 @@ function PerformanceRow({
           ))}
         </ChipFlow>
         {entry.notes === null || entry.notes.length === 0 ? null : (
-          <p className="m-0 text-xs" style={{ color: colorVar('foreSecondary') }}>
+          <p
+            className="m-0 text-xs"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {entry.notes}
           </p>
         )}
@@ -431,14 +440,20 @@ function DeferRow({
   return (
     <div className="flex items-start gap-kro-small px-kro-medium py-2.5">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="m-0 font-semibold text-sm" style={{ color: colorVar('fore') }}>
+        <p
+          className="m-0 font-semibold text-sm"
+          style={{ color: colorVar('fore') }}
+        >
           {target}
         </p>
         <p className="m-0 text-xs" style={{ color: colorVar('foreSecondary') }}>
           {`Deferred ${detailDateTime(entry.made, locale)}`}
         </p>
         {entry.reason === null || entry.reason.length === 0 ? null : (
-          <p className="m-0 text-xs" style={{ color: colorVar('foreSecondary') }}>
+          <p
+            className="m-0 text-xs"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {entry.reason}
           </p>
         )}
@@ -474,7 +489,10 @@ function ShadowRow({
   return (
     <div className="flex items-start gap-kro-small px-kro-medium py-2.5">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="m-0 font-semibold text-sm" style={{ color: colorVar('fore') }}>
+        <p
+          className="m-0 font-semibold text-sm"
+          style={{ color: colorVar('fore') }}
+        >
           {title}
         </p>
         <ChipFlow>
@@ -600,7 +618,11 @@ function RelationForm(props: EndeavorRelationFragmentProps) {
             onChangeDraft={onChangeDraft}
           />
         ) : (
-          <ShadowForm draft={draft} isSaving={isSaving} onChangeDraft={onChangeDraft} />
+          <ShadowForm
+            draft={draft}
+            isSaving={isSaving}
+            onChangeDraft={onChangeDraft}
+          />
         )}
 
         <button
@@ -690,9 +712,7 @@ function PerformanceForm({
           id="performance-resolution"
           value={value.resolution}
           disabled={isSaving}
-          onChange={(next) =>
-            patch({ resolution: next as PerformResolution })
-          }
+          onChange={(next) => patch({ resolution: next as PerformResolution })}
           options={performResolutions.map((resolution) => ({
             value: resolution,
             label: resolution,
@@ -721,7 +741,9 @@ function PerformanceForm({
           step={5}
           disabled={isSaving}
           value={String(value.rewardPoints)}
-          onChange={(event) => patch({ rewardPoints: Number(event.target.value) })}
+          onChange={(event) =>
+            patch({ rewardPoints: Number(event.target.value) })
+          }
         />
       </Field>
       <label
@@ -947,7 +969,10 @@ function NativeSelect({
 }: {
   readonly id: string
   readonly value: string
-  readonly options: readonly { readonly value: string; readonly label: string }[]
+  readonly options: readonly {
+    readonly value: string
+    readonly label: string
+  }[]
   readonly disabled: boolean
   readonly onChange: (value: string) => void
 }) {
@@ -996,9 +1021,10 @@ function IconButton({
       style={{
         minWidth: 'var(--kro-size-min-touch-target)',
         minHeight: 'var(--kro-size-min-touch-target)',
-        color: isDestructive === true
-          ? colorVar('bannerDanger')
-          : colorVar('foreSecondary'),
+        color:
+          isDestructive === true
+            ? colorVar('bannerDanger')
+            : colorVar('foreSecondary'),
       }}
     >
       {children}

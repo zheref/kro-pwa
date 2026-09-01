@@ -12,9 +12,15 @@ export {
   DoSurfaceFragment,
   PULL_TO_REFRESH_THRESHOLD,
 } from './DoSurfaceFragment'
-export { type DoHeaderFragmentProps, DoHeaderFragment } from './DoHeaderFragment'
+export {
+  type DoHeaderFragmentProps,
+  DoHeaderFragment,
+} from './DoHeaderFragment'
 export { type DoLanesFragmentProps, DoLanesFragment } from './DoLanesFragment'
-export { type DoToolbarFragmentProps, DoToolbarFragment } from './DoToolbarFragment'
+export {
+  type DoToolbarFragmentProps,
+  DoToolbarFragment,
+} from './DoToolbarFragment'
 export {
   DO_NOTIFICATIONS_PANEL,
   type DoNotificationsFragmentProps,
@@ -76,4 +82,4 @@ export {
   deleteEndeavorThunk,
   reopenEndeavorThunk,
   skipEndeavorThunk,
-} from './DoOverflowProducer'
+} from '../DoProducer'

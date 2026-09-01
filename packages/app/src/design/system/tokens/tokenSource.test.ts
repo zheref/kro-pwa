@@ -16,7 +16,9 @@ import {
 describe('parseBlocks', () => {
   it('reads a plain rule', () => {
     const blocks = parseBlocks(':root { --a: 1px; }')
-    expect(blocks).toEqual([{ selector: ':root', body: ' --a: 1px; ', within: null }])
+    expect(blocks).toEqual([
+      { selector: ':root', body: ' --a: 1px; ', within: null },
+    ])
   })
 
   it('reaches into an at-rule so a media-wrapped rule is addressable', () => {
@@ -54,9 +56,9 @@ describe('parseDeclarations', () => {
 
 describe('stripComments', () => {
   it('removes block comments so a commented-out token is never parsed as live', () => {
-    expect(stripComments(':root { /* --dead: 1px; */ --live: 2px; }')).not.toContain(
-      '--dead',
-    )
+    expect(
+      stripComments(':root { /* --dead: 1px; */ --live: 2px; }'),
+    ).not.toContain('--dead')
   })
 })
 
@@ -81,7 +83,10 @@ describe('tokens.css', () => {
     const orphans = Object.keys(darkDeclarations()).filter(
       (name) => name.startsWith('--') && light[name] === undefined,
     )
-    expect(orphans, 'a dark-only token has no light value to fall back to').toEqual([])
+    expect(
+      orphans,
+      'a dark-only token has no light value to fall back to',
+    ).toEqual([])
   })
 
   it('resolves a theme by layering dark over light, so scales survive the flip', () => {
@@ -103,7 +108,9 @@ describe('tokens.css', () => {
   })
 
   it('throws on an unknown token instead of returning a plausible default', () => {
-    expect(() => resolveToken('--kro-color-nope', 'light')).toThrow(/declares no/)
+    expect(() => resolveToken('--kro-color-nope', 'light')).toThrow(
+      /declares no/,
+    )
   })
 
   it('ships the reduced-transparency and Safari notes it claims to', () => {
@@ -131,8 +138,8 @@ describe('tokens.css', () => {
       (block) => block.selector === ':root, [data-theme="light"]',
     )
     expect(lightColours, 'no shared light block').toBeDefined()
-    expect(parseDeclarations(lightColours?.body ?? '')['--kro-color-back']).toBe(
-      '#fafafa',
-    )
+    expect(
+      parseDeclarations(lightColours?.body ?? '')['--kro-color-back'],
+    ).toBe('#fafafa')
   })
 })

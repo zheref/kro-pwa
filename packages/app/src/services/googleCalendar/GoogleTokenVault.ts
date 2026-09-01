@@ -92,7 +92,9 @@ export const toBase64Url = (bytes: Uint8Array): string => {
  * `Uint8Array<ArrayBufferLike>`, which `SubtleCrypto` will not accept as a
  * `BufferSource` because `ArrayBufferLike` admits `SharedArrayBuffer`.
  */
-export const fromBase64Url = (value: string): Uint8Array<ArrayBuffer> | null => {
+export const fromBase64Url = (
+  value: string,
+): Uint8Array<ArrayBuffer> | null => {
   if (!/^[A-Za-z0-9_-]*$/.test(value)) return null
   const padded = value
     .replace(/-/g, '+')
@@ -124,7 +126,10 @@ const importKey = async (
   crypto: CryptoSource,
   secret: string,
 ): Promise<CryptoKey> => {
-  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(secret))
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    textEncoder.encode(secret),
+  )
   return crypto.subtle.importKey('raw', digest, AES_GCM, false, [
     'encrypt',
     'decrypt',
@@ -148,7 +153,9 @@ export const makeWebCryptoTokenVault = (params: {
 
   const key = (): Promise<CryptoKey> => {
     if (crypto === null) {
-      return Promise.reject(new Error('No Web Crypto implementation available.'))
+      return Promise.reject(
+        new Error('No Web Crypto implementation available.'),
+      )
     }
     cachedKey ??= importKey(crypto, params.secret)
     return cachedKey

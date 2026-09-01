@@ -35,9 +35,9 @@ const recordOf = (endeavor: Endeavor): EndeavorRecord =>
 
 describe('overlapsPlanHostRange', () => {
   it('includes an event sitting wholly inside the window', () => {
-    expect(overlapsPlanHostRange(event('inside', planAt(9), 3600), dayRange)).toBe(
-      true,
-    )
+    expect(
+      overlapsPlanHostRange(event('inside', planAt(9), 3600), dayRange),
+    ).toBe(true)
   })
 
   it('includes an event that runs into the window from the night before', () => {
@@ -68,14 +68,20 @@ describe('overlapsPlanHostRange', () => {
   })
 
   it('excludes an endeavor with no start — the timeline is start-driven', () => {
-    const untimed = makeEndeavor({ id: 'untimed', title: 'x', kind: EndeavorKind.task })
+    const untimed = makeEndeavor({
+      id: 'untimed',
+      title: 'x',
+      kind: EndeavorKind.task,
+    })
     expect(overlapsPlanHostRange(untimed, dayRange)).toBe(false)
   })
 
   it('includes a zero-length event on the window’s opening instant', () => {
     // Deliberately one notch more permissive than the layout pass, which draws
     // nothing for a zero-extent card. A fetch that under-returns loses data.
-    expect(overlapsPlanHostRange(event('instant', today, 0), dayRange)).toBe(true)
+    expect(overlapsPlanHostRange(event('instant', today, 0), dayRange)).toBe(
+      true,
+    )
   })
 })
 
@@ -89,7 +95,10 @@ describe('endeavorsFromRecords', () => {
   })
 
   it('skips a row whose kind cannot be decoded rather than emptying the day', () => {
-    const broken = { ...recordOf(event('broken', planAt(9), 3600)), kind: 'nonsense' }
+    const broken = {
+      ...recordOf(event('broken', planAt(9), 3600)),
+      kind: 'nonsense',
+    }
     const good = recordOf(event('good', planAt(11), 3600))
     expect(
       endeavorsFromRecords([broken as EndeavorRecord, good]).map((e) => e.id),
@@ -141,12 +150,18 @@ describe('makeLocalStorePlanHost', () => {
       start: addingPlanDays(today, -3),
       end: addingPlanDays(today, 4),
     })
-    expect(events.map((e) => e.id).sort()).toEqual(['in-two-days', 'today-morning'])
+    expect(events.map((e) => e.id).sort()).toEqual([
+      'in-two-days',
+      'today-morning',
+    ])
   })
 })
 
 describe('fetchPlanHostRange — one range request per host', () => {
-  const hostReturning = (id: EndeavorHost, events: readonly Endeavor[]): PlanHost => ({
+  const hostReturning = (
+    id: EndeavorHost,
+    events: readonly Endeavor[],
+  ): PlanHost => ({
     id,
     fetchRange: async () => events,
   })
@@ -162,7 +177,9 @@ describe('fetchPlanHostRange — one range request per host', () => {
     const events = await fetchPlanHostRange(
       [
         hostReturning(EndeavorHost.local, [event('local-a', planAt(9), 3600)]),
-        hostReturning(EndeavorHost.supabase, [event('cloud-a', planAt(11), 3600)]),
+        hostReturning(EndeavorHost.supabase, [
+          event('cloud-a', planAt(11), 3600),
+        ]),
       ],
       dayRange,
     )
@@ -183,13 +200,18 @@ describe('fetchPlanHostRange — one range request per host', () => {
 
   it('lets one host fail without losing the others — best effort per host', async () => {
     const events = await fetchPlanHostRange(
-      [failingHost, hostReturning(EndeavorHost.local, [event('local-a', planAt(9), 3600)])],
+      [
+        failingHost,
+        hostReturning(EndeavorHost.local, [event('local-a', planAt(9), 3600)]),
+      ],
       dayRange,
     )
     expect(events.map((e) => e.id)).toEqual(['local-a'])
   })
 
   it('answers with nothing, not a rejection, when every host fails', async () => {
-    await expect(fetchPlanHostRange([failingHost], dayRange)).resolves.toEqual([])
+    await expect(fetchPlanHostRange([failingHost], dayRange)).resolves.toEqual(
+      [],
+    )
   })
 })

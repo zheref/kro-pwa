@@ -10,7 +10,11 @@
  * that bug's absence: a defined, positive focus duration, taken from #8's
  * Pomodoro preset, and never the rest value.
  */
-import { FocusTimerMode, defaultPomodoroConfig, minutesInSeconds } from '@kro/core'
+import {
+  FocusTimerMode,
+  defaultPomodoroConfig,
+  minutesInSeconds,
+} from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import {
   POMODORO_FOCUS_DURATION,

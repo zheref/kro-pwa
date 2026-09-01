@@ -166,7 +166,9 @@ export const selectFeaturedNowEndeavors = (
  * For three cards that is `[second, first, third]` — the layout canon's own
  * test pins.
  */
-const arrangeHeroCentred = (ranked: readonly Endeavor[]): readonly Endeavor[] => {
+const arrangeHeroCentred = (
+  ranked: readonly Endeavor[],
+): readonly Endeavor[] => {
   const arranged: (Endeavor | undefined)[] = new Array(ranked.length)
   const centre = Math.floor(ranked.length / 2)
   arranged[centre] = ranked[0]
@@ -177,7 +179,9 @@ const arrangeHeroCentred = (ranked: readonly Endeavor[]): readonly Endeavor[] =>
     arranged[index] = ranked[rank]
   }
 
-  return arranged.filter((endeavor): endeavor is Endeavor => endeavor !== undefined)
+  return arranged.filter(
+    (endeavor): endeavor is Endeavor => endeavor !== undefined,
+  )
 }
 
 /**

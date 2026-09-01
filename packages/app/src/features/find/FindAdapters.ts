@@ -90,7 +90,8 @@ export const rowActionFrom = (
   icon: binding.icon,
   role: binding.role,
   tint: effectiveTintOf(binding),
-  position: binding.gesture.kind === 'buttonRow' ? binding.gesture.position : null,
+  position:
+    binding.gesture.kind === 'buttonRow' ? binding.gesture.position : null,
 })
 
 /** Every action a capability set surfaces under one gesture, in declaration order. */

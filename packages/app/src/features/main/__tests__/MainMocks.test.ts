@@ -50,7 +50,7 @@ describe('the gate sets', () => {
 })
 
 describe('the canned states', () => {
-  it('are built from the slice\'s own initial state', () => {
+  it("are built from the slice's own initial state", () => {
     expect(MainMocks.idle).toEqual(initialMainState)
   })
 

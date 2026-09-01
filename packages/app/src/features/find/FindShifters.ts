@@ -50,7 +50,9 @@ export function withSurface(
   surface: FindSurface,
   next: FindSurfaceState,
 ): FindState {
-  return surface === 'find' ? { ...state, find: next } : { ...state, tasks: next }
+  return surface === 'find'
+    ? { ...state, find: next }
+    : { ...state, tasks: next }
 }
 
 /** Reads the surface a transition is about. */

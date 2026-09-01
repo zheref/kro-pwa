@@ -58,7 +58,9 @@ const change = (query: string, matches: boolean): void => {
 
 function Probe() {
   const surface = useSurfaceLayout()
-  return <span data-testid="surface">{`${surface.idiom}/${surface.width}`}</span>
+  return (
+    <span data-testid="surface">{`${surface.idiom}/${surface.width}`}</span>
+  )
 }
 
 beforeEach(() => {

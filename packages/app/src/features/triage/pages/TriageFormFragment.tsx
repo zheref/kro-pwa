@@ -223,10 +223,7 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
         to clear it rather than sitting permanently underneath.
       */}
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-4 pb-40">
-        <RewardStepper
-          points={rewardPoints}
-          onStep={onStepReward}
-        />
+        <RewardStepper points={rewardPoints} onStep={onStepReward} />
 
         <DurationPicker chips={durationChips} onSelect={onSelectDuration} />
 
@@ -359,6 +356,7 @@ function TriageHeader({
 
       <div
         data-testid="triage-reward-badge"
+        role="img"
         aria-label={`Reward: ${rewardPoints} points`}
         className="flex shrink-0 flex-col items-center gap-0.5"
       >
@@ -448,6 +446,7 @@ function RewardStepper({
           <MinusGlyph size={13} aria-hidden />
         </button>
         <span
+          role="img"
           data-testid="triage-reward-value"
           aria-label={`${points} reward points`}
           className="min-w-9 text-center font-semibold text-base tabular-nums"
@@ -498,7 +497,10 @@ function DurationPicker({
   readonly onSelect: (minutes: number) => void
 }) {
   return (
-    <section className="flex flex-col gap-2" aria-label="How long will it take?">
+    <section
+      className="flex flex-col gap-2"
+      aria-label="How long will it take?"
+    >
       <div className={SECTION_INSET_CLASS}>
         <SectionLabel>How long will it take?</SectionLabel>
       </div>
@@ -557,7 +559,9 @@ function SelectionPill({
       )}
       style={{
         minHeight: 'var(--kro-size-min-touch-target)',
-        backgroundColor: isSelected ? colorVar('accent') : colorVar('backInner'),
+        backgroundColor: isSelected
+          ? colorVar('accent')
+          : colorVar('backInner'),
         color: isSelected ? colorVar('onAccent') : colorVar('fore'),
         boxShadow: isSelected
           ? undefined
@@ -730,7 +734,9 @@ function QuadrantTile({
         'flex min-h-[110px] w-full flex-col gap-1.5 p-3.5 text-left',
         'kro-motion-quick transition-[background-color,box-shadow]',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
-        isSelected ? 'items-start justify-start' : 'items-center justify-center',
+        isSelected
+          ? 'items-start justify-start'
+          : 'items-center justify-center',
         /*
           Canon's two-branch unselected fill: *"explicit sRGB white in light
           mode (clean card on the form surface); the palette's elevated dark
@@ -783,7 +789,12 @@ function QuadrantTile({
             ) : (
               <BoltSlash size={12} aria-hidden />
             )}
-            <span className={cn('text-sm', isUrgent ? 'font-semibold' : 'font-normal')}>
+            <span
+              className={cn(
+                'text-sm',
+                isUrgent ? 'font-semibold' : 'font-normal',
+              )}
+            >
               {isUrgent ? 'Urgent' : 'Not urgent'}
             </span>
           </span>
@@ -794,7 +805,10 @@ function QuadrantTile({
               <StarSlash size={12} aria-hidden />
             )}
             <span
-              className={cn('text-sm', isImportant ? 'font-semibold' : 'font-normal')}
+              className={cn(
+                'text-sm',
+                isImportant ? 'font-semibold' : 'font-normal',
+              )}
             >
               {isImportant ? 'Important' : 'Not important'}
             </span>
@@ -847,7 +861,11 @@ function RatingSection({
           </span>
         )}
         <span className="flex-1" />
-        <div className="flex items-center gap-0.5" role="group" aria-label={title}>
+        <div
+          className="flex items-center gap-0.5"
+          role="group"
+          aria-label={title}
+        >
           {TRIAGE_RATING_STEPS.map((step) => {
             const isLit = isTriageRatingStepLit(rating.rating, step)
             return (
@@ -1079,6 +1097,7 @@ function ExpirySection({
               */
               <span
                 key="custom"
+                role="img"
                 data-testid="triage-expiry-custom"
                 aria-label={isCustom ? 'Custom date selected' : 'Custom date'}
                 className={cn(
@@ -1277,7 +1296,9 @@ function ActionRow({
           tint="badgeBlue"
           testId="triage-confirm"
           isEnabled={canConfirm && !isSaving}
-          describedBy={blockedReason === null ? undefined : 'triage-blocked-reason'}
+          describedBy={
+            blockedReason === null ? undefined : 'triage-blocked-reason'
+          }
           onSelect={onTapConfirm}
         />
         {secondary === null ? null : (

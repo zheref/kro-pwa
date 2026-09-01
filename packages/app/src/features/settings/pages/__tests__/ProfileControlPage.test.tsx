@@ -50,7 +50,9 @@ describe('the toolbar control', () => {
 
     const outlet = document.querySelector('[data-toolbar-outlet="profile"]')
     await waitFor(() => {
-      expect(outlet?.querySelector('[data-testid="profile-control"]')).toBeTruthy()
+      expect(
+        outlet?.querySelector('[data-testid="profile-control"]'),
+      ).toBeTruthy()
     })
   })
 
@@ -70,7 +72,9 @@ describe('the toolbar control', () => {
   it('draws the initials avatar once a session exists', async () => {
     renderControl({
       ...stubbedThunkExtra,
-      authService: makeStubbedAuthService({ initialUser: authUserMocks.typical }),
+      authService: makeStubbedAuthService({
+        initialUser: authUserMocks.typical,
+      }),
     })
 
     // No explicit dispatch: the control fires the launch restore itself, which
@@ -123,7 +127,9 @@ describe('the auth surface', () => {
   it('closes itself once a session exists rather than sitting over the app', async () => {
     const { store } = renderControl({
       ...stubbedThunkExtra,
-      authService: makeStubbedAuthService({ initialUser: authUserMocks.typical }),
+      authService: makeStubbedAuthService({
+        initialUser: authUserMocks.typical,
+      }),
     })
 
     store.dispatch(userDidTapSignIn({ origin: 'profilePopover' }))

@@ -1,48 +1,26 @@
 /**
- * The Settings lane's glyph rows.
+ * Every symbol a settings surface holds resolves to a real glyph.
  *
- * The first assertion is the one that matters: the lane's rows must be disjoint
- * from the two shared maps, so "which glyph is that symbol" keeps exactly one
- * answer. The second walks the whole preference schema and the hub's own rows,
- * so an option declared with a glyph nothing draws fails here rather than
- * rendering a question mark for a user.
+ * The lane's own ~30 rows moved into `design/system/icons/icons.ts`
+ * (KC-IS-#71 item 8), so there is no lane map left to prove disjoint. What
+ * remains is the assertion that mattered anyway: walk the whole preference
+ * schema and the hub's own rows, so an option declared with a glyph nothing
+ * draws fails here rather than rendering a question mark for a user.
  */
 import { allSettingOptions } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import {
-  ENDEAVOR_SF_SYMBOL_TO_LUCIDE,
-  isMappedSymbol,
-} from '../../../../design/endeavor/endeavorIcons'
 import { SF_SYMBOL_TO_LUCIDE } from '../../../../design/system/icons/icons'
 import { settingsSections } from '../../SettingsSection'
-import {
-  SETTINGS_SF_SYMBOL_TO_LUCIDE,
-  isSettingsSymbolMapped,
-  settingsIcon,
-} from '../settingsIcons'
+import { isSettingsSymbolMapped, settingsIcon } from '../settingsIcons'
 
-describe('the lane rows do not shadow the shared maps', () => {
-  it('adds no key the design system already answers for', () => {
-    const shared = new Set(Object.keys(SF_SYMBOL_TO_LUCIDE))
-    const overlap = Object.keys(SETTINGS_SF_SYMBOL_TO_LUCIDE).filter((key) =>
-      shared.has(key),
-    )
-
-    expect(overlap).toEqual([])
-  })
-
-  it('adds no key the Endeavor kit already answers for', () => {
-    const kit = new Set(Object.keys(ENDEAVOR_SF_SYMBOL_TO_LUCIDE))
-    const overlap = Object.keys(SETTINGS_SF_SYMBOL_TO_LUCIDE).filter((key) =>
-      kit.has(key),
-    )
-
-    expect(overlap).toEqual([])
-  })
-
-  it('defers to the shared answer for a symbol both know how to draw', () => {
-    expect(isMappedSymbol('calendar')).toBe(true)
+describe('the resolver is the shared one', () => {
+  it('answers a shared symbol with the shared component', () => {
     expect(settingsIcon('calendar')).toBe(SF_SYMBOL_TO_LUCIDE.calendar)
+  })
+
+  it('answers a promoted preference symbol from the shared table', () => {
+    // `sunrise` was one of the lane's own rows before item 8 folded it up.
+    expect(settingsIcon('sunrise')).toBe(SF_SYMBOL_TO_LUCIDE.sunrise)
   })
 })
 

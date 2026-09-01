@@ -78,7 +78,7 @@ describe('the observed focus time is read-only', () => {
 })
 
 describe('the three bounds', () => {
-  it('offers a switch per bound, in canon\'s order', () => {
+  it("offers a switch per bound, in canon's order", () => {
     mount(detailEndeavorMocks.taskWithSessions)
 
     expect(
@@ -131,7 +131,7 @@ describe('the three bounds', () => {
 })
 
 describe('validation', () => {
-  it('says a minimum above a maximum is incoherent, in canon\'s words', () => {
+  it("says a minimum above a maximum is incoherent, in canon's words", () => {
     mount(detailEndeavorMocks.taskWithSessions, {
       draft: {
         ...durationDraftFor(detailEndeavorMocks.taskWithSessions),

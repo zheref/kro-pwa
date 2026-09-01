@@ -82,15 +82,6 @@ const AddForTodayGlyph = captureIconFor('calendar.badge.plus')
 export type InboxPresentation = 'sheet' | 'popover' | 'inline'
 
 /**
- * `position: fixed`, inline, for the reason spelled out in
- * `CapturePromptFragment`: `glass.css`'s unlayered `.kro-glass` sets
- * `position: relative`, which outranks Tailwind's layered `fixed` utility on
- * every glass panel in the repo. Reported against KC-IS-#6's lane; when the
- * one-line fix lands there, this deletes.
- */
-const PINNED_TO_VIEWPORT = { position: 'fixed' } as const
-
-/**
  * The width the row's own pointer chrome occupies at its trailing edge.
  *
  * `EndeavorActionSurface` overlays two things on the right of every row it
@@ -196,7 +187,6 @@ export function InboxFragment(props: InboxFragmentProps) {
           data-testid="inbox-surface"
           data-kro-presentation="sheet"
           className="flex h-[85vh] flex-col gap-0 p-0"
-          style={PINNED_TO_VIEWPORT}
         >
           {heading}
           <InboxBody {...props} />
@@ -212,7 +202,6 @@ export function InboxFragment(props: InboxFragmentProps) {
           // `macInboxButton`'s popover, read from the shell's ported table so
           // the two can never disagree.
           style={{
-            ...PINNED_TO_VIEWPORT,
             width: `${PRESENTATION_SIZE.inbox.width}px`,
             height: `${PRESENTATION_SIZE.inbox.height}px`,
             maxWidth: 'calc(100vw - 3rem)',
@@ -416,7 +405,12 @@ function InboxSection({ title, glyph, cards, ...row }: SectionProps) {
         </span>
       </header>
 
-      <ul className={cn('m-0 flex list-none flex-col p-0', compact ? 'gap-1' : 'gap-2')}>
+      <ul
+        className={cn(
+          'm-0 flex list-none flex-col p-0',
+          compact ? 'gap-1' : 'gap-2',
+        )}
+      >
         {cards.map((card) => (
           <li key={card.id}>
             <InboxRow card={card} {...row} />
@@ -445,7 +439,10 @@ function InboxRow({
   onCancelAddForToday,
   onConfirmAddForToday,
   onOperation,
-}: { readonly card: EndeavorCardModel } & Omit<SectionProps, 'title' | 'glyph' | 'cards'>) {
+}: { readonly card: EndeavorCardModel } & Omit<
+  SectionProps,
+  'title' | 'glyph' | 'cards'
+>) {
   const detected = useInputCapability()
   const resolvedInput = input ?? detected
   const compact = rowLayout === 'compactDesktop'
@@ -579,7 +576,10 @@ function AddForTodayConfirm({
         backgroundColor: colorVar('backInner'),
       }}
     >
-      <p className="m-0 font-semibold text-base" style={{ color: colorVar('fore') }}>
+      <p
+        className="m-0 font-semibold text-base"
+        style={{ color: colorVar('fore') }}
+      >
         Add for Today
       </p>
       <Input

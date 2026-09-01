@@ -65,7 +65,9 @@ describe('every declared custom property has a TypeScript role', () => {
   })
 
   it('covers the whole --kro-role-* family', () => {
-    expect(declaredWithPrefix('--kro-role-')).toEqual(mapped(SEMANTIC_ROLE_VARS))
+    expect(declaredWithPrefix('--kro-role-')).toEqual(
+      mapped(SEMANTIC_ROLE_VARS),
+    )
   })
 
   it('covers the whole --kro-space-* family', () => {
@@ -87,14 +89,11 @@ describe('every declared custom property has a TypeScript role', () => {
 
 describe('the scales carry KroApple’s numbers', () => {
   it('spaces on the 4pt rhythm — 4/8/16/24/32/48', () => {
-    expect(Object.keys(SPACING_VARS).map((key) => resolveToken(SPACING_VARS[key as keyof typeof SPACING_VARS], 'light'))).toEqual([
-      '4px',
-      '8px',
-      '16px',
-      '24px',
-      '32px',
-      '48px',
-    ])
+    expect(
+      Object.keys(SPACING_VARS).map((key) =>
+        resolveToken(SPACING_VARS[key as keyof typeof SPACING_VARS], 'light'),
+      ),
+    ).toEqual(['4px', '8px', '16px', '24px', '32px', '48px'])
   })
 
   it('radii are small 8 / field 12 / card 12 / surface 20 / large 20 / pill', () => {
@@ -115,12 +114,18 @@ describe('the scales carry KroApple’s numbers', () => {
   })
 
   it('fades a disabled control to exactly 0.62 — once, never twice', () => {
-    expect(resolveToken(DISABLED_OPACITY_VAR, 'light')).toBe(String(DISABLED_OPACITY))
+    expect(resolveToken(DISABLED_OPACITY_VAR, 'light')).toBe(
+      String(DISABLED_OPACITY),
+    )
   })
 
   it('ports the shadow recipes 1:1 in light and only deepens their alpha in dark', () => {
-    expect(resolveToken(SHADOW_VARS.subtle, 'light')).toBe('0 2px 8px rgb(0 0 0 / 0.08)')
-    expect(resolveToken(SHADOW_VARS.card, 'light')).toBe('0 4px 20px rgb(0 0 0 / 0.14)')
+    expect(resolveToken(SHADOW_VARS.subtle, 'light')).toBe(
+      '0 2px 8px rgb(0 0 0 / 0.08)',
+    )
+    expect(resolveToken(SHADOW_VARS.card, 'light')).toBe(
+      '0 4px 20px rgb(0 0 0 / 0.14)',
+    )
     expect(resolveToken(SHADOW_VARS.surface, 'light')).toBe(
       '0 3px 12px rgb(0 0 0 / 0.06)',
     )

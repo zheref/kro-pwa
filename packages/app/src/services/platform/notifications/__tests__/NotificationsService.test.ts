@@ -129,7 +129,7 @@ describe('liveNotificationsService — permission', () => {
     expect(service.permissionState()).toBe('unsupported')
   })
 
-  it('reports the browser\'s own answer once it has one', () => {
+  it("reports the browser's own answer once it has one", () => {
     const { service } = liveWith({ notificationApi: permissionApi('denied') })
     expect(service.permissionState()).toBe('denied')
   })
@@ -320,7 +320,8 @@ describe('liveNotificationsService — push', () => {
   it('reports false when unsubscribing with nothing subscribed', async () => {
     const manager: PushManagerLike = {
       getSubscription: async () => null,
-      subscribe: (async () => subscription) as unknown as PushManagerLike['subscribe'],
+      subscribe: (async () =>
+        subscription) as unknown as PushManagerLike['subscribe'],
     }
     const { service } = liveWith({ resolvePushManager: async () => manager })
 
@@ -338,9 +339,7 @@ describe('urlBase64ToUint8Array', () => {
   })
 
   it('translates the URL-safe alphabet back to standard base64', () => {
-    expect(urlBase64ToUint8Array('-_8')).toEqual(
-      urlBase64ToUint8Array('+/8'),
-    )
+    expect(urlBase64ToUint8Array('-_8')).toEqual(urlBase64ToUint8Array('+/8'))
   })
 })
 

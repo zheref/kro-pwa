@@ -16,7 +16,9 @@ describe('EarnExceptions', () => {
 
   it('keeps the three mutation failures apart, because they mean different things', () => {
     expect(EarnExceptions.addRewardFailed('x').kind).toBe('addRewardFailed')
-    expect(EarnExceptions.deleteRewardFailed('x').kind).toBe('deleteRewardFailed')
+    expect(EarnExceptions.deleteRewardFailed('x').kind).toBe(
+      'deleteRewardFailed',
+    )
     expect(EarnExceptions.claimRewardFailed('x').kind).toBe('claimRewardFailed')
   })
 

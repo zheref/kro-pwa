@@ -122,8 +122,7 @@ export const makeGoogleRouteDependencies = (
       : makeStubbedGoogleOAuthService({ exchangeOutcome: 'invalidGrant' }))
 
   const api =
-    overrides.api ??
-    makeLiveGoogleCalendarApiService(overrides.httpTransport)
+    overrides.api ?? makeLiveGoogleCalendarApiService(overrides.httpTransport)
 
   return {
     environment,

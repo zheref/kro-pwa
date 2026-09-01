@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { StoreProvider } from '../../../library/StoreProvider'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import { GoogleCalendarConnections } from '../../../services/googleCalendar/GoogleCalendarConnection'
 import { makeStubbedGoogleCalendarService } from '../../../services/googleCalendar/GoogleCalendarService'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
@@ -48,7 +52,9 @@ function Stage({
         border: '1px solid var(--kro-color-hairline)',
       }}
     >
-      <StoreProvider store={store}>{children ?? <SettingsHubPage />}</StoreProvider>
+      <StoreProvider store={store}>
+        {children ?? <SettingsHubPage />}
+      </StoreProvider>
     </div>
   )
 }

@@ -8,13 +8,13 @@
  * `EndeavorDetailCards` / `EndeavorDetailEditing`, so a Selector here and the
  * reducer's own guard cannot disagree about what is editable.
  */
-import {
-  type Endeavor,
-  type EndeavorField,
-  type EndeavorRelation,
-  type Perform,
-  type Defer,
-  type Shadow,
+import type {
+  Endeavor,
+  EndeavorField,
+  EndeavorRelation,
+  Perform,
+  Defer,
+  Shadow,
 } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
@@ -45,7 +45,10 @@ import type {
   EndeavorDurationDraft,
   ObservedFocusTime,
 } from './EndeavorDuration'
-import { durationValidationMessage, observedFocusTime } from './EndeavorDuration'
+import {
+  durationValidationMessage,
+  observedFocusTime,
+} from './EndeavorDuration'
 import type {
   HostAttachCandidate,
   RelationDraft,

@@ -25,8 +25,12 @@ const localOnlyOptions: readonly SettingOption[] = allPreferenceOptions.filter(
 const preferencesWith = (): Preferences =>
   makePreferences(makeInMemoryKeyValueStore())
 
-const boolCloudOption = cloudSyncOptions.find((option) => option.type.kind === 'bool')
-const boolLocalOption = localOnlyOptions.find((option) => option.type.kind === 'bool')
+const boolCloudOption = cloudSyncOptions.find(
+  (option) => option.type.kind === 'bool',
+)
+const boolLocalOption = localOnlyOptions.find(
+  (option) => option.type.kind === 'bool',
+)
 
 // ---------------------------------------------------------------------------
 // When a pull and a push may happen — acceptance criterion 3
@@ -73,7 +77,9 @@ describe('when a push happens', () => {
 
   it('and the two rules never overlap — no moment both pulls and pushes', () => {
     for (const trigger of settingsSyncTriggers) {
-      expect(shouldPullSettings(trigger) && shouldPushSettings(trigger)).toBe(false)
+      expect(shouldPullSettings(trigger) && shouldPushSettings(trigger)).toBe(
+        false,
+      )
     }
   })
 })
@@ -117,7 +123,9 @@ describe('building the push payload', () => {
     const preferences = preferencesWith()
     preferences.write(boolCloudOption, true)
     const entries = cloudSettingEntriesFrom(preferences)
-    expect(entries.find((entry) => entry.key === boolCloudOption.key)?.value).toBe(true)
+    expect(
+      entries.find((entry) => entry.key === boolCloudOption.key)?.value,
+    ).toBe(true)
   })
 
   it('NEVER carries a device-only value, however it was set — the whole point of the scope', () => {
@@ -126,7 +134,8 @@ describe('building the push payload', () => {
     preferences.write(boolLocalOption, true)
     const keys = cloudSettingEntriesFrom(preferences).map((entry) => entry.key)
     expect(keys).not.toContain(boolLocalOption.key)
-    for (const option of localOnlyOptions) expect(keys).not.toContain(option.key)
+    for (const option of localOnlyOptions)
+      expect(keys).not.toContain(option.key)
   })
 
   it('sends no updated_at of its own — the account clock is the server trigger', () => {

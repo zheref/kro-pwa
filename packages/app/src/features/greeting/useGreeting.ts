@@ -16,7 +16,12 @@
 import type { Greeting, GreetingException } from '@kro/core'
 import { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
-import { childDetailDelegatedClose, onViewLoaded, userDidTapGreeting, userDidTapRetry } from './GreetingFeature'
+import {
+  childDetailDelegatedClose,
+  onViewLoaded,
+  userDidTapGreeting,
+  userDidTapRetry,
+} from './GreetingFeature'
 import { fetchGreetingThunk } from './GreetingProducer'
 import {
   selectGreeting,

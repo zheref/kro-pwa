@@ -53,10 +53,7 @@ import {
 import { formatTimeRange } from '../../../../design/endeavor/formatting'
 import { colorVar } from '../../../../design/system/tokens/roles'
 import { cn } from '../../../../design/system/utils/cn'
-import {
-  startOfNextPlanDay,
-  startOfPlanDay,
-} from '../../PlanCalendar'
+import { startOfNextPlanDay, startOfPlanDay } from '../../PlanCalendar'
 import {
   BLOCK_PRESS_MAX_DISTANCE_PX,
   BLOCK_RIPPLE_TIMING_MS,
@@ -393,8 +390,7 @@ function SlotLayer({
         const onTheHour = isOnTheHourSlot(index)
         return (
           <button
-            // The index IS the identity: slots are positional, and a slot's
-            // wall-clock time is derived from it rather than stored.
+            // biome-ignore lint/suspicious/noArrayIndexKey: slots are positional and a slot's wall-clock time is derived from the index rather than stored — the index IS the identity
             key={`slot-${index}`}
             type="button"
             {...{ [SLOT_INDEX_ATTRIBUTE]: index }}
@@ -476,6 +472,7 @@ function DraftLayer({
   return (
     <div
       data-testid="plan-timeline-draft"
+      role="img"
       aria-label="New event being created"
       className="pointer-events-none absolute"
       style={{

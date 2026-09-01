@@ -88,7 +88,9 @@ const tickThrough = (
 
 describe('withSessionLoadStarted', () => {
   it('marks a first read in flight', () => {
-    expect(withSessionLoadStarted(initialSessionState).load.kind).toBe('loading')
+    expect(withSessionLoadStarted(initialSessionState).load.kind).toBe(
+      'loading',
+    )
   })
 
   it('clears a previous failure so a retry is not shown as still broken', () => {
@@ -216,9 +218,10 @@ describe('withAnchorHydrated', () => {
       isConclusionRecorded: false,
       now: sessionMockInstant(900),
     })
-    expect(
-      runningSessionElapsedDuration(next.anchor!, next.now!),
-    ).toBeCloseTo(900, 5)
+    expect(runningSessionElapsedDuration(next.anchor!, next.now!)).toBeCloseTo(
+      900,
+      5,
+    )
   })
 
   it('lands on ready when no document exists — a cleared anchor is ready', () => {
@@ -288,7 +291,9 @@ describe('withAnchorHydrated', () => {
       expect(next.conclusion.outcome.endedAt).toEqual(
         sessionMockInstant(SESSION_MOCK_TARGET),
       )
-      expect(next.conclusion.outcome.resolution).toBe(PerformResolution.complete)
+      expect(next.conclusion.outcome.resolution).toBe(
+        PerformResolution.complete,
+      )
     }
   })
 
@@ -356,7 +361,10 @@ describe('withSessionStarted', () => {
 
   it('refuses a concluded session, whose anchor is deliberately kept', () => {
     expect(
-      withSessionStarted(sessionStateMocks.concluded, sessionMockInstant(2_000)),
+      withSessionStarted(
+        sessionStateMocks.concluded,
+        sessionMockInstant(2_000),
+      ),
     ).toBe(sessionStateMocks.concluded)
   })
 
@@ -575,7 +583,10 @@ describe('withSessionAwaitingResolution', () => {
   it('parks at concluded and keeps the anchor so the pill can offer Complete', () => {
     const concluded = withSessionAwaitingResolution(
       withDisplayAdvanced(started, sessionMockInstant(1_500)),
-      { now: sessionMockInstant(1_500), reason: SessionOutcomeReason.finishedEarly },
+      {
+        now: sessionMockInstant(1_500),
+        reason: SessionOutcomeReason.finishedEarly,
+      },
     )
     expect(concluded.phase).toBe(SessionPhase.concluded)
     expect(concluded.anchor).not.toBeNull()
@@ -621,9 +632,13 @@ describe('withSessionAwaitingResolution', () => {
       reason: SessionOutcomeReason.finishedEarly,
     })
     const outcome =
-      concluded.conclusion.kind === 'pending' ? concluded.conclusion.outcome : null
+      concluded.conclusion.kind === 'pending'
+        ? concluded.conclusion.outcome
+        : null
     expect(outcome?.fragments).toHaveLength(2)
-    expect(outcome?.fragments.every((fragment) => fragment.end !== null)).toBe(true)
+    expect(outcome?.fragments.every((fragment) => fragment.end !== null)).toBe(
+      true,
+    )
     expect(outcome?.elapsedDuration).toBeCloseTo(1_500, 5)
   })
 })
@@ -707,7 +722,9 @@ describe('withBreakStarted', () => {
   it('runs a fresh countdown at the configured break length', () => {
     const onBreak = withBreakStarted(withBreaks, sessionMockInstant(1_500))
     expect(onBreak.phase).toBe(SessionPhase.break)
-    expect(onBreak.targetDuration).toBe(withBreaks.preferences.defaultBreakDuration)
+    expect(onBreak.targetDuration).toBe(
+      withBreaks.preferences.defaultBreakDuration,
+    )
   })
 
   it('starts from an empty fragment list, never reusing the focus fragments', () => {
@@ -770,20 +787,26 @@ describe('withBreakElapsed', () => {
 
 describe('withBreakFinished / withBreakEnded', () => {
   it('releases the break claim once the cue has played', () => {
-    const done = withBreakElapsed(sessionStateMocks.onBreak, sessionMockInstant(1_000))
+    const done = withBreakElapsed(
+      sessionStateMocks.onBreak,
+      sessionMockInstant(1_000),
+    )
     expect(withBreakFinished(done).conclusion.kind).toBe('breakFinished')
   })
 
   it('ends a break early with no cue and no claim at all', () => {
-    const ended = withBreakEnded(sessionStateMocks.onBreak, sessionMockInstant(200))
+    const ended = withBreakEnded(
+      sessionStateMocks.onBreak,
+      sessionMockInstant(200),
+    )
     expect(ended.phase).toBe(SessionPhase.ready)
     expect(ended.conclusion.kind).toBe('none')
   })
 
   it('does nothing when no break is running', () => {
-    expect(withBreakEnded(sessionStateMocks.running, sessionMockInstant(200))).toBe(
-      sessionStateMocks.running,
-    )
+    expect(
+      withBreakEnded(sessionStateMocks.running, sessionMockInstant(200)),
+    ).toBe(sessionStateMocks.running)
   })
 })
 
@@ -927,7 +950,10 @@ describe('identity editing', () => {
   })
 
   it('tracks the draft without touching the identity', () => {
-    const typed = withEditedTitleChanged(withTitleEditingStarted(ready), 'Draft')
+    const typed = withEditedTitleChanged(
+      withTitleEditingStarted(ready),
+      'Draft',
+    )
     expect(typed.editedTitle).toBe('Draft')
     expect(typed.identity?.title).toBe(sessionIdentityMocks.slides.title)
   })
@@ -955,7 +981,11 @@ describe('identity editing', () => {
 })
 
 describe('withIdentityApplied', () => {
-  const renamed = { ...sessionIdentityMocks.slides, title: '💻 Prepare slides', symbol: '💻' }
+  const renamed = {
+    ...sessionIdentityMocks.slides,
+    title: '💻 Prepare slides',
+    symbol: '💻',
+  }
 
   it('installs the new identity and closes both editors', () => {
     const next = withIdentityApplied(withTitleEditingStarted(ready), renamed)
@@ -979,7 +1009,9 @@ describe('withIdentityApplied', () => {
 
 describe('withCompletedSessionsCount', () => {
   it('installs the count storage answered with', () => {
-    expect(withCompletedSessionsCount(ready, 11).completedSessionsCount).toBe(11)
+    expect(withCompletedSessionsCount(ready, 11).completedSessionsCount).toBe(
+      11,
+    )
   })
 
   it('accepts zero — the row is simply hidden', () => {

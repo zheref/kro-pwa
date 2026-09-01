@@ -32,7 +32,7 @@ import { DestinationKind } from '../SidebarDestination'
 const reduce = mainSlice.reducer
 
 describe('onShellMounted', () => {
-  it('stamps the first measurement and the host\'s build kind', () => {
+  it("stamps the first measurement and the host's build kind", () => {
     const next = reduce(
       initialMainState,
       onShellMounted({ surface: handheldSurface, isDevelopment: true }),
@@ -45,7 +45,7 @@ describe('onShellMounted', () => {
     expect(initialMainState.selected.kind).toBe(DestinationKind.myDay)
   })
 
-  it('leaves a production build without the Tweak row\'s permission', () => {
+  it("leaves a production build without the Tweak row's permission", () => {
     const next = reduce(
       initialMainState,
       onShellMounted({ surface: desktopSurface, isDevelopment: false }),

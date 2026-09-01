@@ -64,9 +64,7 @@ export const handheldShellShape = shellShapeFor(handheldDoSurface)
 const noop = () => {}
 
 /** Every lane of one `DoState`, as card models. */
-export const laneCardsOf = (
-  state: DoState,
-): DoLanesFragmentProps['lanes'] => ({
+export const laneCardsOf = (state: DoState): DoLanesFragmentProps['lanes'] => ({
   featuredNow: doCardModels(
     centredFeaturedWindow(state.lanes.featuredNow, state.featuredCapacity),
     DO_SURFACE_MOCK_NOW,
@@ -76,10 +74,7 @@ export const laneCardsOf = (
   expired: doCardModels(state.lanes.expired, DO_SURFACE_MOCK_NOW),
   next: doCardModels(state.lanes.next, DO_SURFACE_MOCK_NOW),
   anytime: doCardModels(state.lanes.anytime, DO_SURFACE_MOCK_NOW),
-  completedToday: doCardModels(
-    state.lanes.completedToday,
-    DO_SURFACE_MOCK_NOW,
-  ),
+  completedToday: doCardModels(state.lanes.completedToday, DO_SURFACE_MOCK_NOW),
 })
 
 /** The reminder capsules one state shows. */

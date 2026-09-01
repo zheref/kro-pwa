@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseBlocks, parseDeclarations, stripComments } from '../tokens/tokenSource'
+import {
+  parseBlocks,
+  parseDeclarations,
+  stripComments,
+} from '../tokens/tokenSource'
 import {
   EASING_VARS,
   MOTION_MS,
@@ -77,7 +81,8 @@ describe('the spring curves still describe KroApple’s springs', () => {
     const value = declaredRoot[variable]
     if (value === undefined) throw new Error(`${variable} is not declared`)
     const inner = /^linear\(([\s\S]*)\)$/.exec(value)?.[1]
-    if (inner === undefined) throw new Error(`${variable} is not a linear() curve`)
+    if (inner === undefined)
+      throw new Error(`${variable} is not a linear() curve`)
     return inner.split(',').map((part) => Number.parseFloat(part))
   }
 
@@ -94,7 +99,9 @@ describe('the spring curves still describe KroApple’s springs', () => {
 
   it('overshoots past the rest position — the bounce is the point', () => {
     expect(Math.max(...parsedCurve(EASING_VARS.quickSpring))).toBeGreaterThan(1)
-    expect(Math.max(...parsedCurve(EASING_VARS.standardSpring))).toBeGreaterThan(1)
+    expect(
+      Math.max(...parsedCurve(EASING_VARS.standardSpring)),
+    ).toBeGreaterThan(1)
   })
 
   it('starts at rest and finishes at rest', () => {
@@ -117,11 +124,16 @@ describe('the reduced-motion layer', () => {
 
   it('collapses the duration TOKENS, so an inline style is stilled too', () => {
     const rootOverride = reduced.find((block) => block.selector === ':root')
-    expect(rootOverride, ':root is not overridden under reduced motion').toBeDefined()
+    expect(
+      rootOverride,
+      ':root is not overridden under reduced motion',
+    ).toBeDefined()
 
     const declarations = parseDeclarations(rootOverride?.body ?? '')
     for (const variable of Object.values(MOTION_VARS)) {
-      expect(declarations[variable], `${variable} still animates`).toBe('0.01ms')
+      expect(declarations[variable], `${variable} still animates`).toBe(
+        '0.01ms',
+      )
     }
   })
 
@@ -136,7 +148,9 @@ describe('the reduced-motion layer', () => {
   })
 
   it('never uses a zero-length duration, which would never fire transitionend', () => {
-    const values = reduced.flatMap((block) => Object.values(parseDeclarations(block.body)))
+    const values = reduced.flatMap((block) =>
+      Object.values(parseDeclarations(block.body)),
+    )
     expect(values.some((value) => /(^|\s)0m?s/.test(value))).toBe(false)
   })
 })

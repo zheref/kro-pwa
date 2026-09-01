@@ -119,7 +119,8 @@ export function PlanDayPickerFragment({
               // an opaque fill by design — see the header note — so putting the
               // material under it would tint the fill the contrast pair was
               // measured against.
-              !isSelected && 'kro-glass kro-glass--control kro-glass--interactive',
+              !isSelected &&
+                'kro-glass kro-glass--control kro-glass--interactive',
             )}
             style={{
               borderRadius: ITEM_RADIUS,

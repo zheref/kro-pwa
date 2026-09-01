@@ -55,7 +55,7 @@ describe('every field earns a label and a glyph', () => {
     }
   })
 
-  it('uses canon\'s own words where they differ from the domain name', () => {
+  it("uses canon's own words where they differ from the domain name", () => {
     expect(fieldLabel(EndeavorField.sessionPoints)).toBe('Reward')
     expect(fieldLabel(EndeavorField.expiry)).toBe('Expires')
   })
@@ -98,7 +98,11 @@ describe('an unset field says WHY it is blank', () => {
 
 describe('a set field is formatted, not dumped', () => {
   it('renders status as a tinted, glyph-bearing chip — never bare text', () => {
-    const value = fieldValue(detailEndeavorMocks.task, EndeavorField.status, LOCALE)
+    const value = fieldValue(
+      detailEndeavorMocks.task,
+      EndeavorField.status,
+      LOCALE,
+    )
     expect(value.kind).toBe('chip')
   })
 
@@ -114,11 +118,17 @@ describe('a set field is formatted, not dumped', () => {
     ).toEqual({ kind: 'emphasis', text: '8 pts' })
   })
 
-  it('formats a date through the reader\'s locale, not a pinned one', () => {
-    const value = fieldValue(detailEndeavorMocks.task, EndeavorField.due, 'de-DE')
+  it("formats a date through the reader's locale, not a pinned one", () => {
+    const value = fieldValue(
+      detailEndeavorMocks.task,
+      EndeavorField.due,
+      'de-DE',
+    )
     expect(value).toMatchObject({ kind: 'text' })
     if (value.kind === 'text') {
-      expect(value.text).toBe(detailDateTime(detailEndeavorMocks.task.due!, 'de-DE'))
+      expect(value.text).toBe(
+        detailDateTime(detailEndeavorMocks.task.due!, 'de-DE'),
+      )
     }
   })
 })
@@ -126,10 +136,12 @@ describe('a set field is formatted, not dumped', () => {
 describe('the associated colour', () => {
   it('accepts a six-digit hex and prints it uppercased', () => {
     const coloured = { ...detailEndeavorMocks.task, associatedColor: '#2a9d8f' }
-    expect(fieldValue(coloured, EndeavorField.associatedColor, LOCALE)).toEqual({
-      kind: 'text',
-      text: '#2A9D8F',
-    })
+    expect(fieldValue(coloured, EndeavorField.associatedColor, LOCALE)).toEqual(
+      {
+        kind: 'text',
+        text: '#2A9D8F',
+      },
+    )
   })
 
   it('expands a three-digit shorthand the way canon does', () => {
@@ -139,9 +151,10 @@ describe('the associated colour', () => {
   it('refuses a malformed value rather than painting a black swatch', () => {
     expect(normalizedHex('nope')).toBeNull()
     const broken = { ...detailEndeavorMocks.task, associatedColor: 'nope' }
-    expect(
-      fieldValue(broken, EndeavorField.associatedColor, LOCALE),
-    ).toEqual({ kind: 'empty', placeholder: 'No color' })
+    expect(fieldValue(broken, EndeavorField.associatedColor, LOCALE)).toEqual({
+      kind: 'empty',
+      placeholder: 'No color',
+    })
   })
 })
 
@@ -168,7 +181,9 @@ describe('the recurrence summary reads as a sentence', () => {
 
   it('spells a yearly rule with a short month name', () => {
     expect(
-      repeatSummary(makeRepeatConfig({ type: 'yearly', day: 3, month: Month.july })),
+      repeatSummary(
+        makeRepeatConfig({ type: 'yearly', day: 3, month: Month.july }),
+      ),
     ).toBe('Yearly on Jul 3')
   })
 })
@@ -205,14 +220,17 @@ describe('the relation cards', () => {
   })
 
   it('renders attached hosts as chips, so Detail and the Hosts screen agree', () => {
-    const value = relationSummary(detailEndeavorMocks.task, EndeavorRelation.hosts)
+    const value = relationSummary(
+      detailEndeavorMocks.task,
+      EndeavorRelation.hosts,
+    )
     expect(value.kind).toBe('chips')
   })
 
   it('says "Never deferred" rather than showing an empty history', () => {
-    expect(relationSummary(detailEndeavorMocks.task, EndeavorRelation.defers)).toEqual(
-      { kind: 'empty', placeholder: 'Never deferred' },
-    )
+    expect(
+      relationSummary(detailEndeavorMocks.task, EndeavorRelation.defers),
+    ).toEqual({ kind: 'empty', placeholder: 'Never deferred' })
   })
 })
 
@@ -250,10 +268,14 @@ describe('the relation row projections', () => {
 
   it('totals the log so the header answers "how much" without adding up rows', () => {
     const chips = performanceSummaryChips([performance, performance])
-    expect(chips.map((chip) => chip.title)).toEqual(['2 sessions', '50m', '0 pts'])
+    expect(chips.map((chip) => chip.title)).toEqual([
+      '2 sessions',
+      '50m',
+      '0 pts',
+    ])
   })
 
-  it('names every resolution in canon\'s words', () => {
+  it("names every resolution in canon's words", () => {
     expect(resolutionLabel(PerformResolution.finished)).toBe('Finished early')
   })
 
@@ -265,7 +287,10 @@ describe('the relation row projections', () => {
       source: 'googleCalendar',
     })
     expect(shadowTitle(shadow)).toBe('gcal-9')
-    expect(shadowChips(shadow).map((chip) => chip.id)).toEqual(['source', 'kind'])
+    expect(shadowChips(shadow).map((chip) => chip.id)).toEqual([
+      'source',
+      'kind',
+    ])
   })
 
   it('adds the group chip only when the shadow carries one', () => {
@@ -281,8 +306,8 @@ describe('the relation row projections', () => {
 
   it('heads a defer row with the date it was pushed TO, not when it was made', () => {
     const target = new Date(2026, 5, 20, 9)
-    expect(deferTitle({ made: new Date(2026, 5, 18), reason: null, target }, LOCALE)).toBe(
-      detailDateTime(target, LOCALE),
-    )
+    expect(
+      deferTitle({ made: new Date(2026, 5, 18), reason: null, target }, LOCALE),
+    ).toBe(detailDateTime(target, LOCALE))
   })
 })

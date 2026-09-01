@@ -20,10 +20,7 @@
  * `DoTaskListRow` — and a tap on the background deselects, so the prepared card
  * can be dismissed without hitting a control.
  */
-import {
-  EndeavorCard,
-  type EndeavorCardModel,
-} from '../../../design/endeavor'
+import { EndeavorCard, type EndeavorCardModel } from '../../../design/endeavor'
 import { CompactPresentationHeader } from '../../../design/endeavor'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'

@@ -29,9 +29,8 @@ export const selectAuthMode = createSelector([slice], (auth) => auth.mode)
 export const selectAuthForm = createSelector([slice], (auth) => auth.form)
 
 /** The signed-in account, or `null` in every other session state. */
-export const selectCurrentUser = createSelector(
-  [slice],
-  (auth): User | null => (auth.session.kind === 'signedIn' ? auth.session.user : null),
+export const selectCurrentUser = createSelector([slice], (auth): User | null =>
+  auth.session.kind === 'signedIn' ? auth.session.user : null,
 )
 
 /** Canon's `isAuthenticatedSelector`. */
@@ -149,11 +148,15 @@ export const selectUserInitials = createSelector([selectCurrentUser], (user) =>
 )
 
 /** The providers this account has connected, for the Profile section. */
-export const selectConnectedProviders = createSelector([selectCurrentUser], (user) =>
-  user === null ? [] : user.connectedProviders,
+export const selectConnectedProviders = createSelector(
+  [selectCurrentUser],
+  (user) => (user === null ? [] : user.connectedProviders),
 )
 
-export const selectLocalDataDialog = createSelector([slice], (auth) => auth.localData)
+export const selectLocalDataDialog = createSelector(
+  [slice],
+  (auth) => auth.localData,
+)
 
 /** Whether the existing-local-data dialog is on screen. */
 export const selectIsLocalDataDialogPresented = createSelector(

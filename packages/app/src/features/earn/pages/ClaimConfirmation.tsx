@@ -38,7 +38,10 @@ export function ClaimConfirmationBody({
         {reward.glyph}
       </span>
       <div className="flex flex-col gap-1">
-        <p className="m-0 font-bold text-lg" style={{ color: colorVar('fore') }}>
+        <p
+          className="m-0 font-bold text-lg"
+          style={{ color: colorVar('fore') }}
+        >
           Claim {reward.title}?
         </p>
         <p

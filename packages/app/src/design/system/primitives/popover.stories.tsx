@@ -1,5 +1,10 @@
 import { Button } from './button'
-import { POPOVER_SIZE, Popover, PopoverContent, PopoverTrigger } from './popover'
+import {
+  POPOVER_SIZE,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from './popover'
 
 /**
  * The desktop idiom. Each story is sized from `POPOVER_SIZE`, which carries
@@ -17,6 +22,7 @@ function Rows({ count }: { count: number }) {
     <div style={{ display: 'grid', gap: 6 }}>
       {Array.from({ length: count }, (_, index) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: filler rows generated from a fixed count — nothing reorders and there is no id
           key={`row-${index}`}
           style={{
             padding: 'var(--kro-space-small)',
@@ -41,9 +47,18 @@ export const Inbox = {
         <Button variant="secondary">Inbox</Button>
       </PopoverTrigger>
       <PopoverContent
-        style={{ width: POPOVER_SIZE.inbox.width, height: POPOVER_SIZE.inbox.height }}
+        style={{
+          width: POPOVER_SIZE.inbox.width,
+          height: POPOVER_SIZE.inbox.height,
+        }}
       >
-        <h3 style={{ margin: '0 0 12px', fontSize: 15, color: 'var(--kro-color-fore)' }}>
+        <h3
+          style={{
+            margin: '0 0 12px',
+            fontSize: 15,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
           Inbox
         </h3>
         <Rows count={8} />
@@ -65,7 +80,13 @@ export const Visibility = {
           height: POPOVER_SIZE.visibility.height,
         }}
       >
-        <h3 style={{ margin: '0 0 12px', fontSize: 15, color: 'var(--kro-color-fore)' }}>
+        <h3
+          style={{
+            margin: '0 0 12px',
+            fontSize: 15,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
           What shows in My Day
         </h3>
         <Rows count={5} />
@@ -101,7 +122,10 @@ export const Profile = {
 
 export const DarkScheme = {
   render: () => (
-    <div data-theme="dark" style={{ padding: 40, background: 'var(--kro-color-back)' }}>
+    <div
+      data-theme="dark"
+      style={{ padding: 40, background: 'var(--kro-color-back)' }}
+    >
       <Popover defaultOpen>
         <PopoverTrigger asChild>
           <Button variant="secondary">Visibility</Button>

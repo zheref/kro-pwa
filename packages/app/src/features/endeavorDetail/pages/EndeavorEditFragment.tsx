@@ -44,7 +44,10 @@ import {
 import { InlineBanner } from '../../../design/endeavor/InlineBanner'
 import { KroChip, semanticTint } from '../../../design/endeavor/KroChip'
 import { SectionCard } from '../../../design/endeavor/SurfaceCard'
-import { localInputValue, parseLocalInput } from '../../../design/endeavor/endeavorPopovers'
+import {
+  localInputValue,
+  parseLocalInput,
+} from '../../../design/endeavor/endeavorPopovers'
 import { Input } from '../../../design/system/primitives/input'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
@@ -202,11 +205,19 @@ function EditField({
     case EndeavorField.duration:
       return (
         <div className="flex items-center gap-kro-small">
-          <span className="flex-1 text-sm" style={{ color: colorVar('foreSecondary') }}>
+          <span
+            className="flex-1 text-sm"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {label}
           </span>
-          <span className="text-sm font-semibold" style={{ color: colorVar('fore') }}>
-            {working.duration === null ? 'Not set' : formatDuration(working.duration)}
+          <span
+            className="text-sm font-semibold"
+            style={{ color: colorVar('fore') }}
+          >
+            {working.duration === null
+              ? 'Not set'
+              : formatDuration(working.duration)}
           </span>
           <button
             type="button"
@@ -285,7 +296,10 @@ function EditField({
                   disabled={isSaving}
                   data-edit-tag={tag}
                   onClick={() =>
-                    onChangeField({ field: 'tagToggled', value: tag as EndeavorTag })
+                    onChangeField({
+                      field: 'tagToggled',
+                      value: tag as EndeavorTag,
+                    })
                   }
                   className="inline-flex items-center rounded-kro-pill outline-none focus-visible:shadow-[var(--kro-ring)] disabled:opacity-[var(--kro-opacity-disabled)]"
                   style={{ minHeight: 'var(--kro-size-min-touch-target)' }}
@@ -354,7 +368,10 @@ function EditField({
             }
             options={[
               { value: '', label: 'No project' },
-              ...projects.map((list) => ({ value: list.id, label: list.title })),
+              ...projects.map((list) => ({
+                value: list.id,
+                label: list.title,
+              })),
             ]}
           />
         </Labelled>
@@ -569,7 +586,11 @@ function RepeatField({
                   onChangeField({
                     field: 'repeatConfig',
                     value: {
-                      base: { type: 'yearly', day: value ?? 1, month: base.month },
+                      base: {
+                        type: 'yearly',
+                        day: value ?? 1,
+                        month: base.month,
+                      },
                       everyOther: config.everyOther,
                     },
                   })
@@ -602,7 +623,10 @@ function RepeatField({
             </div>
           ) : null}
 
-          <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
+          <p
+            className="m-0 text-sm"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {repeatSummary(config)}
           </p>
         </>
@@ -662,7 +686,10 @@ function Select({
 }: {
   readonly id: string
   readonly value: string
-  readonly options: readonly { readonly value: string; readonly label: string }[]
+  readonly options: readonly {
+    readonly value: string
+    readonly label: string
+  }[]
   readonly disabled: boolean
   readonly onChange: (value: string) => void
 }) {

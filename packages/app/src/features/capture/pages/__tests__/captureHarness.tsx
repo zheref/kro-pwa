@@ -18,7 +18,11 @@
 import type { EndeavorRecord } from '@kro/core'
 import { type ReactNode, useEffect } from 'react'
 import { StoreProvider } from '../../../../library/StoreProvider'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import {
   onDestinationRouteMounted,
@@ -69,7 +73,10 @@ export function installCaptureEnvironment(options?: {
     Object.defineProperty(globalThis.crypto, 'randomUUID', {
       configurable: true,
       writable: true,
-      value: () => `capture-${(counter += 1)}` as `${string}-${string}`,
+      value: () => {
+        counter += 1
+        return `capture-${counter}` as `${string}-${string}`
+      },
     })
   }
 

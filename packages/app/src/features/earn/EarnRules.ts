@@ -21,9 +21,8 @@ import type { Perform, Reward } from '@kro/core'
 import { rewardSuggestions } from '@kro/core'
 
 /** `totalEarnedPointsSelector`, sourced from performances (see header). */
-export const totalEarnedPoints = (
-  performances: readonly Perform[],
-): number => performances.reduce((sum, perform) => sum + perform.rewardPoints, 0)
+export const totalEarnedPoints = (performances: readonly Perform[]): number =>
+  performances.reduce((sum, perform) => sum + perform.rewardPoints, 0)
 
 /** `spentPointsSelector` — claimed rewards, read against the LIVE catalog. */
 export const spentPoints = (
@@ -43,7 +42,10 @@ export const currentPoints = (
   rewards: readonly Reward[],
   claimedRewardIds: readonly string[],
 ): number =>
-  Math.max(0, totalEarnedPoints(performances) - spentPoints(rewards, claimedRewardIds))
+  Math.max(
+    0,
+    totalEarnedPoints(performances) - spentPoints(rewards, claimedRewardIds),
+  )
 
 /** `RewardListRow.pointsRemaining` — "N to go", never negative. */
 export const pointsToGo = (reward: Reward, points: number): number =>

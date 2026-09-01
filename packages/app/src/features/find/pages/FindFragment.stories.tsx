@@ -60,7 +60,11 @@ export const MixedRowsWithChips = {
 export const PointerGrammar = {
   render: () => (
     <Stage width={880}>
-      <FindFragment {...base} input="pointer" capabilities={detailCapabilities} />
+      <FindFragment
+        {...base}
+        input="pointer"
+        capabilities={detailCapabilities}
+      />
     </Stage>
   ),
 }

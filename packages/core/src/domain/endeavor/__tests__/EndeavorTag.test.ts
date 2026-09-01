@@ -67,12 +67,18 @@ describe('endeavorTagFromRawValue / endeavorTagsFromRawValues', () => {
 
 describe('endeavorTagAttentionLevel', () => {
   it('reads onDesk, duringPerformanceActivity, session and passive as auto', () => {
-    expect(endeavorTagAttentionLevel(EndeavorTag.onDesk)).toBe(AttentionLevel.auto)
-    expect(endeavorTagAttentionLevel(EndeavorTag.duringPerformanceActivity)).toBe(
+    expect(endeavorTagAttentionLevel(EndeavorTag.onDesk)).toBe(
       AttentionLevel.auto,
     )
-    expect(endeavorTagAttentionLevel(EndeavorTag.session)).toBe(AttentionLevel.auto)
-    expect(endeavorTagAttentionLevel(EndeavorTag.passive)).toBe(AttentionLevel.auto)
+    expect(
+      endeavorTagAttentionLevel(EndeavorTag.duringPerformanceActivity),
+    ).toBe(AttentionLevel.auto)
+    expect(endeavorTagAttentionLevel(EndeavorTag.session)).toBe(
+      AttentionLevel.auto,
+    )
+    expect(endeavorTagAttentionLevel(EndeavorTag.passive)).toBe(
+      AttentionLevel.auto,
+    )
   })
 
   it('reads engaging as demanding', () => {

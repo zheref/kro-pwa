@@ -461,7 +461,9 @@ function DaysControl({
               'disabled:cursor-not-allowed',
             )}
             style={{
-              backgroundColor: isOn ? colorVar('accent') : colorVar('backInner'),
+              backgroundColor: isOn
+                ? colorVar('accent')
+                : colorVar('backInner'),
               color: isOn ? colorVar('onAccent') : colorVar('fore'),
               opacity: isDisabled ? 0.62 : undefined,
             }}
@@ -484,10 +486,16 @@ function StepperControl({
   bounds,
   onChangeSetting,
 }: ControlProps & {
-  readonly bounds: { min: number; max: number; step: number; unit: string | null }
+  readonly bounds: {
+    min: number
+    max: number
+    step: number
+    unit: string | null
+  }
 }) {
   const current = typeof value === 'number' ? value : bounds.min
-  const summary = bounds.unit === null ? `${current}` : `${current} ${bounds.unit}`
+  const summary =
+    bounds.unit === null ? `${current}` : `${current} ${bounds.unit}`
   const step = (delta: number) => {
     const next = Math.min(
       Math.max(current + delta * bounds.step, bounds.min),
@@ -517,7 +525,11 @@ function StepperControl({
         />
         <div
           aria-hidden
-          style={{ width: '0.75px', height: 28, backgroundColor: colorVar('hairline') }}
+          style={{
+            width: '0.75px',
+            height: 28,
+            backgroundColor: colorVar('hairline'),
+          }}
         />
         <StepperButton
           label={`Increase ${label}`}
@@ -572,7 +584,9 @@ function ChoiceControl({
   isDisabled,
   choices,
   onChangeSetting,
-}: ControlProps & { readonly choices: readonly { value: string; label: string }[] }) {
+}: ControlProps & {
+  readonly choices: readonly { value: string; label: string }[]
+}) {
   return (
     <select
       id={controlId}
@@ -601,7 +615,9 @@ function SwatchControl({
   isDisabled,
   choices,
   onChangeSetting,
-}: ControlProps & { readonly choices: readonly { value: string; label: string }[] }) {
+}: ControlProps & {
+  readonly choices: readonly { value: string; label: string }[]
+}) {
   return (
     <div
       id={controlId}

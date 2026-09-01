@@ -96,7 +96,10 @@ const tasksLens = (searchQuery?: string) =>
  * Gestures and tints mirror the Find rows exactly: leading swipe is Start
  * (green) then Edit (blue); trailing swipe is Delete (role-red) then Archive
  * (orange). Declaration order **is** the swipe-button order. The `viewDetail`
- * tap is dark-launched behind `endeavorDetail`.
+ * tap is dark-launched behind `endeavorDetail`, and carries the long-press row
+ * canon's context menu implies (KC-IS-#71 item 12): a whole-row tap is not
+ * discoverable and is unreachable without a pointer, so the operation the tap
+ * performs is also offered where every other row operation is listed.
  */
 const find: EndeavorsVista = makeEndeavorsVista({
   id: 'find',
@@ -145,6 +148,13 @@ const find: EndeavorsVista = makeEndeavorsVista({
     makeEndeavorOperationBinding({
       operation: EndeavorOperation.viewDetail,
       gesture: tapGesture,
+      icon: 'info.circle',
+      label: 'View Detail',
+      requires: ENDEAVOR_DETAIL_FLAG,
+    }),
+    makeEndeavorOperationBinding({
+      operation: EndeavorOperation.viewDetail,
+      gesture: contextMenuGesture,
       icon: 'info.circle',
       label: 'View Detail',
       requires: ENDEAVOR_DETAIL_FLAG,
@@ -267,7 +277,8 @@ const inbox: EndeavorsVista = makeEndeavorsVista({
  *
  * `edit` is deliberately absent: there is no endeavor editor in canon, so a
  * tap→edit binding would do nothing. The `viewDetail` tap that replaces it is
- * dark-launched behind `endeavorDetail`.
+ * dark-launched behind `endeavorDetail`, and carries the matching long-press
+ * row (KC-IS-#71 item 12) beside Start Session and Delete.
  */
 const planDay: EndeavorsVista = makeEndeavorsVista({
   id: 'plan.day',
@@ -320,6 +331,13 @@ const planDay: EndeavorsVista = makeEndeavorsVista({
     makeEndeavorOperationBinding({
       operation: EndeavorOperation.viewDetail,
       gesture: tapGesture,
+      icon: 'info.circle',
+      label: 'View Detail',
+      requires: ENDEAVOR_DETAIL_FLAG,
+    }),
+    makeEndeavorOperationBinding({
+      operation: EndeavorOperation.viewDetail,
+      gesture: contextMenuGesture,
       icon: 'info.circle',
       label: 'View Detail',
       requires: ENDEAVOR_DETAIL_FLAG,

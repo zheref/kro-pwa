@@ -14,8 +14,16 @@ import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import type { RootState } from '../../../library/store'
-import { THIRST_MOCK_FEATURE_KEY, thirstCountsFixture, thirstStateMocks } from '../ThirstMocks'
-import { initialThirstVoteEntry, type ThirstState, type ThirstVoteEntryState } from '../ThirstFeature'
+import {
+  THIRST_MOCK_FEATURE_KEY,
+  thirstCountsFixture,
+  thirstStateMocks,
+} from '../ThirstMocks'
+import {
+  initialThirstVoteEntry,
+  type ThirstState,
+  type ThirstVoteEntryState,
+} from '../ThirstFeature'
 import {
   selectThirstHasLoadedCounts,
   selectThirstPerPlatformTallies,
@@ -47,7 +55,10 @@ const rootWith = (thirst: ThirstState): RootState => ({
 
 /** A resolved entry — the base every scenario below overrides from, so a
  * test only ever states the fields that matter for it. */
-const resolved: ThirstVoteEntryState = { ...initialThirstVoteEntry, isCheckingVoteState: false }
+const resolved: ThirstVoteEntryState = {
+  ...initialThirstVoteEntry,
+  isCheckingVoteState: false,
+}
 
 const stateWith = (entry: ThirstVoteEntryState): ThirstState => ({
   byFeatureKey: { [key]: entry },
@@ -56,7 +67,9 @@ const stateWith = (entry: ThirstVoteEntryState): ThirstState => ({
 describe('selectThirstVoteStatus', () => {
   it('is notVotable for an unmapped dead-end regardless of stored state', () => {
     const state = rootWith(thirstStateMocks.matrixVotable)
-    expect(selectThirstVoteStatus(state, 'unknown')).toEqual({ kind: 'notVotable' })
+    expect(selectThirstVoteStatus(state, 'unknown')).toEqual({
+      kind: 'notVotable',
+    })
   })
 
   it('is voted once already-voted, even while counts are still loading', () => {
@@ -70,7 +83,11 @@ describe('selectThirstVoteStatus', () => {
     const state = rootWith(
       stateWith({
         ...resolved,
-        voteStateException: { kind: 'notSignedIn', message: 'x', recoverable: false },
+        voteStateException: {
+          kind: 'notSignedIn',
+          message: 'x',
+          recoverable: false,
+        },
       }),
     )
     expect(selectThirstVoteStatus(state, key)).toEqual({
@@ -81,7 +98,11 @@ describe('selectThirstVoteStatus', () => {
 
   it('is loading while the auth check is in flight, even if counts already arrived', () => {
     const state = rootWith(
-      stateWith({ ...resolved, counts: thirstCountsFixture, isCheckingVoteState: true }),
+      stateWith({
+        ...resolved,
+        counts: thirstCountsFixture,
+        isCheckingVoteState: true,
+      }),
     )
     expect(selectThirstVoteStatus(state, key)).toEqual({ kind: 'loading' })
   })
@@ -121,18 +142,25 @@ describe('selectThirstHasLoadedCounts / selectThirstTotalCount', () => {
 
 describe('selectThirstPerPlatformTallies', () => {
   it('is empty before counts load', () => {
-    expect(selectThirstPerPlatformTallies(rootWith(thirstStateMocks.empty), key)).toEqual([])
+    expect(
+      selectThirstPerPlatformTallies(rootWith(thirstStateMocks.empty), key),
+    ).toEqual([])
   })
 
   it('omits zero-vote platforms once counts load', () => {
-    const tallies = selectThirstPerPlatformTallies(rootWith(thirstStateMocks.matrixVotable), key)
+    const tallies = selectThirstPerPlatformTallies(
+      rootWith(thirstStateMocks.matrixVotable),
+      key,
+    )
     expect(tallies.every((tally) => tally.count > 0)).toBe(true)
   })
 })
 
 describe('selectThirstVoteErrorMessage', () => {
   it('is null before any vote has ever been attempted', () => {
-    expect(selectThirstVoteErrorMessage(rootWith(thirstStateMocks.empty), key)).toBeNull()
+    expect(
+      selectThirstVoteErrorMessage(rootWith(thirstStateMocks.empty), key),
+    ).toBeNull()
   })
 
   it('is null once already voted — no retry affordance to explain', () => {
@@ -159,9 +187,15 @@ describe('selectThirstVoteErrorMessage', () => {
       stateWith({
         ...resolved,
         counts: null,
-        voteException: { kind: 'unknown', message: 'insert failed', recoverable: true },
+        voteException: {
+          kind: 'unknown',
+          message: 'insert failed',
+          recoverable: true,
+        },
       }),
     )
-    expect(selectThirstVoteErrorMessage(state, key)).toBe('Something went wrong while voting.')
+    expect(selectThirstVoteErrorMessage(state, key)).toBe(
+      'Something went wrong while voting.',
+    )
   })
 })

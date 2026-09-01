@@ -17,7 +17,11 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { loadShellThunk } from '../../main/MainProducer'
-import { allFindEndeavorMocks, findEndeavorMocks, nineOpenTasks } from '../FindMocks'
+import {
+  allFindEndeavorMocks,
+  findEndeavorMocks,
+  nineOpenTasks,
+} from '../FindMocks'
 import { type TasksVistaSelection, initialTasksLens } from '../FindState'
 import { TasksPage } from './TasksPage'
 import { Harness, makeSeededStore } from './__tests__/pagesHarness'
@@ -62,7 +66,7 @@ describe('mount', () => {
     })
   })
 
-  it('heads a list destination with the list\'s own title', async () => {
+  it("heads a list destination with the list's own title", async () => {
     mount(
       { kind: 'list', listId: 'proj-1', listTitle: 'Household' },
       makeSeededStore({ endeavors: allFindEndeavorMocks }),
@@ -73,7 +77,7 @@ describe('mount', () => {
     })
   })
 
-  it('looks the title up from the shell\'s Lists when the route carries only an id', async () => {
+  it("looks the title up from the shell's Lists when the route carries only an id", async () => {
     const store = makeSeededStore({
       endeavors: allFindEndeavorMocks,
       projects: [makeProject({ id: 'proj-1', title: 'Household' })],
@@ -87,7 +91,7 @@ describe('mount', () => {
     })
   })
 
-  it('falls back to the generic heading rather than guessing an unknown list\'s name', async () => {
+  it("falls back to the generic heading rather than guessing an unknown list's name", async () => {
     mount(
       { kind: 'list', listId: 'never-loaded', listTitle: null },
       makeSeededStore({ endeavors: allFindEndeavorMocks }),
@@ -123,7 +127,7 @@ describe('mount', () => {
 })
 
 describe('the saved lens survives the mount that reads it', () => {
-  it('restores the list\'s own saved grouping rather than the vista default', async () => {
+  it("restores the list's own saved grouping rather than the vista default", async () => {
     const store = makeSeededStore({
       endeavors: nineOpenTasks,
       lensSnapshots: {

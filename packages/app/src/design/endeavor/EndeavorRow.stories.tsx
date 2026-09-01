@@ -36,7 +36,9 @@ export const Presets = {
         <Cell key={config} label={config}>
           <div style={{ width: 520 }}>
             <EndeavorRow
-              {...endeavorRowPropsFromCardModel(endeavorCardMocks.mediumUrgency)}
+              {...endeavorRowPropsFromCardModel(
+                endeavorCardMocks.mediumUrgency,
+              )}
               config={config}
               now={NOW}
               locale="en-US"
@@ -52,7 +54,14 @@ export const FindPills = {
   name: 'Find · kind and status pills on the trailing edge',
   render: () => (
     <Stage>
-      <div style={{ width: 560, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div
+        style={{
+          width: 560,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
         <EndeavorRow
           symbol="📊"
           title="Prepare quarterly slides"
@@ -107,50 +116,59 @@ export const InboxWithTrailingActions = {
   name: 'Inbox · trailing action buttons',
   render: () => (
     <Stage>
-      <div style={{ width: 560, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {[endeavorCardMocks.highUrgency, endeavorCardMocks.lowUrgency].map((model) => (
-          <EndeavorRow
-            key={model.id}
-            {...endeavorRowPropsFromCardModel(model)}
-            config="inbox"
-            now={NOW}
-            locale="en-US"
-            trailing={
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  style={{
-                    minHeight: 'var(--kro-size-min-touch-target)',
-                    padding: '0 12px',
-                    borderRadius: 'var(--kro-radius-pill)',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--kro-color-badge-blue)',
-                    background:
-                      'color-mix(in srgb, var(--kro-color-badge-blue) 15%, transparent)',
-                  }}
-                >
-                  Triage
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    minHeight: 'var(--kro-size-min-touch-target)',
-                    padding: '0 12px',
-                    borderRadius: 'var(--kro-radius-pill)',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--kro-color-badge-green)',
-                    background:
-                      'color-mix(in srgb, var(--kro-color-badge-green) 15%, transparent)',
-                  }}
-                >
-                  Add for Today
-                </button>
-              </div>
-            }
-          />
-        ))}
+      <div
+        style={{
+          width: 560,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        {[endeavorCardMocks.highUrgency, endeavorCardMocks.lowUrgency].map(
+          (model) => (
+            <EndeavorRow
+              key={model.id}
+              {...endeavorRowPropsFromCardModel(model)}
+              config="inbox"
+              now={NOW}
+              locale="en-US"
+              trailing={
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    style={{
+                      minHeight: 'var(--kro-size-min-touch-target)',
+                      padding: '0 12px',
+                      borderRadius: 'var(--kro-radius-pill)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--kro-color-badge-blue)',
+                      background:
+                        'color-mix(in srgb, var(--kro-color-badge-blue) 15%, transparent)',
+                    }}
+                  >
+                    Triage
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      minHeight: 'var(--kro-size-min-touch-target)',
+                      padding: '0 12px',
+                      borderRadius: 'var(--kro-radius-pill)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--kro-color-badge-green)',
+                      background:
+                        'color-mix(in srgb, var(--kro-color-badge-green) 15%, transparent)',
+                    }}
+                  >
+                    Add for Today
+                  </button>
+                </div>
+              }
+            />
+          ),
+        )}
       </div>
     </Stage>
   ),
@@ -169,20 +187,29 @@ export const InputDuality = {
                 : 'pointer — hover the row, or right-click it'
             }
           >
-            <div style={{ width: 460, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[endeavorCardMocks.mediumUrgency, endeavorCardMocks.overdue].map((model) => (
-                <EndeavorRow
-                  key={model.id}
-                  {...endeavorRowPropsFromCardModel(model)}
-                  config="inbox"
-                  now={NOW}
-                  locale="en-US"
-                  endeavorId={model.id}
-                  capabilities={EndeavorsVistas.planDay.capabilities}
-                  onOperation={() => undefined}
-                  input={input}
-                />
-              ))}
+            <div
+              style={{
+                width: 460,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              {[endeavorCardMocks.mediumUrgency, endeavorCardMocks.overdue].map(
+                (model) => (
+                  <EndeavorRow
+                    key={model.id}
+                    {...endeavorRowPropsFromCardModel(model)}
+                    config="inbox"
+                    now={NOW}
+                    locale="en-US"
+                    endeavorId={model.id}
+                    capabilities={EndeavorsVistas.planDay.capabilities}
+                    onOperation={() => undefined}
+                    input={input}
+                  />
+                ),
+              )}
             </div>
           </Cell>
         </Stage>

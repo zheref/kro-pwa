@@ -11,7 +11,12 @@ import {
 
 describe('AuthProvider canon parity', () => {
   it('has canon’s four cases in declaration order', () => {
-    expect(authProviders).toEqual(['email_password', 'google', 'apple', 'facebook'])
+    expect(authProviders).toEqual([
+      'email_password',
+      'google',
+      'apple',
+      'facebook',
+    ])
   })
 
   it('keeps `emailPassword`’s snake_case raw value, which is not its case name', () => {
@@ -28,12 +33,14 @@ describe('AuthProvider canon parity', () => {
   })
 
   it('maps every provider to its canon SF Symbol', () => {
-    expect(authProviders.map((provider) => authProviderIcon(provider))).toEqual([
-      { type: 'glyph', name: 'envelope.fill' },
-      { type: 'glyph', name: 'network' },
-      { type: 'glyph', name: 'apple.logo' },
-      { type: 'glyph', name: 'f.circle.fill' },
-    ])
+    expect(authProviders.map((provider) => authProviderIcon(provider))).toEqual(
+      [
+        { type: 'glyph', name: 'envelope.fill' },
+        { type: 'glyph', name: 'network' },
+        { type: 'glyph', name: 'apple.logo' },
+        { type: 'glyph', name: 'f.circle.fill' },
+      ],
+    )
   })
 })
 
@@ -73,14 +80,20 @@ describe('userInitials', () => {
   })
 
   it('uppercases a lowercase name', () => {
-    expect(userInitials({ ...userMocks.complete, name: 'ada lovelace' })).toBe('AL')
+    expect(userInitials({ ...userMocks.complete, name: 'ada lovelace' })).toBe(
+      'AL',
+    )
   })
 
   it('treats a TAB as part of the word, not as a separator', () => {
     // Canon splits on the single ASCII space (`split(separator: " ")`), not on
     // any whitespace. Widening to /\s+/ would give the same user different
     // initials on iOS and on the web.
-    expect(userInitials({ ...userMocks.complete, name: 'Ada\tLovelace' })).toBe('A')
-    expect(userInitials({ ...userMocks.complete, name: 'Ada\nLovelace' })).toBe('A')
+    expect(userInitials({ ...userMocks.complete, name: 'Ada\tLovelace' })).toBe(
+      'A',
+    )
+    expect(userInitials({ ...userMocks.complete, name: 'Ada\nLovelace' })).toBe(
+      'A',
+    )
   })
 })

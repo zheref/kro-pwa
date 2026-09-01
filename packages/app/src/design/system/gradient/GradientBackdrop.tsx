@@ -73,7 +73,10 @@ export function GradientBackdrop({
         hardEdge && 'kro-gradient-backdrop--hard',
         className,
       )}
-      style={{ ...({ '--kro-gradient-height': height } as CSSProperties), ...style }}
+      style={{
+        ...({ '--kro-gradient-height': height } as CSSProperties),
+        ...style,
+      }}
       {...rest}
     />
   )

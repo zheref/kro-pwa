@@ -46,7 +46,9 @@ describe('platformSlice — initial state', () => {
   })
 
   it('starts with the overdue gate closed — the statusQuo default', () => {
-    expect(platformSlice.getInitialState().isOverdueAlertGateEnabled).toBe(false)
+    expect(platformSlice.getInitialState().isOverdueAlertGateEnabled).toBe(
+      false,
+    )
   })
 })
 
@@ -59,7 +61,7 @@ describe('refreshPlatformStatusThunk lifecycle', () => {
     expect(store.getState().platform.load.kind).toBe('loading')
   })
 
-  it('lands loaded with the device\'s answers (permission already granted)', async () => {
+  it("lands loaded with the device's answers (permission already granted)", async () => {
     const store = storeWith()
 
     await store.dispatch(refreshPlatformStatusThunk())

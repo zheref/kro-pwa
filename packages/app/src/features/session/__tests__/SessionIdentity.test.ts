@@ -116,7 +116,9 @@ describe('isCommittableSessionTitle', () => {
   })
 
   it('refuses an unchanged title, so an accidental tap writes nothing', () => {
-    expect(isCommittableSessionTitle(identity, '  Prepare slides  ')).toBe(false)
+    expect(isCommittableSessionTitle(identity, '  Prepare slides  ')).toBe(
+      false,
+    )
   })
 })
 
@@ -128,7 +130,9 @@ describe('identityWithTitle', () => {
   })
 
   it('leaves the glyph alone — a title edit is not a symbol edit', () => {
-    expect(identityWithTitle(identity, 'New title').symbol).toBe(identity.symbol)
+    expect(identityWithTitle(identity, 'New title').symbol).toBe(
+      identity.symbol,
+    )
   })
 
   it('keeps the id, so the anchor already written stays valid', () => {
@@ -238,7 +242,9 @@ describe('trimSessionTitle', () => {
   })
 
   it('leaves interior spacing alone', () => {
-    expect(trimSessionTitle('Prepare  the  slides')).toBe('Prepare  the  slides')
+    expect(trimSessionTitle('Prepare  the  slides')).toBe(
+      'Prepare  the  slides',
+    )
   })
 
   it('collapses a whitespace-only edit to the empty string', () => {

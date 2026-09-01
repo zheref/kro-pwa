@@ -32,7 +32,11 @@ import { SectionCard } from '../../../design/endeavor/SurfaceCard'
 import { formatDuration } from '../../../design/endeavor/formatting'
 import { DurationDial } from '../../../design/chrome/dial/DurationDial'
 import { colorVar } from '../../../design/system/tokens/roles'
-import type { DurationBound, EndeavorDurationDraft, ObservedFocusTime } from '../EndeavorDuration'
+import type {
+  DurationBound,
+  EndeavorDurationDraft,
+  ObservedFocusTime,
+} from '../EndeavorDuration'
 import { HIDDEN_SCROLLBAR_STYLE } from './EndeavorDetailFragment'
 
 /** Four hours. A preferred duration is not capped at one focus session. */
@@ -112,7 +116,10 @@ export function EndeavorDurationFragment({
             >
               {formatDuration(observed.seconds)}
             </p>
-            <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
+            <p
+              className="m-0 text-sm"
+              style={{ color: colorVar('foreSecondary') }}
+            >
               {`Average of ${observed.sampleCount} completed focus sessions, rounded to the nearest minute.`}
             </p>
           </div>
@@ -143,7 +150,10 @@ export function EndeavorDurationFragment({
               {`Use ${row.title.toLowerCase()}`}
             </label>
 
-            <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
+            <p
+              className="m-0 text-sm"
+              style={{ color: colorVar('foreSecondary') }}
+            >
               {row.explanation}
             </p>
 

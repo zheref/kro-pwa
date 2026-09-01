@@ -31,10 +31,7 @@ import {
   cloudSyncOptionForKey,
 } from '../../features/auth/CloudSettings'
 import type { SupabaseClientProvider } from '../supabase/SupabaseClientProvider'
-import {
-  type UserSettingRow,
-  UserSettingRowMapper,
-} from './UserSettingRow'
+import { type UserSettingRow, UserSettingRowMapper } from './UserSettingRow'
 
 export const USER_SETTINGS_TABLE = 'user_settings'
 

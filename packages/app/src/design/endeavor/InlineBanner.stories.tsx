@@ -72,8 +72,14 @@ export const BothThemes = {
   render: () => (
     <BothSchemes>
       <InlineBanner message="You're offline — this host will sync once you're back online." />
-      <InlineBanner kind="warning" message="Two hosts disagree about this endeavor." />
-      <InlineBanner kind="info" message="Read-only: this host does not accept edits." />
+      <InlineBanner
+        kind="warning"
+        message="Two hosts disagree about this endeavor."
+      />
+      <InlineBanner
+        kind="info"
+        message="Read-only: this host does not accept edits."
+      />
     </BothSchemes>
   ),
 }

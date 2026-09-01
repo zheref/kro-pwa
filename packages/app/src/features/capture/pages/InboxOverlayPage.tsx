@@ -33,17 +33,17 @@ import { useEffect } from 'react'
 import { useActiveToasts } from '../../../design/chrome/toast/ActiveToastHost'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { selectSurface } from '../../main/MainSelectors'
-import { PresentationSurface, presentationFor } from '../../main/MainPresentation'
+import {
+  PresentationSurface,
+  presentationFor,
+} from '../../main/MainPresentation'
 import { onUndoWindowTicked } from '../CaptureFeature'
 import {
   loadCaptureContextThunk,
   undoScheduleForTodayThunk,
 } from '../CaptureProducer'
 import { ADD_FOR_TODAY_UNDO_WINDOW_MS } from '../CaptureRules'
-import {
-  selectSchedulingUndo,
-  selectUndoSnapshot,
-} from '../CaptureSelectors'
+import { selectSchedulingUndo, selectUndoSnapshot } from '../CaptureSelectors'
 import { TriageCarouselPage } from '../../triage/pages/TriageCarouselPage'
 import { InboxFragment } from './InboxFragment'
 import { schedulingToastMessage } from './capturePresentation'

@@ -123,7 +123,10 @@ import { EndeavorRowMapper } from './EndeavorRow'
  * translation table. `__tests__/EndeavorSyncService.test.ts` asserts the two
  * sets are equal, so a rename on either side breaks a test rather than a build.
  */
-export type EndeavorPushTransportOutcome = 'unavailable' | 'succeeded' | 'failed'
+export type EndeavorPushTransportOutcome =
+  | 'unavailable'
+  | 'succeeded'
+  | 'failed'
 
 /** Why a sweep did nothing, or that it ran. One discriminant (`UZF-9`). */
 export type EndeavorSyncStatus = 'disabled' | 'signedOut' | 'synchronized'
@@ -198,7 +201,9 @@ export const supabaseHostingGate =
  * so `pushOne` (called from Triage, which knows nothing about auth) needs no
  * extra argument.
  */
-const currentOwnerUserId = async (localStore: LocalStore): Promise<string | null> => {
+const currentOwnerUserId = async (
+  localStore: LocalStore,
+): Promise<string | null> => {
   const profile = await localStore.userProfiles.current()
   return profile?.id ?? null
 }
@@ -266,7 +271,10 @@ export const makeEndeavorSyncService = (
           continue
         }
         await transport.upsertEndeavor(
-          EndeavorRowMapper.fromDomain(decoded.value, { ownerId, now: params.now }),
+          EndeavorRowMapper.fromDomain(decoded.value, {
+            ownerId,
+            now: params.now,
+          }),
         )
         await localStore.endeavors.markSynced(row.id, syncedAt)
         pushed.push(row.id)
@@ -288,7 +296,9 @@ export const makeEndeavorSyncService = (
     const localWins: string[] = []
     const skipped: string[] = []
 
-    let rows: readonly Awaited<ReturnType<EndeavorCloudTransport['fetchEndeavors']>>[number][]
+    let rows: readonly Awaited<
+      ReturnType<EndeavorCloudTransport['fetchEndeavors']>
+    >[number][]
     try {
       rows = [...(await transport.fetchEndeavors())]
     } catch (error) {
@@ -337,7 +347,8 @@ export const makeEndeavorSyncService = (
 
   /** The gate + account checks every entry point shares. */
   const readyOwner = async (): Promise<
-    { ready: true; ownerUserId: string } | { ready: false; status: EndeavorSyncStatus }
+    | { ready: true; ownerUserId: string }
+    | { ready: false; status: EndeavorSyncStatus }
   > => {
     if (!isCloudEnabled()) return { ready: false, status: 'disabled' }
     const ownerUserId = await currentOwnerUserId(localStore)
@@ -349,7 +360,11 @@ export const makeEndeavorSyncService = (
     const owner = await readyOwner()
     if (!owner.ready) return emptyReport(owner.status)
     const rows = await pushCandidates(owner.ownerUserId)
-    const outcome = await pushRows({ ownerUserId: owner.ownerUserId, rows, now })
+    const outcome = await pushRows({
+      ownerUserId: owner.ownerUserId,
+      rows,
+      now,
+    })
     return { ...emptyReport('synchronized'), ...outcome }
   }
 
@@ -376,7 +391,10 @@ export const makeEndeavorSyncService = (
         rows,
         now,
       })
-      const pullOutcome = await pullRows({ ownerUserId: owner.ownerUserId, now })
+      const pullOutcome = await pullRows({
+        ownerUserId: owner.ownerUserId,
+        now,
+      })
       return { status: 'synchronized', ...pushOutcome, ...pullOutcome }
     },
 
@@ -388,7 +406,10 @@ export const makeEndeavorSyncService = (
         await transport.upsertEndeavor(
           EndeavorRowMapper.fromDomain(endeavor, { ownerId, now }),
         )
-        await localStore.endeavors.markSynced(endeavor.id, epochMillisFromDate(now))
+        await localStore.endeavors.markSynced(
+          endeavor.id,
+          epochMillisFromDate(now),
+        )
         return 'succeeded'
       } catch {
         // The local save already succeeded; a failed push is a deferral, not a

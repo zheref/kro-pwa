@@ -13,7 +13,11 @@
  * tick after the screen pops and the slice must not invent a session to hold
  * it.
  */
-import { type EisenhowerQuadrant, citizenshipOf } from '@kro/core'
+import {
+  type EisenhowerQuadrant,
+  type ShareOutcome,
+  citizenshipOf,
+} from '@kro/core'
 import type { TriageException } from './TriageException'
 import type { TriageSaveState, TriageState } from './TriageFeature'
 import {
@@ -495,4 +499,18 @@ export function withSaveFailed(
   exception: TriageException,
 ): TriageState {
   return { ...state, save: { kind: 'failed', exception } }
+}
+
+/**
+ * One concern: the share hand-off resolved.
+ *
+ * The outcome is kept rather than turned into copy here, because the copy is
+ * derived (`shareOutcomeNotice`) and a Shifter that formatted it would put the
+ * same sentence in two places (`UZF-11`).
+ */
+export function withShareOutcome(
+  state: TriageState,
+  outcome: ShareOutcome,
+): TriageState {
+  return { ...state, shareOutcome: outcome }
 }

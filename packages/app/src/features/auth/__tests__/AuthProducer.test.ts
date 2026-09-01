@@ -18,7 +18,11 @@ import {
 } from '@kro/core'
 import { endeavorMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import {
   authFixtureUsers,
   makeStubbedAuthService,
@@ -56,7 +60,9 @@ import { signOutIntents } from '../SignOutIntents'
 const NOW = new Date('2026-08-31T10:00:00.000Z')
 const OWNER = authFixtureUsers.email.id
 
-const boolCloudOption = cloudSyncOptions.find((option) => option.type.kind === 'bool')
+const boolCloudOption = cloudSyncOptions.find(
+  (option) => option.type.kind === 'bool',
+)
 
 const profileRecord = (id: string): UserProfileRecord => ({
   id,
@@ -114,7 +120,13 @@ const harness = (options: HarnessOptions = {}) => {
       isCloudEnabled: supabaseHostingGate(featureFlags),
     }),
   }
-  return { store: makeStore(extra), localStore, authService, settingsSync, transport }
+  return {
+    store: makeStore(extra),
+    localStore,
+    authService,
+    settingsSync,
+    transport,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +144,9 @@ describe('restoreSessionThunk', () => {
 
   it('signs the account in when a session is persisted (a reload while signed in)', async () => {
     const { store } = harness({
-      authService: makeStubbedAuthService({ initialUser: authFixtureUsers.email }),
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.email,
+      }),
     })
 
     await store.dispatch(restoreSessionThunk({ now: NOW }))
@@ -145,7 +159,9 @@ describe('restoreSessionThunk', () => {
 
   it('PULLS settings on launch — the only moment besides sign-in that a pull overwrites local', async () => {
     const { store, settingsSync } = harness({
-      authService: makeStubbedAuthService({ initialUser: authFixtureUsers.email }),
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.email,
+      }),
     })
 
     await store.dispatch(restoreSessionThunk({ now: NOW }))
@@ -187,7 +203,11 @@ describe('signInWithEmailThunk', () => {
     const { store } = harness()
 
     await store.dispatch(
-      signInWithEmailThunk({ email: 'ada@example.com', password: 'secret', now: NOW }),
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
     )
 
     expect(store.getState().auth.session.kind).toBe('signedIn')
@@ -235,7 +255,11 @@ describe('signInWithEmailThunk', () => {
     })
 
     await store.dispatch(
-      signInWithEmailThunk({ email: 'ada@example.com', password: 'secret', now: NOW }),
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
     )
 
     expect(store.getState().auth.localData).toMatchObject({
@@ -282,7 +306,11 @@ describe('signInWithEmailThunk', () => {
     })
 
     await store.dispatch(
-      signInWithEmailThunk({ email: 'ada@example.com', password: 'secret', now: NOW }),
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
     )
 
     expect(settingsSync.pullCount()).toBe(0)
@@ -291,7 +319,9 @@ describe('signInWithEmailThunk', () => {
   it('refuses an empty form before it ever reaches the service', async () => {
     const { store, authService } = harness()
 
-    await store.dispatch(signInWithEmailThunk({ email: '', password: '', now: NOW }))
+    await store.dispatch(
+      signInWithEmailThunk({ email: '', password: '', now: NOW }),
+    )
 
     expect(authService.operations()).toEqual([])
     expect(store.getState().auth.session).toMatchObject({
@@ -308,7 +338,11 @@ describe('signInWithEmailThunk', () => {
     })
 
     await store.dispatch(
-      signInWithEmailThunk({ email: 'ada@example.com', password: 'wrong', now: NOW }),
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'wrong',
+        now: NOW,
+      }),
     )
 
     expect(store.getState().auth.session).toMatchObject({
@@ -418,7 +452,11 @@ describe('the Apple flow', () => {
     await store.dispatch(beginAppleSignInThunk())
 
     await store.dispatch(
-      signInWithAppleThunk({ idToken: 'token', fullName: 'Grace Hopper', now: NOW }),
+      signInWithAppleThunk({
+        idToken: 'token',
+        fullName: 'Grace Hopper',
+        now: NOW,
+      }),
     )
 
     expect(store.getState().auth.session).toMatchObject({
@@ -461,7 +499,10 @@ describe('startOAuthRedirectThunk', () => {
         redirectTo: 'https://kro.example/auth/callback',
       }),
     )
-    const result = action.payload as Result<{ provider: string; url: string }, unknown>
+    const result = action.payload as Result<
+      { provider: string; url: string },
+      unknown
+    >
 
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.value.provider).toBe('google')
@@ -483,12 +524,17 @@ describe('startOAuthRedirectThunk', () => {
   it('surfaces a provider rejection as a typed failure', async () => {
     const { store } = harness({
       authService: makeStubbedAuthService({
-        failures: { startOAuthRedirect: AuthExceptions.providerRejected('google') },
+        failures: {
+          startOAuthRedirect: AuthExceptions.providerRejected('google'),
+        },
       }),
     })
 
     await store.dispatch(
-      startOAuthRedirectThunk({ provider: 'google', redirectTo: 'https://kro.example' }),
+      startOAuthRedirectThunk({
+        provider: 'google',
+        redirectTo: 'https://kro.example',
+      }),
     )
 
     expect(store.getState().auth.session).toMatchObject({
@@ -533,9 +579,15 @@ describe('resolveLocalDataChoiceThunk', () => {
   })
 
   const signedInWithLocalData = async () => {
-    const context = harness({ seed: { endeavors: [anonymousRow('a'), anonymousRow('b')] } })
+    const context = harness({
+      seed: { endeavors: [anonymousRow('a'), anonymousRow('b')] },
+    })
     await context.store.dispatch(
-      signInWithEmailThunk({ email: 'ada@example.com', password: 'secret', now: NOW }),
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
     )
     return context
   }
@@ -544,7 +596,10 @@ describe('resolveLocalDataChoiceThunk', () => {
     const { store, localStore } = await signedInWithLocalData()
 
     await store.dispatch(
-      resolveLocalDataChoiceThunk({ choice: LocalDataChoice.signAll, now: NOW }),
+      resolveLocalDataChoiceThunk({
+        choice: LocalDataChoice.signAll,
+        now: NOW,
+      }),
     )
 
     const rows = await localStore.endeavors.all()
@@ -560,7 +615,10 @@ describe('resolveLocalDataChoiceThunk', () => {
     const { store, localStore } = await signedInWithLocalData()
 
     await store.dispatch(
-      resolveLocalDataChoiceThunk({ choice: LocalDataChoice.clearAll, now: NOW }),
+      resolveLocalDataChoiceThunk({
+        choice: LocalDataChoice.clearAll,
+        now: NOW,
+      }),
     )
 
     expect(await localStore.endeavors.allIncludingRemoved()).toEqual([])
@@ -596,7 +654,10 @@ describe('resolveLocalDataChoiceThunk', () => {
     const { store } = harness()
 
     const action = await store.dispatch(
-      resolveLocalDataChoiceThunk({ choice: LocalDataChoice.signAll, now: NOW }),
+      resolveLocalDataChoiceThunk({
+        choice: LocalDataChoice.signAll,
+        now: NOW,
+      }),
     )
 
     expect((action.payload as Result<unknown, unknown>).ok).toBe(false)
@@ -653,7 +714,9 @@ describe('signOutThunk', () => {
     await store.dispatch(signOutThunk())
 
     expect(await localStore.endeavors.allIncludingRemoved()).toEqual([])
-    expect(localStore.preferences.get(preferenceStorageKey('general.weekStart'))).toBeNull()
+    expect(
+      localStore.preferences.get(preferenceStorageKey('general.weekStart')),
+    ).toBeNull()
   })
 
   it('PRESERVES debug.ff.* overrides — a tester keeps their flags across a sign-out', async () => {
@@ -669,13 +732,17 @@ describe('signOutThunk', () => {
 
     await store.dispatch(signOutThunk())
 
-    expect(store.getState().auth.pendingSignOutIntents).toEqual(signOutIntents())
+    expect(store.getState().auth.pendingSignOutIntents).toEqual(
+      signOutIntents(),
+    )
   })
 
   it('drops the session', async () => {
     const { store } = harness({
       seed: seedWithPreferences(),
-      authService: makeStubbedAuthService({ initialUser: authFixtureUsers.email }),
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.email,
+      }),
     })
     await store.dispatch(restoreSessionThunk({ now: NOW }))
 
@@ -708,14 +775,18 @@ describe('syncSettingsThunk', () => {
   it('pulls at launch and applies the account values locally', async () => {
     if (boolCloudOption === undefined) return
     const { store, localStore } = harness({
-      settingsStored: [{ key: boolCloudOption.key, value: true, updatedAt: null }],
+      settingsStored: [
+        { key: boolCloudOption.key, value: true, updatedAt: null },
+      ],
     })
 
     await store.dispatch(
       syncSettingsThunk({ trigger: SettingsSyncTrigger.appLaunch, now: NOW }),
     )
 
-    expect(makePreferences(localStore.preferences).read(boolCloudOption)).toBe(true)
+    expect(makePreferences(localStore.preferences).read(boolCloudOption)).toBe(
+      true,
+    )
   })
 
   it('pulls at sign-in', async () => {
@@ -730,7 +801,10 @@ describe('syncSettingsThunk', () => {
     const { store, settingsSync } = harness()
 
     const action = await store.dispatch(
-      syncSettingsThunk({ trigger: SettingsSyncTrigger.settingsOpened, now: NOW }),
+      syncSettingsThunk({
+        trigger: SettingsSyncTrigger.settingsOpened,
+        now: NOW,
+      }),
     )
 
     expect(settingsSync.pullCount()).toBe(0)
@@ -742,7 +816,10 @@ describe('syncSettingsThunk', () => {
     const { store, settingsSync } = harness()
 
     await store.dispatch(
-      syncSettingsThunk({ trigger: SettingsSyncTrigger.settingsClosed, now: NOW }),
+      syncSettingsThunk({
+        trigger: SettingsSyncTrigger.settingsClosed,
+        now: NOW,
+      }),
     )
 
     expect(settingsSync.pushes()).toHaveLength(1)
@@ -752,16 +829,23 @@ describe('syncSettingsThunk', () => {
     const { store, settingsSync } = harness()
 
     await store.dispatch(
-      syncSettingsThunk({ trigger: SettingsSyncTrigger.settingsClosed, now: NOW }),
+      syncSettingsThunk({
+        trigger: SettingsSyncTrigger.settingsClosed,
+        now: NOW,
+      }),
     )
 
-    const pushedKeys = (settingsSync.pushes()[0] ?? []).map((entry) => entry.key)
+    const pushedKeys = (settingsSync.pushes()[0] ?? []).map(
+      (entry) => entry.key,
+    )
     const cloudKeys = cloudSyncOptions.map((option) => option.key)
     for (const key of pushedKeys) expect(cloudKeys).toContain(key)
   })
 
   it('reports offline on a transport failure and keeps the local value', async () => {
-    const { store } = harness({ settingsPullFailure: new TypeError('Failed to fetch') })
+    const { store } = harness({
+      settingsPullFailure: new TypeError('Failed to fetch'),
+    })
 
     await store.dispatch(
       syncSettingsThunk({ trigger: SettingsSyncTrigger.appLaunch, now: NOW }),
@@ -771,10 +855,15 @@ describe('syncSettingsThunk', () => {
   })
 
   it('reports "sign in to sync" rather than an error when nobody is signed in', async () => {
-    const { store } = harness({ settingsPushFailure: AuthExceptions.notSignedIn() })
+    const { store } = harness({
+      settingsPushFailure: AuthExceptions.notSignedIn(),
+    })
 
     await store.dispatch(
-      syncSettingsThunk({ trigger: SettingsSyncTrigger.settingsClosed, now: NOW }),
+      syncSettingsThunk({
+        trigger: SettingsSyncTrigger.settingsClosed,
+        now: NOW,
+      }),
     )
 
     expect(store.getState().auth.settingsSync).toEqual({ kind: 'signedOut' })
@@ -787,7 +876,9 @@ describe('syncSettingsThunk', () => {
 
 describe('synchronizeEndeavorsThunk', () => {
   it('reports disabled and touches no transport under the shipping flag configuration', async () => {
-    const { store, transport } = harness({ seed: { userProfiles: [profileRecord(OWNER)] } })
+    const { store, transport } = harness({
+      seed: { userProfiles: [profileRecord(OWNER)] },
+    })
 
     await store.dispatch(synchronizeEndeavorsThunk({ now: NOW }))
 
@@ -803,7 +894,9 @@ describe('synchronizeEndeavorsThunk', () => {
 
     await store.dispatch(synchronizeEndeavorsThunk({ now: NOW }))
 
-    expect(store.getState().auth.endeavorSync).toMatchObject({ kind: 'completed' })
+    expect(store.getState().auth.endeavorSync).toMatchObject({
+      kind: 'completed',
+    })
   })
 
   it('reports idle rather than a failure when nobody is signed in', async () => {

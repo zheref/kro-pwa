@@ -277,9 +277,7 @@ describe('the pill and the raised surface', () => {
     // Canon: `runningSession != nil && sessionSetup == nil`.
     expect(
       (
-        container.querySelector(
-          '[data-kro-session-pill-layer]',
-        ) as HTMLElement
+        container.querySelector('[data-kro-session-pill-layer]') as HTMLElement
       ).getAttribute('data-kro-session-pill-visible'),
     ).toBe('false')
   })
@@ -348,7 +346,9 @@ describe('the pill and the raised surface', () => {
       document.querySelector('[data-kro-session-surface="modal"]'),
     ).toBeNull()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Resume session' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Resume session' }),
+    )
     await waitFor(() => {
       expect(store.getState().session.phase).toBe(SessionPhase.running)
     })
@@ -382,9 +382,7 @@ describe('the pill and the raised surface', () => {
     })
     expect(
       (
-        container.querySelector(
-          '[data-kro-session-pill-layer]',
-        ) as HTMLElement
+        container.querySelector('[data-kro-session-pill-layer]') as HTMLElement
       ).getAttribute('data-kro-session-pill-visible'),
     ).toBe('false')
   })
@@ -405,9 +403,7 @@ describe('the pill and the raised surface', () => {
 
     expect(
       (
-        container.querySelector(
-          '[data-kro-session-pill-layer]',
-        ) as HTMLElement
+        container.querySelector('[data-kro-session-pill-layer]') as HTMLElement
       ).getAttribute('data-kro-session-pill-visible'),
     ).toBe('false')
     expect(

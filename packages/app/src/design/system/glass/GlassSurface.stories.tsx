@@ -58,8 +58,8 @@ function Stage({
           color: 'rgb(255 255 255 / 0.55)',
         }}
       >
-        Plan · Do · Earn · Find. Plan · Do · Earn · Find. Plan · Do · Earn · Find. Plan ·
-        Do · Earn · Find.
+        Plan · Do · Earn · Find. Plan · Do · Earn · Find. Plan · Do · Earn ·
+        Find. Plan · Do · Earn · Find.
       </p>
       <div style={{ position: 'relative' }}>{children}</div>
     </div>
@@ -100,12 +100,22 @@ export const Control = {
   name: 'Control · the shallower blur',
   render: () => (
     <Stage height={240}>
-      <div style={{ display: 'flex', gap: 'var(--kro-space-small)', flexWrap: 'wrap' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--kro-space-small)',
+          flexWrap: 'wrap',
+        }}
+      >
         <GlassSurface
           as="button"
           material="control"
           interactive
-          style={{ padding: '0 20px', fontWeight: 600, color: 'var(--kro-color-fore)' }}
+          style={{
+            padding: '0 20px',
+            fontWeight: 600,
+            color: 'var(--kro-color-fore)',
+          }}
         >
           Start session
         </GlassSurface>
@@ -118,8 +128,11 @@ export const Control = {
           +
         </GlassSurface>
       </div>
-      <p style={{ marginTop: 16, fontSize: 13, color: 'rgb(255 255 255 / 0.9)' }}>
-        14px blur at 160% saturation. A 20px blur behind a 14px label reads as smeared.
+      <p
+        style={{ marginTop: 16, fontSize: 13, color: 'rgb(255 255 255 / 0.9)' }}
+      >
+        14px blur at 160% saturation. A 20px blur behind a 14px label reads as
+        smeared.
       </p>
     </Stage>
   ),
@@ -155,11 +168,18 @@ export const FixedBar = {
       >
         {Array.from({ length: 30 }, (_, index) => (
           <p
+            // biome-ignore lint/suspicious/noArrayIndexKey: filler rows generated from a constant length — nothing reorders and there is no id
             key={`row-${index}`}
-            style={{ margin: 0, padding: '14px 20px', color: '#fff', fontSize: 18 }}
+            style={{
+              margin: 0,
+              padding: '14px 20px',
+              color: '#fff',
+              fontSize: 18,
+            }}
           >
-            Row {index + 1} — scroll this under the bar. In Safari the bar must stay
-            welded to the top edge; that is what the pseudo-element filter buys.
+            Row {index + 1} — scroll this under the bar. In Safari the bar must
+            stay welded to the top edge; that is what the pseudo-element filter
+            buys.
           </p>
         ))}
       </div>
@@ -179,7 +199,11 @@ export const DarkScheme = {
         as="button"
         material="control"
         interactive
-        style={{ padding: '0 20px', fontWeight: 600, color: 'var(--kro-color-fore)' }}
+        style={{
+          padding: '0 20px',
+          fontWeight: 600,
+          color: 'var(--kro-color-fore)',
+        }}
       >
         Start session
       </GlassSurface>

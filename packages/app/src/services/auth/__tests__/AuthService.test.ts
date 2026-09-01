@@ -21,7 +21,8 @@ describe('the fixture users', () => {
 
   it('uses only synthetic identities — no real account can leak through a fixture', () => {
     for (const user of Object.values(authFixtureUsers)) {
-      for (const email of user.emails) expect(email.endsWith('@example.com')).toBe(true)
+      for (const email of user.emails)
+        expect(email.endsWith('@example.com')).toBe(true)
     }
   })
 
@@ -60,14 +61,20 @@ describe('the stubbed service as a session machine', () => {
   })
 
   it('forgets the account after a sign-out', async () => {
-    const service = makeStubbedAuthService({ initialUser: authFixtureUsers.email })
+    const service = makeStubbedAuthService({
+      initialUser: authFixtureUsers.email,
+    })
     await service.signOut()
     expect(await service.restoreSession()).toBeNull()
   })
 
   it('carries the chosen display name through a sign-up', async () => {
     const service = makeStubbedAuthService()
-    const user = await service.signUpWithEmail('new@example.com', 'secret', 'New User')
+    const user = await service.signUpWithEmail(
+      'new@example.com',
+      'secret',
+      'New User',
+    )
     expect(user.name).toBe('New User')
   })
 
@@ -82,9 +89,9 @@ describe('the stubbed service as a session machine', () => {
     const service = makeStubbedAuthService({
       failures: { signInWithEmail: AuthExceptions.invalidCredentials() },
     })
-    await expect(service.signInWithEmail('ada@example.com', 'wrong')).rejects.toMatchObject(
-      { kind: 'invalidCredentials' },
-    )
+    await expect(
+      service.signInWithEmail('ada@example.com', 'wrong'),
+    ).rejects.toMatchObject({ kind: 'invalidCredentials' })
     await expect(service.restoreSession()).resolves.toBeNull()
   })
 })
@@ -97,11 +104,15 @@ describe('the stubbed service and auth-state listeners', () => {
 
     await service.signInWithEmail('ada@example.com', 'secret')
 
-    expect(seen).toEqual([{ kind: 'signedIn', userId: authFixtureUsers.email.id }])
+    expect(seen).toEqual([
+      { kind: 'signedIn', userId: authFixtureUsers.email.id },
+    ])
   })
 
   it('announces a sign-out', async () => {
-    const service = makeStubbedAuthService({ initialUser: authFixtureUsers.email })
+    const service = makeStubbedAuthService({
+      initialUser: authFixtureUsers.email,
+    })
     const seen: AuthStateEvent[] = []
     service.onAuthStateChange((event) => seen.push(event))
 
@@ -144,7 +155,11 @@ describe('the stubbed Apple flow', () => {
   it('refuses an empty id token — canon`s noIdentityToken', async () => {
     const service = makeStubbedAuthService()
     await expect(
-      service.signInWithAppleIdToken({ idToken: '', rawNonce: 'raw', fullName: null }),
+      service.signInWithAppleIdToken({
+        idToken: '',
+        rawNonce: 'raw',
+        fullName: null,
+      }),
     ).rejects.toMatchObject({ kind: 'noIdentityToken' })
   })
 })

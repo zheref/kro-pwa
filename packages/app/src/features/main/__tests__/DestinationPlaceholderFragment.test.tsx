@@ -68,7 +68,7 @@ describe('DestinationPlaceholderFragment', () => {
     expect(screen.getByText('Rewards is not built yet.')).toBeTruthy()
   })
 
-  it('takes the caller\'s copy when a feature has something better to say', () => {
+  it("takes the caller's copy when a feature has something better to say", () => {
     render(
       <DestinationPlaceholderFragment
         destination={{ kind: DestinationKind.board }}
@@ -81,4 +81,3 @@ describe('DestinationPlaceholderFragment', () => {
     ).toBeTruthy()
   })
 })
-

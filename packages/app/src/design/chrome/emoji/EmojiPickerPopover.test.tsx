@@ -65,7 +65,9 @@ describe('EmojiPickerPopover', () => {
       </EmojiPickerPopover>,
     )
 
-    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('false')
+    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe(
+      'false',
+    )
   })
 
   it('hands Radix a DEFINED open flag, which is what makes picking close it', () => {
@@ -87,7 +89,9 @@ describe('EmojiPickerPopover', () => {
     )
 
     expect(screen.getByRole('button').getAttribute('data-state')).toBe('closed')
-    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('false')
+    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe(
+      'false',
+    )
   })
 
   it('is wide enough for seven full-size cells — canon`s 320 is not', () => {

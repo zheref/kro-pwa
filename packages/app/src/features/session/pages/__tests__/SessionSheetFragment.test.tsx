@@ -99,7 +99,9 @@ describe('phases', () => {
       screen.getByRole('button', { name: /Start Focus Session/ }),
     ).toBeTruthy()
     expect(screen.getByText(/On a break\?/)).toBeTruthy()
-    expect(screen.getByText('Tap to end break and continue working')).toBeTruthy()
+    expect(
+      screen.getByText('Tap to end break and continue working'),
+    ).toBeTruthy()
   })
 
   it('reads the dismissal hint from the host, not from the platform', () => {
@@ -123,7 +125,9 @@ describe('the fixed-slot contract', () => {
       expect(slotHeight(container, 'identity')).toBe(
         `${SESSION_SLOT_HEIGHT.identity}px`,
       )
-      expect(slotHeight(container, 'dial')).toBe(`${SESSION_SLOT_HEIGHT.dial}px`)
+      expect(slotHeight(container, 'dial')).toBe(
+        `${SESSION_SLOT_HEIGHT.dial}px`,
+      )
       expect(slotHeight(container, 'status')).toBe(
         `${SESSION_SLOT_HEIGHT.status}px`,
       )
@@ -170,7 +174,9 @@ describe('the fixed-slot contract', () => {
       )
       expect(visible).toHaveLength(1)
 
-      for (const slot of container.querySelectorAll('[data-kro-session-deck]')) {
+      for (const slot of container.querySelectorAll(
+        '[data-kro-session-deck]',
+      )) {
         const isVisible =
           slot.getAttribute('data-kro-session-deck-visible') === 'true'
         // Canon's `allowsHitTesting(false)` + `accessibilityHidden(true)`.
@@ -336,7 +342,9 @@ describe('the tomato counter', () => {
   })
 
   it('caps the row at ten and appends the count beyond it', () => {
-    render(<SessionSheetFragment {...sessionSheetMocks.runningTomatoOverflow} />)
+    render(
+      <SessionSheetFragment {...sessionSheetMocks.runningTomatoOverflow} />,
+    )
     const row = screen.getByLabelText('12 completed sessions')
     expect(row.textContent).toBe(`${'🍅'.repeat(10)}× 12`)
   })

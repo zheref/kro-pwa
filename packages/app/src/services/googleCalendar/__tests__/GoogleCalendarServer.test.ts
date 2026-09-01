@@ -5,7 +5,10 @@ import { googleCalendarEnvironmentVariableNames as names } from '../GoogleCalend
 import { startGoogleAuthorization } from '../GoogleCalendarRouteHandlers'
 import { makeGoogleRouteDependencies } from '../GoogleCalendarServer'
 import { makeStubbedGoogleOAuthService } from '../GoogleOAuthService'
-import { STUBBED_VAULT_PREFIX, makeStubbedTokenVault } from '../GoogleTokenVault'
+import {
+  STUBBED_VAULT_PREFIX,
+  makeStubbedTokenVault,
+} from '../GoogleTokenVault'
 
 const CONFIGURED = {
   [names.clientId]: 'client-id.apps.googleusercontent.com',
@@ -79,7 +82,9 @@ describe('wiring the server-side dependencies', () => {
         routes: [{ match: 'calendarList', body: { items: [{ id: 'only' }] } }],
       }),
     })
-    const calendars = await deps.api.listCalendars({ accessToken: 'irrelevant' })
+    const calendars = await deps.api.listCalendars({
+      accessToken: 'irrelevant',
+    })
     expect(calendars.map((entry) => entry.id)).toEqual(['only'])
   })
 

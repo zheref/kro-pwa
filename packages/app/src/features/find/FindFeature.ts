@@ -97,7 +97,10 @@ export const findSlice = createSlice({
         enabledFlags: readonly string[]
       }>,
     ) {
-      Object.assign(state, withFindViewLoaded(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withFindViewLoaded(state as FindState, action.payload),
+      )
     },
 
     /** User intent: All Tasks was pointed at a different `.tasks*` vista. */
@@ -108,7 +111,10 @@ export const findSlice = createSlice({
         customTitle?: string | null
       }>,
     ) {
-      Object.assign(state, withTasksVistaSelected(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withTasksVistaSelected(state as FindState, action.payload),
+      )
     },
 
     /** User intent: the search field changed. Canon persists it with the lens. */
@@ -124,7 +130,10 @@ export const findSlice = createSlice({
       state,
       action: PayloadAction<{ surface: FindSurface; toggle: FindFilterToggle }>,
     ) {
-      Object.assign(state, withFilterToggled(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withFilterToggled(state as FindState, action.payload),
+      )
     },
 
     /** User intent: the Archived chip flipped. */
@@ -158,7 +167,10 @@ export const findSlice = createSlice({
       state,
       action: PayloadAction<{ surface: FindSurface; groupKey: string }>,
     ) {
-      Object.assign(state, withGroupExpanded(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withGroupExpanded(state as FindState, action.payload),
+      )
     },
 
     /** User intent: the focused group was closed, re-clipping every group. */
@@ -166,7 +178,10 @@ export const findSlice = createSlice({
       state,
       action: PayloadAction<{ surface: FindSurface }>,
     ) {
-      Object.assign(state, withGroupsCollapsed(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withGroupsCollapsed(state as FindState, action.payload),
+      )
     },
 
     /**
@@ -178,7 +193,10 @@ export const findSlice = createSlice({
       state,
       action: PayloadAction<{ intentId: number }>,
     ) {
-      Object.assign(state, withIntentConsumed(state as FindState, action.payload))
+      Object.assign(
+        state,
+        withIntentConsumed(state as FindState, action.payload),
+      )
     },
   },
 
@@ -309,6 +327,12 @@ export const findSlice = createSlice({
                 endeavorIds: [outcome.endeavorId],
               }),
             )
+            return
+          case 'shared':
+            // Canon's Share writes nothing and leaves the row exactly as it
+            // was, so there is no state to shift (KC-IS-#71 item 18). The
+            // outcome is still carried on the action for a surface that wants
+            // to say the hand-off fell back to the clipboard.
             return
           default:
             Object.assign(

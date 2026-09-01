@@ -23,10 +23,7 @@
  */
 import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
-import {
-  type PerformanceRecord,
-  performanceRecordFromPerform,
-} from '@kro/core'
+import { type PerformanceRecord, performanceRecordFromPerform } from '@kro/core'
 import {
   type AppStore,
   type ThunkExtra,
@@ -46,11 +43,11 @@ import { initialPlatformState } from '../../../platform/PlatformFeature'
 import { initialSessionState } from '../../../session/SessionState'
 import { initialTriageState } from '../../../triage/TriageFeature'
 import type { RootState } from '../../../../library/store'
+import { earnCatalogFixture, earnFixturePerformances } from '../../EarnMocks'
 import {
-  earnCatalogFixture,
-  earnFixturePerformances,
-} from '../../EarnMocks'
-import { writeClaimedRewardIds, writeRewardsCatalog } from '../../EarnRewardsStorage'
+  writeClaimedRewardIds,
+  writeRewardsCatalog,
+} from '../../EarnRewardsStorage'
 import type { EarnState } from '../../EarnFeature'
 import {
   selectAddRewardDraft,
@@ -88,13 +85,13 @@ export const rootWith = (earn: EarnState): RootState => ({
 /** `EARN_MOCK_NOW` in epoch millis — the fixture performances' recorded time. */
 const FIXTURE_NOW_MILLIS = new Date(2026, 2, 17, 10, 0, 0).getTime()
 
-const fixtureRecords: readonly PerformanceRecord[] = earnFixturePerformances.map(
-  (perform, index) =>
+const fixtureRecords: readonly PerformanceRecord[] =
+  earnFixturePerformances.map((perform, index) =>
     performanceRecordFromPerform(perform, {
       endeavorId: `earn-fixture-endeavor-${index}`,
       nowMillis: FIXTURE_NOW_MILLIS,
     }),
-)
+  )
 
 export interface SeededEarnStoreOptions {
   /** Reward ids to seed as already-claimed. Empty catalog otherwise. */

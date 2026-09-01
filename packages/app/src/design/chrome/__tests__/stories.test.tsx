@@ -81,7 +81,10 @@ function storiesOf(module: StoryModule): Array<[string, Story]> {
 function normalise(markup: string): string {
   return markup
     .replace(/(radix-)?[«:][a-zA-Z0-9]+[»:]/g, '$1<id>')
-    .replace(/(id|for|aria-controls|aria-labelledby|aria-describedby)="[^"]*"/g, '$1="<id>"')
+    .replace(
+      /(id|for|aria-controls|aria-labelledby|aria-describedby)="[^"]*"/g,
+      '$1="<id>"',
+    )
 }
 
 let teardown: () => void

@@ -61,7 +61,10 @@ export const Defer = {
       <Cell label="From the overflow menu — Skip sits alongside">
         <Panel>
           <DeferPopover
-            initialTarget={defaultDeferTarget(endeavorCardMocks.highUrgency.dueTime, NOW)}
+            initialTarget={defaultDeferTarget(
+              endeavorCardMocks.highUrgency.dueTime,
+              NOW,
+            )}
             onConfirm={() => undefined}
             onSkip={() => undefined}
           />

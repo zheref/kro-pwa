@@ -63,8 +63,13 @@ export const BadgeMatrix = {
           ['Mark-complete mode', true],
         ] as const
       ).map(([modeLabel, markComplete]) => (
-        <div key={modeLabel} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h3 style={{ margin: 0, color: '#fff', fontSize: 15 }}>{modeLabel}</h3>
+        <div
+          key={modeLabel}
+          style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+        >
+          <h3 style={{ margin: 0, color: '#fff', fontSize: 15 }}>
+            {modeLabel}
+          </h3>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             {MATRIX_URGENCIES.map((urgency) =>
               [10, 120].map((reward) =>
@@ -95,23 +100,25 @@ export const Sizes = {
   render: () => (
     <Stage gradient>
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end' }}>
-        {(['small', 'medium', 'large'] as const).map((size: EndeavorCardSize) => (
-          <Cell key={size} label={size}>
-            <EndeavorCard
-              model={endeavorCardMocks.highUrgency}
-              size={size}
-              now={NOW}
-              locale="en-US"
-              cardSize={
-                size === 'small'
-                  ? { width: 130, height: 170 }
-                  : size === 'large'
-                    ? { width: 200, height: 240 }
-                    : undefined
-              }
-            />
-          </Cell>
-        ))}
+        {(['small', 'medium', 'large'] as const).map(
+          (size: EndeavorCardSize) => (
+            <Cell key={size} label={size}>
+              <EndeavorCard
+                model={endeavorCardMocks.highUrgency}
+                size={size}
+                now={NOW}
+                locale="en-US"
+                cardSize={
+                  size === 'small'
+                    ? { width: 130, height: 170 }
+                    : size === 'large'
+                      ? { width: 200, height: 240 }
+                      : undefined
+                }
+              />
+            </Cell>
+          ),
+        )}
       </div>
     </Stage>
   ),
@@ -129,7 +136,9 @@ export const PreparationOverlay = {
       ]
       return (
         <Stage gradient>
-          <p style={{ margin: 0, color: 'rgb(255 255 255 / 0.8)', fontSize: 13 }}>
+          <p
+            style={{ margin: 0, color: 'rgb(255 255 255 / 0.8)', fontSize: 13 }}
+          >
             Tap a card to prepare it. The content blurs behind the action stack;
             an event card offers Skip where a task offers the backdate check.
           </p>
@@ -143,7 +152,9 @@ export const PreparationOverlay = {
                 size="large"
                 cardSize={{ width: 200, height: 240 }}
                 isSelected={selectedId === model.id}
-                onPrepare={(id) => setSelectedId((current) => (current === id ? null : id))}
+                onPrepare={(id) =>
+                  setSelectedId((current) => (current === id ? null : id))
+                }
                 onExecute={() => undefined}
                 onMarkComplete={() => undefined}
                 onSkip={() => undefined}
@@ -165,7 +176,14 @@ export const HorizontalLayout = {
   name: 'Horizontal · the full-width row (min-height 100)',
   render: () => (
     <Stage gradient>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          width: '100%',
+        }}
+      >
         {[
           endeavorCardMocks.mediumUrgency,
           endeavorCardMocks.overdue,

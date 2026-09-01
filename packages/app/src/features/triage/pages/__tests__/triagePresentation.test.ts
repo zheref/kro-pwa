@@ -39,7 +39,7 @@ describe('the leading edge strip', () => {
     expect(isTriageEdgeStripStart(0)).toBe(true)
   })
 
-  it('accepts a drag starting at the strip\'s last pixel', () => {
+  it("accepts a drag starting at the strip's last pixel", () => {
     expect(isTriageEdgeStripStart(72)).toBe(true)
   })
 
@@ -58,7 +58,7 @@ describe('the live drag offset', () => {
     expect(triageCarouselOffset(-80, 390)).toBe(0)
   })
 
-  it('stops at the carousel\'s trailing edge however far the finger goes', () => {
+  it("stops at the carousel's trailing edge however far the finger goes", () => {
     expect(triageCarouselOffset(900, 390)).toBe(390)
   })
 
@@ -102,20 +102,20 @@ describe('the ~18% release threshold — both sides of it', () => {
 })
 
 describe('the rating rows', () => {
-  it('draws five steps, as canon\'s ForEach(1...5) does', () => {
+  it("draws five steps, as canon's ForEach(1...5) does", () => {
     expect(TRIAGE_RATING_STEPS).toEqual([1, 2, 3, 4, 5])
   })
 
   it('lights every step up to the current rating (3 rockets lights three)', () => {
-    expect(TRIAGE_RATING_STEPS.filter((s) => isTriageRatingStepLit(3, s))).toEqual(
-      [1, 2, 3],
-    )
+    expect(
+      TRIAGE_RATING_STEPS.filter((s) => isTriageRatingStepLit(3, s)),
+    ).toEqual([1, 2, 3])
   })
 
   it('lights nothing when the user has cleared the rating', () => {
-    expect(TRIAGE_RATING_STEPS.some((s) => isTriageRatingStepLit(null, s))).toBe(
-      false,
-    )
+    expect(
+      TRIAGE_RATING_STEPS.some((s) => isTriageRatingStepLit(null, s)),
+    ).toBe(false)
   })
 
   it('lights all five at the top of the scale', () => {
@@ -125,7 +125,7 @@ describe('the rating rows', () => {
   })
 })
 
-describe('the datetime-local control\'s wire format', () => {
+describe("the datetime-local control's wire format", () => {
   it('writes local components, never a UTC instant', () => {
     // A `toISOString()` port would shift this by the runner's offset, which is
     // exactly the bug this function exists to not have.

@@ -6,7 +6,13 @@
  * sidebar's highlight, the inline presentation, and standing down while the
  * overlay is up so the same surface is never on screen twice.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
 import { DestinationKind } from '../../../main/SidebarDestination'
@@ -74,7 +80,7 @@ describe('the inline presentation', () => {
     expect(screen.queryByRole('button', { name: 'Done' })).toBeNull()
   })
 
-  it('lists the rows canon\'s Pending Triage selector keeps', async () => {
+  it("lists the rows canon's Pending Triage selector keeps", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
 
@@ -97,9 +103,9 @@ describe('the inline presentation', () => {
       surface: desktopSurface,
     })
     const { unmount } = mount(desktop)
-    const compactRow = (await screen.findAllByTestId(
-      'inbox-section-pending-triage',
-    ))[0]
+    const compactRow = (
+      await screen.findAllByTestId('inbox-section-pending-triage')
+    )[0]
     expect(
       compactRow?.querySelector('[data-config="compactDesktopInbox"]'),
     ).not.toBeNull()

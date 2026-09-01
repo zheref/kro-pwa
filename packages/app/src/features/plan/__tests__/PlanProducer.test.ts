@@ -4,8 +4,9 @@
  * (`RC-54`, `RC-35`). The assertions are on the resolved `Result`, because a
  * Producer's contract is what it resolves, not what it leaves in state.
  */
-import type { Endeavor, EndeavorRecord } from '@kro/core'
+import type { Endeavor, EndeavorRecord, FeatureFlagService } from '@kro/core'
 import {
+  EisenhowerQuadrant,
   EndeavorHost,
   EndeavorKind,
   FeatureFlagState,
@@ -22,10 +23,13 @@ import { PLAN_REFERENCE_DAY, planAt } from '../PlanMocks'
 import {
   loadPlanDayThunk,
   loadPlanMatrixThunk,
+  persistQuadrantAssignmentsThunk,
   planHostsFor,
   preloadPlanDaysThunk,
+  resolvePlanFlagsThunk,
   updateEventTimeThunk,
 } from '../PlanProducer'
+import { userDidAssignToQuadrant } from '../PlanFeature'
 import { PlanLoadReason } from '../PlanState'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
@@ -94,14 +98,19 @@ describe('planHostsFor', () => {
       localStore: makeInMemoryLocalStore(),
     })
     const google = hosts.find((host) => host.id === EndeavorHost.googleCalendar)
-    expect(await google?.fetchRange({ start: today, end: tomorrow })).toEqual([])
+    expect(await google?.fetchRange({ start: today, end: tomorrow })).toEqual(
+      [],
+    )
   })
 
   it('drops the Google host entirely when its flag is disabled (UZF-22)', () => {
     // `googleCalendarIntegration` is ENABLED at `statusQuo` — canon ships the
     // integration on — so this is the kill-switch path, not a rollout gate.
     const flags = makeHardcodedFeatureFlagService()
-    flags.change(FeatureFlags.googleCalendarIntegration, FeatureFlagState.disabled)
+    flags.change(
+      FeatureFlags.googleCalendarIntegration,
+      FeatureFlagState.disabled,
+    )
     const hosts = planHostsFor({
       ...stubbedThunkExtra,
       localStore: makeInMemoryLocalStore(),
@@ -152,7 +161,9 @@ describe('loadPlanDayThunk', () => {
   it('resolves an empty day rather than treating "nothing" as a failure', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(loadPlanDayThunk({ day: today, reason: PlanLoadReason.appWide }))
+      .dispatch(
+        loadPlanDayThunk({ day: today, reason: PlanLoadReason.appWide }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.value.events).toEqual([])
@@ -220,7 +231,8 @@ describe('loadPlanMatrixThunk', () => {
     ])
     const result = await store.dispatch(loadPlanMatrixThunk()).unwrap()
     expect(result.ok).toBe(true)
-    if (result.ok) expect(result.value.map((e) => e.id).sort()).toEqual(['a', 'b'])
+    if (result.ok)
+      expect(result.value.map((e) => e.id).sort()).toEqual(['a', 'b'])
   })
 
   it('resolves an error rather than throwing when the store cannot be read', async () => {
@@ -295,5 +307,215 @@ describe('updateEventTimeThunk', () => {
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.message).toBe('QuotaExceededError')
+  })
+})
+
+/**
+ * The flag resolver (KC-IS-#71 item 22).
+ *
+ * `onViewLoaded` takes both gates as arguments so no Selector ever reaches for
+ * a flag Service; this is the Producer that supplies them. Four cases in the
+ * `RC-54` shape: the shipping baseline, an override in each direction, and the
+ * unreadable-service path.
+ */
+describe('resolvePlanFlagsThunk', () => {
+  const resolveWith = async (featureFlags: FeatureFlagService) => {
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore(),
+      featureFlags,
+    })
+    const action = await store.dispatch(resolvePlanFlagsThunk())
+    const payload = resolvePlanFlagsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return payload.value
+  }
+
+  it('reports the shipping baseline: quick-create on, Detail dark-launched', async () => {
+    const resolved = await resolveWith(makeHardcodedFeatureFlagService())
+
+    expect(resolved.isQuickEventCreationEnabled).toBe(true)
+    // `endeavorDetail` is OFF at `statusQuo` while iOS dark-launches Detail, so
+    // the row's `viewDetail` tap stays unoffered — which is what the labelled
+    // `Open` control beside the gesture surface exists for.
+    expect(resolved.enabledCapabilityFlags).toEqual([])
+  })
+
+  it('offers the Detail capability once its flag is turned on', async () => {
+    const flags = makeHardcodedFeatureFlagService()
+    flags.change(FeatureFlags.endeavorDetail, FeatureFlagState.enabled)
+
+    const resolved = await resolveWith(flags)
+
+    expect(resolved.enabledCapabilityFlags).toEqual([
+      FeatureFlags.endeavorDetail.name,
+    ])
+  })
+
+  it('takes the quick-create canvas away when its flag is turned off', async () => {
+    const flags = makeHardcodedFeatureFlagService()
+    flags.change(
+      FeatureFlags.timelineQuickEventCreation,
+      FeatureFlagState.disabled,
+    )
+
+    const resolved = await resolveWith(flags)
+
+    expect(resolved.isQuickEventCreationEnabled).toBe(false)
+  })
+
+  it('resolves to "nothing enabled" when the flag service throws, never an error', async () => {
+    const throwing: FeatureFlagService = {
+      ...makeHardcodedFeatureFlagService(),
+      isEnabled: () => {
+        throw new Error('flag store unavailable')
+      },
+    }
+
+    const resolved = await resolveWith(throwing)
+
+    // A capability whose flag cannot be read is simply not offered: the surface
+    // renders without the dark-launched gesture rather than refusing to render.
+    expect(resolved).toEqual({
+      isQuickEventCreationEnabled: false,
+      enabledCapabilityFlags: [],
+    })
+  })
+})
+
+/**
+ * `produceMatrixResolvedEffect`'s web counterpart (KC-IS-#71 item 20).
+ *
+ * The reducer had the assignment and nothing wrote it, so a quadrant move
+ * survived until the next pool read and no further. These cases are about the
+ * write: what lands on disk, that it is the row the slice resolved, and that a
+ * missing row is skipped rather than failing the batch.
+ */
+describe('persistQuadrantAssignmentsThunk', () => {
+  const admissible = (id: string): Endeavor =>
+    makeEndeavor({
+      id,
+      title: id,
+      kind: EndeavorKind.task,
+      due: planAt(9),
+      value: 1,
+      hostedBy: [EndeavorHost.local],
+    })
+
+  /** A store whose matrix pool is loaded with `rows`. */
+  const storeWithPool = async (rows: readonly Endeavor[]) => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: rows.map((row) => recordOf(row)),
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore })
+    await store.dispatch(loadPlanMatrixThunk())
+    return { store, localStore }
+  }
+
+  it('writes the row the reducer resolved, not a second derivation', async () => {
+    const { store, localStore } = await storeWithPool([admissible('a')])
+    store.dispatch(
+      userDidAssignToQuadrant({
+        endeavorId: 'a',
+        quadrant: EisenhowerQuadrant.prioritize,
+      }),
+    )
+    const inState = (
+      store.getState().plan.matrixLoad as { endeavors: readonly Endeavor[] }
+    ).endeavors.find((row) => row.id === 'a')
+
+    await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+
+    const stored = await localStore.endeavors.get('a')
+    expect(stored?.value).toBe(inState?.value)
+    expect(stored?.due?.getTime()).toBe(inState?.due?.getTime())
+  })
+
+  it('writes every id it was given, in one batch', async () => {
+    const { store, localStore } = await storeWithPool([
+      admissible('a'),
+      admissible('b'),
+    ])
+    for (const id of ['a', 'b']) {
+      store.dispatch(
+        userDidAssignToQuadrant({
+          endeavorId: id,
+          quadrant: EisenhowerQuadrant.decide,
+        }),
+      )
+    }
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a', 'b'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(true)
+    if (payload?.ok)
+      expect(payload.value.map((row) => row.id)).toEqual(['a', 'b'])
+    expect(await localStore.endeavors.get('a')).toBeTruthy()
+    expect(await localStore.endeavors.get('b')).toBeTruthy()
+  })
+
+  it('skips an id the pool no longer holds rather than failing the batch', async () => {
+    const { store } = await storeWithPool([admissible('a')])
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a', 'vanished'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    // Filtered out by a lens, or removed between the pick and the confirm.
+    // Neither is an error, and neither should cost the row that IS there.
+    expect(payload?.ok).toBe(true)
+    if (payload?.ok) expect(payload.value.map((row) => row.id)).toEqual(['a'])
+  })
+
+  it('resolves an error rather than throwing when the write fails', async () => {
+    const broken = makeInMemoryLocalStore({
+      endeavors: [recordOf(admissible('a'))],
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore: broken })
+    await store.dispatch(loadPlanMatrixThunk())
+    store.dispatch(
+      userDidAssignToQuadrant({
+        endeavorId: 'a',
+        quadrant: EisenhowerQuadrant.prioritize,
+      }),
+    )
+    // Broken only AFTER the pool is loaded, so the failure is the write's.
+    broken.endeavors.put = () => Promise.reject(new Error('QuotaExceededError'))
+
+    const action = await store.dispatch(
+      persistQuadrantAssignmentsThunk({
+        endeavorIds: ['a'],
+        now: PLAN_REFERENCE_DAY,
+      }),
+    )
+    const payload = persistQuadrantAssignmentsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(false)
+    if (payload?.ok === false) {
+      expect(payload.error.message).toBe('QuotaExceededError')
+    }
   })
 })

@@ -25,7 +25,12 @@ export default {
 
 const CAPTURE_ITEMS: FABMenuEntry[] = [
   { id: 'event', label: 'Event', glyph: 'calendar', onSelect: () => {} },
-  { id: 'task', label: 'Task', glyph: 'checkmark.circle.fill', onSelect: () => {} },
+  {
+    id: 'task',
+    label: 'Task',
+    glyph: 'checkmark.circle.fill',
+    onSelect: () => {},
+  },
   { id: 'reminder', label: 'Reminder', glyph: 'bell', onSelect: () => {} },
   { id: 'habit', label: 'Habit', glyph: 'repeat', onSelect: () => {} },
 ]

@@ -19,7 +19,13 @@ afterEach(() => {
  * Deliberately a Component with no store: that IS the `RC-14` contract this
  * host is built to keep.
  */
-function Raiser({ toast, label = 'Complete' }: { toast: ActiveToastInput; label?: string }) {
+function Raiser({
+  toast,
+  label = 'Complete',
+}: {
+  toast: ActiveToastInput
+  label?: string
+}) {
   const { enqueue } = useActiveToasts()
   return (
     <button type="button" onClick={() => enqueue(toast)}>
@@ -82,7 +88,9 @@ describe('enqueue puts a toast up', () => {
     // A silently-dropped toast surfaces as "the Undo affordance never appeared",
     // which is exactly the kind of thing nobody catches in review.
     const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
-    expect(() => render(<Raiser toast={{ message: 'x' }} />)).toThrow(/ActiveToastHost/)
+    expect(() => render(<Raiser toast={{ message: 'x' }} />)).toThrow(
+      /ActiveToastHost/,
+    )
     quiet.mockRestore()
   })
 })
@@ -152,8 +160,14 @@ describe('a second toast replaces the first — the queue is one deep', () => {
   function twoRaisers() {
     return render(
       <ActiveToastHost position="absolute">
-        <Raiser toast={{ message: '"Groceries" completed', duration: 8 }} label="Complete" />
-        <Raiser toast={{ message: '"Workout" skipped', duration: 8 }} label="Skip" />
+        <Raiser
+          toast={{ message: '"Groceries" completed', duration: 8 }}
+          label="Complete"
+        />
+        <Raiser
+          toast={{ message: '"Workout" skipped', duration: 8 }}
+          label="Skip"
+        />
       </ActiveToastHost>,
     )
   }
@@ -188,7 +202,10 @@ describe('dismiss', () => {
     const { enqueue, dismiss, current } = useActiveToasts()
     return (
       <>
-        <button type="button" onClick={() => enqueue({ message: 'Deleted', duration: 8 })}>
+        <button
+          type="button"
+          onClick={() => enqueue({ message: 'Deleted', duration: 8 })}
+        >
           Delete
         </button>
         <button type="button" onClick={() => dismiss()}>
@@ -253,7 +270,9 @@ describe('the host wires the placement rules through', () => {
     press('Complete')
 
     expect(
-      document.querySelector('[data-kro-toast-layer]')?.getAttribute('data-kro-toast-lifted'),
+      document
+        .querySelector('[data-kro-toast-layer]')
+        ?.getAttribute('data-kro-toast-lifted'),
     ).toBe('true')
   })
 })

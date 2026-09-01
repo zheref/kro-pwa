@@ -57,7 +57,9 @@ export interface AppleSignInChallenge {
 /** The Web Crypto surface this module needs, named so a test can supply it. */
 export interface CryptoProvider {
   getRandomValues<T extends Uint8Array>(array: T): T
-  readonly subtle: { digest(algorithm: string, data: BufferSource): Promise<ArrayBuffer> }
+  readonly subtle: {
+    digest(algorithm: string, data: BufferSource): Promise<ArrayBuffer>
+  }
 }
 
 /** The ambient Web Crypto, or `null` in a runtime that has none. */
@@ -99,7 +101,10 @@ export const sha256Nonce = async (
   crypto: CryptoProvider,
   input: string,
 ): Promise<string> => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(input),
+  )
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')

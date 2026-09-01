@@ -65,7 +65,11 @@ import {
   withDisplayAdvanced,
   withException,
 } from '../SessionShifters'
-import { SessionPhase, SessionPillAffordance, SessionTint } from '../SessionVocabulary'
+import {
+  SessionPhase,
+  SessionPillAffordance,
+  SessionTint,
+} from '../SessionVocabulary'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
 
@@ -97,7 +101,9 @@ const ready = rootWith(sessionStateMocks.ready)
 
 describe('selectIsSessionLoading / selectSessionException', () => {
   it('is loading while the first anchor read is in flight', () => {
-    expect(selectIsSessionLoading(rootWith(sessionStateMocks.loading))).toBe(true)
+    expect(selectIsSessionLoading(rootWith(sessionStateMocks.loading))).toBe(
+      true,
+    )
   })
 
   it('is not loading once the session is under way', () => {
@@ -166,7 +172,10 @@ describe('derived time', () => {
   })
 
   it('reports progress as a clamped fraction of the target', () => {
-    expect(selectSessionProgress(running)).toBeCloseTo(600 / SESSION_MOCK_TARGET, 5)
+    expect(selectSessionProgress(running)).toBeCloseTo(
+      600 / SESSION_MOCK_TARGET,
+      5,
+    )
     expect(selectSessionProgress(concluded)).toBe(1)
   })
 
@@ -396,7 +405,10 @@ describe('the tomato row', () => {
   })
 
   it('hides the row entirely at zero', () => {
-    const none = rootWith({ ...sessionStateMocks.ready, completedSessionsCount: 0 })
+    const none = rootWith({
+      ...sessionStateMocks.ready,
+      completedSessionsCount: 0,
+    })
     expect(selectShouldShowTomatoRow(none)).toBe(false)
   })
 
@@ -405,7 +417,10 @@ describe('the tomato row', () => {
   })
 
   it('caps the glyphs and adds a × N label past ten', () => {
-    const many = rootWith({ ...sessionStateMocks.ready, completedSessionsCount: 42 })
+    const many = rootWith({
+      ...sessionStateMocks.ready,
+      completedSessionsCount: 42,
+    })
     expect(selectTomatoRow(many)).toEqual({
       glyphs: SESSION_TOMATO_DISPLAY_CAP,
       overflowLabel: '× 42',
@@ -424,7 +439,9 @@ describe('a session whose anchor write failed', () => {
 
   it('still shows the pill', () => {
     expect(
-      selectIsSessionPillVisible(rootWith(sessionStateMocks.failedWriteWhileRunning)),
+      selectIsSessionPillVisible(
+        rootWith(sessionStateMocks.failedWriteWhileRunning),
+      ),
     ).toBe(true)
   })
 
@@ -437,7 +454,9 @@ describe('a session whose anchor write failed', () => {
 
 describe('a fresh, never-started session', () => {
   it('reports zero elapsed rather than NaN', () => {
-    expect(selectSessionElapsedDuration(rootWith(sessionStateMocks.idle))).toBe(0)
+    expect(selectSessionElapsedDuration(rootWith(sessionStateMocks.idle))).toBe(
+      0,
+    )
   })
 
   it('reports the default target as remaining', () => {

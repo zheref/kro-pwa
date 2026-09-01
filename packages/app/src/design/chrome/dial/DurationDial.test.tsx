@@ -58,7 +58,11 @@ describe('the drag maths, without a pointer', () => {
 
   it('wraps a full turn back to the start rather than running past the maximum', () => {
     expect(
-      durationForAngle({ degrees: 360, maxSeconds: DEFAULT_MAX_SECONDS, stepSeconds: 60 }),
+      durationForAngle({
+        degrees: 360,
+        maxSeconds: DEFAULT_MAX_SECONDS,
+        stepSeconds: 60,
+      }),
     ).toBe(0)
   })
 })
@@ -73,7 +77,9 @@ describe('keyboard operability', () => {
     expect(document.activeElement).toBe(slider)
     expect(slider.getAttribute('aria-valuenow')).toBe(String(25 * 60))
     expect(slider.getAttribute('aria-valuetext')).toBe('25 minutes')
-    expect(slider.getAttribute('aria-valuemax')).toBe(String(DEFAULT_MAX_SECONDS))
+    expect(slider.getAttribute('aria-valuemax')).toBe(
+      String(DEFAULT_MAX_SECONDS),
+    )
   })
 
   it('steps up a minute on ArrowUp and ArrowRight', async () => {
@@ -122,7 +128,9 @@ describe('keyboard operability', () => {
 
   it('does not step below zero or past the dial`s own range', async () => {
     const onChange = vi.fn()
-    const { rerender } = render(<DurationDial seconds={0} onChange={onChange} />)
+    const { rerender } = render(
+      <DurationDial seconds={0} onChange={onChange} />,
+    )
 
     dial().focus()
     await userEvent.keyboard('{ArrowDown}')
@@ -159,8 +167,12 @@ describe('the preset pills', () => {
   it('marks the pill that matches the current duration as pressed', () => {
     render(<DurationDial seconds={25 * 60} />)
 
-    expect(screen.getByRole('button', { name: '25m' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: '45m' }).getAttribute('aria-pressed')).toBe('false')
+    expect(
+      screen.getByRole('button', { name: '25m' }).getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(
+      screen.getByRole('button', { name: '45m' }).getAttribute('aria-pressed'),
+    ).toBe('false')
   })
 
   it('marks none when the duration sits between two presets', () => {
@@ -168,7 +180,9 @@ describe('the preset pills', () => {
 
     for (const preset of DEFAULT_DURATION_PRESETS) {
       expect(
-        screen.getByRole('button', { name: `${preset}m` }).getAttribute('aria-pressed'),
+        screen
+          .getByRole('button', { name: `${preset}m` })
+          .getAttribute('aria-pressed'),
       ).toBe('false')
     }
   })
@@ -177,9 +191,9 @@ describe('the preset pills', () => {
     render(<DurationDial seconds={25 * 60} />)
 
     for (const preset of DEFAULT_DURATION_PRESETS) {
-      expect(screen.getByRole('button', { name: `${preset}m` }).style.minHeight).toBe(
-        'var(--kro-size-min-touch-target)',
-      )
+      expect(
+        screen.getByRole('button', { name: `${preset}m` }).style.minHeight,
+      ).toBe('var(--kro-size-min-touch-target)')
     }
   })
 })

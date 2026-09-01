@@ -67,8 +67,12 @@ export const WithCheckboxes = {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Show in My Day</DropdownMenuLabel>
-        <DropdownMenuCheckboxItem checked>Completed today</DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked={false}>Expired</DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked>
+          Completed today
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked={false}>
+          Expired
+        </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem checked>Reminders</DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -95,7 +99,10 @@ export const WithDisabled = {
 
 export const DarkScheme = {
   render: () => (
-    <div data-theme="dark" style={{ padding: 40, background: 'var(--kro-color-back)' }}>
+    <div
+      data-theme="dark"
+      style={{ padding: 40, background: 'var(--kro-color-back)' }}
+    >
       <DropdownMenu defaultOpen>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary">Actions</Button>

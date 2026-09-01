@@ -2,7 +2,10 @@ import type { ReactNode } from 'react'
 import { EndeavorKind } from '@kro/core'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { initialDoVisibility } from '../DoRules'
-import { DoToolbarFragment, type DoToolbarFragmentProps } from './DoToolbarFragment'
+import {
+  DoToolbarFragment,
+  type DoToolbarFragmentProps,
+} from './DoToolbarFragment'
 import {
   DO_SURFACE_MOCK_LOCALE,
   DO_SURFACE_MOCK_NOW,

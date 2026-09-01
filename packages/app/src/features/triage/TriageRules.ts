@@ -31,6 +31,7 @@
 import {
   EisenhowerQuadrant,
   assertNever,
+  endeavorShareText,
   quadrantImportantSibling,
   quadrantIsImportant,
 } from '@kro/core'
@@ -304,9 +305,14 @@ export const triagePrimaryActionLabel = (
   quadrant: EisenhowerQuadrant | null,
 ): string => (quadrant === null ? 'Complete Triage' : 'Complete Only')
 
-/** `TriageFeature.shareText(for:)` — the Kro-branded blurb, verbatim. */
-export const triageShareText = (endeavorTitle: string): string =>
-  `I'd like you to help with "${endeavorTitle}". (Shared from Kro.)`
+/**
+ * `TriageFeature.shareText(for:)` — the Kro-branded blurb, verbatim.
+ *
+ * The sentence itself moved into `@kro/core` (KC-IS-#71 item 18), because
+ * Find's `share` row operation hands off the same one and a feature may not
+ * import a sibling feature's module. This is the name Triage calls it by.
+ */
+export const triageShareText = endeavorShareText
 
 // ---------------------------------------------------------------------------
 // The confirm gate

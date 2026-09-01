@@ -82,6 +82,14 @@ export const OperationEffect = {
   archive: 'archive',
   /** Unarchive: back to pending, leaving any completion timestamp alone. */
   unarchive: 'unarchive',
+  /**
+   * Hand the row off through the platform's share sheet, clipboard behind it.
+   *
+   * The one effect that writes nothing: it is `local` because Find performs it
+   * rather than parking an intent for another surface, which is what the
+   * handling flag actually distinguishes (KC-IS-#71 item 18).
+   */
+  share: 'share',
 } as const
 
 export type OperationEffect =
@@ -133,8 +141,14 @@ export const findOperationBindings: Record<
   EndeavorOperation,
   FindOperationBinding
 > = {
-  [Operation.markComplete]: local(Operation.markComplete, OperationEffect.complete),
-  [Operation.markIncomplete]: local(Operation.markIncomplete, OperationEffect.reopen),
+  [Operation.markComplete]: local(
+    Operation.markComplete,
+    OperationEffect.complete,
+  ),
+  [Operation.markIncomplete]: local(
+    Operation.markIncomplete,
+    OperationEffect.reopen,
+  ),
   [Operation.defer]: local(Operation.defer, OperationEffect.defer),
   [Operation.delete]: local(Operation.delete, OperationEffect.softDelete),
   [Operation.archive]: local(Operation.archive, OperationEffect.archive),
@@ -145,15 +159,22 @@ export const findOperationBindings: Record<
   [Operation.startSession]: intent(Operation.startSession, 'session surface'),
   // Do's pre-execution overlay "Start now" — the same hand-off as
   // `startSession`, raised from the overlay rather than a row gesture.
-  [Operation.execute]: intent(Operation.execute, 'session surface (Do prep overlay)'),
+  [Operation.execute]: intent(
+    Operation.execute,
+    'session surface (Do prep overlay)',
+  ),
   // The editor is the Endeavor Detail slice's, registered beside this one.
   [Operation.edit]: intent(Operation.edit, 'endeavorDetail slice'),
-  // Web has `navigator.share`, but a platform capability is a Service behind
-  // `ThunkExtra` (`RC-6`) and none is wired yet. Named rather than dropped.
-  [Operation.share]: intent(Operation.share, 'share Service (not wired yet)'),
+  // `navigator.share`, with the clipboard behind it — a Service behind
+  // `ThunkExtra` since KC-IS-#71 item 18, so Find performs the hand-off
+  // instead of parking an intent nobody consumed.
+  [Operation.share]: local(Operation.share, OperationEffect.share),
   [Operation.triage]: intent(Operation.triage, 'triage surface'),
   // The suggestion lane is Do's own state; Find can only ask.
-  [Operation.dismissSuggestion]: intent(Operation.dismissSuggestion, 'do slice'),
+  [Operation.dismissSuggestion]: intent(
+    Operation.dismissSuggestion,
+    'do slice',
+  ),
   [Operation.viewDetail]: intent(Operation.viewDetail, 'endeavorDetail slice'),
 }
 

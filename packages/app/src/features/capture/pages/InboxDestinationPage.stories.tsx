@@ -22,11 +22,7 @@ export default {
   parameters: { layout: 'fullscreen' },
 }
 
-const page = (
-  surface: DoSurface,
-  theme: 'light' | 'dark',
-  seeded = true,
-) => (
+const page = (surface: DoSurface, theme: 'light' | 'dark', seeded = true) => (
   <ThemeScope theme={theme}>
     <div style={{ height: 620 }}>
       <CaptureStoreStage

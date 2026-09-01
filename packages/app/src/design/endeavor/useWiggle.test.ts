@@ -98,13 +98,15 @@ describe('useWiggle', () => {
 
 describe('wiggleStyle', () => {
   it('rotates by the current angle', () => {
-    expect(wiggleStyle({ angle: 0.35, isAnimating: true }).transform).toBe('rotate(0.35deg)')
+    expect(wiggleStyle({ angle: 0.35, isAnimating: true }).transform).toBe(
+      'rotate(0.35deg)',
+    )
   })
 
   it('uses the half-period while animating and the shorter settle on the way out', () => {
-    expect(wiggleStyle({ angle: 0.35, isAnimating: true }).transition).toContain(
-      `${WIGGLE_HALF_PERIOD_MS}ms`,
-    )
+    expect(
+      wiggleStyle({ angle: 0.35, isAnimating: true }).transition,
+    ).toContain(`${WIGGLE_HALF_PERIOD_MS}ms`)
     expect(wiggleStyle({ angle: 0, isAnimating: false }).transition).toContain(
       `${WIGGLE_SETTLE_MS}ms`,
     )

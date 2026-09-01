@@ -50,7 +50,9 @@ describe('oppositePlanModeEdge', () => {
   })
 
   it('is its own inverse — applying it twice returns the same edge', () => {
-    expect(oppositePlanModeEdge(oppositePlanModeEdge('leading'))).toBe('leading')
+    expect(oppositePlanModeEdge(oppositePlanModeEdge('leading'))).toBe(
+      'leading',
+    )
   })
 })
 

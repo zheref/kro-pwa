@@ -57,7 +57,8 @@ export const PlanListBucket = {
   comingNext: 'comingNext',
 } as const
 
-export type PlanListBucket = (typeof PlanListBucket)[keyof typeof PlanListBucket]
+export type PlanListBucket =
+  (typeof PlanListBucket)[keyof typeof PlanListBucket]
 
 /** Canon's section order for `PlanListGrouping.none`. */
 export const planListBuckets: readonly PlanListBucket[] = [
@@ -146,7 +147,9 @@ export const planListBucketFor = (
  * unscheduled row floats to the bottom of its section.
  */
 export const planListSortDate = (endeavor: Endeavor): number =>
-  endeavor.start?.getTime() ?? endeavor.due?.getTime() ?? Number.POSITIVE_INFINITY
+  endeavor.start?.getTime() ??
+  endeavor.due?.getTime() ??
+  Number.POSITIVE_INFINITY
 
 /* ------------------------------------------------------------------------ */
 /* Sort (`PlanSelectors.listComparator`)                                     */
@@ -189,7 +192,8 @@ export const planListComparator = (
         const rightStart = right.start?.getTime() ?? Number.POSITIVE_INFINITY
         if (leftStart !== rightStart) return leftStart - rightStart
         // Canon: both untimed (or an exact tie) falls back to title, then id.
-        const byTitle = left.title < right.title ? -1 : left.title > right.title ? 1 : 0
+        const byTitle =
+          left.title < right.title ? -1 : left.title > right.title ? 1 : 0
         return byTitle !== 0 ? byTitle : idOrder(left, right)
       }
     case Sort.title:
@@ -203,10 +207,15 @@ export const planListComparator = (
           planListPriorityTier(left, now) - planListPriorityTier(right, now)
         if (byTier !== 0) return byTier
         const leftProximity =
-          left.due?.getTime() ?? left.start?.getTime() ?? Number.POSITIVE_INFINITY
+          left.due?.getTime() ??
+          left.start?.getTime() ??
+          Number.POSITIVE_INFINITY
         const rightProximity =
-          right.due?.getTime() ?? right.start?.getTime() ?? Number.POSITIVE_INFINITY
-        if (leftProximity !== rightProximity) return leftProximity - rightProximity
+          right.due?.getTime() ??
+          right.start?.getTime() ??
+          Number.POSITIVE_INFINITY
+        if (leftProximity !== rightProximity)
+          return leftProximity - rightProximity
         return idOrder(left, right)
       }
     default:
@@ -316,7 +325,12 @@ const projectSections = (
   if (noProject.length === 0) return sections
   return [
     ...sections,
-    { id: 'noProject', title: 'No project', endeavors: noProject, isOngoing: false },
+    {
+      id: 'noProject',
+      title: 'No project',
+      endeavors: noProject,
+      isOngoing: false,
+    },
   ]
 }
 

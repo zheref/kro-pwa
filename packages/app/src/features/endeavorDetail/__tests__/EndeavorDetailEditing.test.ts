@@ -186,21 +186,21 @@ describe('a forbidden edit cannot be EXPRESSED, not merely rejected', () => {
   })
 
   it('returns the identical object when a habit is given a due date', () => {
-    expect(
-      applyFieldChange(habit, { field: 'due', value: new Date() }),
-    ).toBe(habit)
-  })
-
-  it('returns the identical object when a blueprint is given a duration', () => {
-    expect(applyFieldChange(blueprint, { field: 'duration', value: 1800 })).toBe(
-      blueprint,
+    expect(applyFieldChange(habit, { field: 'due', value: new Date() })).toBe(
+      habit,
     )
   })
 
-  it('refuses session points on a calendar event', () => {
+  it('returns the identical object when a blueprint is given a duration', () => {
     expect(
-      applyFieldChange(event, { field: 'sessionPoints', value: 5 }),
-    ).toBe(event)
+      applyFieldChange(blueprint, { field: 'duration', value: 1800 }),
+    ).toBe(blueprint)
+  })
+
+  it('refuses session points on a calendar event', () => {
+    expect(applyFieldChange(event, { field: 'sessionPoints', value: 5 })).toBe(
+      event,
+    )
   })
 
   it('refuses the whole duration profile on a blueprint', () => {
@@ -229,7 +229,8 @@ describe('an allowed edit lands on the working copy', () => {
 
   it('renames a task', () => {
     expect(
-      applyFieldChange(task, { field: 'title', value: 'Prepare the deck' }).title,
+      applyFieldChange(task, { field: 'title', value: 'Prepare the deck' })
+        .title,
     ).toBe('Prepare the deck')
   })
 
@@ -268,17 +269,25 @@ describe('an allowed edit lands on the working copy', () => {
 
   it('moves `list` and `projectId` together, as one user-facing assignment', () => {
     const project = makeProject({ id: 'p-1', title: 'Launch' })
-    const assigned = applyFieldChange(task, { field: 'project', value: project })
+    const assigned = applyFieldChange(task, {
+      field: 'project',
+      value: project,
+    })
     expect(assigned.projectId).toBe('p-1')
     expect(assigned.list?.id).toBe('p-1')
 
-    const cleared = applyFieldChange(assigned, { field: 'project', value: null })
+    const cleared = applyFieldChange(assigned, {
+      field: 'project',
+      value: null,
+    })
     expect(cleared.projectId).toBeNull()
     expect(cleared.list).toBeNull()
   })
 
   it('clears an optional enrichment field', () => {
-    expect(applyFieldChange(task, { field: 'value', value: null }).value).toBeNull()
+    expect(
+      applyFieldChange(task, { field: 'value', value: null }).value,
+    ).toBeNull()
   })
 })
 
@@ -299,12 +308,17 @@ describe('endeavorsEqual compares by value, as canon’s struct equality does', 
 
   it('reports a real edit as different', () => {
     expect(
-      endeavorsEqual(task, applyFieldChange(task, { field: 'title', value: 'x' })),
+      endeavorsEqual(
+        task,
+        applyFieldChange(task, { field: 'title', value: 'x' }),
+      ),
     ).toBe(false)
   })
 
   it('reports a changed relation array as different', () => {
-    expect(endeavorsEqual(task, detailEndeavorMocks.taskWithSessions)).toBe(false)
+    expect(endeavorsEqual(task, detailEndeavorMocks.taskWithSessions)).toBe(
+      false,
+    )
   })
 })
 
@@ -321,9 +335,9 @@ describe('fieldOfChange keeps one vocabulary for the question and the change', (
   })
 
   it('maps a tag toggle onto the `tags` matrix field', () => {
-    expect(fieldOfChange({ field: 'tagToggled', value: EndeavorTag.session })).toBe(
-      EndeavorField.tags,
-    )
+    expect(
+      fieldOfChange({ field: 'tagToggled', value: EndeavorTag.session }),
+    ).toBe(EndeavorField.tags)
   })
 
   it('maps every other change onto its own field', () => {

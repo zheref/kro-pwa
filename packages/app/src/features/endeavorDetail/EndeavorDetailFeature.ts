@@ -93,10 +93,7 @@ export const endeavorDetailSlice = createSlice({
     },
 
     /** Lifecycle: another surface asked for the full editor directly. */
-    onEditRequested(
-      state,
-      action: PayloadAction<{ endeavor?: Endeavor }>,
-    ) {
+    onEditRequested(state, action: PayloadAction<{ endeavor?: Endeavor }>) {
       Object.assign(
         state,
         withEditRequested(state as EndeavorDetailState, action.payload),
@@ -245,9 +242,12 @@ export const endeavorDetailSlice = createSlice({
       // its own and reports the refreshed endeavor, so a per-thunk arm set
       // would be eight copies of the same three lines. The failures differ
       // only in their exception, which the Producer has already typed.
-      .addMatcher(isAnyOf(...relationThunks.map((thunk) => thunk.pending)), (state) => {
-        Object.assign(state, withSaveStarted(state as EndeavorDetailState))
-      })
+      .addMatcher(
+        isAnyOf(...relationThunks.map((thunk) => thunk.pending)),
+        (state) => {
+          Object.assign(state, withSaveStarted(state as EndeavorDetailState))
+        },
+      )
       .addMatcher(
         isAnyOf(...relationThunks.map((thunk) => thunk.fulfilled)),
         (state, action) => {

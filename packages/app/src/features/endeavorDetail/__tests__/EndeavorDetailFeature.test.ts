@@ -46,7 +46,10 @@ import {
   saveEndeavorThunk,
 } from '../EndeavorDetailProducer'
 import { DurationBound } from '../EndeavorDuration'
-import { selectIsEditDirty, selectIsSaveEnabled } from '../EndeavorDetailSelectors'
+import {
+  selectIsEditDirty,
+  selectIsSaveEnabled,
+} from '../EndeavorDetailSelectors'
 
 const reducer = endeavorDetailSlice.reducer
 
@@ -161,7 +164,9 @@ describe('dirty tracking, save and dismiss', () => {
 
   it('reads clean the moment the editor opens', () => {
     expect(selectIsEditDirty(rootOf(detailStateMocks.editingTask))).toBe(false)
-    expect(selectIsSaveEnabled(rootOf(detailStateMocks.editingTask))).toBe(false)
+    expect(selectIsSaveEnabled(rootOf(detailStateMocks.editingTask))).toBe(
+      false,
+    )
   })
 
   it('reads dirty after a real edit, and enables Save', () => {

@@ -25,7 +25,9 @@ describe('building a reconciliation context', () => {
   it('defaults to the shipped ruleset registry', () => {
     // Apple (KC-IS-#12) then Google (KC-IS-#33) — the registry, not a copy of
     // it, so appending a third table needs no edit here.
-    expect(makeReconciliationContext().rulesets).toEqual(defaultProviderRulesets)
+    expect(makeReconciliationContext().rulesets).toEqual(
+      defaultProviderRulesets,
+    )
     expect(makeReconciliationContext().rulesets[0]).toBe(appleRemindersRuleset)
   })
 

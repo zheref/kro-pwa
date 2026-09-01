@@ -149,15 +149,21 @@ describe('planListSortDate', () => {
 
 describe('planListPriorityTier', () => {
   it('puts an overdue row first — tier 0', () => {
-    expect(planListPriorityTier(planListBucketFixtures.untimedOverdue, now)).toBe(0)
+    expect(
+      planListPriorityTier(planListBucketFixtures.untimedOverdue, now),
+    ).toBe(0)
   })
 
   it('puts a row still due today second — tier 1', () => {
-    expect(planListPriorityTier(planListBucketFixtures.untimedDueToday, now)).toBe(1)
+    expect(
+      planListPriorityTier(planListBucketFixtures.untimedDueToday, now),
+    ).toBe(1)
   })
 
   it('puts a row with no due date last — tier 2, same as due later', () => {
-    expect(planListPriorityTier(planListBucketFixtures.unscheduled, now)).toBe(2)
+    expect(planListPriorityTier(planListBucketFixtures.unscheduled, now)).toBe(
+      2,
+    )
   })
 })
 

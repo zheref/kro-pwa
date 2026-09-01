@@ -63,7 +63,12 @@
   },
   "calendars": {
     "calendars": [
-      { "id": "primary", "name": "Sergio", "isPrimary": true, "isSelected": true },
+      {
+        "id": "primary",
+        "name": "Sergio",
+        "isPrimary": true,
+        "isSelected": true
+      },
       {
         "id": "team@example.com",
         "name": "Team",
@@ -80,7 +85,12 @@
   },
   "calendarListResponse": {
     "items": [
-      { "id": "primary", "summary": "Sergio", "primary": true, "selected": true },
+      {
+        "id": "primary",
+        "summary": "Sergio",
+        "primary": true,
+        "selected": true
+      },
       { "id": "team@example.com", "summary": "Team", "selected": true },
       {
         "id": "holidays@group.v.calendar.google.com",

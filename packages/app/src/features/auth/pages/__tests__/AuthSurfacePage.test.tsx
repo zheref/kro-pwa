@@ -35,7 +35,10 @@ describe('the form is the slice, not local state', () => {
   it('records each field in the store rather than in the component', async () => {
     const { store } = renderPage()
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
 
     expect(store.getState().auth.form.email).toBe('ada@example.com')
   })
@@ -43,7 +46,10 @@ describe('the form is the slice, not local state', () => {
   it('keeps the typed email when the mode toggles — canon form survives it', async () => {
     const { store } = renderPage()
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.click(screen.getByTestId('auth-toggle-mode'))
 
     expect(store.getState().auth.mode).toBe('signUp')
@@ -53,11 +59,14 @@ describe('the form is the slice, not local state', () => {
   it('enables submit only once the current mode requirements are met', async () => {
     renderPage()
 
-    expect((screen.getByTestId('auth-submit') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
+    expect(
+      (screen.getByTestId('auth-submit') as HTMLButtonElement).disabled,
+    ).toBe(true)
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.type(screen.getByLabelText('Password'), 'secret')
 
     await waitFor(() => {
@@ -75,7 +84,10 @@ describe('email and password', () => {
       authService: makeStubbedAuthService({}),
     })
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.type(screen.getByLabelText('Password'), 'correct-horse')
     await userEvent.click(screen.getByTestId('auth-submit'))
 
@@ -89,7 +101,9 @@ describe('email and password', () => {
     const authService = makeStubbedAuthService({})
     const spy = {
       ...authService,
-      signUpWithEmail: async (...args: Parameters<typeof authService.signUpWithEmail>) => {
+      signUpWithEmail: async (
+        ...args: Parameters<typeof authService.signUpWithEmail>
+      ) => {
         invoked.push('signUp')
         return authService.signUpWithEmail(...args)
       },
@@ -98,7 +112,10 @@ describe('email and password', () => {
 
     await userEvent.click(screen.getByTestId('auth-toggle-mode'))
     await userEvent.type(screen.getByLabelText('Full name'), 'Ada Lovelace')
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.type(screen.getByLabelText('Password'), 'correct-horse')
     await userEvent.click(screen.getByTestId('auth-submit'))
 
@@ -115,7 +132,10 @@ describe('email and password', () => {
       }),
     })
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.type(screen.getByLabelText('Password'), 'wrong')
     await userEvent.click(screen.getByTestId('auth-submit'))
 
@@ -206,9 +226,9 @@ describe('the unavailable deployment', () => {
     await waitFor(() => {
       expect(screen.getByTestId('auth-unavailable')).toBeTruthy()
     })
-    expect((screen.getByTestId('auth-google') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
+    expect(
+      (screen.getByTestId('auth-google') as HTMLButtonElement).disabled,
+    ).toBe(true)
   })
 
   it('is not shown for an ordinary credential failure', async () => {
@@ -219,7 +239,10 @@ describe('the unavailable deployment', () => {
       }),
     })
 
-    await userEvent.type(screen.getByLabelText('Email address'), 'ada@example.com')
+    await userEvent.type(
+      screen.getByLabelText('Email address'),
+      'ada@example.com',
+    )
     await userEvent.type(screen.getByLabelText('Password'), 'wrong')
     await userEvent.click(screen.getByTestId('auth-submit'))
 
@@ -247,7 +270,9 @@ describe('dismissal and the redirect target', () => {
   it('renders for a signed-in user too — the presenter decides when to show it', () => {
     const { store } = renderPage({
       ...stubbedThunkExtra,
-      authService: makeStubbedAuthService({ initialUser: authUserMocks.typical }),
+      authService: makeStubbedAuthService({
+        initialUser: authUserMocks.typical,
+      }),
     })
 
     expect(store.getState().auth.session.kind).toBe('unknown')

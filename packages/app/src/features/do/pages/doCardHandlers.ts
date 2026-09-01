@@ -35,10 +35,7 @@ export interface DoCardHandlers {
    * A confirmed completion, at the instant the popover carried. Passed straight
    * through from the card kit, which already owns the backdating popover.
    */
-  readonly onMarkComplete: (
-    card: EndeavorCardModel,
-    completedAt: Date,
-  ) => void
+  readonly onMarkComplete: (card: EndeavorCardModel, completedAt: Date) => void
   /** Skip a task, or skip an event occurrence — canon splits these by `isEvent`. */
   readonly onSkip: (card: EndeavorCardModel) => void
   readonly onDefer: (card: EndeavorCardModel, target: Date) => void

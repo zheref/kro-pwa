@@ -32,7 +32,7 @@ describe('the signed-in Profile pane', () => {
     expect(screen.getAllByText('ada@example.com').length).toBeGreaterThan(0)
   })
 
-  it("names canon Account rows, including the sign-in method", () => {
+  it('names canon Account rows, including the sign-in method', () => {
     renderPane()
 
     expect(screen.getByText('Account')).toBeTruthy()
@@ -73,7 +73,7 @@ describe('the signed-in Profile pane', () => {
 })
 
 describe('the signed-out Profile pane', () => {
-  it("shows canon Not Signed In placeholder", () => {
+  it('shows canon Not Signed In placeholder', () => {
     renderPane({ user: null })
 
     expect(screen.getByText('Not Signed In')).toBeTruthy()

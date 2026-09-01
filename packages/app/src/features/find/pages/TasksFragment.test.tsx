@@ -60,10 +60,12 @@ describe('the grouped list', () => {
 
     const group = screen.getByTestId('tasks-group')
     expect(within(group).getAllByTestId('tasks-row-open')).toHaveLength(7)
-    expect(within(group).getByRole('button', { name: 'Show more…' })).toBeTruthy()
+    expect(
+      within(group).getByRole('button', { name: 'Show more…' }),
+    ).toBeTruthy()
   })
 
-  it('states the group\'s TOTAL count in its header, not the clipped one', () => {
+  it("states the group's TOTAL count in its header, not the clipped one", () => {
     render(<TasksFragment {...props()} />)
 
     expect(screen.getByRole('heading', { name: 'Pending (9)' })).toBeTruthy()
@@ -149,7 +151,9 @@ describe('the group affordance says what it will do', () => {
       />,
     )
 
-    expect(screen.getAllByRole('button', { name: 'Show' }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('button', { name: 'Show' }).length,
+    ).toBeGreaterThan(0)
   })
 })
 
@@ -160,7 +164,9 @@ describe('the grouping control', () => {
     const control = screen.getByRole('radiogroup', { name: 'Group by' })
     expect(within(control).getAllByRole('radio')).toHaveLength(4)
     expect(
-      within(control).getByRole('radio', { name: 'Status' }).getAttribute('aria-checked'),
+      within(control)
+        .getByRole('radio', { name: 'Status' })
+        .getAttribute('aria-checked'),
     ).toBe('true')
   })
 
@@ -175,11 +181,13 @@ describe('the grouping control', () => {
 })
 
 describe('rows', () => {
-  it('opens Detail from a row\'s own named control — not by wrapping the row', async () => {
+  it("opens Detail from a row's own named control — not by wrapping the row", async () => {
     const onSelectEndeavor = vi.fn()
     render(<TasksFragment {...props({ onSelectEndeavor })} />)
 
-    await userEvent.click(screen.getAllByTestId('tasks-row-open')[0] as HTMLElement)
+    await userEvent.click(
+      screen.getAllByTestId('tasks-row-open')[0] as HTMLElement,
+    )
 
     expect(onSelectEndeavor).toHaveBeenCalledWith(nineOpenTasks[0]?.id)
   })
@@ -195,14 +203,16 @@ describe('rows', () => {
     }
   })
 
-  it('still carries the vista\'s row operations beside that control', () => {
+  it("still carries the vista's row operations beside that control", () => {
     render(<TasksFragment {...props({ input: 'pointer' })} />)
 
     expect(screen.getAllByRole('button', { name: 'Complete' }).length).toBe(7)
   })
 
   it('names the heading and, on a list destination, its subtitle', () => {
-    render(<TasksFragment {...props({ heading: 'Household', subtitle: 'List' })} />)
+    render(
+      <TasksFragment {...props({ heading: 'Household', subtitle: 'List' })} />,
+    )
 
     expect(screen.getByRole('heading', { name: 'Household' })).toBeTruthy()
     expect(screen.getByText('List')).toBeTruthy()
@@ -210,9 +220,11 @@ describe('rows', () => {
 })
 
 describe('empty and failed states', () => {
-  it('shows canon\'s first-run message when nothing is stored', () => {
+  it("shows canon's first-run message when nothing is stored", () => {
     render(
-      <TasksFragment {...props({ groups: [], emptyState: { kind: 'noData' } })} />,
+      <TasksFragment
+        {...props({ groups: [], emptyState: { kind: 'noData' } })}
+      />,
     )
 
     expect(screen.getByText('No Endeavors Yet')).toBeTruthy()
@@ -242,7 +254,10 @@ describe('empty and failed states', () => {
     const onChangeQuery = vi.fn()
     render(<TasksFragment {...props({ onChangeQuery })} />)
 
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Search tasks' }), 'a')
+    await userEvent.type(
+      screen.getByRole('searchbox', { name: 'Search tasks' }),
+      'a',
+    )
 
     expect(onChangeQuery).toHaveBeenCalledWith('a')
   })

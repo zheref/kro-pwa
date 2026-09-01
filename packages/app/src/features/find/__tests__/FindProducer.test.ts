@@ -6,18 +6,30 @@
  */
 import type { EndeavorRecord } from '@kro/core'
 import {
+  EndeavorHost,
+  EndeavorKind,
   EndeavorOperation,
   EndeavorStatus,
+  ShareOutcome,
   endeavorRecordFromEndeavor,
+  endeavorShareText,
+  makeEndeavor,
+  makeProject,
+  projectRecordFromProject,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
+  type ShareService,
+  makeStubbedShareService,
+} from '../../../services/platform/share/ShareService'
+import {
   FIND_REFERENCE_NOW,
   allFindEndeavorMocks,
   findEndeavorMocks,
 } from '../FindMocks'
+import { FindSurface } from '../FindOperations'
 import {
   fetchFindEndeavorsThunk,
   performBulkOperationThunk,
@@ -74,7 +86,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('resolves every stored row for the surface that asked', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -86,7 +100,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('hands the rows through RAW — reconciliation is the install shifter’s', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok && result.value.now).toEqual(FIND_REFERENCE_NOW)
   })
@@ -94,7 +110,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('resolves a typed failure rather than throwing when the store is broken', async () => {
     const store = failingStore('disk gone')
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('fetchFailed')
@@ -103,7 +121,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('answers an empty store with an empty list, not a failure', async () => {
     const { store } = storeWith([])
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok && result.value.endeavors).toEqual([])
   })
@@ -215,9 +235,13 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.markComplete, findEndeavorMocks.morningTask.id, {
-            completionDate: backdated,
-          }),
+          request(
+            EndeavorOperation.markComplete,
+            findEndeavorMocks.morningTask.id,
+            {
+              completionDate: backdated,
+            },
+          ),
         ),
       )
       .unwrap()
@@ -308,7 +332,10 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.startSession, findEndeavorMocks.morningTask.id),
+          request(
+            EndeavorOperation.startSession,
+            findEndeavorMocks.morningTask.id,
+          ),
         ),
       )
       .unwrap()
@@ -333,7 +360,10 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.markComplete, findEndeavorMocks.morningTask.id),
+          request(
+            EndeavorOperation.markComplete,
+            findEndeavorMocks.morningTask.id,
+          ),
         ),
       )
       .unwrap()
@@ -378,7 +408,8 @@ describe('performBulkOperationThunk applies to exactly the visible rows', () => 
       )
       .unwrap()
     expect(
-      (await localStore.endeavors.get(findEndeavorMocks.morningTask.id))?.status,
+      (await localStore.endeavors.get(findEndeavorMocks.morningTask.id))
+        ?.status,
     ).toBe(EndeavorStatus.closed)
     expect(
       (await localStore.endeavors.get(findEndeavorMocks.afternoonTask.id))
@@ -415,5 +446,210 @@ describe('performBulkOperationThunk applies to exactly the visible rows', () => 
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('bulkOperationFailed')
+  })
+})
+
+/**
+ * The list, hydrated (KC-IS-#71 item 11).
+ *
+ * `EndeavorRecord` has no list column — the row keeps `projectId` and the list
+ * is looked up from `ProjectStore` — and nothing looked it up, so every
+ * hydrated endeavor came back `list: null`. `tasksForList(id)` filters on
+ * `endeavor.list?.id`, so every Lists destination in the app showed
+ * **Nothing Here** while holding rows. These cases are the join.
+ */
+describe('the fetch hydrates each row’s list from the project store', () => {
+  const FINANCES = makeProject({ id: 'project-finances', title: 'Finances' })
+
+  const filedRecord = (id: string, projectId: string | null) =>
+    endeavorRecordFromEndeavor(
+      makeEndeavor({
+        id,
+        title: id,
+        kind: EndeavorKind.task,
+        projectId,
+        hostedBy: [EndeavorHost.local],
+      }),
+      { now: FIND_REFERENCE_NOW },
+    )
+
+  const storeWithProject = (records: readonly EndeavorRecord[]) => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: records,
+      projects: [
+        projectRecordFromProject(FINANCES, { now: FIND_REFERENCE_NOW }),
+      ],
+    })
+    return {
+      localStore,
+      store: makeStore({ ...stubbedThunkExtra, localStore }),
+    }
+  }
+
+  const fetched = async (records: readonly EndeavorRecord[]) => {
+    const { store } = storeWithProject(records)
+    const action = await store.dispatch(
+      fetchFindEndeavorsThunk({
+        surface: FindSurface.tasks,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = fetchFindEndeavorsThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return payload.value.endeavors
+  }
+
+  it('carries the project a row is filed under, so a Lists vista can match it', async () => {
+    const rows = await fetched([filedRecord('filed', FINANCES.id)])
+
+    const filed = rows.find((row) => row.id === 'filed')
+    expect(filed?.list?.id).toBe(FINANCES.id)
+    expect(filed?.list?.title).toBe('Finances')
+  })
+
+  it('leaves an unfiled row unfiled rather than inventing a list', async () => {
+    const rows = await fetched([filedRecord('loose', null)])
+
+    expect(rows.find((row) => row.id === 'loose')?.list).toBeNull()
+  })
+
+  it('leaves a row pointing at a project that is gone unfiled, never half-filed', async () => {
+    // The project was deleted while the row kept pointing at it. An unfiled row
+    // is what that is; a dangling half-list would be a lie the UI then prints.
+    const rows = await fetched([filedRecord('orphan', 'project-vanished')])
+
+    const orphan = rows.find((row) => row.id === 'orphan')
+    expect(orphan).toBeDefined()
+    expect(orphan?.list).toBeNull()
+    expect(orphan?.projectId).toBe('project-vanished')
+  })
+
+  it('reads the project table once, not once per row', async () => {
+    const { localStore, store } = storeWithProject([
+      filedRecord('a', FINANCES.id),
+      filedRecord('b', FINANCES.id),
+      filedRecord('c', FINANCES.id),
+    ])
+    let reads = 0
+    const all = localStore.projects.all.bind(localStore.projects)
+    const counted = {
+      ...localStore,
+      projects: {
+        ...localStore.projects,
+        all: async () => {
+          reads += 1
+          return all()
+        },
+      },
+    }
+    const counting = makeStore({ ...stubbedThunkExtra, localStore: counted })
+    void store
+
+    await counting.dispatch(
+      fetchFindEndeavorsThunk({
+        surface: FindSurface.tasks,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+
+    // A per-row lookup would be three round-trips here and a hundred on a real
+    // list — the same reason the defers and performances are read whole.
+    expect(reads).toBe(1)
+  })
+})
+
+/**
+ * Find's `share` row operation (KC-IS-#71 item 18).
+ *
+ * It was an intent naming a Service that did not exist, so the gesture the
+ * `find` vista declares reached nothing. Now the Producer performs it, and
+ * these are the three properties that matter: the blurb is canon's, the row is
+ * untouched, and the outcome comes back.
+ */
+describe('the share row operation hands the blurb to the platform', () => {
+  const shareStore = (service: ShareService) => {
+    const localStore = makeInMemoryLocalStore({ endeavors: recordsOf() })
+    return {
+      localStore,
+      store: makeStore({
+        ...stubbedThunkExtra,
+        localStore,
+        shareService: service,
+      }),
+    }
+  }
+
+  const shareRow = async (service: ShareService) => {
+    const target = allFindEndeavorMocks[0]
+    if (target === undefined) throw new Error('the fixture pool is empty')
+    const { store, localStore } = shareStore(service)
+    const action = await store.dispatch(
+      performEndeavorOperationThunk({
+        surface: FindSurface.find,
+        operation: EndeavorOperation.share,
+        endeavorId: target.id,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = performEndeavorOperationThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return { outcome: payload.value, target, localStore }
+  }
+
+  it("hands canon's blurb to the share sheet", async () => {
+    const service = makeStubbedShareService()
+    const { outcome, target } = await shareRow(service)
+
+    expect(service.sharedTexts()).toEqual([endeavorShareText(target.title)])
+    expect(outcome.kind).toBe('shared')
+    if (outcome.kind === 'shared') {
+      expect(outcome.outcome).toBe(ShareOutcome.shared)
+      expect(outcome.endeavorId).toBe(target.id)
+    }
+  })
+
+  it('writes nothing — canon leaves the row exactly as it was', async () => {
+    const { target, localStore } = await shareRow(makeStubbedShareService())
+
+    // The seeded row, byte for byte. A write would move the sync watermark
+    // even where it changed no field, and present an untouched row to the next
+    // push sweep.
+    const seeded = endeavorRecordFromEndeavor(target, {
+      now: FIND_REFERENCE_NOW,
+    })
+    expect(await localStore.endeavors.get(target.id)).toEqual(seeded)
+  })
+
+  it('carries the clipboard fallback back, so a surface can say so', async () => {
+    const { outcome } = await shareRow(
+      makeStubbedShareService({ canShare: false }),
+    )
+
+    expect(outcome.kind).toBe('shared')
+    if (outcome.kind === 'shared') {
+      expect(outcome.outcome).toBe(ShareOutcome.copied)
+    }
+  })
+
+  it('still refuses a row that is not there, like every other operation', async () => {
+    const { store } = shareStore(makeStubbedShareService())
+
+    const action = await store.dispatch(
+      performEndeavorOperationThunk({
+        surface: FindSurface.find,
+        operation: EndeavorOperation.share,
+        endeavorId: 'not-a-row',
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = performEndeavorOperationThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(false)
   })
 })

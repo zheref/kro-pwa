@@ -14,7 +14,11 @@ import { KroChip } from '../../design/endeavor/KroChip'
 import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
 import { Button } from '../../design/system/primitives/button'
-import { ICON_SIZE, iconForSymbol, type LucideIcon } from '../../design/system/icons/icons'
+import {
+  ICON_SIZE,
+  iconForSymbol,
+  type LucideIcon,
+} from '../../design/system/icons/icons'
 import {
   type PlatformVoteTally,
   type ThirstVoteStatus,
@@ -82,8 +86,12 @@ export function ComingSoonFragment({
         <p className="font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide">
           Available soon
         </p>
-        {featureBlurb === null || featureBlurb === undefined || featureBlurb.length === 0 ? null : (
-          <p className="max-w-prose text-kro-fore-secondary text-sm">{featureBlurb}</p>
+        {featureBlurb === null ||
+        featureBlurb === undefined ||
+        featureBlurb.length === 0 ? null : (
+          <p className="max-w-prose text-kro-fore-secondary text-sm">
+            {featureBlurb}
+          </p>
         )}
       </div>
 
@@ -159,6 +167,7 @@ function PlatformTallyChip({ tally }: { readonly tally: PlatformVoteTally }) {
   const PlatformIcon = PLATFORM_ICON[tally.platform]
   return (
     <span
+      role="img"
       aria-label={`${votePlatformLabel(tally.platform)}: ${tally.count}`}
       className="inline-flex items-center gap-1 rounded-kro-pill bg-kro-back-inner px-2.5 py-1.5 text-kro-fore-secondary text-xs"
     >
@@ -194,7 +203,12 @@ function CtaPanel({
     return (
       <div className="flex w-full max-w-xs flex-col items-center gap-kro-small">
         <InlineBanner kind="info" message={status.message} />
-        <Button variant="primary" size="lg" disabled className="w-full max-w-xs">
+        <Button
+          variant="primary"
+          size="lg"
+          disabled
+          className="w-full max-w-xs"
+        >
           <Heart size={ICON_SIZE.medium} aria-hidden="true" />
           Vote to get it sooner
         </Button>

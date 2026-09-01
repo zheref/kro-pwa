@@ -158,7 +158,7 @@ describe('the row projection', () => {
     expect(findRowTimeInfo(findEndeavorMocks.undatedTask)).toBeUndefined()
   })
 
-  it('badges every row with its kind and its status, which is canon\'s Find row', () => {
+  it("badges every row with its kind and its status, which is canon's Find row", () => {
     expect(findRowBadges(findEndeavorMocks.afternoonTask)).toEqual([
       { kind: 'endeavorKind', value: EndeavorKind.task },
       { kind: 'status', value: EndeavorStatus.ongoing },

@@ -174,9 +174,7 @@ export const destinationHeading = (destination: SidebarDestination): string =>
     : SIMPLE_HEADINGS[destination.kind]
 
 /** The tab bar's label: canon's iOS title, falling back to the shared one. */
-export const destinationTabLabel = (
-  destination: SidebarDestination,
-): string =>
+export const destinationTabLabel = (destination: SidebarDestination): string =>
   destination.kind === DestinationKind.list
     ? destination.listTitle
     : (TAB_LABELS[destination.kind] ?? SIMPLE_TITLES[destination.kind])
@@ -259,9 +257,7 @@ export const tabDestinationIcon = (
     ? destinationIcon(destination)
     : (TAB_ICON_OVERRIDES[destination.kind] ?? destinationIcon(destination))
 
-export const destinationIcon = (
-  destination: SidebarDestination,
-): LucideIcon =>
+export const destinationIcon = (destination: SidebarDestination): LucideIcon =>
   destination.kind === DestinationKind.list
     ? BookOpen
     : SIMPLE_ICONS[destination.kind]

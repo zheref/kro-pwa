@@ -59,18 +59,21 @@ import {
   type DocumentTitleService,
   type InstallService,
   type NotificationsService,
+  type ShareService,
   type VibrationService,
   type WakeLockService,
   liveAudioFeedbackService,
   liveDocumentTitleService,
   liveInstallService,
   liveNotificationsService,
+  liveShareService,
   liveVibrationService,
   liveWakeLockService,
   stubbedAudioFeedbackService,
   stubbedDocumentTitleService,
   stubbedInstallService,
   stubbedNotificationsService,
+  stubbedShareService,
   stubbedVibrationService,
   stubbedWakeLockService,
 } from '../services/platform'
@@ -125,6 +128,13 @@ export interface ThunkExtra {
   readonly wakeLockService: WakeLockService
   readonly vibrationService: VibrationService
   readonly installService: InstallService
+  /**
+   * The share hand-off (KC-IS-#71 item 18) — `navigator.share`, with the
+   * clipboard behind it. A seventh platform field rather than a member of a
+   * bundle, for the same reason the six above are separate: it shares no handle
+   * and no lifecycle with any of them.
+   */
+  readonly shareService: ShareService
   /**
    * The browser tab's title (#21) — the web's stand-in for KroApple's macOS
    * menu-bar extra, per epic #1. A sixth field rather than a member of the
@@ -207,7 +217,8 @@ const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
  * from it are the same instance — a second construction would be a second
  * in-flight cache the day the service grows one.
  */
-const liveGoogleCalendar: GoogleCalendarService = makeLiveGoogleCalendarService()
+const liveGoogleCalendar: GoogleCalendarService =
+  makeLiveGoogleCalendarService()
 
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
@@ -218,10 +229,13 @@ export const liveThunkExtra: ThunkExtra = {
   wakeLockService: liveWakeLockService,
   vibrationService: liveVibrationService,
   installService: liveInstallService,
+  shareService: liveShareService,
   documentTitleService: liveDocumentTitleService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
-  authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
+  authService: makeLiveAuthService({
+    clientProvider: liveSupabaseClientProvider,
+  }),
   settingsSync: makeLiveSettingsSyncService({
     clientProvider: liveSupabaseClientProvider,
   }),
@@ -236,7 +250,9 @@ export const liveThunkExtra: ThunkExtra = {
   navigation: stubbedNavigationService,
   googleCalendar: liveGoogleCalendar,
   googleCalendarPlanHost: makeGoogleCalendarPlanHost(liveGoogleCalendar),
-  thirstService: makeLiveThirstService({ clientProvider: liveSupabaseClientProvider }),
+  thirstService: makeLiveThirstService({
+    clientProvider: liveSupabaseClientProvider,
+  }),
 }
 
 /**
@@ -255,6 +271,7 @@ export const stubbedThunkExtra: ThunkExtra = {
   wakeLockService: stubbedWakeLockService,
   vibrationService: stubbedVibrationService,
   installService: stubbedInstallService,
+  shareService: stubbedShareService,
   documentTitleService: stubbedDocumentTitleService,
   signOutWipe,
   // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
@@ -272,7 +289,9 @@ export const stubbedThunkExtra: ThunkExtra = {
   // what a user who has never connected sees. A suite that wants events builds
   // its own binding with `makeStubbedGoogleCalendarService({ connection: … })`.
   googleCalendar: stubbedGoogleCalendarService,
-  googleCalendarPlanHost: makeGoogleCalendarPlanHost(stubbedGoogleCalendarService),
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(
+    stubbedGoogleCalendarService,
+  ),
   // Signed out, no counts anywhere — a suite that asserts on shipping
   // behaviour sees the same "sign in to vote" state a fresh visitor does. A
   // suite that wants a votable/voted surface builds its own binding with
@@ -306,7 +325,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
         // widened to accept `Date` and nothing else; class instances, functions
         // and promises still fail it.
         serializableCheck: {
-          isSerializable: (value: unknown) => value instanceof Date || isPlain(value),
+          isSerializable: (value: unknown) =>
+            value instanceof Date || isPlain(value),
         },
       }),
   })

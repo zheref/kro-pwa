@@ -147,15 +147,18 @@ export const platformSlice = createSlice({
         )
       })
 
-      .addCase(requestNotificationPermissionThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        Object.assign(
-          state,
-          result.ok
-            ? withNotificationPermission(state, result.value)
-            : withException(state, result.error),
-        )
-      })
+      .addCase(
+        requestNotificationPermissionThunk.fulfilled,
+        (state, action) => {
+          const result = action.payload
+          Object.assign(
+            state,
+            result.ok
+              ? withNotificationPermission(state, result.value)
+              : withException(state, result.error),
+          )
+        },
+      )
 
       .addCase(reconcileOverdueAlertsThunk.fulfilled, (state, action) => {
         const result = action.payload

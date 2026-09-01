@@ -50,13 +50,22 @@ function Field({
   children: ReactNode
 }) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: the control arrives as `children` — every call site passes an <Input>, which the rule cannot see through a prop
     <label style={{ display: 'grid', gap: 6 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--kro-color-fore)' }}>
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--kro-color-fore)',
+        }}
+      >
         {label}
       </span>
       {children}
       {hint === undefined ? null : (
-        <span style={{ fontSize: 12, color: 'var(--kro-color-fore-secondary)' }}>
+        <span
+          style={{ fontSize: 12, color: 'var(--kro-color-fore-secondary)' }}
+        >
           {hint}
         </span>
       )}
@@ -92,7 +101,10 @@ export const Invalid = {
 export const Disabled = {
   render: () => (
     <Stage>
-      <Field label="Host" hint="This endeavor is read-only — it came from Google Calendar.">
+      <Field
+        label="Host"
+        hint="This endeavor is read-only — it came from Google Calendar."
+      >
         <Input disabled defaultValue="Google Calendar" />
       </Field>
     </Stage>

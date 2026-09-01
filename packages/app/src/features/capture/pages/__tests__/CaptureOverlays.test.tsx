@@ -7,11 +7,21 @@
  * clicked, the real Producer writes, the real Shifters classify, and the
  * assertions read the store the browser would read.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
-import { onCaptureRouteDelivered, userDidTapOpenInbox } from '../../CaptureFeature'
+import {
+  onCaptureRouteDelivered,
+  userDidTapOpenInbox,
+} from '../../CaptureFeature'
 import { captureFixtureRecords } from '../../CaptureMocks'
 import { CAPTURE_INBOX_DELAY_MS } from '../../CaptureRules'
 import { CaptureOverlays } from '../CaptureOverlays'
@@ -38,10 +48,18 @@ afterEach(() => {
   teardownCapture()
 })
 
+/**
+ * The shell, as far as these overlays can tell: the store, and the one Active
+ * Toast host `MainShellPage` mounts around everything (KC-IS-#71 item 15).
+ * `CaptureOverlays` used to mount that host itself, which is why this stage did
+ * not need one.
+ */
 const mount = (store: CaptureStore) =>
   render(
     <CaptureStoreStage store={store}>
-      <CaptureOverlays />
+      <ActiveToastHost position="absolute">
+        <CaptureOverlays />
+      </ActiveToastHost>
     </CaptureStoreStage>,
   )
 
@@ -109,9 +127,9 @@ describe('capture -> route (acceptance criterion 3, first half)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Event' }))
     await userEvent.type(screen.getByTestId('capture-title'), 'Design review')
 
-    expect(
-      screen.getByTestId<HTMLButtonElement>('capture-add').disabled,
-    ).toBe(true)
+    expect(screen.getByTestId<HTMLButtonElement>('capture-add').disabled).toBe(
+      true,
+    )
     expect(screen.getByTestId('capture-blocked-reason').textContent).toBe(
       'Pick a start time and an end time to add this event.',
     )
@@ -152,7 +170,9 @@ describe('add for today -> undo (acceptance criterion 3, second half)', () => {
     await openInboxWithRows(store)
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     const picked = store.getState().capture.addForToday?.pickedTime as Date
     expect(picked.getMinutes() % 15).toBe(0)
@@ -183,7 +203,9 @@ describe('add for today -> undo (acceptance criterion 3, second half)', () => {
     await openInboxWithRows(store)
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
     await waitFor(() => {
@@ -217,7 +239,9 @@ describe('add for today -> undo (acceptance criterion 3, second half)', () => {
     await openInboxWithRows(store)
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
     await waitFor(() => {
@@ -243,14 +267,17 @@ describe('add for today -> undo (acceptance criterion 3, second half)', () => {
     await openInboxWithRows(store)
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(store.getState().capture.addForToday).toBeNull()
     expect(store.getState().capture.undo.kind).toBe('idle')
     expect(
-      store.getState().capture.endeavors.find((e) => e.id === 'fresh-task')?.due,
+      store.getState().capture.endeavors.find((e) => e.id === 'fresh-task')
+        ?.due,
     ).toBeNull()
   })
 })

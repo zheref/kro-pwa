@@ -84,9 +84,7 @@ export const timelineSlotHeightMultiple = (
  * Every slot's catchment height, in order. Exists so a caller renders the run
  * in one pass and so the sum-to-`count` invariant is assertable directly.
  */
-export const timelineSlotHeightMultiples = (
-  count: number,
-): readonly number[] =>
+export const timelineSlotHeightMultiples = (count: number): readonly number[] =>
   Array.from({ length: Math.max(count, 0) }, (_value, index) =>
     timelineSlotHeightMultiple(index, count),
   )

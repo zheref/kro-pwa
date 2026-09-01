@@ -5,8 +5,17 @@
  * `ThirstDestinationPage.test.tsx`), so a scenario is never hand-built twice.
  */
 import { ThirstExceptions } from './ThirstException'
-import { initialThirstState, initialThirstVoteEntry, type ThirstState, type ThirstVoteEntryState } from './ThirstFeature'
-import { bumpVotePlatform, type FeatureVoteCounts, VotePlatform } from './ThirstModels'
+import {
+  initialThirstState,
+  initialThirstVoteEntry,
+  type ThirstState,
+  type ThirstVoteEntryState,
+} from './ThirstFeature'
+import {
+  bumpVotePlatform,
+  type FeatureVoteCounts,
+  VotePlatform,
+} from './ThirstModels'
 
 /** The registry key every mock below is built against — a real votable key
  * (`ThirstRegistry.ts`), so a story/test exercises the actual "Priority
@@ -48,7 +57,11 @@ export const thirstEntryMocks = {
   /** Already voted — the `web` tally the vote bumped is visible. */
   voted: {
     ...initialThirstVoteEntry,
-    counts: bumpVotePlatform(thirstCountsFixture, THIRST_MOCK_FEATURE_KEY, VotePlatform.web),
+    counts: bumpVotePlatform(
+      thirstCountsFixture,
+      THIRST_MOCK_FEATURE_KEY,
+      VotePlatform.web,
+    ),
     alreadyVoted: true,
     isCheckingVoteState: false,
   } satisfies ThirstVoteEntryState,

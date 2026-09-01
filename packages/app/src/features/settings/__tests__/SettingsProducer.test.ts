@@ -179,7 +179,9 @@ describe('loadGoogleConnectionThunk', () => {
     const store = makeStore(
       extraWith({
         googleCalendar: makeStubbedGoogleCalendarService({
-          connection: GoogleCalendarConnections.unconfigured(['GOOGLE_CLIENT_ID']),
+          connection: GoogleCalendarConnections.unconfigured([
+            'GOOGLE_CLIENT_ID',
+          ]),
         }),
       }),
     )
@@ -234,7 +236,9 @@ describe('connectGoogleThunk', () => {
       extraWith({
         navigation,
         googleCalendar: makeStubbedGoogleCalendarService({
-          connection: GoogleCalendarConnections.unconfigured(['GOOGLE_CLIENT_ID']),
+          connection: GoogleCalendarConnections.unconfigured([
+            'GOOGLE_CLIENT_ID',
+          ]),
         }),
       }),
     )

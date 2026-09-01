@@ -151,17 +151,20 @@ export const addSuggestionThunk = createAsyncThunk<
   Result<{ reward: Reward }, EarnException>,
   { suggestion: Reward; id: string; now: Date },
   { extra: ThunkExtra }
->('earn/onSuggestionAddCompleted', async ({ suggestion, id, now }, { extra }) => {
-  try {
-    const store = extra.localStore.preferences
-    const reward = rewardForInsertion(suggestion, { id, dateAdded: now })
-    const catalog = readRewardsCatalog(store)
-    writeRewardsCatalog(store, [reward, ...catalog])
-    return ok({ reward })
-  } catch (error) {
-    return err(EarnExceptions.addRewardFailed(messageOf(error)))
-  }
-})
+>(
+  'earn/onSuggestionAddCompleted',
+  async ({ suggestion, id, now }, { extra }) => {
+    try {
+      const store = extra.localStore.preferences
+      const reward = rewardForInsertion(suggestion, { id, dateAdded: now })
+      const catalog = readRewardsCatalog(store)
+      writeRewardsCatalog(store, [reward, ...catalog])
+      return ok({ reward })
+    } catch (error) {
+      return err(EarnExceptions.addRewardFailed(messageOf(error)))
+    }
+  },
+)
 
 /** Context-menu delete — persists the catalog with the row removed. */
 export const deleteRewardThunk = createAsyncThunk<

@@ -13,7 +13,7 @@ import {
 } from '../AudioFeedbackService'
 
 describe('sessionSoundAssets', () => {
-  it('maps all four of canon\'s roles, and only those four', () => {
+  it("maps all four of canon's roles, and only those four", () => {
     expect(Object.keys(sessionSoundAssets).sort()).toEqual(
       [...sessionSoundRoles].sort(),
     )

@@ -9,7 +9,7 @@ import { PlatformMocks } from '../PlatformMocks'
 const allMocks = Object.values(PlatformMocks)
 
 describe('PlatformMocks', () => {
-  it('derives every variant from the slice\'s own initial state', () => {
+  it("derives every variant from the slice's own initial state", () => {
     const keys = Object.keys(platformSlice.getInitialState()).sort()
     for (const mock of allMocks) {
       expect(Object.keys(mock).sort()).toEqual(keys)
@@ -41,9 +41,9 @@ describe('PlatformMocks', () => {
   })
 
   it('includes a device with no vibrator, so that path is exercised', () => {
-    expect(
-      allMocks.some((mock) => mock.capabilities.vibration === false),
-    ).toBe(true)
+    expect(allMocks.some((mock) => mock.capabilities.vibration === false)).toBe(
+      true,
+    )
   })
 
   it('includes a running session holding the screen awake', () => {

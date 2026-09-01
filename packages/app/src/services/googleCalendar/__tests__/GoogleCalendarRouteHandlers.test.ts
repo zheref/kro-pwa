@@ -72,7 +72,9 @@ const makeDeps = (
   oauth: makeStubbedGoogleOAuthService(overrides.oauth),
   api: makeLiveGoogleCalendarApiService(
     makeStubbedGoogleHttpTransport({
-      ...(overrides.recorded === undefined ? {} : { recorded: overrides.recorded }),
+      ...(overrides.recorded === undefined
+        ? {}
+        : { recorded: overrides.recorded }),
       routes: [
         { match: 'calendarList', body: calendarListBody },
         // `events.insert` answers a single event; `events.list` answers a page.
@@ -189,7 +191,10 @@ describe('starting authorization', () => {
   it('derives the redirect URI from the request origin when none is configured', () => {
     expect(
       googleRedirectUriFor(
-        { url: 'https://preview.kro.app/api/google/connect', cookieHeader: null },
+        {
+          url: 'https://preview.kro.app/api/google/connect',
+          cookieHeader: null,
+        },
         null,
       ),
     ).toBe('https://preview.kro.app/api/google/callback')
@@ -198,7 +203,10 @@ describe('starting authorization', () => {
   it('prefers an explicitly configured redirect URI', () => {
     expect(
       googleRedirectUriFor(
-        { url: 'https://preview.kro.app/api/google/connect', cookieHeader: null },
+        {
+          url: 'https://preview.kro.app/api/google/connect',
+          cookieHeader: null,
+        },
         'https://kro.app/api/google/callback',
       ),
     ).toBe('https://kro.app/api/google/callback')
@@ -633,7 +641,11 @@ describe('the session-logging route', () => {
 
   it('refuses when the user is not connected', async () => {
     const result = await logGoogleSession(
-      { url: 'https://kro.app/api/google/createEvent', cookieHeader: null, body },
+      {
+        url: 'https://kro.app/api/google/createEvent',
+        cookieHeader: null,
+        body,
+      },
       makeDeps(),
     )
     expect(result.ok).toBe(false)

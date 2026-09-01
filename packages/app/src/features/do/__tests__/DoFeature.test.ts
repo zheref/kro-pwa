@@ -36,8 +36,10 @@ import {
 import { DoLane, doCardKey, initialDoVisibility } from '../DoRules'
 import { DoSuggestionSource } from '../DoSuggestions'
 
-const reduce = (state: DoState, action: Parameters<typeof doSlice.reducer>[1]) =>
-  doSlice.reducer(state, action)
+const reduce = (
+  state: DoState,
+  action: Parameters<typeof doSlice.reducer>[1],
+) => doSlice.reducer(state, action)
 
 const loaded = doStateMocks.loadedTypicalDay
 
@@ -74,7 +76,8 @@ describe('onViewLoaded', () => {
 describe('onFeaturedCapacityChanged', () => {
   it('records a wider window', () => {
     expect(
-      reduce(loaded, onFeaturedCapacityChanged({ capacity: 9 })).featuredCapacity,
+      reduce(loaded, onFeaturedCapacityChanged({ capacity: 9 }))
+        .featuredCapacity,
     ).toBe(9)
   })
 
@@ -150,7 +153,10 @@ describe('childVisibilityDelegatedSelectionChanged', () => {
     const next = reduce(
       loaded,
       childVisibilityDelegatedSelectionChanged({
-        visibility: { ...initialDoVisibility, hiddenKinds: [EndeavorKind.habit] },
+        visibility: {
+          ...initialDoVisibility,
+          hiddenKinds: [EndeavorKind.habit],
+        },
         now: DO_MOCK_NOW,
       }),
     )
@@ -161,7 +167,10 @@ describe('childVisibilityDelegatedSelectionChanged', () => {
     const hidden = reduce(
       loaded,
       childVisibilityDelegatedSelectionChanged({
-        visibility: { ...initialDoVisibility, hiddenComputedStates: ['overdue'] },
+        visibility: {
+          ...initialDoVisibility,
+          hiddenComputedStates: ['overdue'],
+        },
         now: DO_MOCK_NOW,
       }),
     )
@@ -184,7 +193,7 @@ describe('userDidTapCard', () => {
   it('prepares the tapped card', () => {
     const next = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     expect(next.selectedCardKey).toBe(doCardKey(DoLane.overdue, 'abc'))
   })
@@ -192,11 +201,11 @@ describe('userDidTapCard', () => {
   it('un-prepares it when the same card is tapped again', () => {
     const once = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     const twice = reduce(
       once,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     expect(twice.selectedCardKey).toBeNull()
   })
@@ -204,11 +213,11 @@ describe('userDidTapCard', () => {
   it('keeps the same endeavor in two lanes independently selectable', () => {
     const inNow = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     const inFeatured = reduce(
       inNow,
-      userDidTapCard({ lane: DoLane.featured, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.featured, endeavorId: 'abc' }),
     )
     expect(inFeatured.selectedCardKey).toBe(doCardKey(DoLane.featured, 'abc'))
   })
@@ -218,7 +227,7 @@ describe('userDidDeselectCard', () => {
   it('clears the preparation cursor', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(reduce(prepared, userDidDeselectCard()).selectedCardKey).toBeNull()
   })
@@ -243,7 +252,7 @@ describe('userDidToggleMarkCompleteMode', () => {
   it('drops the preparation cursor on the way in', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(
       reduce(prepared, userDidToggleMarkCompleteMode()).selectedCardKey,
@@ -260,9 +269,9 @@ describe('userDidToggleMarkCompleteMode', () => {
 
 describe('userDidTapNotifications', () => {
   it('arms the jump to Overdue when there is something to jump to', () => {
-    expect(reduce(loaded, userDidTapNotifications()).shouldScrollToOverdue).toBe(
-      true,
-    )
+    expect(
+      reduce(loaded, userDidTapNotifications()).shouldScrollToOverdue,
+    ).toBe(true)
   })
 
   it('refuses to arm the jump on a day with nothing overdue', () => {
@@ -275,7 +284,7 @@ describe('userDidTapNotifications', () => {
   it('does not disturb the preparation cursor', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(reduce(prepared, userDidTapNotifications()).selectedCardKey).toBe(
       doCardKey(DoLane.now, 'abc'),
@@ -512,7 +521,10 @@ describe('the fetch lifecycle arms', () => {
   it('shows the spinner on pending and clears any prior exception', () => {
     const failed = {
       ...loaded,
-      load: { kind: 'failed' as const, exception: DoExceptions.fetchFailed('x') },
+      load: {
+        kind: 'failed' as const,
+        exception: DoExceptions.fetchFailed('x'),
+      },
     }
     const next = reduce(
       failed,

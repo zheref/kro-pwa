@@ -91,7 +91,10 @@ function ProfilePane({
           >
             {user.name ?? 'Kro User'}
           </span>
-          <span className="text-[15px]" style={{ color: colorVar('foreSecondary') }}>
+          <span
+            className="text-[15px]"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {email}
           </span>
         </div>
@@ -109,7 +112,9 @@ function ProfilePane({
       <Group title="Personal Info">
         <Row
           label="Birthday"
-          value={user.birthDate === null ? 'Not set' : dateLabel(user.birthDate)}
+          value={
+            user.birthDate === null ? 'Not set' : dateLabel(user.birthDate)
+          }
         />
         <Row label="Nationality" value={user.nationality ?? 'Not set'} />
       </Group>
@@ -124,7 +129,9 @@ function ProfilePane({
           <Row
             label="Connected"
             value={user.connectedProviders
-              .map((provider: AuthProvider) => authProviderDisplayName(provider))
+              .map((provider: AuthProvider) =>
+                authProviderDisplayName(provider),
+              )
               .join(', ')}
           />
         )}
@@ -184,7 +191,10 @@ function UnauthenticatedPane({
       <span className="text-lg font-medium" style={{ color: colorVar('fore') }}>
         Not Signed In
       </span>
-      <span className="text-[15px]" style={{ color: colorVar('foreSecondary') }}>
+      <span
+        className="text-[15px]"
+        style={{ color: colorVar('foreSecondary') }}
+      >
         Sign in to view and manage your profile.
       </span>
       <button

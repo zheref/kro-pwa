@@ -36,19 +36,29 @@ describe('SuggestionCard', () => {
 
   it('refuses the double-tap while a flow is in flight', async () => {
     const onAction = vi.fn()
-    render(<SuggestionCard model={model} isActionDisabled onAction={onAction} />)
+    render(
+      <SuggestionCard model={model} isActionDisabled onAction={onAction} />,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: /Connect/ }))
     expect(onAction).not.toHaveBeenCalled()
   })
 
   it('applies the disabled fade EXACTLY once — two fades drop below the 3:1 floor', () => {
-    render(<SuggestionCard model={model} isActionDisabled onAction={() => undefined} />)
+    render(
+      <SuggestionCard
+        model={model}
+        isActionDisabled
+        onAction={() => undefined}
+      />,
+    )
 
     const className = screen.getByRole('button', { name: /Connect/ }).className
     const fades = className
       .split(/\s+/)
-      .filter((token) => token === 'disabled:opacity-[var(--kro-opacity-disabled)]')
+      .filter(
+        (token) => token === 'disabled:opacity-[var(--kro-opacity-disabled)]',
+      )
     expect(fades).toHaveLength(1)
   })
 
@@ -62,14 +72,20 @@ describe('SuggestionCard', () => {
     expect(card().className).toContain('min-w-70')
     expect(card().className).toContain('max-w-85')
 
-    rerender(<SuggestionCard model={model} fillsWidth onAction={() => undefined} />)
+    rerender(
+      <SuggestionCard model={model} fillsWidth onAction={() => undefined} />,
+    )
     expect(card().className).toContain('w-full')
   })
 
   it('keeps the 80px height canon fixes for the carousel row', () => {
-    const { container } = render(<SuggestionCard model={model} onAction={() => undefined} />)
+    const { container } = render(
+      <SuggestionCard model={model} onAction={() => undefined} />,
+    )
 
-    const card = container.querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    const card = container.querySelector(
+      '[data-slot="suggestion-card"]',
+    ) as HTMLElement
     expect(card.className).toContain('h-20')
   })
 
@@ -79,7 +95,9 @@ describe('SuggestionCard', () => {
     // so it is expressed as which item may shrink — and getting that backwards
     // (`min-w-0 flex-1` on the text, `shrink-0` on the button) is the bug that
     // truncates "Connect Goo…" beside a full-size button.
-    const { container } = render(<SuggestionCard model={model} onAction={() => undefined} />)
+    const { container } = render(
+      <SuggestionCard model={model} onAction={() => undefined} />,
+    )
 
     const text = container.querySelector(
       '[data-slot="suggestion-card-text"]',
@@ -90,7 +108,9 @@ describe('SuggestionCard', () => {
     // on the very column that must not shrink.
     expect(text.className.split(/\s+/)).not.toContain('flex-1')
 
-    const action = screen.getByRole('button', { name: /Connect/ }).className.split(/\s+/)
+    const action = screen
+      .getByRole('button', { name: /Connect/ })
+      .className.split(/\s+/)
     expect(action).toContain('shrink')
     expect(action).toContain('min-w-0')
     expect(action).not.toContain('shrink-0')
@@ -110,8 +130,13 @@ describe('SuggestionCard', () => {
 
   it('gives every source a drawable icon and action icon', () => {
     for (const source of suggestionSources) {
-      expect(isMappedSymbol(suggestionIcon(source)), `${source} icon`).toBe(true)
-      expect(isMappedSymbol(suggestionActionIcon(source)), `${source} action`).toBe(true)
+      expect(isMappedSymbol(suggestionIcon(source)), `${source} icon`).toBe(
+        true,
+      )
+      expect(
+        isMappedSymbol(suggestionActionIcon(source)),
+        `${source} action`,
+      ).toBe(true)
     }
   })
 })

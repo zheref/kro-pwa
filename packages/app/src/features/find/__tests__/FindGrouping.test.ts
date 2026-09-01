@@ -235,8 +235,12 @@ describe('the seven-item display limit and its expand', () => {
     )
     const clipped = limitGroups(groups, 7, null)
     const expanded = limitGroups(groups, 7, 'pending')
-    expect(clipped.find((group) => group.key === 'pending')?.endeavors).toHaveLength(7)
-    expect(expanded.find((group) => group.key === 'pending')?.endeavors).toHaveLength(9)
+    expect(
+      clipped.find((group) => group.key === 'pending')?.endeavors,
+    ).toHaveLength(7)
+    expect(
+      expanded.find((group) => group.key === 'pending')?.endeavors,
+    ).toHaveLength(9)
     expect(expanded.every((group) => !group.isTrimmed)).toBe(true)
   })
 

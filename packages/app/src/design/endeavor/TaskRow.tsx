@@ -65,7 +65,9 @@ export function sessionPointsCaption(points: number): string {
  * complete. Same shape as the Start button's `Start <title>`, so the two read
  * as one row rather than two conventions.
  */
-export function completionLabel(model: Pick<TaskRowModel, 'title' | 'isCompleted'>): string {
+export function completionLabel(
+  model: Pick<TaskRowModel, 'title' | 'isCompleted'>,
+): string {
   return model.isCompleted
     ? `Mark ${model.title} incomplete`
     : `Mark ${model.title} complete`
@@ -163,13 +165,17 @@ export function TaskRow({
           aria-label={completionLabel(model)}
           className="sr-only"
           checked={model.isCompleted}
-          onChange={(event) => onToggleComplete?.(model.id, event.target.checked)}
+          onChange={(event) =>
+            onToggleComplete?.(model.id, event.target.checked)
+          }
         />
         <span
           aria-hidden
           className="inline-flex size-4 items-center justify-center rounded-[4px]"
           style={{
-            backgroundColor: model.isCompleted ? colorVar('accent') : 'transparent',
+            backgroundColor: model.isCompleted
+              ? colorVar('accent')
+              : 'transparent',
             boxShadow: model.isCompleted
               ? undefined
               : `inset 0 0 0 1px color-mix(in srgb, ${colorVar('foreSecondary')} 45%, transparent)`,
@@ -200,7 +206,9 @@ export function TaskRow({
           )}
           style={{
             minHeight: 'var(--kro-size-min-pointer-target)',
-            color: model.isOverdue ? colorVar('bannerDanger') : colorVar('fore'),
+            color: model.isOverdue
+              ? colorVar('bannerDanger')
+              : colorVar('fore'),
           }}
         >
           {model.title}

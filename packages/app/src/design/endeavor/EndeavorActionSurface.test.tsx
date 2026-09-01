@@ -103,8 +103,12 @@ describe('touch — the swipe grammar', () => {
   it('renders BOTH swipe edges from the capability set', () => {
     render(<Surface input="touch" onOperation={() => undefined} />)
 
-    expect(document.querySelector('[data-slot="endeavor-swipe-leading"]')).not.toBeNull()
-    expect(document.querySelector('[data-slot="endeavor-swipe-trailing"]')).not.toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-swipe-leading"]'),
+    ).not.toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-swipe-trailing"]'),
+    ).not.toBeNull()
   })
 
   it('performs the leading action on a full swipe right — the iOS full-swipe idiom', () => {
@@ -113,7 +117,10 @@ describe('touch — the swipe grammar', () => {
 
     drag(SWIPE_COMMIT_PX + 10)
 
-    expect(onOperation).toHaveBeenCalledWith(EndeavorOperation.markComplete, 'e1')
+    expect(onOperation).toHaveBeenCalledWith(
+      EndeavorOperation.markComplete,
+      'e1',
+    )
   })
 
   it('performs the trailing action on a full swipe left', () => {
@@ -181,7 +188,9 @@ describe('touch — the swipe grammar', () => {
 
   it('shows no hover strip — there is nothing to hover with', () => {
     render(<Surface input="touch" onOperation={() => undefined} />)
-    expect(document.querySelector('[data-slot="endeavor-hover-actions"]')).toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-hover-actions"]'),
+    ).toBeNull()
   })
 })
 
@@ -199,7 +208,10 @@ describe('the release decision — read from the pointer, not from the last rend
     fireEvent.pointerDown(target, { clientX: 0 })
     fireEvent.pointerUp(target, { clientX: SWIPE_COMMIT_PX + 10 })
 
-    expect(onOperation).toHaveBeenCalledWith(EndeavorOperation.markComplete, 'e1')
+    expect(onOperation).toHaveBeenCalledWith(
+      EndeavorOperation.markComplete,
+      'e1',
+    )
   })
 
   it('does NOT carry the previous drag’s distance into the next release', () => {
@@ -229,10 +241,16 @@ describe('the release decision — read from the pointer, not from the last rend
     // what swallowed every tap on an in-row button.
     expect(pointerEnvironment.capture.captured).toEqual([])
 
-    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX - 1, pointerId: 7 })
+    fireEvent.pointerMove(target, {
+      clientX: SWIPE_DRAG_THRESHOLD_PX - 1,
+      pointerId: 7,
+    })
     expect(pointerEnvironment.capture.captured).toEqual([])
 
-    fireEvent.pointerMove(target, { clientX: SWIPE_DRAG_THRESHOLD_PX, pointerId: 7 })
+    fireEvent.pointerMove(target, {
+      clientX: SWIPE_DRAG_THRESHOLD_PX,
+      pointerId: 7,
+    })
     expect(pointerEnvironment.capture.captured).toEqual([7])
     expect(pointerEnvironment.capture.released).toEqual([])
 
@@ -389,7 +407,10 @@ describe('pointer — the hover and context grammar', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Complete' }))
 
-    expect(onOperation).toHaveBeenCalledWith(EndeavorOperation.markComplete, 'e1')
+    expect(onOperation).toHaveBeenCalledWith(
+      EndeavorOperation.markComplete,
+      'e1',
+    )
   })
 
   it('reveals the strip on FOCUS as well as hover — a keyboard user never hovers', () => {
@@ -405,14 +426,20 @@ describe('pointer — the hover and context grammar', () => {
   it('shows no swipe edges — a mouse cannot swipe', () => {
     render(<Surface input="pointer" onOperation={() => undefined} />)
 
-    expect(document.querySelector('[data-slot="endeavor-swipe-leading"]')).toBeNull()
-    expect(document.querySelector('[data-slot="endeavor-swipe-trailing"]')).toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-swipe-leading"]'),
+    ).toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-swipe-trailing"]'),
+    ).toBeNull()
   })
 
   it('gives the context menu a real, named, focusable trigger', () => {
     render(<Surface input="pointer" onOperation={() => undefined} />)
 
-    const trigger = screen.getByRole('button', { name: 'Actions for Review pull request' })
+    const trigger = screen.getByRole('button', {
+      name: 'Actions for Review pull request',
+    })
     expect(trigger.tagName).toBe('BUTTON')
   })
 
@@ -422,20 +449,28 @@ describe('pointer — the hover and context grammar', () => {
     // cannot see instead of moving the row.
     render(<Surface input="pointer" onOperation={() => undefined} />)
 
-    const trigger = screen.getByRole('button', { name: 'Actions for Review pull request' })
+    const trigger = screen.getByRole('button', {
+      name: 'Actions for Review pull request',
+    })
     expect(trigger.className).toContain('opacity-0')
     expect(trigger.className).toContain('pointer-events-none')
     expect(trigger.className).toContain('group-hover:pointer-events-auto')
-    expect(trigger.className).toContain('group-focus-within:pointer-events-auto')
+    expect(trigger.className).toContain(
+      'group-focus-within:pointer-events-auto',
+    )
     // The keyboard is never gated by `pointer-events`, so tabbing to it still
     // reveals it — which is the whole reason the trigger exists.
     expect(trigger.className).toContain('focus-visible:pointer-events-auto')
   })
 
   it('marks the surface with the input it resolved, so a story can prove which grammar ran', () => {
-    const { rerender } = render(<Surface input="touch" onOperation={() => undefined} />)
+    const { rerender } = render(
+      <Surface input="touch" onOperation={() => undefined} />,
+    )
     const surface = () =>
-      document.querySelector('[data-slot="endeavor-action-surface"]') as HTMLElement
+      document.querySelector(
+        '[data-slot="endeavor-action-surface"]',
+      ) as HTMLElement
 
     expect(surface().dataset.input).toBe('touch')
 
@@ -446,7 +481,9 @@ describe('pointer — the hover and context grammar', () => {
 
 describe('the pointer chrome reserves its own gutter', () => {
   const surface = () =>
-    document.querySelector('[data-slot="endeavor-action-surface"]') as HTMLElement
+    document.querySelector(
+      '[data-slot="endeavor-action-surface"]',
+    ) as HTMLElement
 
   it('measures the strip from the kit’s own geometry — inset, buttons, gaps', () => {
     expect(
@@ -465,7 +502,10 @@ describe('the pointer chrome reserves its own gutter', () => {
   })
 
   it('takes the WIDER of the two — they overlap, they do not sit side by side', () => {
-    const wide = pointerChromeGutterPx({ hoverActionCount: 3, hasContextMenu: true })
+    const wide = pointerChromeGutterPx({
+      hoverActionCount: 3,
+      hasContextMenu: true,
+    })
     const strip =
       POINTER_CHROME.stripInset +
       3 * POINTER_CHROME.stripButton +
@@ -493,7 +533,9 @@ describe('the pointer chrome reserves its own gutter', () => {
     })
 
     expect(surface().dataset.pointerGutter).toBe(String(expected))
-    expect(surface().style.getPropertyValue(POINTER_GUTTER_VAR)).toBe(`${expected}px`)
+    expect(surface().style.getPropertyValue(POINTER_GUTTER_VAR)).toBe(
+      `${expected}px`,
+    )
   })
 
   it('publishes ZERO on touch, where none of that chrome is rendered', () => {

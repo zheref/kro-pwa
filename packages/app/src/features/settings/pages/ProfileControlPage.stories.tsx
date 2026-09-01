@@ -1,5 +1,9 @@
 import { StoreProvider } from '../../../library/StoreProvider'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import { makeStubbedAuthService } from '../../../services/auth/AuthService'
 import { authUserMocks } from '../../auth/AuthMocks'
 import { ToolbarOutlet, ToolbarSlotsProvider } from '../../main/ToolbarSlots'
@@ -79,7 +83,9 @@ export const SignedIn = {
     <Stage
       extra={{
         ...stubbedThunkExtra,
-        authService: makeStubbedAuthService({ initialUser: authUserMocks.typical }),
+        authService: makeStubbedAuthService({
+          initialUser: authUserMocks.typical,
+        }),
       }}
     />
   ),

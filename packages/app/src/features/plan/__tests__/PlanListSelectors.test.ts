@@ -10,27 +10,27 @@
 import type { SettingValue } from '@kro/core'
 import { PlanListGrouping, PlanListSort } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import type { RootState } from '../../../../../library/store'
-import { initialAuthState } from '../../../../auth/AuthState'
-import { initialCaptureState } from '../../../../capture/CaptureFeature'
-import { initialDoState } from '../../../../do/DoFeature'
-import { initialEarnState } from '../../../../earn/EarnFeature'
-import { initialEndeavorDetailState } from '../../../../endeavorDetail/EndeavorDetailState'
-import { initialFindState } from '../../../../find/FindState'
-import { initialGreetingState } from '../../../../greeting/GreetingFeature'
-import { initialMainState } from '../../../../main/MainFeature'
-import { initialPlatformState } from '../../../../platform/PlatformFeature'
-import { initialSessionState } from '../../../../session/SessionState'
-import { initialSettingsState } from '../../../../settings/SettingsState'
-import { initialThirstState } from '../../../../thirst/ThirstFeature'
-import { initialTriageState } from '../../../../triage/TriageFeature'
-import { planDayKey, startOfPlanDay } from '../../../PlanCalendar'
+import type { RootState } from '../../../library/store'
+import { initialAuthState } from '../../auth/AuthState'
+import { initialCaptureState } from '../../capture/CaptureFeature'
+import { initialDoState } from '../../do/DoFeature'
+import { initialEarnState } from '../../earn/EarnFeature'
+import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
+import { initialFindState } from '../../find/FindState'
+import { initialGreetingState } from '../../greeting/GreetingFeature'
+import { initialMainState } from '../../main/MainFeature'
+import { initialPlatformState } from '../../platform/PlatformFeature'
+import { initialSessionState } from '../../session/SessionState'
+import { initialSettingsState } from '../../settings/SettingsState'
+import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialTriageState } from '../../triage/TriageFeature'
+import { planDayKey, startOfPlanDay } from '../PlanCalendar'
 import {
   PLAN_REFERENCE_DAY,
   PLAN_REFERENCE_NOW,
   planStateMocks,
-} from '../../../PlanMocks'
-import type { PlanState } from '../../../PlanState'
+} from '../PlanMocks'
+import type { PlanState } from '../PlanState'
 import {
   selectIsPlanListEmpty,
   selectPlanListEndeavors,
@@ -38,12 +38,12 @@ import {
   selectPlanListSections,
   selectPlanListSort,
   selectPlanRowCapabilities,
-} from '../PlanListSelectors'
+} from '../PlanSelectors'
 import {
   planListBucketFixtures,
   planListMixedDay,
   planListProjectDay,
-} from '../planListMocks'
+} from '../pages/list/planListMocks'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const dayKey = planDayKey(today)
@@ -173,7 +173,13 @@ describe('selectPlanListEndeavors', () => {
   it('leaves an untimed row due on ANOTHER day out of this day list', () => {
     const otherDay = {
       ...planListBucketFixtures.untimedDueToday,
-      due: new Date(planListBucketFixtures.untimedDueToday.due!.getTime() + 86_400_000),
+      // The fixture is a due-today row by construction; the suite's own
+      // `planListBucketFixtures` test asserts that, so this is a read rather
+      // than an assumption.
+      due: new Date(
+        (planListBucketFixtures.untimedDueToday.due as Date).getTime() +
+          86_400_000,
+      ),
     }
     const root = rootWith(
       planWith({ pool: { kind: 'loaded', endeavors: [otherDay] } }),
@@ -196,9 +202,10 @@ describe('selectPlanListEndeavors', () => {
 
     // Under Time the timed 14:00 call leads, because the untimed row has no
     // start at all and floats to the end.
-    expect(
-      selectPlanListEndeavors(rootWith(day)).map((e) => e.id),
-    ).toEqual(['list-coming-next', 'list-untimed-overdue'])
+    expect(selectPlanListEndeavors(rootWith(day)).map((e) => e.id)).toEqual([
+      'list-coming-next',
+      'list-untimed-overdue',
+    ])
 
     // Under Priority the overdue permit leads — which it could not do if the
     // two halves were concatenated as two pre-sorted runs.
@@ -217,12 +224,9 @@ describe('selectPlanListSections', () => {
         timed: { kind: 'loaded', dayKey, events: planListMixedDay },
       }),
     )
-    expect(selectPlanListSections(root).map((section) => section.title)).toEqual([
-      'All Day',
-      'Past Events',
-      'Ongoing',
-      'Coming Next',
-    ])
+    expect(
+      selectPlanListSections(root).map((section) => section.title),
+    ).toEqual(['All Day', 'Past Events', 'Ongoing', 'Coming Next'])
   })
 
   it('regroups the SAME day by project when the preference changes', () => {

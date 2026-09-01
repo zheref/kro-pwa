@@ -25,7 +25,13 @@ export default {
   parameters: { layout: 'fullscreen' },
 }
 
-function Cell({ caption, children }: { caption: string; children: React.ReactNode }) {
+function Cell({
+  caption,
+  children,
+}: {
+  caption: string
+  children: React.ReactNode
+}) {
   return (
     <div
       style={{
@@ -73,7 +79,10 @@ function Row({ children }: { children: React.ReactNode }) {
 export const TruthTable = {
   name: 'Truth table — every row of DayProgressRings.md § States',
   render: () => (
-    <Stage height={320} label="Nothing expected · habits only · tasks only · both · both complete">
+    <Stage
+      height={320}
+      label="Nothing expected · habits only · tasks only · both · both complete"
+    >
       <Row>
         <Cell caption="Nothing expected — no rings">
           <ActivityRings
@@ -257,13 +266,24 @@ function SweepDemo() {
   )
 }
 
-function SweepButton({ label, onClick }: { label: string; onClick: () => void }) {
+function SweepButton({
+  label,
+  onClick,
+}: {
+  label: string
+  onClick: () => void
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="kro-glass kro-glass--control kro-glass--interactive rounded-kro-pill text-kro-fore"
-      style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+      style={{
+        padding: '10px 18px',
+        border: 'none',
+        cursor: 'pointer',
+        fontWeight: 600,
+      }}
     >
       {label}
     </button>

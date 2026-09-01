@@ -103,9 +103,9 @@ const element = (
   isInitial = false,
 ): NavigationElement => ({ destination, isInitial })
 
-const simple = (
-  kind: SimpleDestination['kind'],
-): SimpleDestination => ({ kind })
+const simple = (kind: SimpleDestination['kind']): SimpleDestination => ({
+  kind,
+})
 
 /** Canon's `section.add(element:if:)` — append only when the gate is open. */
 const addIf = (
@@ -167,11 +167,7 @@ export const sidebarSections = (
   addIf(workflowElements, gates.rewards, simple(DestinationKind.earn))
 
   const settingsElements: NavigationElement[] = []
-  addIf(
-    settingsElements,
-    gates.blueprints,
-    simple(DestinationKind.blueprints),
-  )
+  addIf(settingsElements, gates.blueprints, simple(DestinationKind.blueprints))
   addIf(settingsElements, gates.settings, simple(DestinationKind.settings))
   addIf(settingsElements, input.isDevelopment, simple(DestinationKind.dev))
 
@@ -203,10 +199,7 @@ export const sidebarSections = (
   }
   // Canon: the Lists section renders only when the flag is on AND there is
   // something to render — a project, or the inline row being typed into.
-  if (
-    gates.lists &&
-    (input.isAddingProject || input.projects.length > 0)
-  ) {
+  if (gates.lists && (input.isAddingProject || input.projects.length > 0)) {
     sections.push({
       title: 'Lists',
       shouldGoToBottom: false,

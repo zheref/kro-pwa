@@ -84,7 +84,9 @@ describe('the no-denominator rule', () => {
   })
 
   it('omits a category the caller did not mention at all', () => {
-    expect(dayProgressRings({ tasks: { completed: 1, expected: 2 } })).toHaveLength(1)
+    expect(
+      dayProgressRings({ tasks: { completed: 1, expected: 2 } }),
+    ).toHaveLength(1)
     expect(dayProgressRings({})).toHaveLength(0)
   })
 
@@ -135,8 +137,18 @@ describe('the geometry matches canon`s derivation', () => {
   })
 
   it('steps inward by a stroke plus the spacing for each ring', () => {
-    const first = ringPathDiameter({ index: 0, diameter: 44, lineWidth: 6, spacing: 3 })
-    const second = ringPathDiameter({ index: 1, diameter: 44, lineWidth: 6, spacing: 3 })
+    const first = ringPathDiameter({
+      index: 0,
+      diameter: 44,
+      lineWidth: 6,
+      spacing: 3,
+    })
+    const second = ringPathDiameter({
+      index: 1,
+      diameter: 44,
+      lineWidth: 6,
+      spacing: 3,
+    })
 
     expect(first - second).toBe((6 + 3) * 2)
   })
@@ -155,9 +167,15 @@ describe('what is drawn', () => {
   })
 
   it('lays a faint track behind each arc, so a ring at zero still reads as a ring', () => {
-    render(<ActivityRings rings={dayProgressRings({ tasks: { completed: 0, expected: 4 } })} />)
+    render(
+      <ActivityRings
+        rings={dayProgressRings({ tasks: { completed: 0, expected: 4 } })}
+      />,
+    )
 
-    const track = document.querySelector('[data-kro-ring-track]') as SVGCircleElement
+    const track = document.querySelector(
+      '[data-kro-ring-track]',
+    ) as SVGCircleElement
     expect(track.getAttribute('stroke-opacity')).toBe('0.22')
     expect(track.getAttribute('stroke')).toBe('var(--kro-color-ring-emerald)')
   })
@@ -182,14 +200,18 @@ describe('what is drawn', () => {
     render(<ActivityRings rings={both} />)
 
     expect(arcs()[0]?.getAttribute('stroke')).toBe('var(--kro-color-ring-gold)')
-    expect(arcs()[1]?.getAttribute('stroke')).toBe('var(--kro-color-ring-emerald)')
+    expect(arcs()[1]?.getAttribute('stroke')).toBe(
+      'var(--kro-color-ring-emerald)',
+    )
   })
 
   it('announces both rings as one image, not as two unlabelled shapes', () => {
     render(<ActivityRings rings={both} />)
 
     expect(
-      screen.getByRole('img', { name: 'Habits, 3 of 5 complete, Tasks, 1 of 4 complete' }),
+      screen.getByRole('img', {
+        name: 'Habits, 3 of 5 complete, Tasks, 1 of 4 complete',
+      }),
     ).toBeDefined()
   })
 
@@ -205,7 +227,9 @@ describe('what is drawn', () => {
     render(<ActivityRings rings={both} />)
 
     // jsdom reports no `prefers-reduced-motion`, so the transition is present.
-    expect((arcs()[0] as SVGElement).style.transitionProperty).toBe('stroke-dashoffset')
+    expect((arcs()[0] as SVGElement).style.transitionProperty).toBe(
+      'stroke-dashoffset',
+    )
   })
 
   it('takes the new value straight away under reduced motion', () => {

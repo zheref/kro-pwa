@@ -16,19 +16,26 @@ import {
 } from './endeavorCardModel'
 
 const NOW = new Date(2026, 3, 15, 14, 0, 0)
-const hoursFromNow = (count: number) => new Date(NOW.getTime() + count * 3_600_000)
+const hoursFromNow = (count: number) =>
+  new Date(NOW.getTime() + count * 3_600_000)
 
 describe('computedUrgency', () => {
   it('is High once the due moment has passed — an overdue tax receipt', () => {
-    expect(computedUrgency({ due: hoursFromNow(-0.1) }, NOW)).toBe(EndeavorUrgency.high)
+    expect(computedUrgency({ due: hoursFromNow(-0.1) }, NOW)).toBe(
+      EndeavorUrgency.high,
+    )
   })
 
   it('is Medium inside the two-hour window — a stand-up at 3:30', () => {
-    expect(computedUrgency({ due: hoursFromNow(1.5) }, NOW)).toBe(EndeavorUrgency.medium)
+    expect(computedUrgency({ due: hoursFromNow(1.5) }, NOW)).toBe(
+      EndeavorUrgency.medium,
+    )
   })
 
   it('is Low beyond the window — groceries this evening', () => {
-    expect(computedUrgency({ due: hoursFromNow(5) }, NOW)).toBe(EndeavorUrgency.low)
+    expect(computedUrgency({ due: hoursFromNow(5) }, NOW)).toBe(
+      EndeavorUrgency.low,
+    )
   })
 
   it('is Low when there is no due date at all', () => {
@@ -36,7 +43,9 @@ describe('computedUrgency', () => {
   })
 
   it('treats exactly two hours as Medium — canon compares <=, not <', () => {
-    expect(computedUrgency({ due: hoursFromNow(2) }, NOW)).toBe(EndeavorUrgency.medium)
+    expect(computedUrgency({ due: hoursFromNow(2) }, NOW)).toBe(
+      EndeavorUrgency.medium,
+    )
   })
 
   it('is still Medium at the exact due instant — canon compares due < now, strictly', () => {
@@ -59,8 +68,12 @@ describe('the urgency projections', () => {
 
   it('escalates the glyph with the level, so the pill is legible in grayscale', () => {
     expect(urgencyIconSymbol(EndeavorUrgency.low)).toBe('arrow.down.circle')
-    expect(urgencyIconSymbol(EndeavorUrgency.medium)).toBe('exclamationmark.circle')
-    expect(urgencyIconSymbol(EndeavorUrgency.high)).toBe('exclamationmark.circle.fill')
+    expect(urgencyIconSymbol(EndeavorUrgency.medium)).toBe(
+      'exclamationmark.circle',
+    )
+    expect(urgencyIconSymbol(EndeavorUrgency.high)).toBe(
+      'exclamationmark.circle.fill',
+    )
   })
 })
 

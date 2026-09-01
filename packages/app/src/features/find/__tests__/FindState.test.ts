@@ -57,12 +57,12 @@ describe('a tasks selection carries its vista’s own defaults and id', () => {
   })
 
   it('scopes a list vista’s id to the list, so each list saves its own lens', () => {
-    expect(tasksVistaIdFor({ kind: 'list', listId: 'l-1', listTitle: null })).toBe(
-      'tasks.list.l-1',
-    )
-    expect(tasksVistaIdFor({ kind: 'list', listId: 'l-2', listTitle: null })).toBe(
-      'tasks.list.l-2',
-    )
+    expect(
+      tasksVistaIdFor({ kind: 'list', listId: 'l-1', listTitle: null }),
+    ).toBe('tasks.list.l-1')
+    expect(
+      tasksVistaIdFor({ kind: 'list', listId: 'l-2', listTitle: null }),
+    ).toBe('tasks.list.l-2')
   })
 
   it('names the fixed vistas’ own ids for the other selections', () => {

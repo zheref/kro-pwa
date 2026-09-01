@@ -37,7 +37,11 @@ export const EarnExceptions = {
     ),
 
   catalogLoadFailed: (reason: string): EarnException =>
-    exception('catalogLoadFailed', `Couldn't load your rewards: ${reason}`, true),
+    exception(
+      'catalogLoadFailed',
+      `Couldn't load your rewards: ${reason}`,
+      true,
+    ),
 
   blankTitle: (): EarnException =>
     exception('blankTitle', 'Give the reward a title before adding it.', true),
@@ -46,10 +50,18 @@ export const EarnExceptions = {
     exception('addRewardFailed', `Couldn't save that reward: ${reason}`, true),
 
   deleteRewardFailed: (reason: string): EarnException =>
-    exception('deleteRewardFailed', `Couldn't remove that reward: ${reason}`, true),
+    exception(
+      'deleteRewardFailed',
+      `Couldn't remove that reward: ${reason}`,
+      true,
+    ),
 
   claimRewardFailed: (reason: string): EarnException =>
-    exception('claimRewardFailed', `Couldn't claim that reward: ${reason}`, true),
+    exception(
+      'claimRewardFailed',
+      `Couldn't claim that reward: ${reason}`,
+      true,
+    ),
 
   rewardNotFound: (id: string): EarnException =>
     exception(
@@ -58,5 +70,6 @@ export const EarnExceptions = {
       false,
     ),
 
-  unknown: (message: string): EarnException => exception('unknown', message, true),
+  unknown: (message: string): EarnException =>
+    exception('unknown', message, true),
 } as const

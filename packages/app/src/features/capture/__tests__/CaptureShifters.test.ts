@@ -170,7 +170,9 @@ describe('withPromptOpened', () => {
 
 describe('withPromptClosed', () => {
   it('drops the whole draft on Discard', () => {
-    expect(withPromptClosed(captureStateMocks.promptReadyToSubmit).prompt).toBeNull()
+    expect(
+      withPromptClosed(captureStateMocks.promptReadyToSubmit).prompt,
+    ).toBeNull()
   })
 
   it('leaves the pool alone — discarding captures nothing', () => {
@@ -200,9 +202,9 @@ describe('withTitleEdited', () => {
 
 describe('withKindSelected', () => {
   it('switches the chip the user tapped', () => {
-    expect(withKindSelected(openPrompt, CaptureKind.event).prompt?.draft.kind).toBe(
-      CaptureKind.event,
-    )
+    expect(
+      withKindSelected(openPrompt, CaptureKind.event).prompt?.draft.kind,
+    ).toBe(CaptureKind.event)
   })
 
   it('closes a half-open time edit rather than carrying it into the new kind', () => {
@@ -274,7 +276,11 @@ describe('withTimeEditBegun', () => {
 
 describe('withTimePicked', () => {
   it('follows the wheel as it turns', () => {
-    const picked = withTimePicked(openPrompt, 'start', captureMockAt(17, 11, 30))
+    const picked = withTimePicked(
+      openPrompt,
+      'start',
+      captureMockAt(17, 11, 30),
+    )
     expect(picked.prompt?.draft.time).toEqual(captureMockAt(17, 11, 30))
     expect(picked.prompt?.draft.hasTime).toBe(true)
   })
@@ -290,7 +296,9 @@ describe('withTimePicked', () => {
   })
 
   it('is a no-op after the prompt has been dismissed', () => {
-    expect(withTimePicked(loaded, 'start', captureMockAt(17, 12, 0))).toBe(loaded)
+    expect(withTimePicked(loaded, 'start', captureMockAt(17, 12, 0))).toBe(
+      loaded,
+    )
   })
 })
 
@@ -373,7 +381,8 @@ describe('withRecurrencePicked', () => {
       interval: 2,
     })
     expect(
-      withRecurrencePicked(repeating, { kind: 'never' }).prompt?.draft.recurrence,
+      withRecurrencePicked(repeating, { kind: 'never' }).prompt?.draft
+        .recurrence,
     ).toEqual({ kind: 'never' })
   })
 
@@ -523,12 +532,20 @@ describe('withInboxDismissed', () => {
 
 describe('withTriageRequested', () => {
   it('raises the request with the row the user tapped', () => {
-    const requested = withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW)
+    const requested = withTriageRequested(
+      loaded,
+      'fresh-task',
+      CAPTURE_MOCK_NOW,
+    )
     expect(requested.triageRequest?.endeavorId).toBe('fresh-task')
   })
 
   it('seeds it with the first free gap in today’s calendar', () => {
-    const requested = withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW)
+    const requested = withTriageRequested(
+      loaded,
+      'fresh-task',
+      CAPTURE_MOCK_NOW,
+    )
     expect(requested.triageRequest?.nextFreeSlotToday).toEqual(
       captureMockAt(17, 10, 15),
     )
@@ -543,7 +560,11 @@ describe('withTriageRequested', () => {
 
 describe('withTriageRequestCleared', () => {
   it('spends the one-shot once Triage is on screen', () => {
-    const requested = withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW)
+    const requested = withTriageRequested(
+      loaded,
+      'fresh-task',
+      CAPTURE_MOCK_NOW,
+    )
     expect(withTriageRequestCleared(requested).triageRequest).toBeNull()
   })
 
@@ -654,7 +675,9 @@ describe('withAddForTodayCancelled', () => {
   })
 
   it('schedules nothing — the row is untouched', () => {
-    const cancelled = withAddForTodayCancelled(captureStateMocks.addForTodayOpen)
+    const cancelled = withAddForTodayCancelled(
+      captureStateMocks.addForTodayOpen,
+    )
     expect(
       cancelled.endeavors.find((value) => value.id === 'fresh-task')?.due,
     ).toBeNull()

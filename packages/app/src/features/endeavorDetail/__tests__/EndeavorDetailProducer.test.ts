@@ -77,7 +77,9 @@ describe('saveEndeavorThunk persists the working copy locally', () => {
     const { store, localStore } = storeWith()
     const edited = { ...detailEndeavorMocks.task, title: 'Prepare the deck' }
     const result = await store
-      .dispatch(saveEndeavorThunk({ endeavor: edited, now: DETAIL_REFERENCE_NOW }))
+      .dispatch(
+        saveEndeavorThunk({ endeavor: edited, now: DETAIL_REFERENCE_NOW }),
+      )
       .unwrap()
 
     expect(result.ok).toBe(true)

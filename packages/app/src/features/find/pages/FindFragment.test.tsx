@@ -6,7 +6,13 @@
  * the hover/context grammar on pointer, and the ellipsis menu's two irreversible
  * bulk operations.
  */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installPointerEvents } from '../../../design/endeavor/__tests__/pointerEnvironment'
@@ -57,7 +63,7 @@ const props = (
 })
 
 describe('the loaded list — the scene acceptance criterion 1 is read against', () => {
-  it('lists every row the vista handed it, under canon\'s section heading', () => {
+  it("lists every row the vista handed it, under canon's section heading", () => {
     render(<FindFragment {...props()} />)
 
     expect(screen.getByRole('heading', { name: 'All Endeavors' })).toBeTruthy()
@@ -78,7 +84,9 @@ describe('the loaded list — the scene acceptance criterion 1 is read against',
 
     const kinds = screen.getByRole('group', { name: 'Kinds' })
     expect(
-      within(kinds).getByRole('button', { name: /Task/ }).getAttribute('aria-pressed'),
+      within(kinds)
+        .getByRole('button', { name: /Task/ })
+        .getAttribute('aria-pressed'),
     ).toBe('true')
   })
 })
@@ -87,7 +95,11 @@ describe('the four empty states are four different messages', () => {
   it('says "No Endeavors Yet" when nothing was ever fetched', () => {
     render(
       <FindFragment
-        {...props({ rows: [], visibleCount: 0, emptyState: { kind: 'noData' } })}
+        {...props({
+          rows: [],
+          visibleCount: 0,
+          emptyState: { kind: 'noData' },
+        })}
       />,
     )
     expect(screen.getByText('No Endeavors Yet')).toBeTruthy()
@@ -138,7 +150,9 @@ describe('the four empty states are four different messages', () => {
         })}
       />,
     )
-    expect(screen.getByText("Couldn't load your endeavors: offline")).toBeTruthy()
+    expect(
+      screen.getByText("Couldn't load your endeavors: offline"),
+    ).toBeTruthy()
     expect(screen.getByText('Prepare quarterly slides')).toBeTruthy()
   })
 })
@@ -176,7 +190,10 @@ describe('the filter chips dispatch by axis', () => {
     const kinds = screen.getByRole('group', { name: 'Kinds' })
     await userEvent.click(within(kinds).getByRole('button', { name: /Habit/ }))
 
-    expect(onToggleFilter).toHaveBeenCalledWith({ axis: 'kind', value: 'habit' })
+    expect(onToggleFilter).toHaveBeenCalledWith({
+      axis: 'kind',
+      value: 'habit',
+    })
   })
 
   it('raises the Archived chip as its own event — it is a flag, not a status', async () => {
@@ -199,11 +216,16 @@ describe('the filter chips dispatch by axis', () => {
 describe('row operations — one capability set, two input grammars', () => {
   const oneRow = adaptedRows([findEndeavorMocks.morningTask], capabilities)
 
-  it('performs the leading swipe\'s FIRST binding on a full swipe (touch)', () => {
+  it("performs the leading swipe's FIRST binding on a full swipe (touch)", () => {
     const onOperation = vi.fn()
     render(
       <FindFragment
-        {...props({ rows: oneRow, visibleCount: 1, input: 'touch', onOperation })}
+        {...props({
+          rows: oneRow,
+          visibleCount: 1,
+          input: 'touch',
+          onOperation,
+        })}
       />,
     )
 
@@ -222,11 +244,16 @@ describe('row operations — one capability set, two input grammars', () => {
     )
   })
 
-  it('performs the trailing swipe\'s destructive binding the same way', () => {
+  it("performs the trailing swipe's destructive binding the same way", () => {
     const onOperation = vi.fn()
     render(
       <FindFragment
-        {...props({ rows: oneRow, visibleCount: 1, input: 'touch', onOperation })}
+        {...props({
+          rows: oneRow,
+          visibleCount: 1,
+          input: 'touch',
+          onOperation,
+        })}
       />,
     )
 
@@ -248,7 +275,12 @@ describe('row operations — one capability set, two input grammars', () => {
     const onOperation = vi.fn()
     render(
       <FindFragment
-        {...props({ rows: oneRow, visibleCount: 1, input: 'pointer', onOperation })}
+        {...props({
+          rows: oneRow,
+          visibleCount: 1,
+          input: 'pointer',
+          onOperation,
+        })}
       />,
     )
 
@@ -264,7 +296,9 @@ describe('row operations — one capability set, two input grammars', () => {
 
   it('gives every row a named context-menu trigger, on both grammars', () => {
     render(
-      <FindFragment {...props({ rows: oneRow, visibleCount: 1, input: 'pointer' })} />,
+      <FindFragment
+        {...props({ rows: oneRow, visibleCount: 1, input: 'pointer' })}
+      />,
     )
 
     expect(
@@ -286,9 +320,7 @@ describe('row operations — one capability set, two input grammars', () => {
 
       const open = screen.getByTestId('find-row-open')
       // Outside, so neither the pointer capture nor the hover strip can eat it.
-      expect(
-        open.closest('[data-slot="endeavor-action-surface"]'),
-      ).toBeNull()
+      expect(open.closest('[data-slot="endeavor-action-surface"]')).toBeNull()
 
       await userEvent.click(open)
       expect(onOpenDetail).toHaveBeenCalledWith(
@@ -310,7 +342,9 @@ describe('the ellipsis menu — two irreversible bulk operations', () => {
   it('counts the visible rows in both labels, as canon does', async () => {
     render(<FindFragment {...props({ visibleCount: 4 })} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
 
     expect(
       screen.getByRole('menuitem', { name: 'Delete all visible (4)' }),
@@ -324,7 +358,9 @@ describe('the ellipsis menu — two irreversible bulk operations', () => {
     const onDeleteAllVisible = vi.fn()
     render(<FindFragment {...props({ visibleCount: 2, onDeleteAllVisible })} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
     await userEvent.click(
       screen.getByRole('menuitem', { name: 'Delete all visible (2)' }),
     )
@@ -335,9 +371,13 @@ describe('the ellipsis menu — two irreversible bulk operations', () => {
 
   it('archives every visible endeavor through the second entry', async () => {
     const onArchiveAllVisible = vi.fn()
-    render(<FindFragment {...props({ visibleCount: 2, onArchiveAllVisible })} />)
+    render(
+      <FindFragment {...props({ visibleCount: 2, onArchiveAllVisible })} />,
+    )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
     await userEvent.click(
       screen.getByRole('menuitem', { name: 'Archive all visible (2)' }),
     )

@@ -72,7 +72,11 @@ describe('onViewLoaded — a surface mounts', () => {
   it('leaves the other surface untouched', () => {
     const next = reducer(
       initialFindState,
-      onViewLoaded({ surface: 'tasks', now: FIND_REFERENCE_NOW, enabledFlags: [] }),
+      onViewLoaded({
+        surface: 'tasks',
+        now: FIND_REFERENCE_NOW,
+        enabledFlags: [],
+      }),
     )
     expect(next.find.clockAnchor).toBeNull()
   })
@@ -80,7 +84,11 @@ describe('onViewLoaded — a surface mounts', () => {
   it('re-arms the lens restore on a remount', () => {
     const next = reducer(
       findStateMocks.loaded,
-      onViewLoaded({ surface: 'find', now: FIND_REFERENCE_NOW, enabledFlags: [] }),
+      onViewLoaded({
+        surface: 'find',
+        now: FIND_REFERENCE_NOW,
+        enabledFlags: [],
+      }),
     )
     expect(next.find.isLensRestored).toBe(false)
   })
@@ -265,7 +273,9 @@ describe('the fetch lifecycle', () => {
 describe('the lens restore lifecycle', () => {
   it('settles with the vista defaults when nothing was saved', async () => {
     const store = storeWith()
-    await store.dispatch(restoreFindLensThunk({ surface: 'find', vistaId: 'find' }))
+    await store.dispatch(
+      restoreFindLensThunk({ surface: 'find', vistaId: 'find' }),
+    )
     expect(store.getState().find.find.isLensRestored).toBe(true)
   })
 
@@ -283,7 +293,9 @@ describe('the lens restore lifecycle', () => {
         },
       },
     })
-    await store.dispatch(restoreFindLensThunk({ surface: 'find', vistaId: 'find' }))
+    await store.dispatch(
+      restoreFindLensThunk({ surface: 'find', vistaId: 'find' }),
+    )
     expect(store.getState().find.find.isLensRestored).toBe(true)
   })
 
@@ -303,7 +315,9 @@ describe('the lens restore lifecycle', () => {
       ...stubbedThunkExtra,
       localStore,
     })
-    await store.dispatch(restoreFindLensThunk({ surface: 'find', vistaId: 'find' }))
+    await store.dispatch(
+      restoreFindLensThunk({ surface: 'find', vistaId: 'find' }),
+    )
     const { lens } = store.getState().find.find
     expect(lens.searchQuery).toBe('slides')
     expect(lens.showArchived).toBe(true)
@@ -370,7 +384,8 @@ describe('the operation lifecycle is optimistic, then authoritative', () => {
     )
     const { load } = store.getState().find.find
     expect(load.kind).toBe('failed')
-    if (load.kind === 'failed') expect(load.exception.kind).toBe('endeavorNotFound')
+    if (load.kind === 'failed')
+      expect(load.exception.kind).toBe('endeavorNotFound')
   })
 
   it('installs the authoritative row on success', async () => {

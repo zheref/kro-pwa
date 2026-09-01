@@ -51,9 +51,8 @@ import type {
   EndeavorHost,
   EndeavorKind,
   EndeavorStatus,
-  DayViewRange,
 } from '@kro/core'
-import { DayViewRange as Range, EndeavorsVistas } from '@kro/core'
+import { EndeavorsVistas } from '@kro/core'
 import type { PlanDayKey } from './PlanCalendar'
 import type { PlanDayCache } from './PlanDayCache'
 import { emptyPlanDayCache } from './PlanDayCache'
@@ -100,7 +99,8 @@ export const PlanLoadReason = {
   appWide: 'appWide',
 } as const
 
-export type PlanLoadReason = (typeof PlanLoadReason)[keyof typeof PlanLoadReason]
+export type PlanLoadReason =
+  (typeof PlanLoadReason)[keyof typeof PlanLoadReason]
 
 /** The three concurrent in-flight markers behind one rendered signal. */
 export interface PlanActivity {
@@ -151,10 +151,18 @@ export interface PlanState {
   readonly editSession: TimelineEditSession | null
   readonly quickCreate: QuickCreateDraft | null
 
-  readonly dayViewRange: DayViewRange
-  readonly showCompletedInTimeline: boolean
   /** `timelineQuickEventCreation`, cached at `onViewLoaded` as canon caches it. */
   readonly isQuickEventCreationEnabled: boolean
+  /**
+   * The capability flags that resolved ENABLED at `onViewLoaded`.
+   *
+   * Held as names rather than as resolved booleans for the same reason
+   * `FindState.enabledFlags` is: `EndeavorCapabilities.requires` is a flag
+   * *name*, so a second gated binding needs no field here at all. Cached at the
+   * event exactly as canon caches `timelineQuickEventCreation`, so no Selector
+   * ever reaches for a flag Service (`RC-6`).
+   */
+  readonly enabledCapabilityFlags: readonly string[]
 
   readonly visibility: PlanVisibility
 }
@@ -201,8 +209,7 @@ export const initialPlanState: PlanState = {
   },
   editSession: null,
   quickCreate: null,
-  dayViewRange: Range.full,
-  showCompletedInTimeline: true,
   isQuickEventCreationEnabled: false,
+  enabledCapabilityFlags: [],
   visibility: initialPlanVisibility,
 }

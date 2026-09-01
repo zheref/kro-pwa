@@ -90,7 +90,10 @@ describe('withLensSnapshotRestored settles the saved-filter race', () => {
   })
 
   it('settles with the vista defaults when nothing was ever saved', () => {
-    const next = withLensSnapshotRestored(armed, { surface: 'find', lens: null })
+    const next = withLensSnapshotRestored(armed, {
+      surface: 'find',
+      lens: null,
+    })
     expect(next.find.lens).toEqual(armed.find.lens)
     expect(next.find.isLensRestored).toBe(true)
   })
@@ -139,8 +142,9 @@ describe('withEndeavorsInstalled installs one snapshot atomically', () => {
 
 describe('withFetchStarted / withFindException keep the last good list', () => {
   it('raises the loading lifecycle', () => {
-    expect(withFetchStarted(findStateMocks.idle, { surface: 'find' }).find.load)
-      .toEqual({ kind: 'loading' })
+    expect(
+      withFetchStarted(findStateMocks.idle, { surface: 'find' }).find.load,
+    ).toEqual({ kind: 'loading' })
   })
 
   it('keeps the installed rows through a failed refresh', () => {

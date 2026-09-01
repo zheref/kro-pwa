@@ -41,8 +41,9 @@ export const selectEarnException = createSelector(
 // Balance
 // ---------------------------------------------------------------------------
 
-export const selectTotalEarnedPoints = createSelector([selectEarnSlice], (slice) =>
-  totalEarnedPoints(slice.performances),
+export const selectTotalEarnedPoints = createSelector(
+  [selectEarnSlice],
+  (slice) => totalEarnedPoints(slice.performances),
 )
 
 export const selectSpentPoints = createSelector([selectEarnSlice], (slice) =>
@@ -78,8 +79,9 @@ export const selectAvailableSuggestions = createSelector(
   (slice) => availableSuggestions(slice.rewards),
 )
 
-export const selectIsEarnCatalogEmpty = createSelector([selectEarnSlice], (slice) =>
-  isCatalogEmpty(slice.load.kind, slice.rewards),
+export const selectIsEarnCatalogEmpty = createSelector(
+  [selectEarnSlice],
+  (slice) => isCatalogEmpty(slice.load.kind, slice.rewards),
 )
 
 // ---------------------------------------------------------------------------
@@ -129,5 +131,6 @@ export const selectClaimingRewardId = createSelector(
 export const selectClaimingReward = createSelector(
   [selectEarnSlice],
   (slice): Reward | null =>
-    slice.rewards.find((reward) => reward.id === slice.claimingRewardId) ?? null,
+    slice.rewards.find((reward) => reward.id === slice.claimingRewardId) ??
+    null,
 )

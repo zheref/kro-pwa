@@ -31,7 +31,13 @@ describe('the selected columns', () => {
   })
 
   it('selects the Kro-enhanced columns the later migrations added', () => {
-    for (const column of ['value', 'effort', 'expiry', 'associated_color', 'session_points']) {
+    for (const column of [
+      'value',
+      'effort',
+      'expiry',
+      'associated_color',
+      'session_points',
+    ]) {
       expect(ENDEAVOR_SELECT_COLUMNS.split(',')).toContain(column)
     }
   })
@@ -76,7 +82,12 @@ describe('EndeavorRowMapper.toDomain', () => {
     const endeavor = EndeavorRowMapper.toDomain(
       row({
         shadows: [
-          { originalTitle: 'x', sourceIdentifier: 's', kind: 'task', source: 'apple' },
+          {
+            originalTitle: 'x',
+            sourceIdentifier: 's',
+            kind: 'task',
+            source: 'apple',
+          },
           { nonsense: true },
         ],
       }),
@@ -111,7 +122,10 @@ describe('EndeavorRowMapper.fromDomain', () => {
 
   it('writes an explicit null for a cleared optional, so removing a due date clears the column', () => {
     const cleared = { ...endeavorMocks.plannedTask, due: null, expiry: null }
-    const written = EndeavorRowMapper.fromDomain(cleared, { ownerId: 1, now: NOW })
+    const written = EndeavorRowMapper.fromDomain(cleared, {
+      ownerId: 1,
+      now: NOW,
+    })
     expect(written.due).toBeNull()
     expect(written.expiry).toBeNull()
     // Present as keys, not merely absent: an omitted key leaves the column alone.
@@ -137,7 +151,10 @@ describe('EndeavorRowMapper.fromDomain', () => {
 
   it('serialises tags as their raw letters', () => {
     const written = EndeavorRowMapper.fromDomain(
-      { ...endeavorMocks.plannedTask, tags: [EndeavorTag.onDesk, EndeavorTag.session] },
+      {
+        ...endeavorMocks.plannedTask,
+        tags: [EndeavorTag.onDesk, EndeavorTag.session],
+      },
       { ownerId: 1, now: NOW },
     )
     expect(written.tags).toEqual(['O', 'S'])
@@ -175,7 +192,10 @@ describe('the round trip', () => {
 
   it('preserves the Kro-enhanced ratings, which the cloud does carry columns for', () => {
     const back = EndeavorRowMapper.toDomain(
-      EndeavorRowMapper.fromDomain(endeavorMocks.plannedTask, { ownerId: 1, now: NOW }),
+      EndeavorRowMapper.fromDomain(endeavorMocks.plannedTask, {
+        ownerId: 1,
+        now: NOW,
+      }),
     )
     expect(back?.value).toBe(endeavorMocks.plannedTask.value)
     expect(back?.effort).toBe(endeavorMocks.plannedTask.effort)

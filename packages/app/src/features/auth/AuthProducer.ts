@@ -63,7 +63,7 @@ import {
   type EndeavorSyncException,
   endeavorSyncExceptionFrom,
 } from './EndeavorSyncException'
-import { LocalDataChoice, localDataDecisionFor } from './LocalDataDialog'
+import { type LocalDataChoice, localDataDecisionFor } from './LocalDataDialog'
 import { type SignOutIntent, signOutIntents } from './SignOutIntents'
 
 /** What a completed sign-in hands the reducer. */
@@ -176,17 +176,22 @@ export const signInWithEmailThunk = createAsyncThunk<
   Result<AuthCompletion, AuthException>,
   { email: string; password: string; now: Date },
   { extra: ThunkExtra }
->('auth/onEmailSignInCompleted', async ({ email, password, now }, { extra, dispatch }) => {
-  if (email.length === 0 || password.length === 0) {
-    return err(AuthExceptions.incompleteForm('Please enter your email and password.'))
-  }
-  try {
-    const user = await extra.authService.signInWithEmail(email, password)
-    return completeSignIn(user, { extra, dispatch, now })
-  } catch (error) {
-    return err(AuthMapper.toException(error))
-  }
-})
+>(
+  'auth/onEmailSignInCompleted',
+  async ({ email, password, now }, { extra, dispatch }) => {
+    if (email.length === 0 || password.length === 0) {
+      return err(
+        AuthExceptions.incompleteForm('Please enter your email and password.'),
+      )
+    }
+    try {
+      const user = await extra.authService.signInWithEmail(email, password)
+      return completeSignIn(user, { extra, dispatch, now })
+    } catch (error) {
+      return err(AuthMapper.toException(error))
+    }
+  },
+)
 
 /** Canon's `userDidTapSignUp` guards + `produceSignUpWithEmailEffect`. */
 export const signUpWithEmailThunk = createAsyncThunk<
@@ -200,7 +205,9 @@ export const signUpWithEmailThunk = createAsyncThunk<
       return err(AuthExceptions.incompleteForm('Please enter your name.'))
     }
     if (email.length === 0 || password.length === 0) {
-      return err(AuthExceptions.incompleteForm('Please enter your email and password.'))
+      return err(
+        AuthExceptions.incompleteForm('Please enter your email and password.'),
+      )
     }
     if (password.length < MINIMUM_PASSWORD_LENGTH) {
       return err(
@@ -210,7 +217,11 @@ export const signUpWithEmailThunk = createAsyncThunk<
       )
     }
     try {
-      const user = await extra.authService.signUpWithEmail(email, password, name)
+      const user = await extra.authService.signUpWithEmail(
+        email,
+        password,
+        name,
+      )
       return completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
@@ -227,7 +238,10 @@ export const signUpWithEmailThunk = createAsyncThunk<
  * Apple, which is not something a Producer can await.
  */
 export const beginAppleSignInThunk = createAsyncThunk<
-  Result<{ readonly rawNonce: string; readonly hashedNonce: string }, AuthException>,
+  Result<
+    { readonly rawNonce: string; readonly hashedNonce: string },
+    AuthException
+  >,
   void,
   { extra: ThunkExtra }
 >('auth/onAppleChallengeMinted', async (_arg, { extra }) => {
@@ -280,13 +294,18 @@ export const startOAuthRedirectThunk = createAsyncThunk<
   Result<{ readonly provider: string; readonly url: string }, AuthException>,
   { provider: 'google' | 'apple'; redirectTo: string },
   { extra: ThunkExtra }
->('auth/onOAuthRedirectStarted', async ({ provider, redirectTo }, { extra }) => {
-  try {
-    return ok(await extra.authService.startOAuthRedirect({ provider, redirectTo }))
-  } catch (error) {
-    return err(AuthMapper.toException(error))
-  }
-})
+>(
+  'auth/onOAuthRedirectStarted',
+  async ({ provider, redirectTo }, { extra }) => {
+    try {
+      return ok(
+        await extra.authService.startOAuthRedirect({ provider, redirectTo }),
+      )
+    } catch (error) {
+      return err(AuthMapper.toException(error))
+    }
+  },
+)
 
 /**
  * The existing-local-data dialog's three arms — canon's `migrationAlertSignAll`
@@ -386,7 +405,10 @@ export const syncSettingsThunk = createAsyncThunk<
   if (shouldPullSettings(trigger)) {
     try {
       const entries = await extra.settingsSync.pullAll()
-      return ok({ kind: 'pulled', application: applyCloudSettingEntries(entries, preferences) })
+      return ok({
+        kind: 'pulled',
+        application: applyCloudSettingEntries(entries, preferences),
+      })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }

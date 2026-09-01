@@ -3,7 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { initialDoVisibility } from '../../DoRules'
-import { DoToolbarFragment, type DoToolbarFragmentProps } from '../DoToolbarFragment'
+import {
+  DoToolbarFragment,
+  type DoToolbarFragmentProps,
+} from '../DoToolbarFragment'
 import {
   DO_SURFACE_MOCK_LOCALE,
   DO_SURFACE_MOCK_NOW,
@@ -44,7 +47,7 @@ const toolbar = (overrides: Partial<DoToolbarFragmentProps> = {}) => (
   />
 )
 
-describe('canon\'s desktop toolbar table', () => {
+describe("canon's desktop toolbar table", () => {
   it('puts the bell in the navigation group and refresh + visibility in primary', () => {
     render(toolbar())
 
@@ -68,7 +71,7 @@ describe('canon\'s desktop toolbar table', () => {
     expect(screen.queryByLabelText('Notifications')).toBeNull()
   })
 
-  it('keeps refresh\'s footprint while loading and renames it to sync status', () => {
+  it("keeps refresh's footprint while loading and renames it to sync status", () => {
     render(toolbar({ isLoading: true }))
 
     expect(screen.getByLabelText('Show sync status')).toBeTruthy()
@@ -77,11 +80,9 @@ describe('canon\'s desktop toolbar table', () => {
   })
 })
 
-describe('canon\'s compact toolbar table', () => {
+describe("canon's compact toolbar table", () => {
   it('puts the bell leading and the trailing pair in the tab-bar slots', () => {
-    render(
-      toolbar({ shape: handheldShellShape, layout: handheldDoLayout }),
-    )
+    render(toolbar({ shape: handheldShellShape, layout: handheldDoLayout }))
 
     expect(
       screen
@@ -96,11 +97,11 @@ describe('canon\'s compact toolbar table', () => {
   })
 
   it('sizes every control for a fingertip rather than a pointer', () => {
-    render(
-      toolbar({ shape: handheldShellShape, layout: handheldDoLayout }),
-    )
+    render(toolbar({ shape: handheldShellShape, layout: handheldDoLayout }))
     const bell = screen.getByLabelText('Notifications')
-    expect(bell.style.minHeight).toBe(`${handheldDoLayout.minimumControlSide}px`)
+    expect(bell.style.minHeight).toBe(
+      `${handheldDoLayout.minimumControlSide}px`,
+    )
     expect(handheldDoLayout.minimumControlSide).toBe(44)
   })
 })

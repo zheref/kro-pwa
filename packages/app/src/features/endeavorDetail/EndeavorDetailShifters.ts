@@ -29,10 +29,7 @@ import { applyFieldChange, endeavorsEqual } from './EndeavorDetailEditing'
 import type { EndeavorDetailException } from './EndeavorDetailException'
 import type { EndeavorDetailState } from './EndeavorDetailState'
 import { initialEndeavorDetailState } from './EndeavorDetailState'
-import type {
-  DurationBound,
-  EndeavorDurationDraft,
-} from './EndeavorDuration'
+import type { DurationBound, EndeavorDurationDraft } from './EndeavorDuration'
 import {
   draftWithBoundAdjusted,
   draftWithBoundToggled,

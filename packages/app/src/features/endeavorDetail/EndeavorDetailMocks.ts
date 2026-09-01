@@ -149,9 +149,8 @@ export const detailEndeavorMocks = {
 } as const
 
 /** Every fixture, in declaration order. */
-export const allDetailEndeavorMocks: readonly Endeavor[] = Object.values(
-  detailEndeavorMocks,
-)
+export const allDetailEndeavorMocks: readonly Endeavor[] =
+  Object.values(detailEndeavorMocks)
 
 const presented = (endeavor: Endeavor): EndeavorDetailState => ({
   ...initialEndeavorDetailState,

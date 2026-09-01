@@ -40,10 +40,21 @@
  */
 import type { Result } from '@kro/core'
 import type { ThirstException } from './ThirstException'
-import { initialThirstVoteEntry, type ThirstState, type ThirstVoteEntryState } from './ThirstFeature'
-import { type FeatureVoteCounts, VotePlatform, bumpVotePlatform } from './ThirstModels'
+import {
+  initialThirstVoteEntry,
+  type ThirstState,
+  type ThirstVoteEntryState,
+} from './ThirstFeature'
+import {
+  type FeatureVoteCounts,
+  VotePlatform,
+  bumpVotePlatform,
+} from './ThirstModels'
 
-const entryOf = (state: ThirstState, featureKey: string): ThirstVoteEntryState =>
+const entryOf = (
+  state: ThirstState,
+  featureKey: string,
+): ThirstVoteEntryState =>
   state.byFeatureKey[featureKey] ?? initialThirstVoteEntry
 
 const withEntry = (
@@ -167,7 +178,10 @@ export const withCountsResult = (
 // ---------------------------------------------------------------------------
 
 /** A vote request begins: flag it in-flight and clear any prior retry error. */
-export const withVoteStarted = (state: ThirstState, featureKey: string): ThirstState =>
+export const withVoteStarted = (
+  state: ThirstState,
+  featureKey: string,
+): ThirstState =>
   withEntry(state, featureKey, {
     ...entryOf(state, featureKey),
     isVoting: true,

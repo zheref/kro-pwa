@@ -53,7 +53,7 @@
  * which a colour stop inside the slab could not do.
  */
 .kro-gradient-backdrop::after {
-  content: '';
+  content: "";
   position: absolute;
   inset-inline: 0;
   inset-block-end: 0;

@@ -359,7 +359,10 @@ export const withSessionPaused = (
   now: Date,
 ): SessionState => {
   if (state.anchor === null) return state
-  if (state.phase !== SessionPhase.running && state.phase !== SessionPhase.break) {
+  if (
+    state.phase !== SessionPhase.running &&
+    state.phase !== SessionPhase.break
+  ) {
     return state
   }
   return {
@@ -551,7 +554,10 @@ export const withDisplayAdvanced = (
 ): SessionState => {
   const anchor = state.anchor
   if (anchor === null) return { ...state, now }
-  if (state.phase !== SessionPhase.running && state.phase !== SessionPhase.break) {
+  if (
+    state.phase !== SessionPhase.running &&
+    state.phase !== SessionPhase.break
+  ) {
     return { ...state, now }
   }
   if (!isRunningSessionCountdownFinished(anchor, now)) return { ...state, now }
@@ -700,7 +706,10 @@ export const withConclusionRecordingStarted = (
   state: SessionState,
 ): SessionState =>
   state.conclusion.kind === 'pending'
-    ? { ...state, conclusion: { kind: 'recording', outcome: state.conclusion.outcome } }
+    ? {
+        ...state,
+        conclusion: { kind: 'recording', outcome: state.conclusion.outcome },
+      }
     : state
 
 /** `recording → recorded`, carrying the row that landed. */
@@ -737,7 +746,10 @@ export const withConclusionRecordingFailed = (
 ): SessionState => {
   const released: SessionState =
     state.conclusion.kind === 'recording'
-      ? { ...state, conclusion: { kind: 'pending', outcome: state.conclusion.outcome } }
+      ? {
+          ...state,
+          conclusion: { kind: 'pending', outcome: state.conclusion.outcome },
+        }
       : state
   return withException(released, exception)
 }
@@ -817,7 +829,9 @@ export const withEditedTitleChanged = (
 ): SessionState => ({ ...state, editedTitle })
 
 /** Canon's revert-on-empty: the draft is dropped, the identity untouched. */
-export const withTitleEditingCancelled = (state: SessionState): SessionState => ({
+export const withTitleEditingCancelled = (
+  state: SessionState,
+): SessionState => ({
   ...state,
   isEditingTitle: false,
   editedTitle: '',
@@ -829,7 +843,9 @@ export const withSymbolPickerPresented = (state: SessionState): SessionState =>
     ? state
     : { ...state, isEditingSymbol: true }
 
-export const withSymbolPickerDismissed = (state: SessionState): SessionState => ({
+export const withSymbolPickerDismissed = (
+  state: SessionState,
+): SessionState => ({
   ...state,
   isEditingSymbol: false,
 })

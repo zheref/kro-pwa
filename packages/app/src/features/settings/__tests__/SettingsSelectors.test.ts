@@ -41,7 +41,10 @@ import type { SettingsState } from '../SettingsState'
 
 const emptyRoot: RootState = makeStore(stubbedThunkExtra).getState()
 
-const rootWith = (settings: SettingsState, auth: AuthState = AuthMocks.signedOut): RootState => ({
+const rootWith = (
+  settings: SettingsState,
+  auth: AuthState = AuthMocks.signedOut,
+): RootState => ({
   ...emptyRoot,
   auth,
   settings,
@@ -61,7 +64,9 @@ describe('the load lifecycle', () => {
   })
 
   it('reports not-loaded when the read failed — the values never arrived', () => {
-    expect(selectIsSettingsLoaded(rootWith(SettingsMocks.loadFailed))).toBe(false)
+    expect(selectIsSettingsLoaded(rootWith(SettingsMocks.loadFailed))).toBe(
+      false,
+    )
   })
 })
 
@@ -71,7 +76,9 @@ describe('whether the form may be edited', () => {
   })
 
   it('locks it while a read is in flight — canon own pre-load guard', () => {
-    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loading))).toBe(false)
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loading))).toBe(
+      false,
+    )
   })
 
   it('unlocks it once the values arrive', () => {
@@ -81,7 +88,9 @@ describe('whether the form may be edited', () => {
   it('unlocks it when the read FAILED — canon: defaults show and edits still save', () => {
     // The guard exists to stop an in-flight load overwriting an edit. A failed
     // load is not in flight, so there is nothing left to overwrite.
-    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loadFailed))).toBe(true)
+    expect(selectIsSettingsEditable(rootWith(SettingsMocks.loadFailed))).toBe(
+      true,
+    )
   })
 })
 
@@ -131,10 +140,15 @@ describe('reading one option value', () => {
   })
 
   it('answers null for a stored null rather than substituting the default', () => {
-    expect(settingValueIn({ 'general.timezone': null }, {
-      ...workingHoursStartOption,
-      key: 'general.timezone',
-    })).toBeNull()
+    expect(
+      settingValueIn(
+        { 'general.timezone': null },
+        {
+          ...workingHoursStartOption,
+          key: 'general.timezone',
+        },
+      ),
+    ).toBeNull()
   })
 })
 
@@ -222,7 +236,9 @@ describe('the integration rows', () => {
 describe('the hub sync footer, composed from the auth slice', () => {
   it('hides itself before anything has been attempted', () => {
     expect(
-      selectSettingsSyncFooter(rootWith(SettingsMocks.loaded, AuthMocks.signedIn)),
+      selectSettingsSyncFooter(
+        rootWith(SettingsMocks.loaded, AuthMocks.signedIn),
+      ),
     ).toBeNull()
   })
 

@@ -11,7 +11,12 @@
  * does; `toThirstException` below is the single translation site for
  * everything else (`RC-30`).
  */
-import { type Exception, assertNever, exception, toUnknownException } from '@kro/core'
+import {
+  type Exception,
+  assertNever,
+  exception,
+  toUnknownException,
+} from '@kro/core'
 
 export type ThirstException =
   /** No signed-in session — voting (and checking whether one already voted)
@@ -47,7 +52,11 @@ export const thirstExceptionKinds: readonly ThirstException['kind'][] = [
 /** Whether an arbitrary caught value already is one of ours. */
 export function isThirstException(value: unknown): value is ThirstException {
   if (typeof value !== 'object' || value === null) return false
-  const candidate = value as { kind?: unknown; message?: unknown; recoverable?: unknown }
+  const candidate = value as {
+    kind?: unknown
+    message?: unknown
+    recoverable?: unknown
+  }
   return (
     typeof candidate.kind === 'string' &&
     typeof candidate.message === 'string' &&

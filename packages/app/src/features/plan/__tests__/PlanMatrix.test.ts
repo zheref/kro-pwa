@@ -186,9 +186,9 @@ describe('planMatrixResolvedDue', () => {
 
   it('keeps an already-future due date for a non-urgent destination', () => {
     const future = addingPlanDays(startOfToday, 4)
-    expect(planMatrixResolvedDue(future, EisenhowerQuadrant.decide, now)).toEqual(
-      future,
-    )
+    expect(
+      planMatrixResolvedDue(future, EisenhowerQuadrant.decide, now),
+    ).toEqual(future)
   })
 
   it('parks a non-urgent destination on the next Saturday otherwise', () => {
@@ -214,7 +214,9 @@ describe('planMatrixResolvedDue', () => {
 describe('resolveIntoQuadrant — the exhaustive table', () => {
   const dueStates = {
     none: null,
-    overdue: new Date(addingPlanDays(startOfToday, -2).getTime() + 9 * 3600_000),
+    overdue: new Date(
+      addingPlanDays(startOfToday, -2).getTime() + 9 * 3600_000,
+    ),
     today: planAt(14),
     future: new Date(addingPlanDays(startOfToday, 3).getTime() + 9 * 3600_000),
   } as const
@@ -249,13 +251,21 @@ describe('resolveIntoQuadrant — the exhaustive table', () => {
       for (const value of valueStates) {
         const valueName = value === null ? 'no value' : `value ${value}`
         it(`assigning ${quadrant} to a task with ${dueName} due and ${valueName} writes the canon pair`, () => {
-          const resolved = resolveIntoQuadrant(taskWith(due, value), quadrant, now)
+          const resolved = resolveIntoQuadrant(
+            taskWith(due, value),
+            quadrant,
+            now,
+          )
           expect(resolved.due).toEqual(expectedDue(quadrant, due))
           expect(resolved.value).toBe(expectedValue(quadrant, value))
         })
 
         it(`assigning ${quadrant} to a task with ${dueName} due and ${valueName} resolves back to ${quadrant}`, () => {
-          const resolved = resolveIntoQuadrant(taskWith(due, value), quadrant, now)
+          const resolved = resolveIntoQuadrant(
+            taskWith(due, value),
+            quadrant,
+            now,
+          )
           expect(planMatrixQuadrant(resolved, now)).toBe(quadrant)
         })
       }
@@ -357,7 +367,9 @@ describe('isEligibleMatrixKind — admission by resolved kind only', () => {
 
 describe('planMatrixAdmits', () => {
   it('admits an open, triaged task', () => {
-    expect(planMatrixAdmits(planMatrixFixtures.urgentImportant, { now })).toBe(true)
+    expect(planMatrixAdmits(planMatrixFixtures.urgentImportant, { now })).toBe(
+      true,
+    )
   })
 
   it('refuses a completed task even though it is triaged', () => {
@@ -365,7 +377,9 @@ describe('planMatrixAdmits', () => {
   })
 
   it('refuses an untriaged task, missing either half', () => {
-    expect(planMatrixAdmits(planMatrixFixtures.missingValue, { now })).toBe(false)
+    expect(planMatrixAdmits(planMatrixFixtures.missingValue, { now })).toBe(
+      false,
+    )
     expect(planMatrixAdmits(planMatrixFixtures.missingDue, { now })).toBe(false)
   })
 })
@@ -407,7 +421,9 @@ describe('planMatrixPickerCandidates', () => {
   const candidates = planMatrixPickerCandidates(planMatrixFixtureList, { now })
 
   it('offers untriaged tasks, which the items list excludes', () => {
-    expect(candidates.map((endeavor) => endeavor.id)).toContain('matrix-no-value')
+    expect(candidates.map((endeavor) => endeavor.id)).toContain(
+      'matrix-no-value',
+    )
     expect(candidates.map((endeavor) => endeavor.id)).toContain('matrix-no-due')
   })
 
@@ -419,6 +435,8 @@ describe('planMatrixPickerCandidates', () => {
   })
 
   it('still refuses a completed task', () => {
-    expect(candidates.map((endeavor) => endeavor.id)).not.toContain('matrix-done')
+    expect(candidates.map((endeavor) => endeavor.id)).not.toContain(
+      'matrix-done',
+    )
   })
 })

@@ -2,7 +2,12 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { StoreProvider } from '../../../library/StoreProvider'
-import { type AppStore, type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type AppStore,
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import type { GreetingService } from '../../../services/greeting/GreetingService'
 import { useGreeting } from '../useGreeting'
 
@@ -43,9 +48,13 @@ describe('useGreeting', () => {
   })
 
   it('shows exception copy and offers a retry when the device is offline', async () => {
-    const store = storeWith(vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+    const store = storeWith(
+      vi.fn().mockRejectedValue(new TypeError('Failed to fetch')),
+    )
 
-    const { result } = renderHook(() => useGreeting('ada'), { wrapper: wrapperFor(store) })
+    const { result } = renderHook(() => useGreeting('ada'), {
+      wrapper: wrapperFor(store),
+    })
 
     await waitFor(() => expect(result.current.exception).not.toBeNull())
     expect(result.current.headline).toMatch(/offline/i)
@@ -62,8 +71,12 @@ describe('useGreeting', () => {
   })
 
   it('asks the Service again when the user retries', async () => {
-    const fetchGreeting = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
-    const { result } = renderHook(() => useGreeting('ada'), { wrapper: wrapperFor(storeWith(fetchGreeting)) })
+    const fetchGreeting = vi
+      .fn()
+      .mockRejectedValue(new TypeError('Failed to fetch'))
+    const { result } = renderHook(() => useGreeting('ada'), {
+      wrapper: wrapperFor(storeWith(fetchGreeting)),
+    })
 
     await waitFor(() => expect(result.current.canRetry).toBe(true))
     await act(async () => {

@@ -94,5 +94,4 @@ export const generateDoSuggestions = (input: {
 export const areDoSuggestionsVisible = (input: {
   readonly showSuggestionsPreference: boolean
   readonly suggestions: readonly DoSuggestion[]
-}): boolean =>
-  input.showSuggestionsPreference && input.suggestions.length > 0
+}): boolean => input.showSuggestionsPreference && input.suggestions.length > 0

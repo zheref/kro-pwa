@@ -92,7 +92,8 @@ export const resolvedGoogleDate = (
 /** Canon's `isAllDay` — a `date` start with no `dateTime`. */
 export const isAllDayGoogleEvent = (
   event: GoogleCalendarEventResponse,
-): boolean => event.start?.date !== undefined && event.start?.dateTime === undefined
+): boolean =>
+  event.start?.date !== undefined && event.start?.dateTime === undefined
 
 /** Canon's `isCancelled`. Cancelled events are dropped before mapping. */
 export const isCancelledGoogleEvent = (
@@ -316,7 +317,9 @@ export const parseGoogleEventWriteRequest = (
   if (start === null || end === null) return null
 
   const description =
-    typeof candidate.description === 'string' ? candidate.description : undefined
+    typeof candidate.description === 'string'
+      ? candidate.description
+      : undefined
 
   return {
     summary,

@@ -17,9 +17,9 @@ import {
 
 describe('the hub groups match canon three sections', () => {
   it('lists Profile alone at the top, as canon unlabelled first Section does', () => {
-    expect(settingsSectionsIn(SettingsHubGroup.profile).map((s) => s.id)).toEqual([
-      SettingsSectionId.profile,
-    ])
+    expect(
+      settingsSectionsIn(SettingsHubGroup.profile).map((s) => s.id),
+    ).toEqual([SettingsSectionId.profile])
   })
 
   it('lists the five preference panes under Preferences, in canon order', () => {
@@ -35,10 +35,9 @@ describe('the hub groups match canon three sections', () => {
   })
 
   it('lists Integrations then Subscription in the account group', () => {
-    expect(settingsSectionsIn(SettingsHubGroup.account).map((s) => s.id)).toEqual([
-      SettingsSectionId.integrations,
-      SettingsSectionId.subscription,
-    ])
+    expect(
+      settingsSectionsIn(SettingsHubGroup.account).map((s) => s.id),
+    ).toEqual([SettingsSectionId.integrations, SettingsSectionId.subscription])
   })
 
   it('places every declared section in exactly one group', () => {
@@ -77,7 +76,7 @@ describe('a preferences section names the schema group it renders', () => {
 })
 
 describe('glyphs and titles are canon own', () => {
-  it("uses canon person glyph for Profile and creditcard for Subscription", () => {
+  it('uses canon person glyph for Profile and creditcard for Subscription', () => {
     expect(settingsSectionForId('profile')?.glyph).toBe('person.crop.circle')
     expect(settingsSectionForId('subscription')?.glyph).toBe('creditcard')
   })

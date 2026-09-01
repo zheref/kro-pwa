@@ -16,7 +16,9 @@ describe('InlineBanner', () => {
   })
 
   it('prefixes each kind with its own spoken word', () => {
-    const { rerender } = render(<InlineBanner kind="warning" message="Past expiry." />)
+    const { rerender } = render(
+      <InlineBanner kind="warning" message="Past expiry." />,
+    )
     expect(announced()).toBe('Warning: Past expiry.')
 
     rerender(<InlineBanner kind="info" message="Read only." />)
@@ -58,22 +60,30 @@ describe('InlineBanner', () => {
   })
 
   it('fills OPAQUELY with the banner token — a translucent fill cannot be verified once', () => {
-    const { container } = render(<InlineBanner kind="warning" message="Past expiry." />)
+    const { container } = render(
+      <InlineBanner kind="warning" message="Past expiry." />,
+    )
 
-    const banner = container.querySelector('[data-kind="warning"]') as HTMLElement
+    const banner = container.querySelector(
+      '[data-kind="warning"]',
+    ) as HTMLElement
     expect(banner.style.backgroundColor).toBe('var(--kro-color-banner-warning)')
     expect(banner.style.backgroundColor).not.toContain('color-mix')
   })
 
   it('paints danger on the danger token, not on the warning one', () => {
-    const { container } = render(<InlineBanner message="Deleted on the host." />)
+    const { container } = render(
+      <InlineBanner message="Deleted on the host." />,
+    )
 
     const banner = container.querySelector('[data-kind="error"]') as HTMLElement
     expect(banner.style.backgroundColor).toBe('var(--kro-color-banner-danger)')
   })
 
   it('draws info on the recessed surface instead of inventing a third banner colour', () => {
-    const { container } = render(<InlineBanner kind="info" message="Read only." />)
+    const { container } = render(
+      <InlineBanner kind="info" message="Read only." />,
+    )
 
     const banner = container.querySelector('[data-kind="info"]') as HTMLElement
     expect(banner.style.backgroundColor).toBe('var(--kro-color-back-inner)')
@@ -101,9 +111,15 @@ describe('InlineBanner', () => {
 
   it('keeps the action at the 44px touch floor', () => {
     render(
-      <InlineBanner message="Offline." actionTitle="Retry" onAction={() => undefined} />,
+      <InlineBanner
+        message="Offline."
+        actionTitle="Retry"
+        onAction={() => undefined}
+      />,
     )
 
-    expect(screen.getByRole('button', { name: 'Retry' }).className).toContain('h-11')
+    expect(screen.getByRole('button', { name: 'Retry' }).className).toContain(
+      'h-11',
+    )
   })
 })

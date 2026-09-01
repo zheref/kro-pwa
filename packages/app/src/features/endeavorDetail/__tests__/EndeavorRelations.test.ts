@@ -29,20 +29,23 @@ import {
 describe('a read-only relation states WHY, per relation', () => {
   it('says a calendar event cannot record sessions', () => {
     expect(
-      relationReadOnlyReason(EndeavorRelation.performances, EndeavorKind.calendarEvent),
+      relationReadOnlyReason(
+        EndeavorRelation.performances,
+        EndeavorKind.calendarEvent,
+      ),
     ).toBe("This endeavor's kind can't record sessions.")
   })
 
   it('says a habit cannot record defers', () => {
-    expect(relationReadOnlyReason(EndeavorRelation.defers, EndeavorKind.habit)).toBe(
-      "This endeavor's kind can't record defers.",
-    )
+    expect(
+      relationReadOnlyReason(EndeavorRelation.defers, EndeavorKind.habit),
+    ).toBe("This endeavor's kind can't record defers.")
   })
 
   it('says a habit cannot change where it is mirrored', () => {
-    expect(relationReadOnlyReason(EndeavorRelation.hosts, EndeavorKind.habit)).toBe(
-      "This endeavor's kind can't change where it's mirrored.",
-    )
+    expect(
+      relationReadOnlyReason(EndeavorRelation.hosts, EndeavorKind.habit),
+    ).toBe("This endeavor's kind can't change where it's mirrored.")
   })
 
   it('says a blueprint cannot change its external mirrors', () => {
@@ -75,7 +78,8 @@ describe('a read-only relation states WHY, per relation', () => {
 describe('the empty states change with editability, as canon’s copy does', () => {
   it('invites an editable Performances list to log one by hand', () => {
     expect(
-      relationEmptyState(EndeavorRelation.performances, EndeavorKind.task).message,
+      relationEmptyState(EndeavorRelation.performances, EndeavorKind.task)
+        .message,
     ).toContain('log one below by hand')
   })
 

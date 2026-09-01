@@ -7,7 +7,11 @@ import {
 import { rewardMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import { type AppStore, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type AppStore,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import { userDidTapClaim } from '../EarnFeature'
 import { earnFixturePerformances } from '../EarnMocks'
 import {
@@ -87,7 +91,9 @@ describe('loadEarnPreferencesThunk', () => {
         },
       },
     }
-    const result = await storeWith(broken).dispatch(loadEarnPreferencesThunk()).unwrap()
+    const result = await storeWith(broken)
+      .dispatch(loadEarnPreferencesThunk())
+      .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('preferencesLoadFailed')
   })
@@ -105,16 +111,22 @@ describe('loadEarnCatalogThunk', () => {
   })
 
   it('reads the seeded catalog, claimed set and performances together', async () => {
-    const localStore = makeInMemoryLocalStore({ performances: performanceRecords() })
+    const localStore = makeInMemoryLocalStore({
+      performances: performanceRecords(),
+    })
     writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
     writeClaimedRewardIds(localStore.preferences, [rewardMocks.bobaTea.id])
 
-    const result = await storeWith(localStore).dispatch(loadEarnCatalogThunk()).unwrap()
+    const result = await storeWith(localStore)
+      .dispatch(loadEarnCatalogThunk())
+      .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.value.rewards).toEqual([rewardMocks.bobaTea])
       expect(result.value.claimedRewardIds).toEqual([rewardMocks.bobaTea.id])
-      expect(result.value.performances).toHaveLength(earnFixturePerformances.length)
+      expect(result.value.performances).toHaveLength(
+        earnFixturePerformances.length,
+      )
     }
   })
 
@@ -129,7 +141,9 @@ describe('loadEarnCatalogThunk', () => {
         },
       },
     }
-    const result = await storeWith(broken).dispatch(loadEarnCatalogThunk()).unwrap()
+    const result = await storeWith(broken)
+      .dispatch(loadEarnCatalogThunk())
+      .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('catalogLoadFailed')
   })
@@ -146,26 +160,39 @@ describe('loadEarnCatalogThunk', () => {
         rewardMocks.movieNight.id,
       ])
 
-      const result = await storeWith(localStore).dispatch(loadEarnCatalogThunk()).unwrap()
+      const result = await storeWith(localStore)
+        .dispatch(loadEarnCatalogThunk())
+        .unwrap()
       expect(result.ok).toBe(true)
       if (result.ok) {
-        expect(result.value.claimedRewardIds).toEqual([rewardMocks.movieNight.id])
+        expect(result.value.claimedRewardIds).toEqual([
+          rewardMocks.movieNight.id,
+        ])
       }
     },
   )
 })
 
 describe('addRewardThunk', () => {
-  const draft = { title: 'Boba Tea', glyph: '🧋', pointsRequired: 80, notes: null }
+  const draft = {
+    title: 'Boba Tea',
+    glyph: '🧋',
+    pointsRequired: 80,
+    notes: null,
+  }
 
   it('persists the new reward under a caller-minted id', async () => {
     const localStore = makeInMemoryLocalStore()
     const result = await storeWith(localStore)
-      .dispatch(addRewardThunk({ draft, id: 'new-1', now: new Date(2026, 2, 17) }))
+      .dispatch(
+        addRewardThunk({ draft, id: 'new-1', now: new Date(2026, 2, 17) }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.value.reward.id).toBe('new-1')
-    expect(readRewardsCatalog(localStore.preferences).map((r) => r.id)).toEqual(['new-1'])
+    expect(readRewardsCatalog(localStore.preferences).map((r) => r.id)).toEqual(
+      ['new-1'],
+    )
   })
 
   it('rejects a blank title without touching storage', async () => {
@@ -191,7 +218,9 @@ describe('addRewardThunk', () => {
       preferences: instrumentPreferences(localStore.preferences, 0),
     }
     const result = await storeWith(broken)
-      .dispatch(addRewardThunk({ draft, id: 'new-1', now: new Date(2026, 2, 17) }))
+      .dispatch(
+        addRewardThunk({ draft, id: 'new-1', now: new Date(2026, 2, 17) }),
+      )
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('addRewardFailed')
@@ -204,7 +233,13 @@ describe('addSuggestionThunk', () => {
     const localStore = makeInMemoryLocalStore()
     const now = new Date(2026, 2, 17)
     const result = await storeWith(localStore)
-      .dispatch(addSuggestionThunk({ suggestion: rewardMocks.bobaTea, id: 'copy-1', now }))
+      .dispatch(
+        addSuggestionThunk({
+          suggestion: rewardMocks.bobaTea,
+          id: 'copy-1',
+          now,
+        }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -226,10 +261,9 @@ describe('addSuggestionThunk', () => {
         }),
       )
       .unwrap()
-    expect(readRewardsCatalog(localStore.preferences).map((r) => r.id)).toEqual([
-      'copy-1',
-      rewardMocks.movieNight.id,
-    ])
+    expect(readRewardsCatalog(localStore.preferences).map((r) => r.id)).toEqual(
+      ['copy-1', rewardMocks.movieNight.id],
+    )
   })
 
   it('reports a typed failure when the write fails', async () => {
@@ -255,20 +289,29 @@ describe('addSuggestionThunk', () => {
 describe('deleteRewardThunk', () => {
   it('removes the matching row from storage', async () => {
     const localStore = makeInMemoryLocalStore()
-    writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea, rewardMocks.movieNight])
+    writeRewardsCatalog(localStore.preferences, [
+      rewardMocks.bobaTea,
+      rewardMocks.movieNight,
+    ])
     const result = await storeWith(localStore)
       .dispatch(deleteRewardThunk({ id: rewardMocks.bobaTea.id }))
       .unwrap()
     expect(result).toEqual({ ok: true, value: { id: rewardMocks.bobaTea.id } })
-    expect(readRewardsCatalog(localStore.preferences)).toEqual([rewardMocks.movieNight])
+    expect(readRewardsCatalog(localStore.preferences)).toEqual([
+      rewardMocks.movieNight,
+    ])
   })
 
   it('succeeds as a no-op for an id not in the catalog', async () => {
     const localStore = makeInMemoryLocalStore()
     writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
-    const result = await storeWith(localStore).dispatch(deleteRewardThunk({ id: 'ghost' })).unwrap()
+    const result = await storeWith(localStore)
+      .dispatch(deleteRewardThunk({ id: 'ghost' }))
+      .unwrap()
     expect(result.ok).toBe(true)
-    expect(readRewardsCatalog(localStore.preferences)).toEqual([rewardMocks.bobaTea])
+    expect(readRewardsCatalog(localStore.preferences)).toEqual([
+      rewardMocks.bobaTea,
+    ])
   })
 
   it('reports a typed failure and leaves storage untouched when the write fails', async () => {
@@ -283,7 +326,9 @@ describe('deleteRewardThunk', () => {
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('deleteRewardFailed')
-    expect(readRewardsCatalog(broken.preferences)).toEqual([rewardMocks.bobaTea])
+    expect(readRewardsCatalog(broken.preferences)).toEqual([
+      rewardMocks.bobaTea,
+    ])
   })
 })
 
@@ -295,15 +340,21 @@ describe('claimRewardThunk — the atomic one', () => {
       .dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
       .unwrap()
     expect(result).toEqual({ ok: true, value: { id: rewardMocks.bobaTea.id } })
-    expect(readClaimedRewardIds(localStore.preferences)).toEqual([rewardMocks.bobaTea.id])
+    expect(readClaimedRewardIds(localStore.preferences)).toEqual([
+      rewardMocks.bobaTea.id,
+    ])
   })
 
   it('is idempotent — claiming an already-claimed id does not duplicate it', async () => {
     const localStore = makeInMemoryLocalStore()
     writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
     writeClaimedRewardIds(localStore.preferences, [rewardMocks.bobaTea.id])
-    await storeWith(localStore).dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id })).unwrap()
-    expect(readClaimedRewardIds(localStore.preferences)).toEqual([rewardMocks.bobaTea.id])
+    await storeWith(localStore)
+      .dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
+      .unwrap()
+    expect(readClaimedRewardIds(localStore.preferences)).toEqual([
+      rewardMocks.bobaTea.id,
+    ])
   })
 
   it(
@@ -320,30 +371,32 @@ describe('claimRewardThunk — the atomic one', () => {
     },
   )
 
-  it(
-    'a failed persist leaves the stored claimed set untouched (producer-level atomicity)',
-    async () => {
-      const localStore = makeInMemoryLocalStore()
-      writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
-      const broken: LocalStore = {
-        ...localStore,
-        preferences: instrumentPreferences(localStore.preferences, 0),
-      }
-      const result = await storeWith(broken)
-        .dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
-        .unwrap()
-      expect(result.ok).toBe(false)
-      if (!result.ok) expect(result.error.kind).toBe('claimRewardFailed')
-      expect(readClaimedRewardIds(broken.preferences)).toEqual([])
-    },
-  )
+  it('a failed persist leaves the stored claimed set untouched (producer-level atomicity)', async () => {
+    const localStore = makeInMemoryLocalStore()
+    writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea])
+    const broken: LocalStore = {
+      ...localStore,
+      preferences: instrumentPreferences(localStore.preferences, 0),
+    }
+    const result = await storeWith(broken)
+      .dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
+      .unwrap()
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.kind).toBe('claimRewardFailed')
+    expect(readClaimedRewardIds(broken.preferences)).toEqual([])
+  })
 
   it(
     'end-to-end: a failed claim leaves the balance and the catalog partition untouched ' +
       '(acceptance criterion 1 — atomically)',
     async () => {
-      const localStore = makeInMemoryLocalStore({ performances: performanceRecords() })
-      writeRewardsCatalog(localStore.preferences, [rewardMocks.bobaTea, rewardMocks.movieNight])
+      const localStore = makeInMemoryLocalStore({
+        performances: performanceRecords(),
+      })
+      writeRewardsCatalog(localStore.preferences, [
+        rewardMocks.bobaTea,
+        rewardMocks.movieNight,
+      ])
       const broken: LocalStore = {
         ...localStore,
         preferences: instrumentPreferences(localStore.preferences, 0),
@@ -360,9 +413,13 @@ describe('claimRewardThunk — the atomic one', () => {
       await store.dispatch(claimRewardThunk({ id: rewardMocks.bobaTea.id }))
 
       expect(selectCurrentPoints(store.getState())).toBe(before.balance)
-      expect(selectLockedRewards(store.getState()).map((r) => r.id)).toEqual(before.locked)
+      expect(selectLockedRewards(store.getState()).map((r) => r.id)).toEqual(
+        before.locked,
+      )
       // The confirm sheet stays open on the same reward, so the user can retry.
-      expect(store.getState().earn.claimingRewardId).toBe(rewardMocks.bobaTea.id)
+      expect(store.getState().earn.claimingRewardId).toBe(
+        rewardMocks.bobaTea.id,
+      )
     },
   )
 })

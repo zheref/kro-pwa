@@ -28,7 +28,11 @@ interface RecordedCall {
 
 /** A transport double that records every call and answers from a route table. */
 const proxyTransport = (
-  routes: readonly { readonly match: string; readonly status?: number; readonly body?: unknown }[],
+  routes: readonly {
+    readonly match: string
+    readonly status?: number
+    readonly body?: unknown
+  }[],
   recorded: RecordedCall[] = [],
 ): KroApiTransport => {
   const answer = (path: string) => {
@@ -100,7 +104,9 @@ describe('reading the connection state', () => {
         post: () => Promise.reject(new TypeError('Failed to fetch')),
       },
     })
-    await expect(service.connection()).rejects.toMatchObject({ kind: 'offline' })
+    await expect(service.connection()).rejects.toMatchObject({
+      kind: 'offline',
+    })
   })
 })
 
@@ -208,9 +214,9 @@ describe('listing calendars for the lens', () => {
     })
     const calendars = await service.listCalendars()
     expect(calendars.map((calendar) => calendar.id)).toContain('primary')
-    expect(calendars.find((calendar) => calendar.id === 'primary')?.isPrimary).toBe(
-      true,
-    )
+    expect(
+      calendars.find((calendar) => calendar.id === 'primary')?.isPrimary,
+    ).toBe(true)
   })
 
   it('answers an empty inventory when not connected', async () => {
@@ -275,7 +281,11 @@ describe('logging a session', () => {
   it('returns the created event so a caller can record its id', async () => {
     const service = makeLiveGoogleCalendarService({
       transport: proxyTransport([
-        { match: googleApiPaths.createEvent, status: 201, body: fixtures.events },
+        {
+          match: googleApiPaths.createEvent,
+          status: 201,
+          body: fixtures.events,
+        },
       ]),
     })
     expect((await service.logSession(input)).event.id).toBe(

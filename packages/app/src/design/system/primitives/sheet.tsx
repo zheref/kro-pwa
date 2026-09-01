@@ -28,7 +28,8 @@ const sheetVariants = cva(
           'inset-x-0 bottom-0 max-h-[85vh] rounded-t-kro-surface rounded-b-none',
         top: 'inset-x-0 top-0 max-h-[85vh] rounded-b-kro-surface rounded-t-none',
         left: 'inset-y-0 left-0 w-3/4 max-w-sm rounded-r-kro-surface rounded-l-none',
-        right: 'inset-y-0 right-0 w-3/4 max-w-sm rounded-l-kro-surface rounded-r-none',
+        right:
+          'inset-y-0 right-0 w-3/4 max-w-sm rounded-l-kro-surface rounded-r-none',
       },
     },
     defaultVariants: { side: 'bottom' },

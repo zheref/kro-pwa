@@ -156,7 +156,10 @@ export const pickEndeavorCandidates = (
   const needle = query.trim()
   return endeavors
     .filter((endeavor) => isEligibleMatrixKind(endeavor))
-    .filter((endeavor) => needle.length === 0 || titleContains(endeavor.title, needle))
+    .filter(
+      (endeavor) =>
+        needle.length === 0 || titleContains(endeavor.title, needle),
+    )
     .sort(pickerOrder)
 }
 
@@ -165,7 +168,9 @@ const titleContains = (title: string, needle: string): boolean => {
   if (needle.length > title.length) return false
   for (let index = 0; index + needle.length <= title.length; index += 1) {
     const window = title.slice(index, index + needle.length)
-    if (window.localeCompare(needle, undefined, { sensitivity: 'base' }) === 0) {
+    if (
+      window.localeCompare(needle, undefined, { sensitivity: 'base' }) === 0
+    ) {
       return true
     }
   }

@@ -77,8 +77,11 @@ describe('refusing to open what it did not seal', () => {
     // rather than merely HttpOnly.
     const vault = makeWebCryptoTokenVault({ secret: 'key-material-one' })
     const sealed = await vault.seal(REFRESH_TOKEN)
-    const flipped = `${sealed.slice(0, -2)}${sealed.endsWith('A') ? 'B' : 'A'}=`
-      .replace('=', '')
+    const flipped =
+      `${sealed.slice(0, -2)}${sealed.endsWith('A') ? 'B' : 'A'}=`.replace(
+        '=',
+        '',
+      )
     expect(await vault.open(flipped)).toBeNull()
   })
 
@@ -141,7 +144,9 @@ describe('the stubbed vault', () => {
   })
 
   it('refuses a value it did not write', async () => {
-    expect(await makeStubbedTokenVault().open('someone-elses-cookie')).toBeNull()
+    expect(
+      await makeStubbedTokenVault().open('someone-elses-cookie'),
+    ).toBeNull()
   })
 })
 

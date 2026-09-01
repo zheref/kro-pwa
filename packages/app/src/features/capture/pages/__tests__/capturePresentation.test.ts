@@ -52,8 +52,8 @@ describe('capturePromptPresentation — the idiom split', () => {
   })
 })
 
-describe('inboxRowLayoutFor — canon\'s InboxView.Layout', () => {
-  it('draws the compact row on a pointer-first window, per canon\'s own note', () => {
+describe("inboxRowLayoutFor — canon's InboxView.Layout", () => {
+  it("draws the compact row on a pointer-first window, per canon's own note", () => {
     expect(inboxRowLayoutFor(doSurfaceLayout(desktopSurface))).toBe(
       'compactDesktop',
     )
@@ -66,7 +66,9 @@ describe('inboxRowLayoutFor — canon\'s InboxView.Layout', () => {
   })
 
   it('keeps it comfortable on a landscape tablet, which is wide but still a finger', () => {
-    expect(inboxRowLayoutFor(doSurfaceLayout(tabletSurface))).toBe('comfortable')
+    expect(inboxRowLayoutFor(doSurfaceLayout(tabletSurface))).toBe(
+      'comfortable',
+    )
   })
 
   it('maps each layout onto the EndeavorRow preset canon names', () => {
@@ -114,17 +116,17 @@ describe('timeInputValue / parseTimeInput', () => {
   })
 })
 
-describe('formatCaptureDate — canon\'s formattedDate', () => {
+describe("formatCaptureDate — canon's formattedDate", () => {
   it('reads "Today" for the day the user is capturing on', () => {
-    expect(formatCaptureDate(captureMockAt(17, 0), CAPTURE_MOCK_NOW, 'en-US')).toBe(
-      'Today',
-    )
+    expect(
+      formatCaptureDate(captureMockAt(17, 0), CAPTURE_MOCK_NOW, 'en-US'),
+    ).toBe('Today')
   })
 
   it('reads "Tomorrow" for the next day', () => {
-    expect(formatCaptureDate(captureMockAt(18, 0), CAPTURE_MOCK_NOW, 'en-US')).toBe(
-      'Tomorrow',
-    )
+    expect(
+      formatCaptureDate(captureMockAt(18, 0), CAPTURE_MOCK_NOW, 'en-US'),
+    ).toBe('Tomorrow')
   })
 
   it('falls back to a medium date once it is further out', () => {
@@ -140,28 +142,42 @@ describe('formatCaptureDate — canon\'s formattedDate', () => {
   })
 })
 
-describe('schedulingToastMessage — canon\'s ActionToastModel copy', () => {
-  it('quotes the title and names the slot, as canon\'s format string does', () => {
+describe("schedulingToastMessage — canon's ActionToastModel copy", () => {
+  it("quotes the title and names the slot, as canon's format string does", () => {
     expect(
-      schedulingToastMessage('Draft the announcement', captureMockAt(17, 14, 30), 'en-US'),
+      schedulingToastMessage(
+        'Draft the announcement',
+        captureMockAt(17, 14, 30),
+        'en-US',
+      ),
     ).toBe('"Draft the announcement" scheduled for 2:30 PM')
   })
 
   it('strips a leading emoji — the toast already carries its own glyph', () => {
     expect(
-      schedulingToastMessage('📞 Call the bank', captureMockAt(17, 9, 0), 'en-US'),
+      schedulingToastMessage(
+        '📞 Call the bank',
+        captureMockAt(17, 9, 0),
+        'en-US',
+      ),
     ).toBe('"Call the bank" scheduled for 9:00 AM')
   })
 
   it('keeps a mid-title emoji, which is part of the name the user typed', () => {
     expect(
-      schedulingToastMessage('Ship the 🚀 launch', captureMockAt(17, 9, 0), 'en-US'),
+      schedulingToastMessage(
+        'Ship the 🚀 launch',
+        captureMockAt(17, 9, 0),
+        'en-US',
+      ),
     ).toBe('"Ship the 🚀 launch" scheduled for 9:00 AM')
   })
 
   it('formats midnight and noon unambiguously', () => {
     expect(formatCaptureTime(captureMockAt(17, 0, 0), 'en-US')).toBe('12:00 AM')
-    expect(formatCaptureTime(captureMockAt(17, 12, 0), 'en-US')).toBe('12:00 PM')
+    expect(formatCaptureTime(captureMockAt(17, 12, 0), 'en-US')).toBe(
+      '12:00 PM',
+    )
   })
 })
 
@@ -179,7 +195,7 @@ describe('inboxCountCaption — canon\'s "N endeavors" subtitle', () => {
   })
 })
 
-describe('weekDayFromDate — canon\'s Monday-first allCases', () => {
+describe("weekDayFromDate — canon's Monday-first allCases", () => {
   it('maps a Tuesday, which is what the fixtures capture on', () => {
     expect(weekDayFromDate(CAPTURE_MOCK_NOW)).toBe(WeekDay.tuesday)
   })
@@ -194,7 +210,7 @@ describe('weekDayFromDate — canon\'s Monday-first allCases', () => {
 })
 
 describe('captureRecurrencePresets — anchored to the drafted day', () => {
-  it('offers canon\'s five shapes, Never first', () => {
+  it("offers canon's five shapes, Never first", () => {
     const presets = captureRecurrencePresets(CAPTURE_MOCK_NOW)
     expect(presets.map((preset) => preset.recurrence.kind)).toEqual([
       'never',
@@ -214,7 +230,7 @@ describe('captureRecurrencePresets — anchored to the drafted day', () => {
     })
   })
 
-  it('repeats yearly on that month and day, with March as Month.march (not JS\'s 2)', () => {
+  it("repeats yearly on that month and day, with March as Month.march (not JS's 2)", () => {
     const yearly = captureRecurrencePresets(CAPTURE_MOCK_NOW)[4]
     expect(yearly?.recurrence).toEqual({
       kind: 'yearly',
@@ -224,7 +240,7 @@ describe('captureRecurrencePresets — anchored to the drafted day', () => {
     })
   })
 
-  it('labels each preset with canon\'s own EndeavorRecurrence.label', () => {
+  it("labels each preset with canon's own EndeavorRecurrence.label", () => {
     expect(
       captureRecurrencePresets(CAPTURE_MOCK_NOW).map((preset) => preset.label),
     ).toEqual(['Never', 'Daily', 'Weekly', 'Monthly', 'Yearly'])

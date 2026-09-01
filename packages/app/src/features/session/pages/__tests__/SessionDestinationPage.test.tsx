@@ -33,7 +33,10 @@ import { SessionDestinationPage } from '../SessionDestinationPage'
 const NOW = new Date(2026, 2, 17, 9, 0, 0)
 
 const installMatchMedia = (): void => {
-  Object.defineProperty(window, 'innerWidth', { value: 1440, configurable: true })
+  Object.defineProperty(window, 'innerWidth', {
+    value: 1440,
+    configurable: true,
+  })
   window.matchMedia = ((query: string) =>
     ({
       matches: query.includes('min-width'),

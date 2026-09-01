@@ -41,7 +41,11 @@ export const EndeavorDetailExceptions = {
     ),
 
   relationSyncFailed: (reason: string): EndeavorDetailException =>
-    exception('relationSyncFailed', `Couldn't save that entry: ${reason}`, true),
+    exception(
+      'relationSyncFailed',
+      `Couldn't save that entry: ${reason}`,
+      true,
+    ),
 
   hostAdapterUnavailable: (reason: string): EndeavorDetailException =>
     exception('hostAdapterUnavailable', reason, false),

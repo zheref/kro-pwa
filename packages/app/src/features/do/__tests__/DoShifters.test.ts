@@ -33,7 +33,11 @@ const loaded = doStateMocks.loadedTypicalDay
 
 describe('withEndeavorsInstalled', () => {
   it('splits one snapshot into the four channels, habits landing in tasks too', () => {
-    const next = withEndeavorsInstalled(initialDoState, doFixtureDay, DO_MOCK_NOW)
+    const next = withEndeavorsInstalled(
+      initialDoState,
+      doFixtureDay,
+      DO_MOCK_NOW,
+    )
     expect(next.habits.map((endeavor) => endeavor.id)).toContain(
       doEndeavorFixtures.habitDueSoon.id,
     )
@@ -49,7 +53,11 @@ describe('withEndeavorsInstalled', () => {
   })
 
   it('partitions and stamps the clock in the same pass', () => {
-    const next = withEndeavorsInstalled(initialDoState, doFixtureDay, DO_MOCK_NOW)
+    const next = withEndeavorsInstalled(
+      initialDoState,
+      doFixtureDay,
+      DO_MOCK_NOW,
+    )
     expect(next.clockAnchor).toEqual(DO_MOCK_NOW)
     expect(next.load).toEqual({ kind: 'loaded' })
     expect(next.lanes.overdue.length).toBeGreaterThan(0)
@@ -65,7 +73,10 @@ describe('withEndeavorsInstalled', () => {
   it('collapses a duplicate row so one endeavor is presented once', () => {
     const twice = [
       doEndeavorFixtures.overdueThisMorning,
-      { ...doEndeavorFixtures.overdueThisMorning, title: 'Send the invoice v2' },
+      {
+        ...doEndeavorFixtures.overdueThisMorning,
+        title: 'Send the invoice v2',
+      },
     ]
     const next = withEndeavorsInstalled(initialDoState, twice, DO_MOCK_NOW)
     expect(next.lanes.overdue).toHaveLength(1)
@@ -173,7 +184,11 @@ describe('withVisibilityApplied', () => {
       { ...initialDoVisibility, hiddenComputedStates: ['expired'] },
       DO_MOCK_NOW,
     )
-    const shown = withVisibilityApplied(hidden, initialDoVisibility, DO_MOCK_NOW)
+    const shown = withVisibilityApplied(
+      hidden,
+      initialDoVisibility,
+      DO_MOCK_NOW,
+    )
     expect(shown.lanes.expired).toEqual(loaded.lanes.expired)
   })
 })
@@ -220,7 +235,9 @@ describe('withCardSelected', () => {
 
   it('un-prepares it on a second tap', () => {
     const once = withCardSelected(loaded, DoLane.overdue, 'abc')
-    expect(withCardSelected(once, DoLane.overdue, 'abc').selectedCardKey).toBeNull()
+    expect(
+      withCardSelected(once, DoLane.overdue, 'abc').selectedCardKey,
+    ).toBeNull()
   })
 
   it('never arms the auto-advance scroll — a manual tap must not move the surface', () => {
@@ -258,7 +275,9 @@ describe('withMarkCompleteModeToggled', () => {
 describe('withScrollRequestHandled', () => {
   it('spends the auto-advance one-shot', () => {
     const armed = { ...loaded, shouldScrollToCurrentCard: true }
-    expect(withScrollRequestHandled(armed).shouldScrollToCurrentCard).toBe(false)
+    expect(withScrollRequestHandled(armed).shouldScrollToCurrentCard).toBe(
+      false,
+    )
   })
 
   it('spends the overdue-jump one-shot', () => {
@@ -308,7 +327,9 @@ describe('withOptimisticallyCompleted', () => {
       DO_MOCK_NOW,
       DO_MOCK_NOW,
     )
-    expect(next.lanes.overdue.map((endeavor) => endeavor.id)).not.toContain(targetId)
+    expect(next.lanes.overdue.map((endeavor) => endeavor.id)).not.toContain(
+      targetId,
+    )
     expect(next.lanes.completedToday.map((endeavor) => endeavor.id)).toContain(
       targetId,
     )
@@ -337,10 +358,12 @@ describe('withOptimisticallyCompleted', () => {
       doMockAt(16, 18, 0),
       DO_MOCK_NOW,
     )
-    expect(next.lanes.completedToday.map((endeavor) => endeavor.id)).not.toContain(
+    expect(
+      next.lanes.completedToday.map((endeavor) => endeavor.id),
+    ).not.toContain(targetId)
+    expect(next.lanes.overdue.map((endeavor) => endeavor.id)).not.toContain(
       targetId,
     )
-    expect(next.lanes.overdue.map((endeavor) => endeavor.id)).not.toContain(targetId)
   })
 
   it('re-mirrors the habit channel when the completed card was a habit', () => {
@@ -358,7 +381,12 @@ describe('withOptimisticallyCompleted', () => {
 
   it('is a no-op for an id the day does not hold', () => {
     expect(
-      withOptimisticallyCompleted(loaded, 'no-such-card', DO_MOCK_NOW, DO_MOCK_NOW),
+      withOptimisticallyCompleted(
+        loaded,
+        'no-such-card',
+        DO_MOCK_NOW,
+        DO_MOCK_NOW,
+      ),
     ).toBe(loaded)
   })
 
@@ -386,10 +414,13 @@ describe('withAutoAdvanced', () => {
 
   it('focuses the featured hero and arms the scroll when it is on', () => {
     const next = withAutoAdvanced(enabled)
-    const hero = enabled.lanes.featuredNow[
-      Math.floor(enabled.lanes.featuredNow.length / 2)
-    ]
-    expect(next.selectedCardKey).toBe(doCardKey(DoLane.featured, hero?.id ?? ''))
+    const hero =
+      enabled.lanes.featuredNow[
+        Math.floor(enabled.lanes.featuredNow.length / 2)
+      ]
+    expect(next.selectedCardKey).toBe(
+      doCardKey(DoLane.featured, hero?.id ?? ''),
+    )
     expect(next.shouldScrollToCurrentCard).toBe(true)
   })
 

@@ -14,9 +14,11 @@ describe('the exception union', () => {
     // `googleCalendarExceptionCopy` is closed by `assertNever`, so this also
     // pins that no kind was added without copy.
     for (const kind of googleCalendarExceptionKinds) {
-      const failure = { kind, message: 'detail', recoverable: true } as Parameters<
-        typeof googleCalendarExceptionCopy
-      >[0]
+      const failure = {
+        kind,
+        message: 'detail',
+        recoverable: true,
+      } as Parameters<typeof googleCalendarExceptionCopy>[0]
       expect(googleCalendarExceptionCopy(failure).length).toBeGreaterThan(0)
     }
   })
@@ -91,9 +93,9 @@ describe('translating a caught value', () => {
   })
 
   it('maps a TypeError to offline — the request never left the device', () => {
-    expect(googleCalendarExceptionFrom(new TypeError('Failed to fetch')).kind).toBe(
-      'offline',
-    )
+    expect(
+      googleCalendarExceptionFrom(new TypeError('Failed to fetch')).kind,
+    ).toBe('offline')
   })
 
   it('keeps an Error message, which this code base controls at every throw', () => {
@@ -113,9 +115,9 @@ describe('translating a caught value', () => {
   })
 
   it('recognises our own exceptions structurally', () => {
-    expect(
-      isGoogleCalendarException(GoogleCalendarExceptions.offline()),
-    ).toBe(true)
+    expect(isGoogleCalendarException(GoogleCalendarExceptions.offline())).toBe(
+      true,
+    )
     expect(isGoogleCalendarException({ kind: 'somethingElse' })).toBe(false)
     expect(isGoogleCalendarException(null)).toBe(false)
     expect(isGoogleCalendarException('offline')).toBe(false)

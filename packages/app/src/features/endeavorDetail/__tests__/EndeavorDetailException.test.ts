@@ -10,7 +10,8 @@ import {
 
 describe('EndeavorDetailExceptions says whether a retry can help', () => {
   it('marks a failed local save retryable — nothing was written', () => {
-    const exception = EndeavorDetailExceptions.localPersistenceFailed('disk full')
+    const exception =
+      EndeavorDetailExceptions.localPersistenceFailed('disk full')
     expect(exception.kind).toBe('localPersistenceFailed')
     expect(exception.recoverable).toBe(true)
     expect(exception.message).toContain('disk full')

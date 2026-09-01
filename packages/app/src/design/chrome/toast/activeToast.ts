@@ -1,5 +1,8 @@
 import type { SfSymbolName } from '../../system/icons/icons'
-import { TOAST_DURATION_SECONDS, clampToastDuration } from '../layout/chromeLayout'
+import {
+  TOAST_DURATION_SECONDS,
+  clampToastDuration,
+} from '../layout/chromeLayout'
 
 /**
  * The Active Toast model.

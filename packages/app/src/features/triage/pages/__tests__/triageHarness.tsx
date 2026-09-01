@@ -141,7 +141,10 @@ export function installTriageEnvironment(options?: {
     Object.defineProperty(globalThis.crypto, 'randomUUID', {
       configurable: true,
       writable: true,
-      value: () => `triage-${(counter += 1)}` as `${string}-${string}`,
+      value: () => {
+        counter += 1
+        return `triage-${counter}` as `${string}-${string}`
+      },
     })
   }
 

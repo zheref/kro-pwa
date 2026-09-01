@@ -60,7 +60,11 @@ import {
   TIMELINE_MINIMUM_DURATION_SECONDS,
   TIMELINE_SNAP_SECONDS,
 } from './PlanConstants'
-import { planDateAdding, planSecondsBetween, roundHalfAwayFromZero } from './PlanCalendar'
+import {
+  planDateAdding,
+  planSecondsBetween,
+  roundHalfAwayFromZero,
+} from './PlanCalendar'
 
 /** Which affordance the finger is on. */
 export const TimelineDragHandle = {
@@ -219,7 +223,10 @@ export const snapTimelineDelta = (
   hourHeightPx: number = TIMELINE_HOUR_HEIGHT_PX,
 ): TimeIntervalSeconds => {
   const exactDelta = (translationPx / hourHeightPx) * 3600
-  return roundHalfAwayFromZero(exactDelta / TIMELINE_SNAP_SECONDS) * TIMELINE_SNAP_SECONDS
+  return (
+    roundHalfAwayFromZero(exactDelta / TIMELINE_SNAP_SECONDS) *
+    TIMELINE_SNAP_SECONDS
+  )
 }
 
 export interface TimelineDragInput {
@@ -249,9 +256,11 @@ export const applyTimelineDrag = (
       // drag never changes it, so it is constant for the whole drag.
       const currentEnd = session.draftEnd ?? session.originalEnd
       const proposed = planDateAdding(base.baseStart, snapped)
-      const latest = planDateAdding(currentEnd, -TIMELINE_MINIMUM_DURATION_SECONDS)
-      const next =
-        proposed.getTime() < latest.getTime() ? proposed : latest
+      const latest = planDateAdding(
+        currentEnd,
+        -TIMELINE_MINIMUM_DURATION_SECONDS,
+      )
+      const next = proposed.getTime() < latest.getTime() ? proposed : latest
       if (session.draftStart?.getTime() === next.getTime()) return session
       return { ...session, draftStart: next }
     }
@@ -262,8 +271,7 @@ export const applyTimelineDrag = (
         currentStart,
         TIMELINE_MINIMUM_DURATION_SECONDS,
       )
-      const next =
-        proposed.getTime() > earliest.getTime() ? proposed : earliest
+      const next = proposed.getTime() > earliest.getTime() ? proposed : earliest
       if (session.draftEnd?.getTime() === next.getTime()) return session
       return { ...session, draftEnd: next }
     }
@@ -283,7 +291,8 @@ export const applyTimelineDrag = (
 /** The finger lifted. The draft survives; only the base is released. */
 export const endTimelineDrag = (
   session: TimelineEditSession,
-): TimelineEditSession => (session.drag === null ? session : { ...session, drag: null })
+): TimelineEditSession =>
+  session.drag === null ? session : { ...session, drag: null }
 
 /**
  * What leaving edit mode should write, or `null` when nothing moved. Canon's

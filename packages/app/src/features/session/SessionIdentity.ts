@@ -15,7 +15,10 @@ import {
   type TimeIntervalSeconds,
   taskEndeavor,
 } from '@kro/core'
-import { ANONYMOUS_SESSION_SYMBOL, ANONYMOUS_SESSION_TITLE } from './SessionVocabulary'
+import {
+  ANONYMOUS_SESSION_SYMBOL,
+  ANONYMOUS_SESSION_TITLE,
+} from './SessionVocabulary'
 
 /**
  * Who the session is *for*, as the sheet and the pill render it.
@@ -93,7 +96,9 @@ export const sessionIdentityForEndeavor = (
   makeSessionIdentity({
     endeavorId: endeavor.id,
     symbol:
-      symbol ?? leadingSymbolOfTitle(endeavor.title) ?? ANONYMOUS_SESSION_SYMBOL,
+      symbol ??
+      leadingSymbolOfTitle(endeavor.title) ??
+      ANONYMOUS_SESSION_SYMBOL,
     title: endeavor.title,
     duration: endeavor.duration,
     isAnonymous: false,

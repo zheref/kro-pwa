@@ -33,7 +33,7 @@ describe('DestinationPage', () => {
     expect(store.getState().main.selected.kind).toBe(DestinationKind.earn)
   })
 
-  it('renders the placeholder with canon\'s content heading', () => {
+  it("renders the placeholder with canon's content heading", () => {
     renderRoute({ kind: DestinationKind.inbox })
 
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Inbox')
@@ -49,7 +49,7 @@ describe('DestinationPage', () => {
     })
   })
 
-  it('picks up the project\'s name once the Lists rows are in state', () => {
+  it("picks up the project's name once the Lists rows are in state", () => {
     const store = makeStore(stubbedThunkExtra)
     store.dispatch(
       onDestinationRouteMounted({

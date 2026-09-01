@@ -69,7 +69,13 @@
  * It raises `onOperation(operation, endeavorId)` and stops.
  */
 
-import { type CSSProperties, type ReactNode, useCallback, useRef, useState } from 'react'
+import {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useRef,
+  useState,
+} from 'react'
 import type { EndeavorCapabilities, EndeavorOperationBinding } from '@kro/core'
 import {
   DropdownMenu,
@@ -323,7 +329,11 @@ export function EndeavorActionSurface({
       return
     }
     if (Math.abs(delta) >= SWIPE_REVEAL_PX && first !== undefined) {
-      setOffset(delta > 0 ? SWIPE_REVEAL_PX * edge.length : -SWIPE_REVEAL_PX * edge.length)
+      setOffset(
+        delta > 0
+          ? SWIPE_REVEAL_PX * edge.length
+          : -SWIPE_REVEAL_PX * edge.length,
+      )
       return
     }
     setOffset(0)
@@ -389,7 +399,9 @@ export function EndeavorActionSurface({
         onPointerCancel={endDrag}
         style={{
           transform: `translateX(${offset}px)`,
-          transition: isDragging ? undefined : 'transform 240ms var(--kro-ease-standard)',
+          transition: isDragging
+            ? undefined
+            : 'transform 240ms var(--kro-ease-standard)',
           touchAction: canSwipe ? 'pan-y' : undefined,
           position: 'relative',
           zIndex: 1,

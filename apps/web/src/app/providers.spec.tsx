@@ -1,3 +1,4 @@
+import * as kroApp from '@kro/app'
 import {
   navigateToDestinationThunk,
   useAppDispatch,
@@ -9,10 +10,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Providers } from './providers'
 
 /**
- * The composition root. Three things are wired here, and each has one failure
+ * The composition root. Four things are wired here, and each has one failure
  * mode worth a test: a second store per render, a theme written onto an
- * attribute the tokens do not read, and a router that never reaches a
- * Producer.
+ * attribute the tokens do not read, a router that never reaches a Producer,
+ * and an auth-state subscription that is never started — or never stopped.
  */
 const push = vi.fn()
 
@@ -97,6 +98,44 @@ describe('Providers', () => {
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith('/inbox')
     })
+  })
+
+  it('starts the auth-state subscription with the store’s own bindings', () => {
+    const stop = vi.fn()
+    const observe = vi.spyOn(kroApp, 'observeAuthState').mockReturnValue(stop)
+
+    render(
+      <Providers>
+        <Probe />
+      </Providers>,
+    )
+
+    expect(observe).toHaveBeenCalledTimes(1)
+    const context = observe.mock.calls[0]?.[0]
+    // The SAME extra the store's Producers read — a second `liveThunkExtra`
+    // spread would subscribe to a different Supabase client.
+    expect(typeof context?.dispatch).toBe('function')
+    expect(context?.extra.authService).toBeDefined()
+    expect(context?.now()).toBeInstanceOf(Date)
+
+    observe.mockRestore()
+  })
+
+  it('stops the subscription when the root unmounts', () => {
+    const stop = vi.fn()
+    const observe = vi.spyOn(kroApp, 'observeAuthState').mockReturnValue(stop)
+
+    const { unmount } = render(
+      <Providers>
+        <Probe />
+      </Providers>,
+    )
+    expect(stop).not.toHaveBeenCalled()
+
+    unmount()
+    expect(stop).toHaveBeenCalledTimes(1)
+
+    observe.mockRestore()
   })
 
   it('writes the scheme onto `data-theme`, which is what the tokens read', async () => {

@@ -18,7 +18,10 @@
 import { useCallback, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { selectLayout } from '../../main/MainSelectors'
-import type { CaptureTimeEditOutcome, CaptureTimeField } from '../CaptureFeature'
+import type {
+  CaptureTimeEditOutcome,
+  CaptureTimeField,
+} from '../CaptureFeature'
 import {
   userDidBeginTimeEdit,
   userDidDiscardCapture,
@@ -125,7 +128,9 @@ export function CapturePromptPage() {
       presentation={capturePromptPresentation(layout)}
       now={now}
       onEditTitle={(title: string) => dispatch(userDidEditTitle({ title }))}
-      onSelectKind={(kind: CaptureKind) => dispatch(userDidSelectKind({ kind }))}
+      onSelectKind={(kind: CaptureKind) =>
+        dispatch(userDidSelectKind({ kind }))
+      }
       onPickDate={(date: Date) => dispatch(userDidPickDate({ date }))}
       onBeginTimeEdit={(field: CaptureTimeField) =>
         dispatch(userDidBeginTimeEdit({ field }))
@@ -133,10 +138,13 @@ export function CapturePromptPage() {
       onPickTime={(field: CaptureTimeField, time: Date) =>
         dispatch(userDidPickTime({ field, time }))
       }
-      onEndTimeEdit={(field: CaptureTimeField, outcome: CaptureTimeEditOutcome) =>
-        dispatch(userDidEndTimeEdit({ field, outcome }))
+      onEndTimeEdit={(
+        field: CaptureTimeField,
+        outcome: CaptureTimeEditOutcome,
+      ) => dispatch(userDidEndTimeEdit({ field, outcome }))}
+      onPickRewards={(points: number) =>
+        dispatch(userDidPickRewards({ points }))
       }
-      onPickRewards={(points: number) => dispatch(userDidPickRewards({ points }))}
       onPickRecurrence={(recurrence: CaptureRecurrence) =>
         dispatch(userDidPickRecurrence({ recurrence }))
       }

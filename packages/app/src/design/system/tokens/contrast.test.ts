@@ -39,9 +39,9 @@ describe('parseColor', () => {
   it('refuses a value it cannot measure rather than reporting a ratio for it', () => {
     // The Swift original asserts `getRed(...)` succeeded for exactly this
     // reason: a failed conversion left 0/0/0 and passed as "black".
-    expect(() => parseColor('color-mix(in srgb, red 50%, transparent)')).toThrow(
-      /not a colour/,
-    )
+    expect(() =>
+      parseColor('color-mix(in srgb, red 50%, transparent)'),
+    ).toThrow(/not a colour/)
     expect(() => parseColor('#12345')).toThrow(/not a colour/)
   })
 })
@@ -99,7 +99,10 @@ describe('composite', () => {
   })
 
   it('lands halfway at 50% — the property the banner assertions rely on', () => {
-    const mixed = composite(withAlpha(parseColor('#ffffff'), 0.5), parseColor('#000000'))
+    const mixed = composite(
+      withAlpha(parseColor('#ffffff'), 0.5),
+      parseColor('#000000'),
+    )
     expect(mixed.r).toBeCloseTo(0.5, 6)
     expect(contrastRatio(mixed, parseColor('#000000'))).toBeGreaterThan(1)
   })

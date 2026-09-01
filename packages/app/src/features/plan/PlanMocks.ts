@@ -309,9 +309,8 @@ export const planMatrixFixtures = {
 } as const
 
 /** Every matrix fixture in one array, for the exhaustive admission tests. */
-export const planMatrixFixtureList: readonly Endeavor[] = Object.values(
-  planMatrixFixtures,
-)
+export const planMatrixFixtureList: readonly Endeavor[] =
+  Object.values(planMatrixFixtures)
 
 const referenceDayKey = planDayKey(PLAN_REFERENCE_DAY)
 
@@ -361,7 +360,11 @@ export const planStateMocks = {
   loading: {
     ...loadedBase,
     dayLoad: { kind: 'loading', dayKey: referenceDayKey },
-    activity: { isRefreshing: false, isAppLoading: true, preloadCenterDayKey: null },
+    activity: {
+      isRefreshing: false,
+      isAppLoading: true,
+      preloadCenterDayKey: null,
+    },
   } satisfies PlanState,
 
   /** The ordinary loaded day: one long block with two short ones inside it. */

@@ -39,7 +39,11 @@ const ROWS = (
       />
     </CardRow>
     <CardRow>
-      <PropertyRow label="Duration" icon="timer" value={{ kind: 'emphasis', text: '45m' }} />
+      <PropertyRow
+        label="Duration"
+        icon="timer"
+        value={{ kind: 'emphasis', text: '45m' }}
+      />
     </CardRow>
     <CardRow>
       <PropertyRow
@@ -124,10 +128,18 @@ export const EmptyCollections = {
       <SurfaceCard padding={null}>
         <CardRowStack>
           <CardRow>
-            <PropertyRow label="Tags" icon="tag" value={{ kind: 'tags', tags: [] }} />
+            <PropertyRow
+              label="Tags"
+              icon="tag"
+              value={{ kind: 'tags', tags: [] }}
+            />
           </CardRow>
           <CardRow>
-            <PropertyRow label="Hosts" icon="network" value={{ kind: 'chips', chips: [] }} />
+            <PropertyRow
+              label="Hosts"
+              icon="network"
+              value={{ kind: 'chips', chips: [] }}
+            />
           </CardRow>
           <CardRow>
             <PropertyRow
@@ -168,7 +180,12 @@ export const BothThemes = {
           </CardRow>
         </CardRowStack>
       </SurfaceCard>
-      <KroChip title="Detail" icon="info.circle" tint={colorTint('accent')} size="small" />
+      <KroChip
+        title="Detail"
+        icon="info.circle"
+        tint={colorTint('accent')}
+        size="small"
+      />
     </BothSchemes>
   ),
 }

@@ -101,9 +101,7 @@ export const randomUrlSafeString = (
 }
 
 /** S256 PKCE — canon's `makePKCE`, with the same 64-character verifier. */
-export const makePkcePair = async (
-  crypto: CryptoSource,
-): Promise<PkcePair> => {
+export const makePkcePair = async (crypto: CryptoSource): Promise<PkcePair> => {
   const verifier = randomUrlSafeString(64, crypto)
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -328,7 +326,9 @@ export const makeStubbedGoogleOAuthService = (
 ): GoogleOAuthService => {
   const accessToken = options.accessToken ?? 'stub-access-token'
   const refreshToken =
-    options.refreshToken === undefined ? 'stub-refresh-token' : options.refreshToken
+    options.refreshToken === undefined
+      ? 'stub-refresh-token'
+      : options.refreshToken
   const record = (call: string) => options.calls?.push(call)
 
   const answer = (

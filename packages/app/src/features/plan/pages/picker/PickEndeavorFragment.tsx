@@ -125,7 +125,10 @@ export function PickEndeavorFragment({
   const title = `Add to ${planMatrixQuadrantTitle(quadrant)}`
 
   return (
-    <div
+    // `<section>` rather than a `<div aria-label>`: a plain div has no role,
+    // so its accessible name is ignored. The native element carries the
+    // `region` role that a name belongs on.
+    <section
       data-testid="pick-endeavor"
       data-quadrant={quadrant}
       aria-label={title}
@@ -133,7 +136,10 @@ export function PickEndeavorFragment({
     >
       <header className="flex shrink-0 items-start justify-between gap-kro-small">
         <div className="min-w-0">
-          <h2 className="m-0 font-semibold text-lg" style={{ color: colorVar('fore') }}>
+          <h2
+            className="m-0 font-semibold text-lg"
+            style={{ color: colorVar('fore') }}
+          >
             {title}
           </h2>
           <p
@@ -378,6 +384,6 @@ export function PickEndeavorFragment({
           Confirm
         </button>
       </footer>
-    </div>
+    </section>
   )
 }

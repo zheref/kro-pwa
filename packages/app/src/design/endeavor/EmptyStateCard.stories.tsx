@@ -20,7 +20,10 @@ export const TitleOnly = {
   render: () => (
     <Stage width={460}>
       <SurfaceCard>
-        <EmptyStateCard icon="clock.arrow.circlepath" title="No performances yet" />
+        <EmptyStateCard
+          icon="clock.arrow.circlepath"
+          title="No performances yet"
+        />
       </SurfaceCard>
     </Stage>
   ),

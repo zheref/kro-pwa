@@ -103,7 +103,10 @@ export function DoNotificationsFragment({
           >
             You&rsquo;re All Caught Up
           </p>
-          <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
+          <p
+            className="m-0 text-sm"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             There are no updates requiring your attention.
           </p>
         </div>

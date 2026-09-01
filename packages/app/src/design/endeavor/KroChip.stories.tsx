@@ -32,7 +32,11 @@ export const Emphasis = {
         />
       </Cell>
       <Cell label="soft — the workhorse">
-        <KroChip title="Pending" icon="circle" tint={semanticTint('statusPending')} />
+        <KroChip
+          title="Pending"
+          icon="circle"
+          tint={semanticTint('statusPending')}
+        />
       </Cell>
       <Cell label="outline — de-emphasised or unavailable">
         <KroChip
@@ -60,7 +64,13 @@ export const EveryRole = {
     <Stage>
       <ChipFlow>
         {SEMANTIC_ROLES.map((role) => (
-          <KroChip key={role} title={role} icon="tag" tint={semanticTint(role)} size="small" />
+          <KroChip
+            key={role}
+            title={role}
+            icon="tag"
+            tint={semanticTint(role)}
+            size="small"
+          />
         ))}
       </ChipFlow>
     </Stage>
@@ -82,7 +92,13 @@ export const Wrapping = {
           '朝ごはん',
           'Reconciliation',
         ].map((tag) => (
-          <KroChip key={tag} title={tag} icon="tag" tint={colorTint('payneGray')} size="small" />
+          <KroChip
+            key={tag}
+            title={tag}
+            icon="tag"
+            tint={colorTint('payneGray')}
+            size="small"
+          />
         ))}
       </ChipFlow>
     </Stage>

@@ -16,7 +16,9 @@ describe('LiquidGlassFAB', () => {
   })
 
   it('is named by its action, because a bare glyph names nothing', () => {
-    render(<LiquidGlassFAB glyph="magnifyingglass" accessibilityLabel="Search" />)
+    render(
+      <LiquidGlassFAB glyph="magnifyingglass" accessibilityLabel="Search" />,
+    )
 
     // The glyph itself is hidden — a screen reader that announced both would
     // read the icon's own name alongside the action's.
@@ -66,7 +68,13 @@ describe('LiquidGlassFAB', () => {
 
   it('fires its action when tapped', async () => {
     const onClick = vi.fn()
-    render(<LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" onClick={onClick} />)
+    render(
+      <LiquidGlassFAB
+        glyph="plus"
+        accessibilityLabel="Quick add"
+        onClick={onClick}
+      />,
+    )
 
     await userEvent.click(screen.getByRole('button'))
 
@@ -76,7 +84,12 @@ describe('LiquidGlassFAB', () => {
   it('does not fire while disabled, and fades exactly once', async () => {
     const onClick = vi.fn()
     render(
-      <LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" disabled onClick={onClick} />,
+      <LiquidGlassFAB
+        glyph="plus"
+        accessibilityLabel="Quick add"
+        disabled
+        onClick={onClick}
+      />,
     )
 
     const fab = screen.getByRole('button')
@@ -86,7 +99,9 @@ describe('LiquidGlassFAB', () => {
     // Two fades multiply to ~0.38 and drop the control under the 3:1 floor.
     const fades = fab.className
       .split(/\s+/)
-      .filter((token) => token === 'disabled:opacity-[var(--kro-opacity-disabled)]')
+      .filter(
+        (token) => token === 'disabled:opacity-[var(--kro-opacity-disabled)]',
+      )
     expect(fades).toHaveLength(1)
   })
 
@@ -96,13 +111,15 @@ describe('LiquidGlassFAB', () => {
     expect(FAB_GLYPH_SIZE).toBe(24)
     // `size-6` is the 24px utility, and its presence is also what makes
     // Button's `svg:not([class*='size-'])` default stand down.
-    expect(screen.getByRole('button').querySelector('svg')?.getAttribute('class')).toContain(
-      'size-6',
-    )
+    expect(
+      screen.getByRole('button').querySelector('svg')?.getAttribute('class'),
+    ).toContain('size-6')
   })
 
   it('lets a surface override the diameter without losing the shape', () => {
-    render(<LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" size={48} />)
+    render(
+      <LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" size={48} />,
+    )
 
     const fab = screen.getByRole('button')
     expect(fab.style.width).toBe('48px')

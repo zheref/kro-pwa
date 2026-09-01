@@ -1,4 +1,4 @@
-import { DayViewRange, EndeavorsVistas } from '@kro/core'
+import { EndeavorsVistas } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { PlanViewMode } from '../PlanNavigation'
 import {
@@ -37,13 +37,14 @@ describe('initialPlanState', () => {
     expect(initialPlanState.quickCreate).toBeNull()
   })
 
-  it('defaults the timeline to the Full band with completed items shown', () => {
-    expect(initialPlanState.dayViewRange).toBe(DayViewRange.full)
-    expect(initialPlanState.showCompletedInTimeline).toBe(true)
-  })
-
-  it('leaves the quick-create flag off until a build says otherwise', () => {
+  it('leaves both gates off until a resolved flag says otherwise', () => {
+    // The band and the completed filter are NOT here: they are preferences,
+    // read from the settings snapshot through `selectPlanDayViewRange` and
+    // `selectPlanShowsCompleted` (KC-IS-#71 item 19). Mirroring them onto the
+    // slice needed a sync path that never existed, which is why the mirror
+    // silently ignored whatever the user chose in Settings.
     expect(initialPlanState.isQuickEventCreationEnabled).toBe(false)
+    expect(initialPlanState.enabledCapabilityFlags).toEqual([])
   })
 })
 

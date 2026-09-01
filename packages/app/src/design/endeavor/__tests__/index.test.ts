@@ -46,7 +46,9 @@ describe('the endeavor kit barrel', () => {
 
   it('exports each of them as a component, not as a stray value', () => {
     for (const name of COMPONENTS) {
-      expect(typeof (kit as Record<string, unknown>)[name], name).toBe('function')
+      expect(typeof (kit as Record<string, unknown>)[name], name).toBe(
+        'function',
+      )
     }
   })
 
@@ -64,7 +66,9 @@ describe('the endeavor kit barrel', () => {
       'useInputCapability',
       'useWiggle',
     ]) {
-      expect(typeof (kit as Record<string, unknown>)[name], name).toBe('function')
+      expect(typeof (kit as Record<string, unknown>)[name], name).toBe(
+        'function',
+      )
     }
   })
 

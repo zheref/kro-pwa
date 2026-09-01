@@ -79,9 +79,9 @@ describe('the disabled Add names what blocks it (acceptance criterion 1)', () =>
   it('asks for a title on a fresh Task prompt', () => {
     renderPrompt(captureDraftFixtures.emptyTask)
 
-    expect(
-      screen.getByTestId<HTMLButtonElement>('capture-add').disabled,
-    ).toBe(true)
+    expect(screen.getByTestId<HTMLButtonElement>('capture-add').disabled).toBe(
+      true,
+    )
     expect(screen.getByTestId('capture-blocked-reason').textContent).toBe(
       'Enter a title to add this task.',
     )
@@ -114,9 +114,9 @@ describe('the disabled Add names what blocks it (acceptance criterion 1)', () =>
   it('enables Add and says nothing once the draft is valid', () => {
     renderPrompt(captureDraftFixtures.titledTask)
 
-    expect(
-      screen.getByTestId<HTMLButtonElement>('capture-add').disabled,
-    ).toBe(false)
+    expect(screen.getByTestId<HTMLButtonElement>('capture-add').disabled).toBe(
+      false,
+    )
     expect(screen.getByTestId('capture-blocked-reason').textContent).toBe('')
   })
 
@@ -130,7 +130,7 @@ describe('the disabled Add names what blocks it (acceptance criterion 1)', () =>
 })
 
 describe('the chip strip follows the kind', () => {
-  it('offers canon\'s four kinds with the drafted one pressed', () => {
+  it("offers canon's four kinds with the drafted one pressed", () => {
     renderPrompt(captureDraftFixtures.emptyTask)
 
     for (const label of ['Task', 'Event', 'Reminder', 'Habit']) {
@@ -147,7 +147,7 @@ describe('the chip strip follows the kind', () => {
     expect(screen.queryByRole('button', { name: /^Date:/ })).toBeNull()
   })
 
-  it('shows an Event\'s end chip and hides it for every other kind', () => {
+  it("shows an Event's end chip and hides it for every other kind", () => {
     const { unmount } = renderPrompt(captureDraftFixtures.eventMissingEnd)
     expect(screen.getByRole('button', { name: 'End time' })).toBeTruthy()
     unmount()
@@ -177,7 +177,9 @@ describe('the two presentations', () => {
     renderPrompt(captureDraftFixtures.emptyTask)
 
     expect(
-      screen.getByTestId('capture-prompt').getAttribute('data-kro-presentation'),
+      screen
+        .getByTestId('capture-prompt')
+        .getAttribute('data-kro-presentation'),
     ).toBe('sheet')
   })
 
@@ -212,7 +214,7 @@ describe('intent leaves through callbacks only (RC-15)', () => {
     expect(onEditTitle).toHaveBeenCalledTimes(2)
   })
 
-  it('treats Escape as Discard — the same outcome canon\'s button produces', async () => {
+  it("treats Escape as Discard — the same outcome canon's button produces", async () => {
     const onDiscard = vi.fn()
     renderPrompt(captureDraftFixtures.emptyTask, { onDiscard })
 
@@ -252,12 +254,16 @@ describe('intent leaves through callbacks only (RC-15)', () => {
     )
     await userEvent.click(screen.getByRole('button', { name: 'Kro Cloud' }))
 
-    expect(onSelectDestination).toHaveBeenCalledWith(CaptureDestination.kroCloud)
+    expect(onSelectDestination).toHaveBeenCalledWith(
+      CaptureDestination.kroCloud,
+    )
   })
 
   it('submits on Enter only when the draft is valid', async () => {
     const onSubmit = vi.fn()
-    const { unmount } = renderPrompt(captureDraftFixtures.emptyTask, { onSubmit })
+    const { unmount } = renderPrompt(captureDraftFixtures.emptyTask, {
+      onSubmit,
+    })
     await userEvent.type(screen.getByTestId('capture-title'), '{Enter}')
     expect(onSubmit).not.toHaveBeenCalled()
     unmount()
@@ -267,7 +273,7 @@ describe('intent leaves through callbacks only (RC-15)', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 
-  it('steps rewards by canon\'s 5, and clamps the floor at 1', async () => {
+  it("steps rewards by canon's 5, and clamps the floor at 1", async () => {
     const onPickRewards = vi.fn()
     renderPrompt(captureDraftFixtures.titledTask, { onPickRewards })
 
@@ -279,7 +285,7 @@ describe('intent leaves through callbacks only (RC-15)', () => {
     expect(onPickRewards).toHaveBeenCalledWith(15)
   })
 
-  it('offers canon\'s five repeat shapes anchored to the drafted day', async () => {
+  it("offers canon's five repeat shapes anchored to the drafted day", async () => {
     const onPickRecurrence = vi.fn()
     renderPrompt(captureDraftFixtures.titledTask, { onPickRecurrence })
 

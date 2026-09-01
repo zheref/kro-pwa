@@ -16,7 +16,9 @@ const NOW = new Date(2026, 3, 15, 14, 0, 0)
 
 describe('localInputValue', () => {
   it('prints the LOCAL wall clock, not UTC — the bug a UTC-pinned CI never sees', () => {
-    expect(localInputValue(new Date(2026, 3, 15, 9, 5))).toBe('2026-04-15T09:05')
+    expect(localInputValue(new Date(2026, 3, 15, 9, 5))).toBe(
+      '2026-04-15T09:05',
+    )
   })
 
   it('pads every field, because the input refuses a ragged value', () => {
@@ -39,7 +41,9 @@ describe('localInputValue', () => {
 describe('defaultDeferTarget', () => {
   it('pushes an existing due time out by a day, as canon does', () => {
     const due = new Date(2026, 3, 15, 17, 0)
-    expect(defaultDeferTarget(due, NOW).getTime()).toBe(due.getTime() + 86_400_000)
+    expect(defaultDeferTarget(due, NOW).getTime()).toBe(
+      due.getTime() + 86_400_000,
+    )
   })
 
   it('falls back to tomorrow at 9 AM when there is no due time', () => {
@@ -67,15 +71,19 @@ describe('MarkCompletePopover — the BACKDATE surface', () => {
       />,
     )
 
-    expect((screen.getByLabelText('Completed at') as HTMLInputElement).value).toBe(
-      '2026-04-15T14:00',
-    )
+    expect(
+      (screen.getByLabelText('Completed at') as HTMLInputElement).value,
+    ).toBe('2026-04-15T14:00')
   })
 
   it('confirms with the EDITED date — the whole point of the surface', async () => {
     const onConfirm = vi.fn()
     render(
-      <MarkCompletePopover initialDate={NOW} onConfirm={onConfirm} onCancel={() => undefined} />,
+      <MarkCompletePopover
+        initialDate={NOW}
+        onConfirm={onConfirm}
+        onCancel={() => undefined}
+      />,
     )
 
     const input = screen.getByLabelText('Completed at')
@@ -93,7 +101,11 @@ describe('MarkCompletePopover — the BACKDATE surface', () => {
     const onConfirm = vi.fn()
     const onCancel = vi.fn()
     render(
-      <MarkCompletePopover initialDate={NOW} onConfirm={onConfirm} onCancel={onCancel} />,
+      <MarkCompletePopover
+        initialDate={NOW}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />,
     )
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -105,17 +117,28 @@ describe('MarkCompletePopover — the BACKDATE surface', () => {
   it('refuses to confirm an unparseable value rather than sending an Invalid Date', async () => {
     const onConfirm = vi.fn()
     render(
-      <MarkCompletePopover initialDate={NOW} onConfirm={onConfirm} onCancel={() => undefined} />,
+      <MarkCompletePopover
+        initialDate={NOW}
+        onConfirm={onConfirm}
+        onCancel={() => undefined}
+      />,
     )
 
     await userEvent.clear(screen.getByLabelText('Completed at'))
 
-    expect(screen.getByRole('button', { name: /Mark/ })).toHaveProperty('disabled', true)
+    expect(screen.getByRole('button', { name: /Mark/ })).toHaveProperty(
+      'disabled',
+      true,
+    )
   })
 
   it('re-seeds when re-presented, so yesterday’s edit does not persist', () => {
     const { rerender } = render(
-      <MarkCompletePopover initialDate={NOW} onConfirm={() => undefined} onCancel={() => undefined} />,
+      <MarkCompletePopover
+        initialDate={NOW}
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
     )
 
     rerender(
@@ -126,9 +149,9 @@ describe('MarkCompletePopover — the BACKDATE surface', () => {
       />,
     )
 
-    expect((screen.getByLabelText('Completed at') as HTMLInputElement).value).toBe(
-      '2026-04-16T08:00',
-    )
+    expect(
+      (screen.getByLabelText('Completed at') as HTMLInputElement).value,
+    ).toBe('2026-04-16T08:00')
   })
 })
 
@@ -143,11 +166,17 @@ describe('DeferPopover', () => {
   })
 
   it('offers Skip only where canon does — from the overflow route', () => {
-    const { rerender } = render(<DeferPopover initialTarget={NOW} onConfirm={() => undefined} />)
+    const { rerender } = render(
+      <DeferPopover initialTarget={NOW} onConfirm={() => undefined} />,
+    )
     expect(screen.queryByRole('button', { name: /Skip/ })).toBeNull()
 
     rerender(
-      <DeferPopover initialTarget={NOW} onConfirm={() => undefined} onSkip={() => undefined} />,
+      <DeferPopover
+        initialTarget={NOW}
+        onConfirm={() => undefined}
+        onSkip={() => undefined}
+      />,
     )
     expect(screen.getByRole('button', { name: /Skip/ })).not.toBeNull()
   })
@@ -155,7 +184,13 @@ describe('DeferPopover', () => {
   it('raises Skip without also deferring', async () => {
     const onConfirm = vi.fn()
     const onSkip = vi.fn()
-    render(<DeferPopover initialTarget={NOW} onConfirm={onConfirm} onSkip={onSkip} />)
+    render(
+      <DeferPopover
+        initialTarget={NOW}
+        onConfirm={onConfirm}
+        onSkip={onSkip}
+      />,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: /Skip/ }))
 
@@ -174,22 +209,34 @@ describe('DeleteConfirmationPopover', () => {
       />,
     )
 
-    expect(screen.getByText('Delete "Prepare presentation slides"?')).not.toBeNull()
+    expect(
+      screen.getByText('Delete "Prepare presentation slides"?'),
+    ).not.toBeNull()
   })
 
   it('says the deletion reaches every source, because it does', () => {
     render(
-      <DeleteConfirmationPopover title="x" onConfirm={() => undefined} onCancel={() => undefined} />,
+      <DeleteConfirmationPopover
+        title="x"
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
     )
 
-    expect(screen.getByText(/permanently removed from all\s+sources/)).not.toBeNull()
+    expect(
+      screen.getByText(/permanently removed from all\s+sources/),
+    ).not.toBeNull()
   })
 
   it('confirms and cancels independently', async () => {
     const onConfirm = vi.fn()
     const onCancel = vi.fn()
     render(
-      <DeleteConfirmationPopover title="x" onConfirm={onConfirm} onCancel={onCancel} />,
+      <DeleteConfirmationPopover
+        title="x"
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />,
     )
 
     await userEvent.click(screen.getByRole('button', { name: /Cancel/ }))

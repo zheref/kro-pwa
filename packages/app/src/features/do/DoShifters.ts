@@ -23,11 +23,7 @@ import {
   resolvedKind,
 } from '@kro/core'
 import type { DoException } from './DoException'
-import type {
-  DoBackdatedCompletion,
-  DoPreferences,
-  DoState,
-} from './DoFeature'
+import type { DoBackdatedCompletion, DoPreferences, DoState } from './DoFeature'
 import { selectFeaturedNowEndeavors } from './DoFeaturedNow'
 import {
   type DoLane,
@@ -39,10 +35,7 @@ import {
   partitionDoTaskLanes,
   pendingDoEndeavors,
 } from './DoRules'
-import {
-  type DoSuggestionSource,
-  generateDoSuggestions,
-} from './DoSuggestions'
+import { type DoSuggestionSource, generateDoSuggestions } from './DoSuggestions'
 
 /**
  * `applyRegroup` — rebuild every lane from the retained channels.
@@ -214,10 +207,10 @@ export function withSuggestionDismissed(
  */
 export function withCardSelected(
   state: DoState,
-  lane: DoLane,
+  section: string,
   endeavorId: string,
 ): DoState {
-  const key = doCardKey(lane, endeavorId)
+  const key = doCardKey(section, endeavorId)
   return {
     ...state,
     selectedCardKey: state.selectedCardKey === key ? null : key,

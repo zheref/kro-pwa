@@ -153,7 +153,9 @@ export function SettingsHubPage() {
 
   const onTapDone = useCallback(() => {
     void dispatch(
-      navigateToDestinationThunk({ destination: { kind: DestinationKind.myDay } }),
+      navigateToDestinationThunk({
+        destination: { kind: DestinationKind.myDay },
+      }),
     )
   }, [dispatch])
 

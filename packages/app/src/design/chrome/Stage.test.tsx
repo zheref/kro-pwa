@@ -46,7 +46,9 @@ describe('Stage', () => {
 
 describe('BothSchemes', () => {
   it('renders the subject twice, once per scheme, side by side', () => {
-    render(<BothSchemes>{(theme) => <span>{`subject-${theme}`}</span>}</BothSchemes>)
+    render(
+      <BothSchemes>{(theme) => <span>{`subject-${theme}`}</span>}</BothSchemes>,
+    )
 
     expect(screen.getByText('subject-light')).toBeDefined()
     expect(screen.getByText('subject-dark')).toBeDefined()
@@ -63,8 +65,8 @@ describe('BothSchemes', () => {
   it('never leaves both halves on the same scheme', () => {
     render(<BothSchemes>{() => <span>subject</span>}</BothSchemes>)
 
-    const themes = Array.from(document.querySelectorAll('[data-theme]')).map((node) =>
-      node.getAttribute('data-theme'),
+    const themes = Array.from(document.querySelectorAll('[data-theme]')).map(
+      (node) => node.getAttribute('data-theme'),
     )
     expect(new Set(themes).size).toBe(2)
   })

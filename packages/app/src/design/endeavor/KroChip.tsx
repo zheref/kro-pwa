@@ -93,15 +93,23 @@ export function KroChip({
     emphasis === 'prominent'
       ? { backgroundColor: value, color: colorVar('absolute') }
       : emphasis === 'soft'
-        ? { backgroundColor: `color-mix(in srgb, ${value} 16%, transparent)`, color: value }
-        : { color: value, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${value} 55%, transparent)` }
+        ? {
+            backgroundColor: `color-mix(in srgb, ${value} 16%, transparent)`,
+            color: value,
+          }
+        : {
+            color: value,
+            boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${value} 55%, transparent)`,
+          }
 
   return (
     <span
       data-emphasis={emphasis}
       className={cn(
         'inline-flex max-w-full shrink-0 items-center rounded-kro-pill font-semibold',
-        isSmall ? 'gap-1 px-2 py-1 text-[11px]' : 'gap-[5px] px-2.5 py-1.5 text-xs',
+        isSmall
+          ? 'gap-1 px-2 py-1 text-[11px]'
+          : 'gap-[5px] px-2.5 py-1.5 text-xs',
         className,
       )}
       style={style}

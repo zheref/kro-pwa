@@ -182,10 +182,7 @@ export function EarnFragment(props: EarnFragmentProps) {
           aria-hidden
           style={{ color: colorVar('rewardYellow') }}
         />
-        <p
-          className="m-0 text-sm"
-          style={{ color: colorVar('foreSecondary') }}
-        >
+        <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
           {currentPoints} point{currentPoints === 1 ? '' : 's'} available
         </p>
       </div>
@@ -235,14 +232,16 @@ export function EarnFragment(props: EarnFragmentProps) {
             )}
 
             {availableSuggestions.length === 0 ? null : (
-              <RewardSection title={isCatalogEmpty ? 'Get Started' : 'Discover More'}>
+              <RewardSection
+                title={isCatalogEmpty ? 'Get Started' : 'Discover More'}
+              >
                 {isCatalogEmpty ? (
                   <p
                     className="m-0 px-1 text-sm"
                     style={{ color: colorVar('foreSecondary') }}
                   >
-                    Pick a reward to start working towards, or add your own
-                    with the + button.
+                    Pick a reward to start working towards, or add your own with
+                    the + button.
                   </p>
                 ) : null}
                 {availableSuggestions.map((suggestion) => (

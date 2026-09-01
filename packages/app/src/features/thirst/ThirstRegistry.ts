@@ -20,7 +20,9 @@ export interface ThirstRegistryFeature {
 }
 
 /** `ThirstRegistry.availableSoon`, keyed by stable feature key. */
-export const THIRST_AVAILABLE_SOON: Readonly<Record<string, ThirstRegistryFeature>> = {
+export const THIRST_AVAILABLE_SOON: Readonly<
+  Record<string, ThirstRegistryFeature>
+> = {
   matrix: {
     key: 'matrix',
     title: 'Priority Matrix',

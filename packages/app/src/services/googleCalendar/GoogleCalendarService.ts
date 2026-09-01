@@ -231,16 +231,21 @@ export const makeLiveGoogleCalendarService = (
         range.start.toISOString(),
       )}&to=${encodeURIComponent(range.end.toISOString())}`
 
-      const response = await transport.get(path, opts).catch((error: unknown) => {
-        throw googleCalendarExceptionFrom(error)
-      })
+      const response = await transport
+        .get(path, opts)
+        .catch((error: unknown) => {
+          throw googleCalendarExceptionFrom(error)
+        })
 
       if (response.status < 200 || response.status >= 300) {
         const failure = proxyFailureFrom(response.status, response.body)
         // "Not set up" and "not connected" are states of an empty day, not
         // failures the user can act on from the timeline. `needsReconnect` is
         // the one that has a button behind it, so it alone propagates.
-        if (failure.kind === 'unconfigured' || failure.kind === 'notConnected') {
+        if (
+          failure.kind === 'unconfigured' ||
+          failure.kind === 'notConnected'
+        ) {
           return []
         }
         throw failure
@@ -261,7 +266,10 @@ export const makeLiveGoogleCalendarService = (
         })
       if (response.status < 200 || response.status >= 300) {
         const failure = proxyFailureFrom(response.status, response.body)
-        if (failure.kind === 'unconfigured' || failure.kind === 'notConnected') {
+        if (
+          failure.kind === 'unconfigured' ||
+          failure.kind === 'notConnected'
+        ) {
           return []
         }
         throw failure
@@ -338,7 +346,8 @@ export interface StubbedGoogleCalendarServiceOptions {
 export const makeStubbedGoogleCalendarService = (
   options: StubbedGoogleCalendarServiceOptions = {},
 ): GoogleCalendarService => {
-  const connection = options.connection ?? GoogleCalendarConnections.disconnected()
+  const connection =
+    options.connection ?? GoogleCalendarConnections.disconnected()
   const record = (call: string) => options.calls?.push(call)
   const raise = () => {
     if (options.failure !== undefined) throw options.failure
@@ -352,7 +361,9 @@ export const makeStubbedGoogleCalendarService = (
     },
 
     async fetchRange(range) {
-      record(`fetchRange:${range.start.toISOString()}..${range.end.toISOString()}`)
+      record(
+        `fetchRange:${range.start.toISOString()}..${range.end.toISOString()}`,
+      )
       raise()
       if (connection.kind !== 'connected') {
         if (connection.kind === 'needsReconnect') {

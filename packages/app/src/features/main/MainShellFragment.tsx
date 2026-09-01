@@ -15,7 +15,8 @@
  *   (`selectDestinationOwnsProfileControls`); this shell never renders a
  *   destination's controls for it.
  * - **`MainScreen.mainScreenToolbar` / `macDoToolbar`** answer for the
- *   *container* — and the container is this shell. So the tab-bar shell does
+ *   *container* — and the container is this shell, in canon's own order:
+ *   the primary group is Inbox, then Refresh, then Visibility. So the tab-bar shell does
  *   carry Profile leading and Inbox trailing (canon's phone toolbar, with the
  *   Settings gear on tabs other than Plan and Do), and the sidebar shell
  *   carries the navigation group (Profile) and the primary group (Inbox) in
@@ -248,16 +249,25 @@ function ContentToolbar({
         className="flex items-center"
         style={{ gap: `${layout.minimumControlSpacing}px` }}
       >
-        <ToolbarOutlet
-          placement="primary"
-          className="flex items-center gap-kro-small"
-        />
+        {/*
+          Inbox FIRST, then the feature's slot (KC-IS-#71 item 4).
 
+          Canon's `macDoToolbar` builds its primary group as Inbox, Refresh,
+          Visibility — the shell's own control leads and the destination's two
+          follow. The outlet used to be rendered first, which put a Do surface's
+          Refresh and Visibility to the left of Inbox and read as a different
+          toolbar from the one KroApple ships.
+        */}
         {layout.showsInboxControl && (
           <ToolbarButton label="Inbox" layout={layout} onClick={onTapInbox}>
             <Inbox size={ICON_SIZE.medium} aria-hidden="true" />
           </ToolbarButton>
         )}
+
+        <ToolbarOutlet
+          placement="primary"
+          className="flex items-center gap-kro-small"
+        />
       </div>
     </GlassSurface>
   )

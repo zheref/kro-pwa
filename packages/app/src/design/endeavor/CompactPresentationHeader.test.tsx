@@ -29,7 +29,10 @@ describe('CompactPresentationHeader', () => {
   it('names the back control "Back" — a different action needs a different word', async () => {
     const onPress = vi.fn()
     render(
-      <CompactPresentationHeader title="Triage" leadingAction={{ kind: 'back', onPress }} />,
+      <CompactPresentationHeader
+        title="Triage"
+        leadingAction={{ kind: 'back', onPress }}
+      />,
     )
 
     await userEvent.click(screen.getByRole('button', { name: 'Back' }))
@@ -49,7 +52,9 @@ describe('CompactPresentationHeader', () => {
     const button = screen.getByRole('button', { name: 'Close' })
     expect(button.style.minWidth).toBe('var(--kro-size-min-touch-target)')
     expect(button.style.minHeight).toBe('var(--kro-size-min-touch-target)')
-    expect((button.firstElementChild as HTMLElement).className).toContain('size-[30px]')
+    expect((button.firstElementChild as HTMLElement).className).toContain(
+      'size-[30px]',
+    )
   })
 
   it('renders no leading control when the presentation has no way back', () => {
@@ -63,7 +68,8 @@ describe('CompactPresentationHeader', () => {
     )
 
     expect(
-      screen.getByText('Reconciliation conflicts across every connected host').className,
+      screen.getByText('Reconciliation conflicts across every connected host')
+        .className,
     ).toContain('truncate')
   })
 })

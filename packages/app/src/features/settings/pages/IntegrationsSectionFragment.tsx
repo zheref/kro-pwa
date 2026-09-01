@@ -19,10 +19,7 @@ import { colorVar } from '../../../design/system/tokens/roles'
 import { InlineBanner } from '../../../design/endeavor/InlineBanner'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
 import { cn } from '../../../design/system/utils/cn'
-import {
-  IntegrationAction,
-  type IntegrationRow,
-} from '../SettingsIntegrations'
+import { IntegrationAction, type IntegrationRow } from '../SettingsIntegrations'
 import { settingsIcon } from './settingsIcons'
 
 export interface IntegrationsSectionFragmentProps {

@@ -14,7 +14,13 @@
  * Radix popper under jsdom costs seconds"). The desktop/`popover` idiom gets
  * its own dedicated interaction test, at its real (slower) cost.
  */
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { rewardMocks } from '@kro/core/mocks'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { StoreProvider } from '../../../../library/StoreProvider'

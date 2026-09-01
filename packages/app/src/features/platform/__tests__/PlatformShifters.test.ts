@@ -44,7 +44,7 @@ describe('withStatusProbeStarted', () => {
 })
 
 describe('withStatusInstalled', () => {
-  it('installs one probe\'s worth of truth in a single move', () => {
+  it("installs one probe's worth of truth in a single move", () => {
     const next = withStatusInstalled(PlatformMocks.loading, probed)
     expect(next.load).toEqual({ kind: 'loaded' })
     expect(next.notificationPermission).toBe('granted')
@@ -173,7 +173,8 @@ describe('withPendingAlerts', () => {
 describe('withScreenAwakeRequested', () => {
   it('records the hold a running session asks for', () => {
     expect(
-      withScreenAwakeRequested(PlatformMocks.armed, true).isScreenAwakeRequested,
+      withScreenAwakeRequested(PlatformMocks.armed, true)
+        .isScreenAwakeRequested,
     ).toBe(true)
   })
 

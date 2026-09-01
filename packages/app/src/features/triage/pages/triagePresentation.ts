@@ -76,7 +76,8 @@ export const triageCarouselOffset = (
   translationX: number,
   carouselWidth: number,
 ): number => {
-  if (!Number.isFinite(translationX) || !Number.isFinite(carouselWidth)) return 0
+  if (!Number.isFinite(translationX) || !Number.isFinite(carouselWidth))
+    return 0
   return Math.max(0, Math.min(translationX, Math.max(0, carouselWidth)))
 }
 

@@ -64,7 +64,9 @@ describe('planListRowTimeInfo', () => {
   })
 
   it('prints nothing at all for a row with no moment and no duration', () => {
-    expect(planListRowTimeInfo(planListBucketFixtures.unscheduled)).toBeUndefined()
+    expect(
+      planListRowTimeInfo(planListBucketFixtures.unscheduled),
+    ).toBeUndefined()
   })
 })
 

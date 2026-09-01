@@ -53,7 +53,11 @@ import {
   formatTime,
   formatTimeRange,
 } from '../../../design/endeavor'
-import { colorVar, radiusVar, semanticVar } from '../../../design/system/tokens/roles'
+import {
+  colorVar,
+  radiusVar,
+  semanticVar,
+} from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { DoLane, type DoLanes } from '../DoRules'
 import type { DoSuggestionSource } from '../DoSuggestions'
@@ -334,10 +338,7 @@ function SectionHeader({
         the background this shell actually provides. Named in the PR as a
         cross-lane observation for the shell child.
       */}
-      <h2
-        className="m-0 font-bold text-xl"
-        style={{ color: colorVar('fore') }}
-      >
+      <h2 className="m-0 font-bold text-xl" style={{ color: colorVar('fore') }}>
         {title}
       </h2>
 
@@ -414,7 +415,11 @@ function SuggestionsLane({
   return (
     <section data-testid="do-lane-suggestions" aria-label="Suggestions">
       <div className="flex flex-col gap-3">
-        <SectionHeader title="Suggestions" glyph="suggestions" badgeText={null} />
+        <SectionHeader
+          title="Suggestions"
+          glyph="suggestions"
+          badgeText={null}
+        />
         <Carousel>
           {suggestions.map((suggestion) => (
             <div key={suggestion.source} className="flex items-center gap-2">
@@ -819,35 +824,35 @@ function FeaturedLane({
                   handlers.onShowDetails(card)
                 }}
               >
-              <EndeavorCard
-                model={card}
-                size={isHero ? 'large' : 'small'}
-                cardSize={{
-                  width: isHero ? widths.hero : widths.side,
-                  height: isHero
-                    ? FEATURED_LANE_METRICS.heroHeight
-                    : FEATURED_LANE_METRICS.sideHeight,
-                }}
-                now={now}
-                locale={locale}
-                isSelected={
-                  selectedCardKey === `${DoLane.featured}:${card.id}`
-                }
-                isInMarkCompleteMode={isInMarkCompleteMode}
-                onPrepare={
-                  isInMarkCompleteMode
-                    ? undefined
-                    : (id) => handlers.onPrepare(DoLane.featured, id)
-                }
-                onExecute={() => handlers.onExecute(card)}
-                onMarkComplete={handlers.onMarkComplete}
-                onSkip={() => handlers.onSkip(card)}
-                onDefer={(target) => handlers.onDefer(card, target)}
-                onDelegate={() => handlers.onDelegate(card)}
-                onShowDetails={() => handlers.onShowDetails(card)}
-                onDelete={() => handlers.onDelete(card)}
-                className={cn(isHero && 'z-[1]')}
-              />
+                <EndeavorCard
+                  model={card}
+                  size={isHero ? 'large' : 'small'}
+                  cardSize={{
+                    width: isHero ? widths.hero : widths.side,
+                    height: isHero
+                      ? FEATURED_LANE_METRICS.heroHeight
+                      : FEATURED_LANE_METRICS.sideHeight,
+                  }}
+                  now={now}
+                  locale={locale}
+                  isSelected={
+                    selectedCardKey === `${DoLane.featured}:${card.id}`
+                  }
+                  isInMarkCompleteMode={isInMarkCompleteMode}
+                  onPrepare={
+                    isInMarkCompleteMode
+                      ? undefined
+                      : (id) => handlers.onPrepare(DoLane.featured, id)
+                  }
+                  onExecute={() => handlers.onExecute(card)}
+                  onMarkComplete={handlers.onMarkComplete}
+                  onSkip={() => handlers.onSkip(card)}
+                  onDefer={(target) => handlers.onDefer(card, target)}
+                  onDelegate={() => handlers.onDelegate(card)}
+                  onShowDetails={() => handlers.onShowDetails(card)}
+                  onDelete={() => handlers.onDelete(card)}
+                  className={cn(isHero && 'z-[1]')}
+                />
               </div>
             )
           })}

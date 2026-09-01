@@ -95,9 +95,8 @@ on a violation. That is what makes "components cannot fetch" a structural fact.
 > **Citation note.** The last row is `RC-40` — *"the shared Page never imports a Next.js API"* —
 > because the rule governs `packages/app`, the shared render layer. `RC-50` is the neighbouring
 > rule that `packages/core` carries **zero** platform imports (the first row), which is why the
-> two are easy to confuse. `check-uzf-boundaries.mjs` currently prints `RC-50` in that one
-> violation message; correcting the string is a one-word fix in `packages/app/**`, outside this
-> issue's file lane, and belongs to whichever child next touches that script.
+> two are easy to confuse. `check-uzf-boundaries.mjs` printed `RC-50` in that one violation
+> message until KC-IS-#71 item 5; both the header comment and the message say `RC-40` now.
 
 **Divergence from `RC-50`, recorded.** The canon puts the whole `library/` runtime — including
 `store.ts` and `hooks.ts` — inside `{{CORE_PACKAGE}}`. Here `result.ts` / `exception.ts` /

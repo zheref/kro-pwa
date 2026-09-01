@@ -35,10 +35,41 @@ describe('the SF Symbols mapping', () => {
     }
   })
 
+  it('carries the rows the four lane-local maps folded in (KC-IS-#71)', () => {
+    // One representative row per lane, so a re-fork is visible here.
+    for (const symbol of [
+      // Settings (item 8)
+      'sunrise',
+      'speaker.wave.2',
+      'rectangle.portrait.and.arrow.right',
+      // Session (item 16)
+      'bolt.fill',
+      'clock.badge.xmark',
+      'stop.fill',
+      'cup.and.saucer.fill',
+      // Find / Detail (item 13)
+      'line.3.horizontal.decrease.circle',
+      'slider.horizontal.3',
+      'textformat',
+      'star.fill',
+      'flame.fill',
+      'folder',
+      'minus',
+      'flag.checkered',
+      // Capture and Triage
+      'tray.full',
+      'person.2.fill',
+    ] as const) {
+      expect(iconForSymbol(symbol), symbol).toBeDefined()
+    }
+  })
+
   it('keys on KroApple’s exact systemName strings, dots and all', () => {
     // The port is a search-and-replace against these literals; a "prettified"
     // key would silently stop matching the Swift source.
-    expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain('exclamationmark.triangle')
+    expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain(
+      'exclamationmark.triangle',
+    )
     expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain('person.crop.circle')
   })
 
@@ -46,7 +77,7 @@ describe('the SF Symbols mapping', () => {
     // Two symbols legitimately sharing an icon is fine; the check is that the
     // *keys* are unique, which object literals give us, and that the map is
     // not accidentally empty.
-    expect(entries.length).toBeGreaterThan(25)
+    expect(entries.length).toBeGreaterThan(90)
     expect(new Set(Object.keys(SF_SYMBOL_TO_LUCIDE)).size).toBe(entries.length)
   })
 })

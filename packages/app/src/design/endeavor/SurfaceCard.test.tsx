@@ -13,23 +13,31 @@ describe('SurfaceCard', () => {
       </SurfaceCard>,
     )
 
-    const card = container.querySelector('[data-slot="surface-card"]') as HTMLElement
+    const card = container.querySelector(
+      '[data-slot="surface-card"]',
+    ) as HTMLElement
     expect(card.style.backgroundColor).toBe('var(--kro-color-absolute)')
     expect(card.style.borderRadius).toBe('var(--kro-radius-surface)')
     expect(card.style.boxShadow).toBe('var(--kro-shadow-card)')
   })
 
   it('drops the shadow when asked, for a card nested in another card', () => {
-    const { container } = render(<SurfaceCard isElevated={false}>x</SurfaceCard>)
+    const { container } = render(
+      <SurfaceCard isElevated={false}>x</SurfaceCard>,
+    )
 
-    const card = container.querySelector('[data-slot="surface-card"]') as HTMLElement
+    const card = container.querySelector(
+      '[data-slot="surface-card"]',
+    ) as HTMLElement
     expect(card.style.boxShadow).toBe('')
   })
 
   it('hands its padding to the content when told to — so hairlines can run edge to edge', () => {
     const { container } = render(<SurfaceCard padding={null}>x</SurfaceCard>)
 
-    const card = container.querySelector('[data-slot="surface-card"]') as HTMLElement
+    const card = container.querySelector(
+      '[data-slot="surface-card"]',
+    ) as HTMLElement
     expect(card.style.padding).toBe('')
   })
 })
@@ -56,7 +64,9 @@ describe('CardRowStack', () => {
       </CardRowStack>,
     )
 
-    expect(container.querySelectorAll('[data-slot="card-row-separator"]')).toHaveLength(0)
+    expect(
+      container.querySelectorAll('[data-slot="card-row-separator"]'),
+    ).toHaveLength(0)
   })
 
   it('INSETS the separator, so the card reads as a grouped list not a stack of cuts', () => {
@@ -84,7 +94,9 @@ describe('SectionCard', () => {
     )
 
     const card = container.querySelector('[data-slot="surface-card"]')
-    expect(card?.contains(screen.getByRole('heading', { name: 'Core' }))).toBe(false)
+    expect(card?.contains(screen.getByRole('heading', { name: 'Core' }))).toBe(
+      false,
+    )
   })
 
   it('shows a count beside the title when the section has one', () => {
@@ -100,7 +112,11 @@ describe('SectionCard', () => {
   it('raises its action, and only renders one when both halves are given', async () => {
     const onAction = vi.fn()
     const { rerender } = render(
-      <SectionCard title="Performances" actionTitle="Manage" onAction={onAction}>
+      <SectionCard
+        title="Performances"
+        actionTitle="Manage"
+        onAction={onAction}
+      >
         <p>Body</p>
       </SectionCard>,
     )

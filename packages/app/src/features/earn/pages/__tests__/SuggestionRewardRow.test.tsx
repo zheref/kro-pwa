@@ -16,9 +16,7 @@ describe('SuggestionRewardRow', () => {
 
     expect(screen.getByText(suggestion.title)).toBeTruthy()
     expect(screen.getByText(suggestion.glyph)).toBeTruthy()
-    expect(
-      screen.getByText(`${suggestion.pointsRequired} points`),
-    ).toBeTruthy()
+    expect(screen.getByText(`${suggestion.pointsRequired} points`)).toBeTruthy()
   })
 
   it('raises the suggestion, not a copy, when Add is tapped', () => {

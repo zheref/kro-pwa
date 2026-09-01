@@ -25,10 +25,7 @@
  * previous list's grouping applied to the next one's rows. That is why the
  * effect is keyed on the selection's identity fields rather than the object.
  */
-import {
-  type EndeavorGroupingCriteria,
-  type EndeavorOperation,
-} from '@kro/core'
+import type { EndeavorGroupingCriteria, EndeavorOperation } from '@kro/core'
 import { useCallback, useEffect, useMemo } from 'react'
 import type { InputCapability } from '../../../design/endeavor/useInputCapability'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
@@ -126,8 +123,7 @@ export function TasksPage({
         null)
 
   const resolvedSelection = useMemo<TasksVistaSelection>(
-    () =>
-      listId === null ? selection : { kind: 'list', listId, listTitle },
+    () => (listId === null ? selection : { kind: 'list', listId, listTitle }),
     // The object is rebuilt on every render; its identity fields are the deps.
     // biome-ignore lint/correctness/useExhaustiveDependencies: `selection` is
     // derived — `kind`, `listId`, `listTitle` and the seeded query are its

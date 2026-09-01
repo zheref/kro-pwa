@@ -26,10 +26,7 @@ import {
 import { TimelineDragHandle } from '../../../PlanEditSession'
 import { timelinePlacements } from '../../../TimelineLayout'
 import { timelineSlotCount } from '../../../TimelineSlots'
-import {
-  HANDLE_KEYBOARD_STEP_PX,
-  TimelineFragment,
-} from '../TimelineFragment'
+import { HANDLE_KEYBOARD_STEP_PX, TimelineFragment } from '../TimelineFragment'
 import { installPointerEvents, pointer } from '../../__tests__/pointerEvents'
 
 installPointerEvents()
@@ -47,10 +44,8 @@ const selectedDate = startOfPlanDay(PLAN_REFERENCE_DAY)
 const FULL_BAND = { start: 0, endExclusive: 24 }
 const BUSINESS_BAND = { start: 8, endExclusive: 20 }
 
-const placementsFor = (
-  events: readonly Endeavor[],
-  band = FULL_BAND,
-) => timelinePlacements(events, { on: selectedDate, startHour: band.start })
+const placementsFor = (events: readonly Endeavor[], band = FULL_BAND) =>
+  timelinePlacements(events, { on: selectedDate, startHour: band.start })
 
 /**
  * The default scene, named so a case that has to **re-render** mid-gesture can
@@ -141,7 +136,9 @@ describe('the event cards', () => {
     // Each is its own hit target — canon: *"long-press and drag recognition
     // remain available for every overlap column."*
     for (const block of blocks) {
-      expect(block.querySelector('[data-testid="plan-timeline-block-surface"]')).toBeTruthy()
+      expect(
+        block.querySelector('[data-testid="plan-timeline-block-surface"]'),
+      ).toBeTruthy()
     }
   })
 
@@ -157,9 +154,7 @@ describe('the event cards', () => {
   it('marks a finished event inert, so history cannot be dragged by accident', () => {
     mount({ placements: placementsFor(planDayFixtures.pastEvent) })
 
-    expect(
-      screen.getByTestId('plan-timeline-block').dataset.past,
-    ).toBe('true')
+    expect(screen.getByTestId('plan-timeline-block').dataset.past).toBe('true')
   })
 
   it('deepens the fill on the frame a finger lands, with no transition in', () => {
@@ -172,9 +167,9 @@ describe('the event cards', () => {
     })
 
     expect(block.dataset.pressed).toBe('true')
-    expect(screen.getByTestId('plan-timeline-block-fill').style.transition).toBe(
-      'none',
-    )
+    expect(
+      screen.getByTestId('plan-timeline-block-fill').style.transition,
+    ).toBe('none')
   })
 
   it('emits viewDetail on a tap, with the endeavor the card is about', async () => {
@@ -250,7 +245,9 @@ describe('edit mode', () => {
     const other = screen
       .getAllByTestId('plan-timeline-block')
       .find((block) => block.dataset.editing === 'false')
-    expect(Number(armed?.style.zIndex)).toBeGreaterThan(Number(other?.style.zIndex))
+    expect(Number(armed?.style.zIndex)).toBeGreaterThan(
+      Number(other?.style.zIndex),
+    )
   })
 
   it('disables the scroll container, or the drag would be stolen by it', () => {
@@ -355,7 +352,9 @@ describe('edit mode', () => {
 
     const other = screen
       .getAllByTestId('plan-timeline-block')
-      .find((block) => block.dataset.endeavorId === 'nested-short-a') as HTMLElement
+      .find(
+        (block) => block.dataset.endeavorId === 'nested-short-a',
+      ) as HTMLElement
     const surface = other.querySelector(
       '[data-testid="plan-timeline-block-surface"]',
     ) as HTMLElement
@@ -419,7 +418,9 @@ describe('edit mode', () => {
     act(() => {
       vi.advanceTimersByTime(600)
     })
-    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe('true')
+    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe(
+      'true',
+    )
 
     rerender(
       <TimelineFragment
@@ -430,7 +431,9 @@ describe('edit mode', () => {
     )
     pointer('pointerUp', surface, { clientX: 100, clientY: 200 })
 
-    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe('false')
+    expect(screen.getByTestId('plan-timeline-block').dataset.pressed).toBe(
+      'false',
+    )
   })
 
   it('keeps the armed card armed when it is tapped itself', () => {
@@ -478,7 +481,8 @@ describe('quick create', () => {
     const onPressSlot = vi.fn()
     mount({ onPressSlot })
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[36] as HTMLElement
     pointer('pointerDown', slot, { clientX: 100, clientY: 500 })
     pointer('pointerUp', slot, { clientX: 100, clientY: 500 })
     act(() => {
@@ -497,7 +501,8 @@ describe('quick create', () => {
     const onPressSlot = vi.fn()
     mount({ onPressSlot })
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[36] as HTMLElement
     await userEvent.click(slot)
 
     expect(onPressSlot).not.toHaveBeenCalled()
@@ -507,7 +512,8 @@ describe('quick create', () => {
     const onPressSlot = vi.fn()
     mount({ onPressSlot })
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[36] as HTMLElement
     pointer('pointerDown', slot, { clientX: 100, clientY: 500 })
     act(() => {
       vi.advanceTimersByTime(300)
@@ -524,7 +530,8 @@ describe('quick create', () => {
     const onPressSlot = vi.fn()
     mount({ onPressSlot })
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[36] as HTMLElement
     fireEvent.click(slot, { detail: 0 })
 
     expect(onPressSlot).toHaveBeenCalledWith(36, false)
@@ -534,9 +541,13 @@ describe('quick create', () => {
     mount()
 
     const slots = Array.from(screen.getByTestId('plan-timeline-slots').children)
-    const reachable = slots.filter((slot) => slot.getAttribute('tabindex') === '0')
+    const reachable = slots.filter(
+      (slot) => slot.getAttribute('tabindex') === '0',
+    )
     expect(reachable).toHaveLength(24)
-    expect(reachable[9]?.getAttribute('aria-label')).toBe('Add event at 9:00 AM')
+    expect(reachable[9]?.getAttribute('aria-label')).toBe(
+      'Add event at 9:00 AM',
+    )
   })
 
   it('draws the dashed hour ghost where the prompt is seeding an event', () => {

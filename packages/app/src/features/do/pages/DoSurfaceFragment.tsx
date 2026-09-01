@@ -29,7 +29,6 @@
  */
 import type { ActivityRing } from '../../../design/chrome'
 import {
-  ActiveToastHost,
   CHROME_LAYOUT,
   FAB_INSETS,
   LiquidGlassFABMenu,
@@ -46,10 +45,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DoSurfaceLayout, ShellShape } from '../../main/DoSurfaceLayout'
 import type { DoSuggestionSource } from '../DoSuggestions'
 import { DoHeaderFragment } from './DoHeaderFragment'
-import {
-  DoLanesFragment,
-  type DoLanesFragmentProps,
-} from './DoLanesFragment'
+import { DoLanesFragment, type DoLanesFragmentProps } from './DoLanesFragment'
 import {
   DoTasksListFragment,
   type DoTasksListDestination,
@@ -127,35 +123,34 @@ export interface DoSurfaceFragmentProps
 }
 
 /**
- * The surface, with the Active Toast host mounted around it.
+ * The surface.
  *
- * The host is a Component that keeps the toast in React state behind a context
- * (`RC-14` — it may not know a store exists), and `useActiveToasts()` throws
- * outside one. The shell mounts none, and canon's `.activeToast(...)` modifier
- * sits on `DoScreen`'s content rather than on `MainScreen`, so this is where it
- * belongs. `position="absolute"` keeps it inside the surface's own bounds,
- * which is what the `relative` wrapper below is for.
+ * It used to mount its own `ActiveToastHost` (`position="absolute"`, inside the
+ * `relative` wrapper below), because at the time the shell mounted none and
+ * canon's `.activeToast(...)` modifier sits on `DoScreen`'s content rather than
+ * on `MainScreen`. That is no longer true: `MainShellPage` mounts the one host
+ * for the whole app (KC-IS-#71 item 15), so a completion toast raised here now
+ * shares a lifetime with every other surface's — which is what canon's one-deep
+ * replace means — and rises above the Session Pill, which a host scoped to this
+ * surface could never be told about.
+ *
+ * `useActiveToasts()` still throws outside a host, so a story or a test that
+ * mounts this Fragment on its own wraps it in one.
  */
 export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
   return (
     <div
       data-testid="do-surface"
       data-shell-shape={props.shape}
-      className={cn(
-        'relative flex h-full min-h-0 flex-col',
-        props.className,
-      )}
+      className={cn('relative flex h-full min-h-0 flex-col', props.className)}
     >
-      <ActiveToastHost position="absolute">
-        <DoSurfaceBody {...props} />
-      </ActiveToastHost>
+      <DoSurfaceBody {...props} />
     </div>
   )
 }
 
 function DoSurfaceBody(props: DoSurfaceFragmentProps) {
   const {
-    shape,
     layout,
     header,
     rings,
@@ -291,7 +286,9 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           const target = event.target
           if (
             target instanceof Element &&
-            target.closest('[data-slot="endeavor-card"], button, a, [role="dialog"]')
+            target.closest(
+              '[data-slot="endeavor-card"], button, a, [role="dialog"]',
+            )
           ) {
             return
           }
@@ -378,16 +375,10 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
       </div>
 
       {/*
-        `MainScreen.quickActionFAB`'s `.doTab` branch.
-
-        GLYPH SUBSTITUTION, named rather than hidden: canon's four rows use
-        `checkmark.circle`, `clock.badge.xmark`, `plus` and `play.fill`, and the
-        disc itself uses `bolt.fill`. `LiquidGlassFABMenu` types its glyphs as
-        `SfSymbolName` — the design SYSTEM's table — and that table carries
-        neither `bolt.fill` nor `clock.badge.xmark` (the endeavor kit's own
-        table does carry `bolt.fill`, and the two are asserted disjoint, so it
-        cannot simply be added here). The nearest system symbols are used and
-        the gap is filed as a cross-lane need in this PR.
+        `MainScreen.quickActionFAB`'s `.doTab` branch — canon's own glyphs, all
+        five of them, since KC-IS-#71 item 16 folded `bolt.fill` and
+        `clock.badge.xmark` into the design system's table. Until then the disc
+        drew `target` and Clear Expired drew a bare `clock`.
       */}
       <div
         className="pointer-events-none absolute right-0 bottom-0 z-20 flex justify-end p-0"
@@ -408,7 +399,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
       >
         <div className="pointer-events-auto">
           <LiquidGlassFABMenu
-            mainGlyph="target"
+            mainGlyph="bolt.fill"
             mainAccessibilityLabel="Quick action"
             items={[
               {
@@ -420,7 +411,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
               {
                 id: 'clear-expired',
                 label: 'Clear Expired',
-                glyph: 'clock',
+                glyph: 'clock.badge.xmark',
                 onSelect: props.onClearExpired,
               },
               {
@@ -432,7 +423,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
               {
                 id: 'start-session',
                 label: 'Start Session',
-                glyph: 'play',
+                glyph: 'play.fill',
                 onSelect: props.onStartSession,
               },
             ]}

@@ -43,7 +43,11 @@ import {
   authProviders,
   toUnknownException,
 } from '@kro/core'
-import { type AuthException, AuthExceptions, isAuthException } from './AuthException'
+import {
+  type AuthException,
+  AuthExceptions,
+  isAuthException,
+} from './AuthException'
 
 /**
  * The `public.users` row, column for column — canon's `UserRow`. Field names
@@ -134,7 +138,8 @@ export const AuthMapper = {
     if (user.username !== null) payload.username = user.username
     if (user.avatarUrl !== null) payload.avatar_url = user.avatarUrl
     if (user.nationality !== null) payload.nationality = user.nationality
-    if (user.birthDate !== null) payload.birth_date = user.birthDate.toISOString()
+    if (user.birthDate !== null)
+      payload.birth_date = user.birthDate.toISOString()
     return payload
   },
 

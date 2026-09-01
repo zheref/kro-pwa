@@ -76,7 +76,9 @@ describe('the three choices', () => {
   it('never both adopts and clears — the two are mutually exclusive by construction', () => {
     for (const choice of localDataChoices) {
       const decision = localDataDecisionFor(choice)
-      expect(decision.adoptsAnonymousRows && decision.clearsLocalRows).toBe(false)
+      expect(decision.adoptsAnonymousRows && decision.clearsLocalRows).toBe(
+        false,
+      )
     }
   })
 

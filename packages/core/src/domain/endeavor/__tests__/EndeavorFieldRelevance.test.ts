@@ -65,7 +65,9 @@ describe('kind is never editable', () => {
 
 describe('rule: `due` is irrelevant to habits and calendar events', () => {
   it('is visible for the other five kinds', () => {
-    expect(kindsWhere((kind) => isFieldVisible(EndeavorField.due, kind))).toEqual([
+    expect(
+      kindsWhere((kind) => isFieldVisible(EndeavorField.due, kind)),
+    ).toEqual([
       EndeavorKind.background,
       EndeavorKind.behavior,
       EndeavorKind.blueprint,
@@ -79,7 +81,9 @@ describe('rule: `due` is irrelevant to habits and calendar events', () => {
   })
 
   it('is hidden for a calendar event, which is driven by start + duration', () => {
-    expect(isFieldVisible(EndeavorField.due, EndeavorKind.calendarEvent)).toBe(false)
+    expect(isFieldVisible(EndeavorField.due, EndeavorKind.calendarEvent)).toBe(
+      false,
+    )
   })
 })
 
@@ -156,7 +160,9 @@ describe('rule: the remaining nine fields apply to every kind', () => {
 
   it('are visible for all seven kinds', () => {
     for (const field of uniform) {
-      expect(kindsWhere((kind) => isFieldVisible(field, kind))).toEqual(endeavorKinds)
+      expect(kindsWhere((kind) => isFieldVisible(field, kind))).toEqual(
+        endeavorKinds,
+      )
     }
   })
 
@@ -171,9 +177,7 @@ describe('rule: the remaining nine fields apply to every kind', () => {
   })
 
   it('cover every field the three kind-specific rules do not', () => {
-    expect(
-      endeavorFields.filter((field) => !uniform.includes(field)),
-    ).toEqual([
+    expect(endeavorFields.filter((field) => !uniform.includes(field))).toEqual([
       EndeavorField.due,
       EndeavorField.start,
       EndeavorField.duration,
@@ -196,9 +200,9 @@ describe('rule: editability mirrors visibility for non-relation fields', () => {
   })
 
   it('still refuses a blueprint’s duration', () => {
-    expect(isFieldEditable(EndeavorField.duration, EndeavorKind.blueprint)).toBe(
-      false,
-    )
+    expect(
+      isFieldEditable(EndeavorField.duration, EndeavorKind.blueprint),
+    ).toBe(false)
   })
 })
 
@@ -212,10 +216,12 @@ describe('rule: relations are always visible', () => {
   })
 
   it('is visible even where it is not editable — the two differ', () => {
-    expect(isRelationVisible(EndeavorRelation.defers, EndeavorKind.habit)).toBe(true)
-    expect(isRelationEditable(EndeavorRelation.defers, EndeavorKind.habit)).toBe(
-      false,
+    expect(isRelationVisible(EndeavorRelation.defers, EndeavorKind.habit)).toBe(
+      true,
     )
+    expect(
+      isRelationEditable(EndeavorRelation.defers, EndeavorKind.habit),
+    ).toBe(false)
   })
 
   it('is visible for the relation with the narrowest editable set', () => {
@@ -239,28 +245,37 @@ describe('rule: `defers` tracks `due` exactly', () => {
   })
 
   it('refuses a habit for the same reason `due` is hidden on one', () => {
-    expect(isRelationEditable(EndeavorRelation.defers, EndeavorKind.habit)).toBe(
-      false,
-    )
+    expect(
+      isRelationEditable(EndeavorRelation.defers, EndeavorKind.habit),
+    ).toBe(false)
   })
 })
 
 describe('rule: `performances` belongs to the session-trackable kinds', () => {
   it('is editable for task, reminder and habit only', () => {
     expect(
-      kindsWhere((kind) => isRelationEditable(EndeavorRelation.performances, kind)),
+      kindsWhere((kind) =>
+        isRelationEditable(EndeavorRelation.performances, kind),
+      ),
     ).toEqual([EndeavorKind.habit, EndeavorKind.reminder, EndeavorKind.task])
   })
 
   it('matches `sessionPoints`’ own kind set exactly', () => {
     expect(
-      kindsWhere((kind) => isRelationEditable(EndeavorRelation.performances, kind)),
-    ).toEqual(kindsWhere((kind) => isFieldEditable(EndeavorField.sessionPoints, kind)))
+      kindsWhere((kind) =>
+        isRelationEditable(EndeavorRelation.performances, kind),
+      ),
+    ).toEqual(
+      kindsWhere((kind) => isFieldEditable(EndeavorField.sessionPoints, kind)),
+    )
   })
 
   it('refuses a calendar event', () => {
     expect(
-      isRelationEditable(EndeavorRelation.performances, EndeavorKind.calendarEvent),
+      isRelationEditable(
+        EndeavorRelation.performances,
+        EndeavorKind.calendarEvent,
+      ),
     ).toBe(false)
   })
 })
@@ -285,17 +300,21 @@ describe('rule: `hosts` and `shadows` track each other', () => {
   })
 
   it('refuse a habit, which has no external write-back target', () => {
-    expect(isRelationEditable(EndeavorRelation.hosts, EndeavorKind.habit)).toBe(false)
-    expect(isRelationEditable(EndeavorRelation.shadows, EndeavorKind.habit)).toBe(
+    expect(isRelationEditable(EndeavorRelation.hosts, EndeavorKind.habit)).toBe(
       false,
     )
+    expect(
+      isRelationEditable(EndeavorRelation.shadows, EndeavorKind.habit),
+    ).toBe(false)
   })
 
   it('differ from `performances`, which habits DO have and events do not', () => {
     expect(
       isRelationEditable(EndeavorRelation.performances, EndeavorKind.habit),
     ).toBe(true)
-    expect(isRelationEditable(EndeavorRelation.hosts, EndeavorKind.habit)).toBe(false)
+    expect(isRelationEditable(EndeavorRelation.hosts, EndeavorKind.habit)).toBe(
+      false,
+    )
   })
 })
 
@@ -330,7 +349,9 @@ describe('the meta kinds edit `defers` and nothing else', () => {
   it('leaves exactly one editable relation each', () => {
     for (const kind of metaKinds) {
       expect(
-        endeavorRelations.filter((relation) => isRelationEditable(relation, kind)),
+        endeavorRelations.filter((relation) =>
+          isRelationEditable(relation, kind),
+        ),
       ).toEqual([EndeavorRelation.defers])
     }
   })

@@ -55,9 +55,9 @@ describe('resolving a Google date field to an instant', () => {
 
 describe('recognising the two event shapes', () => {
   it('calls a date-only start an all-day event', () => {
-    expect(isAllDayGoogleEvent({ id: 'a', start: { date: '2026-08-31' } })).toBe(
-      true,
-    )
+    expect(
+      isAllDayGoogleEvent({ id: 'a', start: { date: '2026-08-31' } }),
+    ).toBe(true)
   })
 
   it('does not call a timed event all-day', () => {
@@ -161,13 +161,17 @@ describe('mapping a Google event onto an endeavor', () => {
       envelope({ id: 'g', start: { dateTime: '2026-08-31T17:00:00Z' } }),
     )
     expect(mapped?.title).toBe(GOOGLE_EVENT_FALLBACK_TITLE)
-    expect(mapped?.shadows?.[0]?.originalTitle).toBe(GOOGLE_EVENT_FALLBACK_TITLE)
+    expect(mapped?.shadows?.[0]?.originalTitle).toBe(
+      GOOGLE_EVENT_FALLBACK_TITLE,
+    )
   })
 
   it('refuses an event with no usable start rather than storing a partial row', () => {
     expect(GoogleCalendarMapper.toDomain(envelope({ id: 'g' }))).toBeNull()
     expect(
-      GoogleCalendarMapper.toDomain(envelope({ id: 'g', start: { date: 'x' } })),
+      GoogleCalendarMapper.toDomain(
+        envelope({ id: 'g', start: { date: 'x' } }),
+      ),
     ).toBeNull()
   })
 })

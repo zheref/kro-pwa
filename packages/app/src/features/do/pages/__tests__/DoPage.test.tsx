@@ -1,8 +1,15 @@
 import type { LocalStore } from '@kro/core'
 import { EndeavorStatus } from '@kro/core'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import {
   type AppStore,
@@ -55,8 +62,12 @@ const mountPage = (
     store.dispatch(onSurfaceChanged({ surface: options.surface }))
   }
   render(
+    // The shell's two providers, as far as this Page can tell: the store, and
+    // the one Active Toast host `MainShellPage` mounts (KC-IS-#71 item 15).
     <StoreProvider store={store}>
-      <DoPage now={DO_MOCK_NOW} locale="en-US" initialLaneWidth={1120} />
+      <ActiveToastHost position="absolute">
+        <DoPage now={DO_MOCK_NOW} locale="en-US" initialLaneWidth={1120} />
+      </ActiveToastHost>
     </StoreProvider>,
   )
   return { store, localStore }
@@ -223,7 +234,7 @@ describe('prepare → complete → undo', () => {
 
     // Complete, then undo through the same producer the toast's Undo fires.
     const { markEndeavorCompleteThunk } = await import('../../DoProducer')
-    const { reopenEndeavorThunk } = await import('../DoOverflowProducer')
+    const { reopenEndeavorThunk } = await import('../../DoProducer')
 
     await store.dispatch(
       markEndeavorCompleteThunk({
@@ -241,9 +252,9 @@ describe('prepare → complete → undo', () => {
     )
 
     await waitFor(() => {
-      expect(
-        store.getState().do.lanes.overdue.map((e) => e.id),
-      ).toContain(target.id)
+      expect(store.getState().do.lanes.overdue.map((e) => e.id)).toContain(
+        target.id,
+      )
     })
     expect(
       store.getState().do.lanes.completedToday.map((e) => e.id),
@@ -259,7 +270,9 @@ describe('mark-complete mode', () => {
     })
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     expect(store.getState().do.isInMarkCompleteMode).toBe(true)
     await waitFor(() => {
@@ -276,7 +289,9 @@ describe('mark-complete mode', () => {
     })
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     const done = await screen.findByTestId('do-done-control')
     expect(screen.queryByLabelText('Refresh')).toBeNull()
@@ -300,13 +315,15 @@ describe('mark-complete mode', () => {
     expect(store.getState().do.selectedCardKey).not.toBeNull()
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     expect(store.getState().do.selectedCardKey).toBeNull()
   })
 })
 
-describe('the FAB\'s other three rows', () => {
+describe("the FAB's other three rows", () => {
   it('Clear Expired closes the expired lane and refetches the day', async () => {
     const { store } = mountPage()
     await waitFor(() => {
@@ -383,6 +400,36 @@ describe('the intents this surface hands to other features', () => {
     expect(store.getState().endeavorDetail.endeavor?.id).toBe(target.id)
   })
 
+  it('Start on a prepared card carries the endeavor into the session', async () => {
+    // KC-IS-#71 item 21: canon's `.onUserWantsToStartEvent(endeavor, nil)`.
+    // The navigation used to be the whole hand-off, so Execute opened on the
+    // anonymous `Focus Session` however you got there.
+    const navigation = makeRecordingNavigationService()
+    const { store } = mountPage({ navigation })
+    await waitFor(() => {
+      expect(store.getState().do.load.kind).toBe('loaded')
+    })
+
+    const lane = screen.getByTestId('do-lane-overdue')
+    const target = store.getState().do.lanes.overdue[0]
+    if (target === undefined) throw new Error('the Overdue lane is empty')
+
+    const title = lane.querySelector<HTMLButtonElement>(
+      '[data-slot="endeavor-card"] button',
+    )
+    if (title === null) throw new Error('the Overdue lane rendered no card')
+    await userEvent.click(title)
+    const start = lane.querySelector<HTMLButtonElement>(
+      '[data-slot="endeavor-card-prep-overlay"] button[aria-label="Start"]',
+    )
+    if (start === null) throw new Error('the prepared card offers no Start')
+    await userEvent.click(start)
+
+    await waitFor(() => {
+      expect(store.getState().session.identity?.title).toBe(target.title)
+    })
+  })
+
   it('Start on a prepared card routes to the session surface', async () => {
     const navigation = makeRecordingNavigationService()
     const { store } = mountPage({ navigation })
@@ -420,9 +467,7 @@ describe('the intents this surface hands to other features', () => {
     // The expanded list's rows carry the skip control inline, with no popover
     // between it and the intent — see the note in `DoToolbarFragment` about
     // what a Radix popper costs under jsdom.
-    await userEvent.click(
-      screen.getByRole('button', { name: /^Overdue, / }),
-    )
+    await userEvent.click(screen.getByRole('button', { name: /^Overdue, / }))
     const list = await screen.findByTestId('do-tasks-list')
     const target = store.getState().do.lanes.overdue[0]
     if (target === undefined) throw new Error('the Overdue lane is empty')

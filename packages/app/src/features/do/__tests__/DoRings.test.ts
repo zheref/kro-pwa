@@ -2,7 +2,11 @@ import { type Endeavor, EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { DO_MOCK_NOW, doEndeavorFixtures } from '../DoMocks'
 import { areDoRingsVisible, habitsRing, tasksRing } from '../DoRings'
-import { doLensFor, initialDoVisibility, partitionDoTaskLanes } from '../DoRules'
+import {
+  doLensFor,
+  initialDoVisibility,
+  partitionDoTaskLanes,
+} from '../DoRules'
 
 const {
   anytimeTask,
@@ -83,8 +87,9 @@ describe('the rings truth table', () => {
         endeavors.filter((endeavor) => endeavor.kind === EndeavorKind.habit),
         DO_MOCK_NOW,
       )
-      const describeRing = (ring: { completed: number; expected: number } | null) =>
-        ring === null ? 'absent' : `${ring.completed}/${ring.expected}`
+      const describeRing = (
+        ring: { completed: number; expected: number } | null,
+      ) => (ring === null ? 'absent' : `${ring.completed}/${ring.expected}`)
 
       expect(describeRing(taskRing)).toBe(tasks)
       expect(describeRing(habitRing)).toBe(habits)

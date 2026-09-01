@@ -34,7 +34,10 @@
  * behavior this issue's acceptance criteria ask for.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { ThirstExceptions, toThirstException } from '../../features/thirst/ThirstException'
+import {
+  ThirstExceptions,
+  toThirstException,
+} from '../../features/thirst/ThirstException'
 import {
   type FeatureVoteCounts,
   type VotePlatform,
@@ -87,7 +90,10 @@ interface VoteCountRow {
 }
 
 const isVotePlatform = (value: string): value is VotePlatform =>
-  value === 'ios' || value === 'android' || value === 'web' || value === 'windows'
+  value === 'ios' ||
+  value === 'android' ||
+  value === 'web' ||
+  value === 'windows'
 
 const foldVoteCountRows = (
   featureKey: string,
@@ -97,7 +103,8 @@ const foldVoteCountRows = (
   const perPlatform: Partial<Record<VotePlatform, number>> = {}
   for (const row of rows) {
     if (!isVotePlatform(row.platform)) continue
-    perPlatform[row.platform] = (perPlatform[row.platform] ?? 0) + row.vote_count
+    perPlatform[row.platform] =
+      (perPlatform[row.platform] ?? 0) + row.vote_count
   }
   return { featureKey, total: rows[0]?.total_count ?? 0, perPlatform }
 }
@@ -131,7 +138,9 @@ const requireSignedInClient = async (
   return { client, username: user.email ?? user.id }
 }
 
-export const makeLiveThirstService = (options: LiveThirstServiceOptions): ThirstService => {
+export const makeLiveThirstService = (
+  options: LiveThirstServiceOptions,
+): ThirstService => {
   const { clientProvider } = options
 
   return {
@@ -145,7 +154,8 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
           username,
           platform: WEB_VOTE_PLATFORM,
         })
-        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        if (callOptions?.signal !== undefined)
+          query = query.abortSignal(callOptions.signal)
         const { error } = await query
         if (error !== null) {
           if (error.code === UNIQUE_VIOLATION) return
@@ -161,8 +171,12 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
       try {
         // RLS scopes SELECT to the caller's own rows (`votes_select_self`),
         // so any match means the current user has voted.
-        let query = client.from(VOTES_TABLE).select('id').eq('feature_key', featureKey)
-        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        let query = client
+          .from(VOTES_TABLE)
+          .select('id')
+          .eq('feature_key', featureKey)
+        if (callOptions?.signal !== undefined)
+          query = query.abortSignal(callOptions.signal)
         const { data, error } = await query
         if (error !== null) throw error
         return (data ?? []).length > 0
@@ -179,10 +193,14 @@ export const makeLiveThirstService = (options: LiveThirstServiceOptions): Thirst
       if (client === null) return emptyFeatureVoteCounts(featureKey)
       try {
         let query = client.rpc(VOTE_COUNTS_RPC, { p_feature_key: featureKey })
-        if (callOptions?.signal !== undefined) query = query.abortSignal(callOptions.signal)
+        if (callOptions?.signal !== undefined)
+          query = query.abortSignal(callOptions.signal)
         const { data, error } = await query
         if (error !== null) throw error
-        return foldVoteCountRows(featureKey, (data ?? []) as readonly VoteCountRow[])
+        return foldVoteCountRows(
+          featureKey,
+          (data ?? []) as readonly VoteCountRow[],
+        )
       } catch (error) {
         throw toThirstException(error)
       }
@@ -252,13 +270,15 @@ export const makeStubbedThirstService = (
       if (!signedIn) throw ThirstExceptions.notSignedIn()
       if (voted.has(featureKey)) return
       voted.add(featureKey)
-      const current = counts.get(featureKey) ?? emptyFeatureVoteCounts(featureKey)
+      const current =
+        counts.get(featureKey) ?? emptyFeatureVoteCounts(featureKey)
       counts.set(featureKey, {
         ...current,
         total: current.total + 1,
         perPlatform: {
           ...current.perPlatform,
-          [WEB_VOTE_PLATFORM]: (current.perPlatform[WEB_VOTE_PLATFORM] ?? 0) + 1,
+          [WEB_VOTE_PLATFORM]:
+            (current.perPlatform[WEB_VOTE_PLATFORM] ?? 0) + 1,
         },
       })
     },

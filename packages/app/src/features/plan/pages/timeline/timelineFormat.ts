@@ -62,7 +62,9 @@ export const slotAccessibilityLabel = (start: Date, locale?: string): string =>
 
 /** The Plan header's own title — canon's `"MMM d"` over the selected day. */
 export const planTitleDate = (date: Date, locale?: string): string =>
-  new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(date)
+  new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(
+    date,
+  )
 
 /** The line under it — canon's `"EEEE"`. */
 export const planTitleWeekday = (date: Date, locale?: string): string =>

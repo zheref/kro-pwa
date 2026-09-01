@@ -21,7 +21,11 @@ export const ok = <T>(value: T): Result<T, never> => ({ ok: true, value })
 export const err = <E>(error: E): Result<never, E> => ({ ok: false, error })
 
 /** Narrowing guard for the success arm. */
-export const isOk = <T, E>(result: Result<T, E>): result is { ok: true; value: T } => result.ok
+export const isOk = <T, E>(
+  result: Result<T, E>,
+): result is { ok: true; value: T } => result.ok
 
 /** Narrowing guard for the failure arm. */
-export const isErr = <T, E>(result: Result<T, E>): result is { ok: false; error: E } => !result.ok
+export const isErr = <T, E>(
+  result: Result<T, E>,
+): result is { ok: false; error: E } => !result.ok

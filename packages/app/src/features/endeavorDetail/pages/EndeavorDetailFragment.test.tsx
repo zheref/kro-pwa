@@ -40,7 +40,7 @@ const mount = (
   )
 
 describe('the header', () => {
-  it('leads with the kind chip, which is the endeavor\'s strongest identity signal', () => {
+  it("leads with the kind chip, which is the endeavor's strongest identity signal", () => {
     mount(detailEndeavorMocks.task)
     expect(screen.getByText('Task')).toBeTruthy()
   })
@@ -92,7 +92,7 @@ describe('the matrix decides which rows exist', () => {
     expect(screen.getByText('Status')).toBeTruthy()
   })
 
-  it('opens the field\'s editor through a named control', async () => {
+  it("opens the field's editor through a named control", async () => {
     const onEditField = vi.fn()
     mount(detailEndeavorMocks.task, { onEditField })
 
@@ -125,7 +125,9 @@ describe('relations', () => {
     mount(detailEndeavorMocks.event)
 
     const performances = screen.getByTestId('endeavor-detail')
-    expect(within(performances).getAllByText('Read only').length).toBeGreaterThan(0)
+    expect(
+      within(performances).getAllByText('Read only').length,
+    ).toBeGreaterThan(0)
   })
 
   it('summarises an empty relation with WHY it is empty', () => {

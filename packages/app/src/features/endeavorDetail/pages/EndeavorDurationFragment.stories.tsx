@@ -40,7 +40,9 @@ export default {
 export const NoRecommendationYet = {
   render: () => (
     <Stage width={430}>
-      <EndeavorDurationFragment {...scene(detailEndeavorMocks.taskWithOneSession)} />
+      <EndeavorDurationFragment
+        {...scene(detailEndeavorMocks.taskWithOneSession)}
+      />
     </Stage>
   ),
 }
@@ -106,7 +108,9 @@ export const Saving = {
 export const BothColorSchemes = {
   render: () => (
     <BothSchemes>
-      <EndeavorDurationFragment {...scene(detailEndeavorMocks.taskWithSessions)} />
+      <EndeavorDurationFragment
+        {...scene(detailEndeavorMocks.taskWithSessions)}
+      />
     </BothSchemes>
   ),
 }

@@ -154,12 +154,14 @@ export const planCachePreservingDayAcrossMidnight = (params: {
   readonly authoritativeEvents: readonly Endeavor[]
 }): PlanDayCache => {
   if (isSamePlanDay(params.previousNow, params.now)) return params.cache
-  if (!isSamePlanDay(params.selectedDate, params.previousNow)) return params.cache
+  if (!isSamePlanDay(params.selectedDate, params.previousNow))
+    return params.cache
   const key = planDayKey(params.previousNow)
   return {
     ...params.cache,
     [key]: params.authoritativeEvents.filter(
-      (event) => event.start !== null && isSamePlanDay(event.start, params.previousNow),
+      (event) =>
+        event.start !== null && isSamePlanDay(event.start, params.previousNow),
     ),
   }
 }

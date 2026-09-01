@@ -9,17 +9,22 @@ describe('Input', () => {
   it('accepts typing', async () => {
     render(<Input aria-label="Endeavor title" />)
 
-    await userEvent.type(screen.getByLabelText('Endeavor title'), 'Write the port')
-
-    expect(screen.getByLabelText<HTMLInputElement>('Endeavor title').value).toBe(
+    await userEvent.type(
+      screen.getByLabelText('Endeavor title'),
       'Write the port',
     )
+
+    expect(
+      screen.getByLabelText<HTMLInputElement>('Endeavor title').value,
+    ).toBe('Write the port')
   })
 
   it('sits on the recessed field surface, one step in from the card', () => {
     render(<Input aria-label="Title" />)
 
-    expect(screen.getByLabelText('Title').className).toContain('bg-kro-back-inner')
+    expect(screen.getByLabelText('Title').className).toContain(
+      'bg-kro-back-inner',
+    )
   })
 
   it('always draws a border, because a fill-only field vanishes on a dark card', () => {

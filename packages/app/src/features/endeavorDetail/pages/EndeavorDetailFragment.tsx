@@ -35,7 +35,11 @@
  * stylesheet.
  */
 import type { Endeavor, EndeavorField, EndeavorRelation } from '@kro/core'
-import { ChipFlow, KroChip, semanticTint } from '../../../design/endeavor/KroChip'
+import {
+  ChipFlow,
+  KroChip,
+  semanticTint,
+} from '../../../design/endeavor/KroChip'
 import { PropertyRow } from '../../../design/endeavor/PropertyRow'
 import {
   CardRowStack,
@@ -118,10 +122,7 @@ export function EndeavorDetailFragment({
             >
               {title}
             </h2>
-            <IconAction
-              label="Edit title"
-              onPress={() => onEditField('title')}
-            >
+            <IconAction label="Edit title" onPress={() => onEditField('title')}>
               <Pencil size={14} aria-hidden />
             </IconAction>
           </div>
@@ -187,7 +188,9 @@ export function EndeavorDetailFragment({
           count={card.count === 0 ? undefined : card.count}
           actionTitle={card.isManageable ? 'Manage' : undefined}
           onAction={
-            card.isManageable ? () => onManageRelation(card.relation) : undefined
+            card.isManageable
+              ? () => onManageRelation(card.relation)
+              : undefined
           }
         >
           <div

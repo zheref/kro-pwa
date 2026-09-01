@@ -11,7 +11,9 @@ import { describe, expect, it } from 'vitest'
 import { AA_TEXT, formatRatio, parseColor, ratioBetween } from './contrast'
 import {
   CHIP_ROLES,
+  LABEL_ON_FILL_ROLES,
   NON_TEXT_ROLES,
+  THEMES,
   UNMEASURED_ROLES,
   measuredPairs,
   rolesUnderContract,
@@ -55,7 +57,8 @@ describe('the suite measures the whole palette', () => {
     const unmeasured = new Set(Object.keys(UNMEASURED_ROLES))
 
     const unclassified = COLOR_ROLES.filter(
-      (role) => !covered.has(role) && !nonText.has(role) && !unmeasured.has(role),
+      (role) =>
+        !covered.has(role) && !nonText.has(role) && !unmeasured.has(role),
     )
     expect(
       unclassified,
@@ -64,23 +67,50 @@ describe('the suite measures the whole palette', () => {
 
     const doubled = COLOR_ROLES.filter(
       (role) =>
-        [covered.has(role), nonText.has(role), unmeasured.has(role)].filter(Boolean)
-          .length > 1,
+        [covered.has(role), nonText.has(role), unmeasured.has(role)].filter(
+          Boolean,
+        ).length > 1,
     )
     expect(doubled, 'a role may sit in exactly one bucket').toEqual([])
   })
 
   it('names no role in UNMEASURED_ROLES that tokens.css does not declare', () => {
     const declared = new Set<string>(COLOR_ROLES)
-    const stale = Object.keys(UNMEASURED_ROLES).filter((role) => !declared.has(role))
-    expect(stale, 'a stale exemption keeps a deleted role alive in the docs').toEqual(
-      [],
+    const stale = Object.keys(UNMEASURED_ROLES).filter(
+      (role) => !declared.has(role),
     )
+    expect(
+      stale,
+      'a stale exemption keeps a deleted role alive in the docs',
+    ).toEqual([])
   })
 
   it('gives every exemption a written reason', () => {
     for (const [role, reason] of Object.entries(UNMEASURED_ROLES)) {
       expect(reason.length, `${role} has no reason`).toBeGreaterThan(20)
+    }
+  })
+
+  it('measures the three saturated action fills that carry a word (KC-IS-#71 item 16)', () => {
+    // The session sheet paints "Complete Task", "Start New" and "Break"
+    // directly on these. Canon draws them white; measured against this
+    // palette white is 3.65 / 1.92 / 2.27 : 1, so the port draws them black —
+    // and this is the assertion that keeps that decision honest.
+    expect(LABEL_ON_FILL_ROLES.map(({ role }) => role)).toEqual([
+      'completeBlue',
+      'focusGreen',
+      'pastryGreen',
+    ])
+
+    const measured = pairs.filter(
+      (pair) => pair.contract === 'saturated action fill, black label',
+    )
+    expect(measured).toHaveLength(LABEL_ON_FILL_ROLES.length * THEMES.length)
+    for (const pair of measured) {
+      expect(
+        ratioBetween(pair.foreground, pair.background),
+        `${pair.label} (${pair.theme})`,
+      ).toBeGreaterThanOrEqual(4.5)
     }
   })
 

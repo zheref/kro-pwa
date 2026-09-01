@@ -362,7 +362,9 @@ export const isGoogleRateLimitBody = (value: unknown): boolean => {
   return errors.some((entry) => {
     if (!isRecord(entry)) return false
     const reason = optionalString(entry.reason)
-    return reason !== undefined && reason.toLowerCase().endsWith('ratelimitexceeded')
+    return (
+      reason !== undefined && reason.toLowerCase().endsWith('ratelimitexceeded')
+    )
   })
 }
 

@@ -15,5 +15,8 @@ export * from './documentTitle/DocumentTitleService'
 export * from './install/InstallService'
 export * from './notifications/NotificationsService'
 export * from './notifications/OverdueAlertReconciliation'
+// The share hand-off (KC-IS-#71 item 18) — `navigator.share` with the
+// clipboard behind it. Triage carried a stand-in for it; Find named the gap.
+export * from './share/ShareService'
 export * from './vibration/VibrationService'
 export * from './wakeLock/WakeLockService'

@@ -1,7 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement, ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetActiveToastSequence } from '../../../../design/chrome'
+import {
+  ActiveToastHost,
+  resetActiveToastSequence,
+} from '../../../../design/chrome'
 import { noopDoCardHandlers } from '../doCardHandlers'
 import {
   DoSurfaceFragment,
@@ -16,6 +20,21 @@ afterEach(cleanup)
 
 const day = doSurfaceProps(doSurfaceMocks.typicalDay)
 
+/**
+ * Every render here goes through a toast host.
+ *
+ * The one host moved up to the shell (`MainShellPage`, KC-IS-#71 item 15), so a
+ * Fragment mounted on its own has no ancestor supplying the context and
+ * `useActiveToasts()` throws — deliberately, because a silently swallowed toast
+ * is the bug nobody notices. `position="absolute"` keeps the layer inside the
+ * test's own container, exactly as the surface's former host did.
+ */
+const InToastHost = ({ children }: { children: ReactNode }) => (
+  <ActiveToastHost position="absolute">{children}</ActiveToastHost>
+)
+
+const renderSurface = (ui: ReactElement) => render(ui, { wrapper: InToastHost })
+
 /** One touch drag down the scroller, in the shape React's synthetic events want. */
 const pullBy = (scroller: HTMLElement, distance: number) => {
   fireEvent.touchStart(scroller, { touches: [{ clientY: 0 }] })
@@ -25,14 +44,14 @@ const pullBy = (scroller: HTMLElement, distance: number) => {
 
 describe('the surface composes the header, the lanes and the FAB', () => {
   it('renders the day header above the lanes', () => {
-    render(<DoSurfaceFragment {...day} />)
+    renderSurface(<DoSurfaceFragment {...day} />)
     expect(screen.getByTestId('do-header')).toBeTruthy()
     expect(screen.getByTestId('do-lanes')).toBeTruthy()
   })
 
-  it('offers canon\'s four quick actions behind the FAB', async () => {
+  it("offers canon's four quick actions behind the FAB", async () => {
     const onEnterMarkCompleteMode = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...day}
         onEnterMarkCompleteMode={onEnterMarkCompleteMode}
@@ -49,18 +68,18 @@ describe('the surface composes the header, the lanes and the FAB', () => {
       expect(screen.getByRole('button', { name: label })).toBeTruthy()
     }
 
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
     expect(onEnterMarkCompleteMode).toHaveBeenCalledTimes(1)
   })
 
   it('surfaces a failed refresh without throwing the retained day away', () => {
     const failed = doSurfaceProps(doSurfaceMocks.failedRefresh)
-    render(<DoSurfaceFragment {...failed} />)
+    renderSurface(<DoSurfaceFragment {...failed} />)
 
     // The copy is the domain's — `DoException.message`, never assembled here.
-    expect(
-      screen.getByText(/Couldn't refresh the Do screen/),
-    ).toBeTruthy()
+    expect(screen.getByText(/Couldn't refresh the Do screen/)).toBeTruthy()
     expect(screen.getByTestId('do-lane-overdue')).toBeTruthy()
   })
 })
@@ -68,7 +87,7 @@ describe('the surface composes the header, the lanes and the FAB', () => {
 describe('refresh', () => {
   it('refreshes when a touch surface is pulled past the threshold', () => {
     const onRefresh = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...doSurfaceProps(doSurfaceMocks.typicalDay, 'handheld', {
           onRefresh,
@@ -82,7 +101,7 @@ describe('refresh', () => {
 
   it('does not refresh on a short drag that never armed', () => {
     const onRefresh = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...doSurfaceProps(doSurfaceMocks.typicalDay, 'handheld', {
           onRefresh,
@@ -95,7 +114,7 @@ describe('refresh', () => {
   })
 
   it('offers no pull affordance on a pointer surface — that one has a toolbar', () => {
-    render(<DoSurfaceFragment {...day} />)
+    renderSurface(<DoSurfaceFragment {...day} />)
     expect(screen.queryByTestId('do-pull-indicator')).toBeNull()
   })
 })
@@ -103,7 +122,7 @@ describe('refresh', () => {
 describe('the one-shot scrolls', () => {
   it('reports the overdue jump as handled so the flag can clear', () => {
     const onScrollHandled = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...day}
         scrollTarget="overdue"
@@ -118,7 +137,7 @@ describe('the one-shot scrolls', () => {
     const first = day.lanes.now[0]
     if (first === undefined) throw new Error('the Due Soon fixture is empty')
 
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...day}
         selectedCardKey={`now:${first.id}`}
@@ -131,7 +150,7 @@ describe('the one-shot scrolls', () => {
 
   it('reports nothing while no jump has been asked for', () => {
     const onScrollHandled = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...day}
         scrollTarget={null}
@@ -144,7 +163,7 @@ describe('the one-shot scrolls', () => {
 
 describe('mark-complete mode reaches every card at once', () => {
   it('wiggles every card and offers the corner check without a preparation tap', () => {
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...doSurfaceProps(doSurfaceMocks.markCompleteMode)}
       />,
@@ -160,7 +179,7 @@ describe('mark-complete mode reaches every card at once', () => {
   })
 
   it('hides the rings while the header carries the instruction instead', () => {
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...doSurfaceProps(doSurfaceMocks.markCompleteMode)}
       />,
@@ -176,7 +195,7 @@ describe('mark-complete mode reaches every card at once', () => {
 describe('the expanded section list', () => {
   it('opens over the surface when a lane badge is tapped, and closes on Back', async () => {
     const onDeselect = vi.fn()
-    render(
+    renderSurface(
       <DoSurfaceFragment
         {...day}
         handlers={{ ...noopDoCardHandlers, onDeselect }}

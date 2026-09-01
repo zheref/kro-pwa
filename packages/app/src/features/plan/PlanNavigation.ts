@@ -102,7 +102,7 @@ export const advancePlanViewMode = (
   const index = planViewModes.indexOf(mode)
   if (index < 0) return planViewModes[0] as PlanViewMode
   const count = planViewModes.length
-  const advanced = ((index + steps) % count + count) % count
+  const advanced = (((index + steps) % count) + count) % count
   return planViewModes[advanced] as PlanViewMode
 }
 

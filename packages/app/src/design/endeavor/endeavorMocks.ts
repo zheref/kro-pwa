@@ -28,7 +28,9 @@ export const NOW = new Date(2026, 3, 15, 14, 0, 0)
 const hours = (count: number) => new Date(NOW.getTime() + count * 3_600_000)
 const minutes = (count: number) => count * 60
 
-function card(overrides: Partial<EndeavorCardModel> & Pick<EndeavorCardModel, 'id'>): EndeavorCardModel {
+function card(
+  overrides: Partial<EndeavorCardModel> & Pick<EndeavorCardModel, 'id'>,
+): EndeavorCardModel {
   return {
     urgency: EndeavorUrgency.low,
     reward: 10,

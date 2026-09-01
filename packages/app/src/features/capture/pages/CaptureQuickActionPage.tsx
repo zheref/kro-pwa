@@ -27,9 +27,7 @@ export function CaptureQuickActionPage() {
     // — the pairing this disc inherits. `initialStart` is omitted, so the draft
     // opens unscheduled and merely offers the quarter hour nearest `now`; the
     // Plan timeline's press-to-create is the caller that passes one.
-    dispatch(
-      userDidRequestCapture({ kind: CaptureKind.task, now: new Date() }),
-    )
+    dispatch(userDidRequestCapture({ kind: CaptureKind.task, now: new Date() }))
   }, [dispatch])
 
   return (

@@ -16,7 +16,7 @@ import {
  *   9 cards → 32 + 200 + 8·120 + 8·24 = 1384
  */
 describe('the width one arrangement needs', () => {
-  it('matches canon\'s formula at the three-card floor', () => {
+  it("matches canon's formula at the three-card floor", () => {
     expect(featuredRequiredWidth(3)).toBe(520)
   })
 
@@ -26,7 +26,9 @@ describe('the width one arrangement needs', () => {
 
   it('grows by one side card plus one gap per step', () => {
     expect(featuredRequiredWidth(5) - featuredRequiredWidth(3)).toBe(
-      2 * (FEATURED_LANE_METRICS.minimumSideWidth + FEATURED_LANE_METRICS.spacing),
+      2 *
+        (FEATURED_LANE_METRICS.minimumSideWidth +
+          FEATURED_LANE_METRICS.spacing),
     )
   })
 })
@@ -69,10 +71,10 @@ describe('the capacity reported to the slice is free of the card count', () => {
 })
 
 describe('card widths are fixed when they fit and scale only when they cannot', () => {
-  it('keeps canon\'s 120 / 200 on a wide desktop, leaving spare width', () => {
-    expect(featuredCardWidths({ availableWidth: 1120, visibleCount: 7 })).toEqual(
-      { side: 120, hero: 200 },
-    )
+  it("keeps canon's 120 / 200 on a wide desktop, leaving spare width", () => {
+    expect(
+      featuredCardWidths({ availableWidth: 1120, visibleCount: 7 }),
+    ).toEqual({ side: 120, hero: 200 })
   })
 
   it('shrinks proportionally on a 390px phone rather than clipping', () => {
@@ -85,9 +87,9 @@ describe('card widths are fixed when they fit and scale only when they cannot', 
   })
 
   it('answers zero for an empty lane rather than dividing by nothing', () => {
-    expect(featuredCardWidths({ availableWidth: 1120, visibleCount: 0 })).toEqual(
-      { side: 0, hero: 0 },
-    )
+    expect(
+      featuredCardWidths({ availableWidth: 1120, visibleCount: 0 }),
+    ).toEqual({ side: 0, hero: 0 })
   })
 
   it('never returns a width below one pixel, however narrow the lane', () => {

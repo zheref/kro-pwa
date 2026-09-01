@@ -1,6 +1,12 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { ChipFlow, KroChip, chipTintVar, colorTint, semanticTint } from './KroChip'
+import {
+  ChipFlow,
+  KroChip,
+  chipTintVar,
+  colorTint,
+  semanticTint,
+} from './KroChip'
 
 afterEach(cleanup)
 
@@ -12,7 +18,11 @@ describe('KroChip', () => {
 
   it('pairs the label with a glyph when one is given, and hides it from readers', () => {
     const { container } = render(
-      <KroChip title="Task" icon="checkmark.circle.fill" tint={semanticTint('kindTask')} />,
+      <KroChip
+        title="Task"
+        icon="checkmark.circle.fill"
+        tint={semanticTint('kindTask')}
+      />,
     )
 
     const glyph = container.querySelector('svg')
@@ -25,10 +35,16 @@ describe('KroChip', () => {
     // so a fixed white label falls to about 2.2:1 on the dark one. `absolute` is
     // the token whose whole job is "white in light, black in dark".
     const { container } = render(
-      <KroChip title="Event" tint={semanticTint('kindEvent')} emphasis="prominent" />,
+      <KroChip
+        title="Event"
+        tint={semanticTint('kindEvent')}
+        emphasis="prominent"
+      />,
     )
 
-    const chip = container.querySelector('[data-emphasis="prominent"]') as HTMLElement
+    const chip = container.querySelector(
+      '[data-emphasis="prominent"]',
+    ) as HTMLElement
     expect(chip.style.color).toContain('--kro-color-absolute')
     expect(chip.style.backgroundColor).toContain('--kro-role-kind-event')
   })
@@ -38,24 +54,37 @@ describe('KroChip', () => {
       <KroChip title="Pending" tint={semanticTint('statusPending')} />,
     )
 
-    const chip = container.querySelector('[data-emphasis="soft"]') as HTMLElement
+    const chip = container.querySelector(
+      '[data-emphasis="soft"]',
+    ) as HTMLElement
     expect(chip.style.backgroundColor).toContain('16%')
     expect(chip.style.color).toContain('--kro-role-status-pending')
   })
 
   it('draws an outline chip as a ring with no fill', () => {
     const { container } = render(
-      <KroChip title="Unavailable" tint={colorTint('badgeNeutral')} emphasis="outline" />,
+      <KroChip
+        title="Unavailable"
+        tint={colorTint('badgeNeutral')}
+        emphasis="outline"
+      />,
     )
 
-    const chip = container.querySelector('[data-emphasis="outline"]') as HTMLElement
+    const chip = container.querySelector(
+      '[data-emphasis="outline"]',
+    ) as HTMLElement
     expect(chip.style.backgroundColor).toBe('')
     expect(chip.style.boxShadow).toContain('inset')
   })
 
   it('shrinks its glyph and label together at the small size', () => {
     const { container } = render(
-      <KroChip title="Engaging" icon="tag" tint={colorTint('accent')} size="small" />,
+      <KroChip
+        title="Engaging"
+        icon="tag"
+        tint={colorTint('accent')}
+        size="small"
+      />,
     )
 
     const chip = container.querySelector('[data-emphasis]') as HTMLElement
@@ -66,11 +95,15 @@ describe('KroChip', () => {
 
 describe('chipTintVar', () => {
   it('resolves a semantic role to its role variable', () => {
-    expect(chipTintVar(semanticTint('kindHabit'))).toBe('var(--kro-role-kind-habit)')
+    expect(chipTintVar(semanticTint('kindHabit'))).toBe(
+      'var(--kro-role-kind-habit)',
+    )
   })
 
   it('resolves a base palette role to its colour variable', () => {
-    expect(chipTintVar(colorTint('badgeMint'))).toBe('var(--kro-color-badge-mint)')
+    expect(chipTintVar(colorTint('badgeMint'))).toBe(
+      'var(--kro-color-badge-mint)',
+    )
   })
 })
 

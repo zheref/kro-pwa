@@ -297,7 +297,10 @@ export const captureSlice = createSlice({
       state,
       action: PayloadAction<{ recurrence: CaptureRecurrence }>,
     ) {
-      Object.assign(state, withRecurrencePicked(state, action.payload.recurrence))
+      Object.assign(
+        state,
+        withRecurrencePicked(state, action.payload.recurrence),
+      )
     },
 
     userDidSelectDestination(
@@ -382,11 +385,11 @@ export const captureSlice = createSlice({
       )
     },
 
-    userDidAdjustAddForTodayTime(
-      state,
-      action: PayloadAction<{ time: Date }>,
-    ) {
-      Object.assign(state, withAddForTodayTimeAdjusted(state, action.payload.time))
+    userDidAdjustAddForTodayTime(state, action: PayloadAction<{ time: Date }>) {
+      Object.assign(
+        state,
+        withAddForTodayTimeAdjusted(state, action.payload.time),
+      )
     },
 
     userDidCancelAddForToday(state) {
@@ -491,7 +494,10 @@ export const captureSlice = createSlice({
       .addCase(undoScheduleForTodayThunk.fulfilled, (state, action) => {
         const result = action.payload
         if (result.ok) {
-          Object.assign(state, withSchedulingUndone(state, result.value.endeavor))
+          Object.assign(
+            state,
+            withSchedulingUndone(state, result.value.endeavor),
+          )
         } else {
           Object.assign(state, withException(state, result.error))
         }

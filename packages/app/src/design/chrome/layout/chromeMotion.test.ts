@@ -18,20 +18,32 @@ import {
 
 describe('the springs are KroApple`s, at the call sites they came from', () => {
   it('animates the toast on ActiveToastModifier`s 0.4 / 0.8', () => {
-    expect(CHROME_SPRINGS.toast).toEqual({ response: 0.4, dampingFraction: 0.8 })
+    expect(CHROME_SPRINGS.toast).toEqual({
+      response: 0.4,
+      dampingFraction: 0.8,
+    })
   })
 
   it('opens the FAB menu slower than it snaps shut — canon`s two springs', () => {
     // LiquidGlassFABMenu: 0.32/0.78 to toggle, 0.28/0.82 after a choice.
-    expect(CHROME_SPRINGS.menuExpand).toEqual({ response: 0.32, dampingFraction: 0.78 })
-    expect(CHROME_SPRINGS.menuCollapse).toEqual({ response: 0.28, dampingFraction: 0.82 })
+    expect(CHROME_SPRINGS.menuExpand).toEqual({
+      response: 0.32,
+      dampingFraction: 0.78,
+    })
+    expect(CHROME_SPRINGS.menuCollapse).toEqual({
+      response: 0.28,
+      dampingFraction: 0.82,
+    })
     expect(settleMs(CHROME_SPRINGS.menuCollapse)).toBeLessThan(
       settleMs(CHROME_SPRINGS.menuExpand),
     )
   })
 
   it('sweeps the rings on ActivityRings` 0.5 / 0.8', () => {
-    expect(CHROME_SPRINGS.rings).toEqual({ response: 0.5, dampingFraction: 0.8 })
+    expect(CHROME_SPRINGS.rings).toEqual({
+      response: 0.5,
+      dampingFraction: 0.8,
+    })
   })
 
   it('moves the lift on a plain ease, not a spring — it must not overshoot into the pill', () => {
@@ -104,7 +116,11 @@ describe('springTransition hands a component a matched duration and curve', () =
     const transition = springTransition('menuExpand', ['opacity', 'transform'])
 
     expect(transition.transitionProperty).toBe('opacity, transform')
-    expect(transition.transitionDuration).toBe(`${settleMs(CHROME_SPRINGS.menuExpand)}ms`)
-    expect(transition.transitionTimingFunction).toBe(springEasing(CHROME_SPRINGS.menuExpand))
+    expect(transition.transitionDuration).toBe(
+      `${settleMs(CHROME_SPRINGS.menuExpand)}ms`,
+    )
+    expect(transition.transitionTimingFunction).toBe(
+      springEasing(CHROME_SPRINGS.menuExpand),
+    )
   })
 })

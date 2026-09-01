@@ -45,6 +45,7 @@ import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { navigateToDestinationThunk } from '../../main/MainProducer'
+import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import { selectLayout, selectShellShape } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
@@ -64,12 +65,7 @@ import {
   fetchDoEndeavorsThunk,
   loadDoPreferencesThunk,
 } from '../DoProducer'
-import {
-  DoLane,
-  type DoVisibility,
-  doLensFor,
-  laneCards,
-} from '../DoRules'
+import { DoLane, type DoVisibility, doLensFor, laneCards } from '../DoRules'
 import {
   selectAreDoRingsVisible,
   selectAreDoSuggestionsVisible,
@@ -92,7 +88,7 @@ import {
   deleteEndeavorThunk,
   reopenEndeavorThunk,
   skipEndeavorThunk,
-} from './DoOverflowProducer'
+} from '../DoProducer'
 import { groupDoEvents } from './doEventLanes'
 import { featuredCapacityForWidth } from './doFeaturedLaneLayout'
 import {
@@ -312,32 +308,37 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const handlers = useMemo<DoCardHandlers>(
     () => ({
       onPrepare: (section, endeavorId) => {
-        /*
-          `userDidTapCard` mints `"section:id"` and a second tap un-prepares —
-          both the slice's, so the surface never decides what a tap means.
-
-          The cast is deliberate and narrow. Canon's own signature is
-          `userDidTapCard(_:section: String)`, and two of its sections —
-          `"events-allday"` and `"events-timed"` — are view groupings that were
-          never `DoLane` members (`KC-IS-#16` installs the events channel but
-          partitions no event lane). `withCardSelected` only ever interpolates
-          the value into `"lane:id"`, so every one of canon's tags round-trips
-          correctly today. Widening the payload to `string` is a one-line
-          `DoFeature` change named in this PR.
-        */
-        dispatch(
-          userDidTapCard({ lane: section as DoLane, endeavorId }),
-        )
+        // `userDidTapCard` mints `"section:id"` and a second tap un-prepares —
+        // both the slice's, so the surface never decides what a tap means. The
+        // payload takes canon's own `section: String`, so the two view-grouping
+        // tags that are not lanes need no cast (KC-IS-#71 item 2).
+        dispatch(userDidTapCard({ section, endeavorId }))
       },
       onDeselect: () => dispatch(userDidDeselectCard()),
-      onExecute: () => {
-        // The session hand-off carrying the endeavor is `KC-IS-#22`'s; the
-        // navigation to the surface that will receive it exists today.
+      onExecute: (card) => {
+        /*
+          Canon's `.onUserWantsToStartEvent(endeavor, nil)` — the card's own
+          endeavor is carried into the session's launch preparation, so Execute
+          opens already showing its title, glyph and recommended duration
+          (KC-IS-#71 item 21). The navigation waits for the preparation:
+          arriving first would paint one frame of the anonymous `Focus Session`
+          before the identity landed. A preparation that fails still navigates,
+          because a control that goes to the right screen is honest and one
+          that appears to do nothing is not.
+        */
         void dispatch(
-          navigateToDestinationThunk({
-            destination: { kind: DestinationKind.session },
+          prepareSessionLaunchThunk({
+            endeavorId: card.id,
+            // Identity is the composition site's to supply, never a Producer's.
+            sessionId: crypto.randomUUID(),
           }),
-        )
+        ).finally(() => {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.session },
+            }),
+          )
+        })
       },
       onMarkComplete: (card, completedAt) => {
         dispatch(
@@ -402,7 +403,9 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const onLaneWidthChanged = useCallback(
     (width: number) => {
       dispatch(
-        onFeaturedCapacityChanged({ capacity: featuredCapacityForWidth(width) }),
+        onFeaturedCapacityChanged({
+          capacity: featuredCapacityForWidth(width),
+        }),
       )
     },
     [dispatch],

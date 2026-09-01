@@ -37,7 +37,9 @@ describe('which pending alerts a withdrawal covers', () => {
   })
 
   it('leaves an unrelated notification alone — sign-out is not a notification purge', () => {
-    expect(isWithdrawnAlertIdentifier('morning-plan-2026-08-31', intent)).toBe(false)
+    expect(isWithdrawnAlertIdentifier('morning-plan-2026-08-31', intent)).toBe(
+      false,
+    )
     expect(isWithdrawnAlertIdentifier('', intent)).toBe(false)
   })
 

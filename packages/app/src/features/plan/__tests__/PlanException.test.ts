@@ -17,9 +17,9 @@ describe('PlanExceptions', () => {
   it('carries the window a failed preload was centred on', () => {
     const failure = PlanExceptions.preloadFailed('2026-06-18', 'timed out')
     expect(failure.kind).toBe('preloadFailed')
-    expect(
-      failure.kind === 'preloadFailed' ? failure.centerDayKey : null,
-    ).toBe('2026-06-18')
+    expect(failure.kind === 'preloadFailed' ? failure.centerDayKey : null).toBe(
+      '2026-06-18',
+    )
   })
 
   it('keeps the developer detail on `message`, never on `kind`', () => {

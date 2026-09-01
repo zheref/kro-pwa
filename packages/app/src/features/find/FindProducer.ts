@@ -37,23 +37,23 @@ import {
   endeavorRecordFromEndeavor,
   epochMillisFromDate,
   err,
+  liveRecords,
   livingChildRecords,
   makeDefer,
   makeEndeavorsLensSnapshot,
   makeReconciliationContext,
   ok,
   performFromRecord,
+  projectFromRecord,
   resolvedKind,
-  withDeferred,
+  type ShareOutcome,
+  endeavorShareText,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
 import type { FindException } from './FindException'
 import { FindExceptions, findExceptionMessage } from './FindException'
-import type {
-  EndeavorOperationRequest,
-  FindSurface,
-} from './FindOperations'
+import type { EndeavorOperationRequest, FindSurface } from './FindOperations'
 import {
   OperationEffect,
   OperationHandling,
@@ -92,6 +92,17 @@ export type FindOperationOutcome =
       readonly operation: EndeavorOperationRequest['operation']
       readonly endeavorId: string
     }
+  /**
+   * The row's blurb was handed to the platform. Nothing was written — canon's
+   * Share leaves the endeavor exactly as it was — so the outcome is the whole
+   * result (KC-IS-#71 item 18).
+   */
+  | {
+      readonly kind: 'shared'
+      readonly surface: FindSurface
+      readonly endeavorId: string
+      readonly outcome: ShareOutcome
+    }
 
 /**
  * Every stored endeavor, hydrated with its relations.
@@ -105,11 +116,36 @@ export type FindOperationOutcome =
 const readStoredEndeavors = async (
   localStore: LocalStore,
 ): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all([
-    localStore.endeavors.all(),
-    localStore.defers.all(),
-    localStore.performances.all(),
-  ])
+  const [endeavorRecords, deferRecords, performanceRecords, projectRecords] =
+    await Promise.all([
+      localStore.endeavors.all(),
+      localStore.defers.all(),
+      localStore.performances.all(),
+      localStore.projects.all(),
+    ])
+
+  /*
+    The list, looked up (KC-IS-#71 item 11).
+
+    `EndeavorRecord` has no list column — its own header says the row keeps
+    `projectId` and *"the list itself is looked up from `ProjectStore`"* — and
+    nothing looked it up, so every hydrated endeavor came back with
+    `list: null`. `tasksForList(id)` filters on `endeavor.list?.id`, which meant
+    every Lists destination in the app honestly showed **Nothing Here** while
+    holding rows.
+
+    One read of the whole project table rather than one per endeavor, for the
+    same reason the defers and performances above are read whole: a list of a
+    hundred rows would otherwise cost a hundred extra round-trips.
+  */
+  const projectsById = new Map(
+    // `liveRecords`, not `livingChildRecords`: a project is a top-level row
+    // with a tombstone, not a child row awaiting a remote DELETE.
+    liveRecords(projectRecords).map((record) => [
+      record.id,
+      projectFromRecord(record),
+    ]),
+  )
 
   const defersByEndeavor = new Map<string, Defer[]>()
   for (const record of livingChildRecords(deferRecords)) {
@@ -133,6 +169,13 @@ const readStoredEndeavors = async (
     const hydrated = endeavorFromRecord(record, {
       defers: defersByEndeavor.get(record.id) ?? [],
       performances: performancesByEndeavor.get(record.id) ?? [],
+      // A `projectId` naming a project that is gone — deleted while the row
+      // kept pointing at it — leaves `list: null`, which is what an unfiled row
+      // is, never a dangling half-list.
+      list:
+        record.projectId === null
+          ? null
+          : (projectsById.get(record.projectId) ?? null),
     })
     if (hydrated.ok) endeavors.push(hydrated.value)
   }
@@ -299,6 +342,20 @@ export const performEndeavorOperationThunk = createAsyncThunk<
     const target = await findEndeavor(extra.localStore, request.endeavorId)
     if (target === null) {
       return err(FindExceptions.endeavorNotFound(request.endeavorId))
+    }
+
+    if (binding.effect === OperationEffect.share) {
+      // Writes nothing: canon's Share hands the row's blurb to the platform
+      // and leaves the endeavor exactly as it was.
+      const outcome = await extra.shareService.share(
+        endeavorShareText(target.title),
+      )
+      return ok({
+        kind: 'shared',
+        surface: request.surface,
+        endeavorId: target.id,
+        outcome,
+      })
     }
 
     if (binding.effect === OperationEffect.softDelete) {

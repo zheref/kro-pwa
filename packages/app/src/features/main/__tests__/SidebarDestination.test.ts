@@ -74,7 +74,7 @@ describe('macOS naming — canon SidebarDestinationType.title / .heading', () =>
   })
 })
 
-describe('tab labels — canon\'s iOS strings', () => {
+describe("tab labels — canon's iOS strings", () => {
   it('labels the initial tab "Do", not "Today"', () => {
     expect(destinationTabLabel({ kind: DestinationKind.myDay })).toBe('Do')
     expect(destinationTitle({ kind: DestinationKind.myDay })).toBe('Today')
@@ -107,9 +107,9 @@ describe('identity', () => {
   })
 
   it('never confuses a list with a plain destination', () => {
-    expect(
-      isSameDestination(project, { kind: DestinationKind.myDay }),
-    ).toBe(false)
+    expect(isSameDestination(project, { kind: DestinationKind.myDay })).toBe(
+      false,
+    )
   })
 })
 
@@ -146,7 +146,7 @@ describe('glyphs', () => {
     expect(destinationIcon(project)).toBeTypeOf('object')
   })
 
-  it('records canon\'s SF Symbol for every destination', () => {
+  it("records canon's SF Symbol for every destination", () => {
     for (const destination of ALL_SIMPLE_DESTINATIONS) {
       expect(DESTINATION_SF_SYMBOL[destination.kind]).toBeTruthy()
     }

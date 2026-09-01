@@ -40,7 +40,10 @@ import type { LocalDataChoice } from './LocalDataDialog'
 import type { SignOutIntent } from './SignOutIntents'
 
 /** Canon's `applyLoadingStarted`: spin, and clear any prior error. */
-export const withAuthFlowStarted = (state: AuthState, flow: AuthFlow): AuthState => ({
+export const withAuthFlowStarted = (
+  state: AuthState,
+  flow: AuthFlow,
+): AuthState => ({
   ...state,
   session: { kind: 'authenticating', flow },
 })
@@ -96,7 +99,9 @@ export const withSignedOut = (
 })
 
 /** A surface performed the intents and says so. */
-export const withSignOutIntentsAcknowledged = (state: AuthState): AuthState => ({
+export const withSignOutIntentsAcknowledged = (
+  state: AuthState,
+): AuthState => ({
   ...state,
   pendingSignOutIntents: [],
 })
@@ -119,7 +124,8 @@ export const withFormField = (
 /** The user dismissed the error banner. */
 export const withExceptionCleared = (state: AuthState): AuthState => ({
   ...state,
-  session: state.session.kind === 'failed' ? { kind: 'signedOut' } : state.session,
+  session:
+    state.session.kind === 'failed' ? { kind: 'signedOut' } : state.session,
 })
 
 /** An Apple attempt's raw nonce, held only until that attempt resolves. */
@@ -212,7 +218,13 @@ export const withEndeavorSyncFailed = (
 export const withSignInOutcome = (
   state: AuthState,
   outcome:
-    | { readonly ok: true; readonly value: { readonly user: User; readonly localDataPrompt: number | null } }
+    | {
+        readonly ok: true
+        readonly value: {
+          readonly user: User
+          readonly localDataPrompt: number | null
+        }
+      }
     | { readonly ok: false; readonly error: AuthException },
 ): AuthState => {
   if (!outcome.ok) return withAuthFailed(state, outcome.error)

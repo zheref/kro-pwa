@@ -12,7 +12,10 @@ import {
 describe('reading a cookie out of a request header', () => {
   it('finds the named cookie among several', () => {
     expect(
-      readCookie('theme=dark; kro_gcal=sealed-value; other=x', GOOGLE_TOKEN_COOKIE),
+      readCookie(
+        'theme=dark; kro_gcal=sealed-value; other=x',
+        GOOGLE_TOKEN_COOKIE,
+      ),
     ).toBe('sealed-value')
   })
 
@@ -42,7 +45,10 @@ describe('reading a cookie out of a request header', () => {
 
 describe('writing a Set-Cookie header', () => {
   it('is HttpOnly, SameSite=Lax and Path=/', () => {
-    const header = setCookieHeader('kro_gcal', 'v', { maxAge: 60, secure: true })
+    const header = setCookieHeader('kro_gcal', 'v', {
+      maxAge: 60,
+      secure: true,
+    })
     expect(header).toContain('HttpOnly')
     expect(header).toContain('SameSite=Lax')
     expect(header).toContain('Path=/')
@@ -51,18 +57,18 @@ describe('writing a Set-Cookie header', () => {
   it('is Lax rather than Strict, because the OAuth callback is a cross-site GET', () => {
     // Strict would drop the cookie on the way back from Google and break the
     // whole flow in a way that looks like an OAuth error.
-    expect(setCookieHeader('c', 'v', { maxAge: 1, secure: true })).not.toContain(
-      'SameSite=Strict',
-    )
+    expect(
+      setCookieHeader('c', 'v', { maxAge: 1, secure: true }),
+    ).not.toContain('SameSite=Strict')
   })
 
   it('adds Secure only when asked', () => {
     expect(setCookieHeader('c', 'v', { maxAge: 1, secure: true })).toContain(
       'Secure',
     )
-    expect(setCookieHeader('c', 'v', { maxAge: 1, secure: false })).not.toContain(
-      'Secure',
-    )
+    expect(
+      setCookieHeader('c', 'v', { maxAge: 1, secure: false }),
+    ).not.toContain('Secure')
   })
 
   it('percent-encodes the value so a cookie cannot break the header', () => {
@@ -91,13 +97,15 @@ describe('writing a Set-Cookie header', () => {
 
 describe('deciding whether cookies are Secure', () => {
   it('always secures an https origin', () => {
-    expect(shouldUseSecureCookies('https://kro.app/api/google/status')).toBe(true)
+    expect(shouldUseSecureCookies('https://kro.app/api/google/status')).toBe(
+      true,
+    )
   })
 
   it('does not secure http://localhost, where a Secure cookie is dropped', () => {
-    expect(shouldUseSecureCookies('http://localhost:3000/api/google/connect')).toBe(
-      false,
-    )
+    expect(
+      shouldUseSecureCookies('http://localhost:3000/api/google/connect'),
+    ).toBe(false)
     expect(shouldUseSecureCookies('http://127.0.0.1:3000/x')).toBe(false)
   })
 

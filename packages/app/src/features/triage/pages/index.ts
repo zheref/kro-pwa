@@ -25,8 +25,6 @@ export {
   TriageFormFragment,
 } from './TriageFormFragment'
 export {
-  TRIAGE_SF_SYMBOL_TO_LUCIDE,
-  type TriageSfSymbolName,
   type TriageSymbolName,
   isTriageMappedSymbol,
   triageIcon,
@@ -45,10 +43,3 @@ export {
   triageCarouselCompletes,
   triageCarouselOffset,
 } from './triagePresentation'
-export {
-  type TriageShareGateway,
-  TriageShareOutcome,
-  browserTriageShareGateway,
-  performTriageShare,
-  triageShareNotice,
-} from './triageShare'

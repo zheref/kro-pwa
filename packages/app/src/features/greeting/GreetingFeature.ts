@@ -17,7 +17,11 @@
  * itself an event name, and whose three lifecycle phases are the one completion
  * event (`UZF-3`), never a hand-minted succeeded/failed pair.
  */
-import { type Greeting, type GreetingException, unknownException } from '@kro/core'
+import {
+  type Greeting,
+  type GreetingException,
+  unknownException,
+} from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { fetchGreetingThunk } from './GreetingProducer'
 import {
@@ -51,7 +55,10 @@ export const greetingSlice = createSlice({
   reducers: {
     /** Lifecycle signal: the surface mounted and knows who it is greeting. */
     onViewLoaded(state, action: PayloadAction<{ recipient: string }>) {
-      Object.assign(state, withRecipientStamped(state, action.payload.recipient))
+      Object.assign(
+        state,
+        withRecipientStamped(state, action.payload.recipient),
+      )
     },
 
     /** User intent: the retry affordance a recoverable exception offered. */
@@ -94,11 +101,18 @@ export const greetingSlice = createSlice({
 
         Object.assign(
           state,
-          withException(state, unknownException(action.error.message ?? 'Unknown error')),
+          withException(
+            state,
+            unknownException(action.error.message ?? 'Unknown error'),
+          ),
         )
       })
   },
 })
 
-export const { childDetailDelegatedClose, onViewLoaded, userDidTapGreeting, userDidTapRetry } =
-  greetingSlice.actions
+export const {
+  childDetailDelegatedClose,
+  onViewLoaded,
+  userDidTapGreeting,
+  userDidTapRetry,
+} = greetingSlice.actions

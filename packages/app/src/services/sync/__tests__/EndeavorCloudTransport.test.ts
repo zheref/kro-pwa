@@ -67,7 +67,9 @@ describe('the stubbed transport as an in-memory Kro Cloud', () => {
   it('applies an upsert so a later fetch sees it', async () => {
     const transport = makeStubbedEndeavorCloudTransport()
     await transport.upsertEndeavor(writeRow('a'))
-    expect((await transport.fetchEndeavors()).map((row) => row.id)).toEqual(['a'])
+    expect((await transport.fetchEndeavors()).map((row) => row.id)).toEqual([
+      'a',
+    ])
   })
 
   it('drops owner_id on the way back, the way a pull select would', async () => {
@@ -94,7 +96,9 @@ describe('the stubbed transport as an in-memory Kro Cloud', () => {
     const transport = makeStubbedEndeavorCloudTransport({
       failures: { upsertEndeavor: new Error('row locked') },
     })
-    await expect(transport.upsertEndeavor(writeRow('a'))).rejects.toThrow('row locked')
+    await expect(transport.upsertEndeavor(writeRow('a'))).rejects.toThrow(
+      'row locked',
+    )
     expect(transport.calls()).toEqual([{ kind: 'upsertEndeavor', id: 'a' }])
   })
 
@@ -104,7 +108,9 @@ describe('the stubbed transport as an in-memory Kro Cloud', () => {
 })
 
 describe('the live transport with no project configured', () => {
-  const transport = makeLiveEndeavorCloudTransport(makeStubbedSupabaseClientProvider())
+  const transport = makeLiveEndeavorCloudTransport(
+    makeStubbedSupabaseClientProvider(),
+  )
 
   it('reports the engine cleanly unavailable on a fetch rather than crashing a sweep', async () => {
     await expect(transport.fetchEndeavors()).rejects.toMatchObject({
@@ -113,9 +119,11 @@ describe('the live transport with no project configured', () => {
   })
 
   it('reports the same on an upsert', async () => {
-    await expect(transport.upsertEndeavor(writeRow('a'))).rejects.toMatchObject({
-      kind: 'unavailable',
-    })
+    await expect(transport.upsertEndeavor(writeRow('a'))).rejects.toMatchObject(
+      {
+        kind: 'unavailable',
+      },
+    )
   })
 
   it('reports the same on a delete and on an owner resolution', async () => {

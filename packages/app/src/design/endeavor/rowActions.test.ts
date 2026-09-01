@@ -13,7 +13,11 @@ import {
   tapGesture,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { bindingColorRole, resolveRowActions, tintColorRole } from './rowActions'
+import {
+  bindingColorRole,
+  resolveRowActions,
+  tintColorRole,
+} from './rowActions'
 
 const complete = makeEndeavorOperationBinding({
   operation: EndeavorOperation.markComplete,
@@ -134,11 +138,17 @@ describe('resolveRowActions — the same props, two grammars', () => {
       'touch',
     )
 
-    expect(actions.buttonRow.map((binding) => binding.label)).toEqual(['Triage', 'Edit'])
+    expect(actions.buttonRow.map((binding) => binding.label)).toEqual([
+      'Triage',
+      'Edit',
+    ])
   })
 
   it('reports no tap binding for a vista that declares none', () => {
-    const actions = resolveRowActions(EndeavorsVistas.inbox.capabilities, 'touch')
+    const actions = resolveRowActions(
+      EndeavorsVistas.inbox.capabilities,
+      'touch',
+    )
     expect(actions.tap).toBeNull()
   })
 })

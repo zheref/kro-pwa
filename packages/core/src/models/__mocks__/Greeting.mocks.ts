@@ -58,7 +58,9 @@ export const greetingMocks = {
   longMessage: {
     id: 'greeting-6',
     recipient: 'verbose',
-    message: 'A very warm and thoroughly unnecessary welcome to you. '.repeat(8).trim(),
+    message: 'A very warm and thoroughly unnecessary welcome to you. '
+      .repeat(8)
+      .trim(),
     signature: '— Kro, at length',
     issuedAt: new Date('2026-01-12T13:20:00.000Z'),
   } satisfies Greeting,

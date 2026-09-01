@@ -113,7 +113,8 @@ export const makeLiveEndeavorCloudTransport = (
         .select('id')
       if (created.error !== null) throw created.error
       const row = (created.data as readonly { id: number }[] | null)?.[0]
-      if (row === undefined) throw EndeavorSyncExceptions.ownerUnresolved(userId)
+      if (row === undefined)
+        throw EndeavorSyncExceptions.ownerUnresolved(userId)
       return row.id
     },
   }

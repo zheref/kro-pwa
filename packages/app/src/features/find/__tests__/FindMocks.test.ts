@@ -76,9 +76,9 @@ describe('the state variants describe real situations', () => {
 
   it('keeps the rows through the failed variant, as the surface does', () => {
     expect(findStateMocks.failedAfterLoad.find.load.kind).toBe('failed')
-    expect(findStateMocks.failedAfterLoad.find.endeavors.length).toBeGreaterThan(
-      0,
-    )
+    expect(
+      findStateMocks.failedAfterLoad.find.endeavors.length,
+    ).toBeGreaterThan(0)
   })
 
   it('hides every kind, host and status in the everythingHidden variant', () => {

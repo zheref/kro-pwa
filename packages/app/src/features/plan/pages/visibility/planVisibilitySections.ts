@@ -103,13 +103,13 @@ export interface PlanVisibilitySection {
 export const planVisibilitySections = (
   lens: EndeavorsLens,
 ): readonly PlanVisibilitySection[] =>
-  PLAN_VISIBILITY_FILTER_ORDER.filter((filter) => lensExposes(lens, filter)).map(
-    (filter) => ({
-      filter,
-      title: planVisibilityFilterTitle(filter),
-      isSupported: PLAN_VISIBILITY_SUPPORTED_FILTERS.includes(filter),
-    }),
-  )
+  PLAN_VISIBILITY_FILTER_ORDER.filter((filter) =>
+    lensExposes(lens, filter),
+  ).map((filter) => ({
+    filter,
+    title: planVisibilityFilterTitle(filter),
+    isSupported: PLAN_VISIBILITY_SUPPORTED_FILTERS.includes(filter),
+  }))
 
 /** Every `UserFilter`, so the order list above can be proven exhaustive. */
 export const ALL_PLAN_VISIBILITY_FILTERS: readonly UserFilter[] = userFilters

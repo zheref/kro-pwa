@@ -157,7 +157,10 @@ describe('a Google row and its Kro-hosted copy reconcile to ONE endeavor', () =>
       ]),
     })
     const [only] = reconcile(
-      [kroHostedCopy({ title: 'Design review' }), ...(await service.fetchRange(DAY))],
+      [
+        kroHostedCopy({ title: 'Design review' }),
+        ...(await service.fetchRange(DAY)),
+      ],
       context(),
     )
     expect(only?.title).toBe('Design review (moved)')

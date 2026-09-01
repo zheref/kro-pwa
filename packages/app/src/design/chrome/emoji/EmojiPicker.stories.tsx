@@ -68,7 +68,11 @@ export const PinnedHeadings = {
     <Stage height={380} label="Scroll the panel">
       <Panel>
         <EmojiPicker
-          categories={[ACTIVITIES, FOOD].filter(Boolean) as typeof DEFAULT_EMOJI_CATEGORIES}
+          categories={
+            [ACTIVITIES, FOOD].filter(
+              Boolean,
+            ) as typeof DEFAULT_EMOJI_CATEGORIES
+          }
         />
       </Panel>
     </Stage>

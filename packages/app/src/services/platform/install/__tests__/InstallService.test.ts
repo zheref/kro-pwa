@@ -29,7 +29,8 @@ const makeWindow = (options: { standalone?: boolean } = {}) => {
   }
   return {
     win,
-    listenerCount: () => [...listeners.values()].reduce((n, s) => n + s.size, 0),
+    listenerCount: () =>
+      [...listeners.values()].reduce((n, s) => n + s.size, 0),
     dispatch: (type: string, event: unknown) => {
       for (const listener of [...(listeners.get(type) ?? [])]) listener(event)
     },
@@ -73,7 +74,7 @@ describe('liveInstallService — availability', () => {
     expect(service.availability()).toBe('available')
   })
 
-  it('suppresses the browser\'s own mini-infobar when it captures', () => {
+  it("suppresses the browser's own mini-infobar when it captures", () => {
     const { service, host } = liveWith()
     const event = promptEvent('accepted')
 

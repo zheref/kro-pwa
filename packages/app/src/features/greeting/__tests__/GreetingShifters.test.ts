@@ -25,7 +25,10 @@ describe('withRecipientStamped', () => {
   })
 
   it('closes a detail left open by the previous recipient rather than showing it over new data', () => {
-    const next = withRecipientStamped(greetingStateMocks.loadedWithDetailOpen, 'grace')
+    const next = withRecipientStamped(
+      greetingStateMocks.loadedWithDetailOpen,
+      'grace',
+    )
 
     expect(next.detailOpen).toBe(false)
   })
@@ -41,7 +44,9 @@ describe('withRecipientStamped', () => {
 
 describe('withLoadingStarted', () => {
   it('moves an idle surface into loading — the first request goes out', () => {
-    expect(withLoadingStarted(greetingStateMocks.idle).load.kind).toBe('loading')
+    expect(withLoadingStarted(greetingStateMocks.idle).load.kind).toBe(
+      'loading',
+    )
   })
 
   it('clears the exception when the user retries after an error', () => {
@@ -58,26 +63,40 @@ describe('withLoadingStarted', () => {
   })
 
   it('is a no-op in effect when a request is already in flight', () => {
-    expect(withLoadingStarted(greetingStateMocks.loading)).toEqual(greetingStateMocks.loading)
+    expect(withLoadingStarted(greetingStateMocks.loading)).toEqual(
+      greetingStateMocks.loading,
+    )
   })
 })
 
 describe('withGreetingLoaded', () => {
   it('carries the greeting into the loaded arm — the ordinary success', () => {
-    const next = withGreetingLoaded(greetingStateMocks.loading, greetingMocks.typical)
+    const next = withGreetingLoaded(
+      greetingStateMocks.loading,
+      greetingMocks.typical,
+    )
 
-    expect(next.load).toEqual({ kind: 'loaded', greeting: greetingMocks.typical })
+    expect(next.load).toEqual({
+      kind: 'loaded',
+      greeting: greetingMocks.typical,
+    })
   })
 
   it('replaces a previous greeting when a second load lands', () => {
-    const next = withGreetingLoaded(greetingStateMocks.loaded, greetingMocks.unicode)
+    const next = withGreetingLoaded(
+      greetingStateMocks.loaded,
+      greetingMocks.unicode,
+    )
 
     if (next.load.kind !== 'loaded') throw new Error('expected the loaded arm')
     expect(next.load.greeting.recipient).toBe('山田')
   })
 
   it('recovers from a failed state without a separate "clear the error" step', () => {
-    const next = withGreetingLoaded(greetingStateMocks.failedOffline, greetingMocks.typical)
+    const next = withGreetingLoaded(
+      greetingStateMocks.failedOffline,
+      greetingMocks.typical,
+    )
 
     expect(next.load.kind).toBe('loaded')
   })
@@ -85,20 +104,29 @@ describe('withGreetingLoaded', () => {
 
 describe('withException', () => {
   it('parks the typed exception in the failed arm — the request came back 404', () => {
-    const next = withException(greetingStateMocks.loading, GreetingExceptions.notFound())
+    const next = withException(
+      greetingStateMocks.loading,
+      GreetingExceptions.notFound(),
+    )
 
     if (next.load.kind !== 'failed') throw new Error('expected the failed arm')
     expect(next.load.exception.kind).toBe('notFound')
   })
 
   it('closes an open detail — nothing can be shown on top of a failed load', () => {
-    const next = withException(greetingStateMocks.loadedWithDetailOpen, GreetingExceptions.offline())
+    const next = withException(
+      greetingStateMocks.loadedWithDetailOpen,
+      GreetingExceptions.offline(),
+    )
 
     expect(next.detailOpen).toBe(false)
   })
 
   it('keeps the recipient so a retry knows what to ask for again', () => {
-    const next = withException(greetingStateMocks.loading, GreetingExceptions.offline())
+    const next = withException(
+      greetingStateMocks.loading,
+      GreetingExceptions.offline(),
+    )
 
     expect(next.recipient).toBe('ada')
   })

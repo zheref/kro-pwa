@@ -39,7 +39,13 @@ export default {
   },
 }
 
-function Pane({ theme, children }: { theme: 'light' | 'dark'; children: ReactNode }) {
+function Pane({
+  theme,
+  children,
+}: {
+  theme: 'light' | 'dark'
+  children: ReactNode
+}) {
   return (
     <div
       data-theme={theme}
@@ -80,7 +86,13 @@ function BothThemes({ children }: { children: ReactNode }) {
 
 function Swatch({ name, value }: { name: string; value: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--kro-space-small)' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--kro-space-small)',
+      }}
+    >
       <div
         style={{
           width: 44,
@@ -168,11 +180,18 @@ function ScaleGallery() {
   return (
     <div style={{ display: 'grid', gap: 'var(--kro-space-large)' }}>
       <section>
-        <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>Spacing — the 4pt rhythm</h3>
+        <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>
+          Spacing — the 4pt rhythm
+        </h3>
         {Object.entries(SPACING_VARS).map(([name, variable]) => (
           <div
             key={name}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 6,
+            }}
           >
             <span style={{ width: 84, fontSize: 12 }}>{name}</span>
             <div
@@ -216,7 +235,8 @@ function ScaleGallery() {
             </li>
           ))}
           <li>
-            disabled — <code>{DISABLED_OPACITY_VAR}</code> (apply once per control)
+            disabled — <code>{DISABLED_OPACITY_VAR}</code> (apply once per
+            control)
           </li>
         </ul>
       </section>
@@ -226,7 +246,13 @@ function ScaleGallery() {
 
 function ElevationGallery() {
   return (
-    <div style={{ display: 'flex', gap: 'var(--kro-space-large)', flexWrap: 'wrap' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 'var(--kro-space-large)',
+        flexWrap: 'wrap',
+      }}
+    >
       {Object.entries(SHADOW_VARS).map(([name, variable]) => (
         <div
           key={name}
@@ -290,9 +316,10 @@ export const AccentTheming = {
     <BothThemes>
       <div style={{ display: 'grid', gap: 'var(--kro-space-medium)' }}>
         <p style={{ fontSize: 13, margin: 0, maxWidth: '46ch' }}>
-          A user accent is written together with the label colour that reads on it.
-          Choosing the better of black and white can never do worse than 4.58:1 on an
-          opaque fill, so a re-tint cannot make a primary button unreadable.
+          A user accent is written together with the label colour that reads on
+          it. Choosing the better of black and white can never do worse than
+          4.58:1 on an opaque fill, so a re-tint cannot make a primary button
+          unreadable.
         </p>
         {['#5e6472', '#663399', '#b0b9d4', '#c78c00'].map((accent) => {
           const decision = decideAccent(accent)

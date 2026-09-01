@@ -81,7 +81,11 @@ export function AuthSurfacePage({
     const now = new Date()
     if (mode === AuthMode.signIn) {
       void dispatch(
-        signInWithEmailThunk({ email: form.email, password: form.password, now }),
+        signInWithEmailThunk({
+          email: form.email,
+          password: form.password,
+          now,
+        }),
       )
       return
     }

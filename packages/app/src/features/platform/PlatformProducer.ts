@@ -73,9 +73,15 @@ const messageOf = (error: unknown): string =>
 const resolveOverdueAlertGate = (extra: ThunkExtra): boolean => {
   const store = extra.localStore.preferences
   const flags = makeHardcodedFeatureFlagService({
-    overrides: overridesAsAssignments(makeFeatureFlagOverrideStore(store).all()),
+    overrides: overridesAsAssignments(
+      makeFeatureFlagOverrideStore(store).all(),
+    ),
   })
-  return isGateAvailable(overdueNotificationsGate, flags, makePreferences(store))
+  return isGateAvailable(
+    overdueNotificationsGate,
+    flags,
+    makePreferences(store),
+  )
 }
 
 // ---------------------------------------------------------------------------

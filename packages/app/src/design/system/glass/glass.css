@@ -47,7 +47,7 @@
 
 /* Layers 1 + 2 — the material. */
 .kro-glass::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -61,7 +61,7 @@
 
 /* Layer 3 — the specular sheen. */
 .kro-glass::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -178,7 +178,10 @@
 }
 
 /** 2. The engine has no backdrop-filter at all. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+@supports not (
+    (backdrop-filter: blur(1px)) or
+    (-webkit-backdrop-filter: blur(1px))
+  ) {
   .kro-glass::before {
     background: var(--kro-glass-surface-opaque);
   }

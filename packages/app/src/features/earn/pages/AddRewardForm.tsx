@@ -83,7 +83,11 @@ export function AddRewardForm({
         }}
       >
         <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-        <PopoverContent align="end" style={{ width: 340 }} aria-label="New Reward">
+        <PopoverContent
+          align="end"
+          style={{ width: 340 }}
+          aria-label="New Reward"
+        >
           {fields}
         </PopoverContent>
       </Popover>
@@ -119,10 +123,7 @@ function AddRewardFields({
   onChangeNotes,
   onConfirm,
   onCancel,
-}: Omit<
-  AddRewardFormProps,
-  'isOpen' | 'presentation' | 'trigger'
->) {
+}: Omit<AddRewardFormProps, 'isOpen' | 'presentation' | 'trigger'>) {
   const canConfirm = draft.title.trim().length > 0
 
   return (
@@ -181,7 +182,9 @@ function AddRewardFields({
             size="icon-sm"
             aria-label="Fewer points"
             onClick={() =>
-              onChangePoints(Math.max(POINTS_MIN, draft.pointsRequired - POINTS_STEP))
+              onChangePoints(
+                Math.max(POINTS_MIN, draft.pointsRequired - POINTS_STEP),
+              )
             }
           >
             <Minus className="size-4" aria-hidden />
@@ -203,7 +206,9 @@ function AddRewardFields({
             size="icon-sm"
             aria-label="More points"
             onClick={() =>
-              onChangePoints(Math.min(POINTS_MAX, draft.pointsRequired + POINTS_STEP))
+              onChangePoints(
+                Math.min(POINTS_MAX, draft.pointsRequired + POINTS_STEP),
+              )
             }
           >
             <Plus className="size-4" aria-hidden />
@@ -233,7 +238,12 @@ function AddRewardFields({
         <Button type="button" variant="ghost" size="md" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" size="md" disabled={!canConfirm}>
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          disabled={!canConfirm}
+        >
           Add
         </Button>
       </div>

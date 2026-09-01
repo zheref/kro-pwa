@@ -56,7 +56,7 @@
  * asserted in state; the surface that draws it arrives with #22.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { computedSymbol } from '../../../design/endeavor/endeavorCardModel'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { onTriageRequestConsumed } from '../../capture/CaptureFeature'
@@ -104,6 +104,7 @@ import {
   selectTriageHeading,
   selectTriagePrimaryActionLabel,
   selectTriagePushNotice,
+  selectTriageShareNotice,
   selectTriageQuadrantTiles,
   selectTriageRewardPoints,
   selectTriageSaveException,
@@ -116,26 +117,15 @@ import { TRIAGE_DEFAULT_SYMBOL } from '../TriageState'
 import { TriageCarouselFragment } from './TriageCarouselFragment'
 import { TriageFormFragment } from './TriageFormFragment'
 import { resolveTriageEditReachabilityThunk } from './TriageCapabilitiesProducer'
-import { performTriageShare, triageShareNotice } from './triageShare'
-import type { TriageShareGateway } from './triageShare'
+import { shareTriageBlurbThunk } from '../TriageProducer'
 
 export interface TriageCarouselPageProps {
-  /**
-   * The share gateway. Production leaves it undefined and the browser's own
-   * APIs are used; a story or a test injects a double.
-   *
-   * A prop rather than `ThunkExtra` for the reason `triageShare.ts` gives at
-   * length: the share Service this belongs in is not wired, and wiring it means
-   * editing two files outside this issue's lane. Reported as a cross-lane need.
-   */
-  readonly shareGateway?: TriageShareGateway
   /** Stories and tests pin the carousel's width; production measures it. */
   readonly carouselWidth?: number
   readonly locale?: string
 }
 
 export function TriageCarouselPage({
-  shareGateway,
   carouselWidth,
   locale,
 }: TriageCarouselPageProps) {
@@ -167,25 +157,14 @@ export function TriageCarouselPage({
   const isSaving = useAppSelector(selectIsTriageSaving)
   const saveException = useAppSelector(selectTriageSaveException)
   const pushNotice = useAppSelector(selectTriagePushNotice)
+  // The share hand-off's own notice, derived in the domain tier from the
+  // outcome the Producer wrote (KC-IS-#71 item 18) — the sibling
+  // `selectTriagePushNotice` was always going to have.
+  const shareNotice = useAppSelector(selectTriageShareNotice)
   // An O(1) field read, which is all `RC-5` allows in a callback — and all the
   // outcome drain needs. It is deliberately not a Selector chain: the one-shot
   // has to be read as an identity so the effect below fires once per raise.
   const outcome = useAppSelector((state) => state.triage.outcome)
-
-  /**
-   * What the Web Share hand-off did, when it did not simply work.
-   *
-   * The **only** `useState` in this Page, and it is here because the fact it
-   * holds is not modelled anywhere else: a share that fell back to the
-   * clipboard is the outcome of a browser capability, and the capability is not
-   * a Service yet (see `triageShare.ts`). When that Service is wired the
-   * outcome rides back through the Producer into `TriageState` alongside the
-   * push outcome, `selectTriagePushNotice` gains a sibling, and this deletes.
-   *
-   * It is not feature state in `RC-4`'s sense in the meantime: no rule reads
-   * it, it survives no reload, and it is cleared by the next session opening.
-   */
-  const [shareNotice, setShareNotice] = useState<string | null>(null)
 
   /**
    * The request already being opened.
@@ -255,9 +234,7 @@ export function TriageCarouselPage({
     // this repo answers "which emoji is this endeavor", so the two surfaces
     // cannot disagree about the glyph in the header.
     const endeavorSymbol =
-      known === undefined
-        ? TRIAGE_DEFAULT_SYMBOL
-        : computedSymbol(known.title)
+      known === undefined ? TRIAGE_DEFAULT_SYMBOL : computedSymbol(known.title)
 
     const flag = track(dispatch(resolveTriageEditReachabilityThunk()))
 
@@ -272,11 +249,11 @@ export function TriageCarouselPage({
             now: new Date(),
             nextFreeSlotToday: request.nextFreeSlotToday,
             endeavorSymbol,
-            isEditReachable: result !== null && result.ok ? result.value : false,
+            isEditReachable:
+              result !== null && result.ok ? result.value : false,
           }),
         ),
       )
-      setShareNotice(null)
       // The one-shot is spent the moment Triage has been asked to present.
       dispatch(onTriageRequestConsumed())
     })
@@ -294,7 +271,9 @@ export function TriageCarouselPage({
     if (outcome === null) return
     const now = new Date()
 
-    const save = async (decision: Parameters<typeof saveTriageDecisionThunk>[0]['decision']) => {
+    const save = async (
+      decision: Parameters<typeof saveTriageDecisionThunk>[0]['decision'],
+    ) => {
       const action = await dispatch(saveTriageDecisionThunk({ decision, now }))
       const result = saveTriageDecisionThunk.fulfilled.match(action)
         ? action.payload
@@ -347,11 +326,9 @@ export function TriageCarouselPage({
           // it". Handing the row to somebody else on the strength of a write
           // that did not land is the second half of the same mistake.
           if (!saved) return
-          const shareOutcome = await performTriageShare(
-            outcome.text,
-            shareGateway,
-          )
-          setShareNotice(triageShareNotice(shareOutcome))
+          // The hand-off is a Producer's now, so the outcome lands in the
+          // slice and this Page holds no state for it (KC-IS-#71 item 18).
+          await dispatch(shareTriageBlurbThunk({ text: outcome.text }))
           // Canon pops the Triage child when the share sheet is dismissed —
           // *"cancel or completion"* — never on the Share tap itself.
           dispatch(onShareSheetDismissed())
@@ -375,7 +352,7 @@ export function TriageCarouselPage({
     }
 
     dispatch(onTriageOutcomeConsumed())
-  }, [dispatch, outcome, shareGateway])
+  }, [dispatch, outcome])
 
   // --- intents ----------------------------------------------------------
 

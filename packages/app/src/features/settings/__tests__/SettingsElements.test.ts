@@ -124,7 +124,7 @@ describe('the control is derived from the declared value shape', () => {
     expect(settingControlFor(workingDaysOption)).toEqual({ kind: 'days' })
   })
 
-  it("carries canon Stepper range for an int option — session length is 5…120 by 5", () => {
+  it('carries canon Stepper range for an int option — session length is 5…120 by 5', () => {
     expect(settingControlFor(sessionDefaultDurationOption)).toEqual({
       kind: 'stepper',
       min: 5,
@@ -143,14 +143,16 @@ describe('the control is derived from the declared value shape', () => {
     const control = settingControlFor(earnPointsFormulaOption)
 
     expect(control.kind).toBe('choice')
-    expect(control.kind === 'choice' && control.choices.map((c) => c.value)).toEqual(
+    expect(
+      control.kind === 'choice' && control.choices.map((c) => c.value),
+    ).toEqual(
       earnPointsFormulaOption.type.kind === 'enumeration'
         ? [...earnPointsFormulaOption.type.cases]
         : [],
     )
   })
 
-  it("draws the accent choice as canon swatch row rather than a dropdown", () => {
+  it('draws the accent choice as canon swatch row rather than a dropdown', () => {
     expect(settingControlFor(accentColorOption).kind).toBe('swatches')
   })
 

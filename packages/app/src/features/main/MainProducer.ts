@@ -28,10 +28,7 @@ import type { PendingShellRoute } from './MainFeature'
 import { type MainException, MainExceptions } from './MainException'
 import type { ShellConfiguration } from './MainShifters'
 import type { DestinationGates } from './NavigationSections'
-import {
-  type SidebarDestination,
-  destinationPath,
-} from './SidebarDestination'
+import { type SidebarDestination, destinationPath } from './SidebarDestination'
 
 const reasonOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
@@ -62,9 +59,7 @@ const gatesFrom = (extra: ThunkExtra): DestinationGates => {
 }
 
 /** The Lists rows, newest-title-last, as canon renders them. */
-const readProjects = async (
-  extra: ThunkExtra,
-): Promise<readonly Project[]> => {
+const readProjects = async (extra: ThunkExtra): Promise<readonly Project[]> => {
   const records = await extra.localStore.projects.all()
   return records.map(projectFromRecord)
 }
@@ -157,15 +152,18 @@ export const navigateToDestinationThunk = createAsyncThunk<
   Result<string, MainException>,
   { destination: SidebarDestination },
   { extra: ThunkExtra }
->('main/onDestinationNavigationCompleted', async ({ destination }, { extra }) => {
-  const path = destinationPath(destination)
-  try {
-    extra.navigation.navigate(path)
-    return ok(path)
-  } catch (error) {
-    return err(MainExceptions.unknown(reasonOf(error)))
-  }
-})
+>(
+  'main/onDestinationNavigationCompleted',
+  async ({ destination }, { extra }) => {
+    const path = destinationPath(destination)
+    try {
+      extra.navigation.navigate(path)
+      return ok(path)
+    } catch (error) {
+      return err(MainExceptions.unknown(reasonOf(error)))
+    }
+  },
+)
 
 /**
  * The capture slice's routing one-shot, performed.
@@ -193,14 +191,17 @@ export const deliverCaptureRouteThunk = createAsyncThunk<
   Result<PendingShellRoute['context'] | null, MainException>,
   { pending: PendingShellRoute | null; now: Date },
   { extra: ThunkExtra }
->('main/onCaptureRouteDeliveryCompleted', async ({ pending, now }, { extra }) => {
-  if (pending === null || now.getTime() < pending.deliverAtMs) return ok(null)
-  if (!pending.context.autoNavigates) return ok(pending.context)
+>(
+  'main/onCaptureRouteDeliveryCompleted',
+  async ({ pending, now }, { extra }) => {
+    if (pending === null || now.getTime() < pending.deliverAtMs) return ok(null)
+    if (!pending.context.autoNavigates) return ok(pending.context)
 
-  try {
-    extra.navigation.navigate(destinationPath(pending.context.destination))
-    return ok(pending.context)
-  } catch (error) {
-    return err(MainExceptions.unknown(reasonOf(error)))
-  }
-})
+    try {
+      extra.navigation.navigate(destinationPath(pending.context.destination))
+      return ok(pending.context)
+    } catch (error) {
+      return err(MainExceptions.unknown(reasonOf(error)))
+    }
+  },
+)

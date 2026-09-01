@@ -23,7 +23,11 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { AA_NON_TEXT, AA_TEXT, ratioBetween } from '../../system/tokens/contrast'
+import {
+  AA_NON_TEXT,
+  AA_TEXT,
+  ratioBetween,
+} from '../../system/tokens/contrast'
 import { COLOR_ROLE_VARS } from '../../system/tokens/roles'
 import type { ColorRole } from '../../system/tokens/roles'
 import { type Theme, resolveToken } from '../../system/tokens/tokenSource'
@@ -49,9 +53,10 @@ describe('the urgency pill', () => {
       for (const urgency of endeavorUrgencies) {
         const label = value(urgencyForegroundRole(urgency), theme)
         const ratio = ratioBetween(label, fill)
-        expect(ratio, `${urgency} on ${URGENCY_BACKGROUND_ROLE} (${theme})`).toBeGreaterThanOrEqual(
-          AA_TEXT,
-        )
+        expect(
+          ratio,
+          `${urgency} on ${URGENCY_BACKGROUND_ROLE} (${theme})`,
+        ).toBeGreaterThanOrEqual(AA_TEXT)
       }
     }
   })
@@ -73,7 +78,9 @@ describe('the urgency pill', () => {
     // Documented as a test rather than as a comment, because the tempting
     // "just use badgeOrange" edit looks correct in light mode.
     const fill = value(URGENCY_BACKGROUND_ROLE, 'dark')
-    expect(ratioBetween(value('badgeOrange', 'dark'), fill)).toBeLessThan(AA_TEXT)
+    expect(ratioBetween(value('badgeOrange', 'dark'), fill)).toBeLessThan(
+      AA_TEXT,
+    )
     expect(ratioBetween(value('badgeRed', 'dark'), fill)).toBeLessThan(AA_TEXT)
   })
 })
@@ -91,9 +98,9 @@ describe('the reward pill', () => {
 
   it('would FAIL with canon’s own gold — the measurement behind the adaptation', () => {
     // Canon's `Color(red: 0.6, green: 0.5, blue: 0.0)` is #997F00.
-    expect(ratioBetween('#997f00', value(REWARD_BACKGROUND_ROLE, 'light'))).toBeLessThan(
-      AA_TEXT,
-    )
+    expect(
+      ratioBetween('#997f00', value(REWARD_BACKGROUND_ROLE, 'light')),
+    ).toBeLessThan(AA_TEXT)
   })
 })
 
@@ -115,8 +122,13 @@ describe('a glyph on an action fill', () => {
     // indirection exists at all.
     for (const theme of THEMES) {
       for (const fill of ACTION_FILLS) {
-        const ratio = ratioBetween(value(onFillRole(fill), theme), value(fill, theme))
-        expect(ratio, `${fill} glyph (${theme})`).toBeGreaterThanOrEqual(AA_NON_TEXT)
+        const ratio = ratioBetween(
+          value(onFillRole(fill), theme),
+          value(fill, theme),
+        )
+        expect(ratio, `${fill} glyph (${theme})`).toBeGreaterThanOrEqual(
+          AA_NON_TEXT,
+        )
       }
     }
   })
@@ -156,9 +168,9 @@ describe('the floating warning disc', () => {
     // surface that disc measures 1.9:1 — under SC 1.4.11 — so the port keeps
     // canon's yellow and gives the shape an amber boundary.
     for (const theme of THEMES) {
-      expect(ratioBetween(value('ringGold'), value('snow', theme))).toBeLessThan(
-        AA_NON_TEXT,
-      )
+      expect(
+        ratioBetween(value('ringGold'), value('snow', theme)),
+      ).toBeLessThan(AA_NON_TEXT)
       expect(
         ratioBetween(value('bannerWarning', theme), value('snow', theme)),
         `warning ring (${theme})`,
@@ -172,9 +184,10 @@ describe('the inline banner', () => {
     for (const theme of THEMES) {
       for (const role of ['bannerWarning', 'bannerDanger'] as const) {
         const fill = value(role, theme)
-        expect(ratioBetween('#ffffff', fill), `${role} title (${theme})`).toBeGreaterThanOrEqual(
-          AA_TEXT,
-        )
+        expect(
+          ratioBetween('#ffffff', fill),
+          `${role} title (${theme})`,
+        ).toBeGreaterThanOrEqual(AA_TEXT)
         expect(
           ratioBetween('rgb(255 255 255 / 0.7)', fill),
           `${role} detail (${theme})`,
@@ -186,8 +199,12 @@ describe('the inline banner', () => {
   it('keeps the info banner’s text readable on the recessed surface it uses instead', () => {
     for (const theme of THEMES) {
       const fill = value('backInner', theme)
-      expect(ratioBetween(value('fore', theme), fill)).toBeGreaterThanOrEqual(AA_TEXT)
-      expect(ratioBetween(value('foreSecondary', theme), fill)).toBeGreaterThanOrEqual(AA_TEXT)
+      expect(ratioBetween(value('fore', theme), fill)).toBeGreaterThanOrEqual(
+        AA_TEXT,
+      )
+      expect(
+        ratioBetween(value('foreSecondary', theme), fill),
+      ).toBeGreaterThanOrEqual(AA_TEXT)
     }
   })
 })

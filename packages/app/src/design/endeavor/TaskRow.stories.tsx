@@ -70,7 +70,14 @@ export const List = {
   render: () => (
     <Stage width={640}>
       <SurfaceCard padding={null}>
-        <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div
+          style={{
+            padding: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           {rows.map((model) => (
             <TaskRow key={model.id} model={model} onStart={() => undefined} />
           ))}
@@ -85,7 +92,14 @@ export const Selected = {
   render: () => (
     <Stage width={640}>
       <SurfaceCard padding={null}>
-        <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div
+          style={{
+            padding: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           {rows.map((model, index) => (
             <TaskRow
               key={model.id}
@@ -105,7 +119,14 @@ export const PointsWithoutDuration = {
   render: () => (
     <Stage width={640}>
       <SurfaceCard padding={null}>
-        <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div
+          style={{
+            padding: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           {[1, 2, 3, 6].map((points) => (
             <TaskRow
               key={points}
@@ -134,9 +155,20 @@ export const BothThemes = {
   render: () => (
     <BothSchemes>
       <SurfaceCard padding={null}>
-        <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div
+          style={{
+            padding: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           <TaskRow model={rows[0] as TaskRowModel} onStart={() => undefined} />
-          <TaskRow model={rows[1] as TaskRowModel} isSelected onStart={() => undefined} />
+          <TaskRow
+            model={rows[1] as TaskRowModel}
+            isSelected
+            onStart={() => undefined}
+          />
         </div>
       </SurfaceCard>
     </BothSchemes>

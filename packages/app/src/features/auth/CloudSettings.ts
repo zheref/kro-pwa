@@ -81,7 +81,8 @@ export const settingsSyncTriggers: readonly SettingsSyncTrigger[] = [
  * local values."* Opening Settings is deliberately **not** one of them.
  */
 export const shouldPullSettings = (trigger: SettingsSyncTrigger): boolean =>
-  trigger === SettingsSyncTrigger.appLaunch || trigger === SettingsSyncTrigger.signIn
+  trigger === SettingsSyncTrigger.appLaunch ||
+  trigger === SettingsSyncTrigger.signIn
 
 /** *"On closing Settings, it sends the current synced values back."* */
 export const shouldPushSettings = (trigger: SettingsSyncTrigger): boolean =>

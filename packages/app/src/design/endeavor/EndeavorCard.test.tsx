@@ -28,10 +28,12 @@ import { NOW, endeavorCardMocks } from './endeavorMocks'
 
 afterEach(cleanup)
 
-const card = () => document.querySelector('[data-slot="endeavor-card"]') as HTMLElement
+const card = () =>
+  document.querySelector('[data-slot="endeavor-card"]') as HTMLElement
 const shell = () =>
   document.querySelector('[data-slot="endeavor-card-shell"]') as HTMLElement
-const warnings = () => document.querySelectorAll('[data-slot="endeavor-card-warning"]')
+const warnings = () =>
+  document.querySelectorAll('[data-slot="endeavor-card-warning"]')
 const warning = () => warnings()[0] ?? null
 
 describe('the Do-mode badge composition — canon geometry', () => {
@@ -46,7 +48,8 @@ describe('the Do-mode badge composition — canon geometry', () => {
         />,
       )
 
-      const label = urgency === 'low' ? 'Low' : urgency === 'medium' ? 'Medium' : 'High'
+      const label =
+        urgency === 'low' ? 'Low' : urgency === 'medium' ? 'Medium' : 'High'
       if (urgency === EndeavorUrgency.low) {
         expect(screen.queryByText(label)).toBeNull()
       } else {
@@ -78,7 +81,9 @@ describe('the Do-mode badge composition — canon geometry', () => {
   it('floats the warning at (−6, −6), OUTSIDE the card chrome', () => {
     render(<EndeavorCard model={endeavorCardMocks.mediumUrgency} now={NOW} />)
 
-    expect((warning() as HTMLElement).style.transform).toBe('translate(-6px, -6px)')
+    expect((warning() as HTMLElement).style.transform).toBe(
+      'translate(-6px, -6px)',
+    )
   })
 
   it('shows the warning for MEDIUM only — High already shouts through the red pill', () => {
@@ -112,7 +117,11 @@ describe('the Do-mode badge composition — canon geometry', () => {
 
   it('withdraws the warning while the card is prepared, so it never sits over the overlay', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.mediumUrgency} isSelected now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.mediumUrgency}
+        isSelected
+        now={NOW}
+      />,
     )
 
     expect(warning()).toBeNull()
@@ -120,7 +129,11 @@ describe('the Do-mode badge composition — canon geometry', () => {
 
   it('puts the mark-complete glyph at (14, −8) on the vertical card', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isInMarkCompleteMode now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
     )
 
     const control = screen.getByRole('button', { name: 'Mark complete' })
@@ -146,7 +159,13 @@ describe('the Do-mode badge composition — canon geometry', () => {
   })
 
   it('offers SKIP, not complete, on an event — an event cannot be completed', () => {
-    render(<EndeavorCard model={endeavorCardMocks.event} isInMarkCompleteMode now={NOW} />)
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.event}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
+    )
 
     expect(screen.getByRole('button', { name: 'Skip event' })).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Mark complete' })).toBeNull()
@@ -182,7 +201,11 @@ describe('layout and size', () => {
 
   it('stretches to its parent with a 100px floor on the horizontal layout', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} layout="horizontal" now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        layout="horizontal"
+        now={NOW}
+      />,
     )
 
     expect(shell().style.minHeight).toBe(`${HORIZONTAL_MIN_HEIGHT}px`)
@@ -199,7 +222,11 @@ describe('layout and size', () => {
 
   it('draws the small card’s urgency pill as a circle with no label', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} size="small" now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        size="small"
+        now={NOW}
+      />,
     )
 
     expect(screen.queryByText('High')).toBeNull()
@@ -221,7 +248,9 @@ describe('the preparation overlay', () => {
 
   it('is ALWAYS IN THE TREE, so revealing it never changes layout — canon’s own note', () => {
     render(<EndeavorCard model={endeavorCardMocks.highUrgency} now={NOW} />)
-    expect(document.querySelector('[data-slot="endeavor-card-prep-overlay"]')).not.toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-card-prep-overlay"]'),
+    ).not.toBeNull()
   })
 
   it('never puts `kro-glass` on the POSITIONED element — it would rejoin the flow', () => {
@@ -231,7 +260,11 @@ describe('the preparation overlay', () => {
     // card, which pushed the trailing warning glyph into the middle of the row.
     // jsdom does no layout, so the invariant is checked as class composition.
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} layout="horizontal" now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        layout="horizontal"
+        now={NOW}
+      />,
     )
 
     const overlay = document.querySelector(
@@ -247,10 +280,18 @@ describe('the preparation overlay', () => {
       <EndeavorCard model={endeavorCardMocks.highUrgency} now={NOW} />,
     )
     const content = () =>
-      document.querySelector('[data-slot="endeavor-card-content"]') as HTMLElement
+      document.querySelector(
+        '[data-slot="endeavor-card-content"]',
+      ) as HTMLElement
     expect(content().style.filter).toBe('')
 
-    rerender(<EndeavorCard model={endeavorCardMocks.highUrgency} isSelected now={NOW} />)
+    rerender(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isSelected
+        now={NOW}
+      />,
+    )
     expect(content().style.filter).toBe('blur(10px)')
   })
 
@@ -344,18 +385,30 @@ describe('the preparation overlay', () => {
     // `hidden: true` because the overlay is `aria-hidden` while closed — which
     // is itself half the answer: the controls are out of the accessibility tree
     // AND out of the tab order, so neither a reader nor a keyboard reaches them.
-    expect(screen.getByRole('button', { name: 'Start', hidden: true }).tabIndex).toBe(-1)
+    expect(
+      screen.getByRole('button', { name: 'Start', hidden: true }).tabIndex,
+    ).toBe(-1)
   })
 
   it('puts them back once the card is prepared', () => {
-    render(<EndeavorCard model={endeavorCardMocks.highUrgency} isSelected now={NOW} />)
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isSelected
+        now={NOW}
+      />,
+    )
 
     expect(screen.getByRole('button', { name: 'Start' }).tabIndex).toBe(0)
   })
 
   it('adds the dedicated Defer control on the LARGE card only', () => {
     const { rerender } = render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isSelected now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isSelected
+        now={NOW}
+      />,
     )
     expect(screen.queryByRole('button', { name: 'Defer' })).toBeNull()
 
@@ -380,7 +433,10 @@ describe('the preparation overlay', () => {
       />,
     )
     for (const name of ['Mark complete', 'Defer', 'Start', 'Skip', 'Delete']) {
-      expect(screen.getByRole('button', { name }), `${name} missing`).not.toBeNull()
+      expect(
+        screen.getByRole('button', { name }),
+        `${name} missing`,
+      ).not.toBeNull()
     }
 
     rerender(
@@ -418,7 +474,11 @@ describe('the backdate trigger', () => {
 
   it('opens a dialog rather than acting, and says so to a screen reader', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isInMarkCompleteMode now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
     )
 
     // Radix's own contract on a popover trigger. Asserted rather than exercised
@@ -433,10 +493,18 @@ describe('the backdate trigger', () => {
 
 describe('the overflow menu', () => {
   const overflow = () =>
-    document.querySelector('[data-slot="endeavor-card-overflow"]') as HTMLElement
+    document.querySelector(
+      '[data-slot="endeavor-card-overflow"]',
+    ) as HTMLElement
 
   it('is a MENU trigger, and the flow it can open starts closed', () => {
-    render(<EndeavorCard model={endeavorCardMocks.highUrgency} isSelected now={NOW} />)
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isSelected
+        now={NOW}
+      />,
+    )
 
     const trigger = screen.getByRole('button', { name: 'More actions' })
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
@@ -475,7 +543,11 @@ describe('the wiggle', () => {
 
   it('tilts the card in mark-complete mode', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isInMarkCompleteMode now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
     )
 
     expect(card().style.transform).toBe('rotate(0.35deg)')
@@ -483,7 +555,11 @@ describe('the wiggle', () => {
 
   it('SETTLES back to exactly 0° when the mode is left', () => {
     const { rerender } = render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isInMarkCompleteMode now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
     )
     expect(card().style.transform).not.toBe('rotate(0deg)')
 
@@ -494,7 +570,11 @@ describe('the wiggle', () => {
 
   it('marks the mode on the element, so a story can prove which state it is in', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.highUrgency} isInMarkCompleteMode now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        isInMarkCompleteMode
+        now={NOW}
+      />,
     )
 
     expect(card().dataset.markCompleteMode).toBe('true')
@@ -504,7 +584,11 @@ describe('the wiggle', () => {
 describe('the time captions', () => {
   it('prints the plain time while the due moment is ahead', () => {
     render(
-      <EndeavorCard model={endeavorCardMocks.mediumUrgency} now={NOW} locale="en-US" />,
+      <EndeavorCard
+        model={endeavorCardMocks.mediumUrgency}
+        now={NOW}
+        locale="en-US"
+      />,
     )
 
     expect(screen.getByText('3:00 PM')).not.toBeNull()
@@ -512,13 +596,21 @@ describe('the time captions', () => {
   })
 
   it('switches to the relative caption once it has passed', () => {
-    render(<EndeavorCard model={endeavorCardMocks.overdue} now={NOW} locale="en-US" />)
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.overdue}
+        now={NOW}
+        locale="en-US"
+      />,
+    )
 
     expect(screen.getByText('3 days ago')).not.toBeNull()
   })
 
   it('prints neither line for a model that has neither', () => {
-    render(<EndeavorCard model={endeavorCardMocks.bare} now={NOW} locale="en-US" />)
+    render(
+      <EndeavorCard model={endeavorCardMocks.bare} now={NOW} locale="en-US" />,
+    )
 
     expect(screen.queryByText(/m$/)).toBeNull()
   })

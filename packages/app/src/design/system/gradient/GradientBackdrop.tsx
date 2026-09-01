@@ -1,4 +1,13 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from 'react'
+'use client'
+
+import {
+  type CSSProperties,
+  type ComponentPropsWithoutRef,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../utils/cn'
 
 /**
@@ -54,10 +63,24 @@ export interface GradientBackdropProps
    * the remaining-count line, the rings), and this clip fills that box.
    */
   readonly clip?: 'none' | 'bottomTrailing'
+  /**
+   * Where a `bottomTrailing` clip is allowed to grow.
+   *
+   * `host` (the default) fills the positioned parent — a story, a test, a
+   * header rendered on its own. `window` portals the paint into the shell's
+   * `[data-kro-title-slab-host]` so the slab can start at the window's top
+   * and leading edges, pass *under* the transparent toolbar, and still clip
+   * to the title's bottom-trailing corner. Without that host it falls back
+   * to `host`, so a Fragment test never has to mount the shell.
+   */
+  readonly bleed?: 'host' | 'window'
 }
 
 /** Canon's `UnevenRoundedRectangle(bottomTrailingRadius: 50)`. */
 export const LARGE_TITLE_TRAILING_RADIUS_PX = 50
+
+/** The empty layer the shell paints so a LargeScreenTitle slab can portal. */
+export const TITLE_SLAB_HOST_SELECTOR = '[data-kro-title-slab-host]'
 
 /**
  * The `indigoGrape` header slab, installed as the content's top inset.
@@ -74,20 +97,84 @@ export function GradientBackdrop({
   fixed = false,
   hardEdge = false,
   clip = 'none',
+  bleed = 'host',
   className,
   style,
   ...rest
 }: GradientBackdropProps) {
-  return (
+  const wantsWindow = bleed === 'window' && clip === 'bottomTrailing'
+  const measureRef = useRef<HTMLDivElement>(null)
+  const [portal, setPortal] = useState<{
+    readonly host: Element
+    readonly style: CSSProperties
+  } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!wantsWindow) {
+      setPortal(null)
+      return
+    }
+
+    const host = document.querySelector(TITLE_SLAB_HOST_SELECTOR)
+    const header = measureRef.current?.parentElement
+    if (host === null || header == null) {
+      setPortal(null)
+      return
+    }
+
+    const measure = () => {
+      const shell = host.getBoundingClientRect()
+      const box = header.getBoundingClientRect()
+      const nextStyle = {
+        top: 0,
+        left: 0,
+        width: `${Math.max(0, box.right - shell.left)}px`,
+        height: `${Math.max(0, box.bottom - shell.top)}px`,
+      }
+      setPortal((current) => {
+        if (
+          current !== null &&
+          current.host === host &&
+          current.style.width === nextStyle.width &&
+          current.style.height === nextStyle.height
+        ) {
+          return current
+        }
+        return { host, style: nextStyle }
+      })
+    }
+
+    measure()
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(header)
+    observer?.observe(host)
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+    }
+  }, [wantsWindow])
+
+  const visual = (
+    portaled: boolean,
+    extraStyle?: CSSProperties,
+    ref?: typeof measureRef,
+  ) => (
     <div
+      ref={ref}
       aria-hidden="true"
       data-gradient-variant={variant}
       data-gradient-clip={clip}
+      data-gradient-bleed={bleed}
       className={cn(
         'kro-gradient-backdrop',
         fixed && 'kro-gradient-backdrop--fixed',
         hardEdge && 'kro-gradient-backdrop--hard',
         clip === 'bottomTrailing' && 'kro-gradient-backdrop--large-title',
+        portaled && 'kro-gradient-backdrop--window-bleed',
         className,
       )}
       style={{
@@ -98,10 +185,26 @@ export function GradientBackdrop({
           ? {}
           : ({ '--kro-gradient-height': height } as CSSProperties)),
         ...style,
+        ...extraStyle,
       }}
       {...rest}
     />
   )
+
+  if (wantsWindow && portal !== null) {
+    return (
+      <>
+        <div
+          ref={measureRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+        />
+        {createPortal(visual(true, portal.style), portal.host)}
+      </>
+    )
+  }
+
+  return visual(false, undefined, wantsWindow ? measureRef : undefined)
 }
 
 export type GradientContentProps = ComponentPropsWithoutRef<'div'>

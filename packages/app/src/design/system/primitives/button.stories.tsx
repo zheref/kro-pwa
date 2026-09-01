@@ -1,6 +1,6 @@
 import { Check, Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Button } from './button'
+import { Button, buttonSizeForDensity } from './button'
 
 export default {
   title: 'Design system/Primitives/Button',
@@ -76,9 +76,9 @@ export const Variants = {
 export const Sizes = {
   render: () => (
     <Stage>
-      <Row label="Sizes — 44px touch floor, 28px pointer target at sm">
-        <Button size="sm">Compact</Button>
-        <Button size="md">Default</Button>
+      <Row label="Sizes — compact 28px pointer / comfortable 44px touch">
+        <Button size={buttonSizeForDensity('compact')}>Compact</Button>
+        <Button size={buttonSizeForDensity('comfortable')}>Comfortable</Button>
         <Button size="lg">Large</Button>
         <Button size="pill">Pill</Button>
       </Row>

@@ -371,6 +371,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
             handlers={handlers}
             suggestionHandlers={suggestionHandlers}
             preparationPresentation={layout.isTouchPrimary ? 'mobile' : 'macOS'}
+            controlDensity={layout.isTouchPrimary ? 'comfortable' : 'compact'}
           />
 
           {/* Canon's `Spacer(minLength: 80)` — the last lane clears the FAB. */}

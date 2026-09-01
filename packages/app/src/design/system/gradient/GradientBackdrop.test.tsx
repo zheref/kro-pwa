@@ -4,6 +4,7 @@ import {
   GradientBackdrop,
   GradientContent,
   LARGE_TITLE_TRAILING_RADIUS_PX,
+  TITLE_SLAB_HOST_SELECTOR,
 } from './GradientBackdrop'
 
 afterEach(cleanup)
@@ -87,6 +88,47 @@ describe('GradientBackdrop', () => {
 
   it('names the LargeScreenTitle trailing round, matching canon`s 50pt', () => {
     expect(LARGE_TITLE_TRAILING_RADIUS_PX).toBe(50)
+  })
+
+  it('falls back to filling its host when the shell has not painted a portal target', () => {
+    render(
+      <header data-testid="header" style={{ position: 'relative' }}>
+        <GradientBackdrop
+          clip="bottomTrailing"
+          bleed="window"
+          data-testid="slab"
+        />
+      </header>,
+    )
+
+    const slab = screen.getByTestId('slab')
+    expect(screen.getByTestId('header').contains(slab)).toBe(true)
+    expect(slab.dataset.gradientBleed).toBe('window')
+    expect(slab.className).not.toContain('kro-gradient-backdrop--window-bleed')
+  })
+
+  it('portals a window bleed into the shell host so the slab can start at the origin', () => {
+    render(
+      <div data-testid="shell" style={{ position: 'relative' }}>
+        <div data-kro-title-slab-host="" data-testid="host" />
+        <header data-testid="header" style={{ position: 'relative' }}>
+          <GradientBackdrop
+            clip="bottomTrailing"
+            bleed="window"
+            data-testid="slab"
+          />
+        </header>
+      </div>,
+    )
+
+    const slab = screen.getByTestId('slab')
+    expect(screen.getByTestId('host').contains(slab)).toBe(true)
+    expect(screen.getByTestId('header').contains(slab)).toBe(false)
+    expect(slab.className).toContain('kro-gradient-backdrop--window-bleed')
+  })
+
+  it('names the host selector the shell paints', () => {
+    expect(TITLE_SLAB_HOST_SELECTOR).toBe('[data-kro-title-slab-host]')
   })
 
   it('keeps a caller’s inline style alongside its own custom property', () => {

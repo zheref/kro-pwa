@@ -55,6 +55,10 @@ import {
   formatTimeRange,
 } from '../../../design/endeavor'
 import {
+  type ControlDensity,
+  controlMinSizeVar,
+} from '../../../design/system/primitives/button'
+import {
   colorVar,
   radiusVar,
   semanticVar,
@@ -155,6 +159,12 @@ export interface DoLanesFragmentProps {
    * glass card; touch keeps the iOS action stack.
    */
   readonly preparationPresentation?: EndeavorPreparationPresentation
+  /**
+   * Compact CTAs on pointer Do; comfortable (44px) when the primary input is
+   * a finger. Defaults compact so a story without a layout still matches
+   * desktop.
+   */
+  readonly controlDensity?: ControlDensity
 }
 
 export function DoLanesFragment(props: DoLanesFragmentProps) {
@@ -171,6 +181,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     onCreateEndeavor,
     suggestionHandlers,
     preparationPresentation = 'automatic',
+    controlDensity = 'compact',
     className,
   } = props
 
@@ -205,6 +216,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
         <SuggestionsLane
           suggestions={suggestions}
           handlers={suggestionHandlers}
+          density={controlDensity}
         />
       ) : null}
 
@@ -368,11 +380,13 @@ const badgeStyle = {
 function SuggestionsLane({
   suggestions,
   handlers,
+  density,
 }: {
   readonly suggestions: readonly (SuggestionCardModel & {
     readonly source: DoSuggestionSource
   })[]
   readonly handlers: DoSuggestionHandlers
+  readonly density: ControlDensity
 }) {
   const cards = suggestions.map((suggestion) => (
     <div
@@ -381,6 +395,7 @@ function SuggestionsLane({
     >
       <SuggestionCard
         model={suggestion}
+        density={density}
         onAction={() => handlers.onAction(suggestion.source)}
       />
       {/*
@@ -399,8 +414,8 @@ function SuggestionsLane({
           'kro-on-gradient outline-none focus-visible:shadow-[var(--kro-ring)]',
         )}
         style={{
-          minWidth: 'var(--kro-size-min-touch-target)',
-          minHeight: 'var(--kro-size-min-touch-target)',
+          minWidth: controlMinSizeVar(density),
+          minHeight: controlMinSizeVar(density),
         }}
       >
         <span aria-hidden className="text-lg leading-none">

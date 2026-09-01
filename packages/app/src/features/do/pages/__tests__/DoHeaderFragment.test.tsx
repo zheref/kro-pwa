@@ -150,6 +150,7 @@ describe('the LargeScreenTitle slab', () => {
     expect(header.contains(slab)).toBe(true)
     expect(slab.className).toContain('kro-gradient-backdrop--large-title')
     expect(slab.className).toContain('kro-gradient-backdrop--hard')
+    expect(slab.dataset.gradientBleed).toBe('window')
   })
 
   it('does not pin a 360px drop — the clip fills the title, remaining-count and rings', () => {

@@ -138,13 +138,26 @@ describe('acceptance criterion 1 — wide', () => {
     ).toBe(true)
   })
 
-  it('shows the expanded heading on a wide surface and the plain one when narrow', () => {
+  it('does not repeat My Day in the content toolbar — LargeScreenTitle owns that', () => {
     renderShell(desktopSurface)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('My Day')
+
+    const toolbar = screen.getByTestId('shell-content-toolbar')
+    expect(toolbar.querySelector('h1')).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
 
     cleanup()
     renderShell(handheldSurface)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('My Day')
+    expect(
+      screen.getByTestId('shell-tab-bar-toolbar').querySelector('h1'),
+    ).toBeNull()
+  })
+
+  it('still titles destinations that do not paint a LargeScreenTitle', () => {
+    renderShell(desktopSurface, {
+      selected: { kind: DestinationKind.inbox },
+    })
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Inbox')
   })
 
   it('collapses the sidebar column on request', () => {
@@ -363,5 +376,25 @@ describe('the content column reaches the window edge', () => {
 
     expect(screen.queryByTestId('shell-large-title-slab')).toBeNull()
     expect(screen.getByTestId('shell-tab-bar')).toBeTruthy()
+  })
+
+  it('offers a window-origin host so the title slab can grow from the edges', () => {
+    renderShell(desktopSurface)
+
+    const host = screen.getByTestId('shell-title-slab-host')
+    expect(host.hasAttribute('data-kro-title-slab-host')).toBe(true)
+    expect(host.getAttribute('aria-hidden')).toBe('true')
+
+    cleanup()
+    renderShell(handheldSurface)
+    expect(screen.getByTestId('shell-title-slab-host')).toBeTruthy()
+  })
+
+  it('drops the glass bar and the redundant title so the slab shows through', () => {
+    renderShell(desktopSurface)
+
+    const toolbar = screen.getByTestId('shell-content-toolbar')
+    expect(toolbar.className).not.toContain('kro-glass')
+    expect(toolbar.tagName).toBe('HEADER')
   })
 })

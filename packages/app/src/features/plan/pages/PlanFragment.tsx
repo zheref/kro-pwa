@@ -208,6 +208,7 @@ export function PlanFragment({
         <GradientBackdrop
           hardEdge
           clip="bottomTrailing"
+          bleed="window"
           data-testid="plan-header-title-slab"
         />
         {/*

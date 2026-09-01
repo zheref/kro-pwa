@@ -1,7 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Button } from './button'
+import {
+  Button,
+  buttonSizeForDensity,
+  controlDensity,
+  controlMinSizeVar,
+  iconButtonSizeForDensity,
+} from './button'
 
 afterEach(cleanup)
 
@@ -102,6 +108,27 @@ describe('Button', () => {
 
     rerender(<Button size="sm">Compact</Button>)
     expect(screen.getByRole('button').className).toContain('h-7')
+  })
+
+  it('maps pointer vs touch onto those two sizes', () => {
+    expect(controlDensity(false)).toBe('compact')
+    expect(controlDensity(true)).toBe('comfortable')
+    expect(buttonSizeForDensity('compact')).toBe('sm')
+    expect(buttonSizeForDensity('comfortable')).toBe('md')
+  })
+
+  it('maps icon-only buttons the same way', () => {
+    expect(iconButtonSizeForDensity('compact')).toBe('icon-sm')
+    expect(iconButtonSizeForDensity('comfortable')).toBe('icon')
+  })
+
+  it('names the token floor each density must not fall below', () => {
+    expect(controlMinSizeVar('compact')).toBe(
+      'var(--kro-size-min-pointer-target)',
+    )
+    expect(controlMinSizeVar('comfortable')).toBe(
+      'var(--kro-size-min-touch-target)',
+    )
   })
 
   it('renders the child element with asChild, so a link never nests in a button', () => {

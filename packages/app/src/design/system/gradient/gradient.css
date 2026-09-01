@@ -84,6 +84,18 @@
 }
 
 /**
+ * LargeScreenTitle grown to the window origin. Size is inline (the title's
+ * bottom-trailing corner, measured against the shell host). `inset: auto`
+ * must win over `--large-title`'s `inset: 0` so the slab can start at (0, 0)
+ * rather than at the header box.
+ */
+.kro-gradient-backdrop--window-bleed {
+  inset: auto;
+  position: absolute;
+  height: auto;
+}
+
+/**
  * The content that sits over the slab. Establishes the stacking order once, so
  * a surface does not have to remember to raise itself above a decoration.
  */

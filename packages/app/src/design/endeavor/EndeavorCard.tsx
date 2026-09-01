@@ -320,7 +320,7 @@ function VerticalCard({
       data-preparation={macOSPrep ? 'macOS' : 'mobile'}
       className={cn(
         'relative flex flex-col overflow-hidden',
-        usesGlass && 'kro-glass',
+        usesGlass && 'kro-glass kro-glass--pressed',
       )}
       style={{
         width: cardSize?.width ?? DEFAULT_CARD_WIDTH,
@@ -537,7 +537,7 @@ function HorizontalCard({
       data-preparation={macOSPrep ? 'macOS' : 'mobile'}
       className={cn(
         'relative flex w-full items-center overflow-hidden',
-        usesGlass && 'kro-glass',
+        usesGlass && 'kro-glass kro-glass--pressed',
       )}
       style={{
         minHeight: HORIZONTAL_MIN_HEIGHT,

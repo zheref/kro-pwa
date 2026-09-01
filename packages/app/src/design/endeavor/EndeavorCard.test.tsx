@@ -494,6 +494,7 @@ describe('macOS preparation', () => {
     )
 
     expect(shell().className).toContain('kro-glass')
+    expect(shell().className).toContain('kro-glass--pressed')
     expect(
       document.querySelector('[data-slot="endeavor-card-macos-details"]')
         ?.textContent,
@@ -518,6 +519,7 @@ describe('macOS preparation', () => {
     ) as HTMLElement
     expect(content.style.opacity).toBe('1')
     expect(shell().className).not.toContain('kro-glass')
+    expect(shell().className).not.toContain('kro-glass--pressed')
     expect(
       document.querySelector('[data-slot="endeavor-card-macos-prep"]'),
     ).not.toBeNull()

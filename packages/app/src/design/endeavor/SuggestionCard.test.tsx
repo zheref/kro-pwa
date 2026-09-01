@@ -2,6 +2,8 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  SUGGESTION_CARD_MAX_WIDTH_PX,
+  SUGGESTION_CARD_MIN_WIDTH_PX,
   SuggestionCard,
   suggestionActionIcon,
   suggestionIcon,
@@ -69,13 +71,15 @@ describe('SuggestionCard', () => {
     const card = () =>
       container.querySelector('[data-slot="suggestion-card"]') as HTMLElement
 
-    expect(card().className).toContain('min-w-70')
-    expect(card().className).toContain('max-w-85')
+    expect(card().style.minWidth).toBe(`${SUGGESTION_CARD_MIN_WIDTH_PX}px`)
+    expect(card().style.maxWidth).toBe(`${SUGGESTION_CARD_MAX_WIDTH_PX}px`)
+    expect(card().className).not.toContain('w-full')
 
     rerender(
       <SuggestionCard model={model} fillsWidth onAction={() => undefined} />,
     )
     expect(card().className).toContain('w-full')
+    expect(card().style.minWidth).toBe('')
   })
 
   it('is canon`s 80pt carousel card, not a taller stacked banner', () => {
@@ -140,5 +144,35 @@ describe('SuggestionCard', () => {
         `${source} action`,
       ).toBe(true)
     }
+  })
+
+  it('is about a third wider than canon`s 280–340 carousel', () => {
+    expect(SUGGESTION_CARD_MIN_WIDTH_PX).toBe(Math.round((280 * 4) / 3))
+    expect(SUGGESTION_CARD_MAX_WIDTH_PX).toBe(Math.round((340 * 4) / 3))
+  })
+
+  it('defaults the CTA to the 28px pointer target so the title does not wrap', () => {
+    render(<SuggestionCard model={model} onAction={() => undefined} />)
+
+    const action = screen.getByRole('button', { name: /Connect/ })
+    expect(action.style.minHeight).toBe('var(--kro-size-min-pointer-target)')
+    expect(
+      (document.querySelector('[data-slot="suggestion-card"]') as HTMLElement)
+        .dataset.density,
+    ).toBe('compact')
+  })
+
+  it('uses the 44px touch floor when the surface asks for comfortable density', () => {
+    render(
+      <SuggestionCard
+        model={model}
+        density="comfortable"
+        onAction={() => undefined}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: /Connect/ }).style.minHeight,
+    ).toBe('var(--kro-size-min-touch-target)')
   })
 })

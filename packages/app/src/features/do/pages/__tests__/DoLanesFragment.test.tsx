@@ -228,14 +228,14 @@ describe('the Suggestions lane', () => {
     ).toBeNull()
   })
 
-  it('keeps each card at canon`s 280–340px carousel width', () => {
+  it('keeps each card a third wider than canon`s 280–340 carousel', () => {
     render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
     const card = screen
       .getByTestId('do-lane-suggestions')
       .querySelector('[data-slot="suggestion-card"]') as HTMLElement
-    expect(card.className).toContain('min-w-70')
-    expect(card.className).toContain('max-w-85')
+    expect(card.style.minWidth).toBe('373px')
+    expect(card.style.maxWidth).toBe('453px')
     expect(card.className).not.toContain('w-full')
   })
 
@@ -243,5 +243,35 @@ describe('the Suggestions lane', () => {
     render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
     expect(screen.getByRole('button', { name: /Dismiss/ })).toBeTruthy()
+  })
+
+  it('defaults suggestion controls to the compact pointer target', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.dataset.density).toBe('compact')
+    expect(
+      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
+    ).toBe('var(--kro-size-min-pointer-target)')
+  })
+
+  it('uses the touch floor when the surface asks for comfortable density', () => {
+    render(
+      <DoLanesFragment
+        {...propsFor(doSurfaceMocks.suggestionOffered, {
+          controlDensity: 'comfortable',
+        })}
+      />,
+    )
+
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.dataset.density).toBe('comfortable')
+    expect(
+      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
+    ).toBe('var(--kro-size-min-touch-target)')
   })
 })

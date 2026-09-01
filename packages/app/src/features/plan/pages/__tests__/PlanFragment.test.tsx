@@ -70,6 +70,7 @@ describe('PlanFragment', () => {
     const slab = screen.getByTestId('plan-header-title-slab')
     expect(header.contains(slab)).toBe(true)
     expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(slab.dataset.gradientBleed).toBe('window')
   })
 
   it('renders the timeline destination it was handed', () => {

@@ -75,6 +75,7 @@ export function DoHeaderFragment({
       <GradientBackdrop
         hardEdge
         clip="bottomTrailing"
+        bleed="window"
         data-testid="do-header-title-slab"
       />
       <div className="relative z-10 flex min-w-0 flex-col gap-0.5">

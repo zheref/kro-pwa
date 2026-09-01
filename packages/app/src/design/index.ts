@@ -116,6 +116,7 @@ export {
   GradientBackdrop,
   GradientContent,
   LARGE_TITLE_TRAILING_RADIUS_PX,
+  TITLE_SLAB_HOST_SELECTOR,
 } from './system/gradient/GradientBackdrop'
 export {
   type DetailBackdropProps,
@@ -143,8 +144,13 @@ export {
 export { cn } from './system/utils/cn'
 export {
   type ButtonProps,
+  type ControlDensity,
   Button,
+  buttonSizeForDensity,
   buttonVariants,
+  controlDensity,
+  controlMinSizeVar,
+  iconButtonSizeForDensity,
 } from './system/primitives/button'
 export { type InputProps, Input } from './system/primitives/input'
 export {

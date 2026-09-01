@@ -59,18 +59,21 @@ import {
   type DocumentTitleService,
   type InstallService,
   type NotificationsService,
+  type ShareService,
   type VibrationService,
   type WakeLockService,
   liveAudioFeedbackService,
   liveDocumentTitleService,
   liveInstallService,
   liveNotificationsService,
+  liveShareService,
   liveVibrationService,
   liveWakeLockService,
   stubbedAudioFeedbackService,
   stubbedDocumentTitleService,
   stubbedInstallService,
   stubbedNotificationsService,
+  stubbedShareService,
   stubbedVibrationService,
   stubbedWakeLockService,
 } from '../services/platform'
@@ -125,6 +128,13 @@ export interface ThunkExtra {
   readonly wakeLockService: WakeLockService
   readonly vibrationService: VibrationService
   readonly installService: InstallService
+  /**
+   * The share hand-off (KC-IS-#71 item 18) — `navigator.share`, with the
+   * clipboard behind it. A seventh platform field rather than a member of a
+   * bundle, for the same reason the six above are separate: it shares no handle
+   * and no lifecycle with any of them.
+   */
+  readonly shareService: ShareService
   /**
    * The browser tab's title (#21) — the web's stand-in for KroApple's macOS
    * menu-bar extra, per epic #1. A sixth field rather than a member of the
@@ -219,6 +229,7 @@ export const liveThunkExtra: ThunkExtra = {
   wakeLockService: liveWakeLockService,
   vibrationService: liveVibrationService,
   installService: liveInstallService,
+  shareService: liveShareService,
   documentTitleService: liveDocumentTitleService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
@@ -260,6 +271,7 @@ export const stubbedThunkExtra: ThunkExtra = {
   wakeLockService: stubbedWakeLockService,
   vibrationService: stubbedVibrationService,
   installService: stubbedInstallService,
+  shareService: stubbedShareService,
   documentTitleService: stubbedDocumentTitleService,
   signOutWipe,
   // `statusQuo` by default, so a suite that asserts on shipping behaviour gets

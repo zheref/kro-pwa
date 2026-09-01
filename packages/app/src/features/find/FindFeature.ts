@@ -328,6 +328,12 @@ export const findSlice = createSlice({
               }),
             )
             return
+          case 'shared':
+            // Canon's Share writes nothing and leaves the row exactly as it
+            // was, so there is no state to shift (KC-IS-#71 item 18). The
+            // outcome is still carried on the action for a surface that wants
+            // to say the hand-off fell back to the clipboard.
+            return
           default:
             Object.assign(
               state,

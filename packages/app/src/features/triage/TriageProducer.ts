@@ -45,6 +45,7 @@ import {
   performFromRecord,
   reconcile,
   resolvedKind,
+  ShareOutcome,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
@@ -319,4 +320,32 @@ export const saveTriageDecisionThunk = createAsyncThunk<
   })
 
   return ok({ endeavor: triaged, push, now })
+})
+
+/**
+ * The Delegate quadrant's Share (KC-IS-#71 item 18).
+ *
+ * The hand-off used to be performed by `pages/triageShare.ts` — a stand-in the
+ * Page called directly, with an injected gateway prop standing in for
+ * `ThunkExtra` — because no share Service was wired. One is now
+ * (`services/platform/share/ShareService.ts`), so this is the Producer the
+ * architecture always asked for: the Service arrives through `extra`, and the
+ * outcome comes back through the slice instead of a `useState` in the Page.
+ *
+ * The Service never throws, and the `try` is still here: a Service *may*
+ * throw and a Producer must not require a caller to know which ones do not
+ * (`RC-7`). A failure resolves `unavailable`, which is the same thing a
+ * platform with neither capability reports — from the user's side there is no
+ * difference worth two messages.
+ */
+export const shareTriageBlurbThunk = createAsyncThunk<
+  Result<ShareOutcome, TriageException>,
+  { readonly text: string },
+  { extra: ThunkExtra }
+>('triage/onShareCompleted', async ({ text }, { extra }) => {
+  try {
+    return ok(await extra.shareService.share(text))
+  } catch {
+    return ok(ShareOutcome.unavailable)
+  }
 })

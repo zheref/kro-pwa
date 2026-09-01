@@ -10,7 +10,9 @@ import {
   EndeavorKind,
   EndeavorOperation,
   EndeavorStatus,
+  ShareOutcome,
   endeavorRecordFromEndeavor,
+  endeavorShareText,
   makeEndeavor,
   makeProject,
   projectRecordFromProject,
@@ -18,6 +20,10 @@ import {
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import {
+  type ShareService,
+  makeStubbedShareService,
+} from '../../../services/platform/share/ShareService'
 import {
   FIND_REFERENCE_NOW,
   allFindEndeavorMocks,
@@ -551,5 +557,99 @@ describe('the fetch hydrates each row’s list from the project store', () => {
     // A per-row lookup would be three round-trips here and a hundred on a real
     // list — the same reason the defers and performances are read whole.
     expect(reads).toBe(1)
+  })
+})
+
+/**
+ * Find's `share` row operation (KC-IS-#71 item 18).
+ *
+ * It was an intent naming a Service that did not exist, so the gesture the
+ * `find` vista declares reached nothing. Now the Producer performs it, and
+ * these are the three properties that matter: the blurb is canon's, the row is
+ * untouched, and the outcome comes back.
+ */
+describe('the share row operation hands the blurb to the platform', () => {
+  const shareStore = (service: ShareService) => {
+    const localStore = makeInMemoryLocalStore({ endeavors: recordsOf() })
+    return {
+      localStore,
+      store: makeStore({
+        ...stubbedThunkExtra,
+        localStore,
+        shareService: service,
+      }),
+    }
+  }
+
+  const shareRow = async (service: ShareService) => {
+    const target = allFindEndeavorMocks[0]
+    if (target === undefined) throw new Error('the fixture pool is empty')
+    const { store, localStore } = shareStore(service)
+    const action = await store.dispatch(
+      performEndeavorOperationThunk({
+        surface: FindSurface.find,
+        operation: EndeavorOperation.share,
+        endeavorId: target.id,
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = performEndeavorOperationThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+    if (payload === null || !payload.ok) throw new Error('did not resolve ok')
+    return { outcome: payload.value, target, localStore }
+  }
+
+  it("hands canon's blurb to the share sheet", async () => {
+    const service = makeStubbedShareService()
+    const { outcome, target } = await shareRow(service)
+
+    expect(service.sharedTexts()).toEqual([endeavorShareText(target.title)])
+    expect(outcome.kind).toBe('shared')
+    if (outcome.kind === 'shared') {
+      expect(outcome.outcome).toBe(ShareOutcome.shared)
+      expect(outcome.endeavorId).toBe(target.id)
+    }
+  })
+
+  it('writes nothing — canon leaves the row exactly as it was', async () => {
+    const { target, localStore } = await shareRow(makeStubbedShareService())
+
+    // The seeded row, byte for byte. A write would move the sync watermark
+    // even where it changed no field, and present an untouched row to the next
+    // push sweep.
+    const seeded = endeavorRecordFromEndeavor(target, {
+      now: FIND_REFERENCE_NOW,
+    })
+    expect(await localStore.endeavors.get(target.id)).toEqual(seeded)
+  })
+
+  it('carries the clipboard fallback back, so a surface can say so', async () => {
+    const { outcome } = await shareRow(
+      makeStubbedShareService({ canShare: false }),
+    )
+
+    expect(outcome.kind).toBe('shared')
+    if (outcome.kind === 'shared') {
+      expect(outcome.outcome).toBe(ShareOutcome.copied)
+    }
+  })
+
+  it('still refuses a row that is not there, like every other operation', async () => {
+    const { store } = shareStore(makeStubbedShareService())
+
+    const action = await store.dispatch(
+      performEndeavorOperationThunk({
+        surface: FindSurface.find,
+        operation: EndeavorOperation.share,
+        endeavorId: 'not-a-row',
+        now: FIND_REFERENCE_NOW,
+      }),
+    )
+    const payload = performEndeavorOperationThunk.fulfilled.match(action)
+      ? action.payload
+      : null
+
+    expect(payload?.ok).toBe(false)
   })
 })

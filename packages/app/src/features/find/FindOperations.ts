@@ -82,6 +82,14 @@ export const OperationEffect = {
   archive: 'archive',
   /** Unarchive: back to pending, leaving any completion timestamp alone. */
   unarchive: 'unarchive',
+  /**
+   * Hand the row off through the platform's share sheet, clipboard behind it.
+   *
+   * The one effect that writes nothing: it is `local` because Find performs it
+   * rather than parking an intent for another surface, which is what the
+   * handling flag actually distinguishes (KC-IS-#71 item 18).
+   */
+  share: 'share',
 } as const
 
 export type OperationEffect =
@@ -157,9 +165,10 @@ export const findOperationBindings: Record<
   ),
   // The editor is the Endeavor Detail slice's, registered beside this one.
   [Operation.edit]: intent(Operation.edit, 'endeavorDetail slice'),
-  // Web has `navigator.share`, but a platform capability is a Service behind
-  // `ThunkExtra` (`RC-6`) and none is wired yet. Named rather than dropped.
-  [Operation.share]: intent(Operation.share, 'share Service (not wired yet)'),
+  // `navigator.share`, with the clipboard behind it — a Service behind
+  // `ThunkExtra` since KC-IS-#71 item 18, so Find performs the hand-off
+  // instead of parking an intent nobody consumed.
+  [Operation.share]: local(Operation.share, OperationEffect.share),
   [Operation.triage]: intent(Operation.triage, 'triage surface'),
   // The suggestion lane is Do's own state; Find can only ask.
   [Operation.dismissSuggestion]: intent(

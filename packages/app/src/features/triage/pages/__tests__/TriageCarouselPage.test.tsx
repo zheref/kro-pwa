@@ -32,7 +32,10 @@ import { installPointerEvents } from '../../../../design/endeavor/__tests__/poin
 import { selectPendingTriageEndeavors } from '../../../capture/CaptureSelectors'
 import { triageEndeavorFixtures, triageFixtureRecords } from '../../TriageMocks'
 import { TriageCarouselPage } from '../TriageCarouselPage'
-import type { TriageShareGateway } from '../triageShare'
+import {
+  type ShareNavigatorLike,
+  makeLiveShareService,
+} from '../../../../services/platform/share/ShareService'
 import {
   TRIAGE_MOCK_NOW,
   type TriageStore,
@@ -57,24 +60,34 @@ afterEach(() => {
   teardownEnvironment()
 })
 
-const mount = (store: TriageStore, gateway?: TriageShareGateway) =>
+const mount = (store: TriageStore) =>
   render(
     <TriageStoreStage store={store}>
-      <TriageCarouselPage
-        carouselWidth={390}
-        locale="en-US"
-        shareGateway={gateway}
-      />
+      <TriageCarouselPage carouselWidth={390} locale="en-US" />
     </TriageStoreStage>,
   )
+
+/**
+ * A store whose share Service is bound to the browser doubles a case supplies.
+ *
+ * The doubles go in at the `navigator` seam rather than by stubbing the
+ * Service, so the fallback order the Service implements is the thing under
+ * test — which is what the old `shareGateway` prop bought, now reached through
+ * `ThunkExtra` (KC-IS-#71 item 18).
+ */
+const storeSharingWith = (nav: ShareNavigatorLike) =>
+  makeTriageStore({
+    extra: { shareService: makeLiveShareService({ navigator: nav }) },
+  })
 
 /** A store with the fixture pool, one row's Triage tapped and the session open. */
 const openedOn = async (
   endeavorId: string,
-  gateway?: TriageShareGateway,
+  provided?: TriageStore,
 ): Promise<TriageStore> => {
-  const store = makeTriageStore({ endeavors: triageFixtureRecords() })
-  mount(store, gateway)
+  const store =
+    provided ?? makeTriageStore({ endeavors: triageFixtureRecords() })
+  mount(store)
   await seedTriageRequest(store, endeavorId)
   await screen.findByTestId('triage-form')
   return store
@@ -319,10 +332,10 @@ describe('confirming returns to the Inbox with the row drained', () => {
 })
 
 describe('Share — the Web Share hand-off and its clipboard fallback', () => {
-  const openedOnDelegate = async (gateway: TriageShareGateway) => {
+  const openedOnDelegate = async (nav: ShareNavigatorLike) => {
     const store = await openedOn(
       triageEndeavorFixtures.unscheduledTask.id,
-      gateway,
+      storeSharingWith(nav),
     )
     fireEvent.click(
       screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.delegate}`),
@@ -382,9 +395,12 @@ describe('Share — the Web Share hand-off and its clipboard fallback', () => {
     const share = vi.fn().mockResolvedValue(undefined)
     const store = makeTriageStore({
       endeavors: triageFixtureRecords(),
-      extra: { localStore: makeUnwritableLocalStore() },
+      extra: {
+        localStore: makeUnwritableLocalStore(),
+        shareService: makeLiveShareService({ navigator: { share } }),
+      },
     })
-    mount(store, { share })
+    mount(store)
     await seedTriageRequest(store, triageEndeavorFixtures.unscheduledTask.id)
     await screen.findByTestId('triage-form')
 

@@ -102,6 +102,15 @@ describe('the catalog splits local writes from cross-feature intents', () => {
     }
   })
 
+  it('performs the share itself now that the capability is a Service', () => {
+    // It was an intent naming "share Service (not wired yet)" until
+    // KC-IS-#71 item 18 wired one. `local` is the right handling because Find
+    // performs the hand-off rather than parking it for another surface — the
+    // distinction the flag actually carries — even though it writes nothing.
+    expect(isLocallyHandledOperation(EndeavorOperation.share)).toBe(true)
+    expect(isRemovingOperation(EndeavorOperation.share)).toBe(false)
+  })
+
   it('marks only delete as the operation that removes the row', () => {
     const removing = endeavorOperations.filter(isRemovingOperation)
     expect(removing).toEqual([EndeavorOperation.delete])

@@ -46,6 +46,8 @@ import {
   performFromRecord,
   projectFromRecord,
   resolvedKind,
+  type ShareOutcome,
+  endeavorShareText,
   withDeferred,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
@@ -90,6 +92,17 @@ export type FindOperationOutcome =
       readonly surface: FindSurface
       readonly operation: EndeavorOperationRequest['operation']
       readonly endeavorId: string
+    }
+  /**
+   * The row's blurb was handed to the platform. Nothing was written — canon's
+   * Share leaves the endeavor exactly as it was — so the outcome is the whole
+   * result (KC-IS-#71 item 18).
+   */
+  | {
+      readonly kind: 'shared'
+      readonly surface: FindSurface
+      readonly endeavorId: string
+      readonly outcome: ShareOutcome
     }
 
 /**
@@ -330,6 +343,20 @@ export const performEndeavorOperationThunk = createAsyncThunk<
     const target = await findEndeavor(extra.localStore, request.endeavorId)
     if (target === null) {
       return err(FindExceptions.endeavorNotFound(request.endeavorId))
+    }
+
+    if (binding.effect === OperationEffect.share) {
+      // Writes nothing: canon's Share hands the row's blurb to the platform
+      // and leaves the endeavor exactly as it was.
+      const outcome = await extra.shareService.share(
+        endeavorShareText(target.title),
+      )
+      return ok({
+        kind: 'shared',
+        surface: request.surface,
+        endeavorId: target.id,
+        outcome,
+      })
     }
 
     if (binding.effect === OperationEffect.softDelete) {

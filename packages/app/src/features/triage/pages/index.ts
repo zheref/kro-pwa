@@ -43,10 +43,3 @@ export {
   triageCarouselCompletes,
   triageCarouselOffset,
 } from './triagePresentation'
-export {
-  type TriageShareGateway,
-  TriageShareOutcome,
-  browserTriageShareGateway,
-  performTriageShare,
-  triageShareNotice,
-} from './triageShare'

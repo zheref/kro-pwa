@@ -31,11 +31,16 @@
  * tests rather than fake-timer setups.
  */
 import type { EisenhowerQuadrant } from '@kro/core'
+import { ShareOutcome } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import type { TriageException } from './TriageException'
 import { TriageExceptions } from './TriageException'
 import type { TriageExpiryPreset } from './TriageExpiry'
-import { openTriageThunk, saveTriageDecisionThunk } from './TriageProducer'
+import {
+  openTriageThunk,
+  saveTriageDecisionThunk,
+  shareTriageBlurbThunk,
+} from './TriageProducer'
 import type { TriagePushOutcome } from './TriageSave'
 import {
   withDueDatePicked,
@@ -54,6 +59,7 @@ import {
   withSaveStarted,
   withSaved,
   withSessionOpened,
+  withShareOutcome,
   withShareSheetDismissed,
   withValueRatingTapped,
 } from './TriageShifters'
@@ -97,6 +103,15 @@ export interface TriageState {
   readonly session: TriageSession | null
   /** The one-shot the shell performs, then acknowledges (`RC-17`). */
   readonly outcome: TriageOutcome | null
+  /**
+   * What the share hand-off did, when it did not simply work.
+   *
+   * `null` while nothing has been shared, and cleared when the next session
+   * opens. It lived in a `useState` on `TriageCarouselPage` until KC-IS-#71
+   * item 18, because the capability was not a Service and there was no Producer
+   * to carry the outcome back.
+   */
+  readonly shareOutcome: ShareOutcome | null
   /** The instant the slice last classified against — never a clock read. */
   readonly clockAnchor: Date | null
 }
@@ -106,6 +121,7 @@ export const initialTriageState: TriageState = {
   save: { kind: 'idle' },
   session: null,
   outcome: null,
+  shareOutcome: null,
   clockAnchor: null,
 }
 
@@ -262,6 +278,20 @@ export const triageSlice = createSlice({
       // --- opening the session -------------------------------------------
       .addCase(openTriageThunk.pending, (state) => {
         Object.assign(state, withFetchStarted(state))
+      })
+      // --- the share hand-off --------------------------------------------
+      .addCase(shareTriageBlurbThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        // The Producer resolves `unavailable` rather than an error even when
+        // the Service throws, so there is no failure arm to write: `err` is
+        // structurally unreachable here and `.rejected` below covers the
+        // programmer-error case every other thunk's does.
+        if (result.ok) {
+          Object.assign(state, withShareOutcome(state, result.value))
+        }
+      })
+      .addCase(shareTriageBlurbThunk.rejected, (state) => {
+        Object.assign(state, withShareOutcome(state, ShareOutcome.unavailable))
       })
       .addCase(openTriageThunk.fulfilled, (state, action) => {
         const result = action.payload

@@ -14,6 +14,7 @@ import {
   eisenhowerQuadrants,
   quadrantIsImportant,
   quadrantIsUrgent,
+  shareOutcomeNotice,
 } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
@@ -376,4 +377,17 @@ export const selectTriagePushNotice = createSelector(
 export const selectIsTriageDecisionDurable = createSelector(
   [selectTriageSlice],
   (slice) => slice.save.kind === 'saved',
+)
+
+/**
+ * The copy the surface shows once the share hand-off resolved, or `null`.
+ *
+ * The sibling `selectTriagePushNotice` promised (KC-IS-#71 item 18): the
+ * outcome rides back through the Producer into `TriageState`, so the Page holds
+ * no `useState` for it and a story can render every case from a mock.
+ */
+export const selectTriageShareNotice = createSelector(
+  [selectTriageSlice],
+  (slice): string | null =>
+    slice.shareOutcome === null ? null : shareOutcomeNotice(slice.shareOutcome),
 )

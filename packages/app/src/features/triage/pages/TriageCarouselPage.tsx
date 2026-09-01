@@ -56,7 +56,7 @@
  * asserted in state; the surface that draws it arrives with #22.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { computedSymbol } from '../../../design/endeavor/endeavorCardModel'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { onTriageRequestConsumed } from '../../capture/CaptureFeature'

@@ -36,10 +36,29 @@ import { DoExceptions } from './DoException'
 import type { FeaturedNowCapacity } from './DoFeaturedNow'
 import {
   clearExpiredThunk,
+  deferEndeavorThunk,
+  delegateEndeavorThunk,
+  deleteEndeavorThunk,
   fetchDoEndeavorsThunk,
   loadDoPreferencesThunk,
   markEndeavorCompleteThunk,
+  reopenEndeavorThunk,
+  skipEndeavorThunk,
 } from './DoProducer'
+
+/**
+ * The overflow menu's five, as one list.
+ *
+ * Named once so the matchers below cannot drift from the Producers, and so a
+ * sixth card action is a row here rather than two more `addCase` blocks.
+ */
+const OVERFLOW_THUNKS = [
+  deferEndeavorThunk,
+  skipEndeavorThunk,
+  delegateEndeavorThunk,
+  reopenEndeavorThunk,
+  deleteEndeavorThunk,
+] as const
 import {
   type DoLane,
   type DoLanes,
@@ -473,6 +492,56 @@ export const doSlice = createSlice({
           ),
         )
       })
+
+      /*
+        --- the overflow menu's five card actions (KC-IS-#71 item 3) ---
+
+        These registered NO arm at all until now, and the gap was quiet in the
+        exact case that matters: each one refetches the day after its write,
+        so a broken store failed the refetch too and `fetchDoEndeavorsThunk`'s
+        own arm painted the banner — but a write that failed while the store
+        was otherwise healthy refetched a *good* day and the surface said
+        nothing at all. The row simply did not move, with no explanation.
+
+        `addMatcher` rather than ten `addCase`s: every one of the five carries
+        the same contract — a `Result` in `.fulfilled`, a defensive `.rejected`
+        — so a sixth needs a name in the list below and nothing else. It sits
+        after every `addCase` because RTK runs matchers in registration order
+        *after* the cases, which is what keeps a successful install from being
+        followed by this.
+
+        No `.pending` and no success arm: the day arrives through the refetch's
+        own install, and adding one here would paint the same snapshot twice.
+      */
+      .addMatcher(
+        (
+          action,
+        ): action is ReturnType<
+          (typeof OVERFLOW_THUNKS)[number]['fulfilled']
+        > => OVERFLOW_THUNKS.some((thunk) => thunk.fulfilled.match(action)),
+        (state, action) => {
+          const result = action.payload
+          if (!result.ok) {
+            Object.assign(state, withException(state, result.error))
+          }
+        },
+      )
+      .addMatcher(
+        (
+          action,
+        ): action is ReturnType<(typeof OVERFLOW_THUNKS)[number]['rejected']> =>
+          OVERFLOW_THUNKS.some((thunk) => thunk.rejected.match(action)),
+        (state, action) => {
+          if (action.meta.aborted) return
+          Object.assign(
+            state,
+            withException(
+              state,
+              DoExceptions.unknown(action.error.message ?? 'Unknown error'),
+            ),
+          )
+        },
+      )
   },
 })
 

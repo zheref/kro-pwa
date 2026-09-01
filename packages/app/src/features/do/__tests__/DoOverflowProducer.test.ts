@@ -4,16 +4,17 @@ import {
   type AppStore,
   makeStore,
   stubbedThunkExtra,
-} from '../../../../library/store'
-import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
-import { DO_MOCK_NOW, doFixtureRecords, doMockAt } from '../../DoMocks'
+} from '../../../library/store'
+import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { DO_MOCK_NOW, doFixtureRecords, doMockAt } from '../DoMocks'
+import { selectDoException } from '../DoSelectors'
 import {
   deferEndeavorThunk,
   delegateEndeavorThunk,
   deleteEndeavorThunk,
   reopenEndeavorThunk,
   skipEndeavorThunk,
-} from '../DoOverflowProducer'
+} from '../DoProducer'
 
 /**
  * Every suite here goes through `makeStore(extra)` with a seeded in-memory
@@ -161,16 +162,29 @@ describe('Delegate', () => {
     expect(record?.status).toBe(EndeavorStatus.delegated)
   })
 
-  it('takes the delegated row out of the Anytime lane', async () => {
+  it('leaves the delegated row IN its lane — delegating is not completing', async () => {
+    /*
+      This case used to assert the opposite, and passed vacuously: the refetch
+      was dispatched fire-and-forget, so the assertion ran against a day that
+      had never loaded and `lanes.anytime` was empty. Awaiting it (KC-IS-#71
+      item 3) made the day real and the claim false.
+
+      The truth is canon's: `hasBeenCompleted` counts `closed`, `reviewing`,
+      `qa` and `skipped` — NOT `delegated`. Handing a task to somebody else
+      does not finish it, so it stays on your day with the delegated
+      treatment the design system draws. Skip is the row that leaves.
+    */
     const { store } = seededStore()
 
     await store.dispatch(
       delegateEndeavorThunk({ endeavorId: 'anytime-task', now: DO_MOCK_NOW }),
     )
 
+    const lane = store.getState().do.lanes.anytime
+    expect(lane.map((endeavor) => endeavor.id)).toContain('anytime-task')
     expect(
-      store.getState().do.lanes.anytime.map((endeavor) => endeavor.id),
-    ).not.toContain('anytime-task')
+      lane.find((endeavor) => endeavor.id === 'anytime-task')?.status,
+    ).toBe(EndeavorStatus.delegated)
   })
 
   it('reports a stale card key', async () => {
@@ -256,5 +270,93 @@ describe('Undo a completion — the exact inverse of marking complete', () => {
 
     const after = await localStore.endeavors.get('completed-today')
     expect(after?.due?.getTime()).toBe(before?.due?.getTime())
+  })
+})
+
+/**
+ * The failure reaches the banner (KC-IS-#71 item 3).
+ *
+ * These five registered no reducer arm at all, and the gap was quiet in the
+ * exact case that matters. Each one refetches the day after its write, so a
+ * broken *store* failed the refetch too and `fetchDoEndeavorsThunk`'s own arm
+ * painted the banner — but a write that failed while the store was otherwise
+ * healthy refetched a good day and the surface said nothing. The row simply did
+ * not move, with no explanation.
+ *
+ * The store below is broken for **writes only**: reads succeed, so the refetch
+ * lands a perfectly good day and the only thing that can surface the failure is
+ * the arm.
+ */
+describe('a failed overflow write reaches the banner', () => {
+  const cases = [
+    {
+      name: 'Defer',
+      dispatchIt: (store: AppStore) =>
+        store.dispatch(
+          deferEndeavorThunk({
+            endeavorId: 'due-late-today',
+            target: doMockAt(18, 9),
+            now: DO_MOCK_NOW,
+          }),
+        ),
+    },
+    {
+      name: 'Skip',
+      dispatchIt: (store: AppStore) =>
+        store.dispatch(
+          skipEndeavorThunk({ endeavorId: 'due-late-today', now: DO_MOCK_NOW }),
+        ),
+    },
+    {
+      name: 'Delegate',
+      dispatchIt: (store: AppStore) =>
+        store.dispatch(
+          delegateEndeavorThunk({
+            endeavorId: 'anytime-task',
+            now: DO_MOCK_NOW,
+          }),
+        ),
+    },
+    {
+      name: 'Delete',
+      dispatchIt: (store: AppStore) =>
+        store.dispatch(
+          deleteEndeavorThunk({ endeavorId: 'anytime-task', now: DO_MOCK_NOW }),
+        ),
+    },
+  ] as const
+
+  for (const { name, dispatchIt } of cases) {
+    it(`${name} leaves a message the surface can show`, async () => {
+      const store = brokenWriteStore()
+
+      await dispatchIt(store)
+
+      const exception = selectDoException(store.getState())
+      expect(exception, `${name} reported nothing`).not.toBeNull()
+      expect(exception?.message).toContain('disk is full')
+    })
+  }
+
+  it('says nothing when the write succeeds — the banner is not a receipt', async () => {
+    const { store } = seededStore()
+
+    await store.dispatch(
+      skipEndeavorThunk({ endeavorId: 'due-late-today', now: DO_MOCK_NOW }),
+    )
+
+    expect(selectDoException(store.getState())).toBeNull()
+  })
+
+  it('keeps the retained day, so a failure costs the user nothing on screen', async () => {
+    const store = brokenWriteStore()
+    // The refetch still lands: the read half of the store works. The lanes are
+    // the day; `load` is only the lifecycle, so a banner takes nothing away.
+    await store.dispatch(
+      skipEndeavorThunk({ endeavorId: 'due-late-today', now: DO_MOCK_NOW }),
+    )
+
+    expect(store.getState().do.load.kind).toBe('failed')
+    expect(store.getState().do.lanes.anytime.length).toBeGreaterThan(0)
   })
 })

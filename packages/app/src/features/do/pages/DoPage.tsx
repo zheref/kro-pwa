@@ -88,7 +88,7 @@ import {
   deleteEndeavorThunk,
   reopenEndeavorThunk,
   skipEndeavorThunk,
-} from './DoOverflowProducer'
+} from '../DoProducer'
 import { groupDoEvents } from './doEventLanes'
 import { featuredCapacityForWidth } from './doFeaturedLaneLayout'
 import {

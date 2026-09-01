@@ -234,7 +234,7 @@ describe('prepare → complete → undo', () => {
 
     // Complete, then undo through the same producer the toast's Undo fires.
     const { markEndeavorCompleteThunk } = await import('../../DoProducer')
-    const { reopenEndeavorThunk } = await import('../DoOverflowProducer')
+    const { reopenEndeavorThunk } = await import('../../DoProducer')
 
     await store.dispatch(
       markEndeavorCompleteThunk({

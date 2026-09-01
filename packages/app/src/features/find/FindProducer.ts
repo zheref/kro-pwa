@@ -48,7 +48,6 @@ import {
   resolvedKind,
   type ShareOutcome,
   endeavorShareText,
-  withDeferred,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'

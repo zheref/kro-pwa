@@ -31,6 +31,10 @@ import {
 import type { ReactNode } from 'react'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
+import {
+  FieldSectionLabel,
+  OnGradient,
+} from '../../../design/system/gradient/OnGradient'
 import { cn } from '../../../design/system/utils/cn'
 import { SUBSCRIPTION_PLAN_NAME } from '../SettingsState'
 import { Avatar } from './SettingsHubFragment'
@@ -153,13 +157,10 @@ function ProfilePane({
         </button>
       </SurfaceCard>
 
-      <p
-        className="m-0 px-kro-tiny text-[13px] leading-snug"
-        style={{ color: colorVar('foreSecondary') }}
-      >
+      <OnGradient as="p" className="m-0 px-kro-tiny text-[13px] leading-snug">
         Signing out clears the preferences saved on this device, so the next
         account starts from defaults.
-      </p>
+      </OnGradient>
     </div>
   )
 }
@@ -186,17 +187,14 @@ function UnauthenticatedPane({
         size={56}
         strokeWidth={1.5}
         aria-hidden
-        style={{ color: colorVar('foreSecondary') }}
+        className="kro-on-gradient"
       />
-      <span className="text-lg font-medium" style={{ color: colorVar('fore') }}>
+      <OnGradient as="span" className="text-lg font-medium">
         Not Signed In
-      </span>
-      <span
-        className="text-[15px]"
-        style={{ color: colorVar('foreSecondary') }}
-      >
+      </OnGradient>
+      <OnGradient as="span" className="text-[15px]">
         Sign in to view and manage your profile.
-      </span>
+      </OnGradient>
       <button
         type="button"
         onClick={onTapSignIn}
@@ -237,12 +235,9 @@ function SubscriptionPane() {
       <Group title="Current plan">
         <Row label="Plan" value={SUBSCRIPTION_PLAN_NAME} />
       </Group>
-      <p
-        className="m-0 px-kro-tiny text-[13px] leading-snug"
-        style={{ color: colorVar('foreSecondary') }}
-      >
+      <OnGradient as="p" className="m-0 px-kro-tiny text-[13px] leading-snug">
         Kro has no paid plan yet. When one exists, managing it will live here.
-      </p>
+      </OnGradient>
     </div>
   )
 }
@@ -260,12 +255,7 @@ function Group({
 }) {
   return (
     <section className="flex w-full flex-col gap-kro-small">
-      <h3
-        className="m-0 px-kro-tiny text-[13px] font-semibold uppercase tracking-wide"
-        style={{ color: colorVar('foreSecondary') }}
-      >
-        {title}
-      </h3>
+      <FieldSectionLabel>{title}</FieldSectionLabel>
       <SurfaceCard padding={null}>
         <div className="flex w-full flex-col">{children}</div>
       </SurfaceCard>

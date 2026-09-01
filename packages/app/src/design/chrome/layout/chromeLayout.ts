@@ -47,6 +47,18 @@ export const FAB_INSETS = {
 
 export type FabInsetVariant = keyof typeof FAB_INSETS
 
+/**
+ * The inset around floating glass columns — sidebar, content toolbar, tab
+ * dock. Matches `--kro-space-small` (the 4pt rhythm's 8px step) so a destination
+ * that reads the token and chrome that reads this number cannot drift.
+ *
+ * WEB ADAPTATION. Canon edge-pins the iPad sidebar; on the web a gutter of
+ * gradient around the glass is what gives the material something to refract
+ * at the window edge, and what lets the destination seize the remaining
+ * space as the window resizes.
+ */
+export const SHELL_GUTTER = 8
+
 export const CHROME_LAYOUT = {
   /** `LiquidGlassFAB.size` — the disc's diameter. */
   fabDiameter: 62,

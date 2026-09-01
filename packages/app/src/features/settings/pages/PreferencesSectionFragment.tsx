@@ -35,6 +35,10 @@ import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
 import { InlineBanner } from '../../../design/endeavor/InlineBanner'
+import {
+  FieldSectionLabel,
+  OnGradient,
+} from '../../../design/system/gradient/OnGradient'
 import type {
   SettingControl,
   SettingElement,
@@ -137,12 +141,7 @@ function Subgroup({
       className="flex w-full flex-col gap-kro-small"
     >
       {subgroup.title === null ? null : (
-        <h3
-          className="m-0 px-kro-tiny text-[13px] font-semibold uppercase tracking-wide"
-          style={{ color: colorVar('foreSecondary') }}
-        >
-          {subgroup.title}
-        </h3>
+        <FieldSectionLabel>{subgroup.title}</FieldSectionLabel>
       )}
 
       <SurfaceCard padding={null}>
@@ -176,12 +175,9 @@ function Subgroup({
       ) : null}
 
       {subgroup.footnote === null ? null : (
-        <p
-          className="m-0 px-kro-tiny text-[13px] leading-snug"
-          style={{ color: colorVar('foreSecondary') }}
-        >
+        <OnGradient as="p" className="m-0 px-kro-tiny text-[13px] leading-snug">
           {subgroup.footnote}
-        </p>
+        </OnGradient>
       )}
     </section>
   )

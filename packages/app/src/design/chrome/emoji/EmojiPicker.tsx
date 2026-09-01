@@ -106,7 +106,7 @@ export function EmojiPicker({
                     minHeight: 'var(--kro-size-min-touch-target)',
                     borderRadius: 8,
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: 'default',
                     fontSize: 26,
                     lineHeight: 1,
                     background: selected

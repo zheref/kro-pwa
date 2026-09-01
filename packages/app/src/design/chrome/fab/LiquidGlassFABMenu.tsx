@@ -235,7 +235,7 @@ function MenuRow({
         // Canon: `.padding(.horizontal, 16).padding(.vertical, 12)`.
         padding: '12px 16px',
         border: 'none',
-        cursor: 'pointer',
+        cursor: 'default',
         fontSize: 14,
         fontWeight: 600,
         opacity: expanded ? 1 : 0,

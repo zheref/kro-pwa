@@ -58,6 +58,7 @@ import { Settings, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Reward } from '@kro/core'
 import { LiquidGlassFAB } from '../../../design/chrome/fab/LiquidGlassFAB'
+import { OnGradient } from '../../../design/system/gradient/OnGradient'
 import { colorVar } from '../../../design/system/tokens/roles'
 import type { EarnRewardDraft } from '../EarnFeature'
 import { AddRewardForm } from './AddRewardForm'
@@ -182,9 +183,9 @@ export function EarnFragment(props: EarnFragmentProps) {
           aria-hidden
           style={{ color: colorVar('rewardYellow') }}
         />
-        <p className="m-0 text-sm" style={{ color: colorVar('foreSecondary') }}>
+        <OnGradient as="p" className="m-0 text-sm">
           {currentPoints} point{currentPoints === 1 ? '' : 's'} available
-        </p>
+        </OnGradient>
       </div>
 
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-kro-medium pt-kro-small pb-24">
@@ -236,13 +237,10 @@ export function EarnFragment(props: EarnFragmentProps) {
                 title={isCatalogEmpty ? 'Get Started' : 'Discover More'}
               >
                 {isCatalogEmpty ? (
-                  <p
-                    className="m-0 px-1 text-sm"
-                    style={{ color: colorVar('foreSecondary') }}
-                  >
+                  <OnGradient as="p" className="m-0 px-1 text-sm">
                     Pick a reward to start working towards, or add your own with
                     the + button.
-                  </p>
+                  </OnGradient>
                 ) : null}
                 {availableSuggestions.map((suggestion) => (
                   <SuggestionRewardRow
@@ -255,13 +253,13 @@ export function EarnFragment(props: EarnFragmentProps) {
             )}
           </>
         ) : (
-          <p
+          <OnGradient
+            as="p"
             data-testid="earn-catalog-pending"
             className="m-0 px-1 text-sm"
-            style={{ color: colorVar('foreSecondary') }}
           >
             {errorMessage ?? 'Loading your rewards…'}
-          </p>
+          </OnGradient>
         )}
       </div>
 
@@ -307,9 +305,9 @@ function RewardSection({
 }) {
   return (
     <section className="flex flex-col gap-2.5">
-      <h2
+      <OnGradient
+        as="h2"
         className="m-0 flex items-center gap-1.5 font-semibold text-sm"
-        style={{ color: colorVar('fore') }}
       >
         {title}
         {count === undefined ? null : (
@@ -323,7 +321,7 @@ function RewardSection({
             {count}
           </span>
         )}
-      </h2>
+      </OnGradient>
       <div className="flex flex-col gap-2.5">{children}</div>
     </section>
   )

@@ -29,6 +29,7 @@ export {
   FAB_INSETS,
   SHELL_BOTTOM_INSET_FALLBACK,
   SHELL_BOTTOM_INSET_VAR,
+  SHELL_GUTTER,
   TOAST_DURATION_SECONDS,
   type FabInsetVariant,
   clampToastDuration,

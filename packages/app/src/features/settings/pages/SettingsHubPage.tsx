@@ -194,16 +194,6 @@ export function SettingsHubPage() {
               onTapBack={() => dispatch(userDidTapBackToHub())}
             />
 
-            {/*
-              The shell's `indigoGrape` slab is 180px tall and a pane opens
-              inside it. The header is legible on it and so is a white card, but
-              a *subgroup label* — small, secondary, uppercase — is not: without
-              this spacer "WORKING HOURS" landed in the solid part of the
-              gradient and disappeared. The hub needs none because its profile
-              card already pushes the first label past the fade.
-            */}
-            <div className="pt-kro-large" />
-
             {settingsPaneKind(section.id) === SettingsPaneKind.preferences &&
             section.settingGroup !== null ? (
               <PreferencesSectionFragment

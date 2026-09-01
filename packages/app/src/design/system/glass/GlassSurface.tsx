@@ -2,17 +2,21 @@ import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react'
 import { cn } from '../utils/cn'
 
 /**
- * The three shapes KroGlass is used in. Not a free-form set of props: a
- * material with three named forms is a material; a material with eight
+ * The named shapes KroGlass is used in. Not a free-form set of props: a
+ * material with five named forms is a material; a material with eight
  * booleans is a pile of CSS.
  */
 export type GlassMaterial =
-  /** A floating card, sheet or popover. 20px blur, full rim. */
+  /** A floating card, sheet, popover or content well. 24px blur, full rim. */
   | 'surface'
-  /** A small control — pill button, chip, segmented control. 14px blur. */
+  /** A small control — pill button, chip, segmented control. 16px blur. */
   | 'control'
-  /** Top or bottom chrome. Hairline instead of a ring, no corner radius. */
+  /** Top chrome. Hairline instead of a ring, no corner radius. */
   | 'bar'
+  /** A split-view sidebar column. Trailing hairline, 20px corners. */
+  | 'sidebar'
+  /** A floating tab dock. Capsule inset from the viewport edge. */
+  | 'dock'
 
 export interface GlassSurfaceProps extends ComponentPropsWithoutRef<'div'> {
   /**
@@ -43,6 +47,8 @@ const MATERIAL_CLASS: Record<GlassMaterial, string | null> = {
   surface: null,
   control: 'kro-glass--control',
   bar: 'kro-glass--bar',
+  sidebar: 'kro-glass--sidebar',
+  dock: 'kro-glass--dock',
 }
 
 /**

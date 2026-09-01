@@ -83,6 +83,49 @@
   color: var(--kro-color-header-date);
 }
 
+/* ==========================================================================
+   DetailBackdrop — the page's own field, not a header slab.
+
+   Canon: KroApple `KroUI/Main/DetailBackdrop.swift`. Glass renders as glass
+   by refracting what is under it; a flat `back` fill is pixel-identical at
+   every height and the only possible result is uniform frost. This layer is
+   a *vertical* indigo→grape ramp (measured 11 distinct samples under an
+   iPad sidebar vs 7 on a diagonal) plus two soft meshes so a web engine has
+   something to blur even in a short column.
+
+   It is a background and nothing else — `aria-hidden`, no pointer events,
+   never the thing a destination sits *in*.
+   ========================================================================== */
+
+.kro-detail-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--kro-color-header-gradient-indigo);
+  background-image:
+    radial-gradient(
+      120% 70% at 8% -10%,
+      rgb(255 255 255 / 0.22),
+      transparent 52%
+    ),
+    radial-gradient(90% 60% at 100% 110%, rgb(0 0 0 / 0.28), transparent 58%),
+    linear-gradient(
+      to bottom,
+      var(--kro-color-header-gradient-indigo),
+      var(--kro-color-header-gradient-grape)
+    );
+}
+
+.kro-detail-backdrop--fixed {
+  position: fixed;
+}
+
+/** On-gradient ink. White in both schemes — the ramp is dark either way. */
+.kro-on-gradient {
+  color: var(--kro-color-snow);
+}
+
 /* --------------------------------------------------------------------------
    Forced colours (Windows high-contrast).
 
@@ -97,6 +140,15 @@
   }
 
   .kro-gradient-headline {
+    color: CanvasText;
+  }
+
+  .kro-detail-backdrop {
+    background-image: none;
+    background-color: Canvas;
+  }
+
+  .kro-on-gradient {
     color: CanvasText;
   }
 }

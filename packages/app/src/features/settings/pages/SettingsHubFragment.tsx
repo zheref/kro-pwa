@@ -17,6 +17,10 @@
  */
 import { colorVar } from '../../../design/system/tokens/roles'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
+import {
+  FieldSectionLabel,
+  OnGradient,
+} from '../../../design/system/gradient/OnGradient'
 import { cn } from '../../../design/system/utils/cn'
 import type { SettingsSyncFooter } from '../SettingsSelectors'
 import type { SettingsSection, SettingsSectionId } from '../SettingsSection'
@@ -131,20 +135,21 @@ export function SettingsHubFragment({
       />
 
       {syncFooter === null ? null : (
-        <p
+        <OnGradient
+          as="p"
           data-testid="sync-footer"
           data-warning={syncFooter.isWarning}
           role="status"
           className="m-0 flex items-center justify-center gap-kro-tiny text-[13px]"
-          style={{
-            color: syncFooter.isWarning
-              ? colorVar('badgeOrange')
-              : colorVar('foreSecondary'),
-          }}
+          style={
+            syncFooter.isWarning
+              ? { color: colorVar('badgeOrange') }
+              : undefined
+          }
         >
           <FooterGlyph glyph={syncFooter.glyph} />
           {syncFooter.title}
-        </p>
+        </OnGradient>
       )}
     </div>
   )
@@ -168,14 +173,7 @@ function HubGroup({
 
   return (
     <section className="flex w-full flex-col gap-kro-small">
-      {title === null ? null : (
-        <h3
-          className="m-0 px-kro-tiny text-[13px] font-semibold uppercase tracking-wide"
-          style={{ color: colorVar('foreSecondary') }}
-        >
-          {title}
-        </h3>
-      )}
+      {title === null ? null : <FieldSectionLabel>{title}</FieldSectionLabel>}
       <SurfaceCard padding={null}>
         <div className="flex w-full flex-col">
           {sections.map((section, index) => (

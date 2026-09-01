@@ -114,7 +114,7 @@ export function PlanDayPickerFragment({
             onClick={() => onSelectDate(date)}
             className={cn(
               'flex flex-col items-center justify-center gap-[1px]',
-              'cursor-pointer',
+              'cursor-default',
               // The glass only carries the *unselected* chip. A selected one is
               // an opaque fill by design — see the header note — so putting the
               // material under it would tint the fill the contrast pair was
@@ -183,7 +183,7 @@ function PickerArrow({
       onClick={onClick}
       className={cn(
         'kro-glass kro-glass--control kro-glass--interactive',
-        'flex cursor-pointer items-center justify-center text-kro-fore',
+        'flex items-center justify-center text-kro-fore',
       )}
       style={{ borderRadius: ITEM_RADIUS, border: 'none' }}
     >

@@ -13,11 +13,12 @@
  * Labels are canon's iOS strings (`destinationTabLabel`), which is why My Day
  * reads "Do" here and "Today" in the sidebar.
  *
- * The bar is KroGlass in its `bar` material — the same treatment canon's
- * `.toolbarBackground(.hidden)` + Liquid Glass tab bar gives it.
+ * The bar is KroGlass in its `dock` material — the web stand-in for iOS 26's
+ * floating Liquid Glass tab bar, inset from the viewport edge so the page
+ * field shows around it.
  */
 import { type LucideIcon, Search } from 'lucide-react'
-import { GlassSurface } from '../../design/system/glass/GlassSurface'
+import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import type { DoSurfaceLayout } from './DoSurfaceLayout'
@@ -44,12 +45,12 @@ export function TabBarFragment(props: TabBarFragmentProps) {
     props
 
   return (
-    <GlassSurface
+    <GlassPanel
       as="nav"
-      material="bar"
+      kind="dock"
       aria-label="Tabs"
       data-testid="shell-tab-bar"
-      className="flex w-full items-stretch justify-around"
+      className="w-full shrink-0 items-stretch justify-around"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         paddingTop: `${layout.minimumControlSpacing}px`,
@@ -76,7 +77,7 @@ export function TabBarFragment(props: TabBarFragmentProps) {
           onSelect={onSelectDestination}
         />
       ))}
-    </GlassSurface>
+    </GlassPanel>
   )
 }
 

@@ -22,7 +22,7 @@
  * this component knowing which it is on.
  */
 import { Plus, Search, Trash2, X } from 'lucide-react'
-import { GlassSurface } from '../../design/system/glass/GlassSurface'
+import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import type { DoSurfaceLayout } from './DoSurfaceLayout'
@@ -78,18 +78,16 @@ export function SidebarFragment(props: SidebarFragmentProps) {
   } = props
 
   return (
-    <GlassSurface
+    <GlassPanel
       as="nav"
-      material="bar"
+      kind="sidebar"
       aria-label="Sidebar"
       data-testid="shell-sidebar"
       className={cn(
-        // `relative z-10` is load-bearing: the header gradient is an
-        // absolutely-positioned decoration that deliberately extends PAST the
-        // content's leading edge, over this column. Without a stacking context
-        // here it paints over the sidebar's own top rows.
-        'relative z-10 flex h-full flex-col overflow-y-auto',
-        'border-kro-hairline border-r text-kro-fore',
+        // `relative z-10` is load-bearing: the page field is an absolutely-
+        // positioned decoration behind this column. Without a stacking context
+        // here it would paint over the sidebar's own top rows.
+        'relative z-10 h-full shrink-0 overflow-y-auto text-kro-fore',
       )}
       style={{
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,
@@ -153,7 +151,7 @@ export function SidebarFragment(props: SidebarFragmentProps) {
           onDeleteProject={onDeleteProject}
         />
       ))}
-    </GlassSurface>
+    </GlassPanel>
   )
 }
 
@@ -177,7 +175,7 @@ function SidebarSearchField({
       }}
       className={cn(
         'flex items-center gap-kro-small rounded-kro-field',
-        'bg-kro-back px-kro-small',
+        'bg-kro-absolute/40 px-kro-small',
       )}
       style={{ minHeight: `${layout.minimumControlSide}px` }}
     >
@@ -304,7 +302,7 @@ function SidebarRow({
           // the header gradient, which a 15%-accent wash does not.
           isSelected
             ? 'bg-kro-accent font-semibold text-kro-on-accent'
-            : 'hover:bg-kro-back',
+            : 'hover:bg-kro-absolute/25',
         )}
         style={{ minHeight: `${layout.minimumControlSide}px` }}
       >
@@ -367,7 +365,7 @@ function NewProjectRow({
           if (event.key === 'Escape') onCancel()
         }}
         className={cn(
-          'w-full rounded-kro-field bg-kro-back px-kro-small py-kro-tiny',
+          'w-full rounded-kro-field bg-kro-absolute/40 px-kro-small py-kro-tiny',
           'text-kro-fore text-sm outline-none',
           'placeholder:text-kro-fore-secondary',
         )}

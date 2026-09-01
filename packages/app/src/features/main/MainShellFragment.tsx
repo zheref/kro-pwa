@@ -34,7 +34,7 @@ import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { GlassSurface } from '../../design/system/glass/GlassSurface'
-import { GradientBackdrop } from '../../design/system/gradient/GradientBackdrop'
+import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import {
@@ -48,11 +48,7 @@ import {
   type SidebarDestination,
   destinationHeading,
 } from './SidebarDestination'
-import {
-  SIDEBAR_IDEAL_WIDTH,
-  SidebarFragment,
-  type SidebarFragmentProps,
-} from './SidebarFragment'
+import { SidebarFragment, type SidebarFragmentProps } from './SidebarFragment'
 import { TabBarFragment } from './TabBarFragment'
 import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
 
@@ -108,76 +104,66 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     <div
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
-      className="flex h-dvh w-full overflow-hidden bg-kro-back"
+      className="relative flex h-dvh w-full overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
-      {isSidebarVisible && (
-        <SidebarFragment
-          {...sidebar}
-          sections={sections}
-          selected={selected}
-          layout={layout}
-        />
-      )}
+      <DetailBackdrop />
 
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        {/*
-          Canon's `extendsHeaderGradientToLeadingEdge`: on a desktop-shaped
-          surface the slab reaches the window edge behind the sidebar; on a
-          narrow one it stops at the content's own edge.
-        */}
-        <GradientBackdrop
-          height="180px"
-          className="absolute top-0 right-0"
-          style={{
-            left:
-              layout.extendsHeaderGradientToLeadingEdge && isSidebarVisible
-                ? `-${SIDEBAR_IDEAL_WIDTH}px`
-                : 0,
-          }}
-        />
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small p-kro-small">
+        {isSidebarVisible && (
+          <SidebarFragment
+            {...sidebar}
+            sections={sections}
+            selected={selected}
+            layout={layout}
+          />
+        )}
 
-        <ContentToolbar
-          layout={layout}
-          selected={selected}
-          onToggleSidebar={onToggleSidebar}
-          onTapProfile={onTapProfile}
-          onTapInbox={onTapInbox}
-        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <ContentToolbar
+            layout={layout}
+            selected={selected}
+            onToggleSidebar={onToggleSidebar}
+            onTapProfile={onTapProfile}
+            onTapInbox={onTapInbox}
+          />
 
-        <main className="relative min-h-0 flex-1 overflow-y-auto">
-          {children}
-        </main>
+          <main className="relative min-h-0 flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   ) : (
     <div
       data-testid="shell-tab-bar-shape"
       data-shell-shape="tabBar"
-      className="flex h-dvh w-full flex-col overflow-hidden bg-kro-back"
+      className="relative flex h-dvh w-full flex-col overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
-      <GradientBackdrop height="180px" fixed />
+      <DetailBackdrop />
 
-      <TabBarToolbar
-        layout={layout}
-        selected={selected}
-        onTapProfile={onTapProfile}
-        onTapInbox={onTapInbox}
-        onTapSettings={onTapSettings}
-      />
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-kro-small p-kro-small">
+        <TabBarToolbar
+          layout={layout}
+          selected={selected}
+          onTapProfile={onTapProfile}
+          onTapInbox={onTapInbox}
+          onTapSettings={onTapSettings}
+        />
 
-      <main className="relative min-h-0 flex-1 overflow-y-auto">
-        {children}
-      </main>
+        <main className="relative min-h-0 flex-1 overflow-y-auto">
+          {children}
+        </main>
 
-      <TabBarFragment
-        elements={tabs}
-        selected={selected}
-        layout={layout}
-        searchDestination={searchDestination}
-        onSelectDestination={sidebar.onSelectDestination}
-      />
+        <TabBarFragment
+          elements={tabs}
+          selected={selected}
+          layout={layout}
+          searchDestination={searchDestination}
+          onSelectDestination={sidebar.onSelectDestination}
+        />
+      </div>
     </div>
   )
 }
@@ -206,9 +192,9 @@ function ContentToolbar({
   return (
     <GlassSurface
       as="header"
-      material="bar"
+      material="surface"
       data-testid="shell-content-toolbar"
-      className="relative z-10 flex items-center justify-between px-kro-medium"
+      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 16}px`,
@@ -300,9 +286,9 @@ function TabBarToolbar({
   return (
     <GlassSurface
       as="header"
-      material="bar"
+      material="surface"
       data-testid="shell-tab-bar-toolbar"
-      className="relative z-10 flex items-center justify-between px-kro-medium"
+      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 8}px`,

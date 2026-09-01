@@ -50,6 +50,7 @@ import {
   springEasing,
 } from '../../../design/chrome'
 import { ICON_SIZE } from '../../../design/system/icons/icons'
+import { PageFieldEmpty } from '../../../design/system/gradient/OnGradient'
 import { cn } from '../../../design/system/utils/cn'
 import {
   type ToolbarPlacement,
@@ -451,17 +452,11 @@ function PlanModePlaceholder({ mode }: { readonly mode: PlanViewMode }) {
   const label = mode === Mode.list ? 'List' : 'Priority Matrix'
 
   return (
-    <div
+    <PageFieldEmpty
       data-testid="plan-mode-placeholder"
       data-mode={mode}
-      className="flex h-full flex-col items-center justify-center gap-kro-small p-kro-x-large text-center"
-    >
-      <h3 className="font-semibold text-kro-fore text-xl">{label}</h3>
-      <p className="max-w-prose text-kro-fore-secondary text-sm">
-        {label} is not built yet — it arrives with the Plan list and priority
-        matrix child (KC-IS-#20). The timeline is the destination this child
-        ships.
-      </p>
-    </div>
+      title={label}
+      description={`${label} is not built yet — it arrives with the Plan list and priority matrix child (KC-IS-#20). The timeline is the destination this child ships.`}
+    />
   )
 }

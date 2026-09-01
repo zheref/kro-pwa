@@ -33,6 +33,8 @@ import * as sheetStories from '../system/primitives/sheet.stories'
 import * as tabsStories from '../system/primitives/tabs.stories'
 import * as glassStories from '../system/glass/GlassSurface.stories'
 import * as gradientStories from '../system/gradient/GradientBackdrop.stories'
+import * as detailBackdropStories from '../system/gradient/DetailBackdrop.stories'
+import * as onGradientStories from '../system/gradient/OnGradient.stories'
 import * as tokenStories from '../system/tokens/Tokens.stories'
 
 interface Story {
@@ -46,6 +48,8 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['Tokens', tokenStories],
   ['KroGlass', glassStories],
   ['GradientBackdrop', gradientStories],
+  ['DetailBackdrop', detailBackdropStories],
+  ['OnGradient', onGradientStories],
   ['Button', buttonStories],
   ['Input', inputStories],
   ['Dialog', dialogStories],

@@ -105,12 +105,28 @@ export {
   GlassSurface,
 } from './system/glass/GlassSurface'
 export {
+  type GlassPanelProps,
+  type GlassPanelKind,
+  GlassPanel,
+} from './system/glass/GlassPanel'
+export {
   type GradientBackdropProps,
   type GradientContentProps,
   type GradientStyle,
   GradientBackdrop,
   GradientContent,
 } from './system/gradient/GradientBackdrop'
+export {
+  type DetailBackdropProps,
+  DetailBackdrop,
+} from './system/gradient/DetailBackdrop'
+export {
+  type OnGradientProps,
+  type PageFieldEmptyProps,
+  FieldSectionLabel,
+  OnGradient,
+  PageFieldEmpty,
+} from './system/gradient/OnGradient'
 
 // Icons
 export {

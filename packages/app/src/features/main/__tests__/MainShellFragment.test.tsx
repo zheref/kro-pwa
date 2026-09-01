@@ -165,6 +165,15 @@ describe('acceptance criterion 1 — wide', () => {
 })
 
 describe('the destination is rendered inside the shell', () => {
+  it('paints the page field behind both shells so glass has something to refract', () => {
+    renderShell(desktopSurface)
+    expect(screen.getByTestId('detail-backdrop')).toBeTruthy()
+
+    cleanup()
+    renderShell(handheldSurface)
+    expect(screen.getByTestId('detail-backdrop')).toBeTruthy()
+  })
+
   it('renders its children in the sidebar shape', () => {
     renderShell(desktopSurface)
     expect(screen.getByText('destination content')).toBeTruthy()
@@ -318,7 +327,9 @@ describe('the bottom inset the shell publishes for the design system', () => {
     const layout = doSurfaceLayout(handheldSurface)
 
     expect(tabBarReservedHeight(layout)).toBe(
-      layout.minimumControlSide + 2 * layout.minimumControlSpacing,
+      layout.minimumControlSide +
+        2 * layout.minimumControlSpacing +
+        8 /* TAB_DOCK_INSET */,
     )
   })
 

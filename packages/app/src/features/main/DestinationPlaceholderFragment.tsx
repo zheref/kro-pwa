@@ -14,7 +14,7 @@
  * kept both strings.
  */
 import { ICON_SIZE } from '../../design/system/icons/icons'
-import { cn } from '../../design/system/utils/cn'
+import { PageFieldEmpty } from '../../design/system/gradient/OnGradient'
 import {
   type SidebarDestination,
   destinationHeading,
@@ -35,28 +35,20 @@ export function DestinationPlaceholderFragment({
   const heading = destinationHeading(destination)
 
   return (
-    <section
+    <PageFieldEmpty
+      as="section"
       aria-labelledby="destination-placeholder-heading"
       data-testid="destination-placeholder"
-      className={cn(
-        'flex h-full flex-col items-center justify-center',
-        'gap-kro-small p-kro-x-large text-center',
-      )}
-    >
-      <Icon
-        size={ICON_SIZE.large}
-        aria-hidden="true"
-        className="text-kro-fore-secondary"
-      />
-      <h2
-        id="destination-placeholder-heading"
-        className="font-semibold text-2xl text-kro-fore"
-      >
-        {heading}
-      </h2>
-      <p className="max-w-prose text-kro-fore-secondary text-sm">
-        {description ?? `${heading} is not built yet.`}
-      </p>
-    </section>
+      titleId="destination-placeholder-heading"
+      title={heading}
+      description={description ?? `${heading} is not built yet.`}
+      icon={
+        <Icon
+          size={ICON_SIZE.large}
+          aria-hidden="true"
+          className="kro-on-gradient"
+        />
+      }
+    />
   )
 }

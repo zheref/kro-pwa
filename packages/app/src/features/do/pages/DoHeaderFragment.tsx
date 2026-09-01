@@ -12,13 +12,11 @@
  * ## The gradient is NOT painted here
  *
  * Canon's `LargeScreenTitle` carries its own `LinearGradient` because SwiftUI
- * has no shared slab above it. The web shell already renders one
- * (`MainShellFragment`'s `GradientBackdrop`), and it is the shell that answers
- * `extendsHeaderGradientToLeadingEdge` — on a desktop-shaped surface the slab
- * reaches past the content's leading edge behind the sidebar, on a narrow one
- * it stops. Painting a second gradient here would double the ramp and put the
- * `extends…` decision in two places. So this header is transparent and draws
- * its copy in the on-gradient ink.
+ * has no shared slab above it. The web shell already renders the page field
+ * (`MainShellFragment`'s `DetailBackdrop`), and white ink is the on-gradient
+ * colour that field is measured for. Painting a second gradient here would
+ * double the ramp. So this header is transparent and draws its copy in the
+ * on-gradient ink.
  *
  * ## Ink
  *

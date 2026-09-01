@@ -193,27 +193,6 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     <div
       data-testid="do-lanes"
       className={cn('flex flex-col gap-kro-large pt-kro-medium', className)}
-      /*
-        The day's own surface, with the shell's header slab fading into it over
-        its first 32px.
-
-        Without this the first lane's title lands on whatever the slab happens
-        to be at that height — a dark title on mid-ramp purple, which measures
-        around 3:1 and fails the epic's own 4.5:1 bar on a compact window where
-        the header is short. Canon has the same problem solved a different way
-        (`DoScreen` paints indigoGrape behind the WHOLE surface and every title
-        is white); the web shell paints a 180px slab instead, so the day is a
-        page surface and the fade is what keeps the join from being a hard
-        line. 32px is `--kro-space-x-large`, the same distance
-        `GradientBackdrop`'s own fade uses.
-
-        `color-mix(… 0%, transparent)` rather than the `transparent` keyword:
-        the keyword interpolates through transparent BLACK, which greys the
-        ramp in light mode.
-      */
-      style={{
-        backgroundImage: `linear-gradient(to bottom, color-mix(in srgb, ${colorVar('back')} 0%, transparent), ${colorVar('back')} var(--kro-space-x-large))`,
-      }}
     >
       {showsSuggestions && suggestions.length > 0 ? (
         <SuggestionsLane
@@ -223,26 +202,8 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
       ) : null}
 
       {hasNoEndeavors ? (
-        /*
-          The promotion inset is drawn white-on-translucent-black, because canon
-          shows it over `DoScreen`'s full-screen indigoGrape gradient. The web
-          shell's slab stops 180px down, so the inset would otherwise land on
-          the page surface and paint 0.85-white text on light grey — measured
-          well under the 4.5:1 the epic's own contrast bar requires. Restoring
-          the field the component was designed against is a wrapper, not a fork
-          of the component: the two gradient stops are the design system's own,
-          so the inset and the header slab cannot drift apart.
-        */
-        <div className="px-kro-medium">
-          <div
-            data-testid="do-empty-day"
-            style={{
-              borderRadius: radiusVar('surface'),
-              backgroundImage: `linear-gradient(to bottom right, ${colorVar('headerGradientIndigo')}, ${colorVar('headerGradientGrape')})`,
-            }}
-          >
-            <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
-          </div>
+        <div className="px-kro-medium" data-testid="do-empty-day">
+          <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
         </div>
       ) : (
         <>
@@ -322,25 +283,17 @@ function SectionHeader({
   return (
     <div className="flex items-center gap-2 px-kro-medium">
       {Glyph === null ? null : (
-        <span className="shrink-0" style={{ color: colorVar('fore') }}>
+        <span className="kro-on-gradient shrink-0">
           {Glyph({ size: SECTION_TITLE_GLYPH_SIZE, 'aria-hidden': true })}
         </span>
       )}
       {/*
-        WEB ADAPTATION, and the reason is a real difference in the two
-        backgrounds. Canon draws every section title in white because `DoScreen`
-        paints the indigoGrape gradient behind the WHOLE surface, so every lane
-        sits on it. The web shell (`KC-IS-#13`) paints a 180px header slab
-        instead and lets the day scroll onto the page's own surface, so a white
-        title below the slab is white on white — invisible in light, and only
-        accidentally legible in dark. The token foreground is the same decision
-        canon made (ink that contrasts with what is behind it), read against
-        the background this shell actually provides. Named in the PR as a
-        cross-lane observation for the shell child.
+        Canon draws every section title in white because `DoScreen` paints the
+        indigoGrape gradient behind the whole surface. The web shell now does
+        the same (`DetailBackdrop`), so the on-gradient ink is the one that
+        clears 4.5:1 on both stops.
       */}
-      <h2 className="m-0 font-bold text-xl" style={{ color: colorVar('fore') }}>
-        {title}
-      </h2>
+      <h2 className="kro-on-gradient m-0 font-bold text-xl">{title}</h2>
 
       {badgeText === null ? null : (
         <span className="ml-auto">

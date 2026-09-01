@@ -228,7 +228,7 @@ export function VisibilityFilterSection({
             onClick={() => onToggle(row.toggle)}
             className={cn(
               'flex w-full items-center justify-between gap-kro-small',
-              'cursor-pointer rounded-kro-field border-none bg-transparent',
+              'rounded-kro-field border-none bg-transparent',
               'px-kro-small py-kro-small text-left text-kro-fore text-sm',
               'hover:bg-kro-back-inner',
             )}

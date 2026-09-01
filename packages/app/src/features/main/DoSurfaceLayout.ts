@@ -96,6 +96,14 @@ export const TOUCH_CONTROL_SPACING = 8
 export const POINTER_CONTROL_SPACING = 4
 
 /**
+ * How far the floating tab dock sits in from the viewport edge.
+ * Matches `SHELL_GUTTER` / `--kro-space-small`. Restated as a number because
+ * this module is pure and a CSS custom property cannot be read without a
+ * document.
+ */
+export const TAB_DOCK_INSET = 8
+
+/**
  * The adaptive contract, as a value.
  *
  * Canon exposes these as computed properties on a struct; TypeScript has no
@@ -304,8 +312,9 @@ export const shellShapeFor = (surface: DoSurface): ShellShape =>
  *
  * Derived from the same two numbers `TabBarFragment` lays itself out with — a
  * `minimumControlSide` tall button between two `minimumControlSpacing`
- * paddings — so nudging either moves the reservation with it instead of
- * leaving a literal behind.
+ * paddings, plus `TAB_DOCK_INSET` for the gutter the floating dock sits in —
+ * so nudging either moves the reservation with it instead of leaving a literal
+ * behind.
  *
  * WHY IT EXISTS. On iOS a tab is a safe area and SwiftUI has already excluded
  * the bar from it, which is why canon can anchor the Active Toast 24pt off "the
@@ -316,7 +325,7 @@ export const shellShapeFor = (surface: DoSurface): ShellShape =>
  * publishes; the kit never imports the shell to ask.
  */
 export const tabBarReservedHeight = (layout: DoSurfaceLayout): number =>
-  layout.minimumControlSide + 2 * layout.minimumControlSpacing
+  layout.minimumControlSide + 2 * layout.minimumControlSpacing + TAB_DOCK_INSET
 
 /** The inset for a shell shape — the sidebar shell has no bottom chrome. */
 export const shellBottomInset = (

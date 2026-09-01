@@ -255,6 +255,14 @@ export function measuredPairs(): MeasuredPair[] {
         background: colorValue(stop, theme),
         floor: AA_TEXT_FLOOR,
       })
+      pairs.push({
+        contract: 'on-gradient ink on the page field',
+        label: stop,
+        theme,
+        foreground: colorValue('snow', theme),
+        background: colorValue(stop, theme),
+        floor: AA_TEXT_FLOOR,
+      })
     }
 
     pairs.push({

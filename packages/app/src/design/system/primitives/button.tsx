@@ -23,7 +23,7 @@ import { cn } from '../utils/cn'
 const buttonVariants = cva(
   cn(
     'inline-flex shrink-0 items-center justify-center gap-kro-small',
-    'whitespace-nowrap font-medium',
+    'cursor-default whitespace-nowrap font-medium',
     'kro-motion-quick transition-[color,background-color,box-shadow,transform]',
     'outline-none focus-visible:shadow-[var(--kro-ring)]',
     'active:scale-[0.97]',

@@ -5,9 +5,9 @@
  * A pure re-export barrel: no logic, so the guard's new-source-file rule
  * exempts it by design.
  *
- * KC-IS-#20 adds `list/` and `matrix/` beside `timeline/` and passes them into
- * `PlanFragment`'s `destinations` slots; nothing exported from `timeline/`
- * changes when it does.
+ * KC-IS-#20 added `list/`, `matrix/`, `picker/` and `visibility/` beside
+ * `timeline/` and passes the first two into `PlanFragment`'s `destinations`
+ * slots; nothing exported from `timeline/` changed when it did.
  */
 
 export { type PlanPageProps, PLAN_TIMELINE_TOP_INSET, PlanPage } from './PlanPage'
@@ -41,8 +41,13 @@ export {
 export {
   VISIBILITY_STATE_VALUES,
   type PlanVisibilityPanelFragmentProps,
+  type VisibilityRow,
   PlanVisibilityPanelFragment,
+  VisibilityFilterSection,
   areAllPlanFiltersEnabled,
+  hostRows,
+  kindRows,
+  stateRows,
 } from './PlanVisibilityPanelFragment'
 export {
   PLAN_MODE_SLIDE_FRACTION,
@@ -97,3 +102,104 @@ export {
   useSlotPress,
   useVerticalDrag,
 } from './timeline/useTimelineGestures'
+
+export {
+  PLAN_LIST_IMPLIED_DURATION_SECONDS,
+  PlanListBucket,
+  PlanTimeOfDayBand,
+  type PlanListSection,
+  isPlanListAllDay,
+  planListBucketFor,
+  planListBucketTitle,
+  planListBuckets,
+  planListComparator,
+  planListPriorityTier,
+  planListSections,
+  planListSortDate,
+  planListSorted,
+  planTimeOfDayBandFor,
+  planTimeOfDayBandTitle,
+  planTimeOfDayBands,
+} from './list/planListModel'
+export {
+  type PlanListRowSymbol,
+  planListRowBadges,
+  planListRowOpenLabel,
+  planListRowSymbol,
+  planListRowTimeInfo,
+} from './list/planListPresentation'
+export {
+  selectIsPlanListEmpty,
+  selectPlanListEndeavors,
+  selectPlanListGrouping,
+  selectPlanListSections,
+  selectPlanListSort,
+  selectPlanRowCapabilities,
+} from './list/PlanListSelectors'
+export {
+  type PlanEndeavorDeletion,
+  deletePlanEndeavorThunk,
+} from './list/PlanListProducer'
+export {
+  type PlanListFragmentProps,
+  PlanListFragment,
+} from './list/PlanListFragment'
+
+export {
+  PlanMatrixQuadrant,
+  eisenhowerQuadrantFor,
+  planMatrixActionForeground,
+  planMatrixAddExistingLabel,
+  planMatrixAddLabel,
+  planMatrixAddNewLabel,
+  planMatrixItemSymbol,
+  planMatrixQuadrantCaption,
+  planMatrixQuadrantFor,
+  planMatrixQuadrantTint,
+  planMatrixQuadrantTitle,
+  planMatrixQuadrants,
+} from './matrix/planMatrixPresentation'
+export {
+  MATRIX_CARD_GAP,
+  MATRIX_CARD_MIN_PX,
+  MATRIX_QUADRANT_GAP,
+  MATRIX_TINT_ALPHA,
+  type PlanMatrixFragmentProps,
+  PlanMatrixFragment,
+} from './matrix/PlanMatrixFragment'
+
+export {
+  PICK_ENDEAVOR_SELECTION_LIMIT,
+  PICK_ENDEAVOR_SUBTITLE,
+  PickEndeavorPriority,
+  type PickEndeavorSection,
+  pickEndeavorCanConfirm,
+  pickEndeavorCanSelectMore,
+  pickEndeavorCandidates,
+  pickEndeavorCapNotice,
+  pickEndeavorConfirmBlocker,
+  pickEndeavorPriorities,
+  pickEndeavorPriorityFor,
+  pickEndeavorPriorityTitle,
+  pickEndeavorSections,
+  pickEndeavorSelection,
+  pickEndeavorSelectionCaption,
+} from './picker/planPickerModel'
+export {
+  type PickEndeavorFragmentProps,
+  PickEndeavorFragment,
+} from './picker/PickEndeavorFragment'
+
+export {
+  ALL_PLAN_VISIBILITY_FILTERS,
+  PLAN_VISIBILITY_FILTER_ORDER,
+  PLAN_VISIBILITY_SUPPORTED_FILTERS,
+  type PlanVisibilitySection,
+  planVisibilityFilterTitle,
+  planVisibilitySections,
+} from './visibility/planVisibilitySections'
+export {
+  type PlanVisibilityCalendar,
+  type PlanVisibilityFragmentProps,
+  PlanVisibilityFragment,
+} from './visibility/PlanVisibilityFragment'

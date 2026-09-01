@@ -46,6 +46,7 @@ import {
   EmptyDayStateView,
   EndeavorCard,
   type EndeavorCardModel,
+  type EndeavorPreparationPresentation,
   REWARD_BACKGROUND_ROLE,
   REWARD_FOREGROUND_ROLE,
   SuggestionCard,
@@ -150,10 +151,10 @@ export interface DoLanesFragmentProps {
   readonly suggestionHandlers: DoSuggestionHandlers
   readonly className?: string
   /**
-   * Regular-width surfaces stack suggestions full-width; compact ones keep the
-   * horizontal carousel. Matches Plan's `fillsWidth` banner placement.
+   * Canon's `preparationPresentation`. Pointer Do uses the compact macOS
+   * glass card; touch keeps the iOS action stack.
    */
-  readonly fillsSuggestionWidth?: boolean
+  readonly preparationPresentation?: EndeavorPreparationPresentation
 }
 
 export function DoLanesFragment(props: DoLanesFragmentProps) {
@@ -169,7 +170,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     locale,
     onCreateEndeavor,
     suggestionHandlers,
-    fillsSuggestionWidth = false,
+    preparationPresentation = 'automatic',
     className,
   } = props
 
@@ -204,7 +205,6 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
         <SuggestionsLane
           suggestions={suggestions}
           handlers={suggestionHandlers}
-          fillsWidth={fillsSuggestionWidth}
         />
       ) : null}
 
@@ -244,6 +244,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
               initialWidth={props.initialLaneWidth}
               onWidthChanged={props.onLaneWidthChanged}
               handlers={props.handlers}
+              preparationPresentation={preparationPresentation}
             />
           ) : null}
 
@@ -261,6 +262,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
                 locale={locale}
                 handlers={props.handlers}
                 onExpand={props.onExpandSection}
+                preparationPresentation={preparationPresentation}
               />
             )
           })}
@@ -366,25 +368,19 @@ const badgeStyle = {
 function SuggestionsLane({
   suggestions,
   handlers,
-  fillsWidth,
 }: {
   readonly suggestions: readonly (SuggestionCardModel & {
     readonly source: DoSuggestionSource
   })[]
   readonly handlers: DoSuggestionHandlers
-  readonly fillsWidth: boolean
 }) {
   const cards = suggestions.map((suggestion) => (
     <div
       key={suggestion.source}
-      className={cn(
-        'flex items-center gap-kro-small',
-        fillsWidth ? 'w-full' : 'shrink-0',
-      )}
+      className="flex shrink-0 items-center gap-kro-small"
     >
       <SuggestionCard
         model={suggestion}
-        fillsWidth={fillsWidth}
         onAction={() => handlers.onAction(suggestion.source)}
       />
       {/*
@@ -422,18 +418,7 @@ function SuggestionsLane({
           glyph="suggestions"
           badgeText={null}
         />
-        {fillsWidth ? (
-          <div
-            data-testid="do-suggestions-stack"
-            className="flex flex-col gap-kro-medium px-kro-large"
-          >
-            {cards}
-          </div>
-        ) : (
-          <Carousel className="overflow-y-visible py-kro-small">
-            {cards}
-          </Carousel>
-        )}
+        <Carousel className="overflow-y-visible py-kro-small">{cards}</Carousel>
       </div>
     </section>
   )
@@ -719,6 +704,7 @@ function FeaturedLane({
   initialWidth,
   onWidthChanged,
   handlers,
+  preparationPresentation,
 }: {
   readonly cards: readonly EndeavorCardModel[]
   readonly selectedCardKey: string | null
@@ -728,6 +714,7 @@ function FeaturedLane({
   readonly initialWidth?: number
   readonly onWidthChanged?: (width: number) => void
   readonly handlers: DoCardHandlers
+  readonly preparationPresentation: EndeavorPreparationPresentation
 }) {
   const laneRef = useRef<HTMLDivElement | null>(null)
   /**
@@ -814,6 +801,7 @@ function FeaturedLane({
                   }}
                   now={now}
                   locale={locale}
+                  preparationPresentation={preparationPresentation}
                   isSelected={
                     selectedCardKey === `${DoLane.featured}:${card.id}`
                   }
@@ -854,6 +842,7 @@ function TaskLane({
   locale,
   handlers,
   onExpand,
+  preparationPresentation,
 }: {
   readonly section: DoSectionDescriptor
   readonly cards: readonly EndeavorCardModel[]
@@ -863,6 +852,7 @@ function TaskLane({
   readonly locale?: string
   readonly handlers: DoCardHandlers
   readonly onExpand: (destination: DoTasksListDestination) => void
+  readonly preparationPresentation: EndeavorPreparationPresentation
 }) {
   return (
     <section
@@ -904,6 +894,7 @@ function TaskLane({
                 size="medium"
                 now={now}
                 locale={locale}
+                preparationPresentation={preparationPresentation}
                 isSelected={selectedCardKey === `${section.tag}:${card.id}`}
                 isInMarkCompleteMode={isInMarkCompleteMode}
                 onPrepare={

@@ -420,7 +420,7 @@ describe('the intents this surface hands to other features', () => {
     if (title === null) throw new Error('the Overdue lane rendered no card')
     await userEvent.click(title)
     const start = lane.querySelector<HTMLButtonElement>(
-      '[data-slot="endeavor-card-prep-overlay"] button[aria-label="Start"]',
+      '[data-slot="endeavor-card"] button[aria-label="Start"]',
     )
     if (start === null) throw new Error('the prepared card offers no Start')
     await userEvent.click(start)
@@ -445,7 +445,7 @@ describe('the intents this surface hands to other features', () => {
     await userEvent.click(title)
 
     const start = lane.querySelector<HTMLButtonElement>(
-      '[data-slot="endeavor-card-prep-overlay"] button[aria-label="Start"]',
+      '[data-slot="endeavor-card"] button[aria-label="Start"]',
     )
     if (start === null) throw new Error('the prepared card offers no Start')
     await userEvent.click(start)
@@ -464,9 +464,9 @@ describe('the intents this surface hands to other features', () => {
       expect(store.getState().do.load.kind).toBe('loaded')
     })
 
-    // The expanded list's rows carry the skip control inline, with no popover
-    // between it and the intent — see the note in `DoToolbarFragment` about
-    // what a Radix popper costs under jsdom.
+    // Desktop Do uses macOS preparation. Horizontal rows keep Skip as a
+    // compact control so the intent does not have to open a Radix menu
+    // (see the measurement in `system/primitives/__tests__/radixEnvironment.tsx`).
     await userEvent.click(screen.getByRole('button', { name: /^Overdue, / }))
     const list = await screen.findByTestId('do-tasks-list')
     const target = store.getState().do.lanes.overdue[0]

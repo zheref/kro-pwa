@@ -142,7 +142,10 @@ export function LiquidGlassFABMenu({
       // opposite orders — so the disc comes first in the DOM (tab order) and
       // the column is reversed for paint. Putting the rows first in the DOM
       // instead sends the next Tab straight past the component.
-      className={cn('inline-flex flex-col-reverse items-end', className)}
+      className={cn(
+        'inline-flex flex-col-reverse items-end overflow-visible',
+        className,
+      )}
       style={{ gap: ROW_SPACING, ...style }}
       data-kro-fab-menu={expanded ? 'expanded' : 'collapsed'}
       onKeyDown={onKeyDown}

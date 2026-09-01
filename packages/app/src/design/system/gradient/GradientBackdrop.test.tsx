@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   GradientBackdrop,
   GradientContent,
-  LARGE_TITLE_SLAB_HEIGHT,
   LARGE_TITLE_TRAILING_RADIUS_PX,
 } from './GradientBackdrop'
 
@@ -70,15 +69,24 @@ describe('GradientBackdrop', () => {
     expect(slab.dataset.gradientClip).toBe('bottomTrailing')
   })
 
+  it('does not pin a height on the title clip — that clip fills its host', () => {
+    render(<GradientBackdrop clip="bottomTrailing" data-testid="slab" />)
+
+    expect(
+      screen
+        .getByTestId('slab')
+        .style.getPropertyValue('--kro-gradient-height'),
+    ).toBe('')
+  })
+
   it('defaults to an unclipped slab so existing callers do not change shape', () => {
     render(<GradientBackdrop data-testid="slab" />)
 
     expect(screen.getByTestId('slab').dataset.gradientClip).toBe('none')
   })
 
-  it('names the LargeScreenTitle geometry as constants, matching canon`s 50pt round', () => {
+  it('names the LargeScreenTitle trailing round, matching canon`s 50pt', () => {
     expect(LARGE_TITLE_TRAILING_RADIUS_PX).toBe(50)
-    expect(LARGE_TITLE_SLAB_HEIGHT).toBe('360px')
   })
 
   it('keeps a caller’s inline style alongside its own custom property', () => {

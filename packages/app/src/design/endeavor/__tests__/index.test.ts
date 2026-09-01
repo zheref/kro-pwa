@@ -65,6 +65,7 @@ describe('the endeavor kit barrel', () => {
       'resolveRowActions',
       'useInputCapability',
       'useWiggle',
+      'usesDetailedMacOSPreparation',
     ]) {
       expect(typeof (kit as Record<string, unknown>)[name], name).toBe(
         'function',

@@ -212,7 +212,9 @@ export {
   type EndeavorCardMetrics,
   type EndeavorCardProps,
   type EndeavorCardSize,
+  type EndeavorPreparationPresentation,
   EndeavorCard,
+  usesDetailedMacOSPreparation,
 } from './EndeavorCard'
 export {
   type DeferPopoverProps,

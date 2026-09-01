@@ -16,21 +16,17 @@
  *   · the Lists section: one row per project, an inline "New project…" row,
  *     and a per-row delete.
  *
- * **Row height is the iOS list default, not the pointer chrome.** Canon's Mac
- * sidebar uses `minimumControlSide` (28 on a pointer desktop), which reads as
- * a dense utility list in a 200px glass column. The web sidebar is a phone
- * `List` in a split view, so rows, the search field and the inline draft
- * stay at the 44pt HIG floor even when the rest of the chrome is compact.
+ * **Row height sits between the two floors.** Canon's Mac sidebar uses
+ * `minimumControlSide` (28 on a pointer desktop); the first web cut used the
+ * 44pt iOS list floor, which read as a phone `List` in a 200px column. 36pt
+ * is the denser desktop row without dropping to the 28pt pointer minimum.
  */
 import { Plus, Search, Trash2, X } from 'lucide-react'
 import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
+import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
-import {
-  TOUCH_CONTROL_SIDE,
-  TOUCH_CONTROL_SPACING,
-  type DoSurfaceLayout,
-} from './DoSurfaceLayout'
+import { TOUCH_CONTROL_SPACING, type DoSurfaceLayout } from './DoSurfaceLayout'
 import type { NavigationSection } from './NavigationSections'
 import {
   type SidebarDestination,
@@ -45,10 +41,10 @@ export const SIDEBAR_MIN_WIDTH = 180
 export const SIDEBAR_IDEAL_WIDTH = 200
 
 /**
- * iOS HIG list-row / search-field height. Used for every tappable row in this
- * column, including on a pointer desktop — see the file header.
+ * Destination-row / search-field height. Between Mac's 28pt pointer minimum
+ * and the 44pt iOS list floor — see the file header.
  */
-export const SIDEBAR_ROW_HEIGHT = TOUCH_CONTROL_SIDE
+export const SIDEBAR_ROW_HEIGHT = 36
 
 /** iOS `.title` — 28pt bold. Canon's `.navigationTitle("Kro")` in this column. */
 export const SIDEBAR_APP_TITLE_SIZE_PX = 28
@@ -313,17 +309,22 @@ function SidebarRow({
         type="button"
         aria-current={isSelected ? 'page' : undefined}
         onClick={() => onSelect(destination)}
+        data-theme={isSelected ? 'dark' : undefined}
         className={cn(
           'flex flex-1 items-center gap-kro-small rounded-kro-small px-kro-small',
-          'text-left text-kro-fore text-sm',
-          // Canon's macOS sidebar selection is a filled accent capsule with a
-          // light label, not a tinted one. It also survives being drawn over
-          // the header gradient, which a 15%-accent wash does not.
+          'text-left text-sm',
           isSelected
-            ? 'bg-kro-accent font-semibold text-kro-on-accent'
-            : 'hover:bg-kro-absolute/25',
+            ? 'font-semibold'
+            : 'text-kro-fore hover:bg-kro-absolute/25',
         )}
-        style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
+        style={{
+          minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
+          // Same trick as TaskRow: `absolute` inside a forced dark scope is
+          // black in both page schemes (the token flips to white in light).
+          // `snow` is white in both, so the label stays white on that fill.
+          backgroundColor: isSelected ? colorVar('absolute') : undefined,
+          color: isSelected ? colorVar('snow') : undefined,
+        }}
       >
         <Icon size={ICON_SIZE.small} aria-hidden="true" className="shrink-0" />
         <span className="truncate">{title}</span>

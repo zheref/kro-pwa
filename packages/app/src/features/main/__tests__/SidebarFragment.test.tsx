@@ -110,27 +110,46 @@ describe('the shipping sidebar', () => {
   })
 })
 
-describe('control sizing follows the iOS list floor', () => {
-  it('draws 44px rows on a pointer desktop, matching iOS rather than Mac 28', () => {
+describe('control sizing is denser than the iOS list floor', () => {
+  it('draws 36px rows on a pointer desktop', () => {
     renderSidebar()
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
-      '44px',
+      '36px',
     )
   })
 
-  it('keeps the same 44px rows when the sidebar is touch-driven', () => {
+  it('keeps the same 36px rows when the sidebar is touch-driven', () => {
     renderSidebar({ layout: doSurfaceLayout(handheldSurface) })
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
-      '44px',
+      '36px',
     )
   })
 
-  it('sizes the search field to the same 44px row', () => {
+  it('sizes the search field to the same 36px row', () => {
     renderSidebar()
 
-    expect(screen.getByRole('search').style.minHeight).toBe('44px')
+    expect(screen.getByRole('search').style.minHeight).toBe('36px')
+  })
+})
+
+describe('the selected row', () => {
+  it('fills black with white type, not the accent wash', () => {
+    renderSidebar()
+
+    const today = screen.getByRole('button', { name: 'Today' })
+    expect(today.getAttribute('data-theme')).toBe('dark')
+    expect(today.style.backgroundColor).toBe('var(--kro-color-absolute)')
+    expect(today.style.color).toBe('var(--kro-color-snow)')
+  })
+
+  it('leaves an unselected row on the page ink, with no fill', () => {
+    renderSidebar()
+
+    const jot = screen.getByRole('button', { name: 'Jot Down' })
+    expect(jot.getAttribute('data-theme')).toBeNull()
+    expect(jot.style.backgroundColor).toBe('')
   })
 })
 

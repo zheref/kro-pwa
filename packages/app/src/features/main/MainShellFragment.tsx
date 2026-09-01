@@ -35,10 +35,6 @@ import type { CSSProperties, ReactNode } from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { GlassSurface } from '../../design/system/glass/GlassSurface'
 import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
-import {
-  GradientBackdrop,
-  LARGE_TITLE_SLAB_HEIGHT,
-} from '../../design/system/gradient/GradientBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import {
@@ -177,16 +173,15 @@ export function MainShellFragment(props: MainShellFragmentProps) {
 }
 
 /**
- * The content column — LargeScreenTitle's slab lives here, not on the page
- * field.
+ * The content column reaches the window's trailing edge so a destination's
+ * own LargeScreenTitle slab can too.
  *
- * Canon paints a diagonal indigo→grape fill behind the 34pt title, clipped to
- * a 50px bottom-trailing round, and on a split view that fill starts at the
- * sidebar's trailing edge (it does **not** run under the sidebar — that is
- * `extendsGradientToWindowLeadingEdge`, which the user does not want) and
- * reaches the window's trailing edge. Dropping the shell's right gutter is
- * what lets the slab hit that edge; the glass toolbar keeps a trailing inset
- * so it still floats.
+ * The diagonal indigo→grape clip is **the title component's background**, not
+ * this column's — canon anchors a 1000pt ramp at the title's bottom edge so
+ * extra height reaches *up* through the toolbar, never *down* through
+ * Suggestions. Dropping the shell's right gutter is what lets that header
+ * hit the window edge; the glass toolbar keeps a trailing inset so it still
+ * floats.
  */
 function ContentColumn({ children }: { readonly children: ReactNode }) {
   return (
@@ -194,12 +189,6 @@ function ContentColumn({ children }: { readonly children: ReactNode }) {
       data-testid="shell-content-column"
       className="relative flex min-h-0 min-w-0 flex-1 flex-col"
     >
-      <GradientBackdrop
-        hardEdge
-        clip="bottomTrailing"
-        height={LARGE_TITLE_SLAB_HEIGHT}
-        data-testid="shell-large-title-slab"
-      />
       {children}
     </div>
   )

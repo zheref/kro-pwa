@@ -22,6 +22,7 @@ import {
   DEFAULT_CARD_WIDTH,
   EndeavorCard,
   HORIZONTAL_MIN_HEIGHT,
+  usesDetailedMacOSPreparation,
 } from './EndeavorCard'
 import { EndeavorUrgency, endeavorUrgencies } from './endeavorCardModel'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
@@ -449,6 +450,84 @@ describe('the preparation overlay', () => {
     )
     expect(screen.getByRole('button', { name: 'Skip event' })).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull()
+  })
+})
+
+describe('macOS preparation', () => {
+  it('treats only the explicit macOS case as the compact glass card', () => {
+    expect(usesDetailedMacOSPreparation('macOS')).toBe(true)
+    expect(usesDetailedMacOSPreparation('mobile')).toBe(false)
+    expect(usesDetailedMacOSPreparation('automatic')).toBe(false)
+  })
+
+  it('replaces the content instead of blurring it, and skips the iOS overlay', () => {
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        preparationPresentation="macOS"
+        isSelected
+        now={NOW}
+      />,
+    )
+
+    const content = document.querySelector(
+      '[data-slot="endeavor-card-content"]',
+    ) as HTMLElement
+    expect(content.style.filter).toBe('')
+    expect(content.style.opacity).toBe('0')
+    expect(
+      document.querySelector('[data-slot="endeavor-card-prep-overlay"]'),
+    ).toBeNull()
+    expect(
+      document.querySelector('[data-slot="endeavor-card-macos-prep"]'),
+    ).not.toBeNull()
+  })
+
+  it('paints the shell as glass and shows compact details plus a 28px action row', () => {
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        preparationPresentation="macOS"
+        isSelected
+        now={NOW}
+      />,
+    )
+
+    expect(shell().className).toContain('kro-glass')
+    expect(
+      document.querySelector('[data-slot="endeavor-card-macos-details"]')
+        ?.textContent,
+    ).toContain('Task')
+    expect(
+      document.querySelector('[data-slot="endeavor-card-macos-actions"]'),
+    ).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Start' })).not.toBeNull()
+  })
+
+  it('leaves an unselected macOS card looking like the ordinary card', () => {
+    render(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        preparationPresentation="macOS"
+        now={NOW}
+      />,
+    )
+
+    const content = document.querySelector(
+      '[data-slot="endeavor-card-content"]',
+    ) as HTMLElement
+    expect(content.style.opacity).toBe('1')
+    expect(shell().className).not.toContain('kro-glass')
+    expect(
+      document.querySelector('[data-slot="endeavor-card-macos-prep"]'),
+    ).not.toBeNull()
+    expect(
+      (
+        document.querySelector(
+          '[data-slot="endeavor-card-macos-prep"]',
+        ) as HTMLElement
+      ).style.opacity,
+    ).toBe('0')
   })
 })
 

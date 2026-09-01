@@ -218,14 +218,8 @@ describe('the empty day', () => {
 })
 
 describe('the Suggestions lane', () => {
-  it('carousels the cards on a compact surface', () => {
-    render(
-      <DoLanesFragment
-        {...propsFor(doSurfaceMocks.suggestionOffered, {
-          fillsSuggestionWidth: false,
-        })}
-      />,
-    )
+  it('carousels the cards — Do never stacks them, even on a regular surface', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
     const lane = screen.getByTestId('do-lane-suggestions')
     expect(lane.querySelector('[data-testid="do-carousel"]')).not.toBeNull()
@@ -234,24 +228,15 @@ describe('the Suggestions lane', () => {
     ).toBeNull()
   })
 
-  it('stacks them full-width on a regular surface so they can breathe', () => {
-    render(
-      <DoLanesFragment
-        {...propsFor(doSurfaceMocks.suggestionOffered, {
-          fillsSuggestionWidth: true,
-        })}
-      />,
-    )
+  it('keeps each card at canon`s 280–340px carousel width', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
-    const lane = screen.getByTestId('do-lane-suggestions')
-    expect(
-      lane.querySelector('[data-testid="do-suggestions-stack"]'),
-    ).not.toBeNull()
-    expect(lane.querySelector('[data-testid="do-carousel"]')).toBeNull()
-    const card = lane.querySelector(
-      '[data-slot="suggestion-card"]',
-    ) as HTMLElement
-    expect(card.className).toContain('w-full')
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.className).toContain('min-w-70')
+    expect(card.className).toContain('max-w-85')
+    expect(card.className).not.toContain('w-full')
   })
 
   it('keeps a named dismiss next to every suggestion', () => {

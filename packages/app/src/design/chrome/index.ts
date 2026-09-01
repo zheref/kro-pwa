@@ -60,6 +60,7 @@ export {
   type RotatingGlowProps,
   type RotatingGlowShape,
   RotatingGlow,
+  glowPlumeMargin,
   shouldGlowAnimate,
 } from './glow/RotatingGlow'
 

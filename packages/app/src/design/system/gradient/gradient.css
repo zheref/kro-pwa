@@ -76,6 +76,9 @@
  * here would paint a grey band on top of it.
  */
 .kro-gradient-backdrop--large-title {
+  /* Fill the title component, not a fixed 360px drop into the day's content. */
+  inset: 0;
+  height: auto;
   overflow: hidden;
   border-end-end-radius: 50px;
 }

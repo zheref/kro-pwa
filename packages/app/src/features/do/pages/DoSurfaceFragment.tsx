@@ -30,8 +30,11 @@
 import type { ActivityRing } from '../../../design/chrome'
 import {
   CHROME_LAYOUT,
+  DEFAULT_GLOW_BLUR_RADIUS,
+  DEFAULT_GLOW_SPREAD,
   FAB_INSETS,
   LiquidGlassFABMenu,
+  glowPlumeMargin,
   useActiveToasts,
 } from '../../../design/chrome'
 import {
@@ -367,7 +370,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
             onCreateEndeavor={props.onCreateEndeavor}
             handlers={handlers}
             suggestionHandlers={suggestionHandlers}
-            fillsSuggestionWidth={layout.width === 'regular'}
+            preparationPresentation={layout.isTouchPrimary ? 'mobile' : 'macOS'}
           />
 
           {/* Canon's `Spacer(minLength: 80)` — the last lane clears the FAB. */}
@@ -382,7 +385,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
         drew `target` and Clear Expired drew a bare `clock`.
       */}
       <div
-        className="pointer-events-none absolute right-0 bottom-0 z-20 flex justify-end p-0"
+        className="pointer-events-none absolute right-0 bottom-0 z-20 flex justify-end overflow-visible"
         /*
           Canon's trailing inset, and NOT canon's bottom one. `FAB_INSETS`
           carries 16 / 60 because iOS stacks the FAB over the whole screen,
@@ -392,10 +395,20 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           disc floating in the middle of the last lane. 24 is the same
           bottom breathing room the Active Toast uses, and the two share this
           corner.
+
+          Extra plume room: RotatingGlow casts a coloured shadow *from behind
+          the disc*, so the blur has to be able to spill below the button
+          instead of clipping into a rim. The toast padding already lifts the
+          disc; the plume margin is the extra reach canon's `.padding(-margin)`
+          gives the glow layer, plus another blur×2 so the under-cast can
+          bloom toward the floor.
         */
         style={{
           paddingInlineEnd: FAB_INSETS.legacy.trailing,
-          paddingBlockEnd: CHROME_LAYOUT.toastBottomPadding,
+          paddingBlockEnd:
+            CHROME_LAYOUT.toastBottomPadding +
+            glowPlumeMargin(DEFAULT_GLOW_SPREAD, DEFAULT_GLOW_BLUR_RADIUS) +
+            DEFAULT_GLOW_BLUR_RADIUS * 2,
         }}
       >
         <div className="pointer-events-auto">
@@ -446,6 +459,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
             isInMarkCompleteMode={props.isInMarkCompleteMode}
             now={now}
             locale={locale}
+            preparationPresentation={layout.isTouchPrimary ? 'mobile' : 'macOS'}
             onBack={() => {
               // Canon: leaving the pushed list deselects, so returning to the
               // lanes never leaves a prepared card behind the user's back.

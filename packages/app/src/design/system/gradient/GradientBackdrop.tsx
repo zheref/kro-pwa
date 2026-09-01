@@ -45,23 +45,16 @@ export interface GradientBackdropProps
   readonly hardEdge?: boolean
   /**
    * How the slab is clipped. `bottomTrailing` is LargeScreenTitle's
-   * `UnevenRoundedRectangle(bottomTrailingRadius: 50)` — the header that sits
-   * on the content column and rounds only its bottom-trailing corner.
+   * `UnevenRoundedRectangle(bottomTrailingRadius: 50)` — the header's own
+   * background, filling its host and rounding only the bottom-trailing corner.
+   *
+   * Canon paints a 1000pt gradient *anchored at the title's bottom edge*, so
+   * the extra height reaches *up* through the toolbar, not *down* into the
+   * day's content. On the web the host is the title component itself (My Day,
+   * the remaining-count line, the rings), and this clip fills that box.
    */
   readonly clip?: 'none' | 'bottomTrailing'
 }
-
-/**
- * How tall the LargeScreenTitle slab is when it is the content column's own
- * header, not a full-window field.
- *
- * Canon paints a 1000pt gradient anchored at the title's bottom edge so it
- * always fills past the toolbar. On the web the content column already starts
- * below the window chrome, so 360px is enough to cover the glass toolbar, the
- * 34pt title and the first stretch of content, with the 50px trailing round
- * still visible.
- */
-export const LARGE_TITLE_SLAB_HEIGHT = '360px'
 
 /** Canon's `UnevenRoundedRectangle(bottomTrailingRadius: 50)`. */
 export const LARGE_TITLE_TRAILING_RADIUS_PX = 50
@@ -98,7 +91,12 @@ export function GradientBackdrop({
         className,
       )}
       style={{
-        ...({ '--kro-gradient-height': height } as CSSProperties),
+        // The title clip fills its positioned host. A CSS height would paint
+        // a 360px slab down through Suggestions, which is the failure this
+        // clip exists to prevent — canon's extra height reaches *up*.
+        ...(clip === 'bottomTrailing'
+          ? {}
+          : ({ '--kro-gradient-height': height } as CSSProperties)),
         ...style,
       }}
       {...rest}

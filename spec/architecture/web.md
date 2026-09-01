@@ -75,10 +75,19 @@ apps/web/            @kro/web    — the Next.js 15 App Router shell
   src/progressive/   service-worker registration, push subscriptions, actions
 ```
 
-`apps/web` owns **no** presentation any more. `src/components/ui/` held 56 vendored Chakra
-snippets serving the pre-parity routes; the design system (#6) replaced them in
-`packages/app/src/design/`, and #79 deleted them with the `(legacy)` group that was their last
-importer. A component belongs in `packages/app`, never here.
+`apps/web` owns **no reusable presentation** any more — no Component (`RC-14`), no Fragment
+(`RC-15`), no Page (`RC-37`). `src/components/ui/` held 56 vendored Chakra snippets serving the
+pre-parity routes; the design system (#6) replaced them in `packages/app/src/design/`, and #79
+deleted them with the `(legacy)` group that was their last importer. A **new** Component,
+Fragment or Page belongs in `packages/app`, never here.
+
+What `apps/web` does still own is what the platform mandates and canon puts here on purpose:
+the passive Server Pages (`RC-38`), the ≤10-line client wrappers (`RC-39`), the root layout and
+the composition root (`RC-41`), and the three redirects. Some of those render JSX — `layout.tsx`
+is the document, `providers.tsx` is the provider tree, and `(shell)/AppShellClient.tsx` mounts
+`MainShellPage` plus the global overlay list. They are **compositions**, not components: each
+one wires or forwards, and none is reusable or has a body worth lifting. The distinction is the
+`RC-62` "apps are thin shells" line, not "no `.tsx` under `apps/web`".
 
 Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing points back.
 

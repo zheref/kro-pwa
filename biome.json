@@ -17,9 +17,7 @@
       "!**/test-results",
       "!**/storybook-static",
       "!pnpm-lock.yaml",
-      "!apps/web/public",
-      "!packages",
-      "!scripts"
+      "!apps/web/public"
     ]
   },
   "formatter": {

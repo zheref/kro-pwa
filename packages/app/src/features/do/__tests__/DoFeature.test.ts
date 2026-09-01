@@ -193,7 +193,7 @@ describe('userDidTapCard', () => {
   it('prepares the tapped card', () => {
     const next = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     expect(next.selectedCardKey).toBe(doCardKey(DoLane.overdue, 'abc'))
   })
@@ -201,11 +201,11 @@ describe('userDidTapCard', () => {
   it('un-prepares it when the same card is tapped again', () => {
     const once = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     const twice = reduce(
       once,
-      userDidTapCard({ lane: DoLane.overdue, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.overdue, endeavorId: 'abc' }),
     )
     expect(twice.selectedCardKey).toBeNull()
   })
@@ -213,11 +213,11 @@ describe('userDidTapCard', () => {
   it('keeps the same endeavor in two lanes independently selectable', () => {
     const inNow = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     const inFeatured = reduce(
       inNow,
-      userDidTapCard({ lane: DoLane.featured, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.featured, endeavorId: 'abc' }),
     )
     expect(inFeatured.selectedCardKey).toBe(doCardKey(DoLane.featured, 'abc'))
   })
@@ -227,7 +227,7 @@ describe('userDidDeselectCard', () => {
   it('clears the preparation cursor', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(reduce(prepared, userDidDeselectCard()).selectedCardKey).toBeNull()
   })
@@ -252,7 +252,7 @@ describe('userDidToggleMarkCompleteMode', () => {
   it('drops the preparation cursor on the way in', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(
       reduce(prepared, userDidToggleMarkCompleteMode()).selectedCardKey,
@@ -284,7 +284,7 @@ describe('userDidTapNotifications', () => {
   it('does not disturb the preparation cursor', () => {
     const prepared = reduce(
       loaded,
-      userDidTapCard({ lane: DoLane.now, endeavorId: 'abc' }),
+      userDidTapCard({ section: DoLane.now, endeavorId: 'abc' }),
     )
     expect(reduce(prepared, userDidTapNotifications()).selectedCardKey).toBe(
       doCardKey(DoLane.now, 'abc'),

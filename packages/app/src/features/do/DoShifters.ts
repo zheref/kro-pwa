@@ -207,10 +207,10 @@ export function withSuggestionDismissed(
  */
 export function withCardSelected(
   state: DoState,
-  lane: DoLane,
+  section: string,
   endeavorId: string,
 ): DoState {
-  const key = doCardKey(lane, endeavorId)
+  const key = doCardKey(section, endeavorId)
   return {
     ...state,
     selectedCardKey: state.selectedCardKey === key ? null : key,

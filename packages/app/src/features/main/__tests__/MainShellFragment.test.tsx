@@ -227,6 +227,52 @@ describe('toolbar slots — the shell hardcodes no feature control', () => {
       .querySelector('[data-toolbar-outlet="primary"]')
     expect(outlet?.childElementCount).toBe(0)
   })
+
+  it("puts Inbox before the feature's slot — canon's Inbox, Refresh, Visibility", () => {
+    render(
+      <ToolbarSlotsProvider>
+        <MainShellFragment
+          shape="sidebar"
+          layout={doSurfaceLayout(desktopSurface)}
+          selected={MainMocks.desktopLoaded.selected}
+          sections={[]}
+          tabs={[]}
+          searchDestination={searchDestination}
+          searchQuery=""
+          isAddingProject={false}
+          draftProjectTitle=""
+          canManageProjects={false}
+          isSidebarVisible={false}
+          onSelectDestination={noop}
+          onChangeSearchQuery={noop}
+          onSubmitSearch={noop}
+          onTapAddProject={noop}
+          onEditDraftProjectTitle={noop}
+          onCommitDraftProject={noop}
+          onCancelDraftProject={noop}
+          onDeleteProject={noop}
+          onToggleSidebar={noop}
+          onTapProfile={noop}
+          onTapInbox={noop}
+          onTapSettings={noop}
+        >
+          <ToolbarSlot placement="primary">
+            <button type="button">Refresh</button>
+            <button type="button">Visibility</button>
+          </ToolbarSlot>
+        </MainShellFragment>
+      </ToolbarSlotsProvider>,
+    )
+
+    // The group's own DOM order IS the reading order, so the assertion is on
+    // the sequence rather than on any one control being present.
+    const toolbar = screen.getByTestId('shell-content-toolbar')
+    const labels = Array.from(toolbar.querySelectorAll('button'))
+      .map((button) => button.getAttribute('aria-label') ?? button.textContent)
+      .filter((label): label is string => label !== null)
+
+    expect(labels.slice(-3)).toEqual(['Inbox', 'Refresh', 'Visibility'])
+  })
 })
 
 describe('shell-owned intents', () => {

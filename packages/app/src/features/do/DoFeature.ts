@@ -253,14 +253,25 @@ export const doSlice = createSlice({
       )
     },
 
-    /** User intent: a short tap prepares a card, and a second tap un-prepares it. */
+    /**
+     * User intent: a short tap prepares a card, and a second tap un-prepares it.
+     *
+     * `section` is canon's own parameter name and canon's own type — a
+     * `String`, not a lane. Two of the tags canon passes (`"events-allday"`,
+     * `"events-timed"`) are view groupings with no lane of their own, so a
+     * `DoLane` payload forced the surface to cast (KC-IS-#71 item 2).
+     */
     userDidTapCard(
       state,
-      action: PayloadAction<{ lane: DoLane; endeavorId: string }>,
+      action: PayloadAction<{ section: string; endeavorId: string }>,
     ) {
       Object.assign(
         state,
-        withCardSelected(state, action.payload.lane, action.payload.endeavorId),
+        withCardSelected(
+          state,
+          action.payload.section,
+          action.payload.endeavorId,
+        ),
       )
     },
 

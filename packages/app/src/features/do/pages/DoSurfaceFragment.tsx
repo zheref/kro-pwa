@@ -151,7 +151,6 @@ export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
 
 function DoSurfaceBody(props: DoSurfaceFragmentProps) {
   const {
-    shape,
     layout,
     header,
     rings,

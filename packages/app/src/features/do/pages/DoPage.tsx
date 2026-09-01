@@ -307,20 +307,11 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const handlers = useMemo<DoCardHandlers>(
     () => ({
       onPrepare: (section, endeavorId) => {
-        /*
-          `userDidTapCard` mints `"section:id"` and a second tap un-prepares —
-          both the slice's, so the surface never decides what a tap means.
-
-          The cast is deliberate and narrow. Canon's own signature is
-          `userDidTapCard(_:section: String)`, and two of its sections —
-          `"events-allday"` and `"events-timed"` — are view groupings that were
-          never `DoLane` members (`KC-IS-#16` installs the events channel but
-          partitions no event lane). `withCardSelected` only ever interpolates
-          the value into `"lane:id"`, so every one of canon's tags round-trips
-          correctly today. Widening the payload to `string` is a one-line
-          `DoFeature` change named in this PR.
-        */
-        dispatch(userDidTapCard({ lane: section as DoLane, endeavorId }))
+        // `userDidTapCard` mints `"section:id"` and a second tap un-prepares —
+        // both the slice's, so the surface never decides what a tap means. The
+        // payload takes canon's own `section: String`, so the two view-grouping
+        // tags that are not lanes need no cast (KC-IS-#71 item 2).
+        dispatch(userDidTapCard({ section, endeavorId }))
       },
       onDeselect: () => dispatch(userDidDeselectCard()),
       onExecute: () => {

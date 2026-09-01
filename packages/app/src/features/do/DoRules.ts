@@ -104,9 +104,18 @@ export const emptyDoLanes: DoLanes = {
   completedToday: [],
 }
 
-/** The fully-qualified card key canon's `selectedCardKey` carries. */
-export const doCardKey = (lane: DoLane, endeavorId: string): string =>
-  `${lane}:${endeavorId}`
+/**
+ * The fully-qualified card key canon's `selectedCardKey` carries.
+ *
+ * `section` is a `string`, not a `DoLane`. Canon's own signature is
+ * `userDidTapCard(_:section: String)` and two of the sections it passes —
+ * `"events-allday"` and `"events-timed"` — are view groupings that were never
+ * lane members: KC-IS-#16 installs the events channel but partitions no event
+ * lane. Every `DoLane` is such a tag, so a lane still type-checks (KC-IS-#71
+ * item 2).
+ */
+export const doCardKey = (section: string, endeavorId: string): string =>
+  `${section}:${endeavorId}`
 
 // ---------------------------------------------------------------------------
 // Visibility, as the slice stores it

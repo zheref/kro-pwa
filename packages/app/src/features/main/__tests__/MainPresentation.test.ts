@@ -17,7 +17,7 @@ import {
 } from '../MainPresentation'
 import { DoSurfaceIdiom, DoSurfaceWidth } from '../DoSurfaceLayout'
 
-describe('canon\'s desktop frames', () => {
+describe("canon's desktop frames", () => {
   it('keeps the Inbox at 560 x 620', () => {
     expect(PRESENTATION_SIZE.inbox).toEqual({ width: 560, height: 620 })
   })
@@ -92,9 +92,9 @@ describe('presentationFor', () => {
 
 describe('presentationStyle', () => {
   it('emits only the dimensions the surface actually fixes', () => {
-    expect(presentationStyle(presentationFor('profile', desktopSurface))).toEqual(
-      { width: '300px' },
-    )
+    expect(
+      presentationStyle(presentationFor('profile', desktopSurface)),
+    ).toEqual({ width: '300px' })
   })
 
   it('emits both minimums for the session frame', () => {

@@ -73,9 +73,7 @@ export const endeavorTagsFromRawValues = (
     .filter((tag): tag is EndeavorTag => tag !== null)
 
 /** `Tag.attentionLevel`. */
-export const endeavorTagAttentionLevel = (
-  tag: EndeavorTag,
-): AttentionLevel => {
+export const endeavorTagAttentionLevel = (tag: EndeavorTag): AttentionLevel => {
   switch (tag) {
     case EndeavorTag.onDesk:
     case EndeavorTag.duringPerformanceActivity:

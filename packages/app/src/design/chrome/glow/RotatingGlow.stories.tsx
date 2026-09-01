@@ -64,7 +64,11 @@ export const OnTheFAB = {
 export const TwoHuesVersusOne = {
   name: 'Two hues versus one — why the second hue exists',
   render: () => (
-    <Stage theme="dark" height={280} label="Left: two hues (travels). Right: one (pulses).">
+    <Stage
+      theme="dark"
+      height={280}
+      label="Left: two hues (travels). Right: one (pulses)."
+    >
       <Centre>
         <RotatingGlow hues={['ringEmerald', 'glowLime']}>
           <LiquidGlassFAB glyph="plus" accessibilityLabel="Two hues" />

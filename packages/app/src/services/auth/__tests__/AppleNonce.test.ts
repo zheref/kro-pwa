@@ -48,7 +48,12 @@ describe('randomNonceString', () => {
     // would bias the distribution toward the first few symbols; rejection
     // sampling drops them and keeps drawing.
     const nonce = randomNonceString(scriptedCrypto([200, 255, 0, 1]), 4)
-    expect(nonce).toBe(APPLE_NONCE_CHARSET.charAt(0) + APPLE_NONCE_CHARSET.charAt(1) + APPLE_NONCE_CHARSET.charAt(0) + APPLE_NONCE_CHARSET.charAt(1))
+    expect(nonce).toBe(
+      APPLE_NONCE_CHARSET.charAt(0) +
+        APPLE_NONCE_CHARSET.charAt(1) +
+        APPLE_NONCE_CHARSET.charAt(0) +
+        APPLE_NONCE_CHARSET.charAt(1),
+    )
   })
 
   it('does not repeat itself across attempts (a fresh nonce per sign-in)', () => {
@@ -72,7 +77,10 @@ describe('sha256Nonce', () => {
   })
 
   it('is 64 lowercase hex characters for any input, so Apple always gets a well-formed nonce', async () => {
-    const digest = await sha256Nonce(realCrypto(), randomNonceString(realCrypto()))
+    const digest = await sha256Nonce(
+      realCrypto(),
+      randomNonceString(realCrypto()),
+    )
     expect(digest).toMatch(/^[0-9a-f]{64}$/)
   })
 })

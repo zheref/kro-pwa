@@ -71,7 +71,7 @@ describe('the shell shape', () => {
   })
 })
 
-describe('control ownership — canon\'s table, read through the store', () => {
+describe("control ownership — canon's table, read through the store", () => {
   it('gives the destination surface no Profile control on a handheld', () => {
     // Canon: the handheld installs Profile once at the tab's own chrome, so
     // the destination must not add a second one.
@@ -87,15 +87,17 @@ describe('control ownership — canon\'s table, read through the store', () => {
   })
 
   it('drops the control minimums from 44 to 28 only on a pointer surface', () => {
-    expect(selectLayout(rootWith(MainMocks.desktopLoaded)).minimumControlSide)
-      .toBe(28)
-    expect(selectLayout(rootWith(MainMocks.handheldLoaded)).minimumControlSide)
-      .toBe(44)
+    expect(
+      selectLayout(rootWith(MainMocks.desktopLoaded)).minimumControlSide,
+    ).toBe(28)
+    expect(
+      selectLayout(rootWith(MainMocks.handheldLoaded)).minimumControlSide,
+    ).toBe(44)
   })
 })
 
 describe('the navigation model', () => {
-  it('builds the shipping sidebar from the slice\'s gates', () => {
+  it("builds the shipping sidebar from the slice's gates", () => {
     const sections = selectSidebarSections(rootWith(MainMocks.desktopLoaded))
     expect(sections.map((section) => section.title)).toEqual([
       null,
@@ -137,9 +139,9 @@ describe('the selection', () => {
   })
 
   it('reports a selection that the current gates still render', () => {
-    expect(
-      selectIsSelectionReachable(rootWith(MainMocks.desktopLoaded)),
-    ).toBe(true)
+    expect(selectIsSelectionReachable(rootWith(MainMocks.desktopLoaded))).toBe(
+      true,
+    )
   })
 
   it('reports an unreachable selection when a flag closed under it', () => {
@@ -165,7 +167,9 @@ describe('the selection', () => {
 
 describe('selectPendingShellRoute — the one cross-slice read (RC-20)', () => {
   it('reports nothing while the capture slice has no intent', () => {
-    expect(selectPendingShellRoute(rootWith(MainMocks.desktopLoaded))).toBeNull()
+    expect(
+      selectPendingShellRoute(rootWith(MainMocks.desktopLoaded)),
+    ).toBeNull()
   })
 
   it('reshapes a Plan intent into shell terms, payload intact', () => {

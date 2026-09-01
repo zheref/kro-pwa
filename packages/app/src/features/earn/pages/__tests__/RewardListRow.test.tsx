@@ -129,7 +129,9 @@ describe('RewardListRow', () => {
     })
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    expect(document.querySelector('[data-slot="dropdown-menu-content"]')).toBeNull()
+    expect(
+      document.querySelector('[data-slot="dropdown-menu-content"]'),
+    ).toBeNull()
   })
 })
 

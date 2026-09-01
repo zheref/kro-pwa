@@ -1,6 +1,12 @@
 import type { LocalStore } from '@kro/core'
 import { EndeavorStatus } from '@kro/core'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
@@ -246,9 +252,9 @@ describe('prepare → complete → undo', () => {
     )
 
     await waitFor(() => {
-      expect(
-        store.getState().do.lanes.overdue.map((e) => e.id),
-      ).toContain(target.id)
+      expect(store.getState().do.lanes.overdue.map((e) => e.id)).toContain(
+        target.id,
+      )
     })
     expect(
       store.getState().do.lanes.completedToday.map((e) => e.id),
@@ -264,7 +270,9 @@ describe('mark-complete mode', () => {
     })
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     expect(store.getState().do.isInMarkCompleteMode).toBe(true)
     await waitFor(() => {
@@ -281,7 +289,9 @@ describe('mark-complete mode', () => {
     })
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     const done = await screen.findByTestId('do-done-control')
     expect(screen.queryByLabelText('Refresh')).toBeNull()
@@ -305,13 +315,15 @@ describe('mark-complete mode', () => {
     expect(store.getState().do.selectedCardKey).not.toBeNull()
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick action' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
 
     expect(store.getState().do.selectedCardKey).toBeNull()
   })
 })
 
-describe('the FAB\'s other three rows', () => {
+describe("the FAB's other three rows", () => {
   it('Clear Expired closes the expired lane and refetches the day', async () => {
     const { store } = mountPage()
     await waitFor(() => {
@@ -425,9 +437,7 @@ describe('the intents this surface hands to other features', () => {
     // The expanded list's rows carry the skip control inline, with no popover
     // between it and the intent — see the note in `DoToolbarFragment` about
     // what a Radix popper costs under jsdom.
-    await userEvent.click(
-      screen.getByRole('button', { name: /^Overdue, / }),
-    )
+    await userEvent.click(screen.getByRole('button', { name: /^Overdue, / }))
     const list = await screen.findByTestId('do-tasks-list')
     const target = store.getState().do.lanes.overdue[0]
     if (target === undefined) throw new Error('the Overdue lane is empty')

@@ -12,7 +12,10 @@ import type { Greeting, GreetingException } from '@kro/core'
 import type { GreetingState } from './GreetingFeature'
 
 /** One concern: a recipient was named, so the previous outcome is now stale. */
-export function withRecipientStamped(state: GreetingState, recipient: string): GreetingState {
+export function withRecipientStamped(
+  state: GreetingState,
+  recipient: string,
+): GreetingState {
   return { ...state, recipient, load: { kind: 'loading' }, detailOpen: false }
 }
 
@@ -21,11 +24,17 @@ export function withLoadingStarted(state: GreetingState): GreetingState {
   return { ...state, load: { kind: 'loading' } }
 }
 
-export function withGreetingLoaded(state: GreetingState, greeting: Greeting): GreetingState {
+export function withGreetingLoaded(
+  state: GreetingState,
+  greeting: Greeting,
+): GreetingState {
   return { ...state, load: { kind: 'loaded', greeting } }
 }
 
 /** One concern: the load failed, so nothing can be showing its detail. */
-export function withException(state: GreetingState, exception: GreetingException): GreetingState {
+export function withException(
+  state: GreetingState,
+  exception: GreetingException,
+): GreetingState {
   return { ...state, load: { kind: 'failed', exception }, detailOpen: false }
 }

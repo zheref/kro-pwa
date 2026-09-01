@@ -89,9 +89,7 @@ function Viewport({
   readonly width: number
   readonly children: ReactNode
 }) {
-  return (
-    <div style={{ width, height: 720, display: 'flex' }}>{children}</div>
-  )
+  return <div style={{ width, height: 720, display: 'flex' }}>{children}</div>
 }
 
 const page = (

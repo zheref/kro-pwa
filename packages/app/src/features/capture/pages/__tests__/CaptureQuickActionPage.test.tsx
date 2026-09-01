@@ -49,7 +49,7 @@ describe('it follows the selected destination', () => {
     expect(screen.getByRole('button', { name: 'Quick add' })).toBeTruthy()
   })
 
-  it('stands down on Plan, whose own menu is KC-IS-#19\'s', () => {
+  it("stands down on Plan, whose own menu is KC-IS-#19's", () => {
     mount(
       makeCaptureStore({
         endeavors: [],

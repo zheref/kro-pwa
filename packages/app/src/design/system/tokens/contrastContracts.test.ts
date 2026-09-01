@@ -55,7 +55,8 @@ describe('the suite measures the whole palette', () => {
     const unmeasured = new Set(Object.keys(UNMEASURED_ROLES))
 
     const unclassified = COLOR_ROLES.filter(
-      (role) => !covered.has(role) && !nonText.has(role) && !unmeasured.has(role),
+      (role) =>
+        !covered.has(role) && !nonText.has(role) && !unmeasured.has(role),
     )
     expect(
       unclassified,
@@ -64,18 +65,22 @@ describe('the suite measures the whole palette', () => {
 
     const doubled = COLOR_ROLES.filter(
       (role) =>
-        [covered.has(role), nonText.has(role), unmeasured.has(role)].filter(Boolean)
-          .length > 1,
+        [covered.has(role), nonText.has(role), unmeasured.has(role)].filter(
+          Boolean,
+        ).length > 1,
     )
     expect(doubled, 'a role may sit in exactly one bucket').toEqual([])
   })
 
   it('names no role in UNMEASURED_ROLES that tokens.css does not declare', () => {
     const declared = new Set<string>(COLOR_ROLES)
-    const stale = Object.keys(UNMEASURED_ROLES).filter((role) => !declared.has(role))
-    expect(stale, 'a stale exemption keeps a deleted role alive in the docs').toEqual(
-      [],
+    const stale = Object.keys(UNMEASURED_ROLES).filter(
+      (role) => !declared.has(role),
     )
+    expect(
+      stale,
+      'a stale exemption keeps a deleted role alive in the docs',
+    ).toEqual([])
   })
 
   it('gives every exemption a written reason', () => {

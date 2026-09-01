@@ -33,13 +33,11 @@ const renderTabBar = (
   )
 
 describe('the shipping tab bar', () => {
-  it('offers Search, Plan, Do and Earn — canon\'s iPhone set', () => {
+  it("offers Search, Plan, Do and Earn — canon's iPhone set", () => {
     renderTabBar()
 
     expect(
-      screen
-        .getAllByRole('button')
-        .map((button) => button.textContent),
+      screen.getAllByRole('button').map((button) => button.textContent),
     ).toEqual(['Search', 'Plan', 'Do', 'Earn'])
   })
 

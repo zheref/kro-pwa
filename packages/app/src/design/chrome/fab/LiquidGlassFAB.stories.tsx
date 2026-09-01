@@ -111,7 +111,11 @@ export const Disabled = {
           }}
         >
           <LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" />
-          <LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add (disabled)" disabled />
+          <LiquidGlassFAB
+            glyph="plus"
+            accessibilityLabel="Quick add (disabled)"
+            disabled
+          />
         </div>
       )}
     </BothSchemes>

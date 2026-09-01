@@ -83,7 +83,7 @@ describe('sheet on mobile, popover on desktop (acceptance criterion 2)', () => {
     ).toBe('sheet')
   })
 
-  it('pops it over the content at canon\'s 560 x 620 on a desktop', () => {
+  it("pops it over the content at canon's 560 x 620 on a desktop", () => {
     renderInbox({ presentation: 'popover', rowLayout: 'compactDesktop' })
 
     const panel = screen.getByTestId('inbox-surface')
@@ -127,7 +127,7 @@ describe('the two sections', () => {
     expect(screen.getByTestId('inbox-section-pending-triage')).toBeTruthy()
   })
 
-  it('counts the rows in the header, as canon\'s subtitle does', () => {
+  it("counts the rows in the header, as canon's subtitle does", () => {
     renderInbox({ presentation: 'inline' })
 
     // The overlay presentations also announce the count through the dialog's
@@ -136,14 +136,16 @@ describe('the two sections', () => {
     expect(screen.getByText('3 endeavors')).toBeTruthy()
   })
 
-  it('gives every row canon\'s two explicit buttons, which are not swipe bindings', () => {
+  it("gives every row canon's two explicit buttons, which are not swipe bindings", () => {
     renderInbox()
 
     expect(
       screen.getByRole('button', { name: 'Triage Draft the announcement' }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     ).toBeTruthy()
   })
 })
@@ -208,7 +210,9 @@ describe('Add for Today', () => {
     renderInbox({ onRequestAddForToday })
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
 
     expect(onRequestAddForToday).toHaveBeenCalledWith(justCreated.id)
@@ -271,7 +275,9 @@ describe('the row operations come from the vista, not from this file', () => {
     // swipe and nothing on the leading one; the surface renders exactly those,
     // labelled with the vista's own strings.
     const created = screen.getByTestId('inbox-section-just-created')
-    const trailing = created.querySelector('[data-slot="endeavor-swipe-trailing"]')
+    const trailing = created.querySelector(
+      '[data-slot="endeavor-swipe-trailing"]',
+    )
     expect(trailing).not.toBeNull()
     expect(
       [...(trailing?.querySelectorAll('button') ?? [])].map((button) =>
@@ -302,7 +308,7 @@ describe('the row operations come from the vista, not from this file', () => {
     )
   })
 
-  it('raises the Triage intent and stops there — the carousel is #26\'s', async () => {
+  it("raises the Triage intent and stops there — the carousel is #26's", async () => {
     const onTapTriage = vi.fn()
     renderInbox({ onTapTriage })
 

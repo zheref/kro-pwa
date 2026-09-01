@@ -68,7 +68,7 @@ describe('Sheet', () => {
    * this in a browser; the fix is an inline style, which nothing in a
    * stylesheet can out-rank.
    */
-  it('forces position:fixed inline — className alone loses to `.kro-glass`\'s unlayered CSS', () => {
+  it("forces position:fixed inline — className alone loses to `.kro-glass`'s unlayered CSS", () => {
     render(<InboxSheet />)
 
     expect(screen.getByRole('dialog').style.position).toBe('fixed')

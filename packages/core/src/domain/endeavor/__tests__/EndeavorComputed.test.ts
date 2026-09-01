@@ -50,9 +50,9 @@ describe('isCompleted vs hasBeenCompleted', () => {
       EndeavorStatus.qa,
       EndeavorStatus.skipped,
     ]) {
-      expect(
-        hasBeenCompleted({ ...endeavorMocks.plannedTask, status }),
-      ).toBe(true)
+      expect(hasBeenCompleted({ ...endeavorMocks.plannedTask, status })).toBe(
+        true,
+      )
     }
   })
 
@@ -65,7 +65,9 @@ describe('isCompleted vs hasBeenCompleted', () => {
       EndeavorStatus.delegated,
       EndeavorStatus.blocked,
     ]) {
-      expect(hasBeenCompleted({ ...endeavorMocks.plannedTask, status })).toBe(false)
+      expect(hasBeenCompleted({ ...endeavorMocks.plannedTask, status })).toBe(
+        false,
+      )
     }
   })
 
@@ -90,7 +92,9 @@ describe('isEvent', () => {
 
 describe('endOf', () => {
   it('adds the duration to the start', () => {
-    expect(endOf(endeavorMocks.todayEvent)).toEqual(new Date(2026, 0, 15, 8, 30, 0))
+    expect(endOf(endeavorMocks.todayEvent)).toEqual(
+      new Date(2026, 0, 15, 8, 30, 0),
+    )
   })
 
   it('is null when there is no start', () => {
@@ -98,9 +102,7 @@ describe('endOf', () => {
   })
 
   it('is null when there is no duration', () => {
-    expect(
-      endOf({ ...endeavorMocks.todayEvent, duration: null }),
-    ).toBeNull()
+    expect(endOf({ ...endeavorMocks.todayEvent, duration: null })).toBeNull()
   })
 })
 
@@ -219,7 +221,9 @@ describe('isDueToday', () => {
   })
 
   it('is false for yesterday and for tomorrow', () => {
-    expect(isDueToday(endeavorMocks.overdueTouristReminder, MOCK_NOW)).toBe(false)
+    expect(isDueToday(endeavorMocks.overdueTouristReminder, MOCK_NOW)).toBe(
+      false,
+    )
     expect(
       isDueToday(
         { ...endeavorMocks.plannedTask, due: new Date(2026, 0, 16, 9, 0, 0) },
@@ -253,7 +257,9 @@ describe('isDueSoon', () => {
   })
 
   it('is false for an OVERDUE endeavor — Overdue and Due Soon are separate lanes', () => {
-    expect(isDueSoon(endeavorMocks.overdueTouristReminder, MOCK_NOW)).toBe(false)
+    expect(isDueSoon(endeavorMocks.overdueTouristReminder, MOCK_NOW)).toBe(
+      false,
+    )
     expect(isDue(endeavorMocks.overdueTouristReminder, MOCK_NOW)).toBe(true)
   })
 
@@ -278,7 +284,10 @@ describe('isRecent', () => {
   it('is false for a creation stamp in the future', () => {
     expect(
       isRecent(
-        { ...endeavorMocks.plannedTask, createdAt: new Date(2026, 0, 16, 9, 0, 0) },
+        {
+          ...endeavorMocks.plannedTask,
+          createdAt: new Date(2026, 0, 16, 9, 0, 0),
+        },
         MOCK_NOW,
       ),
     ).toBe(false)
@@ -333,7 +342,11 @@ describe('isShadowing', () => {
       isShadowing(kroSide, {
         ...captured,
         shadows: [
-          { ...shadowMocks.googleEvent, group: 'Work', kind: EndeavorKind.task },
+          {
+            ...shadowMocks.googleEvent,
+            group: 'Work',
+            kind: EndeavorKind.task,
+          },
         ],
       }),
     ).toBe(true)
@@ -346,7 +359,9 @@ describe('exposesEvent', () => {
   })
 
   it('is false for an id no shadow carries', () => {
-    expect(exposesEvent(endeavorMocks.todayEvent, 'gcal-event-0000')).toBe(false)
+    expect(exposesEvent(endeavorMocks.todayEvent, 'gcal-event-0000')).toBe(
+      false,
+    )
   })
 
   it('is false when the matching shadow is not a calendarEvent', () => {
@@ -357,8 +372,8 @@ describe('exposesEvent', () => {
 
   it('is false when there are no shadows at all', () => {
     expect(exposesEvent(endeavorMocks.plannedTask, 'anything')).toBe(false)
-    expect(exposesEvent(endeavorMocks.completedWithPerformances, 'anything')).toBe(
-      false,
-    )
+    expect(
+      exposesEvent(endeavorMocks.completedWithPerformances, 'anything'),
+    ).toBe(false)
   })
 })

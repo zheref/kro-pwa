@@ -14,7 +14,13 @@ describe('the user fixtures', () => {
     // Asserted on the *keys*, not on a substring of the serialised value: the
     // provider raw value is legitimately `email_password`, and a naive
     // substring check would flag it while missing an actual `accessToken`.
-    const forbiddenKeys = ['token', 'accesstoken', 'refreshtoken', 'password', 'secret']
+    const forbiddenKeys = [
+      'token',
+      'accesstoken',
+      'refreshtoken',
+      'password',
+      'secret',
+    ]
     for (const user of Object.values(authUserMocks)) {
       for (const key of Object.keys(user)) {
         expect(forbiddenKeys).not.toContain(key.toLowerCase())
@@ -24,7 +30,8 @@ describe('the user fixtures', () => {
 
   it('uses only example.com addresses, so no real account can leak into a fixture', () => {
     for (const user of Object.values(authUserMocks)) {
-      for (const email of user.emails) expect(email.endsWith('@example.com')).toBe(true)
+      for (const email of user.emails)
+        expect(email.endsWith('@example.com')).toBe(true)
     }
   })
 
@@ -48,7 +55,13 @@ describe('the state fixtures', () => {
 
   it('cover the whole session lifecycle, so no arm is untested for lack of a fixture', () => {
     const kinds = Object.values(AuthMocks).map((state) => state.session.kind)
-    for (const kind of ['unknown', 'signedOut', 'authenticating', 'signedIn', 'failed']) {
+    for (const kind of [
+      'unknown',
+      'signedOut',
+      'authenticating',
+      'signedIn',
+      'failed',
+    ]) {
       expect(kinds).toContain(kind)
     }
   })
@@ -72,7 +85,9 @@ describe('the state fixtures', () => {
   })
 
   it('cover a sign-out that still owes the platform tier its withdrawal', () => {
-    expect(AuthMocks.signedOutWithPendingIntents.pendingSignOutIntents).toHaveLength(1)
+    expect(
+      AuthMocks.signedOutWithPendingIntents.pendingSignOutIntents,
+    ).toHaveLength(1)
   })
 
   it('never carry a nonce, which belongs to one attempt and not to a fixture', () => {

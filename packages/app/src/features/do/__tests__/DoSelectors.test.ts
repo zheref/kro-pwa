@@ -77,7 +77,8 @@ describe('selectIsDoLoading', () => {
 describe('selectDoException', () => {
   it('surfaces the typed exception after a failed refresh', () => {
     expect(
-      selectDoException(rootWith(doStateMocks.failedRefreshKeepingTheDay))?.kind,
+      selectDoException(rootWith(doStateMocks.failedRefreshKeepingTheDay))
+        ?.kind,
     ).toBe('fetchFailed')
   })
 
@@ -92,7 +93,9 @@ describe('selectDoException', () => {
 
 describe('selectHasNoDoEndeavors', () => {
   it('is true for a genuinely empty day', () => {
-    expect(selectHasNoDoEndeavors(rootWith(doStateMocks.loadedEmptyDay))).toBe(true)
+    expect(selectHasNoDoEndeavors(rootWith(doStateMocks.loadedEmptyDay))).toBe(
+      true,
+    )
   })
 
   it('is false for a populated day', () => {
@@ -182,9 +185,9 @@ describe('selectDoFeaturedNowLane', () => {
   })
 
   it('is empty when nothing scores', () => {
-    expect(selectDoFeaturedNowLane(rootWith(doStateMocks.loadedEmptyDay))).toEqual(
-      [],
-    )
+    expect(
+      selectDoFeaturedNowLane(rootWith(doStateMocks.loadedEmptyDay)),
+    ).toEqual([])
   })
 })
 
@@ -231,7 +234,9 @@ describe('the ring selectors', () => {
 
 describe('selectAreDoRingsVisible', () => {
   it('is true on the ordinary shipping configuration', () => {
-    expect(selectAreDoRingsVisible(rootWith(doStateMocks.ringsEnabled))).toBe(true)
+    expect(selectAreDoRingsVisible(rootWith(doStateMocks.ringsEnabled))).toBe(
+      true,
+    )
   })
 
   it('is false while bulk mark-complete mode is on', () => {
@@ -308,7 +313,9 @@ describe('selectDoNextActionableCardKey', () => {
 describe('selectDoClearExpiredTargets', () => {
   it('names every expired endeavor on the day', () => {
     expect(
-      selectDoClearExpiredTargets(loaded).map((endeavor) => endeavor.id).sort(),
+      selectDoClearExpiredTargets(loaded)
+        .map((endeavor) => endeavor.id)
+        .sort(),
     ).toEqual(
       [
         doEndeavorFixtures.expiredLastNight.id,

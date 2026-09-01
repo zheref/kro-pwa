@@ -70,10 +70,14 @@ describe('PlanVisibilityPanelFragment', () => {
     })
 
     expect(
-      screen.getByRole('switch', { name: 'Habits' }).getAttribute('aria-checked'),
+      screen
+        .getByRole('switch', { name: 'Habits' })
+        .getAttribute('aria-checked'),
     ).toBe('false')
     expect(
-      screen.getByRole('switch', { name: 'Tasks' }).getAttribute('aria-checked'),
+      screen
+        .getByRole('switch', { name: 'Tasks' })
+        .getAttribute('aria-checked'),
     ).toBe('true')
   })
 
@@ -81,7 +85,9 @@ describe('PlanVisibilityPanelFragment', () => {
     const onToggle = vi.fn()
     mount({ onToggle })
 
-    await userEvent.click(screen.getByRole('switch', { name: 'Google Calendar' }))
+    await userEvent.click(
+      screen.getByRole('switch', { name: 'Google Calendar' }),
+    )
 
     expect(onToggle).toHaveBeenCalledWith({
       axis: 'host',

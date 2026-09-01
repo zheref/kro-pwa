@@ -137,9 +137,7 @@ export const AddingAProject = {
 export const TouchSized = {
   render: () => (
     <Stage>
-      <SidebarFragment
-        {...props({ layout: doSurfaceLayout(tabletSurface) })}
-      />
+      <SidebarFragment {...props({ layout: doSurfaceLayout(tabletSurface) })} />
     </Stage>
   ),
 }

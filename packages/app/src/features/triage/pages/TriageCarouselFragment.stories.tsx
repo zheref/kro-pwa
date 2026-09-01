@@ -42,20 +42,22 @@ function InboxStandIn() {
       }}
     >
       <p style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Inbox</p>
-      {['Draft Q3 product plan', 'Call the letting agent', 'Renew the domain'].map(
-        (title) => (
-          <div
-            key={title}
-            style={{
-              padding: 12,
-              borderRadius: 'var(--kro-radius-card)',
-              background: 'var(--kro-color-back-inner)',
-            }}
-          >
-            {title}
-          </div>
-        ),
-      )}
+      {[
+        'Draft Q3 product plan',
+        'Call the letting agent',
+        'Renew the domain',
+      ].map((title) => (
+        <div
+          key={title}
+          style={{
+            padding: 12,
+            borderRadius: 'var(--kro-radius-card)',
+            background: 'var(--kro-color-back-inner)',
+          }}
+        >
+          {title}
+        </div>
+      ))}
     </div>
   )
 }
@@ -85,7 +87,11 @@ const surface = (
 export const Closed = {
   render: () =>
     surface(
-      <TriageCarouselFragment isPresenting={false} onDismiss={noop} carouselWidth={390}>
+      <TriageCarouselFragment
+        isPresenting={false}
+        onDismiss={noop}
+        carouselWidth={390}
+      >
         {null}
       </TriageCarouselFragment>,
     ),

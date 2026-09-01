@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { isThirstVotable, thirstFeatureBlurb, thirstFeatureTitle } from '../ThirstRegistry'
+import {
+  isThirstVotable,
+  thirstFeatureBlurb,
+  thirstFeatureTitle,
+} from '../ThirstRegistry'
 
 describe('isThirstVotable', () => {
   it.each(['matrix', 'board', 'blueprints', 'habits'])(
-    '%s is votable — one of #35\'s four routes',
+    "%s is votable — one of #35's four routes",
     (key) => {
       expect(isThirstVotable(key)).toBe(true)
     },

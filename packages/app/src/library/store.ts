@@ -207,7 +207,8 @@ const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
  * from it are the same instance — a second construction would be a second
  * in-flight cache the day the service grows one.
  */
-const liveGoogleCalendar: GoogleCalendarService = makeLiveGoogleCalendarService()
+const liveGoogleCalendar: GoogleCalendarService =
+  makeLiveGoogleCalendarService()
 
 /** The production bindings — the default `makeStore()` argument. */
 export const liveThunkExtra: ThunkExtra = {
@@ -221,7 +222,9 @@ export const liveThunkExtra: ThunkExtra = {
   documentTitleService: liveDocumentTitleService,
   signOutWipe,
   featureFlags: liveFeatureFlags,
-  authService: makeLiveAuthService({ clientProvider: liveSupabaseClientProvider }),
+  authService: makeLiveAuthService({
+    clientProvider: liveSupabaseClientProvider,
+  }),
   settingsSync: makeLiveSettingsSyncService({
     clientProvider: liveSupabaseClientProvider,
   }),
@@ -236,7 +239,9 @@ export const liveThunkExtra: ThunkExtra = {
   navigation: stubbedNavigationService,
   googleCalendar: liveGoogleCalendar,
   googleCalendarPlanHost: makeGoogleCalendarPlanHost(liveGoogleCalendar),
-  thirstService: makeLiveThirstService({ clientProvider: liveSupabaseClientProvider }),
+  thirstService: makeLiveThirstService({
+    clientProvider: liveSupabaseClientProvider,
+  }),
 }
 
 /**
@@ -272,7 +277,9 @@ export const stubbedThunkExtra: ThunkExtra = {
   // what a user who has never connected sees. A suite that wants events builds
   // its own binding with `makeStubbedGoogleCalendarService({ connection: … })`.
   googleCalendar: stubbedGoogleCalendarService,
-  googleCalendarPlanHost: makeGoogleCalendarPlanHost(stubbedGoogleCalendarService),
+  googleCalendarPlanHost: makeGoogleCalendarPlanHost(
+    stubbedGoogleCalendarService,
+  ),
   // Signed out, no counts anywhere — a suite that asserts on shipping
   // behaviour sees the same "sign in to vote" state a fresh visitor does. A
   // suite that wants a votable/voted surface builds its own binding with
@@ -306,7 +313,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
         // widened to accept `Date` and nothing else; class instances, functions
         // and promises still fail it.
         serializableCheck: {
-          isSerializable: (value: unknown) => value instanceof Date || isPlain(value),
+          isSerializable: (value: unknown) =>
+            value instanceof Date || isPlain(value),
         },
       }),
   })

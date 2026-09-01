@@ -93,17 +93,14 @@ export function ActiveToastHost({
     timerRef.current = null
   }, [])
 
-  const dismiss = useCallback(
-    (id?: string) => {
-      setToast((showing) => {
-        // A stale dismiss — an undo handler firing after a newer toast replaced
-        // the one it belonged to — must not take the newer toast down with it.
-        if (id !== undefined && showing?.id !== id) return showing
-        return null
-      })
-    },
-    [],
-  )
+  const dismiss = useCallback((id?: string) => {
+    setToast((showing) => {
+      // A stale dismiss — an undo handler firing after a newer toast replaced
+      // the one it belonged to — must not take the newer toast down with it.
+      if (id !== undefined && showing?.id !== id) return showing
+      return null
+    })
+  }, [])
 
   const enqueue = useCallback((input: ActiveToastInput) => {
     const next = toActiveToast(input)

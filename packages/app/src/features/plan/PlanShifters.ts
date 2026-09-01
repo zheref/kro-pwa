@@ -299,7 +299,10 @@ export function withPlanPreloadSettled(
   args: { readonly centerDayKey: PlanDayKey },
 ): PlanState {
   if (state.activity.preloadCenterDayKey !== args.centerDayKey) return state
-  return { ...state, activity: { ...state.activity, preloadCenterDayKey: null } }
+  return {
+    ...state,
+    activity: { ...state.activity, preloadCenterDayKey: null },
+  }
 }
 
 /**
@@ -379,7 +382,9 @@ export function withEditCommitApplied(
   const authoritativeDayKey = authoritativeDayKeyOf(state)
 
   const existing =
-    authoritativeEventsOf(state).find((event) => event.id === commit.endeavorId) ??
+    authoritativeEventsOf(state).find(
+      (event) => event.id === commit.endeavorId,
+    ) ??
     Object.values(state.preloadedDays)
       .flat()
       .find((event) => event.id === commit.endeavorId) ??

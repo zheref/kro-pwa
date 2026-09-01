@@ -133,8 +133,14 @@ export const findOperationBindings: Record<
   EndeavorOperation,
   FindOperationBinding
 > = {
-  [Operation.markComplete]: local(Operation.markComplete, OperationEffect.complete),
-  [Operation.markIncomplete]: local(Operation.markIncomplete, OperationEffect.reopen),
+  [Operation.markComplete]: local(
+    Operation.markComplete,
+    OperationEffect.complete,
+  ),
+  [Operation.markIncomplete]: local(
+    Operation.markIncomplete,
+    OperationEffect.reopen,
+  ),
   [Operation.defer]: local(Operation.defer, OperationEffect.defer),
   [Operation.delete]: local(Operation.delete, OperationEffect.softDelete),
   [Operation.archive]: local(Operation.archive, OperationEffect.archive),
@@ -145,7 +151,10 @@ export const findOperationBindings: Record<
   [Operation.startSession]: intent(Operation.startSession, 'session surface'),
   // Do's pre-execution overlay "Start now" — the same hand-off as
   // `startSession`, raised from the overlay rather than a row gesture.
-  [Operation.execute]: intent(Operation.execute, 'session surface (Do prep overlay)'),
+  [Operation.execute]: intent(
+    Operation.execute,
+    'session surface (Do prep overlay)',
+  ),
   // The editor is the Endeavor Detail slice's, registered beside this one.
   [Operation.edit]: intent(Operation.edit, 'endeavorDetail slice'),
   // Web has `navigator.share`, but a platform capability is a Service behind
@@ -153,7 +162,10 @@ export const findOperationBindings: Record<
   [Operation.share]: intent(Operation.share, 'share Service (not wired yet)'),
   [Operation.triage]: intent(Operation.triage, 'triage surface'),
   // The suggestion lane is Do's own state; Find can only ask.
-  [Operation.dismissSuggestion]: intent(Operation.dismissSuggestion, 'do slice'),
+  [Operation.dismissSuggestion]: intent(
+    Operation.dismissSuggestion,
+    'do slice',
+  ),
   [Operation.viewDetail]: intent(Operation.viewDetail, 'endeavorDetail slice'),
 }
 

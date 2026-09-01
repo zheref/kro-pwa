@@ -28,7 +28,9 @@ const snapshot = {
 
 describe('withCatalogLoadStarted', () => {
   it('moves load to loading', () => {
-    expect(withCatalogLoadStarted(initialEarnState).load).toEqual({ kind: 'loading' })
+    expect(withCatalogLoadStarted(initialEarnState).load).toEqual({
+      kind: 'loading',
+    })
   })
 
   it('leaves the retained catalog untouched (typical)', () => {
@@ -60,7 +62,10 @@ describe('withCatalogInstalled', () => {
   })
 
   it('replaces a previously failed load (typical retry)', () => {
-    const failed = withException(initialEarnState, EarnExceptions.catalogLoadFailed('x'))
+    const failed = withException(
+      initialEarnState,
+      EarnExceptions.catalogLoadFailed('x'),
+    )
     const next = withCatalogInstalled(failed, snapshot)
     expect(next.load).toEqual({ kind: 'loaded' })
   })
@@ -129,7 +134,9 @@ describe('withRewardDraftOpened', () => {
       defaultRewardThreshold: 250,
       pointsFormula: 'slidingScale',
     })
-    expect(withRewardDraftOpened(withPrefs).addRewardDraft.pointsRequired).toBe(250)
+    expect(withRewardDraftOpened(withPrefs).addRewardDraft.pointsRequired).toBe(
+      250,
+    )
   })
 
   it('resets a stale draft rather than reusing it (boundary)', () => {
@@ -145,7 +152,10 @@ describe('withRewardDraftClosed', () => {
   })
 
   it('resets the draft to blank', () => {
-    const dirty = withDraftTitleChanged(withRewardDraftOpened(initialEarnState), 'x')
+    const dirty = withDraftTitleChanged(
+      withRewardDraftOpened(initialEarnState),
+      'x',
+    )
     expect(withRewardDraftClosed(dirty).addRewardDraft.title).toBe('')
   })
 
@@ -156,58 +166,79 @@ describe('withRewardDraftClosed', () => {
 
 describe('withDraftTitleChanged', () => {
   it('sets the title', () => {
-    expect(withDraftTitleChanged(initialEarnState, 'Movie Night').addRewardDraft.title).toBe(
-      'Movie Night',
-    )
+    expect(
+      withDraftTitleChanged(initialEarnState, 'Movie Night').addRewardDraft
+        .title,
+    ).toBe('Movie Night')
   })
 
   it('accepts an empty string (validated later, at confirm)', () => {
-    expect(withDraftTitleChanged(initialEarnState, '').addRewardDraft.title).toBe('')
+    expect(
+      withDraftTitleChanged(initialEarnState, '').addRewardDraft.title,
+    ).toBe('')
   })
 
   it('leaves other draft fields untouched', () => {
     const withPoints = withDraftPointsChanged(initialEarnState, 300)
-    expect(withDraftTitleChanged(withPoints, 'x').addRewardDraft.pointsRequired).toBe(300)
+    expect(
+      withDraftTitleChanged(withPoints, 'x').addRewardDraft.pointsRequired,
+    ).toBe(300)
   })
 })
 
 describe('withDraftGlyphChanged', () => {
   it('sets a short glyph as-is', () => {
-    expect(withDraftGlyphChanged(initialEarnState, '🎮').addRewardDraft.glyph).toBe('🎮')
+    expect(
+      withDraftGlyphChanged(initialEarnState, '🎮').addRewardDraft.glyph,
+    ).toBe('🎮')
   })
 
   it('truncates to two code points (canon: `String(glyph.prefix(2))`)', () => {
-    expect(withDraftGlyphChanged(initialEarnState, 'abc').addRewardDraft.glyph).toBe('ab')
+    expect(
+      withDraftGlyphChanged(initialEarnState, 'abc').addRewardDraft.glyph,
+    ).toBe('ab')
   })
 
   it('accepts an empty glyph — the producer substitutes the default at confirm (boundary)', () => {
-    expect(withDraftGlyphChanged(initialEarnState, '').addRewardDraft.glyph).toBe('')
+    expect(
+      withDraftGlyphChanged(initialEarnState, '').addRewardDraft.glyph,
+    ).toBe('')
   })
 })
 
 describe('withDraftPointsChanged', () => {
   it('sets a positive value', () => {
-    expect(withDraftPointsChanged(initialEarnState, 500).addRewardDraft.pointsRequired).toBe(500)
+    expect(
+      withDraftPointsChanged(initialEarnState, 500).addRewardDraft
+        .pointsRequired,
+    ).toBe(500)
   })
 
   it('clamps a negative value to zero (canon: `max(0, points)`)', () => {
-    expect(withDraftPointsChanged(initialEarnState, -50).addRewardDraft.pointsRequired).toBe(0)
+    expect(
+      withDraftPointsChanged(initialEarnState, -50).addRewardDraft
+        .pointsRequired,
+    ).toBe(0)
   })
 
   it('accepts exactly zero (boundary)', () => {
-    expect(withDraftPointsChanged(initialEarnState, 0).addRewardDraft.pointsRequired).toBe(0)
+    expect(
+      withDraftPointsChanged(initialEarnState, 0).addRewardDraft.pointsRequired,
+    ).toBe(0)
   })
 })
 
 describe('withDraftNotesChanged', () => {
   it('sets non-empty notes', () => {
-    expect(withDraftNotesChanged(initialEarnState, 'save up').addRewardDraft.notes).toBe(
-      'save up',
-    )
+    expect(
+      withDraftNotesChanged(initialEarnState, 'save up').addRewardDraft.notes,
+    ).toBe('save up')
   })
 
   it('maps an empty string to null (canon: `notes.isEmpty ? nil : notes`)', () => {
-    expect(withDraftNotesChanged(initialEarnState, '').addRewardDraft.notes).toBeNull()
+    expect(
+      withDraftNotesChanged(initialEarnState, '').addRewardDraft.notes,
+    ).toBeNull()
   })
 
   it('clears previously set notes back to null', () => {
@@ -241,12 +272,16 @@ describe('withRewardAdded', () => {
 describe('withRewardRemoved', () => {
   it('removes the matching reward', () => {
     const withOne = withCatalogInstalled(initialEarnState, snapshot)
-    expect(withRewardRemoved(withOne, rewardMocks.bobaTea.id).rewards).toEqual([])
+    expect(withRewardRemoved(withOne, rewardMocks.bobaTea.id).rewards).toEqual(
+      [],
+    )
   })
 
   it('is a no-op for an id not in the catalog', () => {
     const withOne = withCatalogInstalled(initialEarnState, snapshot)
-    expect(withRewardRemoved(withOne, 'ghost').rewards).toEqual(snapshot.rewards)
+    expect(withRewardRemoved(withOne, 'ghost').rewards).toEqual(
+      snapshot.rewards,
+    )
   })
 
   it('empties the last reward without error (boundary)', () => {
@@ -254,19 +289,25 @@ describe('withRewardRemoved', () => {
       ...snapshot,
       rewards: [rewardMocks.bobaTea],
     })
-    expect(withRewardRemoved(withOne, rewardMocks.bobaTea.id).rewards).toHaveLength(0)
+    expect(
+      withRewardRemoved(withOne, rewardMocks.bobaTea.id).rewards,
+    ).toHaveLength(0)
   })
 })
 
 describe('withClaimRequested / withClaimCancelled', () => {
   it('opens the confirm sheet on the given id', () => {
-    expect(withClaimRequested(initialEarnState, rewardMocks.bobaTea.id).claimingRewardId).toBe(
-      rewardMocks.bobaTea.id,
-    )
+    expect(
+      withClaimRequested(initialEarnState, rewardMocks.bobaTea.id)
+        .claimingRewardId,
+    ).toBe(rewardMocks.bobaTea.id)
   })
 
   it('cancel clears the confirm sheet', () => {
-    const requested = withClaimRequested(initialEarnState, rewardMocks.bobaTea.id)
+    const requested = withClaimRequested(
+      initialEarnState,
+      rewardMocks.bobaTea.id,
+    )
     expect(withClaimCancelled(requested).claimingRewardId).toBeNull()
   })
 
@@ -284,8 +325,13 @@ describe('withClaimApplied', () => {
   })
 
   it('clears the confirm sheet', () => {
-    const requested = withClaimRequested(initialEarnState, rewardMocks.bobaTea.id)
-    expect(withClaimApplied(requested, rewardMocks.bobaTea.id).claimingRewardId).toBeNull()
+    const requested = withClaimRequested(
+      initialEarnState,
+      rewardMocks.bobaTea.id,
+    )
+    expect(
+      withClaimApplied(requested, rewardMocks.bobaTea.id).claimingRewardId,
+    ).toBeNull()
   })
 
   it('is idempotent on an already-claimed id — canon: guard not already present', () => {

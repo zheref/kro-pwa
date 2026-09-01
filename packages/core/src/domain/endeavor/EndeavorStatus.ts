@@ -135,9 +135,7 @@ export const endeavorStatusDisplayName = (status: EndeavorStatus): string => {
  * `Status.captionPrefix` — verbatim, **trailing space included**, because the
  * caption is `captionPrefix + formattedDate` and the space is the separator.
  */
-export const endeavorStatusCaptionPrefix = (
-  status: EndeavorStatus,
-): string => {
+export const endeavorStatusCaptionPrefix = (status: EndeavorStatus): string => {
   switch (status) {
     case EndeavorStatus.blocked:
       return 'Blocked Since '

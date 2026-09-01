@@ -126,7 +126,10 @@ export const withDraftNotesChanged = (
  * top (canon's `rewards.insert(_, at: 0)`), close the sheet and clear the
  * draft — harmless when the sheet was never open (the suggestion path).
  */
-export const withRewardAdded = (state: EarnState, reward: Reward): EarnState => ({
+export const withRewardAdded = (
+  state: EarnState,
+  reward: Reward,
+): EarnState => ({
   ...state,
   load: { kind: 'loaded' },
   rewards: [reward, ...state.rewards],

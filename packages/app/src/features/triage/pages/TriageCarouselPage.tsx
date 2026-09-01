@@ -255,9 +255,7 @@ export function TriageCarouselPage({
     // this repo answers "which emoji is this endeavor", so the two surfaces
     // cannot disagree about the glyph in the header.
     const endeavorSymbol =
-      known === undefined
-        ? TRIAGE_DEFAULT_SYMBOL
-        : computedSymbol(known.title)
+      known === undefined ? TRIAGE_DEFAULT_SYMBOL : computedSymbol(known.title)
 
     const flag = track(dispatch(resolveTriageEditReachabilityThunk()))
 
@@ -272,7 +270,8 @@ export function TriageCarouselPage({
             now: new Date(),
             nextFreeSlotToday: request.nextFreeSlotToday,
             endeavorSymbol,
-            isEditReachable: result !== null && result.ok ? result.value : false,
+            isEditReachable:
+              result !== null && result.ok ? result.value : false,
           }),
         ),
       )
@@ -294,7 +293,9 @@ export function TriageCarouselPage({
     if (outcome === null) return
     const now = new Date()
 
-    const save = async (decision: Parameters<typeof saveTriageDecisionThunk>[0]['decision']) => {
+    const save = async (
+      decision: Parameters<typeof saveTriageDecisionThunk>[0]['decision'],
+    ) => {
       const action = await dispatch(saveTriageDecisionThunk({ decision, now }))
       const result = saveTriageDecisionThunk.fulfilled.match(action)
         ? action.payload

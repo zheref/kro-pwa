@@ -76,9 +76,7 @@ export const Handheld = {
 export const MarkCompleteMode = {
   render: () => (
     <Stage width={1120}>
-      <DoSurfaceFragment
-        {...doSurfaceProps(doSurfaceMocks.markCompleteMode)}
-      />
+      <DoSurfaceFragment {...doSurfaceProps(doSurfaceMocks.markCompleteMode)} />
     </Stage>
   ),
 }

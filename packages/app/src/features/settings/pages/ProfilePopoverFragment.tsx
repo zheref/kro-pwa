@@ -132,7 +132,11 @@ export function ProfilePopoverFragment({
           label="All Endeavors"
           onClick={onTapAllEndeavors}
         />
-        <MenuRow glyph="creditcard" label="Subscription" onClick={onTapSettings} />
+        <MenuRow
+          glyph="creditcard"
+          label="Subscription"
+          onClick={onTapSettings}
+        />
         <MenuRow glyph="gearshape" label="Settings" onClick={onTapSettings} />
         {isSignedIn ? (
           <>

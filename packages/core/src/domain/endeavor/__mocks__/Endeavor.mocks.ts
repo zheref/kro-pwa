@@ -163,7 +163,11 @@ export const endeavorMocks = {
     status: EndeavorStatus.pending,
     due: at(13, 9, 0),
     defers: [
-      makeDefer({ made: at(10, 9, 0), reason: 'Office closed', target: at(12, 9, 0) }),
+      makeDefer({
+        made: at(10, 9, 0),
+        reason: 'Office closed',
+        target: at(12, 9, 0),
+      }),
       makeDefer({ made: at(12, 9, 0), reason: null, target: at(13, 9, 0) }),
     ],
     createdAt: at(1, 7, 0),
@@ -219,7 +223,10 @@ export const endeavorMocks = {
             startedAt: at(9, 18, 30),
             endedAt: at(9, 18, 55),
           }),
-          makePerformFragment({ startedAt: at(9, 19, 0), endedAt: at(9, 19, 42) }),
+          makePerformFragment({
+            startedAt: at(9, 19, 0),
+            endedAt: at(9, 19, 42),
+          }),
         ],
         rewardPoints: 40,
         followUpNotes: 'Ordered the wired one after all',
@@ -238,4 +245,5 @@ export const endeavorMocks = {
 } satisfies Record<string, Endeavor>
 
 /** Every fixture, for suites that assert a property across the whole spread. */
-export const allEndeavorMocks: readonly Endeavor[] = Object.values(endeavorMocks)
+export const allEndeavorMocks: readonly Endeavor[] =
+  Object.values(endeavorMocks)

@@ -210,7 +210,9 @@ export const applyOverdueAlertReconciliation = async (
   if (plan.withdraw.length > 0) await ports.withdraw(plan.withdraw)
   for (const alert of plan.schedule) await ports.schedule(alert)
 
-  const pendingAfter = (await ports.pendingIdentifiers()).filter(isOverdueAlertId)
+  const pendingAfter = (await ports.pendingIdentifiers()).filter(
+    isOverdueAlertId,
+  )
 
   return {
     permission,

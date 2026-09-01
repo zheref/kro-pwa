@@ -82,8 +82,13 @@ export const sessionDialState = (params: {
   readonly elapsedDuration: TimeIntervalSeconds
   readonly remainingDuration: TimeIntervalSeconds
 }): SessionDialState => {
-  const { phase, isCountdown, targetDuration, elapsedDuration, remainingDuration } =
-    params
+  const {
+    phase,
+    isCountdown,
+    targetDuration,
+    elapsedDuration,
+    remainingDuration,
+  } = params
   if (phase === SessionPhase.break) {
     return { seconds: remainingDuration, isEditable: false }
   }
@@ -112,8 +117,9 @@ export const sessionSuggestionsHeading = (phase: SessionPhase): string =>
     : 'MAYBE DO THIS NEXT?'
 
 /** Whether a suggestion may be tapped — canon's `isInteractive`, `ready` only. */
-export const areSessionSuggestionsInteractive = (phase: SessionPhase): boolean =>
-  phase === SessionPhase.ready
+export const areSessionSuggestionsInteractive = (
+  phase: SessionPhase,
+): boolean => phase === SessionPhase.ready
 
 /**
  * One suggestion card, as the sheet renders it.

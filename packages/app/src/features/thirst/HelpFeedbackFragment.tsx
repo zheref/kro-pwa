@@ -15,7 +15,14 @@
  * canon deliberately leaves unwired.
  */
 import type { LucideIcon } from 'lucide-react'
-import { BookOpen, Flag, Lightbulb, Mail, MessagesSquare, Star } from 'lucide-react'
+import {
+  BookOpen,
+  Flag,
+  Lightbulb,
+  Mail,
+  MessagesSquare,
+  Star,
+} from 'lucide-react'
 import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
 
@@ -108,10 +115,16 @@ function HelpFeedbackRowView({
         'bg-kro-back text-left text-kro-fore text-sm',
       )}
       style={
-        isLast ? undefined : { boxShadow: `inset 0 -1px 0 ${colorVar('hairline')}` }
+        isLast
+          ? undefined
+          : { boxShadow: `inset 0 -1px 0 ${colorVar('hairline')}` }
       }
     >
-      <Icon size={16} aria-hidden="true" style={{ color: colorVar('foreSecondary') }} />
+      <Icon
+        size={16}
+        aria-hidden="true"
+        style={{ color: colorVar('foreSecondary') }}
+      />
       <span>{row.label}</span>
     </button>
   )

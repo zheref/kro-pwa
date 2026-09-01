@@ -23,8 +23,9 @@ export const selectIsGreetingLoading = createSelector(
   (slice) => slice.load.kind === 'loading',
 )
 
-export const selectGreetingException = createSelector([selectGreetingSlice], (slice) =>
-  slice.load.kind === 'failed' ? slice.load.exception : null,
+export const selectGreetingException = createSelector(
+  [selectGreetingSlice],
+  (slice) => (slice.load.kind === 'failed' ? slice.load.exception : null),
 )
 
 export const selectIsGreetingDetailOpen = createSelector(
@@ -43,6 +44,8 @@ export const selectGreetingHeadline = createSelector(
     if (exception !== null) return greetingExceptionCopy(exception)
     if (isLoading) return 'Fetching your greeting…'
     if (greeting === null) return ''
-    return greeting.message.length > 0 ? greeting.message : `Hello, ${greeting.recipient}.`
+    return greeting.message.length > 0
+      ? greeting.message
+      : `Hello, ${greeting.recipient}.`
   },
 )

@@ -84,7 +84,9 @@ export const TimelineDestination = {
 
 /** Something is in flight — the ONE activity signal replaces the refresh glyph. */
 export const Syncing = {
-  render: () => <Stage width={390}>{surface({ isActivityIndicated: true })}</Stage>,
+  render: () => (
+    <Stage width={390}>{surface({ isActivityIndicated: true })}</Stage>
+  ),
 }
 
 /** Both status banners, above the canvas rather than over it. */
@@ -101,7 +103,9 @@ export const WithStatusBanners = {
 
 /** LIST — the honest placeholder KC-IS-#20 replaces with two props. */
 export const ListPlaceholder = {
-  render: () => <Stage width={390}>{surface({ viewMode: PlanViewMode.list })}</Stage>,
+  render: () => (
+    <Stage width={390}>{surface({ viewMode: PlanViewMode.list })}</Stage>
+  ),
 }
 
 /** MATRIX — the placeholder, AND the FAB standing down as canon requires. */

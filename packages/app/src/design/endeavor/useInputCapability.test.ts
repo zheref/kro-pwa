@@ -1,6 +1,10 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { POINTER_QUERY, readInputCapability, useInputCapability } from './useInputCapability'
+import {
+  POINTER_QUERY,
+  readInputCapability,
+  useInputCapability,
+} from './useInputCapability'
 
 type Listener = () => void
 
@@ -15,7 +19,10 @@ type Listener = () => void
  * alongside. A stub that offers both cannot tell the two code paths apart,
  * which is exactly how the missing fallback went unnoticed.
  */
-function installMatchMedia(initiallyPointer: boolean, api: 'modern' | 'legacy' = 'modern') {
+function installMatchMedia(
+  initiallyPointer: boolean,
+  api: 'modern' | 'legacy' = 'modern',
+) {
   const listeners = new Set<Listener>()
   let matches = initiallyPointer
 

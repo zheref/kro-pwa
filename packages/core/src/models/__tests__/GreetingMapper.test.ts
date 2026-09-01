@@ -23,7 +23,9 @@ describe('GreetingMapper.toDomain', () => {
   })
 
   it('returns null when the timestamp is unparseable — a backend that shipped a bad format', () => {
-    expect(GreetingMapper.toDomain({ ...wire, issued_at: 'yesterday' })).toBeNull()
+    expect(
+      GreetingMapper.toDomain({ ...wire, issued_at: 'yesterday' }),
+    ).toBeNull()
   })
 
   it('returns null when the identity fields are empty, so no half-built greeting is stored', () => {
@@ -40,24 +42,34 @@ describe('GreetingMapper.fromDomain', () => {
   })
 
   it('round-trips a greeting unchanged — write, read back, same domain value', () => {
-    const roundTripped = GreetingMapper.toDomain(GreetingMapper.fromDomain(greetingMocks.unicode))
+    const roundTripped = GreetingMapper.toDomain(
+      GreetingMapper.fromDomain(greetingMocks.unicode),
+    )
 
     expect(roundTripped).toEqual(greetingMocks.unicode)
   })
 
   it('keeps a null signature null instead of dropping the key', () => {
-    expect(GreetingMapper.fromDomain(greetingMocks.noSignature).signature).toBeNull()
+    expect(
+      GreetingMapper.fromDomain(greetingMocks.noSignature).signature,
+    ).toBeNull()
   })
 })
 
 describe('GreetingMapper.toException', () => {
   it('reads a TypeError as offline — the shape `fetch` throws with no connection', () => {
-    expect(GreetingMapper.toException(new TypeError('Failed to fetch')).kind).toBe('offline')
+    expect(
+      GreetingMapper.toException(new TypeError('Failed to fetch')).kind,
+    ).toBe('offline')
   })
 
   it('reads 401 and 403 as unauthorized — the session expired while the tab was open', () => {
-    expect(GreetingMapper.toException({ status: 401 }).kind).toBe('unauthorized')
-    expect(GreetingMapper.toException({ status: 403 }).kind).toBe('unauthorized')
+    expect(GreetingMapper.toException({ status: 401 }).kind).toBe(
+      'unauthorized',
+    )
+    expect(GreetingMapper.toException({ status: 403 }).kind).toBe(
+      'unauthorized',
+    )
   })
 
   it('reads 404 as notFound — the recipient has no greeting registered', () => {

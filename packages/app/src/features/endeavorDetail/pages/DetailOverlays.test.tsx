@@ -6,7 +6,13 @@
  * from a screenshot: Detail **opens from another surface's row**, and the
  * editor's **dirty tracking** decides whether Save is offered at all.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { installRadixEnvironment } from '../../../design/system/primitives/__tests__/radixEnvironment'
@@ -63,7 +69,11 @@ describe('Detail opens from ANY surface, through the intent queue', () => {
 
     render(
       <Harness store={store}>
-        <TasksPage selection={{ kind: 'default' }} input="touch" locale="en-US" />
+        <TasksPage
+          selection={{ kind: 'default' }}
+          input="touch"
+          locale="en-US"
+        />
         <DetailOverlays locale="en-US" />
       </Harness>,
     )
@@ -94,7 +104,11 @@ describe('Detail opens from ANY surface, through the intent queue', () => {
 
     render(
       <Harness store={store}>
-        <TasksPage selection={{ kind: 'default' }} input="touch" locale="en-US" />
+        <TasksPage
+          selection={{ kind: 'default' }}
+          input="touch"
+          locale="en-US"
+        />
         <DetailOverlays locale="en-US" />
       </Harness>,
     )
@@ -155,7 +169,7 @@ describe('the title bar', () => {
     expect(store.getState().endeavorDetail.endeavor).not.toBeNull()
   })
 
-  it('names the endeavor\'s kind and state under the title', () => {
+  it("names the endeavor's kind and state under the title", () => {
     mountPresented(detailEndeavorMocks.task)
 
     expect(screen.getByText(/Task · Pending/)).toBeTruthy()
@@ -243,7 +257,9 @@ describe('the destinations the overlay presents', () => {
 
     const relation = screen.getByTestId('endeavor-relation')
     expect(relation.dataset.relation).toBe('hosts')
-    expect(within(relation).getByRole('heading', { name: 'Hosts' })).toBeTruthy()
+    expect(
+      within(relation).getByRole('heading', { name: 'Hosts' }),
+    ).toBeTruthy()
   })
 
   it('offers no Save on a relation screen — each entry commits on its own', () => {
@@ -293,9 +309,9 @@ describe('a relation write commits on its own, through the real Producer', () =>
     )
 
     await waitFor(() => {
-      expect(store.getState().endeavorDetail.endeavor?.performances).toHaveLength(
-        1,
-      )
+      expect(
+        store.getState().endeavorDetail.endeavor?.performances,
+      ).toHaveLength(1)
     })
     expect(
       store.getState().endeavorDetail.endeavor?.performances[0]?.rewardPoints,

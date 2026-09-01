@@ -39,10 +39,9 @@ const detailFlagOn = resolveEndeavorCapabilities(
 describe('endeavorRowAdapter maps the Find vista onto one row', () => {
   it('keeps the leading swipe pair in declaration order — Start then Edit', () => {
     const adapter = endeavorRowAdapter(task, allFlagsOff)
-    expect(adapter.leadingSwipeActions.map((action) => action.operation)).toEqual([
-      EndeavorOperation.startSession,
-      EndeavorOperation.edit,
-    ])
+    expect(
+      adapter.leadingSwipeActions.map((action) => action.operation),
+    ).toEqual([EndeavorOperation.startSession, EndeavorOperation.edit])
   })
 
   it('keeps the trailing swipe pair in declaration order — Delete then Archive', () => {
@@ -105,7 +104,9 @@ describe('tints and roles resolve exactly once, at the adapter', () => {
         label: 'Triage',
       }),
     ])
-    expect(rowActionsForGesture(capabilities, 'contextMenu')[0]?.tint).toBeNull()
+    expect(
+      rowActionsForGesture(capabilities, 'contextMenu')[0]?.tint,
+    ).toBeNull()
   })
 })
 

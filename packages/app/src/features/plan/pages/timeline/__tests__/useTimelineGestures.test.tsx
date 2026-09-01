@@ -141,12 +141,20 @@ describe('useBlockPress', () => {
     render(<BlockHarness onTap={onTap} onHold={null} />)
     const block = screen.getByTestId('block')
 
-    pointer('pointerDown', block, { clientX: 0, clientY: 0, pointerType: 'touch' })
+    pointer('pointerDown', block, {
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'touch',
+    })
     expect(block.dataset.pressed).toBe('true')
     act(() => {
       vi.advanceTimersByTime(2000)
     })
-    pointer('pointerUp', block, { clientX: 0, clientY: 0, pointerType: 'touch' })
+    pointer('pointerUp', block, {
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'touch',
+    })
 
     expect(onTap).toHaveBeenCalledTimes(1)
   })
@@ -177,10 +185,18 @@ function SlotHarness({
   })
   return (
     <div data-testid="slots" {...handlers}>
-      <button type="button" {...{ [SLOT_INDEX_ATTRIBUTE]: 4 }} data-testid="slot-4">
+      <button
+        type="button"
+        {...{ [SLOT_INDEX_ATTRIBUTE]: 4 }}
+        data-testid="slot-4"
+      >
         slot
       </button>
-      <button type="button" {...{ [SLOT_INDEX_ATTRIBUTE]: 5 }} data-testid="slot-5">
+      <button
+        type="button"
+        {...{ [SLOT_INDEX_ATTRIBUTE]: 5 }}
+        data-testid="slot-5"
+      >
         slot
       </button>
     </div>
@@ -233,10 +249,22 @@ describe('useSlotPress', () => {
     const onCreate = vi.fn()
     render(<SlotHarness onCreate={onCreate} />)
 
-    pointer('pointerDown', screen.getByTestId('slot-4'), { clientX: 50, clientY: 50 })
-    pointer('pointerUp', screen.getByTestId('slot-4'), { clientX: 50, clientY: 50 })
-    pointer('pointerDown', screen.getByTestId('slot-5'), { clientX: 50, clientY: 70 })
-    pointer('pointerUp', screen.getByTestId('slot-5'), { clientX: 50, clientY: 70 })
+    pointer('pointerDown', screen.getByTestId('slot-4'), {
+      clientX: 50,
+      clientY: 50,
+    })
+    pointer('pointerUp', screen.getByTestId('slot-4'), {
+      clientX: 50,
+      clientY: 50,
+    })
+    pointer('pointerDown', screen.getByTestId('slot-5'), {
+      clientX: 50,
+      clientY: 70,
+    })
+    pointer('pointerUp', screen.getByTestId('slot-5'), {
+      clientX: 50,
+      clientY: 70,
+    })
 
     expect(onCreate).not.toHaveBeenCalled()
   })
@@ -262,12 +290,24 @@ describe('useSlotPress', () => {
     render(<SlotHarness onCreate={onCreate} />)
     const slot = screen.getByTestId('slot-4')
 
-    pointer('pointerDown', slot, { clientX: 50, clientY: 50, pointerType: 'touch' })
-    pointer('pointerMove', slot, { clientX: 50, clientY: 90, pointerType: 'touch' })
+    pointer('pointerDown', slot, {
+      clientX: 50,
+      clientY: 50,
+      pointerType: 'touch',
+    })
+    pointer('pointerMove', slot, {
+      clientX: 50,
+      clientY: 90,
+      pointerType: 'touch',
+    })
     act(() => {
       vi.advanceTimersByTime(1000)
     })
-    pointer('pointerUp', slot, { clientX: 50, clientY: 90, pointerType: 'touch' })
+    pointer('pointerUp', slot, {
+      clientX: 50,
+      clientY: 90,
+      pointerType: 'touch',
+    })
 
     expect(onCreate).not.toHaveBeenCalled()
   })
@@ -311,9 +351,7 @@ function DragHarness({
 describe('useVerticalDrag', () => {
   it('reports translation CUMULATIVE from finger-down, never a per-frame delta', () => {
     const onDrag = vi.fn()
-    render(
-      <DragHarness onBegin={() => {}} onDrag={onDrag} onEnd={() => {}} />,
-    )
+    render(<DragHarness onBegin={() => {}} onDrag={onDrag} onEnd={() => {}} />)
     const handle = screen.getByTestId('handle')
 
     pointer('pointerDown', handle, { clientX: 0, clientY: 100 })
@@ -373,9 +411,7 @@ describe('useVerticalDrag', () => {
   it('reports nothing at all when disabled — a past block is inert', () => {
     const onBegin = vi.fn()
     const onDrag = vi.fn()
-    render(
-      <DisabledDragHarness onBegin={onBegin} onDrag={onDrag} />,
-    )
+    render(<DisabledDragHarness onBegin={onBegin} onDrag={onDrag} />)
     const handle = screen.getByTestId('handle')
 
     pointer('pointerDown', handle, { clientY: 100 })

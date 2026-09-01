@@ -21,7 +21,11 @@ export const AllTasks = {
   render: () => (
     <Stage width={430}>
       <Harness store={makeSeededStore({ endeavors: nineOpenTasks })}>
-        <TasksPage selection={{ kind: 'default' }} input="touch" locale="en-US" />
+        <TasksPage
+          selection={{ kind: 'default' }}
+          input="touch"
+          locale="en-US"
+        />
       </Harness>
     </Stage>
   ),
@@ -62,7 +66,11 @@ export const Empty = {
   render: () => (
     <Stage width={430}>
       <Harness store={makeSeededStore()}>
-        <TasksPage selection={{ kind: 'default' }} input="touch" locale="en-US" />
+        <TasksPage
+          selection={{ kind: 'default' }}
+          input="touch"
+          locale="en-US"
+        />
       </Harness>
     </Stage>
   ),

@@ -149,7 +149,9 @@ describe('intents', () => {
     const onTapResume = vi.fn()
     renderPill(sessionPillMocks.paused, { onTapResume })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Resume session' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Resume session' }),
+    )
     expect(onTapResume).toHaveBeenCalledTimes(1)
   })
 

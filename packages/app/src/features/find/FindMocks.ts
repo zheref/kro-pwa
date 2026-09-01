@@ -129,9 +129,8 @@ export const findEndeavorMocks = {
 } as const
 
 /** Every fixture, in declaration order. */
-export const allFindEndeavorMocks: readonly Endeavor[] = Object.values(
-  findEndeavorMocks,
-)
+export const allFindEndeavorMocks: readonly Endeavor[] =
+  Object.values(findEndeavorMocks)
 
 /**
  * Nine tasks in one status, so the seven-per-group display limit has something
@@ -249,7 +248,10 @@ export const findStateMocks = {
     ...initialFindState,
     find: {
       ...loadedSurface(initialFindState.find, allFindEndeavorMocks),
-      load: { kind: 'failed', exception: FindExceptions.fetchFailed('offline') },
+      load: {
+        kind: 'failed',
+        exception: FindExceptions.fetchFailed('offline'),
+      },
     },
   } satisfies FindState as FindState,
 

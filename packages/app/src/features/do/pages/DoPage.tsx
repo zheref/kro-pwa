@@ -64,12 +64,7 @@ import {
   fetchDoEndeavorsThunk,
   loadDoPreferencesThunk,
 } from '../DoProducer'
-import {
-  DoLane,
-  type DoVisibility,
-  doLensFor,
-  laneCards,
-} from '../DoRules'
+import { DoLane, type DoVisibility, doLensFor, laneCards } from '../DoRules'
 import {
   selectAreDoRingsVisible,
   selectAreDoSuggestionsVisible,
@@ -325,9 +320,7 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
           correctly today. Widening the payload to `string` is a one-line
           `DoFeature` change named in this PR.
         */
-        dispatch(
-          userDidTapCard({ lane: section as DoLane, endeavorId }),
-        )
+        dispatch(userDidTapCard({ lane: section as DoLane, endeavorId }))
       },
       onDeselect: () => dispatch(userDidDeselectCard()),
       onExecute: () => {
@@ -402,7 +395,9 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const onLaneWidthChanged = useCallback(
     (width: number) => {
       dispatch(
-        onFeaturedCapacityChanged({ capacity: featuredCapacityForWidth(width) }),
+        onFeaturedCapacityChanged({
+          capacity: featuredCapacityForWidth(width),
+        }),
       )
     },
     [dispatch],

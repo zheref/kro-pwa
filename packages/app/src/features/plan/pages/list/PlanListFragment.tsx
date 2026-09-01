@@ -36,7 +36,11 @@
  * marker on the row itself. A colour alone would be the one signal this repo's
  * contrast contract refuses to ship unpaired.
  */
-import type { EndeavorCapabilities, PlanListGrouping, PlanListSort } from '@kro/core'
+import type {
+  EndeavorCapabilities,
+  PlanListGrouping,
+  PlanListSort,
+} from '@kro/core'
 import {
   planListGroupingLabel,
   planListGroupings,
@@ -51,7 +55,11 @@ import type { OnEndeavorOperation } from '../../../../design/endeavor/rowActions
 import type { InputCapability } from '../../../../design/endeavor/useInputCapability'
 import { colorVar, radiusVar } from '../../../../design/system/tokens/roles'
 import { cn } from '../../../../design/system/utils/cn'
-import { type PlanListSection, planListBucketFor, PlanListBucket } from './planListModel'
+import {
+  type PlanListSection,
+  planListBucketFor,
+  PlanListBucket,
+} from './planListModel'
 import {
   planListRowBadges,
   planListRowOpenLabel,

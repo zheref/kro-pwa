@@ -40,7 +40,11 @@ const loaded: SettingsState = {
   ...base,
   load: { kind: 'loaded' },
   values: defaultSettingValues,
-  google: { ...base.google, isEnabled: true, connection: { kind: 'disconnected' } },
+  google: {
+    ...base.google,
+    isEnabled: true,
+    connection: { kind: 'disconnected' },
+  },
 }
 
 export const SettingsMocks = {

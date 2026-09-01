@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { err, isErr, isOk, ok, type Result } from '../result'
-import { GreetingExceptions, type GreetingException } from '../../models/GreetingException'
+import {
+  GreetingExceptions,
+  type GreetingException,
+} from '../../models/GreetingException'
 
 type GreetingResult = Result<string, GreetingException>
 
@@ -79,7 +82,9 @@ describe('isErr', () => {
   })
 
   it('narrows the union so `error.kind` is reachable without a cast', () => {
-    const result: GreetingResult = err(GreetingExceptions.malformed('missing id'))
+    const result: GreetingResult = err(
+      GreetingExceptions.malformed('missing id'),
+    )
 
     if (isErr(result)) {
       expect(result.error.kind).toBe('malformed')

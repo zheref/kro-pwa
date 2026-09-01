@@ -60,8 +60,7 @@ export const DoViewSection = {
   eventsTimed: 'events-timed',
 } as const
 
-export type DoViewSection =
-  (typeof DoViewSection)[keyof typeof DoViewSection]
+export type DoViewSection = (typeof DoViewSection)[keyof typeof DoViewSection]
 
 /** The glyphs canon names, as the keys this surface's icon table resolves. */
 export type DoSectionGlyph =
@@ -171,7 +170,9 @@ export const doEventsBadgeText = (count: number): string => `${count} events`
  * against canon, not a match for it.
  */
 export const doShortDateString = (now: Date, locale?: string): string =>
-  new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(now)
+  new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(
+    now,
+  )
 
 /**
  * The weekday alone — canon's `currentDateString.split(",").first`.
@@ -310,9 +311,7 @@ export const doNotificationsAccessibilityValue = (input: {
  * Keeping the two in step is the point — the filter that hides the Expired lane
  * must be labelled with the lane's own name.
  */
-export const doComputedStateLabel = (
-  state: EndeavorComputedState,
-): string => {
+export const doComputedStateLabel = (state: EndeavorComputedState): string => {
   switch (state) {
     case 'overdue':
       return 'Overdue'

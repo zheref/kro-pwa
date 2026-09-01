@@ -3,7 +3,11 @@ import { exception, toUnknownException, unknownException } from '../exception'
 
 describe('exception', () => {
   it('builds a union member with its discriminant, detail and retry affordance', () => {
-    const built = exception('offline', 'The greeting service is unreachable.', true)
+    const built = exception(
+      'offline',
+      'The greeting service is unreachable.',
+      true,
+    )
 
     expect(built).toEqual({
       kind: 'offline',
@@ -23,7 +27,9 @@ describe('exception', () => {
 
 describe('unknownException', () => {
   it('keeps the developer-facing detail for the log — a serialization bug in the payload creator', () => {
-    expect(unknownException('cannot serialize payload').message).toBe('cannot serialize payload')
+    expect(unknownException('cannot serialize payload').message).toBe(
+      'cannot serialize payload',
+    )
   })
 
   it('always discriminates as `unknown`, so the defensive `.rejected` arm has one shape to shift into', () => {

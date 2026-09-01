@@ -297,7 +297,10 @@ export const doSlice = createSlice({
       state,
       action: PayloadAction<{ source: DoSuggestionSource }>,
     ) {
-      Object.assign(state, withSuggestionDismissed(state, action.payload.source))
+      Object.assign(
+        state,
+        withSuggestionDismissed(state, action.payload.source),
+      )
     },
 
     /**

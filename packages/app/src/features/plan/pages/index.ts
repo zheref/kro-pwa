@@ -10,7 +10,11 @@
  * slots; nothing exported from `timeline/` changed when it did.
  */
 
-export { type PlanPageProps, PLAN_TIMELINE_TOP_INSET, PlanPage } from './PlanPage'
+export {
+  type PlanPageProps,
+  PLAN_TIMELINE_TOP_INSET,
+  PlanPage,
+} from './PlanPage'
 export {
   PLAN_FAB_INSET,
   PLAN_SCROLL_BOTTOM_INSET,

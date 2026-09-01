@@ -88,7 +88,9 @@ describe('useAccentColor', () => {
   it('applies the tint to the document root for as long as it is mounted', () => {
     const { unmount } = renderHook(() => useAccentColor('#663399'))
 
-    expect(document.documentElement.style.getPropertyValue(ACCENT_VAR)).toBe('#663399')
+    expect(document.documentElement.style.getPropertyValue(ACCENT_VAR)).toBe(
+      '#663399',
+    )
     unmount()
     expect(document.documentElement.style.getPropertyValue(ACCENT_VAR)).toBe('')
   })
@@ -127,7 +129,9 @@ describe('useAccentColor', () => {
 
     rerender({ accent: '#b0b9d4' })
 
-    expect(document.documentElement.style.getPropertyValue(ACCENT_VAR)).toBe('#b0b9d4')
+    expect(document.documentElement.style.getPropertyValue(ACCENT_VAR)).toBe(
+      '#b0b9d4',
+    )
     expect(document.documentElement.style.getPropertyValue(ON_ACCENT_VAR)).toBe(
       '#000000',
     )

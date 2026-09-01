@@ -26,7 +26,12 @@ const summarise = (
   Object.fromEntries(
     placements.map((placement) => [
       placement.endeavor.id,
-      [placement.yOffset, placement.height, placement.column, placement.columnCount],
+      [
+        placement.yOffset,
+        placement.height,
+        placement.column,
+        placement.columnCount,
+      ],
     ]),
   )
 
@@ -46,8 +51,9 @@ describe('timelinePointOffset', () => {
 
 describe('timelinePlacements — golden fixtures', () => {
   it('lays a solo three-hour block full width from 09:00', () => {
-    expect(summarise(timelinePlacements(planDayFixtures.longSoloBlock, { on })))
-      .toEqual({ 'solo-standup': [540, 180, 0, 1] })
+    expect(
+      summarise(timelinePlacements(planDayFixtures.longSoloBlock, { on })),
+    ).toEqual({ 'solo-standup': [540, 180, 0, 1] })
   })
 
   it('gives a short event nested inside a long one its own column', () => {
@@ -77,7 +83,9 @@ describe('timelinePlacements — golden fixtures', () => {
 
   it('splits two overlapping long blocks into two equal columns', () => {
     expect(
-      summarise(timelinePlacements(planDayFixtures.overlappingLongBlocks, { on })),
+      summarise(
+        timelinePlacements(planDayFixtures.overlappingLongBlocks, { on }),
+      ),
     ).toEqual({
       'overlap-a': [600, 120, 0, 2],
       'overlap-b': [660, 120, 1, 2],
@@ -86,7 +94,9 @@ describe('timelinePlacements — golden fixtures', () => {
 
   it('widens a three-way overlap to three columns for every member', () => {
     expect(
-      summarise(timelinePlacements(planDayFixtures.denseOverlapCluster, { on })),
+      summarise(
+        timelinePlacements(planDayFixtures.denseOverlapCluster, { on }),
+      ),
     ).toEqual({
       'dense-a': [780, 60, 0, 3],
       'dense-b': [795, 60, 1, 3],
@@ -96,7 +106,9 @@ describe('timelinePlacements — golden fixtures', () => {
 
   it('keeps separated clusters at one column each and floors a 10-minute card', () => {
     expect(
-      summarise(timelinePlacements(planDayFixtures.fullDayLongAndShort, { on })),
+      summarise(
+        timelinePlacements(planDayFixtures.fullDayLongAndShort, { on }),
+      ),
     ).toEqual({
       'morning-block': [480, 120, 0, 1],
       'tiny-sync': [900, 30, 0, 1],
@@ -106,7 +118,9 @@ describe('timelinePlacements — golden fixtures', () => {
 
   it('clamps an event running in from the previous night to the day it renders', () => {
     expect(
-      summarise(timelinePlacements(planDayFixtures.spillingFromYesterday, { on })),
+      summarise(
+        timelinePlacements(planDayFixtures.spillingFromYesterday, { on }),
+      ),
     ).toEqual({ 'overnight-run': [0, 180, 0, 1] })
   })
 
@@ -147,7 +161,7 @@ describe('timelinePlacements — scoping', () => {
     expect(timelinePlacements([zeroLength], { on })).toEqual([])
   })
 
-  it("drops an event belonging to another day", () => {
+  it('drops an event belonging to another day', () => {
     expect(timelinePlacements([tomorrow], { on })).toEqual([])
   })
 })
@@ -163,7 +177,10 @@ describe('timelinePlacements — band anchoring', () => {
 
   it('leaves a full-day band identical to an unspecified one', () => {
     expect(
-      timelinePlacements(planDayFixtures.denseOverlapCluster, { on, startHour: 0 }),
+      timelinePlacements(planDayFixtures.denseOverlapCluster, {
+        on,
+        startHour: 0,
+      }),
     ).toEqual(timelinePlacements(planDayFixtures.denseOverlapCluster, { on }))
   })
 

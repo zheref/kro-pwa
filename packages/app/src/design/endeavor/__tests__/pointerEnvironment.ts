@@ -42,7 +42,9 @@ export interface PointerCaptureLog {
  * The stubs record instead, so "this gesture is held" is an assertion rather
  * than an assumption.
  */
-export function installPointerEvents(): (() => void) & { readonly capture: PointerCaptureLog } {
+export function installPointerEvents(): (() => void) & {
+  readonly capture: PointerCaptureLog
+} {
   const original = (globalThis as { PointerEvent?: unknown }).PointerEvent
   const originalCapture = {
     set: Element.prototype.setPointerCapture,
@@ -54,15 +56,21 @@ export function installPointerEvents(): (() => void) & { readonly capture: Point
   const released: number[] = []
   const held = new Set<number>()
 
-  Element.prototype.setPointerCapture = function setPointerCapture(pointerId: number) {
+  Element.prototype.setPointerCapture = function setPointerCapture(
+    pointerId: number,
+  ) {
     captured.push(pointerId)
     held.add(pointerId)
   }
-  Element.prototype.releasePointerCapture = function releasePointerCapture(pointerId: number) {
+  Element.prototype.releasePointerCapture = function releasePointerCapture(
+    pointerId: number,
+  ) {
     released.push(pointerId)
     held.delete(pointerId)
   }
-  Element.prototype.hasPointerCapture = function hasPointerCapture(pointerId: number) {
+  Element.prototype.hasPointerCapture = function hasPointerCapture(
+    pointerId: number,
+  ) {
     return held.has(pointerId)
   }
 

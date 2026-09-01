@@ -41,7 +41,9 @@ describe('DropdownMenu', () => {
       </DropdownMenu>,
     )
 
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Actions' }), { key: 'Enter' })
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Actions' }), {
+      key: 'Enter',
+    })
 
     expect(onOpenChange).toHaveBeenCalledWith(true)
   })
@@ -68,7 +70,9 @@ describe('DropdownMenu', () => {
       </DropdownMenu>,
     )
 
-    expect(document.querySelector('[data-slot="dropdown-menu-content"]')).toBeNull()
+    expect(
+      document.querySelector('[data-slot="dropdown-menu-content"]'),
+    ).toBeNull()
   })
 })
 
@@ -98,7 +102,9 @@ describe('the menu’s theming contract', () => {
     // The tint is additive; the row's own words carry the meaning. Nothing in
     // the base item class is red, so a caller that forgets `destructive` gets
     // an ordinary row rather than a silently-styled one.
-    expect(DROPDOWN_MENU_CLASSES.itemDestructive).toContain('text-kro-banner-danger')
+    expect(DROPDOWN_MENU_CLASSES.itemDestructive).toContain(
+      'text-kro-banner-danger',
+    )
     expect(DROPDOWN_MENU_CLASSES.item).not.toContain('banner-danger')
   })
 
@@ -108,6 +114,8 @@ describe('the menu’s theming contract', () => {
   })
 
   it('sizes its glyphs from the icon scale', () => {
-    expect(DROPDOWN_MENU_CLASSES.item).toContain("[&_svg:not([class*='size-'])]:size-5")
+    expect(DROPDOWN_MENU_CLASSES.item).toContain(
+      "[&_svg:not([class*='size-'])]:size-5",
+    )
   })
 })

@@ -118,7 +118,9 @@ export function useAccentColor(
 
   useEffect(() => {
     if (decision === null || !enabled) return
-    const element = target ?? (typeof document === 'undefined' ? null : document.documentElement)
+    const element =
+      target ??
+      (typeof document === 'undefined' ? null : document.documentElement)
     if (element === null) return
     const { revert } = applyAccentColor(decision.accent, element)
     return revert

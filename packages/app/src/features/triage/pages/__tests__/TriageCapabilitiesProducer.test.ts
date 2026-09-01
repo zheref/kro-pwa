@@ -53,7 +53,9 @@ describe('whether Triage may offer its inline Edit affordance', () => {
       : null
 
     // Never `.rejected`: a Producer resolves a Result (`RC-7`).
-    expect(resolveTriageEditReachabilityThunk.rejected.match(action)).toBe(false)
+    expect(resolveTriageEditReachabilityThunk.rejected.match(action)).toBe(
+      false,
+    )
     expect(result?.ok === true && result.value).toBe(false)
   })
 })

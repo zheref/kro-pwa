@@ -100,7 +100,7 @@ describe('it presents itself from the ported decision table', () => {
     expect(panel.style.width).toBe(`${CAPTURE_PROMPT_POPOVER_WIDTH}px`)
   })
 
-  it('opens on the kind it was asked for, with that kind\'s placeholder', async () => {
+  it("opens on the kind it was asked for, with that kind's placeholder", async () => {
     const store = makeCaptureStore({ endeavors: [] })
     mount(store)
     open(store, CaptureKind.reminder)
@@ -117,7 +117,10 @@ describe('every edit goes through the slice, never through local state', () => {
     open(store)
     await screen.findByTestId('capture-title')
 
-    await userEvent.type(screen.getByTestId('capture-title'), 'Book the flights')
+    await userEvent.type(
+      screen.getByTestId('capture-title'),
+      'Book the flights',
+    )
 
     expect(store.getState().capture.prompt?.draft.title).toBe(
       'Book the flights',
@@ -160,7 +163,10 @@ describe('every edit goes through the slice, never through local state', () => {
     open(store)
     await screen.findByTestId('capture-title')
 
-    await userEvent.type(screen.getByTestId('capture-title'), 'Water the plants')
+    await userEvent.type(
+      screen.getByTestId('capture-title'),
+      'Water the plants',
+    )
     await userEvent.click(screen.getByTestId('capture-add'))
 
     await waitFor(() => {
@@ -176,7 +182,10 @@ describe('every edit goes through the slice, never through local state', () => {
     mount(store)
     open(store)
     await screen.findByTestId('capture-title')
-    await userEvent.type(screen.getByTestId('capture-title'), 'Book the flights')
+    await userEvent.type(
+      screen.getByTestId('capture-title'),
+      'Book the flights',
+    )
 
     // Two presses inside one frame — the shape a double-click takes, and the
     // one an awaited `userEvent.click` can never produce because it lets the
@@ -196,7 +205,7 @@ describe('every edit goes through the slice, never through local state', () => {
 })
 
 describe('the clock it reads "Today" against', () => {
-  it('comes from the slice\'s anchor, not from the wall clock', async () => {
+  it("comes from the slice's anchor, not from the wall clock", async () => {
     const store = makeCaptureStore({ endeavors: [] })
     mount(store)
 

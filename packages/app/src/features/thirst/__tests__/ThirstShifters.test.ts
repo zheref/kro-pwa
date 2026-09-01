@@ -2,7 +2,11 @@ import { err, ok } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { ThirstExceptions } from '../ThirstException'
 import { initialThirstState } from '../ThirstFeature'
-import { THIRST_MOCK_FEATURE_KEY, thirstCountsFixture, thirstStateMocks } from '../ThirstMocks'
+import {
+  THIRST_MOCK_FEATURE_KEY,
+  thirstCountsFixture,
+  thirstStateMocks,
+} from '../ThirstMocks'
 import { VotePlatform } from '../ThirstModels'
 import {
   withCountsFetchStarted,
@@ -24,13 +28,22 @@ describe('withVoteStateCheckStarted', () => {
 
   it('clears a stale exception so a retry surfaces loading, not the old failure', () => {
     const started = withVoteStateCheckStarted(initialThirstState, key, REQ)
-    const failed = withVoteStateResult(started, key, REQ, err(ThirstExceptions.offline()))
+    const failed = withVoteStateResult(
+      started,
+      key,
+      REQ,
+      err(ThirstExceptions.offline()),
+    )
     const next = withVoteStateCheckStarted(failed, key, 'req-2')
     expect(next.byFeatureKey[key]?.voteStateException).toBeNull()
   })
 
   it('is a no-op on every other feature key already in state', () => {
-    const withOther = withVoteStateCheckStarted(initialThirstState, 'board', REQ)
+    const withOther = withVoteStateCheckStarted(
+      initialThirstState,
+      'board',
+      REQ,
+    )
     const next = withVoteStateCheckStarted(withOther, key, REQ)
     expect(next.byFeatureKey.board?.isCheckingVoteState).toBe(true)
   })
@@ -55,7 +68,12 @@ describe('withVoteStateResult', () => {
 
   it('records the typed failure — this is what blocks voting', () => {
     const started = withVoteStateCheckStarted(initialThirstState, key, REQ)
-    const next = withVoteStateResult(started, key, REQ, err(ThirstExceptions.notSignedIn()))
+    const next = withVoteStateResult(
+      started,
+      key,
+      REQ,
+      err(ThirstExceptions.notSignedIn()),
+    )
     expect(next.byFeatureKey[key]?.voteStateException?.kind).toBe('notSignedIn')
   })
 
@@ -127,7 +145,12 @@ describe('withCountsFetchStarted / withCountsResult', () => {
     const bumpedTotal = votedWhileFetching.byFeatureKey[key]?.counts?.total
     // The slower fetch (dispatched before the vote) finally resolves with
     // its stale, pre-vote snapshot.
-    const next = withCountsResult(votedWhileFetching, key, 'req-2', ok(thirstCountsFixture))
+    const next = withCountsResult(
+      votedWhileFetching,
+      key,
+      'req-2',
+      ok(thirstCountsFixture),
+    )
     expect(next.byFeatureKey[key]?.counts?.total).toBe(bumpedTotal)
     expect(next.byFeatureKey[key]?.isLoadingCounts).toBe(false)
   })
@@ -136,16 +159,28 @@ describe('withCountsFetchStarted / withCountsResult', () => {
     const votedFirst = withVoteResult(initialThirstState, key, ok(true))
     const fetchedAfter = withCountsFetchStarted(votedFirst, key, REQ)
     const serverConfirmedTotal = { ...thirstCountsFixture, total: 99 }
-    const next = withCountsResult(fetchedAfter, key, REQ, ok(serverConfirmedTotal))
+    const next = withCountsResult(
+      fetchedAfter,
+      key,
+      REQ,
+      ok(serverConfirmedTotal),
+    )
     expect(next.byFeatureKey[key]?.counts?.total).toBe(99)
   })
 })
 
 describe('withVoteStarted', () => {
   it('flags voting in flight and clears a prior retry error', () => {
-    const failed = withVoteResult(initialThirstState, key, err(ThirstExceptions.unknown('x')))
+    const failed = withVoteResult(
+      initialThirstState,
+      key,
+      err(ThirstExceptions.unknown('x')),
+    )
     const next = withVoteStarted(failed, key)
-    expect(next.byFeatureKey[key]).toMatchObject({ isVoting: true, voteException: null })
+    expect(next.byFeatureKey[key]).toMatchObject({
+      isVoting: true,
+      voteException: null,
+    })
   })
 })
 
@@ -170,7 +205,7 @@ describe('withVoteResult — the atomic one', () => {
     expect(next.byFeatureKey[key]?.voteEpoch).toBe(1)
   })
 
-  it('bumps the total without disturbing other platforms\' tallies', () => {
+  it("bumps the total without disturbing other platforms' tallies", () => {
     const votable = withCountsResult(
       withCountsFetchStarted(initialThirstState, key, REQ),
       key,
@@ -222,7 +257,7 @@ describe('withVoteResult — the atomic one', () => {
     })
   })
 
-  it('never disturbs a sibling feature key\'s entry', () => {
+  it("never disturbs a sibling feature key's entry", () => {
     const seeded = thirstStateMocks.matrixVotable
     const next = withVoteResult(seeded, 'board', ok(true))
     expect(next.byFeatureKey[key]).toEqual(seeded.byFeatureKey[key])

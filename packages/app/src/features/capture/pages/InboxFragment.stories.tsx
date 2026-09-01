@@ -154,7 +154,11 @@ export const DestinationPageInline = {
   render: () => (
     <ThemeScope theme="light">
       <div style={{ height: 620 }}>
-        {inbox({ presentation: 'inline', rowLayout: 'compactDesktop', input: 'pointer' })}
+        {inbox({
+          presentation: 'inline',
+          rowLayout: 'compactDesktop',
+          input: 'pointer',
+        })}
       </div>
     </ThemeScope>
   ),

@@ -29,11 +29,7 @@
  * rule — a preference that cannot be read is not a reason to show an error over
  * a screen that works.
  */
-import {
-  FeatureFlags,
-  type Result,
-  ok,
-} from '@kro/core'
+import { FeatureFlags, type Result, ok } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../../library/store'
 import type { FindException } from '../FindException'

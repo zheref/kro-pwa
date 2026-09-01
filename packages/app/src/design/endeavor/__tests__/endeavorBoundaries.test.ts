@@ -39,7 +39,9 @@ function collect(dir: string): string[] {
 
 /** Strips comments, so a rule quoted in a doc-block is not a violation of it. */
 function stripComments(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
 const IMPORT_RE = /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s*['"]([^'"]+)['"]/g
@@ -93,7 +95,10 @@ describe('the endeavor kit holds the RC-14 boundary', () => {
     const offenders: string[] = []
     for (const { where, source } of FILES) {
       for (const specifier of importsOf(source)) {
-        if (/(^|\/)services\//.test(specifier) || /Service(\.js)?$/.test(specifier)) {
+        if (
+          /(^|\/)services\//.test(specifier) ||
+          /Service(\.js)?$/.test(specifier)
+        ) {
           offenders.push(`${where} -> ${specifier}`)
         }
         if (/(^|\/)library\/(store|hooks|StoreProvider)$/.test(specifier)) {
@@ -109,7 +114,8 @@ describe('the endeavor kit holds the RC-14 boundary', () => {
     const offenders: string[] = []
     for (const { where, source } of FILES) {
       for (const specifier of importsOf(source)) {
-        if (specifier.includes('features/')) offenders.push(`${where} -> ${specifier}`)
+        if (specifier.includes('features/'))
+          offenders.push(`${where} -> ${specifier}`)
       }
     }
 
@@ -138,7 +144,9 @@ describe('the sanctioned `@kro/core` reach stays narrow', () => {
     const readers = FILES.filter(
       ({ where, source }) =>
         !isTestOrStory(where) &&
-        /import\s+type\s*\{[^}]*\bEndeavor\b[^}]*\}\s*from\s*'@kro\/core'/.test(source),
+        /import\s+type\s*\{[^}]*\bEndeavor\b[^}]*\}\s*from\s*'@kro\/core'/.test(
+          source,
+        ),
     ).map(({ where }) => where)
 
     expect(readers).toEqual(['endeavorCardModel.ts'])
@@ -173,7 +181,8 @@ describe('the sanctioned `@kro/core` reach stays narrow', () => {
       for (const [, names] of blocks) {
         for (const raw of (names as string).split(',')) {
           const name = raw.replace(/^\s*type\s+/, '').trim()
-          if (name !== '' && !allowed.has(name)) offenders.push(`${where}: ${name}`)
+          if (name !== '' && !allowed.has(name))
+            offenders.push(`${where}: ${name}`)
         }
       }
     }

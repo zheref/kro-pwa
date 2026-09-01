@@ -5,7 +5,10 @@
  * `CaptureQuickActionPage.test.tsx` mirrors this set (`RC-11`).
  */
 
-import { DestinationKind, type SidebarDestination } from '../../main/SidebarDestination'
+import {
+  DestinationKind,
+  type SidebarDestination,
+} from '../../main/SidebarDestination'
 import { CaptureQuickActionPage } from './CaptureQuickActionPage'
 import {
   CaptureStoreStage,

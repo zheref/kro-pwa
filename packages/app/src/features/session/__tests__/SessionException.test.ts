@@ -6,10 +6,7 @@
  * refusal from a slow start.
  */
 import { describe, expect, it } from 'vitest'
-import {
-  SessionExceptions,
-  sessionExceptionMessage,
-} from '../SessionException'
+import { SessionExceptions, sessionExceptionMessage } from '../SessionException'
 
 describe('SessionExceptions', () => {
   it('reports a refused second session as unrecoverable, not a retryable blip', () => {

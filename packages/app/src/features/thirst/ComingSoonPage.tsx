@@ -9,8 +9,16 @@
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
 import { ComingSoonFragment } from './ComingSoonFragment'
-import { castVoteThunk, checkVoteStateThunk, fetchCountsThunk } from './ThirstProducer'
-import { isThirstVotable, thirstFeatureBlurb, thirstFeatureTitle } from './ThirstRegistry'
+import {
+  castVoteThunk,
+  checkVoteStateThunk,
+  fetchCountsThunk,
+} from './ThirstProducer'
+import {
+  isThirstVotable,
+  thirstFeatureBlurb,
+  thirstFeatureTitle,
+} from './ThirstRegistry'
 import {
   selectThirstHasLoadedCounts,
   selectThirstIsVoting,
@@ -28,17 +36,26 @@ export interface ComingSoonPageProps {
   readonly fallbackTitle?: string
 }
 
-export function ComingSoonPage({ featureKey, fallbackTitle }: ComingSoonPageProps) {
+export function ComingSoonPage({
+  featureKey,
+  fallbackTitle,
+}: ComingSoonPageProps) {
   const dispatch = useAppDispatch()
-  const status = useAppSelector((state) => selectThirstVoteStatus(state, featureKey))
+  const status = useAppSelector((state) =>
+    selectThirstVoteStatus(state, featureKey),
+  )
   const hasCounts = useAppSelector((state) =>
     selectThirstHasLoadedCounts(state, featureKey),
   )
-  const totalCount = useAppSelector((state) => selectThirstTotalCount(state, featureKey))
+  const totalCount = useAppSelector((state) =>
+    selectThirstTotalCount(state, featureKey),
+  )
   const perPlatform = useAppSelector((state) =>
     selectThirstPerPlatformTallies(state, featureKey),
   )
-  const isVoting = useAppSelector((state) => selectThirstIsVoting(state, featureKey))
+  const isVoting = useAppSelector((state) =>
+    selectThirstIsVoting(state, featureKey),
+  )
   const voteErrorMessage = useAppSelector((state) =>
     selectThirstVoteErrorMessage(state, featureKey),
   )
@@ -65,7 +82,9 @@ export function ComingSoonPage({ featureKey, fallbackTitle }: ComingSoonPageProp
 
   return (
     <ComingSoonFragment
-      featureTitle={thirstFeatureTitle(featureKey) ?? fallbackTitle ?? featureKey}
+      featureTitle={
+        thirstFeatureTitle(featureKey) ?? fallbackTitle ?? featureKey
+      }
       featureBlurb={thirstFeatureBlurb(featureKey)}
       status={status}
       hasCounts={hasCounts}

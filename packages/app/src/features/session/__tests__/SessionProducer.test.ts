@@ -194,7 +194,10 @@ const harness = (
     preferences.write(earnPointsFormulaOption, options.pointsFormula)
   }
   if (options.defaultDurationMinutes !== undefined) {
-    preferences.write(sessionDefaultDurationOption, options.defaultDurationMinutes)
+    preferences.write(
+      sessionDefaultDurationOption,
+      options.defaultDurationMinutes,
+    )
   }
   if (options.breakDurationMinutes !== undefined) {
     preferences.write(
@@ -215,7 +218,14 @@ const harness = (
     documentTitleService: documentTitle,
   }
 
-  return { store: makeStore(extra), localStore, anchor, audio, wakeLock, documentTitle }
+  return {
+    store: makeStore(extra),
+    localStore,
+    anchor,
+    audio,
+    wakeLock,
+    documentTitle,
+  }
 }
 
 /** Prepares and starts a 25-minute countdown on the stored endeavor. */
@@ -276,9 +286,9 @@ describe('loadSessionPreferencesThunk', () => {
 
     const both = harness({ stopwatchEnabled: true })
     await both.store.dispatch(loadSessionPreferencesThunk())
-    expect(both.store.getState().session.availability.isStopwatchAvailable).toBe(
-      true,
-    )
+    expect(
+      both.store.getState().session.availability.isStopwatchAvailable,
+    ).toBe(true)
   })
 
   it('surfaces a storage failure as a typed exception, not a throw', async () => {
@@ -305,7 +315,10 @@ describe('prepareSessionLaunchThunk', () => {
     const { store } = harness({ endeavors: [SLIDES] })
     await store.dispatch(loadSessionPreferencesThunk())
     await store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
 
     const slice = store.getState().session
@@ -377,13 +390,28 @@ describe('prepareSessionLaunchThunk', () => {
     const { store } = harness({
       endeavors: [SLIDES],
       performances: [
-        { endeavorId: SLIDES.id, resolution: PerformResolution.finished, duration: 900 },
-        { endeavorId: SLIDES.id, resolution: PerformResolution.complete, duration: 900 },
-        { endeavorId: SLIDES.id, resolution: PerformResolution.aborted, duration: 60 },
+        {
+          endeavorId: SLIDES.id,
+          resolution: PerformResolution.finished,
+          duration: 900,
+        },
+        {
+          endeavorId: SLIDES.id,
+          resolution: PerformResolution.complete,
+          duration: 900,
+        },
+        {
+          endeavorId: SLIDES.id,
+          resolution: PerformResolution.aborted,
+          duration: 60,
+        },
       ],
     })
     await store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
     expect(store.getState().session.completedSessionsCount).toBe(2)
   })
@@ -420,7 +448,10 @@ describe('the one-session invariant', () => {
     const second = harness({ endeavors: [SLIDES], anchor: rival })
     await second.store.dispatch(loadSessionPreferencesThunk())
     await second.store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
     await second.store.dispatch(startSessionThunk({ now: at(10) }))
 
@@ -447,7 +478,10 @@ describe('the one-session invariant', () => {
     const it = harness({ endeavors: [SLIDES] })
     await it.store.dispatch(loadSessionPreferencesThunk())
     await it.store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
 
     let releaseRead: () => void = () => {}
@@ -486,7 +520,10 @@ describe('the one-session invariant', () => {
     const it = harness({ endeavors: [SLIDES] })
     await it.store.dispatch(loadSessionPreferencesThunk())
     await it.store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
 
     let releaseRead: () => void = () => {}
@@ -598,7 +635,9 @@ describe('pause, kill and reload', () => {
     await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
 
     const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 60) }),
+    )
 
     const slice = reloaded.getState().session
     expect(slice.phase).toBe(SessionPhase.concluded)
@@ -627,7 +666,9 @@ describe('pause, kill and reload', () => {
     localStore.performances.put = put
 
     const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 60) }),
+    )
     expect(reloaded.getState().session.conclusion.kind).toBe('pending')
 
     await reloaded.dispatch(
@@ -645,7 +686,9 @@ describe('pause, kill and reload', () => {
     await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
 
     const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 60) }),
+    )
     await reloaded.dispatch(
       recordSessionPerformanceThunk({ now: at(TARGET + 60) }),
     )
@@ -687,7 +730,9 @@ describe('pause, kill and reload', () => {
     await store.dispatch(hydrateRunningSessionThunk({ now: NOW }))
 
     const { load } = store.getState().session
-    expect(load.kind === 'failed' && load.exception.kind).toBe('anchorReadFailed')
+    expect(load.kind === 'failed' && load.exception.kind).toBe(
+      'anchorReadFailed',
+    )
   })
 })
 
@@ -771,7 +816,9 @@ describe('auto-conclusion records exactly once', () => {
     for (let extra = 0; extra < 50; extra += 1) {
       await store.dispatch(advanceSessionThunk({ now: at(TARGET + extra) }))
     }
-    await store.dispatch(recordSessionPerformanceThunk({ now: at(TARGET + 50) }))
+    await store.dispatch(
+      recordSessionPerformanceThunk({ now: at(TARGET + 50) }),
+    )
 
     expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
   })
@@ -843,18 +890,20 @@ describe('reward awarding', () => {
 
   it('awards 30 % of base when the timer finished but the task did not', async () => {
     // Sliding scale, `complete`, elapsed ≥ target → trunc(30 × 0.3) = 9.
-    expect(await awardFor({ elapsedSeconds: TARGET, finish: 'countdown' })).toBe(9)
+    expect(
+      await awardFor({ elapsedSeconds: TARGET, finish: 'countdown' }),
+    ).toBe(9)
   })
 
   it('awards zero for a below-threshold abort', async () => {
-    expect(
-      await awardFor({ elapsedSeconds: 60, finish: 'early' }),
-    ).toBe(0)
+    expect(await awardFor({ elapsedSeconds: 60, finish: 'early' })).toBe(0)
   })
 
   it('awards zero for an above-threshold finish that did not reach the target', async () => {
     // `complete` with elapsed < target is the proportional branch, which pays 0.
-    expect(await awardFor({ elapsedSeconds: TARGET * 0.5, finish: 'early' })).toBe(0)
+    expect(
+      await awardFor({ elapsedSeconds: TARGET * 0.5, finish: 'early' }),
+    ).toBe(0)
   })
 
   it('uses the legacy formula when the preference selects it', async () => {
@@ -912,10 +961,17 @@ describe('calendar logging', () => {
       failure: options.failure,
       calls,
     })
-    const store = makeStore({ ...stubbedThunkExtra, localStore, googleCalendar })
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore,
+      googleCalendar,
+    })
     await store.dispatch(loadSessionPreferencesThunk())
     await store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
     await store.dispatch(startSessionThunk({ now: NOW }))
     return { store, localStore, calls }
@@ -923,9 +979,7 @@ describe('calendar logging', () => {
 
   it('logs the concluded session with canon’s intention and span', async () => {
     const { store, calls } = await withCalendar({ connected: true })
-    await store.dispatch(
-      advanceSessionThunk({ now: at(TARGET) }),
-    )
+    await store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
 
     // The service composes `"Session: <intention>"` itself; this feature hands
     // it the intention, so the duplication #33's header warns about never
@@ -959,7 +1013,9 @@ describe('calendar logging', () => {
     // still a span — so this asserts the *shape* rather than the absence, and
     // the null path is covered purely in `SessionOutcome.test.ts`.
     await store.dispatch(abortSessionThunk({ now: NOW }))
-    expect(calls.filter((call) => call.startsWith('logSession'))).toHaveLength(1)
+    expect(calls.filter((call) => call.startsWith('logSession'))).toHaveLength(
+      1,
+    )
   })
 })
 
@@ -983,7 +1039,9 @@ describe('break flows', () => {
 
     expect(it.store.getState().session.phase).toBe(SessionPhase.ready)
     // One row: the focus session. The break never becomes a performance.
-    expect(await it.localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(
+      await it.localStore.performances.forEndeavor(SLIDES.id),
+    ).toHaveLength(1)
   })
 
   it('plays the break-complete cue when the break timer runs out', async () => {
@@ -998,10 +1056,9 @@ describe('break flows', () => {
     // `break_complete.mp3` does not ship yet — so the stub records it as a
     // miss rather than a play. The assertion is that the role was *requested*,
     // which is this feature's contract; shipping the file is #34's.
-    expect([
-      ...it.audio.playedRoles(),
-      ...it.audio.missedRoles(),
-    ]).toContain('breakComplete')
+    expect([...it.audio.playedRoles(), ...it.audio.missedRoles()]).toContain(
+      'breakComplete',
+    )
   })
 
   it('plays no cue when the user ends the break early — canon does not', async () => {
@@ -1024,12 +1081,17 @@ describe('break flows', () => {
   })
 
   it('auto-starts the break when the preference asks for it', async () => {
-    const it = await startedHarness({ breaksEnabled: true, autoStartBreak: true })
+    const it = await startedHarness({
+      breaksEnabled: true,
+      autoStartBreak: true,
+    })
     await it.store.dispatch(advanceSessionThunk({ now: at(TARGET) }))
 
     expect(it.store.getState().session.phase).toBe(SessionPhase.break)
     // The focus session is recorded exactly once on the way through.
-    expect(await it.localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(
+      await it.localStore.performances.forEndeavor(SLIDES.id),
+    ).toHaveLength(1)
   })
 })
 
@@ -1091,7 +1153,9 @@ describe('markEndeavorCompleteFromSessionThunk', () => {
 
     const record = await it.localStore.endeavors.get(SLIDES.id)
     expect(record?.status).toBe(EndeavorStatus.closed)
-    expect(await it.localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(
+      await it.localStore.performances.forEndeavor(SLIDES.id),
+    ).toHaveLength(1)
   })
 
   it('returns the runtime to ready with the anchor cleared', async () => {
@@ -1116,7 +1180,9 @@ describe('markEndeavorCompleteFromSessionThunk', () => {
     )
 
     const { load } = it.store.getState().session
-    expect(load.kind === 'failed' && load.exception.kind).toBe('markCompleteFailed')
+    expect(load.kind === 'failed' && load.exception.kind).toBe(
+      'markCompleteFailed',
+    )
   })
 
   // -- The close waits for the write ---------------------------------------
@@ -1173,12 +1239,16 @@ describe('markEndeavorCompleteFromSessionThunk', () => {
       ...stubbedThunkExtra,
       localStore: it.localStore,
     })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 60) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 60) }),
+    )
     await reloaded.dispatch(
       markEndeavorCompleteFromSessionThunk({ now: at(TARGET + 65) }),
     )
 
-    expect(await it.localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
+    expect(
+      await it.localStore.performances.forEndeavor(SLIDES.id),
+    ).toHaveLength(1)
     const record = await it.localStore.endeavors.get(SLIDES.id)
     expect(record?.status).toBe(EndeavorStatus.closed)
     expect(reloaded.getState().session.phase).toBe(SessionPhase.ready)
@@ -1207,7 +1277,9 @@ describe('updateSessionIdentityThunk', () => {
       updateSessionIdentityThunk({ symbol: '💻', now: at(60) }),
     )
 
-    expect(it.store.getState().session.identity?.title).toBe('💻 Prepare slides')
+    expect(it.store.getState().session.identity?.title).toBe(
+      '💻 Prepare slides',
+    )
     expect((await it.localStore.endeavors.get(SLIDES.id))?.title).toBe(
       '💻 Prepare slides',
     )
@@ -1231,7 +1303,9 @@ describe('updateSessionIdentityThunk', () => {
     )
 
     expect(it.anchor.total()).toBe(before)
-    expect(it.store.getState().session.identity?.title).toBe('📊 Prepare slides')
+    expect(it.store.getState().session.identity?.title).toBe(
+      '📊 Prepare slides',
+    )
   })
 })
 
@@ -1304,7 +1378,9 @@ describe('startSessionTickTask', () => {
   it('dispatches one advance per tick, moving the displayed clock', async () => {
     const it = await startedHarness()
     const driver = fakeClock(NOW)
-    const task = startSessionTickTask(it.store.dispatch, { clock: driver.clock })
+    const task = startSessionTickTask(it.store.dispatch, {
+      clock: driver.clock,
+    })
 
     driver.advance(1)
     await Promise.resolve()
@@ -1320,7 +1396,9 @@ describe('startSessionTickTask', () => {
   it('stops dispatching once aborted', async () => {
     const it = await startedHarness()
     const driver = fakeClock(NOW)
-    const task = startSessionTickTask(it.store.dispatch, { clock: driver.clock })
+    const task = startSessionTickTask(it.store.dispatch, {
+      clock: driver.clock,
+    })
 
     driver.advance(1)
     await Promise.resolve()
@@ -1335,7 +1413,9 @@ describe('startSessionTickTask', () => {
   it('is idempotent on abort — a second stop is harmless', async () => {
     const it = await startedHarness()
     const driver = fakeClock(NOW)
-    const task = startSessionTickTask(it.store.dispatch, { clock: driver.clock })
+    const task = startSessionTickTask(it.store.dispatch, {
+      clock: driver.clock,
+    })
 
     task.abort()
     expect(() => task.abort()).not.toThrow()
@@ -1347,7 +1427,9 @@ describe('startSessionTickTask', () => {
 // ---------------------------------------------------------------------------
 
 describe('tomatoCountFor', () => {
-  const withPerformances = (resolutions: readonly PerformResolution[]): Endeavor => ({
+  const withPerformances = (
+    resolutions: readonly PerformResolution[],
+  ): Endeavor => ({
     ...SLIDES,
     performances: resolutions.map((resolution) =>
       makePerform({ date: NOW, duration: 900, resolution }),
@@ -1355,13 +1437,18 @@ describe('tomatoCountFor', () => {
   })
 
   it('counts a completed session', () => {
-    expect(tomatoCountFor(withPerformances([PerformResolution.complete]))).toBe(1)
+    expect(tomatoCountFor(withPerformances([PerformResolution.complete]))).toBe(
+      1,
+    )
   })
 
   it('counts a finished one too', () => {
     expect(
       tomatoCountFor(
-        withPerformances([PerformResolution.complete, PerformResolution.finished]),
+        withPerformances([
+          PerformResolution.complete,
+          PerformResolution.finished,
+        ]),
       ),
     ).toBe(2)
   })
@@ -1369,7 +1456,10 @@ describe('tomatoCountFor', () => {
   it('never counts an aborted attempt', () => {
     expect(
       tomatoCountFor(
-        withPerformances([PerformResolution.aborted, PerformResolution.aborted]),
+        withPerformances([
+          PerformResolution.aborted,
+          PerformResolution.aborted,
+        ]),
       ),
     ).toBe(0)
   })

@@ -12,9 +12,8 @@ import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../../library/store'
 import { resolveCapabilityFlagsThunk } from '../FindCapabilitiesProducer'
 
-const storeWithFlags = (
-  featureFlags = stubbedThunkExtra.featureFlags,
-) => makeStore({ ...stubbedThunkExtra, featureFlags })
+const storeWithFlags = (featureFlags = stubbedThunkExtra.featureFlags) =>
+  makeStore({ ...stubbedThunkExtra, featureFlags })
 
 describe('resolveCapabilityFlagsThunk', () => {
   it('reports nothing enabled on the shipping baseline — endeavorDetail is dark-launched', async () => {

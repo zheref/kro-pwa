@@ -94,14 +94,19 @@ describe('planHostsFor', () => {
       localStore: makeInMemoryLocalStore(),
     })
     const google = hosts.find((host) => host.id === EndeavorHost.googleCalendar)
-    expect(await google?.fetchRange({ start: today, end: tomorrow })).toEqual([])
+    expect(await google?.fetchRange({ start: today, end: tomorrow })).toEqual(
+      [],
+    )
   })
 
   it('drops the Google host entirely when its flag is disabled (UZF-22)', () => {
     // `googleCalendarIntegration` is ENABLED at `statusQuo` — canon ships the
     // integration on — so this is the kill-switch path, not a rollout gate.
     const flags = makeHardcodedFeatureFlagService()
-    flags.change(FeatureFlags.googleCalendarIntegration, FeatureFlagState.disabled)
+    flags.change(
+      FeatureFlags.googleCalendarIntegration,
+      FeatureFlagState.disabled,
+    )
     const hosts = planHostsFor({
       ...stubbedThunkExtra,
       localStore: makeInMemoryLocalStore(),
@@ -152,7 +157,9 @@ describe('loadPlanDayThunk', () => {
   it('resolves an empty day rather than treating "nothing" as a failure', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(loadPlanDayThunk({ day: today, reason: PlanLoadReason.appWide }))
+      .dispatch(
+        loadPlanDayThunk({ day: today, reason: PlanLoadReason.appWide }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.value.events).toEqual([])
@@ -220,7 +227,8 @@ describe('loadPlanMatrixThunk', () => {
     ])
     const result = await store.dispatch(loadPlanMatrixThunk()).unwrap()
     expect(result.ok).toBe(true)
-    if (result.ok) expect(result.value.map((e) => e.id).sort()).toEqual(['a', 'b'])
+    if (result.ok)
+      expect(result.value.map((e) => e.id).sort()).toEqual(['a', 'b'])
   })
 
   it('resolves an error rather than throwing when the store cannot be read', async () => {

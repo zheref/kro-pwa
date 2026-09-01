@@ -166,7 +166,10 @@ function UnsupportedSection({
       >
         {title}
       </h3>
-      <p className="m-0 px-kro-small text-sm" style={{ color: colorVar('foreSecondary') }}>
+      <p
+        className="m-0 px-kro-small text-sm"
+        style={{ color: colorVar('foreSecondary') }}
+      >
         This filter is not available on Plan yet.
       </p>
     </section>

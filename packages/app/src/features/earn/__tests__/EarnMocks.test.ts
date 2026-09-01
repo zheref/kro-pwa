@@ -19,7 +19,9 @@ describe('EARN_MOCK_NOW', () => {
   })
 
   it('is the same on every read', () => {
-    expect(EARN_MOCK_NOW.getTime()).toBe(new Date(2026, 2, 17, 10, 0, 0).getTime())
+    expect(EARN_MOCK_NOW.getTime()).toBe(
+      new Date(2026, 2, 17, 10, 0, 0).getTime(),
+    )
   })
 })
 
@@ -36,8 +38,12 @@ describe('earnFixturePerformances', () => {
 describe('earnCatalogFixture', () => {
   it('straddles the fixture balance — one affordable, two not', () => {
     const balance = currentPoints(earnFixturePerformances, [], [])
-    const affordable = earnCatalogFixture.filter((r) => r.pointsRequired <= balance)
-    const unaffordable = earnCatalogFixture.filter((r) => r.pointsRequired > balance)
+    const affordable = earnCatalogFixture.filter(
+      (r) => r.pointsRequired <= balance,
+    )
+    const unaffordable = earnCatalogFixture.filter(
+      (r) => r.pointsRequired > balance,
+    )
     expect(affordable.length).toBeGreaterThan(0)
     expect(unaffordable.length).toBeGreaterThan(0)
   })

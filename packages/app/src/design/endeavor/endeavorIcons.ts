@@ -176,15 +176,15 @@ export function endeavorIcon(name: KitSymbolName): LucideIcon {
 export function iconForBindingSymbol(name: string): LucideIcon {
   const fromSystem = (SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[name]
   if (fromSystem !== undefined) return fromSystem
-  const fromKit = (ENDEAVOR_SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[name]
+  const fromKit = (ENDEAVOR_SF_SYMBOL_TO_LUCIDE as Record<string, LucideIcon>)[
+    name
+  ]
   return fromKit ?? CircleHelp
 }
 
 /** Whether `name` resolves to a real drawing rather than the help fallback. */
 export function isMappedSymbol(name: string): boolean {
-  return (
-    name in SF_SYMBOL_TO_LUCIDE || name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE
-  )
+  return name in SF_SYMBOL_TO_LUCIDE || name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE
 }
 
 export type { LucideIcon }

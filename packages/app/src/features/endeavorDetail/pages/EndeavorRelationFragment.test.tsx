@@ -35,7 +35,9 @@ const mount = (
     draft?: RelationDraft | null
     isDraftCommittable?: boolean
     isSaving?: boolean
-    exception?: ReturnType<typeof EndeavorDetailExceptions.relationSyncFailed> | null
+    exception?: ReturnType<
+      typeof EndeavorDetailExceptions.relationSyncFailed
+    > | null
     onChangeDraft?: (draft: RelationDraft | null) => void
     onCommitDraft?: () => void
     onRemoveEntry?: (index: number) => void
@@ -91,7 +93,7 @@ describe('the shared layout', () => {
 })
 
 describe('a read-only relation says WHY, and its empty state changes with it', () => {
-  it('replaces the add form with the kind\'s own reason', () => {
+  it("replaces the add form with the kind's own reason", () => {
     mount(detailEndeavorMocks.event, EndeavorRelation.performances)
 
     expect(
@@ -133,7 +135,9 @@ describe('a read-only relation says WHY, and its empty state changes with it', (
     )
 
     expect(screen.getByText('3 sessions')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: /^Remove performance/ })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: /^Remove performance/ }),
+    ).toBeNull()
   })
 })
 
@@ -179,7 +183,9 @@ describe('the add forms', () => {
       onRemoveEntry,
     })
 
-    const removes = screen.getAllByRole('button', { name: /^Remove performance/ })
+    const removes = screen.getAllByRole('button', {
+      name: /^Remove performance/,
+    })
     await userEvent.click(removes[0] as HTMLElement)
 
     expect(onRemoveEntry).toHaveBeenCalledWith(0)
@@ -195,7 +201,9 @@ describe('hosts cannot be attached in this build, and the screen says so', () =>
     ).toBeTruthy()
     // Both Apple providers give the same reason, so there are two of them.
     expect(
-      screen.getAllByText('Apple Calendar and Reminders have no web equivalent.'),
+      screen.getAllByText(
+        'Apple Calendar and Reminders have no web equivalent.',
+      ),
     ).toHaveLength(2)
   })
 
@@ -247,7 +255,7 @@ describe('relationEntryFromDraft', () => {
     })
   })
 
-  it('stamps a defer\'s `made` from the caller\'s clock, never its own', () => {
+  it("stamps a defer's `made` from the caller's clock, never its own", () => {
     const entry = relationEntryFromDraft(
       { relation: 'defers', draft: { target: NOW, reason: 'later' } },
       new Date(2026, 0, 1),
@@ -260,7 +268,7 @@ describe('relationEntryFromDraft', () => {
     })
   })
 
-  it('trims a shadow\'s identity columns and drops an empty group', () => {
+  it("trims a shadow's identity columns and drops an empty group", () => {
     const entry = relationEntryFromDraft(
       {
         relation: 'shadows',
@@ -285,7 +293,10 @@ describe('relationEntryFromDraft', () => {
 
   it('builds nothing for hosts, which attach rather than adding a row', () => {
     expect(
-      relationEntryFromDraft({ relation: 'hosts', host: 'googleCalendar' }, NOW),
+      relationEntryFromDraft(
+        { relation: 'hosts', host: 'googleCalendar' },
+        NOW,
+      ),
     ).toBeNull()
   })
 })
@@ -341,7 +352,9 @@ describe('the shadows list', () => {
 
   it('collects the four identity columns a mirror is matched on', async () => {
     const onChangeDraft = vi.fn()
-    mount(detailEndeavorMocks.event, EndeavorRelation.shadows, { onChangeDraft })
+    mount(detailEndeavorMocks.event, EndeavorRelation.shadows, {
+      onChangeDraft,
+    })
 
     await userEvent.type(screen.getByLabelText('Original title'), 'A')
     expect(onChangeDraft).toHaveBeenLastCalledWith({
@@ -364,7 +377,9 @@ describe('the shadows list', () => {
 
   it('removes a mirror by its position', async () => {
     const onRemoveEntry = vi.fn()
-    mount(detailEndeavorMocks.event, EndeavorRelation.shadows, { onRemoveEntry })
+    mount(detailEndeavorMocks.event, EndeavorRelation.shadows, {
+      onRemoveEntry,
+    })
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Remove Team sync' }),
@@ -400,7 +415,10 @@ describe('the performance form collects the user-meaningful subset', () => {
       onChangeDraft,
     })
 
-    await userEvent.selectOptions(screen.getByLabelText('Resolution'), 'aborted')
+    await userEvent.selectOptions(
+      screen.getByLabelText('Resolution'),
+      'aborted',
+    )
 
     expect(onChangeDraft).toHaveBeenLastCalledWith({
       relation: 'performances',
@@ -490,6 +508,8 @@ describe('the defer list', () => {
     )
 
     expect(screen.getByText('Waiting on finance')).toBeTruthy()
-    expect(screen.getByRole('button', { name: /^Remove defer to/ })).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /^Remove defer to/ }),
+    ).toBeTruthy()
   })
 })

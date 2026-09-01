@@ -111,7 +111,11 @@ export const AuthExceptions = {
     exception('incompleteForm', detail, true),
 
   unknown: (message: string): AuthException =>
-    exception('unknown', message.length === 0 ? 'Unexpected error.' : message, true),
+    exception(
+      'unknown',
+      message.length === 0 ? 'Unexpected error.' : message,
+      true,
+    ),
 } as const
 
 /** Every `kind` in the union, for the exhaustiveness tests and the debug list. */
@@ -134,7 +138,11 @@ export const authExceptionKinds: readonly AuthException['kind'][] = [
 /** Whether an arbitrary caught value already is one of ours. */
 export const isAuthException = (value: unknown): value is AuthException => {
   if (typeof value !== 'object' || value === null) return false
-  const candidate = value as { kind?: unknown; message?: unknown; recoverable?: unknown }
+  const candidate = value as {
+    kind?: unknown
+    message?: unknown
+    recoverable?: unknown
+  }
   return (
     typeof candidate.kind === 'string' &&
     typeof candidate.message === 'string' &&

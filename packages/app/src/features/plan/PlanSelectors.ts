@@ -33,7 +33,10 @@ import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import { isSamePlanDay, planDayKey } from './PlanCalendar'
 import { planEventsForDay } from './PlanDayCache'
-import { timelineEditPreview, timelineEventsWithEditPreview } from './PlanEditSession'
+import {
+  timelineEditPreview,
+  timelineEventsWithEditPreview,
+} from './PlanEditSession'
 import { planMatrixItems, planMatrixPickerCandidates } from './PlanMatrix'
 import {
   isPlanFabAvailable,
@@ -147,8 +150,9 @@ export const selectPlanAuthoritativeEvents = createSelector(
 )
 
 /** The typed exception the day is in, or `null`. */
-export const selectPlanDayException = createSelector([selectPlanSlice], (slice) =>
-  slice.dayLoad.kind === 'failed' ? slice.dayLoad.exception : null,
+export const selectPlanDayException = createSelector(
+  [selectPlanSlice],
+  (slice) => (slice.dayLoad.kind === 'failed' ? slice.dayLoad.exception : null),
 )
 
 /**
@@ -227,8 +231,10 @@ export const selectPlanEditingEndeavorId = createSelector(
 )
 
 /** The times the armed card currently shows, or `null`. */
-export const selectPlanEditPreview = createSelector([selectPlanSlice], (slice) =>
-  slice.editSession === null ? null : timelineEditPreview(slice.editSession),
+export const selectPlanEditPreview = createSelector(
+  [selectPlanSlice],
+  (slice) =>
+    slice.editSession === null ? null : timelineEditPreview(slice.editSession),
 )
 
 // ---------------------------------------------------------------- activity

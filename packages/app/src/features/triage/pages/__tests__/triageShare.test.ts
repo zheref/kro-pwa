@@ -14,7 +14,8 @@ import {
   triageShareNotice,
 } from '../triageShare'
 
-const BLURB = 'I\'d like you to help with "Draft Q3 product plan". (Shared from Kro.)'
+const BLURB =
+  'I\'d like you to help with "Draft Q3 product plan". (Shared from Kro.)'
 
 describe('the system share sheet', () => {
   it('hands the blurb to the share sheet when the browser has one', async () => {
@@ -32,7 +33,9 @@ describe('the system share sheet', () => {
   it('treats the user closing the sheet as a dismissal, not a failure', async () => {
     const share = vi
       .fn()
-      .mockRejectedValue(Object.assign(new Error('cancelled'), { name: 'AbortError' }))
+      .mockRejectedValue(
+        Object.assign(new Error('cancelled'), { name: 'AbortError' }),
+      )
     const writeText = vi.fn()
 
     const outcome = await performTriageShare(BLURB, { share, writeText })
@@ -99,9 +102,10 @@ describe('the live gateway', () => {
   it('offers neither capability on a navigator that has neither (jsdom)', () => {
     const gateway = browserTriageShareGateway()
     expect(gateway.share).toBeUndefined()
-    expect(typeof gateway.writeText === 'function' || gateway.writeText === undefined).toBe(
-      true,
-    )
+    expect(
+      typeof gateway.writeText === 'function' ||
+        gateway.writeText === undefined,
+    ).toBe(true)
   })
 
   it('binds share to navigator, so the call cannot throw "Illegal invocation"', async () => {

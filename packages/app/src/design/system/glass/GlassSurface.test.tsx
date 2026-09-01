@@ -28,7 +28,9 @@ describe('GlassSurface', () => {
   it('asks for the shallower blur on a small control', () => {
     render(<GlassSurface material="control" data-testid="surface" />)
 
-    expect(screen.getByTestId('surface').className).toContain('kro-glass--control')
+    expect(screen.getByTestId('surface').className).toContain(
+      'kro-glass--control',
+    )
   })
 
   it('drops the ring for a hairline on a bar, and raises it once scrolled', () => {

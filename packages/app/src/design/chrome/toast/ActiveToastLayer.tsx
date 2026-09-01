@@ -145,7 +145,12 @@ export function ActiveToastLayer({
         together with its first message announces nothing at all, because the
         technology was not yet observing it.
       */}
-      <div role="status" aria-live="polite" aria-atomic="true" style={VISUALLY_HIDDEN}>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={VISUALLY_HIDDEN}
+      >
         {toast?.message ?? ''}
       </div>
 

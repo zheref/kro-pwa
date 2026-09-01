@@ -70,7 +70,8 @@ const readEndeavor = async (
   localStore: LocalStore,
   endeavorId: string,
 ): Promise<Endeavor | null> => {
-  const record: EndeavorRecord | null = await localStore.endeavors.get(endeavorId)
+  const record: EndeavorRecord | null =
+    await localStore.endeavors.get(endeavorId)
   if (record === null) return null
 
   const [defers, performances] = await Promise.all([
@@ -303,7 +304,9 @@ export const deleteEndeavorThunk = createAsyncThunk<
       return ok(endeavorId)
     } catch (error) {
       return err(
-        DoExceptions.unknown(`Couldn't delete that endeavor: ${messageOf(error)}`),
+        DoExceptions.unknown(
+          `Couldn't delete that endeavor: ${messageOf(error)}`,
+        ),
       )
     } finally {
       dispatch(fetchDoEndeavorsThunk({ now }))

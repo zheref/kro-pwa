@@ -6,7 +6,13 @@
  * who has never set a duration still opens on a sensible number with every
  * switch off.
  */
-import { EMPIRICAL_SAMPLE_MINIMUM, PerformResolution, makeEndeavor, makePerform, EndeavorKind } from '@kro/core'
+import {
+  EMPIRICAL_SAMPLE_MINIMUM,
+  PerformResolution,
+  makeEndeavor,
+  makePerform,
+  EndeavorKind,
+} from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_DURATION_SEED,

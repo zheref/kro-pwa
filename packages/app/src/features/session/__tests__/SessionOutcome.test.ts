@@ -20,9 +20,7 @@ const MIDDLE = new Date(2026, 2, 17, 9, 10, 0)
 const RESUMED = new Date(2026, 2, 17, 9, 15, 0)
 const END = new Date(2026, 2, 17, 9, 30, 0)
 
-const outcome = (
-  overrides: Partial<SessionOutcome> = {},
-): SessionOutcome =>
+const outcome = (overrides: Partial<SessionOutcome> = {}): SessionOutcome =>
   makeSessionOutcome({
     endeavorId: 'e-1',
     intention: 'Prepare slides',

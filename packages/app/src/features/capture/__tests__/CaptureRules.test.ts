@@ -95,7 +95,9 @@ describe('the prompt kind vocabulary', () => {
 
 describe('hosting destinations', () => {
   it('shows Kro Cloud under its product name, not its vendor name', () => {
-    expect(captureDestinationLabel(CaptureDestination.kroCloud)).toBe('Kro Cloud')
+    expect(captureDestinationLabel(CaptureDestination.kroCloud)).toBe(
+      'Kro Cloud',
+    )
     expect(captureDestinationLabel(CaptureDestination.local)).toBe('On Device')
   })
 
@@ -289,7 +291,9 @@ describe('the next quarter-hour slot Add for Today offers', () => {
   it('never offers a slot that has already begun', () => {
     for (const minute of [0, 1, 14, 15, 29, 30, 44, 45, 59]) {
       const from = captureMockAt(17, 10, minute)
-      expect(nextQuarterHourSlot(from).getTime()).toBeGreaterThan(from.getTime())
+      expect(nextQuarterHourSlot(from).getTime()).toBeGreaterThan(
+        from.getTime(),
+      )
     }
   })
 })
@@ -405,7 +409,9 @@ describe('what a confirmed prompt emits', () => {
   })
 
   it('drops a habit’s date and a reminder’s reward points', () => {
-    expect(captureResultFromDraft(captureDraftFixtures.titledHabit)?.date).toBeNull()
+    expect(
+      captureResultFromDraft(captureDraftFixtures.titledHabit)?.date,
+    ).toBeNull()
     expect(
       captureResultFromDraft(captureDraftFixtures.titledReminder)?.rewards,
     ).toBeNull()
@@ -565,9 +571,9 @@ describe('where a capture sends the user', () => {
   })
 
   it('falls back to the Inbox for an event with no start to scroll to', () => {
-    expect(
-      captureRouteFor(captureEndeavorFixtures.unscheduledEvent).kind,
-    ).toBe('inbox')
+    expect(captureRouteFor(captureEndeavorFixtures.unscheduledEvent).kind).toBe(
+      'inbox',
+    )
   })
 
   it('waits the same half second before either route', () => {

@@ -48,7 +48,11 @@ import {
   TIMELINE_HOUR_HEIGHT_PX,
   TIMELINE_MINIMUM_CARD_HEIGHT_PX,
 } from './PlanConstants'
-import { planSecondsBetween, startOfNextPlanDay, startOfPlanDay } from './PlanCalendar'
+import {
+  planSecondsBetween,
+  startOfNextPlanDay,
+  startOfPlanDay,
+} from './PlanCalendar'
 
 /**
  * One event rectangle placed on the timeline: vertical offsets in pixels,
@@ -135,7 +139,12 @@ export const timelinePlacements = (
     const start = endeavor.start
     if (start === null) continue
     const end = new Date(start.getTime() + (endeavor.duration ?? 0) * 1000)
-    if (!(end.getTime() > bandStart.getTime() && start.getTime() < dayEnd.getTime())) {
+    if (
+      !(
+        end.getTime() > bandStart.getTime() &&
+        start.getTime() < dayEnd.getTime()
+      )
+    ) {
       continue
     }
     const clampedStart =

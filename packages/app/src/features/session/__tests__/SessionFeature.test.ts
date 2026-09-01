@@ -98,8 +98,10 @@ describe('userDidSelectMode', () => {
 describe('userDidSelectTargetDuration', () => {
   it('accepts a preset before the session starts', () => {
     expect(
-      reduce(sessionStateMocks.ready, userDidSelectTargetDuration(minutesInSeconds(45)))
-        .targetDuration,
+      reduce(
+        sessionStateMocks.ready,
+        userDidSelectTargetDuration(minutesInSeconds(45)),
+      ).targetDuration,
     ).toBe(minutesInSeconds(45))
   })
 
@@ -112,7 +114,8 @@ describe('userDidSelectTargetDuration', () => {
 
   it('refuses a zero duration, which would conclude instantly', () => {
     expect(
-      reduce(sessionStateMocks.ready, userDidSelectTargetDuration(0)).targetDuration,
+      reduce(sessionStateMocks.ready, userDidSelectTargetDuration(0))
+        .targetDuration,
     ).toBe(SESSION_MOCK_TARGET)
   })
 })
@@ -142,17 +145,17 @@ describe('the title editor', () => {
   })
 
   it('does nothing when there is no identity to edit', () => {
-    expect(reduce(initialSessionState, userDidTapEditTitle()).isEditingTitle).toBe(
-      false,
-    )
+    expect(
+      reduce(initialSessionState, userDidTapEditTitle()).isEditingTitle,
+    ).toBe(false)
   })
 })
 
 describe('the symbol picker', () => {
   it('opens on the glyph', () => {
-    expect(reduce(sessionStateMocks.ready, userDidTapSymbol()).isEditingSymbol).toBe(
-      true,
-    )
+    expect(
+      reduce(sessionStateMocks.ready, userDidTapSymbol()).isEditingSymbol,
+    ).toBe(true)
   })
 
   it('refuses to open during a break', () => {
@@ -195,13 +198,19 @@ describe('userDidTapStartNewSession', () => {
   const now = new Date(2026, 2, 17, 9, 30, 0)
 
   it('returns the runtime to ready with the anchor cleared', () => {
-    const next = reduce(sessionStateMocks.concluded, userDidTapStartNewSession({ now }))
+    const next = reduce(
+      sessionStateMocks.concluded,
+      userDidTapStartNewSession({ now }),
+    )
     expect(next.phase).toBe(SessionPhase.ready)
     expect(next.anchor).toBeNull()
   })
 
   it('resets the target to the configured default for the next session', () => {
-    const next = reduce(sessionStateMocks.concluded, userDidTapStartNewSession({ now }))
+    const next = reduce(
+      sessionStateMocks.concluded,
+      userDidTapStartNewSession({ now }),
+    )
     expect(next.targetDuration).toBe(
       sessionStateMocks.concluded.preferences.defaultDuration,
     )
@@ -296,7 +305,9 @@ describe('kill and reload, under a controlled clock', () => {
   it('concludes correctly when the reload lands after the target elapsed', async () => {
     const { store, localStore } = await liveSession()
     const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 600) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 600) }),
+    )
     // The very first tick after recovery observes an already-elapsed countdown.
     await reloaded.dispatch(advanceSessionThunk({ now: at(TARGET + 601) }))
 
@@ -306,9 +317,13 @@ describe('kill and reload, under a controlled clock', () => {
   it('records the whole overrun session exactly once after such a reload', async () => {
     const { store, localStore } = await liveSession()
     const reloaded = makeStore({ ...stubbedThunkExtra, localStore })
-    await reloaded.dispatch(hydrateRunningSessionThunk({ now: at(TARGET + 600) }))
+    await reloaded.dispatch(
+      hydrateRunningSessionThunk({ now: at(TARGET + 600) }),
+    )
     for (let extra = 1; extra <= 10; extra += 1) {
-      await reloaded.dispatch(advanceSessionThunk({ now: at(TARGET + 600 + extra) }))
+      await reloaded.dispatch(
+        advanceSessionThunk({ now: at(TARGET + 600 + extra) }),
+      )
     }
 
     expect(await localStore.performances.forEndeavor(SLIDES.id)).toHaveLength(1)
@@ -429,7 +444,8 @@ const rejectedArms: readonly {
   },
   {
     name: 'resumeSessionThunk',
-    reject: (error) => resumeSessionThunk.rejected(error, REQUEST, { now: NOW }),
+    reject: (error) =>
+      resumeSessionThunk.rejected(error, REQUEST, { now: NOW }),
   },
   {
     name: 'advanceSessionThunk',
@@ -524,7 +540,10 @@ describe('the recording claim moves only forward', () => {
     const store = makeStore({ ...stubbedThunkExtra, localStore })
     await store.dispatch(loadSessionPreferencesThunk())
     await store.dispatch(
-      prepareSessionLaunchThunk({ endeavorId: SLIDES.id, sessionId: SLIDES.id }),
+      prepareSessionLaunchThunk({
+        endeavorId: SLIDES.id,
+        sessionId: SLIDES.id,
+      }),
     )
     await store.dispatch(startSessionThunk({ now: NOW }))
 

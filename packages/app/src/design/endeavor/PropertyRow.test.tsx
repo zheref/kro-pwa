@@ -7,7 +7,12 @@ afterEach(cleanup)
 
 describe('PropertyRow', () => {
   it('reads as "label, value" — the pair a detail screen is made of', () => {
-    render(<PropertyRow label="Duration" value={{ kind: 'emphasis', text: '45m' }} />)
+    render(
+      <PropertyRow
+        label="Duration"
+        value={{ kind: 'emphasis', text: '45m' }}
+      />,
+    )
 
     expect(screen.getByText('Duration')).not.toBeNull()
     expect(screen.getAllByText('45m').length).toBeGreaterThan(0)
@@ -15,17 +20,26 @@ describe('PropertyRow', () => {
 
   it('restacks chip-shaped values, because a wrapped flow cannot trail-align', () => {
     const { container } = render(
-      <PropertyRow label="Tags" value={{ kind: 'tags', tags: ['Engaging', 'On desk'] }} />,
+      <PropertyRow
+        label="Tags"
+        value={{ kind: 'tags', tags: ['Engaging', 'On desk'] }}
+      />,
     )
 
-    const row = container.querySelector('[data-slot="property-row"]') as HTMLElement
+    const row = container.querySelector(
+      '[data-slot="property-row"]',
+    ) as HTMLElement
     expect(row.dataset.stacked).toBe('true')
   })
 
   it('does NOT restack an empty tag list — there is nothing to wrap', () => {
-    const { container } = render(<PropertyRow label="Tags" value={{ kind: 'tags', tags: [] }} />)
+    const { container } = render(
+      <PropertyRow label="Tags" value={{ kind: 'tags', tags: [] }} />,
+    )
 
-    const row = container.querySelector('[data-slot="property-row"]') as HTMLElement
+    const row = container.querySelector(
+      '[data-slot="property-row"]',
+    ) as HTMLElement
     expect(row.dataset.stacked).toBe('false')
   })
 
@@ -36,7 +50,9 @@ describe('PropertyRow', () => {
 
     // `rem` is the user's root font size, so a reader at 200% text gets the
     // stacked layout on a viewport twice as wide.
-    const row = container.querySelector('[data-slot="property-row"]') as HTMLElement
+    const row = container.querySelector(
+      '[data-slot="property-row"]',
+    ) as HTMLElement
     expect(row.className).toContain('max-[26rem]:flex-col')
   })
 
@@ -58,25 +74,37 @@ describe('PropertyRow', () => {
 describe('propertyRowAccessibilityText — canon’s accessibilityValue, exported so it can be asserted', () => {
   it('speaks a rating as a count, never as a row of glyph names', () => {
     expect(
-      propertyRowAccessibilityText({ kind: 'rating', value: 4, outOf: 5, symbol: 'star' }),
+      propertyRowAccessibilityText({
+        kind: 'rating',
+        value: 4,
+        outOf: 5,
+        symbol: 'star',
+      }),
     ).toBe('4 out of 5')
   })
 
   it('speaks an empty collection as "None", not as an em dash', () => {
-    expect(propertyRowAccessibilityText({ kind: 'tags', tags: [] })).toBe('None')
-    expect(propertyRowAccessibilityText({ kind: 'chips', chips: [] })).toBe('None')
+    expect(propertyRowAccessibilityText({ kind: 'tags', tags: [] })).toBe(
+      'None',
+    )
+    expect(propertyRowAccessibilityText({ kind: 'chips', chips: [] })).toBe(
+      'None',
+    )
   })
 
   it('joins a collection with commas', () => {
     expect(
-      propertyRowAccessibilityText({ kind: 'tags', tags: ['Engaging', 'On desk'] }),
+      propertyRowAccessibilityText({
+        kind: 'tags',
+        tags: ['Engaging', 'On desk'],
+      }),
     ).toBe('Engaging, On desk')
   })
 
   it('speaks the placeholder for an empty value', () => {
-    expect(propertyRowAccessibilityText({ kind: 'empty', placeholder: 'No expiry' })).toBe(
-      'No expiry',
-    )
+    expect(
+      propertyRowAccessibilityText({ kind: 'empty', placeholder: 'No expiry' }),
+    ).toBe('No expiry')
   })
 
   it('speaks a chip by its title, and the swatch by its label', () => {

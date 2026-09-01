@@ -176,7 +176,9 @@ describe('the supabaseHosting gate', () => {
 
     await service.push({ now: NOW })
 
-    expect(transport.calls().map((call) => call.kind)).not.toContain('resolveOwnerId')
+    expect(transport.calls().map((call) => call.kind)).not.toContain(
+      'resolveOwnerId',
+    )
   })
 })
 
@@ -186,7 +188,11 @@ describe('the supabaseHosting gate', () => {
 
 describe('the tombstone ruling (KC-IS-#31, routed from KC-PR-#48)', () => {
   it('differs from the canon predicate by exactly the tombstone — the two halves KC-IS-#10 shipped', () => {
-    const rows = [cleanRecord('clean'), dirtyRecord('dirty'), tombstonedRecord('gone')]
+    const rows = [
+      cleanRecord('clean'),
+      dirtyRecord('dirty'),
+      tombstonedRecord('gone'),
+    ]
 
     const canonPredicate = pendingSyncRecords(rows).map((row) => row.id)
     const rulingPredicate = dirtyRecords(rows).map((row) => row.id)
@@ -202,7 +208,9 @@ describe('the tombstone ruling (KC-IS-#31, routed from KC-PR-#48)', () => {
   it('pushes a tombstone as a DELETE — the schema has no deleted_at column to carry one', async () => {
     const { service, transport } = harness({
       endeavors: [tombstonedRecord('gone')],
-      rows: [{ id: 'gone', title: 'Pay Mortgage', kind: 'task', status: 'planned' }],
+      rows: [
+        { id: 'gone', title: 'Pay Mortgage', kind: 'task', status: 'planned' },
+      ],
       cloudEnabled: true,
     })
 
@@ -210,7 +218,10 @@ describe('the tombstone ruling (KC-IS-#31, routed from KC-PR-#48)', () => {
 
     expect(report.deleted).toEqual(['gone'])
     expect(report.pushed).toEqual([])
-    expect(transport.calls()).toContainEqual({ kind: 'deleteEndeavor', id: 'gone' })
+    expect(transport.calls()).toContainEqual({
+      kind: 'deleteEndeavor',
+      id: 'gone',
+    })
     expect(transport.rows()).toEqual([])
   })
 
@@ -293,7 +304,11 @@ describe('push', () => {
   it('never pushes another account rows, or anonymous ones', async () => {
     const foreign = recordFor(
       { ...endeavorMocks.plannedTask, id: 'foreign' },
-      { id: 'foreign', ownerUserId: 'someone-else', lastSyncedAtEpochMillis: null },
+      {
+        id: 'foreign',
+        ownerUserId: 'someone-else',
+        lastSyncedAtEpochMillis: null,
+      },
     )
     const anonymous = recordFor(
       { ...endeavorMocks.plannedTask, id: 'anon' },
@@ -332,7 +347,9 @@ describe('push', () => {
     const { service } = harness({
       endeavors: [dirtyRecord('live')],
       cloudEnabled: true,
-      failures: { resolveOwnerId: new Error('permission denied for table owners') },
+      failures: {
+        resolveOwnerId: new Error('permission denied for table owners'),
+      },
     })
 
     await expect(service.push({ now: NOW })).rejects.toMatchObject({
@@ -391,12 +408,18 @@ describe('pull', () => {
 
     expect(report.pulled).toEqual(['contested'])
     expect(report.localWins).toEqual([])
-    expect((await localStore.endeavors.get('contested'))?.title).toBe('From the cloud')
+    expect((await localStore.endeavors.get('contested'))?.title).toBe(
+      'From the cloud',
+    )
   })
 
   it('keeps a local row that is strictly newer, so an unpushed offline edit survives', async () => {
     const ahead = recordFor(
-      { ...endeavorMocks.plannedTask, id: 'contested', title: 'Edited offline' },
+      {
+        ...endeavorMocks.plannedTask,
+        id: 'contested',
+        title: 'Edited offline',
+      },
       {
         id: 'contested',
         title: 'Edited offline',
@@ -413,7 +436,9 @@ describe('pull', () => {
     const report = await service.pull({ now: NOW })
 
     expect(report.localWins).toEqual(['contested'])
-    expect((await localStore.endeavors.get('contested'))?.title).toBe('Edited offline')
+    expect((await localStore.endeavors.get('contested'))?.title).toBe(
+      'Edited offline',
+    )
   })
 
   it('resolves a tie to the cloud, matching lastWriteWins', async () => {
@@ -435,7 +460,9 @@ describe('pull', () => {
 
     await service.pull({ now: NOW })
 
-    expect((await localStore.endeavors.get('contested'))?.title).toBe('From the cloud')
+    expect((await localStore.endeavors.get('contested'))?.title).toBe(
+      'From the cloud',
+    )
   })
 
   it('skips a cloud row whose kind it cannot decode rather than storing a guess', async () => {
@@ -511,9 +538,9 @@ describe('the stubbed engine', () => {
   it('reports disabled by default, which is what a correctly configured build does', async () => {
     const stub = makeStubbedEndeavorSyncService()
     expect((await stub.synchronize({ now: NOW })).status).toBe('disabled')
-    expect(await stub.pushOne({ endeavor: endeavorMocks.plannedTask, now: NOW })).toBe(
-      'unavailable',
-    )
+    expect(
+      await stub.pushOne({ endeavor: endeavorMocks.plannedTask, now: NOW }),
+    ).toBe('unavailable')
   })
 
   it('records which operations were asked of it', async () => {

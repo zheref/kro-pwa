@@ -173,7 +173,9 @@ describe('selectPlanListEndeavors', () => {
   it('leaves an untimed row due on ANOTHER day out of this day list', () => {
     const otherDay = {
       ...planListBucketFixtures.untimedDueToday,
-      due: new Date(planListBucketFixtures.untimedDueToday.due!.getTime() + 86_400_000),
+      due: new Date(
+        planListBucketFixtures.untimedDueToday.due!.getTime() + 86_400_000,
+      ),
     }
     const root = rootWith(
       planWith({ pool: { kind: 'loaded', endeavors: [otherDay] } }),
@@ -196,9 +198,10 @@ describe('selectPlanListEndeavors', () => {
 
     // Under Time the timed 14:00 call leads, because the untimed row has no
     // start at all and floats to the end.
-    expect(
-      selectPlanListEndeavors(rootWith(day)).map((e) => e.id),
-    ).toEqual(['list-coming-next', 'list-untimed-overdue'])
+    expect(selectPlanListEndeavors(rootWith(day)).map((e) => e.id)).toEqual([
+      'list-coming-next',
+      'list-untimed-overdue',
+    ])
 
     // Under Priority the overdue permit leads — which it could not do if the
     // two halves were concatenated as two pre-sorted runs.
@@ -217,12 +220,9 @@ describe('selectPlanListSections', () => {
         timed: { kind: 'loaded', dayKey, events: planListMixedDay },
       }),
     )
-    expect(selectPlanListSections(root).map((section) => section.title)).toEqual([
-      'All Day',
-      'Past Events',
-      'Ongoing',
-      'Coming Next',
-    ])
+    expect(
+      selectPlanListSections(root).map((section) => section.title),
+    ).toEqual(['All Day', 'Past Events', 'Ongoing', 'Coming Next'])
   })
 
   it('regroups the SAME day by project when the preference changes', () => {

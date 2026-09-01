@@ -71,9 +71,7 @@ export interface EndeavorDurationDraft {
  * profile with only a preferred value opens with all three dials agreeing
  * instead of two of them sitting at zero.
  */
-export const durationDraftFor = (
-  endeavor: Endeavor,
-): EndeavorDurationDraft => {
+export const durationDraftFor = (endeavor: Endeavor): EndeavorDurationDraft => {
   const observed = empiricalDuration(endeavor)
   const seed = endeavor.duration ?? observed ?? DEFAULT_DURATION_SEED
   return {

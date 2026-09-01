@@ -46,7 +46,10 @@ import {
   type GoogleFormTransport,
   makeLiveGoogleOAuthService,
 } from '../GoogleOAuthService'
-import { ambientCryptoSource, makeWebCryptoTokenVault } from '../GoogleTokenVault'
+import {
+  ambientCryptoSource,
+  makeWebCryptoTokenVault,
+} from '../GoogleTokenVault'
 import fixtures from '../google.fixtures.json'
 
 const crypto = ambientCryptoSource()
@@ -104,7 +107,9 @@ const formTransport = (ledger: Ledger): GoogleFormTransport => ({
 })
 
 const makeDeps = (ledger: Ledger): GoogleRouteDependencies => ({
-  environment: googleCalendarEnvironmentFrom(makeRecordEnvironment(ENVIRONMENT)),
+  environment: googleCalendarEnvironmentFrom(
+    makeRecordEnvironment(ENVIRONMENT),
+  ),
   vault: makeWebCryptoTokenVault({ secret: tokenKeyFixture, crypto }),
   oauth: makeLiveGoogleOAuthService({
     clientId: ENVIRONMENT[names.clientId] as string,
@@ -266,7 +271,8 @@ describe('SEC-5 — no credential reaches a URL', () => {
     const ledger = makeLedger()
     await runWholeIntegration(ledger)
     for (const value of ledger.clientVisible) {
-      for (const secret of allSecretFixtures) expect(value).not.toContain(secret)
+      for (const secret of allSecretFixtures)
+        expect(value).not.toContain(secret)
     }
   })
 
@@ -391,7 +397,9 @@ describe('SEC-5 — the client tier structurally cannot leak a token', () => {
     const { makeStubbedGoogleCalendarService } = await import(
       '../GoogleCalendarService'
     )
-    const { GoogleCalendarConnections } = await import('../GoogleCalendarConnection')
+    const { GoogleCalendarConnections } = await import(
+      '../GoogleCalendarConnection'
+    )
     const service = makeStubbedGoogleCalendarService({
       connection: GoogleCalendarConnections.connected(['calendar']),
     })
@@ -408,7 +416,8 @@ describe('SEC-5 — the client tier structurally cannot leak a token', () => {
       service.authorizationPath(),
     ].join('\n')
 
-    for (const secret of allSecretFixtures) expect(answers).not.toContain(secret)
+    for (const secret of allSecretFixtures)
+      expect(answers).not.toContain(secret)
     expect(answers).not.toMatch(/access_token|refresh_token|Bearer /)
   })
 })

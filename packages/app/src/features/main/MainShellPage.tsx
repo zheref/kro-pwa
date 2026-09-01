@@ -74,10 +74,7 @@ import {
 import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { searchDestination } from './NavigationSections'
-import {
-  DestinationKind,
-  type SidebarDestination,
-} from './SidebarDestination'
+import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
 import { ToolbarSlotsProvider } from './ToolbarSlots'
 import { useSurfaceLayout } from './useSurfaceLayout'
@@ -93,10 +90,7 @@ export interface MainShellPageProps {
   readonly children?: ReactNode
 }
 
-export function MainShellPage({
-  isDevelopment,
-  children,
-}: MainShellPageProps) {
+export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
   const dispatch = useAppDispatch()
   const surface = useSurfaceLayout()
 
@@ -195,20 +189,20 @@ export function MainShellPage({
     (projectId: string) => {
       const wasSelected =
         selected.kind === 'list' && selected.listId === projectId
-      void dispatch(deleteProjectThunk({ id: projectId, now: new Date() })).then(
-        () => {
-          // The shifter already moves `selected` to My Day; the URL must
-          // follow, or the route remount re-selects the deleted list and the
-          // highlight snaps back.
-          if (wasSelected) {
-            void dispatch(
-              navigateToDestinationThunk({
-                destination: { kind: DestinationKind.myDay },
-              }),
-            )
-          }
-        },
-      )
+      void dispatch(
+        deleteProjectThunk({ id: projectId, now: new Date() }),
+      ).then(() => {
+        // The shifter already moves `selected` to My Day; the URL must
+        // follow, or the route remount re-selects the deleted list and the
+        // highlight snaps back.
+        if (wasSelected) {
+          void dispatch(
+            navigateToDestinationThunk({
+              destination: { kind: DestinationKind.myDay },
+            }),
+          )
+        }
+      })
     },
     [dispatch, selected],
   )
@@ -262,7 +256,9 @@ export function MainShellPage({
           onTapProfile={() =>
             onSelectDestination({ kind: DestinationKind.settings })
           }
-          onTapInbox={() => onSelectDestination({ kind: DestinationKind.inbox })}
+          onTapInbox={() =>
+            onSelectDestination({ kind: DestinationKind.inbox })
+          }
           onTapSettings={() =>
             onSelectDestination({ kind: DestinationKind.settings })
           }

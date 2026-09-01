@@ -28,7 +28,10 @@ import { signOutIntents } from '../SignOutIntents'
 
 describe('withAuthFlowStarted', () => {
   it('spins the named flow from a signed-out state (the user taps Sign In)', () => {
-    const next = withAuthFlowStarted(AuthMocks.signedOut, AuthFlow.emailPassword)
+    const next = withAuthFlowStarted(
+      AuthMocks.signedOut,
+      AuthFlow.emailPassword,
+    )
     expect(next.session).toEqual({
       kind: 'authenticating',
       flow: AuthFlow.emailPassword,
@@ -67,7 +70,10 @@ describe('withAuthFailed', () => {
   })
 
   it('replaces an earlier failure rather than stacking one', () => {
-    const first = withAuthFailed(AuthMocks.signedOut, AuthExceptions.cancelled())
+    const first = withAuthFailed(
+      AuthMocks.signedOut,
+      AuthExceptions.cancelled(),
+    )
     const second = withAuthFailed(first, AuthExceptions.networkUnavailable())
     expect(second.session).toEqual({
       kind: 'failed',
@@ -79,7 +85,10 @@ describe('withAuthFailed', () => {
 describe('withSignedIn', () => {
   it('settles the session on the account', () => {
     const next = withSignedIn(AuthMocks.authenticating, authUserMocks.typical)
-    expect(next.session).toEqual({ kind: 'signedIn', user: authUserMocks.typical })
+    expect(next.session).toEqual({
+      kind: 'signedIn',
+      user: authUserMocks.typical,
+    })
   })
 
   it('empties the form — a password with no remaining purpose is not held', () => {
@@ -89,7 +98,9 @@ describe('withSignedIn', () => {
 
   it('drops the Apple nonce, whose attempt has now resolved', () => {
     const withNonce = withAppleChallengeMinted(AuthMocks.signedOut, 'raw-nonce')
-    expect(withSignedIn(withNonce, authUserMocks.apple).appleRawNonce).toBeNull()
+    expect(
+      withSignedIn(withNonce, authUserMocks.apple).appleRawNonce,
+    ).toBeNull()
   })
 })
 
@@ -101,7 +112,9 @@ describe('withSignedOutResolved', () => {
   })
 
   it('is distinct from a failure — nothing went wrong', () => {
-    expect(withSignedOutResolved(AuthMocks.unknown).session.kind).not.toBe('failed')
+    expect(withSignedOutResolved(AuthMocks.unknown).session.kind).not.toBe(
+      'failed',
+    )
   })
 
   it('leaves the form alone, so a half-typed sign-in survives the restore answering', () => {
@@ -148,7 +161,9 @@ describe('withSignedOut', () => {
 
 describe('withSignOutIntentsAcknowledged', () => {
   it('clears the queue once a surface has performed it', () => {
-    const next = withSignOutIntentsAcknowledged(AuthMocks.signedOutWithPendingIntents)
+    const next = withSignOutIntentsAcknowledged(
+      AuthMocks.signedOutWithPendingIntents,
+    )
     expect(next.pendingSignOutIntents).toEqual([])
   })
 
@@ -158,7 +173,9 @@ describe('withSignOutIntentsAcknowledged', () => {
   })
 
   it('leaves the session untouched', () => {
-    const next = withSignOutIntentsAcknowledged(AuthMocks.signedOutWithPendingIntents)
+    const next = withSignOutIntentsAcknowledged(
+      AuthMocks.signedOutWithPendingIntents,
+    )
     expect(next.session.kind).toBe('signedOut')
   })
 })
@@ -186,7 +203,11 @@ describe('withModeToggled', () => {
 describe('withFormField', () => {
   it('sets one field and leaves the others', () => {
     const next = withFormField(AuthMocks.signedOut, 'email', 'ada@example.com')
-    expect(next.form).toEqual({ email: 'ada@example.com', password: '', name: '' })
+    expect(next.form).toEqual({
+      email: 'ada@example.com',
+      password: '',
+      name: '',
+    })
   })
 
   it('accepts an empty value — clearing a field is a real edit', () => {
@@ -204,11 +225,15 @@ describe('withFormField', () => {
 
 describe('withExceptionCleared', () => {
   it('dismisses a failure', () => {
-    expect(withExceptionCleared(AuthMocks.failed).session.kind).toBe('signedOut')
+    expect(withExceptionCleared(AuthMocks.failed).session.kind).toBe(
+      'signedOut',
+    )
   })
 
   it('leaves a signed-in session alone', () => {
-    expect(withExceptionCleared(AuthMocks.signedIn).session.kind).toBe('signedIn')
+    expect(withExceptionCleared(AuthMocks.signedIn).session.kind).toBe(
+      'signedIn',
+    )
   })
 
   it('leaves a running flow alone — dismissing a banner does not cancel a sign-in', () => {
@@ -220,14 +245,16 @@ describe('withExceptionCleared', () => {
 
 describe('withAppleChallengeMinted', () => {
   it('stores the raw nonce for the attempt in flight', () => {
-    expect(withAppleChallengeMinted(AuthMocks.signedOut, 'raw').appleRawNonce).toBe(
-      'raw',
-    )
+    expect(
+      withAppleChallengeMinted(AuthMocks.signedOut, 'raw').appleRawNonce,
+    ).toBe('raw')
   })
 
   it('replaces a previous nonce, so only one attempt is ever live', () => {
     const first = withAppleChallengeMinted(AuthMocks.signedOut, 'first')
-    expect(withAppleChallengeMinted(first, 'second').appleRawNonce).toBe('second')
+    expect(withAppleChallengeMinted(first, 'second').appleRawNonce).toBe(
+      'second',
+    )
   })
 
   it('never stores the hashed half, which belongs to Apple and not to this device', () => {
@@ -254,7 +281,10 @@ describe('the existing-local-data dialog', () => {
       pendingUser: authUserMocks.typical,
       anonymousCount: 1,
     })
-    expect(next.session).toEqual({ kind: 'signedIn', user: authUserMocks.typical })
+    expect(next.session).toEqual({
+      kind: 'signedIn',
+      user: authUserMocks.typical,
+    })
   })
 
   it('moves to resolving on a choice, carrying the account forward', () => {
@@ -271,14 +301,15 @@ describe('the existing-local-data dialog', () => {
 
   it('ignores a choice when no dialog is up', () => {
     expect(
-      withLocalDataChoiceStarted(AuthMocks.signedIn, LocalDataChoice.clearAll).localData,
+      withLocalDataChoiceStarted(AuthMocks.signedIn, LocalDataChoice.clearAll)
+        .localData,
     ).toEqual({ kind: 'hidden' })
   })
 
   it('hides on success', () => {
-    expect(withLocalDataDialogDismissed(AuthMocks.localDataResolving).localData).toEqual(
-      { kind: 'hidden' },
-    )
+    expect(
+      withLocalDataDialogDismissed(AuthMocks.localDataResolving).localData,
+    ).toEqual({ kind: 'hidden' })
   })
 
   it('re-opens on failure rather than stranding a signed-in account with unresolved rows', () => {
@@ -301,25 +332,30 @@ describe('the sync footers', () => {
   it('records a successful settings sync with its instant', () => {
     const at = new Date('2026-08-31T09:00:00.000Z')
     expect(
-      withSettingsSyncState(AuthMocks.signedIn, { kind: 'synced', at }).settingsSync,
+      withSettingsSyncState(AuthMocks.signedIn, { kind: 'synced', at })
+        .settingsSync,
     ).toEqual({ kind: 'synced', at })
   })
 
   it('records an offline settings attempt', () => {
     expect(
-      withSettingsSyncState(AuthMocks.signedIn, { kind: 'offline' }).settingsSync,
+      withSettingsSyncState(AuthMocks.signedIn, { kind: 'offline' })
+        .settingsSync,
     ).toEqual({ kind: 'offline' })
   })
 
   it('records a disabled endeavor engine — the shipping state, not a failure', () => {
     expect(
-      withEndeavorSyncState(AuthMocks.signedIn, { kind: 'disabled' }).endeavorSync,
+      withEndeavorSyncState(AuthMocks.signedIn, { kind: 'disabled' })
+        .endeavorSync,
     ).toEqual({ kind: 'disabled' })
   })
 
   it('records a failed sweep with its typed exception', () => {
     const exception = EndeavorSyncExceptions.pullFailed('503')
-    expect(withEndeavorSyncFailed(AuthMocks.signedIn, exception).endeavorSync).toEqual({
+    expect(
+      withEndeavorSyncFailed(AuthMocks.signedIn, exception).endeavorSync,
+    ).toEqual({
       kind: 'failed',
       exception,
     })
@@ -340,7 +376,10 @@ describe('withSignInOutcome', () => {
       ok: true,
       value: { user: authUserMocks.typical, localDataPrompt: null },
     })
-    expect(next.session).toEqual({ kind: 'signedIn', user: authUserMocks.typical })
+    expect(next.session).toEqual({
+      kind: 'signedIn',
+      user: authUserMocks.typical,
+    })
     expect(next.localData).toEqual({ kind: 'hidden' })
   })
 

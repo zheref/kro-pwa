@@ -88,14 +88,19 @@ export interface AuthService {
 }
 
 /** The two providers Kro's OAuth redirect supports. */
-export const oauthRedirectProviders: readonly AuthProvider[] = ['google', 'apple']
+export const oauthRedirectProviders: readonly AuthProvider[] = [
+  'google',
+  'apple',
+]
 
 /**
  * A domain `AuthProvider` to supabase-js's `Provider`, or `null` when the
  * provider has no redirect flow (`email_password` is a credential grant, and
  * `facebook` is declared in the domain but wired on no Kro surface).
  */
-export const supabaseProviderFor = (provider: AuthProvider): Provider | null => {
+export const supabaseProviderFor = (
+  provider: AuthProvider,
+): Provider | null => {
   if (provider === 'google') return 'google'
   if (provider === 'apple') return 'apple'
   return null
@@ -120,7 +125,9 @@ export interface LiveAuthServiceOptions {
 }
 
 const defaultNavigate = (url: string): void => {
-  const host = globalThis as { readonly location?: { assign?: (target: string) => void } }
+  const host = globalThis as {
+    readonly location?: { assign?: (target: string) => void }
+  }
   host.location?.assign?.(url)
 }
 
@@ -181,14 +188,16 @@ const ensureProfileRow = async (
     throw AuthExceptions.userCreationFailed('profile row missing after upsert')
   }
 
-  const needsName = (row.name ?? '').length === 0 && (params.name ?? '').length > 0
+  const needsName =
+    (row.name ?? '').length === 0 && (params.name ?? '').length > 0
   const needsAvatar =
     (row.avatar_url ?? '').length === 0 && (params.avatarUrl ?? '').length > 0
 
   if (needsName || needsAvatar) {
     const patch: { name?: string; avatar_url?: string } = {}
     if (needsName && params.name !== null) patch.name = params.name
-    if (needsAvatar && params.avatarUrl !== null) patch.avatar_url = params.avatarUrl
+    if (needsAvatar && params.avatarUrl !== null)
+      patch.avatar_url = params.avatarUrl
 
     const updated = await client
       .from(USERS_TABLE)
@@ -223,7 +232,9 @@ const metadataString = (
   return null
 }
 
-export const makeLiveAuthService = (options: LiveAuthServiceOptions): AuthService => {
+export const makeLiveAuthService = (
+  options: LiveAuthServiceOptions,
+): AuthService => {
   const { clientProvider } = options
   const navigate = options.navigate ?? defaultNavigate
   const crypto = options.crypto === undefined ? ambientCrypto() : options.crypto
@@ -237,7 +248,10 @@ export const makeLiveAuthService = (options: LiveAuthServiceOptions): AuthServic
       const sessionUser = data.session?.user
       if (sessionUser === undefined) return null
 
-      const read = await client.from(USERS_TABLE).select().eq('id', sessionUser.id)
+      const read = await client
+        .from(USERS_TABLE)
+        .select()
+        .eq('id', sessionUser.id)
       if (read.error !== null) throw read.error
       const row = (read.data as readonly UserRow[] | null)?.[0]
       return row === undefined ? null : AuthMapper.toDomain(row)
@@ -245,7 +259,10 @@ export const makeLiveAuthService = (options: LiveAuthServiceOptions): AuthServic
 
     async signInWithEmail(email, password) {
       const client = requireClient(clientProvider)
-      const { data, error } = await client.auth.signInWithPassword({ email, password })
+      const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password,
+      })
       if (error !== null) throw error
       return ensureProfileRow(client, {
         userId: data.user.id,
@@ -287,7 +304,8 @@ export const makeLiveAuthService = (options: LiveAuthServiceOptions): AuthServic
 
     async signInWithAppleIdToken(credentials) {
       const client = requireClient(clientProvider)
-      if (credentials.idToken.length === 0) throw AuthExceptions.noIdentityToken()
+      if (credentials.idToken.length === 0)
+        throw AuthExceptions.noIdentityToken()
       const { data, error } = await client.auth.signInWithIdToken({
         provider: 'apple',
         token: credentials.idToken,
@@ -377,10 +395,14 @@ export const oauthProfileFromMetadata = (
 // Stub
 // ---------------------------------------------------------------------------
 
-const fixtureRows = fixtures.users as unknown as Readonly<Record<string, UserRow>>
+const fixtureRows = fixtures.users as unknown as Readonly<
+  Record<string, UserRow>
+>
 
 /** The fixture profiles, as domain users, for tests and stories. */
-export const authFixtureUsers: Readonly<Record<'email' | 'apple' | 'google', User>> = {
+export const authFixtureUsers: Readonly<
+  Record<'email' | 'apple' | 'google', User>
+> = {
   email: AuthMapper.toDomain(fixtureRows.email as UserRow) as User,
   apple: AuthMapper.toDomain(fixtureRows.apple as UserRow) as User,
   google: AuthMapper.toDomain(fixtureRows.google as UserRow) as User,
@@ -465,7 +487,12 @@ export const makeStubbedAuthService = (
     async signUpWithEmail(email, _password, name) {
       record('signUpWithEmail')
       const fixture = authFixtureUsers.email
-      return signedIn({ ...fixture, emails: [email], name, connectedProviders: [] })
+      return signedIn({
+        ...fixture,
+        emails: [email],
+        name,
+        connectedProviders: [],
+      })
     },
 
     async beginAppleSignIn() {
@@ -480,10 +507,13 @@ export const makeStubbedAuthService = (
 
     async signInWithAppleIdToken(credentials) {
       record('signInWithAppleIdToken')
-      if (credentials.idToken.length === 0) throw AuthExceptions.noIdentityToken()
+      if (credentials.idToken.length === 0)
+        throw AuthExceptions.noIdentityToken()
       const fixture = authFixtureUsers.apple
       return signedIn(
-        credentials.fullName === null ? fixture : { ...fixture, name: credentials.fullName },
+        credentials.fullName === null
+          ? fixture
+          : { ...fixture, name: credentials.fullName },
       )
     },
 
@@ -494,7 +524,10 @@ export const makeStubbedAuthService = (
       }
       // No navigation, no network: the URL is synthesised so a test can assert
       // the provider and the return address were carried correctly.
-      return { provider, url: `https://auth.kro.invalid/${provider}?redirect=${redirectTo}` }
+      return {
+        provider,
+        url: `https://auth.kro.invalid/${provider}?redirect=${redirectTo}`,
+      }
     },
 
     async updateProfile(next) {

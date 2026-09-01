@@ -146,7 +146,8 @@ export const OnBreak = {
 
 export const Concluded = {
   name: 'Concluded — untinted glass, blue Mark complete',
-  render: () => bothSchemes('Concluded', () => pill(sessionPillMocks.concluded)),
+  render: () =>
+    bothSchemes('Concluded', () => pill(sessionPillMocks.concluded)),
 }
 
 export const LongTitle = {

@@ -103,12 +103,19 @@ describe('the weekday chips', () => {
 
 describe('the accent swatches', () => {
   it('maps every canon choice to a colour', () => {
-    for (const choice of ['blue', 'purple', 'green', 'orange', 'pink', 'graphite']) {
+    for (const choice of [
+      'blue',
+      'purple',
+      'green',
+      'orange',
+      'pink',
+      'graphite',
+    ]) {
       expect(ACCENT_SWATCH_COLOR[choice]).toMatch(/^#[0-9a-f]{6}$/)
     }
   })
 
-  it("maps graphite to canon Color(white: 0.4)", () => {
+  it('maps graphite to canon Color(white: 0.4)', () => {
     expect(accentSwatchColor('graphite')).toBe('#666666')
   })
 
@@ -133,7 +140,7 @@ describe('time zones', () => {
     expect(deviceTimeZone().length).toBeGreaterThan(0)
   })
 
-  it("spaces an identifier underscores, as canon Picker does", () => {
+  it('spaces an identifier underscores, as canon Picker does', () => {
     expect(timeZoneLabel('America/New_York')).toBe('America/New York')
   })
 })

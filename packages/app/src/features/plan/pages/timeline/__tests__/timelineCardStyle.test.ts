@@ -21,7 +21,10 @@ import {
   rippleDiameterCss,
 } from '../timelineCardStyle'
 
-const event = (overrides: { associatedColor?: string | null; duration?: number }) =>
+const event = (overrides: {
+  associatedColor?: string | null
+  duration?: number
+}) =>
   makeEndeavor({
     id: 'card',
     title: 'Design review',

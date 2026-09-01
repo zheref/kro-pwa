@@ -52,7 +52,9 @@ describe('the initial state', () => {
 
 describe('the form events', () => {
   it('records an email as the user types it', () => {
-    expect(reduce(initialAuthState, userDidChangeEmail('ada@')).form.email).toBe('ada@')
+    expect(
+      reduce(initialAuthState, userDidChangeEmail('ada@')).form.email,
+    ).toBe('ada@')
   })
 
   it('records a password without touching the other fields', () => {
@@ -61,7 +63,9 @@ describe('the form events', () => {
   })
 
   it('records a name', () => {
-    expect(reduce(initialAuthState, userDidChangeName('Ada')).form.name).toBe('Ada')
+    expect(reduce(initialAuthState, userDidChangeName('Ada')).form.name).toBe(
+      'Ada',
+    )
   })
 
   it('accepts a cleared field — deleting what you typed is a real edit', () => {
@@ -77,7 +81,9 @@ describe('the form events', () => {
 
 describe('userDidTapToggleMode', () => {
   it('switches to create-account', () => {
-    expect(reduce(initialAuthState, userDidTapToggleMode()).mode).toBe(AuthMode.signUp)
+    expect(reduce(initialAuthState, userDidTapToggleMode()).mode).toBe(
+      AuthMode.signUp,
+    )
   })
 
   it('switches back', () => {
@@ -99,15 +105,15 @@ describe('userDidTapToggleMode', () => {
 
 describe('userDidDismissException', () => {
   it('dismisses a failure banner', () => {
-    expect(reduce(AuthMocks.failed, userDidDismissException()).session.kind).toBe(
-      'signedOut',
-    )
+    expect(
+      reduce(AuthMocks.failed, userDidDismissException()).session.kind,
+    ).toBe('signedOut')
   })
 
   it('is a no-op when nothing failed', () => {
-    expect(reduce(AuthMocks.signedIn, userDidDismissException()).session.kind).toBe(
-      'signedIn',
-    )
+    expect(
+      reduce(AuthMocks.signedIn, userDidDismissException()).session.kind,
+    ).toBe('signedIn')
   })
 
   it('does not cancel a running flow', () => {
@@ -130,12 +136,18 @@ describe('onAppleAuthorizationFailed', () => {
   })
 
   it('stops the spinner', () => {
-    const next = reduce(AuthMocks.authenticating, onAppleAuthorizationFailed('x'))
+    const next = reduce(
+      AuthMocks.authenticating,
+      onAppleAuthorizationFailed('x'),
+    )
     expect(next.session.kind).not.toBe('authenticating')
   })
 
   it('names the reported reason in the message for logs', () => {
-    const next = reduce(AuthMocks.authenticating, onAppleAuthorizationFailed('invalid_client'))
+    const next = reduce(
+      AuthMocks.authenticating,
+      onAppleAuthorizationFailed('invalid_client'),
+    )
     expect(next.session).toMatchObject({
       exception: { message: expect.stringContaining('invalid_client') },
     })
@@ -150,12 +162,16 @@ describe('onProviderSheetDismissed', () => {
 
   it('records the cancellation as its own case, which renders no banner', () => {
     const next = reduce(AuthMocks.authenticating, onProviderSheetDismissed())
-    expect(next.session).toMatchObject({ exception: AuthExceptions.cancelled() })
+    expect(next.session).toMatchObject({
+      exception: AuthExceptions.cancelled(),
+    })
   })
 
   it('drops any nonce in flight', () => {
     const withNonce = { ...AuthMocks.authenticating, appleRawNonce: 'raw' }
-    expect(reduce(withNonce, onProviderSheetDismissed()).appleRawNonce).toBeNull()
+    expect(
+      reduce(withNonce, onProviderSheetDismissed()).appleRawNonce,
+    ).toBeNull()
   })
 })
 
@@ -167,14 +183,17 @@ describe('onLocalDataDialogDismissed', () => {
   })
 
   it('is a no-op when no dialog is up', () => {
-    expect(reduce(AuthMocks.signedIn, onLocalDataDialogDismissed()).localData).toEqual({
+    expect(
+      reduce(AuthMocks.signedIn, onLocalDataDialogDismissed()).localData,
+    ).toEqual({
       kind: 'hidden',
     })
   })
 
   it('leaves the signed-in session intact — dismissing the prompt does not sign anyone out', () => {
     expect(
-      reduce(AuthMocks.localDataDialog, onLocalDataDialogDismissed()).session.kind,
+      reduce(AuthMocks.localDataDialog, onLocalDataDialogDismissed()).session
+        .kind,
     ).toBe('signedIn')
   })
 })
@@ -221,8 +240,14 @@ describe('the defensive rejected arms', () => {
   })
 
   it('degrades a rejected restore to a typed unknown failure rather than a stuck spinner', () => {
-    const next = reduce(AuthMocks.unknown, rejectionOf(restoreSessionThunk, { now: NOW }))
-    expect(next.session).toMatchObject({ kind: 'failed', exception: { kind: 'unknown' } })
+    const next = reduce(
+      AuthMocks.unknown,
+      rejectionOf(restoreSessionThunk, { now: NOW }),
+    )
+    expect(next.session).toMatchObject({
+      kind: 'failed',
+      exception: { kind: 'unknown' },
+    })
   })
 
   it('degrades a rejected sign-in the same way', () => {
@@ -260,19 +285,28 @@ describe('the defensive rejected arms', () => {
 // ---------------------------------------------------------------------------
 
 describe('the restore pending arm', () => {
-  const pendingOf = (thunk: { pending: { type: string } }, meta: Record<string, unknown>) => ({
+  const pendingOf = (
+    thunk: { pending: { type: string } },
+    meta: Record<string, unknown>,
+  ) => ({
     type: thunk.pending.type,
     payload: undefined,
     meta: { arg: meta, requestId: 'r', requestStatus: 'pending' as const },
   })
 
   it('spins on the very first restore', () => {
-    const next = reduce(AuthMocks.unknown, pendingOf(restoreSessionThunk, { now: NOW }))
+    const next = reduce(
+      AuthMocks.unknown,
+      pendingOf(restoreSessionThunk, { now: NOW }),
+    )
     expect(next.session.kind).toBe('authenticating')
   })
 
   it('does NOT blank a signed-in header on a re-restore triggered by a token refresh', () => {
-    const next = reduce(AuthMocks.signedIn, pendingOf(restoreSessionThunk, { now: NOW }))
+    const next = reduce(
+      AuthMocks.signedIn,
+      pendingOf(restoreSessionThunk, { now: NOW }),
+    )
     expect(next.session.kind).toBe('signedIn')
   })
 

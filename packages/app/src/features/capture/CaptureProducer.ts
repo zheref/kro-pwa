@@ -92,13 +92,18 @@ const messageOf = (error: unknown): string =>
 const readStoredEndeavors = async (
   localStore: LocalStore,
 ): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all([
-    localStore.endeavors.all(),
-    localStore.defers.all(),
-    localStore.performances.all(),
-  ])
+  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
+    [
+      localStore.endeavors.all(),
+      localStore.defers.all(),
+      localStore.performances.all(),
+    ],
+  )
 
-  const defersByEndeavor = new Map<string, ReturnType<typeof deferFromRecord>[]>()
+  const defersByEndeavor = new Map<
+    string,
+    ReturnType<typeof deferFromRecord>[]
+  >()
   for (const record of livingChildRecords(deferRecords)) {
     const bucket = defersByEndeavor.get(record.endeavorId) ?? []
     bucket.push(deferFromRecord(record))
@@ -243,43 +248,46 @@ export const submitCaptureThunk = createAsyncThunk<
   Result<CaptureCommit, CaptureException>,
   { draft: CaptureDraft; id: string; now: Date },
   { extra: ThunkExtra }
->('capture/onCaptureSubmissionCompleted', async ({ draft, id, now }, { extra }) => {
-  const result = captureResultFromDraft(draft)
-  if (result === null || !isCaptureResultValidForCreation(result)) {
-    return err(
-      CaptureExceptions.invalidCapture(
-        captureBlockedReason(draft) ?? 'This capture is missing something.',
-      ),
-    )
-  }
+>(
+  'capture/onCaptureSubmissionCompleted',
+  async ({ draft, id, now }, { extra }) => {
+    const result = captureResultFromDraft(draft)
+    if (result === null || !isCaptureResultValidForCreation(result)) {
+      return err(
+        CaptureExceptions.invalidCapture(
+          captureBlockedReason(draft) ?? 'This capture is missing something.',
+        ),
+      )
+    }
 
-  const endeavor = endeavorFromCaptureResult(result, { id, now })
+    const endeavor = endeavorFromCaptureResult(result, { id, now })
 
-  try {
-    await persistEndeavor(
-      extra.localStore,
-      endeavor,
-      now,
-      makeReconciliationContext({ now }),
-    )
-  } catch (error) {
-    return err(CaptureExceptions.captureFailed(messageOf(error)))
-  }
+    try {
+      await persistEndeavor(
+        extra.localStore,
+        endeavor,
+        now,
+        makeReconciliationContext({ now }),
+      )
+    } catch (error) {
+      return err(CaptureExceptions.captureFailed(messageOf(error)))
+    }
 
-  try {
-    extra.localStore.preferences.set(
-      LAST_USED_DESTINATION_KEY,
-      result.destination,
-    )
-  } catch {
-    // Remembering the destination is a convenience, not the capture. The
-    // endeavor is already on disk, so failing here would report a capture that
-    // demonstrably happened as having failed — and the user would see the row
-    // appear on the next refresh anyway.
-  }
+    try {
+      extra.localStore.preferences.set(
+        LAST_USED_DESTINATION_KEY,
+        result.destination,
+      )
+    } catch {
+      // Remembering the destination is a convenience, not the capture. The
+      // endeavor is already on disk, so failing here would report a capture that
+      // demonstrably happened as having failed — and the user would see the row
+      // appear on the next refresh anyway.
+    }
 
-  return ok({ endeavor, destination: result.destination, now })
-})
+    return ok({ endeavor, destination: result.destination, now })
+  },
+)
 
 /** What a confirmed Add-for-Today hands the reducer. */
 export interface CaptureScheduling {
@@ -355,43 +363,50 @@ export const undoScheduleForTodayThunk = createAsyncThunk<
   Result<{ endeavor: Endeavor }, CaptureException>,
   { snapshot: CaptureSchedulingSnapshot; now: Date },
   { extra: ThunkExtra }
->('capture/onUndoAddForTodayCompleted', async ({ snapshot, now }, { extra }) => {
-  let target: Endeavor | undefined
-  try {
-    target = await readStoredEndeavor(extra.localStore, snapshot.endeavorId)
-  } catch (error) {
-    return err(CaptureExceptions.undoFailed(messageOf(error)))
-  }
-  if (target === undefined) {
-    return err(CaptureExceptions.endeavorNotFound(snapshot.endeavorId))
-  }
+>(
+  'capture/onUndoAddForTodayCompleted',
+  async ({ snapshot, now }, { extra }) => {
+    let target: Endeavor | undefined
+    try {
+      target = await readStoredEndeavor(extra.localStore, snapshot.endeavorId)
+    } catch (error) {
+      return err(CaptureExceptions.undoFailed(messageOf(error)))
+    }
+    if (target === undefined) {
+      return err(CaptureExceptions.endeavorNotFound(snapshot.endeavorId))
+    }
 
-  const restored = unscheduledFromSnapshot(target, snapshot)
-  const removed = defersAddedBySnapshot(target, snapshot)
+    const restored = unscheduledFromSnapshot(target, snapshot)
+    const removed = defersAddedBySnapshot(target, snapshot)
 
-  try {
-    const context = makeReconciliationContext({ now })
-    await persistEndeavor(extra.localStore, restored, now, context)
+    try {
+      const context = makeReconciliationContext({ now })
+      await persistEndeavor(extra.localStore, restored, now, context)
 
-    if (removed.length > 0) {
-      const rows = await extra.localStore.defers.forEndeavor(snapshot.endeavorId)
-      for (const row of rows) {
-        const matches = removed.some(
-          (entry) =>
-            entry.made.getTime() === row.made.getTime() &&
-            entry.target.getTime() ===
-              (row.target ?? row.made).getTime(),
+      if (removed.length > 0) {
+        const rows = await extra.localStore.defers.forEndeavor(
+          snapshot.endeavorId,
         )
-        if (matches) {
-          await extra.localStore.defers.removeLocal(row, epochMillisFromDate(now))
+        for (const row of rows) {
+          const matches = removed.some(
+            (entry) =>
+              entry.made.getTime() === row.made.getTime() &&
+              entry.target.getTime() === (row.target ?? row.made).getTime(),
+          )
+          if (matches) {
+            await extra.localStore.defers.removeLocal(
+              row,
+              epochMillisFromDate(now),
+            )
+          }
         }
       }
+      return ok({ endeavor: restored })
+    } catch (error) {
+      return err(CaptureExceptions.undoFailed(messageOf(error)))
     }
-    return ok({ endeavor: restored })
-  } catch (error) {
-    return err(CaptureExceptions.undoFailed(messageOf(error)))
-  }
-})
+  },
+)
 
 /** What a row operation hands the reducer. `null` means the row is gone. */
 export interface CaptureOperationOutcome {

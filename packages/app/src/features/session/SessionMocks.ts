@@ -13,10 +13,7 @@
  */
 import { FocusTimerMode, minutesInSeconds } from '@kro/core'
 import { SessionExceptions } from './SessionException'
-import {
-  type SessionIdentity,
-  makeSessionIdentity,
-} from './SessionIdentity'
+import { type SessionIdentity, makeSessionIdentity } from './SessionIdentity'
 import {
   type SessionAvailability,
   type SessionPreferences,
@@ -119,7 +116,10 @@ const started = withSessionStarted(running, SESSION_MOCK_NOW)
 /** A break running, two minutes in — breaks need their flag turned on. */
 const onBreak = withDisplayAdvanced(
   withBreakStarted(
-    prepared(sessionIdentityMocks.slides, sessionAvailabilityMocks.everythingOn),
+    prepared(
+      sessionIdentityMocks.slides,
+      sessionAvailabilityMocks.everythingOn,
+    ),
     SESSION_MOCK_NOW,
   ),
   sessionMockInstant(120),
@@ -141,7 +141,10 @@ export const sessionStateMocks = {
   idle: initialSessionState,
 
   /** A preference/anchor read in flight. */
-  loading: { ...initialSessionState, load: { kind: 'loading' } } as SessionState,
+  loading: {
+    ...initialSessionState,
+    load: { kind: 'loading' },
+  } as SessionState,
 
   /** Ready to start: identity, recommendation and tomato count in place. */
   ready: running,
@@ -168,7 +171,10 @@ export const sessionStateMocks = {
    * The countdown reached zero: parked at `concluded`, the sheet
    * auto-presented, and the conclusion claimed exactly once.
    */
-  concluded: withDisplayAdvanced(started, sessionMockInstant(SESSION_MOCK_TARGET)),
+  concluded: withDisplayAdvanced(
+    started,
+    sessionMockInstant(SESSION_MOCK_TARGET),
+  ),
 
   /**
    * Concluded, then dismissed without picking — the pill keeps the
@@ -182,7 +188,10 @@ export const sessionStateMocks = {
   /** A finish-early **below** the 30 % threshold — an aborted attempt. */
   abortedBelowThreshold: withSessionAborted(
     withDisplayAdvanced(started, sessionMockInstant(60)),
-    { now: sessionMockInstant(60), reason: SessionOutcomeReason.belowThreshold },
+    {
+      now: sessionMockInstant(60),
+      reason: SessionOutcomeReason.belowThreshold,
+    },
   ),
 
   /** A finish-early at exactly 30 % — recorded, not aborted. */

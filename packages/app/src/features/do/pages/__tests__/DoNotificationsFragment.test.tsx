@@ -95,7 +95,7 @@ describe('the panel owns its own chrome', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('reserves canon\'s 380 x 440 minimum frame', () => {
+  it("reserves canon's 380 x 440 minimum frame", () => {
     render(
       <DoNotificationsFragment
         overdue={[]}
@@ -107,8 +107,6 @@ describe('the panel owns its own chrome', () => {
 
     const panel = screen.getByTestId('do-notifications-panel')
     expect(panel.style.width).toBe(`${DO_NOTIFICATIONS_PANEL.width}px`)
-    expect(panel.style.minHeight).toBe(
-      `${DO_NOTIFICATIONS_PANEL.minHeight}px`,
-    )
+    expect(panel.style.minHeight).toBe(`${DO_NOTIFICATIONS_PANEL.minHeight}px`)
   })
 })

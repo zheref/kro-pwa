@@ -14,7 +14,9 @@ import { EndeavorDetailFragment } from './EndeavorDetailFragment'
 
 const noop = () => {}
 
-const scene = (endeavor: (typeof detailEndeavorMocks)[keyof typeof detailEndeavorMocks]) => ({
+const scene = (
+  endeavor: (typeof detailEndeavorMocks)[keyof typeof detailEndeavorMocks],
+) => ({
   endeavor,
   title: detailDisplayTitle(endeavor),
   sections: visibleSections(endeavor.kind),

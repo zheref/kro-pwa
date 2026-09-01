@@ -86,6 +86,9 @@ export const googleCalendarRuleset: ProviderClassificationRuleset = {
     { when: { type: 'unscheduled' }, outcome: keepStoredKind() },
 
     // Canon's whole Google rule: everything Google hosts is a calendar event.
-    { when: { type: 'always' }, outcome: classifyAs(EndeavorKind.calendarEvent) },
+    {
+      when: { type: 'always' },
+      outcome: classifyAs(EndeavorKind.calendarEvent),
+    },
   ],
 }

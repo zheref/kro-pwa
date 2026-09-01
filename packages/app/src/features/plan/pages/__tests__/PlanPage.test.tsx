@@ -12,12 +12,21 @@
  * — rather than left to a comment claiming they are wired.
  */
 import type { EndeavorRecord } from '@kro/core'
-import { EndeavorHost, EndeavorKind, endeavorRecordFromEndeavor, makeEndeavor } from '@kro/core'
+import {
+  EndeavorHost,
+  EndeavorKind,
+  endeavorRecordFromEndeavor,
+  makeEndeavor,
+} from '@kro/core'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StoreProvider } from '../../../../library/StoreProvider'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { PLAN_REFERENCE_DAY, planAt } from '../../PlanMocks'
 import { PlanPage } from '../PlanPage'
@@ -42,7 +51,11 @@ const seededEvent = (id: string, hour: number, durationSeconds = 3600) =>
     hostedBy: [EndeavorHost.local],
   })
 
-const recordOf = (id: string, hour: number, durationSeconds = 3600): EndeavorRecord =>
+const recordOf = (
+  id: string,
+  hour: number,
+  durationSeconds = 3600,
+): EndeavorRecord =>
   endeavorRecordFromEndeavor(seededEvent(id, hour, durationSeconds), {
     now: PLAN_REFERENCE_DAY,
   })
@@ -66,7 +79,10 @@ const mount = (
   )
 
 beforeEach(() => {
-  Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true })
+  Object.defineProperty(window, 'innerWidth', {
+    value: 390,
+    configurable: true,
+  })
   window.matchMedia = ((query: string) =>
     ({
       matches: query.includes('coarse'),
@@ -162,7 +178,9 @@ describe('PlanPage', () => {
     })
 
     expect(store.getState().plan.editSession?.endeavorId).toBe('standup')
-    await vi.waitFor(() => expect(vibrateForTimelineHold).toHaveBeenCalledTimes(1))
+    await vi.waitFor(() =>
+      expect(vibrateForTimelineHold).toHaveBeenCalledTimes(1),
+    )
     vi.useRealTimers()
   })
 
@@ -186,9 +204,12 @@ describe('PlanPage', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const store = storeWith()
     mount(store)
-    await vi.waitFor(() => expect(screen.getByTestId('plan-timeline-slots')).toBeTruthy())
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('plan-timeline-slots')).toBeTruthy(),
+    )
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[36] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[36] as HTMLElement
     pointer('pointerDown', slot, { clientX: 100, clientY: 540 })
     act(() => {
       vi.advanceTimersByTime(300)
@@ -214,9 +235,12 @@ describe('PlanPage', () => {
       },
     })
     mount(store)
-    await vi.waitFor(() => expect(screen.getByTestId('plan-timeline-slots')).toBeTruthy())
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('plan-timeline-slots')).toBeTruthy(),
+    )
 
-    const slot = screen.getByTestId('plan-timeline-slots').children[40] as HTMLElement
+    const slot = screen.getByTestId('plan-timeline-slots')
+      .children[40] as HTMLElement
     pointer('pointerDown', slot, { clientX: 100, clientY: 600 })
     pointer('pointerUp', slot, { clientX: 100, clientY: 600 })
     act(() => {
@@ -276,7 +300,9 @@ describe('PlanPage', () => {
     act(() => {
       vi.advanceTimersByTime(2000)
     })
-    await userEvent.click(screen.getByRole('button', { name: 'Priority Matrix' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Priority Matrix' }),
+    )
     act(() => {
       vi.advanceTimersByTime(2000)
     })
@@ -302,7 +328,9 @@ describe('PlanPage', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const store = storeWith()
     mount(store)
-    await vi.waitFor(() => expect(screen.getByTestId('plan-timeline')).toBeTruthy())
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('plan-timeline')).toBeTruthy(),
+    )
 
     // The flag is cached at `onViewLoaded`; turning it off in state is what a
     // debug override does, and the canvas must lose its press targets.

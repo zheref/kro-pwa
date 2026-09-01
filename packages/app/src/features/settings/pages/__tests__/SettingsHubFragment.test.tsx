@@ -114,7 +114,8 @@ describe('the profile row reflects the session', () => {
 })
 
 describe('the sync footer reports the three states', () => {
-  const footer = (value: SettingsSyncFooter | null) => renderHub({ syncFooter: value })
+  const footer = (value: SettingsSyncFooter | null) =>
+    renderHub({ syncFooter: value })
 
   it('is hidden entirely when there is nothing to report — canon syncStatus nil', () => {
     footer(null)
@@ -155,7 +156,7 @@ describe('the sync footer reports the three states', () => {
 })
 
 describe('the Done affordance', () => {
-  it("carries canon toolbar label", () => {
+  it('carries canon toolbar label', () => {
     renderHub()
     expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy()
   })

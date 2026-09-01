@@ -115,11 +115,7 @@ export const loadPlanDayThunk = createAsyncThunk<
     )
     return ok({ dayKey, reason, events })
   } catch (error) {
-    return err(
-      PlanExceptions.dayLoadFailed(
-        planExceptionFrom(error).message,
-      ),
-    )
+    return err(PlanExceptions.dayLoadFailed(planExceptionFrom(error).message))
   }
 })
 

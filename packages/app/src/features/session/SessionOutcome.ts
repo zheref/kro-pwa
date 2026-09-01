@@ -15,10 +15,10 @@
  * `(endeavorId, resolution, fragments, elapsed, targetDuration)` to
  * `taskMarkedComplete`.
  */
-import {
-  type FocusSessionFragment,
-  type PerformResolution,
-  type TimeIntervalSeconds,
+import type {
+  FocusSessionFragment,
+  PerformResolution,
+  TimeIntervalSeconds,
 } from '@kro/core'
 
 /** Why the session stopped — kept for the record's notes and for tests. */

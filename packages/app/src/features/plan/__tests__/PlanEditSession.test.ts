@@ -95,7 +95,9 @@ describe('timelineEditableEnd', () => {
   })
 
   it('falls back to an hour when a grabbed block has no duration', () => {
-    expect(timelineEditableEnd(durationless)?.getTime()).toBe(planAt(15).getTime())
+    expect(timelineEditableEnd(durationless)?.getTime()).toBe(
+      planAt(15).getTime(),
+    )
   })
 
   it('has no end for an endeavor with no start', () => {
@@ -237,10 +239,9 @@ describe('beginTimelineDrag / endTimelineDrag', () => {
   })
 
   it('re-bases from the draft when a different handle is grabbed', () => {
-    const dragged = applyTimelineDrag(
-      beginTimelineDrag(session, 'start'),
-      { translationPx: HOUR_PX },
-    )
+    const dragged = applyTimelineDrag(beginTimelineDrag(session, 'start'), {
+      translationPx: HOUR_PX,
+    })
     const regrabbed = beginTimelineDrag(endTimelineDrag(dragged), 'body')
     expect(regrabbed.drag).toEqual({
       handle: 'body',
@@ -250,10 +251,9 @@ describe('beginTimelineDrag / endTimelineDrag', () => {
   })
 
   it('releases the base on end, leaving the draft in place', () => {
-    const dragged = applyTimelineDrag(
-      beginTimelineDrag(session, 'body'),
-      { translationPx: HOUR_PX },
-    )
+    const dragged = applyTimelineDrag(beginTimelineDrag(session, 'body'), {
+      translationPx: HOUR_PX,
+    })
     const released = endTimelineDrag(dragged)
     expect(released.drag).toBeNull()
     expect(released.draftStart?.getTime()).toBe(planAt(10).getTime())
@@ -272,10 +272,9 @@ describe('commitTimelineEdit', () => {
   const session = beginTimelineEdit(offsite, now) as TimelineEditSession
 
   it('writes the dragged times', () => {
-    const dragged = applyTimelineDrag(
-      beginTimelineDrag(session, 'body'),
-      { translationPx: HOUR_PX },
-    )
+    const dragged = applyTimelineDrag(beginTimelineDrag(session, 'body'), {
+      translationPx: HOUR_PX,
+    })
     expect(commitTimelineEdit(dragged)).toEqual({
       endeavorId: 'nested-long',
       start: planAt(10),
@@ -340,7 +339,9 @@ describe('timelineEventsWithEditPreview — live reflow', () => {
       drag: null,
     }
     const previewed = timelineEventsWithEditPreview(events, squashed)
-    expect(previewed.find((event) => event.id === 'nested-long')?.duration).toBe(900)
+    expect(
+      previewed.find((event) => event.id === 'nested-long')?.duration,
+    ).toBe(900)
   })
 })
 
@@ -363,7 +364,7 @@ describe('property: snapping from a stable base never drifts', () => {
     return Array.from({ length }, () => {
       state = (state * 1_103_515_245 + 12_345) % 2_147_483_648
       // ±240px — four hours either way, well past the clamps.
-      return ((state / 2_147_483_648) * 480 - 240)
+      return (state / 2_147_483_648) * 480 - 240
     })
   }
 
@@ -397,11 +398,14 @@ describe('property: snapping from a stable base never drifts', () => {
         handle,
       )
       const wandered = sequenceFrom(7, 30).reduce(
-        (current, translationPx) => applyTimelineDrag(current, { translationPx }),
+        (current, translationPx) =>
+          applyTimelineDrag(current, { translationPx }),
         session,
       )
       const returned = applyTimelineDrag(wandered, { translationPx: 0 })
-      expect(timelineEditPreview(returned)).toEqual(timelineEditPreview(session))
+      expect(timelineEditPreview(returned)).toEqual(
+        timelineEditPreview(session),
+      )
       expect(commitTimelineEdit(returned)).toBeNull()
     }
   })

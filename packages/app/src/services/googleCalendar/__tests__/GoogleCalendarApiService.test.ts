@@ -101,7 +101,9 @@ describe('validating a Google status', () => {
       validateGoogleStatus(500, { error: { message: accessTokenFixture } })
       expect.unreachable('should have thrown')
     } catch (error) {
-      expect((error as { message: string }).message).not.toContain(accessTokenFixture)
+      expect((error as { message: string }).message).not.toContain(
+        accessTokenFixture,
+      )
     }
   })
 })
@@ -113,7 +115,9 @@ describe('listing calendars', () => {
         routes: [{ match: 'calendarList', body: calendarListBody }],
       }),
     )
-    const calendars = await service.listCalendars({ accessToken: accessTokenFixture })
+    const calendars = await service.listCalendars({
+      accessToken: accessTokenFixture,
+    })
     expect(calendars.map((entry) => entry.id)).toEqual([
       'primary',
       'team@example.com',
@@ -130,7 +134,9 @@ describe('listing calendars', () => {
           : { status: 200, body: { items: [{ id: 'b' }] } }
       },
     })
-    const calendars = await service.listCalendars({ accessToken: accessTokenFixture })
+    const calendars = await service.listCalendars({
+      accessToken: accessTokenFixture,
+    })
     expect(calendars.map((entry) => entry.id)).toEqual(['a', 'b'])
   })
 
@@ -203,9 +209,9 @@ describe('listing events across every calendar', () => {
       to: TO,
     })
     expect(envelopes).toHaveLength(2)
-    expect(envelopes.every((envelope) => envelope.calendarId === 'primary')).toBe(
-      true,
-    )
+    expect(
+      envelopes.every((envelope) => envelope.calendarId === 'primary'),
+    ).toBe(true)
   })
 
   it('does NOT swallow a grant-level failure — the banner depends on it', async () => {
@@ -220,13 +226,21 @@ describe('listing events across every calendar', () => {
       },
     })
     await expect(
-      service.listEvents({ accessToken: accessTokenFixture, from: FROM, to: TO }),
+      service.listEvents({
+        accessToken: accessTokenFixture,
+        from: FROM,
+        to: TO,
+      }),
     ).rejects.toMatchObject({ kind: 'unauthorized' })
   })
 
   it('refuses a window that does not move forward', async () => {
     await expect(
-      withEvents().listEvents({ accessToken: accessTokenFixture, from: TO, to: FROM }),
+      withEvents().listEvents({
+        accessToken: accessTokenFixture,
+        from: TO,
+        to: FROM,
+      }),
     ).rejects.toMatchObject({ kind: 'invalidRequest' })
   })
 
@@ -250,7 +264,11 @@ describe('listing events across every calendar', () => {
       makeStubbedGoogleHttpTransport({ offline: true }),
     )
     await expect(
-      service.listEvents({ accessToken: accessTokenFixture, from: FROM, to: TO }),
+      service.listEvents({
+        accessToken: accessTokenFixture,
+        from: FROM,
+        to: TO,
+      }),
     ).rejects.toMatchObject({ kind: 'offline' })
   })
 })

@@ -57,7 +57,11 @@
  * yet; the Do feature (#16) needs the same buckets and may promote them to
  * `@kro/core` when it lands. Flagged in the PR Notes.
  */
-import type { Endeavor, EisenhowerQuadrant, ReconciliationContext } from '@kro/core'
+import type {
+  Endeavor,
+  EisenhowerQuadrant,
+  ReconciliationContext,
+} from '@kro/core'
 import {
   EisenhowerQuadrant as Quadrant,
   EndeavorKind,
@@ -222,7 +226,10 @@ export const planMatrixResolvedDue = (
     return new Date(startOfTomorrow.getTime() - 1000)
   }
 
-  if (existingDue !== null && existingDue.getTime() >= startOfTomorrow.getTime()) {
+  if (
+    existingDue !== null &&
+    existingDue.getTime() >= startOfTomorrow.getTime()
+  ) {
     return existingDue
   }
   return followingWeekend(now)

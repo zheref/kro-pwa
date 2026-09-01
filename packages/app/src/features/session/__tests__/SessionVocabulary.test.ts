@@ -52,9 +52,9 @@ describe('sessionPhaseFromPersisted', () => {
 describe('persistedPhaseFromSessionPhase', () => {
   it('round-trips every persisted case through the runtime and back', () => {
     for (const phase of persistedSessionPhases) {
-      expect(persistedPhaseFromSessionPhase(sessionPhaseFromPersisted(phase))).toBe(
-        phase,
-      )
+      expect(
+        persistedPhaseFromSessionPhase(sessionPhaseFromPersisted(phase)),
+      ).toBe(phase)
     }
   })
 

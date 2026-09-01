@@ -7,7 +7,11 @@
  */
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
-import { initialThirstVoteEntry, type ThirstState, type ThirstVoteEntryState } from './ThirstFeature'
+import {
+  initialThirstVoteEntry,
+  type ThirstState,
+  type ThirstVoteEntryState,
+} from './ThirstFeature'
 import { isThirstVotable } from './ThirstRegistry'
 import { thirstExceptionCopy } from './ThirstException'
 import {
@@ -18,7 +22,8 @@ import {
 
 const selectThirstSlice = (state: RootState): ThirstState => state.thirst
 
-const featureKeyArg = (_state: RootState, featureKey: string): string => featureKey
+const featureKeyArg = (_state: RootState, featureKey: string): string =>
+  featureKey
 
 export const selectThirstEntry = createSelector(
   [selectThirstSlice, featureKeyArg],
@@ -40,7 +45,10 @@ export const selectThirstVoteStatus = createSelector(
     if (!isThirstVotable(featureKey)) return { kind: 'notVotable' }
     if (entry.alreadyVoted) return { kind: 'voted' }
     if (entry.voteStateException !== null) {
-      return { kind: 'unavailable', message: thirstExceptionCopy(entry.voteStateException) }
+      return {
+        kind: 'unavailable',
+        message: thirstExceptionCopy(entry.voteStateException),
+      }
     }
     // Stay in loading until the auth check resolves, even if public counts
     // already arrived — never show a votable CTA to a not-yet-verified user.
@@ -49,7 +57,8 @@ export const selectThirstVoteStatus = createSelector(
     // exactly this reason — the pre-`useEffect` first paint reads as loading,
     // never as a transiently-votable false positive (found in review).
     if (entry.isCheckingVoteState) return { kind: 'loading' }
-    if (entry.isLoadingCounts && entry.counts === null) return { kind: 'loading' }
+    if (entry.isLoadingCounts && entry.counts === null)
+      return { kind: 'loading' }
     return { kind: 'votable' }
   },
 )
@@ -97,6 +106,8 @@ export const selectThirstVoteErrorMessage = createSelector(
   [selectThirstEntry],
   (entry): string | null => {
     if (entry.alreadyVoted || entry.voteStateException !== null) return null
-    return entry.voteException === null ? null : thirstExceptionCopy(entry.voteException)
+    return entry.voteException === null
+      ? null
+      : thirstExceptionCopy(entry.voteException)
   },
 )

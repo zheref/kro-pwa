@@ -38,7 +38,8 @@ import { isPlanListAllDay } from './planListModel'
  * Same rule as the Find row (`findRowSymbol`) so one endeavor looks the same in
  * both lists; the fallback glyph differs because a Plan day is events-first.
  */
-const EMOJI_LEAD = /^(\p{Extended_Pictographic}(?:️)?(?:‍\p{Extended_Pictographic}(?:️)?)*)\s*/u
+const EMOJI_LEAD =
+  /^(\p{Extended_Pictographic}(?:️)?(?:‍\p{Extended_Pictographic}(?:️)?)*)\s*/u
 
 export interface PlanListRowSymbol {
   readonly symbol: string
@@ -53,7 +54,11 @@ export const planListRowSymbol = (title: string): PlanListRowSymbol => {
   if (match === null || lead === undefined) {
     return { symbol: 'calendar', isGeneric: true, title: title.trim() }
   }
-  return { symbol: lead, isGeneric: false, title: title.slice(match[0].length).trim() }
+  return {
+    symbol: lead,
+    isGeneric: false,
+    title: title.slice(match[0].length).trim(),
+  }
 }
 
 /**
@@ -92,7 +97,9 @@ export const planListRowTimeInfo = (
  */
 export const planListRowBadges = (
   endeavor: Endeavor,
-): readonly EndeavorRowBadge[] => [{ kind: 'endeavorKind', value: endeavor.kind }]
+): readonly EndeavorRowBadge[] => [
+  { kind: 'endeavorKind', value: endeavor.kind },
+]
 
 /** The label the row's Open control announces, for a title that may be empty. */
 export const planListRowOpenLabel = (title: string): string =>

@@ -28,7 +28,7 @@ describe('the default snapshot is the schema, not a copy of it', () => {
     }
   })
 
-  it("reproduces canon 09:00–17:00 working day without typing the numbers", () => {
+  it('reproduces canon 09:00–17:00 working day without typing the numbers', () => {
     expect(defaultSettingValues[workingHoursStartOption.key]).toBe(9 * 60)
     expect(defaultSettingValues[workingHoursEndOption.key]).toBe(17 * 60)
   })
@@ -65,13 +65,15 @@ describe('the variants describe distinct, reachable worlds', () => {
     expect(SettingsMocks.integrationsUnconfigured.google.connection.kind).toBe(
       'unconfigured',
     )
-    expect(SettingsMocks.integrationsNeedsReconnect.google.connection.kind).toBe(
-      'needsReconnect',
-    )
+    expect(
+      SettingsMocks.integrationsNeedsReconnect.google.connection.kind,
+    ).toBe('needsReconnect')
   })
 
   it('keeps the load-failed variant editable — defaults show, form still works', () => {
     expect(SettingsMocks.loadFailed.load.kind).toBe('failed')
-    expect(Object.keys(SettingsMocks.loadFailed.values).length).toBeGreaterThan(0)
+    expect(Object.keys(SettingsMocks.loadFailed.values).length).toBeGreaterThan(
+      0,
+    )
   })
 })

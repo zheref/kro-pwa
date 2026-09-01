@@ -5,7 +5,12 @@
  * All four are here rather than inline in the Fragment so they are testable
  * without a renderer, and so the Fragment stays layout.
  */
-import { type WeekDay, weekDays, weekDaysBitmask, weekDaysFromBitmask } from '@kro/core'
+import {
+  type WeekDay,
+  weekDays,
+  weekDaysBitmask,
+  weekDaysFromBitmask,
+} from '@kro/core'
 
 // ---------------------------------------------------------------------------
 // Time of day ⇄ the `<input type="time">` wire format
@@ -70,7 +75,9 @@ export const weekDaysBitmaskToggling = (mask: number, day: WeekDay): number => {
   else selected.add(day)
   // Rebuilt in canon's `allCases` order so the mask never depends on click
   // order, which is what makes two devices agree on the same stored number.
-  return weekDaysBitmask(weekDays.filter((candidate) => selected.has(candidate)))
+  return weekDaysBitmask(
+    weekDays.filter((candidate) => selected.has(candidate)),
+  )
 }
 
 /** Whether the mask contains `day`. */
@@ -128,7 +135,13 @@ export const knownTimeZones = (): readonly string[] => {
       // Fall through to the documented fallback below.
     }
   }
-  return ['UTC', 'America/Bogota', 'America/New_York', 'Europe/Madrid', 'Asia/Tokyo']
+  return [
+    'UTC',
+    'America/Bogota',
+    'America/New_York',
+    'Europe/Madrid',
+    'Asia/Tokyo',
+  ]
 }
 
 /** The device's own zone — canon's *"defaults to the device's current zone"*. */

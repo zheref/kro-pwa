@@ -51,7 +51,11 @@ import {
   DialogContent,
   DialogTitle,
 } from '../../../design/system/primitives/dialog'
-import { Sheet, SheetContent, SheetTitle } from '../../../design/system/primitives/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '../../../design/system/primitives/sheet'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { childIntentDelegatedConsumed } from '../../find/FindFeature'
@@ -204,7 +208,11 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
         return
       case 'defers':
         void dispatch(
-          addDeferThunk({ endeavorId: endeavor.id, entry: entry as Defer, now }),
+          addDeferThunk({
+            endeavorId: endeavor.id,
+            entry: entry as Defer,
+            now,
+          }),
         )
         return
       default:
@@ -281,7 +289,9 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
         sections={sections}
         relations={relations}
         locale={locale}
-        onEditField={(field: EndeavorField) => dispatch(userDidTapField({ field }))}
+        onEditField={(field: EndeavorField) =>
+          dispatch(userDidTapField({ field }))
+        }
         onManageRelation={(relation: EndeavorRelation) =>
           dispatch(userDidTapManageRelation({ relation }))
         }
@@ -299,7 +309,9 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
           dispatch(userDidTapField({ field: 'duration' as EndeavorField }))
         }
       />
-    ) : destination.kind === 'duration' && durationDraft !== null && observed !== null ? (
+    ) : destination.kind === 'duration' &&
+      durationDraft !== null &&
+      observed !== null ? (
       <EndeavorDurationFragment
         draft={durationDraft}
         observed={observed}
@@ -326,7 +338,9 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
         hostCandidates={hostCandidates}
         now={seededAt}
         locale={locale}
-        onChangeDraft={(draft) => dispatch(userDidChangeRelationDraft({ draft }))}
+        onChangeDraft={(draft) =>
+          dispatch(userDidChangeRelationDraft({ draft }))
+        }
         onCommitDraft={onCommitDraft}
         onRemoveEntry={onRemoveEntry}
         onAttachHost={onAttachHost}
@@ -347,7 +361,10 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
                     kind: 'back',
                     onPress: () => dispatch(userDidDismissDestination()),
                   }
-                : { kind: 'dismiss', onPress: () => dispatch(userDidTapDismiss()) }
+                : {
+                    kind: 'dismiss',
+                    onPress: () => dispatch(userDidTapDismiss()),
+                  }
             }
           />
         </div>

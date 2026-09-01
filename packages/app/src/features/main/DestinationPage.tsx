@@ -20,10 +20,7 @@ import { EarnPage } from '../earn/pages/EarnPage'
 import { DestinationPlaceholderFragment } from './DestinationPlaceholderFragment'
 import { onDestinationRouteMounted } from './MainFeature'
 import { selectProjects } from './MainSelectors'
-import {
-  DestinationKind,
-  type SidebarDestination,
-} from './SidebarDestination'
+import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 
 export type DestinationPageProps =
   | {

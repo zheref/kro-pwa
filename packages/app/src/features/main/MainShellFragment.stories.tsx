@@ -100,9 +100,7 @@ const shell = (
       {...overrides}
     >
       <DestinationPlaceholderFragment
-        destination={
-          overrides.selected ?? { kind: DestinationKind.myDay }
-        }
+        destination={overrides.selected ?? { kind: DestinationKind.myDay }}
       />
     </MainShellFragment>
   </ToolbarSlotsProvider>

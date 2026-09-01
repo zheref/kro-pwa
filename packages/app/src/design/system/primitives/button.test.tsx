@@ -13,10 +13,9 @@ describe('Button', () => {
     // "Cancel" control ends up submitting the form it sits in.
     render(<Button>Start session</Button>)
 
-    expect(screen.getByRole('button', { name: 'Start session' })).toHaveProperty(
-      'type',
-      'button',
-    )
+    expect(
+      screen.getByRole('button', { name: 'Start session' }),
+    ).toHaveProperty('type', 'button')
   })
 
   it('still lets a caller ask for a submit button', () => {
@@ -41,7 +40,9 @@ describe('Button', () => {
     render(<Button disabled>Confirm</Button>)
 
     const className = screen.getByRole('button').className
-    const occurrences = className.split(/\s+/).filter((c) => c === DISABLED_FADE)
+    const occurrences = className
+      .split(/\s+/)
+      .filter((c) => c === DISABLED_FADE)
     expect(occurrences).toHaveLength(1)
   })
 

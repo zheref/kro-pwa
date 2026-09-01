@@ -46,7 +46,10 @@ describe('endeavorListsEqual', () => {
 
   it('is false when the id differs', () => {
     expect(
-      endeavorListsEqual(endeavorListMocks.finances, endeavorListMocks.household),
+      endeavorListsEqual(
+        endeavorListMocks.finances,
+        endeavorListMocks.household,
+      ),
     ).toBe(false)
   })
 

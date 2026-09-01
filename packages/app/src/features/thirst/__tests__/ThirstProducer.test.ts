@@ -5,14 +5,24 @@
  * read that record.
  */
 import { describe, expect, it } from 'vitest'
-import { makeStore, stubbedThunkExtra, type ThunkExtra } from '../../../library/store'
+import {
+  makeStore,
+  stubbedThunkExtra,
+  type ThunkExtra,
+} from '../../../library/store'
 import { makeStubbedThirstService } from '../../../services/thirst/ThirstService'
 import { THIRST_MOCK_FEATURE_KEY, thirstCountsFixture } from '../ThirstMocks'
-import { castVoteThunk, checkVoteStateThunk, fetchCountsThunk } from '../ThirstProducer'
+import {
+  castVoteThunk,
+  checkVoteStateThunk,
+  fetchCountsThunk,
+} from '../ThirstProducer'
 
 const key = THIRST_MOCK_FEATURE_KEY
 
-const harness = (overrides: Partial<Parameters<typeof makeStubbedThirstService>[0]> = {}) => {
+const harness = (
+  overrides: Partial<Parameters<typeof makeStubbedThirstService>[0]> = {},
+) => {
   const thirstService = makeStubbedThirstService(overrides)
   const extra: ThunkExtra = { ...stubbedThunkExtra, thirstService }
   return { store: makeStore(extra), thirstService }
@@ -20,7 +30,10 @@ const harness = (overrides: Partial<Parameters<typeof makeStubbedThirstService>[
 
 describe('checkVoteStateThunk', () => {
   it('resolves ok(true) once the stub has recorded a vote for this signed-in user', async () => {
-    const { store } = harness({ signedIn: true, initialVotedFeatureKeys: [key] })
+    const { store } = harness({
+      signedIn: true,
+      initialVotedFeatureKeys: [key],
+    })
     await store.dispatch(checkVoteStateThunk({ featureKey: key }))
     expect(store.getState().thirst.byFeatureKey[key]?.alreadyVoted).toBe(true)
   })
@@ -34,17 +47,19 @@ describe('checkVoteStateThunk', () => {
   it('resolves the typed notSignedIn failure when signed out — this is what blocks voting', async () => {
     const { store } = harness({ signedIn: false })
     await store.dispatch(checkVoteStateThunk({ featureKey: key }))
-    expect(store.getState().thirst.byFeatureKey[key]?.voteStateException?.kind).toBe(
-      'notSignedIn',
-    )
+    expect(
+      store.getState().thirst.byFeatureKey[key]?.voteStateException?.kind,
+    ).toBe('notSignedIn')
   })
 })
 
 describe('fetchCountsThunk', () => {
-  it('installs the stub\'s seeded counts', async () => {
+  it("installs the stub's seeded counts", async () => {
     const { store } = harness({ initialCounts: { [key]: thirstCountsFixture } })
     await store.dispatch(fetchCountsThunk({ featureKey: key }))
-    expect(store.getState().thirst.byFeatureKey[key]?.counts).toEqual(thirstCountsFixture)
+    expect(store.getState().thirst.byFeatureKey[key]?.counts).toEqual(
+      thirstCountsFixture,
+    )
   })
 
   it('installs an empty count for a feature with no seeded votes — public, no session needed', async () => {
@@ -54,7 +69,9 @@ describe('fetchCountsThunk', () => {
   })
 
   it('degrades a scripted failure to the typed unknown exception, never throwing out of the thunk', async () => {
-    const { store } = harness({ failures: { fetchCounts: new Error('rpc down') } })
+    const { store } = harness({
+      failures: { fetchCounts: new Error('rpc down') },
+    })
     const action = await store.dispatch(fetchCountsThunk({ featureKey: key }))
     expect(fetchCountsThunk.fulfilled.match(action)).toBe(true)
   })
@@ -86,8 +103,12 @@ describe('castVoteThunk', () => {
    */
   it('two concurrent votes for the same feature only ever bump the count once', async () => {
     const { store, thirstService } = harness({ signedIn: true })
-    const first = store.dispatch(castVoteThunk({ featureKey: key, id: 'vote-1' }))
-    const second = store.dispatch(castVoteThunk({ featureKey: key, id: 'vote-2' }))
+    const first = store.dispatch(
+      castVoteThunk({ featureKey: key, id: 'vote-1' }),
+    )
+    const second = store.dispatch(
+      castVoteThunk({ featureKey: key, id: 'vote-2' }),
+    )
     await Promise.all([first, second])
 
     const entry = store.getState().thirst.byFeatureKey[key]
@@ -98,8 +119,13 @@ describe('castVoteThunk', () => {
   })
 
   it('a second vote for an already-voted feature (server convergence) reports a no-op success', async () => {
-    const { store } = harness({ signedIn: true, initialVotedFeatureKeys: [key] })
-    const action = await store.dispatch(castVoteThunk({ featureKey: key, id: 'vote-2' }))
+    const { store } = harness({
+      signedIn: true,
+      initialVotedFeatureKeys: [key],
+    })
+    const action = await store.dispatch(
+      castVoteThunk({ featureKey: key, id: 'vote-2' }),
+    )
     expect(castVoteThunk.fulfilled.match(action)).toBe(true)
   })
 
@@ -124,12 +150,18 @@ describe('castVoteThunk', () => {
     })
     const delayedService = {
       ...base,
-      async fetchCounts(featureKey: string, options?: { signal?: AbortSignal }) {
+      async fetchCounts(
+        featureKey: string,
+        options?: { signal?: AbortSignal },
+      ) {
         if (gateNextFetch) await fetchGate
         return base.fetchCounts(featureKey, options)
       },
     }
-    const extra: ThunkExtra = { ...stubbedThunkExtra, thirstService: delayedService }
+    const extra: ThunkExtra = {
+      ...stubbedThunkExtra,
+      thirstService: delayedService,
+    }
     const store = makeStore(extra)
 
     // The ordinary first mount's fetch — resolves immediately and installs

@@ -16,7 +16,13 @@ export default {
   component: CompactPresentationHeader,
 }
 
-function Panel({ width, children }: { readonly width: number; readonly children: React.ReactNode }) {
+function Panel({
+  width,
+  children,
+}: {
+  readonly width: number
+  readonly children: React.ReactNode
+}) {
   return (
     <div
       style={{

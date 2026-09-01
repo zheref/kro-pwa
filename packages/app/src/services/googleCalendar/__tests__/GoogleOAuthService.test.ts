@@ -324,7 +324,11 @@ describe('the stubbed OAuth service', () => {
   it('records every call so a route spec can assert on the sequence', async () => {
     const calls: string[] = []
     const service = makeStubbedGoogleOAuthService({ calls })
-    await service.exchangeCode({ code: 'c', verifier: 'v', redirectUri: REDIRECT })
+    await service.exchangeCode({
+      code: 'c',
+      verifier: 'v',
+      redirectUri: REDIRECT,
+    })
     await service.refresh('r')
     await service.revoke('r')
     expect(calls).toEqual(['exchangeCode', 'refresh', 'revoke'])

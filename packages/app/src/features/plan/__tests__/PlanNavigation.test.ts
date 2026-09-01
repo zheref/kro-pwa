@@ -33,7 +33,9 @@ describe('PlanViewMode', () => {
   it('labels each destination as canon does', () => {
     expect(planViewModeLabel(PlanViewMode.timeline)).toBe('Day View')
     expect(planViewModeLabel(PlanViewMode.list)).toBe('List View')
-    expect(planViewModeLabel(PlanViewMode.priorityMatrix)).toBe('Priority Matrix')
+    expect(planViewModeLabel(PlanViewMode.priorityMatrix)).toBe(
+      'Priority Matrix',
+    )
   })
 })
 
@@ -61,7 +63,9 @@ describe('canvas capabilities per mode', () => {
   it('renders the hour grid only on the timeline', () => {
     expect(planViewModeUsesTimelineCanvas(PlanViewMode.timeline)).toBe(true)
     expect(planViewModeUsesTimelineCanvas(PlanViewMode.list)).toBe(false)
-    expect(planViewModeUsesTimelineCanvas(PlanViewMode.priorityMatrix)).toBe(false)
+    expect(planViewModeUsesTimelineCanvas(PlanViewMode.priorityMatrix)).toBe(
+      false,
+    )
   })
 
   it('allows press-to-create only where there is canvas to press', () => {
@@ -70,13 +74,17 @@ describe('canvas capabilities per mode', () => {
   })
 
   it('never allows press-to-create on the matrix', () => {
-    expect(planViewModeSupportsQuickCreate(PlanViewMode.priorityMatrix)).toBe(false)
+    expect(planViewModeSupportsQuickCreate(PlanViewMode.priorityMatrix)).toBe(
+      false,
+    )
   })
 })
 
 describe('advancePlanViewMode — the carousel is circular', () => {
   it('steps forward one destination', () => {
-    expect(advancePlanViewMode(PlanViewMode.timeline, 1)).toBe(PlanViewMode.list)
+    expect(advancePlanViewMode(PlanViewMode.timeline, 1)).toBe(
+      PlanViewMode.list,
+    )
   })
 
   it('wraps past the last destination back to the first', () => {

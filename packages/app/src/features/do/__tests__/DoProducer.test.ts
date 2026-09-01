@@ -7,7 +7,11 @@ import {
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import { type AppStore, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type AppStore,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import {
   DO_MOCK_NOW,
   doEndeavorFixtures,
@@ -229,7 +233,9 @@ describe('clearExpiredThunk', () => {
     await store.dispatch(clearExpiredThunk({ now: DO_MOCK_NOW }))
 
     const firstPut = log.findIndex((entry) => entry.startsWith('put#'))
-    const lastPut = log.map((entry) => entry.startsWith('put#')).lastIndexOf(true)
+    const lastPut = log
+      .map((entry) => entry.startsWith('put#'))
+      .lastIndexOf(true)
     const readsAfterTheLastPut = log
       .slice(lastPut + 1)
       .filter((entry) => entry.startsWith('all#'))
@@ -330,7 +336,8 @@ describe('markEndeavorCompleteThunk', () => {
 
     const { load } = store.getState().do
     expect(load.kind).toBe('failed')
-    if (load.kind === 'failed') expect(load.exception.kind).toBe('endeavorNotFound')
+    if (load.kind === 'failed')
+      expect(load.exception.kind).toBe('endeavorNotFound')
   })
 
   it('resolves an exception rather than throwing when the write fails', async () => {

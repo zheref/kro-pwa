@@ -80,13 +80,18 @@ const messageOf = (error: unknown): string =>
 const readStoredEndeavors = async (
   localStore: LocalStore,
 ): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all([
-    localStore.endeavors.all(),
-    localStore.defers.all(),
-    localStore.performances.all(),
-  ])
+  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
+    [
+      localStore.endeavors.all(),
+      localStore.defers.all(),
+      localStore.performances.all(),
+    ],
+  )
 
-  const defersByEndeavor = new Map<string, ReturnType<typeof deferFromRecord>[]>()
+  const defersByEndeavor = new Map<
+    string,
+    ReturnType<typeof deferFromRecord>[]
+  >()
   for (const record of livingChildRecords(deferRecords)) {
     const bucket = defersByEndeavor.get(record.endeavorId) ?? []
     bucket.push(deferFromRecord(record))
@@ -234,7 +239,10 @@ export const clearExpiredThunk = createAsyncThunk<
 
   let targets: readonly Endeavor[]
   try {
-    const stored = reconcile(await readStoredEndeavors(extra.localStore), context)
+    const stored = reconcile(
+      await readStoredEndeavors(extra.localStore),
+      context,
+    )
     targets = doClearExpiredTargets(stored, now, context)
   } catch (error) {
     return err(DoExceptions.fetchFailed(messageOf(error)))

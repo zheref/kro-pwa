@@ -67,7 +67,8 @@ export const COLOR_ROLE_VARS = {
   rewardYellow: '--kro-color-reward-yellow',
   glowLime: '--kro-color-glow-lime',
   timelineTodayForeground: '--kro-color-timeline-today-foreground',
-  timelineTodaySelectedForeground: '--kro-color-timeline-today-selected-foreground',
+  timelineTodaySelectedForeground:
+    '--kro-color-timeline-today-selected-foreground',
   timelineSelectionOutline: '--kro-color-timeline-selection-outline',
   // Accent + derived
   accent: '--kro-color-accent',

@@ -5,7 +5,13 @@
  * Its two jobs are the pool (loaded on mount through the real Producer) and the
  * Undo window (the toast, and the tick that closes it).
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
@@ -58,7 +64,7 @@ describe('the pool arrives through the real Producer', () => {
     expect(store.getState().capture.endeavors.length).toBeGreaterThan(0)
   })
 
-  it('shows only the unscheduled, non-event, unfinished rows canon\'s selector keeps', async () => {
+  it("shows only the unscheduled, non-event, unfinished rows canon's selector keeps", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
     await waitFor(() => {
@@ -86,7 +92,7 @@ describe('the pool arrives through the real Producer', () => {
   })
 })
 
-describe('it presents itself from the shell\'s own ported frame', () => {
+describe("it presents itself from the shell's own ported frame", () => {
   it('sheets on a phone', async () => {
     const store = makeCaptureStore({
       endeavors: captureFixtureRecords(),
@@ -102,7 +108,7 @@ describe('it presents itself from the shell\'s own ported frame', () => {
     ).toBe('sheet')
   })
 
-  it('pops over at canon\'s 560 x 620 on a desktop', async () => {
+  it("pops over at canon's 560 x 620 on a desktop", async () => {
     const store = makeCaptureStore({
       endeavors: captureFixtureRecords(),
       surface: desktopSurface,
@@ -147,7 +153,7 @@ describe('the Undo window', () => {
     expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
   })
 
-  it('raises canon\'s toast, with Undo, the moment a scheduling lands', async () => {
+  it("raises canon's toast, with Undo, the moment a scheduling lands", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
     await waitFor(() => {
@@ -157,14 +163,16 @@ describe('the Undo window', () => {
     await screen.findByTestId('inbox-surface')
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
 
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeTruthy()
   })
 
-  it('hands the host canon\'s fixed eight seconds, never a computed remainder', async () => {
+  it("hands the host canon's fixed eight seconds, never a computed remainder", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
     await waitFor(() => {
@@ -174,7 +182,9 @@ describe('the Undo window', () => {
     await screen.findByTestId('inbox-surface')
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
     await screen.findByRole('button', { name: 'Undo' })
@@ -194,7 +204,7 @@ describe('the Undo window', () => {
     expect(ADD_FOR_TODAY_UNDO_WINDOW_MS / 1000).toBeLessThanOrEqual(12)
   })
 
-  it('arms the window for canon\'s eight seconds, measured from the confirmation', async () => {
+  it("arms the window for canon's eight seconds, measured from the confirmation", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
     await waitFor(() => {
@@ -204,7 +214,9 @@ describe('the Undo window', () => {
     await screen.findByTestId('inbox-surface')
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Add Draft the announcement for today' }),
+      screen.getByRole('button', {
+        name: 'Add Draft the announcement for today',
+      }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Schedule' }))
 

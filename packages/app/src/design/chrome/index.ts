@@ -81,8 +81,14 @@ export {
   resetActiveToastSequence,
   toActiveToast,
 } from './toast/activeToast'
-export { type ActiveToastViewProps, ActiveToastView } from './toast/ActiveToastView'
-export { type ActiveToastLayerProps, ActiveToastLayer } from './toast/ActiveToastLayer'
+export {
+  type ActiveToastViewProps,
+  ActiveToastView,
+} from './toast/ActiveToastView'
+export {
+  type ActiveToastLayerProps,
+  ActiveToastLayer,
+} from './toast/ActiveToastLayer'
 export {
   type ActiveToastController,
   type ActiveToastHostProps,

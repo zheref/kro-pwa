@@ -47,11 +47,13 @@
  * Server Page's prefetch. See the PR body for what a slice-resident connection
  * would add, and why it belongs to the child that owns those files.
  */
-import type { Endeavor, EndeavorOperation, PlanListGrouping, PlanListSort } from '@kro/core'
-import {
-  planListGroupingOption,
-  planListSortOption,
+import type {
+  Endeavor,
+  EndeavorOperation,
+  PlanListGrouping,
+  PlanListSort,
 } from '@kro/core'
+import { planListGroupingOption, planListSortOption } from '@kro/core'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FABMenuEntry } from '../../../design/chrome'
 import { presentationFor } from '../../main/MainPresentation'
@@ -217,7 +219,9 @@ export function PlanPage({
   const placements = useAppSelector(selectPlanTimelinePlacements)
   const events = useAppSelector(selectPlanTimelineEvents)
   const authoritative = useAppSelector(selectPlanAuthoritativeEvents)
-  const isQuickCreateAvailable = useAppSelector(selectIsPlanQuickCreateAvailable)
+  const isQuickCreateAvailable = useAppSelector(
+    selectIsPlanQuickCreateAvailable,
+  )
   const quickCreate = useAppSelector(selectPlanQuickCreateDraft)
   const editingEndeavorId = useAppSelector(selectPlanEditingEndeavorId)
   const editPreview = useAppSelector(selectPlanEditPreview)
@@ -247,9 +251,8 @@ export function PlanPage({
    * Fragment for the same reason (see its header). Nothing derived from either
    * survives dismissal.
    */
-  const [pickerQuadrant, setPickerQuadrant] = useState<PlanMatrixQuadrant | null>(
-    null,
-  )
+  const [pickerQuadrant, setPickerQuadrant] =
+    useState<PlanMatrixQuadrant | null>(null)
 
   /**
    * The route mounted.
@@ -269,7 +272,9 @@ export function PlanPage({
    */
   useEffect(() => {
     dispatch(
-      onDestinationRouteMounted({ destination: { kind: DestinationKind.plan } }),
+      onDestinationRouteMounted({
+        destination: { kind: DestinationKind.plan },
+      }),
     )
   }, [dispatch])
 
@@ -462,7 +467,10 @@ export function PlanPage({
   const onSelectGrouping = useCallback(
     (grouping: PlanListGrouping) => {
       void dispatch(
-        updateSettingThunk({ key: planListGroupingOption.key, value: grouping }),
+        updateSettingThunk({
+          key: planListGroupingOption.key,
+          value: grouping,
+        }),
       )
     },
     [dispatch],
@@ -853,29 +861,29 @@ export function PlanPage({
 
   return (
     <>
-    {picker}
-    <PlanFragment
-      selectedDate={selectedDate}
-      eventCount={events.length}
-      viewMode={viewMode}
-      onSelectViewMode={(mode) => dispatch(userDidSelectViewMode({ mode }))}
-      // The seam KC-IS-#19 left: two props, one call site, and nothing under
-      // `pages/timeline/**` moved to fill it.
-      destinations={{ timeline, list, matrix }}
-      staleSyncLabel={staleSyncLabel}
-      needsReconnect={googleNeedsReconnect}
-      reconnectDetail={googleReconnectDetail}
-      onTapReconnect={onTapReconnect}
-      isActivityIndicated={isActivityIndicated}
-      onTapRefresh={onTapRefresh}
-      visibility={visibility}
-      isVisibilityOpen={isVisibilityOpen}
-      onToggleVisibilityPanel={setIsVisibilityOpen}
-      visibilityPanel={visibilityPanel}
-      isFabAvailable={isFabAvailable}
-      isFabGlowActive={isFabGlowActive}
-      fabItems={fabItems}
-    />
+      {picker}
+      <PlanFragment
+        selectedDate={selectedDate}
+        eventCount={events.length}
+        viewMode={viewMode}
+        onSelectViewMode={(mode) => dispatch(userDidSelectViewMode({ mode }))}
+        // The seam KC-IS-#19 left: two props, one call site, and nothing under
+        // `pages/timeline/**` moved to fill it.
+        destinations={{ timeline, list, matrix }}
+        staleSyncLabel={staleSyncLabel}
+        needsReconnect={googleNeedsReconnect}
+        reconnectDetail={googleReconnectDetail}
+        onTapReconnect={onTapReconnect}
+        isActivityIndicated={isActivityIndicated}
+        onTapRefresh={onTapRefresh}
+        visibility={visibility}
+        isVisibilityOpen={isVisibilityOpen}
+        onToggleVisibilityPanel={setIsVisibilityOpen}
+        visibilityPanel={visibilityPanel}
+        isFabAvailable={isFabAvailable}
+        isFabGlowActive={isFabGlowActive}
+        fabItems={fabItems}
+      />
     </>
   )
 }

@@ -416,7 +416,12 @@ function InboxSection({ title, glyph, cards, ...row }: SectionProps) {
         </span>
       </header>
 
-      <ul className={cn('m-0 flex list-none flex-col p-0', compact ? 'gap-1' : 'gap-2')}>
+      <ul
+        className={cn(
+          'm-0 flex list-none flex-col p-0',
+          compact ? 'gap-1' : 'gap-2',
+        )}
+      >
         {cards.map((card) => (
           <li key={card.id}>
             <InboxRow card={card} {...row} />
@@ -445,7 +450,10 @@ function InboxRow({
   onCancelAddForToday,
   onConfirmAddForToday,
   onOperation,
-}: { readonly card: EndeavorCardModel } & Omit<SectionProps, 'title' | 'glyph' | 'cards'>) {
+}: { readonly card: EndeavorCardModel } & Omit<
+  SectionProps,
+  'title' | 'glyph' | 'cards'
+>) {
   const detected = useInputCapability()
   const resolvedInput = input ?? detected
   const compact = rowLayout === 'compactDesktop'
@@ -579,7 +587,10 @@ function AddForTodayConfirm({
         backgroundColor: colorVar('backInner'),
       }}
     >
-      <p className="m-0 font-semibold text-base" style={{ color: colorVar('fore') }}>
+      <p
+        className="m-0 font-semibold text-base"
+        style={{ color: colorVar('fore') }}
+      >
         Add for Today
       </p>
       <Input

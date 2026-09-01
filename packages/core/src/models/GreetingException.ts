@@ -25,14 +25,24 @@ export const GreetingExceptions = {
     exception('offline', 'The greeting service is unreachable.', true),
 
   notFound: (): GreetingException =>
-    exception('notFound', 'The greeting service has no greeting for that recipient.', false),
+    exception(
+      'notFound',
+      'The greeting service has no greeting for that recipient.',
+      false,
+    ),
 
   unauthorized: (): GreetingException =>
-    exception('unauthorized', 'The greeting service refused the request.', false),
+    exception(
+      'unauthorized',
+      'The greeting service refused the request.',
+      false,
+    ),
 
-  malformed: (detail: string): GreetingException => exception('malformed', detail, false),
+  malformed: (detail: string): GreetingException =>
+    exception('malformed', detail, false),
 
-  unknown: (message: string): GreetingException => exception('unknown', message, true),
+  unknown: (message: string): GreetingException =>
+    exception('unknown', message, true),
 }
 
 /**

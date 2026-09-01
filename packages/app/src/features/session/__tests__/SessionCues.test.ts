@@ -17,7 +17,10 @@ import {
   sessionCueSchedule,
 } from '../SessionCues'
 
-const countdown = (targetDuration: number, extra: Record<string, unknown> = {}) =>
+const countdown = (
+  targetDuration: number,
+  extra: Record<string, unknown> = {},
+) =>
   sessionCueSchedule({
     mode: FocusTimerMode.countdown,
     targetDuration,
@@ -103,9 +106,9 @@ describe('sessionCueMarksCrossed', () => {
   })
 
   it('fires every mark a long reload gap skipped over, once each', () => {
-    expect(sessionCueMarksCrossed(schedule, [], 9_999).map((m) => m.at)).toEqual(
-      [500, 1500],
-    )
+    expect(
+      sessionCueMarksCrossed(schedule, [], 9_999).map((m) => m.at),
+    ).toEqual([500, 1500])
   })
 
   it('never fires a mark twice, however many times the tick repeats', () => {

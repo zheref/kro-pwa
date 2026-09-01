@@ -31,8 +31,12 @@ describe('picking a glyph', () => {
   it('marks the current selection, so reopening the picker shows where you are', () => {
     render(<EmojiPicker categories={[FOOD]} selection="🍕" />)
 
-    expect(screen.getByRole('button', { name: '🍕' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: '🍎' }).getAttribute('aria-pressed')).toBe('false')
+    expect(
+      screen.getByRole('button', { name: '🍕' }).getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(
+      screen.getByRole('button', { name: '🍎' }).getAttribute('aria-pressed'),
+    ).toBe('false')
   })
 
   it('marks nothing when the endeavor has no symbol yet', () => {

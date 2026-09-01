@@ -32,9 +32,10 @@ describe('the row list mirrors canon four items', () => {
   })
 
   it('omits the Google row when the flag is off — canon flag gate', () => {
-    const ids = rowsFor({ kind: 'disconnected' }, { isGoogleEnabled: false }).map(
-      (row) => row.id,
-    )
+    const ids = rowsFor(
+      { kind: 'disconnected' },
+      { isGoogleEnabled: false },
+    ).map((row) => row.id)
 
     expect(ids).not.toContain(IntegrationId.google)
     expect(ids).toContain(IntegrationId.kroCloud)
@@ -54,7 +55,10 @@ describe('the Apple rows are ported as canon inert Connects', () => {
   it('offers no working action on either Apple row', () => {
     const rows = rowsFor({ kind: 'connected' })
 
-    for (const id of [IntegrationId.appleCalendar, IntegrationId.appleReminders]) {
+    for (const id of [
+      IntegrationId.appleCalendar,
+      IntegrationId.appleReminders,
+    ]) {
       const row = rows.find((candidate) => candidate.id === id)
       expect(row?.action).toBe(IntegrationAction.unavailable)
       expect(row?.isConnected).toBe(false)
@@ -70,9 +74,10 @@ describe('the Apple rows are ported as canon inert Connects', () => {
   })
 
   it('keeps them listed even when Google is hidden — the list is not conditional', () => {
-    const ids = rowsFor({ kind: 'disconnected' }, { isGoogleEnabled: false }).map(
-      (row) => row.id,
-    )
+    const ids = rowsFor(
+      { kind: 'disconnected' },
+      { isGoogleEnabled: false },
+    ).map((row) => row.id)
 
     expect(ids).toContain(IntegrationId.appleCalendar)
     expect(ids).toContain(IntegrationId.appleReminders)
@@ -80,10 +85,7 @@ describe('the Apple rows are ported as canon inert Connects', () => {
 })
 
 describe('the Google row distinguishes all four connection states', () => {
-  const googleRow = (
-    connection: GoogleConnectionState,
-    isBusy = false,
-  ) =>
+  const googleRow = (connection: GoogleConnectionState, isBusy = false) =>
     rowsFor(connection, { isBusy }).find(
       (row) => row.id === IntegrationId.google,
     )
@@ -107,7 +109,10 @@ describe('the Google row distinguishes all four connection states', () => {
   })
 
   it('offers nothing pressable on a deployment with no Google client', () => {
-    const row = googleRow({ kind: 'unconfigured', missing: ['GOOGLE_CLIENT_ID'] })
+    const row = googleRow({
+      kind: 'unconfigured',
+      missing: ['GOOGLE_CLIENT_ID'],
+    })
 
     expect(row?.action).toBe(IntegrationAction.unavailable)
     expect(row?.subtitle).toContain('no Google client is configured')

@@ -52,9 +52,9 @@ describe('Tabs', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Timeline' }))
     await userEvent.keyboard('{ArrowRight}')
 
-    expect(screen.getByRole('tab', { name: 'List' }).getAttribute('aria-selected')).toBe(
-      'true',
-    )
+    expect(
+      screen.getByRole('tab', { name: 'List' }).getAttribute('aria-selected'),
+    ).toBe('true')
   })
 
   it('raises the active trigger onto a solid surface, not just a tint', () => {

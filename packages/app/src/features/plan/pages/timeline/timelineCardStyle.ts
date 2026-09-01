@@ -58,7 +58,8 @@ export const cardFillBackground = (
     // Rounded to two decimals: `0.15 + 0.14` is `0.29000000000000004` in
     // binary floating point, and a percentage with sixteen digits in it is
     // both unreadable in devtools and unassertable in a test.
-    const percent = Math.round(cardFillOpacity(scheme, isPressed) * 10_000) / 100
+    const percent =
+      Math.round(cardFillOpacity(scheme, isPressed) * 10_000) / 100
     return `color-mix(in srgb, ${accentColor} ${percent}%, transparent)`
   }
   return `light-dark(${mix('light')}, ${mix('dark')})`
@@ -144,10 +145,7 @@ export const normalizedHexColor = (raw: string | null): string | null => {
  * Returns a colour *string* rather than a role because half the answers are
  * host-supplied hexes that no token can name.
  */
-export const cardAccentColor = (
-  endeavor: Endeavor,
-  index: number,
-): string =>
+export const cardAccentColor = (endeavor: Endeavor, index: number): string =>
   normalizedHexColor(endeavor.associatedColor) ??
   colorVar(paletteAccentFor(index))
 

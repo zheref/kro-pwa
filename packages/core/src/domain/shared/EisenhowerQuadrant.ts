@@ -132,6 +132,5 @@ export const quadrantIcon = (
  * `keepsEndeavor` — whether picking this quadrant leaves the endeavor on the
  * active list. Only `delete` (displayed as **Archive**) takes it off.
  */
-export const quadrantKeepsEndeavor = (
-  quadrant: EisenhowerQuadrant,
-): boolean => quadrant !== EisenhowerQuadrant.delete
+export const quadrantKeepsEndeavor = (quadrant: EisenhowerQuadrant): boolean =>
+  quadrant !== EisenhowerQuadrant.delete

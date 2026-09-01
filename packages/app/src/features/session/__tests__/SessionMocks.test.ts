@@ -23,7 +23,10 @@ describe('the phase/anchor invariant', () => {
   it('gives every non-ready fixture an anchor', () => {
     for (const [name, state] of Object.entries(sessionStateMocks)) {
       if (state.phase === SessionPhase.ready) continue
-      expect(state.anchor, `${name} is ${state.phase} with no anchor`).not.toBeNull()
+      expect(
+        state.anchor,
+        `${name} is ${state.phase} with no anchor`,
+      ).not.toBeNull()
     }
   })
 

@@ -32,10 +32,17 @@ describe('EndeavorRow presets', () => {
 
   it('applies the preset’s geometry to the rendered row', () => {
     const { container } = render(
-      <EndeavorRow symbol="📊" title="Slides" config="compactDesktopInbox" now={NOW} />,
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        config="compactDesktopInbox"
+        now={NOW}
+      />,
     )
 
-    const row = container.querySelector('[data-slot="endeavor-row"]') as HTMLElement
+    const row = container.querySelector(
+      '[data-slot="endeavor-row"]',
+    ) as HTMLElement
     expect(row.style.minHeight).toBe('52px')
     expect(row.style.padding).toBe('7px 10px')
   })
@@ -52,7 +59,8 @@ describe('EndeavorRow content', () => {
         now={NOW}
       />,
     )
-    const row = () => container.querySelector('[data-slot="endeavor-row"]') as HTMLElement
+    const row = () =>
+      container.querySelector('[data-slot="endeavor-row"]') as HTMLElement
     const titleColumn = () => row().children[1] as HTMLElement
 
     expect(titleColumn().textContent).toContain('50')
@@ -95,7 +103,9 @@ describe('EndeavorRow content', () => {
       (container.querySelector('[data-slot="endeavor-row"]') as HTMLElement)
         .firstElementChild as HTMLElement
 
-    expect(symbolCell().style.backgroundColor).toBe('var(--kro-color-back-inner)')
+    expect(symbolCell().style.backgroundColor).toBe(
+      'var(--kro-color-back-inner)',
+    )
 
     rerender(<EndeavorRow symbol="📊" title="Slides" now={NOW} />)
     expect(symbolCell().style.backgroundColor).toBe('')
@@ -106,7 +116,11 @@ describe('EndeavorRow content', () => {
       <EndeavorRow
         symbol="🧾"
         title="Taxes"
-        timeInfo={{ kind: 'dueTime', date: new Date(NOW.getTime() - 259_200_000), duration: null }}
+        timeInfo={{
+          kind: 'dueTime',
+          date: new Date(NOW.getTime() - 259_200_000),
+          duration: null,
+        }}
         now={NOW}
         locale="en-US"
       />,
@@ -200,9 +214,13 @@ describe('endeavorRowPropsFromCardModel', () => {
 
 describe('the row’s optional action surface', () => {
   it('stays a plain list item when no capabilities are given', () => {
-    const { container } = render(<EndeavorRow symbol="📊" title="Slides" now={NOW} />)
+    const { container } = render(
+      <EndeavorRow symbol="📊" title="Slides" now={NOW} />,
+    )
 
-    expect(container.querySelector('[data-slot="endeavor-action-surface"]')).toBeNull()
+    expect(
+      container.querySelector('[data-slot="endeavor-action-surface"]'),
+    ).toBeNull()
   })
 
   it('wraps itself in the duality surface when they are', () => {
@@ -304,7 +322,11 @@ describe('the row reserves the surface’s pointer gutter', () => {
       />,
     )
 
-    expect(row(container).style.paddingRight).toContain(`var(${POINTER_GUTTER_VAR}, 0px)`)
-    expect(container.querySelector('[data-slot="endeavor-action-surface"]')).toBeNull()
+    expect(row(container).style.paddingRight).toContain(
+      `var(${POINTER_GUTTER_VAR}, 0px)`,
+    )
+    expect(
+      container.querySelector('[data-slot="endeavor-action-surface"]'),
+    ).toBeNull()
   })
 })

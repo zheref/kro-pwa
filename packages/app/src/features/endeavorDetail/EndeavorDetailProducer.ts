@@ -313,10 +313,7 @@ export const removeDeferThunk = createAsyncThunk<
       )
       const row = rows[index]
       if (row !== undefined) {
-        await extra.localStore.defers.removeLocal(
-          row,
-          epochMillisFromDate(now),
-        )
+        await extra.localStore.defers.removeLocal(row, epochMillisFromDate(now))
       }
       await persistEndeavor(
         extra.localStore,

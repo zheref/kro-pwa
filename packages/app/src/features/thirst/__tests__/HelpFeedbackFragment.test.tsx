@@ -18,27 +18,32 @@ const ROW_LABELS = [
 ]
 
 describe('HelpFeedbackFragment', () => {
-  it('renders exactly canon\'s six rows', () => {
+  it("renders exactly canon's six rows", () => {
     render(<HelpFeedbackFragment />)
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(6)
     expect(buttons.map((button) => button.textContent)).toEqual(ROW_LABELS)
   })
 
-  it('groups the rows under canon\'s three section headings', () => {
+  it("groups the rows under canon's three section headings", () => {
     render(<HelpFeedbackFragment />)
     expect(screen.getByText('Resources')).toBeTruthy()
     expect(screen.getByText('Support')).toBeTruthy()
     expect(screen.getByText('Feedback')).toBeTruthy()
   })
 
-  it.each(ROW_LABELS)('%s is genuinely inert — no href, no navigation target', (label) => {
-    render(<HelpFeedbackFragment />)
-    const row = screen.getByRole('button', { name: label }) as HTMLButtonElement
-    expect(row.getAttribute('href')).toBeNull()
-    expect(row.hasAttribute('aria-disabled')).toBe(false)
-    expect(row.disabled).toBe(false)
-  })
+  it.each(ROW_LABELS)(
+    '%s is genuinely inert — no href, no navigation target',
+    (label) => {
+      render(<HelpFeedbackFragment />)
+      const row = screen.getByRole('button', {
+        name: label,
+      }) as HTMLButtonElement
+      expect(row.getAttribute('href')).toBeNull()
+      expect(row.hasAttribute('aria-disabled')).toBe(false)
+      expect(row.disabled).toBe(false)
+    },
+  )
 
   it('labels the whole surface for assistive tech', () => {
     render(<HelpFeedbackFragment />)

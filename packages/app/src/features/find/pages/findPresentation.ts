@@ -193,12 +193,17 @@ export const isFilterChipSelected = (
  * Find row does not render, and building one per row per keystroke of the
  * search field is the cost this avoids.
  */
-const EMOJI_LEAD = /^(\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic})*)\s*/u
+const EMOJI_LEAD =
+  /^(\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic})*)\s*/u
 
 /** The row's symbol and the title with a leading emoji stripped. */
 export const findRowSymbol = (
   title: string,
-): { readonly symbol: string; readonly isGeneric: boolean; readonly title: string } => {
+): {
+  readonly symbol: string
+  readonly isGeneric: boolean
+  readonly title: string
+} => {
   const match = EMOJI_LEAD.exec(title)
   const lead = match?.[1]
   if (match === null || lead === undefined) {

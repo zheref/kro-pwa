@@ -1,4 +1,10 @@
-import { type CSSProperties, type KeyboardEvent, useCallback, useId, useRef } from 'react'
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  useCallback,
+  useId,
+  useRef,
+} from 'react'
 import { type SfSymbolName, iconForSymbol } from '../../system/icons/icons'
 import { cn } from '../../system/utils/cn'
 import { RotatingGlow, type RotatingGlowProps } from '../glow/RotatingGlow'
@@ -142,7 +148,10 @@ export function LiquidGlassFABMenu({
       onKeyDown={onKeyDown}
     >
       {glow ? (
-        <RotatingGlow {...glow} isActive={isGlowActive && (glow.isActive ?? true)}>
+        <RotatingGlow
+          {...glow}
+          isActive={isGlowActive && (glow.isActive ?? true)}
+        >
           {mainButton}
         </RotatingGlow>
       ) : (

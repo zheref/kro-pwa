@@ -70,7 +70,10 @@ export function emptyFeatureVoteCounts(featureKey: string): FeatureVoteCounts {
 }
 
 /** Canon's `FeatureVoteCounts.count(for:)`. */
-export function countFor(counts: FeatureVoteCounts, platform: VotePlatform): number {
+export function countFor(
+  counts: FeatureVoteCounts,
+  platform: VotePlatform,
+): number {
   return counts.perPlatform[platform] ?? 0
 }
 
@@ -89,7 +92,10 @@ export function bumpVotePlatform(
   return {
     ...base,
     total: base.total + 1,
-    perPlatform: { ...base.perPlatform, [platform]: countFor(base, platform) + 1 },
+    perPlatform: {
+      ...base.perPlatform,
+      [platform]: countFor(base, platform) + 1,
+    },
   }
 }
 

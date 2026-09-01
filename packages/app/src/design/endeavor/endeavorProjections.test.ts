@@ -25,7 +25,9 @@ describe('kind projections', () => {
 
   it('gives every kind a glyph the icon map can draw', () => {
     for (const kind of endeavorKinds) {
-      expect(isMappedSymbol(kindGlyph(kind)), `${kind} has no drawing`).toBe(true)
+      expect(isMappedSymbol(kindGlyph(kind)), `${kind} has no drawing`).toBe(
+        true,
+      )
     }
   })
 
@@ -41,7 +43,10 @@ describe('kind projections', () => {
 describe('status projections', () => {
   it('gives every status a glyph, so status never depends on colour alone', () => {
     for (const status of endeavorStatuses) {
-      expect(isMappedSymbol(statusGlyph(status)), `${status} has no drawing`).toBe(true)
+      expect(
+        isMappedSymbol(statusGlyph(status)),
+        `${status} has no drawing`,
+      ).toBe(true)
     }
   })
 
@@ -72,7 +77,9 @@ describe('host projections', () => {
     // Adding a host means editing `@kro/core`, and nothing here. This test is
     // what proves that: it walks the domain's own case list.
     for (const host of endeavorHosts) {
-      expect(isMappedSymbol(hostGlyph(host)), `${host} has no drawing`).toBe(true)
+      expect(isMappedSymbol(hostGlyph(host)), `${host} has no drawing`).toBe(
+        true,
+      )
     }
   })
 

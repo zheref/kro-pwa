@@ -6,7 +6,13 @@
  * divergence between the two sets is a real disagreement rather than two
  * different hand-built prop bags.
  */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EisenhowerQuadrant } from '@kro/core'
 import { triageStateMocks } from '../../TriageMocks'
@@ -42,7 +48,9 @@ describe('Pristine — the story of the same name', () => {
     expect(screen.getByTestId('triage-blocked-reason').textContent).toBe(
       'Pick a quadrant to complete this triage.',
     )
-    expect(confirm.getAttribute('aria-describedby')).toBe('triage-blocked-reason')
+    expect(confirm.getAttribute('aria-describedby')).toBe(
+      'triage-blocked-reason',
+    )
     expect(confirm.getAttribute('aria-label')).toBe(
       'Complete Triage, unavailable',
     )
@@ -83,7 +91,7 @@ describe('ValuePromotesToSchedule — acceptance criterion 2', () => {
     ).toBe('false')
   })
 
-  it('shows the rating\'s own descriptor beside the rockets', () => {
+  it("shows the rating's own descriptor beside the rockets", () => {
     mount(triagePageStateMocks.valuePromotedToSchedule)
     expect(screen.getByTestId('triage-value-label').textContent).toBe('Major')
   })
@@ -122,9 +130,9 @@ describe('SchedulePicked — quadrant + seeded date', () => {
     mount(triageStateMocks.scheduled)
 
     const row = within(screen.getByTestId('triage-expiry-row'))
-    expect(
-      row.getByText('An hour later').getAttribute('aria-pressed'),
-    ).toBe('true')
+    expect(row.getByText('An hour later').getAttribute('aria-pressed')).toBe(
+      'true',
+    )
   })
 
   it('hides Clear on the expiry while a scheduled date holds the invariant', () => {
@@ -138,9 +146,9 @@ describe('SchedulePicked — quadrant + seeded date', () => {
 describe('the three quadrant-specific secondary actions', () => {
   it('offers the green Start Now on Prioritize', () => {
     mount(triageStateMocks.prioritizedOnBusyDay)
-    expect(screen.getByTestId('triage-secondary-startNow').textContent).toContain(
-      'Start Now',
-    )
+    expect(
+      screen.getByTestId('triage-secondary-startNow').textContent,
+    ).toContain('Start Now')
   })
 
   it('offers the orange Share on Delegate', () => {
@@ -153,9 +161,9 @@ describe('the three quadrant-specific secondary actions', () => {
   it('offers the gray Archive on Archive, and Complete needs no date there', () => {
     mount(triageStateMocks.archivePicked)
 
-    expect(screen.getByTestId('triage-secondary-archive').textContent).toContain(
-      'Archive',
-    )
+    expect(
+      screen.getByTestId('triage-secondary-archive').textContent,
+    ).toContain('Archive')
     // Archive is the exemption: no scheduled date and the gate is open anyway.
     expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
       false,

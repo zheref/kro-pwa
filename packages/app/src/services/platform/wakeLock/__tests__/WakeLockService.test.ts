@@ -199,7 +199,7 @@ describe('liveWakeLockService — visibility', () => {
 })
 
 describe('stubbedWakeLockService', () => {
-  it('records every request so a suite can assert the session\'s transitions', async () => {
+  it("records every request so a suite can assert the session's transitions", async () => {
     const service = makeStubbedWakeLockService()
 
     await service.setKeepAwake(true)

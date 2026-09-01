@@ -32,7 +32,9 @@ describe('the fixture instant', () => {
   })
 
   it('is a fixed instant, not a clock read', () => {
-    expect(CAPTURE_MOCK_NOW.getTime()).toBe(new Date(2026, 2, 17, 10, 7).getTime())
+    expect(CAPTURE_MOCK_NOW.getTime()).toBe(
+      new Date(2026, 2, 17, 10, 7).getTime(),
+    )
   })
 })
 

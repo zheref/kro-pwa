@@ -52,7 +52,11 @@ import type {
   PropertyRowChip,
   PropertyRowValue,
 } from '../../../design/endeavor/PropertyRow'
-import { type ChipTint, colorTint, semanticTint } from '../../../design/endeavor/KroChip'
+import {
+  type ChipTint,
+  colorTint,
+  semanticTint,
+} from '../../../design/endeavor/KroChip'
 import type { KitSymbolName } from '../../../design/endeavor/endeavorIcons'
 import {
   hostGlyph,

@@ -50,10 +50,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '../../../design/system/primitives/dialog'
-import {
-  Sheet,
-  SheetContent,
-} from '../../../design/system/primitives/sheet'
+import { Sheet, SheetContent } from '../../../design/system/primitives/sheet'
 import { cn } from '../../../design/system/utils/cn'
 import type { SessionPhase } from '../SessionVocabulary'
 import {

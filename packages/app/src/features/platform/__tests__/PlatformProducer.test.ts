@@ -164,7 +164,9 @@ describe('overdue alerts — the AND gate (flag × two preferences)', () => {
       )
 
       expect(kit.notifications.recordedSchedules()).toEqual([])
-      expect(kit.store.getState().platform.isOverdueAlertGateEnabled).toBe(false)
+      expect(kit.store.getState().platform.isOverdueAlertGateEnabled).toBe(
+        false,
+      )
     })
   }
 
@@ -213,9 +215,9 @@ describe('overdue alerts — the AND gate (flag × two preferences)', () => {
     // …and yet the producer still schedules nothing, because the second
     // preference is off. Proven by the table above; asserted here so the two
     // halves of the AND are visibly independent.
-    expect(
-      makePreferences(kit.preferences).read(doNotifyOnOverdueOption),
-    ).toBe(false)
+    expect(makePreferences(kit.preferences).read(doNotifyOnOverdueOption)).toBe(
+      false,
+    )
   })
 })
 
@@ -255,7 +257,9 @@ describe('reconcileOverdueAlertsThunk', () => {
       reconcileOverdueAlertsThunk({ endeavors: [endeavorMocks.plannedTask] }),
     )
 
-    expect(kit.notifications.recordedWithdrawals()).toEqual([PLANNED_TASK_ALERT])
+    expect(kit.notifications.recordedWithdrawals()).toEqual([
+      PLANNED_TASK_ALERT,
+    ])
     expect(kit.store.getState().platform.pendingOverdueAlertIds).toEqual([])
   })
 
@@ -341,7 +345,9 @@ describe('withdrawPendingAlertsThunk', () => {
 
     await kit.store.dispatch(withdrawPendingAlertsThunk())
 
-    expect(kit.notifications.recordedWithdrawals()).toEqual([PLANNED_TASK_ALERT])
+    expect(kit.notifications.recordedWithdrawals()).toEqual([
+      PLANNED_TASK_ALERT,
+    ])
   })
 })
 
@@ -433,7 +439,8 @@ describe('refreshPlatformStatusThunk', () => {
 
     const { load } = store.getState().platform
     expect(load.kind).toBe('failed')
-    if (load.kind === 'failed') expect(load.exception.kind).toBe('statusProbeFailed')
+    if (load.kind === 'failed')
+      expect(load.exception.kind).toBe('statusProbeFailed')
   })
 })
 
@@ -470,7 +477,7 @@ describe('playSessionSoundThunk', () => {
     expect(kit.audio.playedRoles()).toEqual([])
   })
 
-  it('defaults to audible, matching the preference\'s own default', async () => {
+  it("defaults to audible, matching the preference's own default", async () => {
     const kit = harness()
 
     await kit.store.dispatch(
@@ -555,7 +562,7 @@ describe('setScreenAwakeThunk', () => {
     expect(kit.store.getState().platform.isScreenAwakeRequested).toBe(false)
   })
 
-  it('defaults to holding, matching the preference\'s own default', async () => {
+  it("defaults to holding, matching the preference's own default", async () => {
     const kit = harness()
 
     await kit.store.dispatch(setScreenAwakeThunk({ enabled: true }))

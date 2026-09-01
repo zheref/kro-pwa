@@ -91,9 +91,7 @@ const SIGNED_OUT: SettingsSyncFooter = {
 
 /** Signed out: the row is an invitation and the footer prompts. */
 export const SignedOut = {
-  render: () => (
-    <Stage width={760}>{hub({ syncFooter: SIGNED_OUT })}</Stage>
-  ),
+  render: () => <Stage width={760}>{hub({ syncFooter: SIGNED_OUT })}</Stage>,
 }
 
 /** Signed in with a healthy sync — the ordinary desktop hub. */

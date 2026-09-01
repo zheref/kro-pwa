@@ -28,7 +28,7 @@ const renderDialog = (
   )
 
 describe('the prompt', () => {
-  it("shows canon title and interpolates the row count", () => {
+  it('shows canon title and interpolates the row count', () => {
     renderDialog()
 
     expect(screen.getByText('You Have Local Data')).toBeTruthy()

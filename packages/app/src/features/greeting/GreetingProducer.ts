@@ -20,14 +20,23 @@ export const fetchGreetingThunk = createAsyncThunk<
   Result<Greeting, GreetingException>,
   { recipient: string },
   { extra: ThunkExtra }
->('greeting/onGreetingFetchCompleted', async ({ recipient }, { extra, signal }) => {
-  try {
-    const response = await extra.greetingService.fetchGreeting(recipient, { signal })
-    const greeting = GreetingMapper.toDomain(response)
-    return greeting
-      ? ok(greeting)
-      : err(GreetingExceptions.malformed(`greeting for "${recipient}" failed to map`))
-  } catch (error) {
-    return err(GreetingMapper.toException(error))
-  }
-})
+>(
+  'greeting/onGreetingFetchCompleted',
+  async ({ recipient }, { extra, signal }) => {
+    try {
+      const response = await extra.greetingService.fetchGreeting(recipient, {
+        signal,
+      })
+      const greeting = GreetingMapper.toDomain(response)
+      return greeting
+        ? ok(greeting)
+        : err(
+            GreetingExceptions.malformed(
+              `greeting for "${recipient}" failed to map`,
+            ),
+          )
+    } catch (error) {
+      return err(GreetingMapper.toException(error))
+    }
+  },
+)

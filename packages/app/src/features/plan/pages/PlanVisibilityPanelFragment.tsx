@@ -136,9 +136,7 @@ export const VISIBILITY_STATE_VALUES: readonly EndeavorComputedState[] = [
  * hidden draws the struck-through one. Exported because the toolbar control
  * reads it and this Fragment is not always mounted.
  */
-export const areAllPlanFiltersEnabled = (
-  visibility: PlanVisibility,
-): boolean =>
+export const areAllPlanFiltersEnabled = (visibility: PlanVisibility): boolean =>
   visibility.hiddenKinds.length === 0 &&
   visibility.hiddenHosts.length === 0 &&
   visibility.hiddenStatuses.length === 0 &&
@@ -161,9 +159,24 @@ export function PlanVisibilityPanelFragment({
       data-testid="plan-visibility-panel"
       className={cn('flex flex-col gap-kro-medium', className)}
     >
-      <VisibilityFilterSection title="Show" rows={stateRows} visibility={visibility} onToggle={onToggle} />
-      <VisibilityFilterSection title="Kinds" rows={kindRows} visibility={visibility} onToggle={onToggle} />
-      <VisibilityFilterSection title="Sources" rows={hostRows} visibility={visibility} onToggle={onToggle} />
+      <VisibilityFilterSection
+        title="Show"
+        rows={stateRows}
+        visibility={visibility}
+        onToggle={onToggle}
+      />
+      <VisibilityFilterSection
+        title="Kinds"
+        rows={kindRows}
+        visibility={visibility}
+        onToggle={onToggle}
+      />
+      <VisibilityFilterSection
+        title="Sources"
+        rows={hostRows}
+        visibility={visibility}
+        onToggle={onToggle}
+      />
     </div>
   )
 }

@@ -119,7 +119,10 @@ export {
   selectIsGreetingDetailOpen,
   selectIsGreetingLoading,
 } from './features/greeting/GreetingSelectors'
-export { type GreetingViewModel, useGreeting } from './features/greeting/useGreeting'
+export {
+  type GreetingViewModel,
+  useGreeting,
+} from './features/greeting/useGreeting'
 
 /**
  * Auth + Settings UI (KC-IS-#32) — the Settings hub and its panes, the profile

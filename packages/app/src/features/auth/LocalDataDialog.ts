@@ -68,14 +68,28 @@ export interface LocalDataDecision {
 }
 
 /** The decision table above, as a total function (`RC-9` closes it). */
-export const localDataDecisionFor = (choice: LocalDataChoice): LocalDataDecision => {
+export const localDataDecisionFor = (
+  choice: LocalDataChoice,
+): LocalDataDecision => {
   switch (choice) {
     case LocalDataChoice.signAll:
-      return { adoptsAnonymousRows: true, clearsLocalRows: false, pullsFromCloud: true }
+      return {
+        adoptsAnonymousRows: true,
+        clearsLocalRows: false,
+        pullsFromCloud: true,
+      }
     case LocalDataChoice.clearAll:
-      return { adoptsAnonymousRows: false, clearsLocalRows: true, pullsFromCloud: true }
+      return {
+        adoptsAnonymousRows: false,
+        clearsLocalRows: true,
+        pullsFromCloud: true,
+      }
     case LocalDataChoice.cancel:
-      return { adoptsAnonymousRows: false, clearsLocalRows: false, pullsFromCloud: true }
+      return {
+        adoptsAnonymousRows: false,
+        clearsLocalRows: false,
+        pullsFromCloud: true,
+      }
   }
 }
 

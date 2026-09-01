@@ -81,7 +81,9 @@ describe('planVisibilitySections against the SHIPPED Plan vista', () => {
 
 describe('planVisibilitySections in general', () => {
   it('draws nothing for a vista that exposes nothing — a read-only surface', () => {
-    expect(planVisibilitySections(makeEndeavorsLens({ exposes: [] }))).toEqual([])
+    expect(planVisibilitySections(makeEndeavorsLens({ exposes: [] }))).toEqual(
+      [],
+    )
   })
 
   it('honours canon order even when the lens declares them out of order', () => {

@@ -54,26 +54,42 @@ describe('the sweep is two hues, and closes on itself', () => {
 describe('shouldGlowAnimate — the decision, isolated from the DOM', () => {
   it('turns for an active glow with a real revolution time', () => {
     expect(
-      shouldGlowAnimate({ isActive: true, reduceMotion: false, secondsPerRevolution: 4 }),
+      shouldGlowAnimate({
+        isActive: true,
+        reduceMotion: false,
+        secondsPerRevolution: 4,
+      }),
     ).toBe(true)
   })
 
   it('settles still when the user has asked for reduced motion', () => {
     // A slow endless rotation is exactly what Reduce Motion exists to stop.
     expect(
-      shouldGlowAnimate({ isActive: true, reduceMotion: true, secondsPerRevolution: 4 }),
+      shouldGlowAnimate({
+        isActive: true,
+        reduceMotion: true,
+        secondsPerRevolution: 4,
+      }),
     ).toBe(false)
   })
 
   it('does not turn when the glow is switched off outright', () => {
     expect(
-      shouldGlowAnimate({ isActive: false, reduceMotion: false, secondsPerRevolution: 4 }),
+      shouldGlowAnimate({
+        isActive: false,
+        reduceMotion: false,
+        secondsPerRevolution: 4,
+      }),
     ).toBe(false)
   })
 
   it('holds at 0 degrees when the caller asks for no revolution', () => {
     expect(
-      shouldGlowAnimate({ isActive: true, reduceMotion: false, secondsPerRevolution: 0 }),
+      shouldGlowAnimate({
+        isActive: true,
+        reduceMotion: false,
+        secondsPerRevolution: 0,
+      }),
     ).toBe(false)
   })
 })
@@ -141,9 +157,9 @@ describe('isActive removes the glow rather than freezing it', () => {
     )
 
     expect(document.querySelectorAll('[data-kro-glow-band]')).toHaveLength(0)
-    expect(document.querySelector('[data-kro-glow]')?.getAttribute('data-kro-glow')).toBe(
-      'off',
-    )
+    expect(
+      document.querySelector('[data-kro-glow]')?.getAttribute('data-kro-glow'),
+    ).toBe('off')
   })
 
   it('keeps the decorated content mounted either way', () => {

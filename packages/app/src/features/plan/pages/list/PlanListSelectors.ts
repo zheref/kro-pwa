@@ -66,7 +66,11 @@ import {
   selectPlanTimelineEvents,
   selectPlanVista,
 } from '../../PlanSelectors'
-import { type PlanListSection, planListSections, planListSorted } from './planListModel'
+import {
+  type PlanListSection,
+  planListSections,
+  planListSorted,
+} from './planListModel'
 
 /** The `showCompletedInTimeline` preference — canon applies it to both canvases. */
 const selectShowCompleted = (state: RootState): boolean =>

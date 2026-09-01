@@ -1,6 +1,9 @@
 import { greetingMocks } from '@kro/core/mocks'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { greetingSlice, initialGreetingState } from '../../features/greeting/GreetingFeature'
+import {
+  greetingSlice,
+  initialGreetingState,
+} from '../../features/greeting/GreetingFeature'
 import { fetchGreetingThunk } from '../../features/greeting/GreetingProducer'
 import type { GreetingService } from '../../services/greeting/GreetingService'
 import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../store'
@@ -17,13 +20,15 @@ describe('makeStore', () => {
   })
 
   it('hands the injected services to a Producer — the substitution seam tests depend on', async () => {
-    const fetchGreeting = vi.fn(async (_recipient: string, _options?: { signal?: AbortSignal }) => ({
-      id: 'greeting-1',
-      recipient: 'ada',
-      message: 'Good morning, Ada.',
-      signature: '— Kro',
-      issued_at: '2026-01-15T08:00:00.000Z',
-    }))
+    const fetchGreeting = vi.fn(
+      async (_recipient: string, _options?: { signal?: AbortSignal }) => ({
+        id: 'greeting-1',
+        recipient: 'ada',
+        message: 'Good morning, Ada.',
+        signature: '— Kro',
+        issued_at: '2026-01-15T08:00:00.000Z',
+      }),
+    )
     const extra: ThunkExtra = {
       ...stubbedThunkExtra,
       greetingService: { fetchGreeting } satisfies GreetingService,
@@ -63,7 +68,8 @@ describe('makeStore', () => {
 
     const { load } = store.getState().greeting
     expect(load.kind).toBe('loaded')
-    if (load.kind === 'loaded') expect(load.greeting.issuedAt).toEqual(greetingMocks.typical.issuedAt)
+    if (load.kind === 'loaded')
+      expect(load.greeting.issuedAt).toEqual(greetingMocks.typical.issuedAt)
     expect(consoleError).not.toHaveBeenCalled()
   })
 })

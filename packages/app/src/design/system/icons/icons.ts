@@ -91,7 +91,7 @@ export const SF_SYMBOL_TO_LUCIDE = {
   'checkmark.circle.fill': CheckCircle2,
   calendar: Calendar,
   clock: Clock,
-  'repeat': Repeat,
+  repeat: Repeat,
   bell: Bell,
   flag: Flag,
   tag: Tag,

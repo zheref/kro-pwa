@@ -18,9 +18,7 @@ describe('ClaimConfirmationBody', () => {
       />,
     )
 
-    expect(
-      screen.getByText(`Claim ${rewardMocks.bobaTea.title}?`),
-    ).toBeTruthy()
+    expect(screen.getByText(`Claim ${rewardMocks.bobaTea.title}?`)).toBeTruthy()
     expect(
       screen.getByText(`${rewardMocks.bobaTea.pointsRequired} points`),
     ).toBeTruthy()

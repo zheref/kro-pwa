@@ -1,10 +1,10 @@
-import {
-  type EndeavorStore,
-  EndeavorStatus,
-  type LocalStore,
-} from '@kro/core'
+import { type EndeavorStore, EndeavorStatus, type LocalStore } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { type AppStore, makeStore, stubbedThunkExtra } from '../../../../library/store'
+import {
+  type AppStore,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { DO_MOCK_NOW, doFixtureRecords, doMockAt } from '../../DoMocks'
 import {
@@ -177,7 +177,9 @@ describe('Delegate', () => {
     const { store } = seededStore()
 
     const result = await store
-      .dispatch(delegateEndeavorThunk({ endeavorId: 'ghost', now: DO_MOCK_NOW }))
+      .dispatch(
+        delegateEndeavorThunk({ endeavorId: 'ghost', now: DO_MOCK_NOW }),
+      )
       .unwrap()
     expect(result.ok).toBe(false)
   })

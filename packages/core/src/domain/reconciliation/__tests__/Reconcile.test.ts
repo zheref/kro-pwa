@@ -382,7 +382,6 @@ describe('reconciledCounterpartOf', () => {
     expect(counterpart?.kind).toBe(EndeavorKind.habit)
   })
 
-
   it('finds the merged row a given endeavor ends up in', () => {
     const mirror = localMirrorRow({
       id: 'local',

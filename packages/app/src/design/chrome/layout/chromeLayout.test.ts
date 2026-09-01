@@ -120,7 +120,9 @@ describe('the shell’s bottom inset — canon measures inside the tab, the web 
 
   it('names the property a shell publishes, with a zero fallback', () => {
     expect(SHELL_BOTTOM_INSET_VAR).toBe('--kro-shell-bottom-inset')
-    expect(SHELL_BOTTOM_INSET_FALLBACK).toBe(`var(${SHELL_BOTTOM_INSET_VAR}, 0px)`)
+    expect(SHELL_BOTTOM_INSET_FALLBACK).toBe(
+      `var(${SHELL_BOTTOM_INSET_VAR}, 0px)`,
+    )
   })
 })
 

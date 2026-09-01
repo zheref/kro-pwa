@@ -23,11 +23,7 @@ import {
   resolvedKind,
 } from '@kro/core'
 import type { DoException } from './DoException'
-import type {
-  DoBackdatedCompletion,
-  DoPreferences,
-  DoState,
-} from './DoFeature'
+import type { DoBackdatedCompletion, DoPreferences, DoState } from './DoFeature'
 import { selectFeaturedNowEndeavors } from './DoFeaturedNow'
 import {
   type DoLane,
@@ -39,10 +35,7 @@ import {
   partitionDoTaskLanes,
   pendingDoEndeavors,
 } from './DoRules'
-import {
-  type DoSuggestionSource,
-  generateDoSuggestions,
-} from './DoSuggestions'
+import { type DoSuggestionSource, generateDoSuggestions } from './DoSuggestions'
 
 /**
  * `applyRegroup` — rebuild every lane from the retained channels.

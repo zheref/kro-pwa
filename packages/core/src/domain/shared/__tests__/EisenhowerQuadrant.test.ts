@@ -39,7 +39,9 @@ describe('quadrantDisplayName', () => {
   })
 
   it('renders the two whose label matches the case name', () => {
-    expect(quadrantDisplayName(EisenhowerQuadrant.prioritize)).toBe('Prioritize')
+    expect(quadrantDisplayName(EisenhowerQuadrant.prioritize)).toBe(
+      'Prioritize',
+    )
     expect(quadrantDisplayName(EisenhowerQuadrant.delegate)).toBe('Delegate')
   })
 })
@@ -62,7 +64,8 @@ describe('quadrantIsImportant / quadrantIsUrgent', () => {
   it('makes prioritize the only both, and delete the only neither', () => {
     expect(
       eisenhowerQuadrants.filter(
-        (quadrant) => quadrantIsImportant(quadrant) && quadrantIsUrgent(quadrant),
+        (quadrant) =>
+          quadrantIsImportant(quadrant) && quadrantIsUrgent(quadrant),
       ),
     ).toEqual([EisenhowerQuadrant.prioritize])
     expect(
@@ -113,9 +116,15 @@ describe('quadrantImportantSibling', () => {
 
 describe('quadrantCaption', () => {
   it('spells out both axes for the three that keep the endeavor', () => {
-    expect(quadrantCaption(EisenhowerQuadrant.prioritize)).toBe('Urgent · Important')
-    expect(quadrantCaption(EisenhowerQuadrant.decide)).toBe('Important · Not Urgent')
-    expect(quadrantCaption(EisenhowerQuadrant.delegate)).toBe('Urgent · Not Important')
+    expect(quadrantCaption(EisenhowerQuadrant.prioritize)).toBe(
+      'Urgent · Important',
+    )
+    expect(quadrantCaption(EisenhowerQuadrant.decide)).toBe(
+      'Important · Not Urgent',
+    )
+    expect(quadrantCaption(EisenhowerQuadrant.delegate)).toBe(
+      'Urgent · Not Important',
+    )
   })
 
   it('says only "Neither" for delete', () => {
@@ -166,8 +175,8 @@ describe('quadrantKeepsEndeavor', () => {
   })
 
   it('is false for exactly one of the four', () => {
-    expect(eisenhowerQuadrants.filter((q) => !quadrantKeepsEndeavor(q))).toEqual([
-      EisenhowerQuadrant.delete,
-    ])
+    expect(
+      eisenhowerQuadrants.filter((q) => !quadrantKeepsEndeavor(q)),
+    ).toEqual([EisenhowerQuadrant.delete])
   })
 })

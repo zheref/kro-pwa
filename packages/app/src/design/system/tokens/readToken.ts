@@ -36,12 +36,18 @@ export function readToken(name: string, element?: Element | null): string {
 }
 
 /** The computed value of a base palette role. */
-export function readColorRole(role: ColorRole, element?: Element | null): string {
+export function readColorRole(
+  role: ColorRole,
+  element?: Element | null,
+): string {
   return readToken(COLOR_ROLE_VARS[role], element)
 }
 
 /** The computed value of a semantic role, after the browser follows the alias. */
-export function readSemanticRole(role: SemanticRole, element?: Element | null): string {
+export function readSemanticRole(
+  role: SemanticRole,
+  element?: Element | null,
+): string {
   return readToken(SEMANTIC_ROLE_VARS[role], element)
 }
 

@@ -97,12 +97,18 @@ export const planSlice = createSlice({
         isQuickEventCreationEnabled: boolean
       }>,
     ) {
-      Object.assign(state, withPlanViewLoaded(state as PlanState, action.payload))
+      Object.assign(
+        state,
+        withPlanViewLoaded(state as PlanState, action.payload),
+      )
     },
 
     /** Lifecycle: the minute clock ticked. Carries the instant; never reads one. */
     onClockTicked(state, action: PayloadAction<{ now: Date }>) {
-      Object.assign(state, withPlanClockAdvanced(state as PlanState, action.payload))
+      Object.assign(
+        state,
+        withPlanClockAdvanced(state as PlanState, action.payload),
+      )
     },
 
     /** Lifecycle: the two Plan preferences the timeline consumes arrived. */
@@ -151,7 +157,10 @@ export const planSlice = createSlice({
     },
 
     /** User intent, single primitive field — the one mutation allowed inline. */
-    userDidSelectViewMode(state, action: PayloadAction<{ mode: PlanViewMode }>) {
+    userDidSelectViewMode(
+      state,
+      action: PayloadAction<{ mode: PlanViewMode }>,
+    ) {
       state.viewMode = action.payload.mode
     },
 
@@ -185,7 +194,10 @@ export const planSlice = createSlice({
      * accessibility action and the "Add for Today" hand-off. Rounds to the
      * nearest quarter hour, same as a press.
      */
-    userDidRequestQuickCreateAt(state, action: PayloadAction<{ moment: Date }>) {
+    userDidRequestQuickCreateAt(
+      state,
+      action: PayloadAction<{ moment: Date }>,
+    ) {
       if (!state.isQuickEventCreationEnabled) return
       if (state.editSession !== null) return
       Object.assign(
@@ -212,9 +224,11 @@ export const planSlice = createSlice({
      * *"so the user can't accidentally reschedule history"* — and re-checked
      * here against the slice's own clock rather than trusting the caller.
      */
-    userDidHoldEventBlock(state, action: PayloadAction<{ endeavorId: string }>) {
-      const events =
-        state.dayLoad.kind === 'loaded' ? state.dayLoad.events : []
+    userDidHoldEventBlock(
+      state,
+      action: PayloadAction<{ endeavorId: string }>,
+    ) {
+      const events = state.dayLoad.kind === 'loaded' ? state.dayLoad.events : []
       const endeavor = events.find(
         (candidate) => candidate.id === action.payload.endeavorId,
       )
@@ -280,7 +294,10 @@ export const planSlice = createSlice({
         Object.assign(state, withEditSession(state as PlanState, null))
         return
       }
-      Object.assign(state, withEditCommitApplied(state as PlanState, { commit }))
+      Object.assign(
+        state,
+        withEditCommitApplied(state as PlanState, { commit }),
+      )
     },
 
     /** User intent: leave edit mode without writing anything. */
@@ -296,10 +313,15 @@ export const planSlice = createSlice({
      */
     userDidAssignToQuadrant(
       state,
-      action: PayloadAction<{ endeavorId: string; quadrant: EisenhowerQuadrant }>,
+      action: PayloadAction<{
+        endeavorId: string
+        quadrant: EisenhowerQuadrant
+      }>,
     ) {
       const pool = [
-        ...(state.matrixLoad.kind === 'loaded' ? state.matrixLoad.endeavors : []),
+        ...(state.matrixLoad.kind === 'loaded'
+          ? state.matrixLoad.endeavors
+          : []),
         ...(state.dayLoad.kind === 'loaded' ? state.dayLoad.events : []),
       ]
       const endeavor = pool.find(
@@ -316,7 +338,10 @@ export const planSlice = createSlice({
     },
 
     /** User intent: one visibility toggle in the lens sheet. */
-    userDidToggleVisibility(state, action: PayloadAction<PlanVisibilityToggle>) {
+    userDidToggleVisibility(
+      state,
+      action: PayloadAction<PlanVisibilityToggle>,
+    ) {
       Object.assign(
         state,
         withPlanVisibilityToggled(state as PlanState, action.payload),
@@ -429,7 +454,10 @@ export const planSlice = createSlice({
 
       // ------------------------------------------------------- matrix rows
       .addCase(loadPlanMatrixThunk.pending, (state) => {
-        Object.assign(state, withPlanMatrixLoad(state as PlanState, { kind: 'loading' }))
+        Object.assign(
+          state,
+          withPlanMatrixLoad(state as PlanState, { kind: 'loading' }),
+        )
       })
       .addCase(loadPlanMatrixThunk.fulfilled, (state, action) => {
         const result = action.payload

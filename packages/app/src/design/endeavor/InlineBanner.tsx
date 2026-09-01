@@ -126,17 +126,28 @@ export function InlineBanner({
         'flex w-full items-start gap-2.5 rounded-kro-field p-3',
         className,
       )}
-      style={{ backgroundColor: colorVar(style.fill), color: colorVar(style.title) }}
+      style={{
+        backgroundColor: colorVar(style.fill),
+        color: colorVar(style.title),
+      }}
     >
       {/* The severity, spoken but not shown — the glyph shows it. Inside the
           live region, so it is part of the announcement rather than a label
           the announcement may or may not include. */}
       <span className="sr-only">{`${style.spokenPrefix}: `}</span>
-      <Icon size={16} strokeWidth={2.5} className="mt-px shrink-0" aria-hidden />
+      <Icon
+        size={16}
+        strokeWidth={2.5}
+        className="mt-px shrink-0"
+        aria-hidden
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <p className="m-0 text-[13px] font-semibold leading-snug">{message}</p>
         {detail === undefined ? null : (
-          <p className="m-0 text-[13px] leading-snug" style={{ color: style.body }}>
+          <p
+            className="m-0 text-[13px] leading-snug"
+            style={{ color: style.body }}
+          >
             {detail}
           </p>
         )}

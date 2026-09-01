@@ -73,7 +73,10 @@ export function parseColor(value: string): Rgb {
   const fn = RGB_FUNCTION.exec(text)
   if (fn?.[1] !== undefined) {
     const [rgbPart, alphaPart] = fn[1].split('/')
-    const parts = (rgbPart as string).trim().split(/[\s,]+/).filter(Boolean)
+    const parts = (rgbPart as string)
+      .trim()
+      .split(/[\s,]+/)
+      .filter(Boolean)
     if (parts.length < 3) throw new Error(`not a colour: "${value}"`)
     const alphaText = alphaPart ?? parts[3]
     const alpha =
@@ -88,7 +91,11 @@ export function parseColor(value: string): Rgb {
       b: channel(parts[2] as string),
       a: alpha,
     }
-    if (Number.isNaN(parsed.r) || Number.isNaN(parsed.g) || Number.isNaN(parsed.b)) {
+    if (
+      Number.isNaN(parsed.r) ||
+      Number.isNaN(parsed.g) ||
+      Number.isNaN(parsed.b)
+    ) {
       throw new Error(`not a colour: "${value}"`)
     }
     return parsed

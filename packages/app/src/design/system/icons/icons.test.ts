@@ -38,7 +38,9 @@ describe('the SF Symbols mapping', () => {
   it('keys on KroApple’s exact systemName strings, dots and all', () => {
     // The port is a search-and-replace against these literals; a "prettified"
     // key would silently stop matching the Swift source.
-    expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain('exclamationmark.triangle')
+    expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain(
+      'exclamationmark.triangle',
+    )
     expect(Object.keys(SF_SYMBOL_TO_LUCIDE)).toContain('person.crop.circle')
   })
 

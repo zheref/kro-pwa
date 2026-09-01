@@ -73,7 +73,9 @@ describe('featuredNowScore', () => {
 
   it('treats the six-hour band as inclusive and the moment past it as unscored', () => {
     expect(scoreOf(candidate({ id: 'six', due: doMockAt(17, 16, 0) }))).toBe(35)
-    expect(scoreOf(candidate({ id: 'past-six', due: doMockAt(17, 16, 0, 1) }))).toBe(10)
+    expect(
+      scoreOf(candidate({ id: 'past-six', due: doMockAt(17, 16, 0, 1) })),
+    ).toBe(10)
   })
 
   it('nudges only above the default ten reward points, never at it', () => {
@@ -96,7 +98,10 @@ describe('selectFeaturedNowEndeavors', () => {
   const later = candidate({ id: 'later', due: doMockAt(17, 20, 0) }) // 10
 
   it('centres the top scorer and flanks it, so three cards read [2nd, 1st, 3rd]', () => {
-    const lane = selectFeaturedNowEndeavors([soon, overdue, imminent], DO_MOCK_NOW)
+    const lane = selectFeaturedNowEndeavors(
+      [soon, overdue, imminent],
+      DO_MOCK_NOW,
+    )
     expect(lane.map((endeavor) => endeavor.id)).toEqual([
       'imminent',
       'overdue',
@@ -163,7 +168,10 @@ describe('selectFeaturedNowEndeavors', () => {
 
   it('is empty when nothing scores', () => {
     expect(
-      selectFeaturedNowEndeavors([doEndeavorFixtures.zeroScoreTask], DO_MOCK_NOW),
+      selectFeaturedNowEndeavors(
+        [doEndeavorFixtures.zeroScoreTask],
+        DO_MOCK_NOW,
+      ),
     ).toEqual([])
   })
 
@@ -197,9 +205,15 @@ describe('featuredNowCapacityFor', () => {
 
 describe('centredFeaturedWindow', () => {
   // A hero-centred seven: rank 1 is at the centre, ranks 6 and 7 at the ends.
-  const arranged = ['rank6', 'rank4', 'rank2', 'hero', 'rank3', 'rank5', 'rank7'].map(
-    (id) => candidate({ id, due: doMockAt(17, 11, 0) }),
-  )
+  const arranged = [
+    'rank6',
+    'rank4',
+    'rank2',
+    'hero',
+    'rank3',
+    'rank5',
+    'rank7',
+  ].map((id) => candidate({ id, due: doMockAt(17, 11, 0) }))
 
   it('keeps the hero centred when the width narrows', () => {
     const window = centredFeaturedWindow(arranged, 3)

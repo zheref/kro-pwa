@@ -46,7 +46,11 @@ describe('formatTime', () => {
 
   it('prints a range with canon’s en-dash separator', () => {
     expect(
-      formatTimeRange(new Date(2026, 3, 15, 14, 0), new Date(2026, 3, 15, 15, 30), 'en-US'),
+      formatTimeRange(
+        new Date(2026, 3, 15, 14, 0),
+        new Date(2026, 3, 15, 15, 30),
+        'en-US',
+      ),
     ).toBe('2:00 PM – 3:30 PM')
   })
 })
@@ -54,19 +58,27 @@ describe('formatTime', () => {
 describe('formatRelativeTime', () => {
   it('names yesterday with its time — a task finished last night', () => {
     const yesterday = new Date(2026, 3, 14, 17, 0)
-    expect(formatRelativeTime(yesterday, NOW, 'en-US')).toBe('Yesterday, 5:00 PM')
+    expect(formatRelativeTime(yesterday, NOW, 'en-US')).toBe(
+      'Yesterday, 5:00 PM',
+    )
   })
 
   it('counts whole days past yesterday — a receipt three days overdue', () => {
-    expect(formatRelativeTime(new Date(2026, 3, 12, 9, 0), NOW, 'en-US')).toBe('3 days ago')
+    expect(formatRelativeTime(new Date(2026, 3, 12, 9, 0), NOW, 'en-US')).toBe(
+      '3 days ago',
+    )
   })
 
   it('falls through to the plain time earlier the same day, as canon does', () => {
-    expect(formatRelativeTime(new Date(2026, 3, 15, 9, 30), NOW, 'en-US')).toBe('9:30 AM')
+    expect(formatRelativeTime(new Date(2026, 3, 15, 9, 30), NOW, 'en-US')).toBe(
+      '9:30 AM',
+    )
   })
 
   it('counts calendar days, not 24-hour spans — 23:59 two nights ago is 2 days', () => {
-    expect(formatRelativeTime(new Date(2026, 3, 13, 23, 59), NOW, 'en-US')).toBe('2 days ago')
+    expect(
+      formatRelativeTime(new Date(2026, 3, 13, 23, 59), NOW, 'en-US'),
+    ).toBe('2 days ago')
   })
 
   it('localizes the WORDS as well as the clock — de-DE gets "Gestern, 17:00"', () => {
@@ -78,20 +90,28 @@ describe('formatRelativeTime', () => {
   })
 
   it('localizes the counted form too — es-ES says "Hace 3 días", not "3 days ago"', () => {
-    expect(formatRelativeTime(new Date(2026, 3, 12, 9, 0), NOW, 'es-ES')).toBe('Hace 3 días')
+    expect(formatRelativeTime(new Date(2026, 3, 12, 9, 0), NOW, 'es-ES')).toBe(
+      'Hace 3 días',
+    )
   })
 
   it('lets the locale use its own word where it has one — de-DE has "vorgestern"', () => {
     // `numeric: 'auto'` is what allows this. English has no single word for
     // the day before yesterday and correctly falls back to "2 days ago".
-    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'de-DE')).toBe('Vorgestern')
-    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'en-US')).toBe('2 days ago')
+    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'de-DE')).toBe(
+      'Vorgestern',
+    )
+    expect(formatRelativeTime(new Date(2026, 3, 13, 9, 0), NOW, 'en-US')).toBe(
+      '2 days ago',
+    )
   })
 })
 
 describe('formatDueCaption', () => {
   it('prints the plain time while the moment is still ahead', () => {
-    expect(formatDueCaption(new Date(2026, 3, 15, 16, 0), NOW, 'en-US')).toBe('4:00 PM')
+    expect(formatDueCaption(new Date(2026, 3, 15, 16, 0), NOW, 'en-US')).toBe(
+      '4:00 PM',
+    )
   })
 
   it('switches to the relative caption once the moment has passed', () => {

@@ -158,9 +158,7 @@ export function ToolbarOutlet({
     [attach, placement],
   )
 
-  return (
-    <div className={className} data-toolbar-outlet={placement} ref={ref} />
-  )
+  return <div className={className} data-toolbar-outlet={placement} ref={ref} />
 }
 
 /**
@@ -197,9 +195,7 @@ export function ToolbarSlot({
  * Whether a `ToolbarSlot` would currently render — useful to a feature that
  * wants to fall back to in-content chrome outside a shell (a story, a test).
  */
-export function useToolbarOutletPresent(
-  placement: ToolbarPlacement,
-): boolean {
+export function useToolbarOutletPresent(placement: ToolbarPlacement): boolean {
   const value = useContext(ToolbarSlotsContext)
   return (value?.containers[placement] ?? null) !== null
 }

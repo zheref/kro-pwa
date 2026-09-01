@@ -24,7 +24,9 @@ describe('the Endeavor mock spread', () => {
   })
 
   it('covers a spread of statuses', () => {
-    const statuses = new Set(allEndeavorMocks.map((endeavor) => endeavor.status))
+    const statuses = new Set(
+      allEndeavorMocks.map((endeavor) => endeavor.status),
+    )
     expect(statuses.size).toBeGreaterThanOrEqual(4)
   })
 
@@ -34,8 +36,13 @@ describe('the Endeavor mock spread', () => {
 
   it('includes a Kro-citizen, a Kro-enhanced and a Kro-tourist host shape', () => {
     expect(endeavorMocks.plannedTask.hostedBy).toEqual(['supabase', 'local'])
-    expect(endeavorMocks.todayEvent.hostedBy).toEqual(['googleCalendar', 'local'])
-    expect(endeavorMocks.overdueTouristReminder.hostedBy).toEqual(['appleReminders'])
+    expect(endeavorMocks.todayEvent.hostedBy).toEqual([
+      'googleCalendar',
+      'local',
+    ])
+    expect(endeavorMocks.overdueTouristReminder.hostedBy).toEqual([
+      'appleReminders',
+    ])
   })
 
   it('includes the neutral floor with no host at all', () => {
@@ -51,7 +58,9 @@ describe('the Endeavor mock spread', () => {
   })
 
   it('carries the awkward cases: errors, in-flight, and a non-ASCII title', () => {
-    expect(endeavorMocks.blockedBlueprint.errorMessages.length).toBeGreaterThan(0)
+    expect(endeavorMocks.blockedBlueprint.errorMessages.length).toBeGreaterThan(
+      0,
+    )
     expect(endeavorMocks.blockedBlueprint.inActivity).toBe(true)
     expect(endeavorMocks.blockedBlueprint.title.length).toBeGreaterThan(80)
   })

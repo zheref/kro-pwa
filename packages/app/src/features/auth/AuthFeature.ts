@@ -138,7 +138,10 @@ export const authSlice = createSlice({
       .addCase(restoreSessionThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
@@ -152,7 +155,10 @@ export const authSlice = createSlice({
       .addCase(signInWithEmailThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
@@ -165,7 +171,10 @@ export const authSlice = createSlice({
       .addCase(signUpWithEmailThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
@@ -182,7 +191,10 @@ export const authSlice = createSlice({
       .addCase(beginAppleSignInThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
@@ -195,7 +207,10 @@ export const authSlice = createSlice({
       .addCase(signInWithAppleThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
@@ -205,7 +220,9 @@ export const authSlice = createSlice({
           state,
           withAuthFlowStarted(
             state,
-            action.meta.arg.provider === 'apple' ? AuthFlow.apple : AuthFlow.google,
+            action.meta.arg.provider === 'apple'
+              ? AuthFlow.apple
+              : AuthFlow.google,
           ),
         )
       })
@@ -213,18 +230,25 @@ export const authSlice = createSlice({
         const result = action.payload
         // A started redirect leaves the spinner up: the page is on its way out,
         // and the session arrives through the launch restore on the way back.
-        if (!result.ok) Object.assign(state, withAuthFailed(state, result.error))
+        if (!result.ok)
+          Object.assign(state, withAuthFailed(state, result.error))
       })
       .addCase(startOAuthRedirectThunk.rejected, (state, action) => {
         Object.assign(
           state,
-          withAuthFailed(state, AuthExceptions.unknown(action.error.message ?? '')),
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
         )
       })
 
       // --- the existing-local-data dialog -------------------------------------
       .addCase(resolveLocalDataChoiceThunk.pending, (state, action) => {
-        Object.assign(state, withLocalDataChoiceStarted(state, action.meta.arg.choice))
+        Object.assign(
+          state,
+          withLocalDataChoiceStarted(state, action.meta.arg.choice),
+        )
       })
       .addCase(resolveLocalDataChoiceThunk.fulfilled, (state, action) => {
         const result = action.payload
@@ -260,7 +284,8 @@ export const authSlice = createSlice({
       .addCase(syncSettingsThunk.pending, (state, action) => {
         // A skipped trigger never spins — the footer must not say "syncing"
         // because the user opened Settings.
-        if (action.meta.arg.trigger === SettingsSyncTrigger.settingsOpened) return
+        if (action.meta.arg.trigger === SettingsSyncTrigger.settingsOpened)
+          return
         Object.assign(state, withSettingsSyncState(state, { kind: 'syncing' }))
       })
       .addCase(syncSettingsThunk.fulfilled, (state, action) => {
@@ -273,7 +298,8 @@ export const authSlice = createSlice({
             state,
             withSettingsSyncState(
               state,
-              result.error.kind === 'notSignedIn' || result.error.kind === 'unavailable'
+              result.error.kind === 'notSignedIn' ||
+                result.error.kind === 'unavailable'
                 ? { kind: 'signedOut' }
                 : { kind: 'offline' },
             ),
@@ -283,7 +309,10 @@ export const authSlice = createSlice({
         if (result.value.kind === 'skipped') return
         Object.assign(
           state,
-          withSettingsSyncState(state, { kind: 'synced', at: action.meta.arg.now }),
+          withSettingsSyncState(state, {
+            kind: 'synced',
+            at: action.meta.arg.now,
+          }),
         )
       })
       .addCase(syncSettingsThunk.rejected, (state) => {
@@ -308,7 +337,9 @@ export const authSlice = createSlice({
             state,
             withEndeavorSyncState(
               state,
-              summary.status === 'disabled' ? { kind: 'disabled' } : { kind: 'idle' },
+              summary.status === 'disabled'
+                ? { kind: 'disabled' }
+                : { kind: 'idle' },
             ),
           )
           return

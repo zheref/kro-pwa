@@ -7,7 +7,10 @@ describe('Owner', () => {
   })
 
   it('builds the group case with the canon key names', () => {
-    expect(groupOwner('group-42')).toEqual({ type: 'group', groupId: 'group-42' })
+    expect(groupOwner('group-42')).toEqual({
+      type: 'group',
+      groupId: 'group-42',
+    })
   })
 
   it('writes the discriminant under `type` for BOTH cases', () => {

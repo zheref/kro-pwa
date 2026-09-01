@@ -58,10 +58,19 @@ export const DoExceptions = {
     ),
 
   markCompleteFailed: (reason: string): DoException =>
-    exception('markCompleteFailed', `Couldn't save that completion: ${reason}`, true),
+    exception(
+      'markCompleteFailed',
+      `Couldn't save that completion: ${reason}`,
+      true,
+    ),
 
   endeavorNotFound: (id: string): DoException =>
-    exception('endeavorNotFound', `No endeavor with id '${id}' is on the Do surface.`, false),
+    exception(
+      'endeavorNotFound',
+      `No endeavor with id '${id}' is on the Do surface.`,
+      false,
+    ),
 
-  unknown: (message: string): DoException => exception('unknown', message, true),
+  unknown: (message: string): DoException =>
+    exception('unknown', message, true),
 } as const

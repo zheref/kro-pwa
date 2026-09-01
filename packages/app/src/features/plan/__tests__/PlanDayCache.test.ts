@@ -49,7 +49,9 @@ describe('planPreloadWindow', () => {
   })
 
   it('centres on the day, not on the moment within it', () => {
-    expect(planPreloadWindow(planAt(23, 59))).toEqual(planPreloadWindow(planAt(0)))
+    expect(planPreloadWindow(planAt(23, 59))).toEqual(
+      planPreloadWindow(planAt(0)),
+    )
   })
 })
 
@@ -86,8 +88,12 @@ describe('partitionPlanDayBuffer — the authoritative day is filtered out', () 
 
   it('keeps every other day, grouped by its own key', () => {
     const cache = partitionPlanDayBuffer(events, { excludingDayKey: todayKey })
-    expect(cache[planDayKey(yesterday)]?.map((e) => e.id)).toEqual(['yesterday-a'])
-    expect(cache[planDayKey(tomorrow)]?.map((e) => e.id)).toEqual(['tomorrow-a'])
+    expect(cache[planDayKey(yesterday)]?.map((e) => e.id)).toEqual([
+      'yesterday-a',
+    ])
+    expect(cache[planDayKey(tomorrow)]?.map((e) => e.id)).toEqual([
+      'tomorrow-a',
+    ])
   })
 
   it('drops an endeavor with no start — the buffer is start-indexed', () => {
@@ -96,7 +102,9 @@ describe('partitionPlanDayBuffer — the authoritative day is filtered out', () 
       title: 'Someday',
       kind: EndeavorKind.task,
     })
-    const cache = partitionPlanDayBuffer([untimed], { excludingDayKey: todayKey })
+    const cache = partitionPlanDayBuffer([untimed], {
+      excludingDayKey: todayKey,
+    })
     expect(Object.keys(cache)).toEqual([])
   })
 
@@ -236,9 +244,9 @@ describe('planCacheWithRescheduled — one owner per occurrence', () => {
       authoritativeDayKey: todayKey,
     })
     expect(next[planDayKey(tomorrow)]?.map((e) => e.id)).toEqual(['staying'])
-    expect(next[planDayKey(addingPlanDays(today, 2))]?.map((e) => e.id)).toEqual([
-      'moving',
-    ])
+    expect(
+      next[planDayKey(addingPlanDays(today, 2))]?.map((e) => e.id),
+    ).toEqual(['moving'])
   })
 
   it('drops it from the buffer entirely when it lands on the authoritative day', () => {
@@ -249,7 +257,11 @@ describe('planCacheWithRescheduled — one owner per occurrence', () => {
       authoritativeDayKey: todayKey,
     })
     expect(next[todayKey]).toBeUndefined()
-    expect(Object.values(next).flat().map((e) => e.id)).toEqual(['staying'])
+    expect(
+      Object.values(next)
+        .flat()
+        .map((e) => e.id),
+    ).toEqual(['staying'])
   })
 
   it('removes an emptied day rather than leaving an empty array behind', () => {
@@ -275,7 +287,11 @@ describe('planCacheWithRescheduled — one owner per occurrence', () => {
       endeavor: untimed,
       authoritativeDayKey: todayKey,
     })
-    expect(Object.values(next).flat().map((e) => e.id)).toEqual(['staying'])
+    expect(
+      Object.values(next)
+        .flat()
+        .map((e) => e.id),
+    ).toEqual(['staying'])
   })
 })
 
@@ -286,13 +302,19 @@ describe('planCacheReplacing', () => {
   )
 
   it('replaces the row wherever the buffer holds it', () => {
-    const updated = { ...(cache[planDayKey(tomorrow)]?.[0] as Endeavor), value: 5 }
+    const updated = {
+      ...(cache[planDayKey(tomorrow)]?.[0] as Endeavor),
+      value: 5,
+    }
     const next = planCacheReplacing(cache, updated)
     expect(next[planDayKey(tomorrow)]?.[0]?.value).toBe(5)
   })
 
   it('leaves every other row untouched', () => {
-    const updated = { ...(cache[planDayKey(tomorrow)]?.[0] as Endeavor), value: 5 }
+    const updated = {
+      ...(cache[planDayKey(tomorrow)]?.[0] as Endeavor),
+      value: 5,
+    }
     const next = planCacheReplacing(cache, updated)
     expect(next[planDayKey(tomorrow)]?.[1]?.id).toBe('other')
   })

@@ -192,7 +192,4 @@ export const planListSortDay: readonly Endeavor[] = [
  * value is what keeps a story from showing gestures production does not offer.
  */
 export const planListCapabilitiesFixture: EndeavorCapabilities =
-  resolveEndeavorCapabilities(
-    EndeavorsVistas.planDay.capabilities,
-    () => false,
-  )
+  resolveEndeavorCapabilities(EndeavorsVistas.planDay.capabilities, () => false)

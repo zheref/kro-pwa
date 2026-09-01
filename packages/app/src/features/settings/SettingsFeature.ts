@@ -96,14 +96,19 @@ export const settingsSlice = createSlice({
           return
         }
         Object.assign(state, withPreferencesLoaded(state, result.value.values))
-        Object.assign(state, withGoogleEnabled(state, result.value.isGoogleEnabled))
+        Object.assign(
+          state,
+          withGoogleEnabled(state, result.value.isGoogleEnabled),
+        )
       })
       .addCase(loadSettingsThunk.rejected, (state, action) => {
         Object.assign(
           state,
           withPreferencesFailed(
             state,
-            SettingsExceptions.preferencesUnavailable(action.error.message ?? ''),
+            SettingsExceptions.preferencesUnavailable(
+              action.error.message ?? '',
+            ),
           ),
         )
       })
@@ -155,7 +160,9 @@ export const settingsSlice = createSlice({
           state,
           withGoogleFailed(
             state,
-            SettingsExceptions.integrationUnavailable(action.error.message ?? ''),
+            SettingsExceptions.integrationUnavailable(
+              action.error.message ?? '',
+            ),
           ),
         )
       })
@@ -178,7 +185,9 @@ export const settingsSlice = createSlice({
           state,
           withGoogleFailed(
             state,
-            SettingsExceptions.integrationUnavailable(action.error.message ?? ''),
+            SettingsExceptions.integrationUnavailable(
+              action.error.message ?? '',
+            ),
           ),
         )
       })
@@ -200,7 +209,9 @@ export const settingsSlice = createSlice({
           state,
           withGoogleFailed(
             state,
-            SettingsExceptions.integrationUnavailable(action.error.message ?? ''),
+            SettingsExceptions.integrationUnavailable(
+              action.error.message ?? '',
+            ),
           ),
         )
       })

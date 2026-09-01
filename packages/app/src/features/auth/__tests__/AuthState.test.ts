@@ -46,12 +46,22 @@ describe('the initial state', () => {
   })
 
   it('carries no credential-shaped field at all — the shape itself forbids one', () => {
-    const forbidden = ['token', 'accessToken', 'refreshToken', 'password', 'secret']
+    const forbidden = [
+      'token',
+      'accessToken',
+      'refreshToken',
+      'password',
+      'secret',
+    ]
     for (const key of Object.keys(initialAuthState)) {
       expect(forbidden).not.toContain(key)
     }
     // `form.password` is the user's own input for one submit and is cleared by
     // `withSignedIn`; nothing else in the slice may hold a credential.
-    expect(Object.keys(initialAuthState.form)).toEqual(['email', 'password', 'name'])
+    expect(Object.keys(initialAuthState.form)).toEqual([
+      'email',
+      'password',
+      'name',
+    ])
   })
 })

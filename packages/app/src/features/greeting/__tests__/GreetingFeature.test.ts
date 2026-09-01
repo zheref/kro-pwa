@@ -1,7 +1,11 @@
 import type { GreetingResponse } from '@kro/core'
 import { greetingMocks } from '@kro/core/mocks'
 import { describe, expect, it, vi } from 'vitest'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import type { GreetingService } from '../../../services/greeting/GreetingService'
 import {
   childDetailDelegatedClose,
@@ -25,21 +29,30 @@ const storeWith = (fetchGreeting: GreetingService['fetchGreeting']) =>
 
 describe('onViewLoaded', () => {
   it('stamps the recipient and starts loading on first mount', () => {
-    const next = reduce(initialGreetingState, onViewLoaded({ recipient: 'ada' }))
+    const next = reduce(
+      initialGreetingState,
+      onViewLoaded({ recipient: 'ada' }),
+    )
 
     expect(next.recipient).toBe('ada')
     expect(next.load.kind).toBe('loading')
   })
 
   it('replaces the previous recipient when the surface remounts for someone else', () => {
-    const next = reduce(greetingStateMocks.loaded, onViewLoaded({ recipient: 'grace' }))
+    const next = reduce(
+      greetingStateMocks.loaded,
+      onViewLoaded({ recipient: 'grace' }),
+    )
 
     expect(next.recipient).toBe('grace')
     expect(next.load.kind).toBe('loading')
   })
 
   it('clears an error left over from the last recipient', () => {
-    const next = reduce(greetingStateMocks.failedOffline, onViewLoaded({ recipient: 'grace' }))
+    const next = reduce(
+      greetingStateMocks.failedOffline,
+      onViewLoaded({ recipient: 'grace' }),
+    )
 
     expect(next.load.kind).toBe('loading')
   })
@@ -47,11 +60,15 @@ describe('onViewLoaded', () => {
 
 describe('userDidTapRetry', () => {
   it('puts a failed surface back into loading — the user taps "try again"', () => {
-    expect(reduce(greetingStateMocks.failedOffline, userDidTapRetry()).load.kind).toBe('loading')
+    expect(
+      reduce(greetingStateMocks.failedOffline, userDidTapRetry()).load.kind,
+    ).toBe('loading')
   })
 
   it('keeps the recipient so the retry asks for the same greeting', () => {
-    expect(reduce(greetingStateMocks.failedOffline, userDidTapRetry()).recipient).toBe('ada')
+    expect(
+      reduce(greetingStateMocks.failedOffline, userDidTapRetry()).recipient,
+    ).toBe('ada')
   })
 
   it('is harmless when a request is already in flight — a double tap changes nothing', () => {
@@ -63,7 +80,9 @@ describe('userDidTapRetry', () => {
 
 describe('userDidTapGreeting', () => {
   it('opens the detail on a loaded greeting', () => {
-    expect(reduce(greetingStateMocks.loaded, userDidTapGreeting()).detailOpen).toBe(true)
+    expect(
+      reduce(greetingStateMocks.loaded, userDidTapGreeting()).detailOpen,
+    ).toBe(true)
   })
 
   it('leaves the loaded greeting itself untouched — opening a detail loads nothing', () => {
@@ -73,29 +92,36 @@ describe('userDidTapGreeting', () => {
   })
 
   it('is idempotent — tapping an already-open detail keeps it open', () => {
-    expect(reduce(greetingStateMocks.loadedWithDetailOpen, userDidTapGreeting()).detailOpen).toBe(
-      true,
-    )
+    expect(
+      reduce(greetingStateMocks.loadedWithDetailOpen, userDidTapGreeting())
+        .detailOpen,
+    ).toBe(true)
   })
 })
 
 describe('childDetailDelegatedClose', () => {
   it('closes the detail when the child asks to be dismissed', () => {
     expect(
-      reduce(greetingStateMocks.loadedWithDetailOpen, childDetailDelegatedClose()).detailOpen,
+      reduce(
+        greetingStateMocks.loadedWithDetailOpen,
+        childDetailDelegatedClose(),
+      ).detailOpen,
     ).toBe(false)
   })
 
   it('leaves the greeting loaded behind it', () => {
-    const next = reduce(greetingStateMocks.loadedWithDetailOpen, childDetailDelegatedClose())
+    const next = reduce(
+      greetingStateMocks.loadedWithDetailOpen,
+      childDetailDelegatedClose(),
+    )
 
     expect(next.load.kind).toBe('loaded')
   })
 
   it('is a no-op when nothing was open — a stray delegate cannot corrupt state', () => {
-    expect(reduce(greetingStateMocks.loaded, childDetailDelegatedClose())).toEqual(
-      greetingStateMocks.loaded,
-    )
+    expect(
+      reduce(greetingStateMocks.loaded, childDetailDelegatedClose()),
+    ).toEqual(greetingStateMocks.loaded)
   })
 })
 
@@ -127,11 +153,14 @@ describe('the fetch lifecycle', () => {
 
     const { load } = store.getState().greeting
     expect(load.kind).toBe('loaded')
-    if (load.kind === 'loaded') expect(load.greeting).toEqual(greetingMocks.typical)
+    if (load.kind === 'loaded')
+      expect(load.greeting).toEqual(greetingMocks.typical)
   })
 
   it('surfaces an offline exception when the request never left the device (user on the subway)', async () => {
-    const store = storeWith(vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+    const store = storeWith(
+      vi.fn().mockRejectedValue(new TypeError('Failed to fetch')),
+    )
 
     await store.dispatch(fetchGreetingThunk({ recipient: 'ada' }))
 
@@ -169,7 +198,12 @@ describe('the fetch lifecycle', () => {
     store.dispatch({
       type: fetchGreetingThunk.rejected.type,
       error: { message: 'dispatch exploded' },
-      meta: { aborted: false, condition: false, arg: { recipient: 'ada' }, requestId: 'r1' },
+      meta: {
+        aborted: false,
+        condition: false,
+        arg: { recipient: 'ada' },
+        requestId: 'r1',
+      },
     })
 
     const { load } = store.getState().greeting

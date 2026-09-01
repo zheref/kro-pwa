@@ -118,7 +118,7 @@ export const settingValueIn = (
   values: Readonly<Record<string, SettingValue | null>>,
   option: SettingOption,
 ): SettingValue | null =>
-  option.key in values ? values[option.key] ?? null : option.defaultValue
+  option.key in values ? (values[option.key] ?? null) : option.defaultValue
 
 /**
  * Canon's *"the section warns when the end time is not after the start time"* —
@@ -136,7 +136,10 @@ export const selectWorkingHoursValid = createSelector(
   },
 )
 
-export const selectSettingsPane = createSelector([slice], (settings) => settings.pane)
+export const selectSettingsPane = createSelector(
+  [slice],
+  (settings) => settings.pane,
+)
 
 /** Which section is open, or `null` for the hub. */
 export const selectOpenSection = createSelector(
@@ -196,9 +199,8 @@ export const profileHubSection: SettingsSection = settingsSectionsIn(
 export const preferencesHubSections: readonly SettingsSection[] =
   settingsSectionsIn(SettingsHubGroup.preferences)
 
-export const accountHubSections: readonly SettingsSection[] = settingsSectionsIn(
-  SettingsHubGroup.account,
-)
+export const accountHubSections: readonly SettingsSection[] =
+  settingsSectionsIn(SettingsHubGroup.account)
 
 /**
  * The hub's sync footer — canon's `SettingsHubSyncStatus`, built from the

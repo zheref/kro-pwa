@@ -16,7 +16,12 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { POPOVER_CLASSES, POPOVER_SIZE, Popover, PopoverTrigger } from './popover'
+import {
+  POPOVER_CLASSES,
+  POPOVER_SIZE,
+  Popover,
+  PopoverTrigger,
+} from './popover'
 
 afterEach(cleanup)
 
@@ -45,7 +50,9 @@ describe('Popover', () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(true)
     expect(
-      screen.getByRole('button', { name: 'Visibility' }).getAttribute('aria-expanded'),
+      screen
+        .getByRole('button', { name: 'Visibility' })
+        .getAttribute('aria-expanded'),
     ).toBe('true')
   })
 

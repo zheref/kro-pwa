@@ -32,9 +32,9 @@ describe('AuthMapper.toDomain', () => {
   })
 
   it('falls back to email_password for an unrecognised login_kind — canon falls back twice over', () => {
-    expect(AuthMapper.toDomain(row({ login_kind: 'passkey' }))?.authProvider).toBe(
-      'email_password',
-    )
+    expect(
+      AuthMapper.toDomain(row({ login_kind: 'passkey' }))?.authProvider,
+    ).toBe('email_password')
   })
 
   it('drops an unrecognised connected service rather than defaulting it', () => {
@@ -64,7 +64,9 @@ describe('AuthMapper.toDomain', () => {
   })
 
   it('reads an unparseable birth_date as absent rather than as an Invalid Date', () => {
-    expect(AuthMapper.toDomain(row({ birth_date: 'nope' }))?.birthDate).toBeNull()
+    expect(
+      AuthMapper.toDomain(row({ birth_date: 'nope' }))?.birthDate,
+    ).toBeNull()
   })
 })
 
@@ -80,7 +82,11 @@ describe('AuthMapper.fromDomain', () => {
   })
 
   it('OMITS a null field, so an UPDATE never clobbers an existing column with NULL', () => {
-    const payload = AuthMapper.fromDomain({ ...user, name: null, username: null })
+    const payload = AuthMapper.fromDomain({
+      ...user,
+      name: null,
+      username: null,
+    })
     expect(Object.hasOwn(payload, 'name')).toBe(false)
     expect(Object.hasOwn(payload, 'username')).toBe(false)
   })
@@ -116,9 +122,9 @@ describe('AuthMapper.toException', () => {
   })
 
   it('recognises a wrong password from the message GoTrue returns', () => {
-    expect(AuthMapper.toException(new Error('Invalid login credentials')).kind).toBe(
-      'invalidCredentials',
-    )
+    expect(
+      AuthMapper.toException(new Error('Invalid login credentials')).kind,
+    ).toBe('invalidCredentials')
   })
 
   it('recognises an already-registered email', () => {
@@ -136,9 +142,9 @@ describe('AuthMapper.toException', () => {
   })
 
   it('recognises a connection failure from the message text', () => {
-    expect(AuthMapper.toException(new Error('network request timed out')).kind).toBe(
-      'networkUnavailable',
-    )
+    expect(
+      AuthMapper.toException(new Error('network request timed out')).kind,
+    ).toBe('networkUnavailable')
   })
 
   it('matches case-insensitively, because GoTrue capitalises inconsistently', () => {

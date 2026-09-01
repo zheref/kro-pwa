@@ -83,15 +83,15 @@ describe('the email and password form', () => {
   it('disables submit on an empty form and names what blocks it', () => {
     renderSurface()
 
-    expect((screen.getByTestId('auth-submit') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
+    expect(
+      (screen.getByTestId('auth-submit') as HTMLButtonElement).disabled,
+    ).toBe(true)
     expect(screen.getByTestId('auth-submit-hint').textContent).toContain(
       'Enter your email and password',
     )
   })
 
-  it("names canon six-character minimum when the blocked form is a sign-up", () => {
+  it('names canon six-character minimum when the blocked form is a sign-up', () => {
     renderSurface({ mode: AuthMode.signUp })
 
     expect(screen.getByTestId('auth-submit-hint').textContent).toContain(
@@ -155,15 +155,17 @@ describe('the provider buttons carry each provider own branding', () => {
   it('spins the provider that is running and locks the other', () => {
     renderSurface({ authenticatingFlow: AuthFlow.google })
 
-    expect(screen.getByTestId('auth-google').textContent).toContain('Signing in…')
-    expect((screen.getByTestId('auth-apple') as HTMLButtonElement).disabled).toBe(
-      true,
+    expect(screen.getByTestId('auth-google').textContent).toContain(
+      'Signing in…',
     )
+    expect(
+      (screen.getByTestId('auth-apple') as HTMLButtonElement).disabled,
+    ).toBe(true)
   })
 })
 
 describe('the honest unavailable state', () => {
-  it("says the build has no cloud and that local use still works", () => {
+  it('says the build has no cloud and that local use still works', () => {
     renderSurface({ isUnavailable: true })
 
     expect(screen.getByTestId('auth-unavailable').textContent).toContain(
@@ -177,15 +179,15 @@ describe('the honest unavailable state', () => {
   it('disables every route in rather than letting one fail opaquely', () => {
     renderSurface({ isUnavailable: true, isSubmitEnabled: true })
 
-    expect((screen.getByTestId('auth-submit') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
-    expect((screen.getByTestId('auth-apple') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
-    expect((screen.getByTestId('auth-google') as HTMLButtonElement).disabled).toBe(
-      true,
-    )
+    expect(
+      (screen.getByTestId('auth-submit') as HTMLButtonElement).disabled,
+    ).toBe(true)
+    expect(
+      (screen.getByTestId('auth-apple') as HTMLButtonElement).disabled,
+    ).toBe(true)
+    expect(
+      (screen.getByTestId('auth-google') as HTMLButtonElement).disabled,
+    ).toBe(true)
     expect(
       (screen.getByLabelText('Email address') as HTMLInputElement).disabled,
     ).toBe(true)

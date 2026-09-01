@@ -50,7 +50,14 @@ import {
   endeavorHosts,
   endeavorKinds,
 } from '@kro/core'
-import { Bell, BellDot, Eye, EyeOff, LoaderCircle, RefreshCw } from 'lucide-react'
+import {
+  Bell,
+  BellDot,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  RefreshCw,
+} from 'lucide-react'
 import {
   type ReactNode,
   useCallback,
@@ -236,7 +243,11 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
         {allVisible ? (
           <Eye size={20} aria-hidden="true" />
         ) : (
-          <EyeOff size={20} aria-hidden="true" data-testid="do-visibility-filtered" />
+          <EyeOff
+            size={20}
+            aria-hidden="true"
+            data-testid="do-visibility-filtered"
+          />
         )}
       </ToolbarButton>
 
@@ -345,11 +356,7 @@ function Placed({
     </div>
   )
 
-  return present ? (
-    <ToolbarSlot placement={placement}>{row}</ToolbarSlot>
-  ) : (
-    row
-  )
+  return present ? <ToolbarSlot placement={placement}>{row}</ToolbarSlot> : row
 }
 
 function ToolbarButton({

@@ -16,10 +16,7 @@ import { initialGreetingState } from '../../greeting/GreetingFeature'
 import type { RootState } from '../../../library/store'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
-import {
-  detailEndeavorMocks,
-  detailStateMocks,
-} from '../EndeavorDetailMocks'
+import { detailEndeavorMocks, detailStateMocks } from '../EndeavorDetailMocks'
 import {
   selectDetailAttachedHosts,
   selectDetailBadges,
@@ -90,9 +87,9 @@ describe('presentation', () => {
   })
 
   it('reports which editor is open', () => {
-    expect(selectDetailDestination(rootWith(detailStateMocks.durationOpen))).toEqual(
-      { kind: 'duration' },
-    )
+    expect(
+      selectDetailDestination(rootWith(detailStateMocks.durationOpen)),
+    ).toEqual({ kind: 'duration' })
     expect(
       selectDetailDestination(rootWith(detailStateMocks.presentedTask)),
     ).toBeNull()
@@ -114,12 +111,12 @@ describe('the read surface’s cards', () => {
   })
 
   it('answers empty while nothing is presented', () => {
-    expect(selectDetailFieldsBySection(rootWith(detailStateMocks.closed))).toEqual(
-      [],
-    )
-    expect(selectDetailRelationCards(rootWith(detailStateMocks.closed))).toEqual(
-      [],
-    )
+    expect(
+      selectDetailFieldsBySection(rootWith(detailStateMocks.closed)),
+    ).toEqual([])
+    expect(
+      selectDetailRelationCards(rootWith(detailStateMocks.closed)),
+    ).toEqual([])
   })
 
   it('marks a relation the kind cannot manage as inert', () => {
@@ -162,22 +159,28 @@ describe('the editor’s own reads', () => {
       selectEditShowsIdentityHeader(rootWith(detailStateMocks.editingTask)),
     ).toBe(true)
     expect(
-      selectEditShowsIdentityHeader(rootWith(detailStateMocks.editingTitleOnly)),
+      selectEditShowsIdentityHeader(
+        rootWith(detailStateMocks.editingTitleOnly),
+      ),
     ).toBe(false)
   })
 
   it('titles the editor by its focus', () => {
-    expect(selectEditNavigationTitle(rootWith(detailStateMocks.editingTask))).toBe(
-      'Edit',
-    )
+    expect(
+      selectEditNavigationTitle(rootWith(detailStateMocks.editingTask)),
+    ).toBe('Edit')
     expect(
       selectEditNavigationTitle(rootWith(detailStateMocks.editingTitleOnly)),
     ).toBe('Edit title')
   })
 
   it('reports dirty, valid and save-enabled independently', () => {
-    expect(selectIsEditDirty(rootWith(detailStateMocks.editingTask))).toBe(false)
-    expect(selectIsEditDirty(rootWith(detailStateMocks.editingDirty))).toBe(true)
+    expect(selectIsEditDirty(rootWith(detailStateMocks.editingTask))).toBe(
+      false,
+    )
+    expect(selectIsEditDirty(rootWith(detailStateMocks.editingDirty))).toBe(
+      true,
+    )
     expect(selectIsEditValid(rootWith(detailStateMocks.editingInvalid))).toBe(
       false,
     )
@@ -206,7 +209,9 @@ describe('the duration profile’s reads', () => {
     expect(
       selectDurationDraft(rootWith(detailStateMocks.durationOpen)),
     ).not.toBeNull()
-    expect(selectDurationDraft(rootWith(detailStateMocks.editingTask))).toBeNull()
+    expect(
+      selectDurationDraft(rootWith(detailStateMocks.editingTask)),
+    ).toBeNull()
   })
 
   it('computes the observed focus time from the performances', () => {
@@ -218,7 +223,9 @@ describe('the duration profile’s reads', () => {
   })
 
   it('answers null for the observed card while nothing is presented', () => {
-    expect(selectObservedFocusTime(rootWith(detailStateMocks.closed))).toBeNull()
+    expect(
+      selectObservedFocusTime(rootWith(detailStateMocks.closed)),
+    ).toBeNull()
   })
 
   it('says nothing about validation on a coherent profile', () => {
@@ -233,9 +240,9 @@ describe('the relation reads', () => {
     const withSessions = rootWith(detailStateMocks.performancesOpen)
     expect(selectDetailPerformances(withSessions)).toHaveLength(3)
     expect(selectDetailDefers(withSessions)).toEqual([])
-    expect(selectDetailShadows(rootWith(detailStateMocks.presentedEvent))).toHaveLength(
-      1,
-    )
+    expect(
+      selectDetailShadows(rootWith(detailStateMocks.presentedEvent)),
+    ).toHaveLength(1)
   })
 
   it('names the relation being managed', () => {
@@ -249,7 +256,9 @@ describe('the relation reads', () => {
 
   it('states WHY a relation is read-only, instead of merely hiding the form', () => {
     expect(
-      selectRelationReadOnlyReason(rootWith(detailStateMocks.performancesReadOnly)),
+      selectRelationReadOnlyReason(
+        rootWith(detailStateMocks.performancesReadOnly),
+      ),
     ).toBe("This endeavor's kind can't record sessions.")
     expect(
       selectRelationReadOnlyReason(rootWith(detailStateMocks.performancesOpen)),

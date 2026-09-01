@@ -7,10 +7,7 @@
  * surfaces, so a Shifter reaching for one directly would be the easiest
  * possible way to make state untestable.
  */
-import type {
-  PlatformState,
-  PlatformStatus,
-} from './PlatformFeature'
+import type { PlatformState, PlatformStatus } from './PlatformFeature'
 import type { PlatformException } from './PlatformException'
 import type {
   InstallAvailability,
@@ -22,7 +19,9 @@ import type {
 // ---------------------------------------------------------------------------
 
 /** Starts the status probe, clearing any prior failure so a retry reads clean. */
-export const withStatusProbeStarted = (state: PlatformState): PlatformState => ({
+export const withStatusProbeStarted = (
+  state: PlatformState,
+): PlatformState => ({
   ...state,
   load: { kind: 'loading' },
 })

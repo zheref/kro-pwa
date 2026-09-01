@@ -20,19 +20,23 @@ import {
 
 afterEach(cleanup)
 
-describe('captureQuickActionShows — canon\'s default: branch', () => {
+describe("captureQuickActionShows — canon's default: branch", () => {
   it('stands down on the three tabs that own their own FAB', () => {
     expect(captureQuickActionShows({ kind: DestinationKind.plan })).toBe(false)
     expect(captureQuickActionShows({ kind: DestinationKind.myDay })).toBe(false)
     expect(captureQuickActionShows({ kind: DestinationKind.earn })).toBe(false)
   })
 
-  it('hides on Search, which canon\'s isQuickActionAvailable excludes outright', () => {
-    expect(captureQuickActionShows({ kind: DestinationKind.search })).toBe(false)
+  it("hides on Search, which canon's isQuickActionAvailable excludes outright", () => {
+    expect(captureQuickActionShows({ kind: DestinationKind.search })).toBe(
+      false,
+    )
   })
 
   it('shows on every other destination, including a project list', () => {
-    expect(captureQuickActionShows({ kind: DestinationKind.allTasks })).toBe(true)
+    expect(captureQuickActionShows({ kind: DestinationKind.allTasks })).toBe(
+      true,
+    )
     expect(captureQuickActionShows({ kind: DestinationKind.inbox })).toBe(true)
     expect(
       captureQuickActionShows({
@@ -45,7 +49,8 @@ describe('captureQuickActionShows — canon\'s default: branch', () => {
 
   it('answers for every destination the shell can select, with no gaps', () => {
     const answered = ALL_SIMPLE_DESTINATIONS.filter(
-      (destination) => typeof captureQuickActionShows(destination) === 'boolean',
+      (destination) =>
+        typeof captureQuickActionShows(destination) === 'boolean',
     )
     expect(answered.length).toBe(ALL_SIMPLE_DESTINATIONS.length)
   })
@@ -58,7 +63,7 @@ describe('the disc itself', () => {
     expect(screen.getByRole('button', { name: 'Quick add' })).toBeTruthy()
   })
 
-  it('sits at canon\'s own trailing and bottom insets', () => {
+  it("sits at canon's own trailing and bottom insets", () => {
     render(<CaptureQuickActionFragment isVisible onPress={() => {}} />)
 
     const anchor = screen.getByTestId('capture-quick-action')

@@ -1,10 +1,11 @@
 import type { ActiveToastInput } from '../../../../design/chrome'
 import { describe, expect, it, vi } from 'vitest'
+import { noopDoCardHandlers, withCompletionToast } from '../doCardHandlers'
 import {
-  noopDoCardHandlers,
-  withCompletionToast,
-} from '../doCardHandlers'
-import { DO_SURFACE_MOCK_NOW, doSurfaceMocks, doSurfaceProps } from '../doSurfaceMocks'
+  DO_SURFACE_MOCK_NOW,
+  doSurfaceMocks,
+  doSurfaceProps,
+} from '../doSurfaceMocks'
 
 const card = (() => {
   const first = doSurfaceProps(doSurfaceMocks.typicalDay).lanes.overdue[0]

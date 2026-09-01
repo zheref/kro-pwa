@@ -213,7 +213,9 @@ export function PlanFragment({
         <div className="min-w-0">
           <h2 className="truncate font-semibold text-2xl">
             {planTitleDate(selectedDate)}{' '}
-            <span className="font-normal">{planTitleWeekday(selectedDate)}</span>
+            <span className="font-normal">
+              {planTitleWeekday(selectedDate)}
+            </span>
           </h2>
           <p data-testid="plan-subtitle" className="text-sm">
             {planEventCountLabel(eventCount)}
@@ -246,61 +248,58 @@ export function PlanFragment({
           refreshPlacement !== null && visibilityPlacement !== null && 'hidden',
         )}
       >
-      {/*
+        {/*
         The leading refresh control — canon's `ToolbarItem(placement:
         .topBarLeading)`. It IS the activity signal: while anything is in
         flight it becomes a spinner, and canon's own label swaps with it.
       */}
-      <ToolbarControl
-        placement={refreshPlacement}
-        testId="plan-refresh-slot"
-      >
-        <button
-          type="button"
-          data-testid="plan-refresh"
-          data-busy={isActivityIndicated ? 'true' : 'false'}
-          aria-label={isActivityIndicated ? 'Syncing' : 'Refresh'}
-          aria-busy={isActivityIndicated}
-          disabled={isActivityIndicated}
-          onClick={onTapRefresh}
-          className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent disabled:cursor-default"
-        >
-          {isActivityIndicated ? (
-            <Loader2
-              size={ICON_SIZE.medium}
-              aria-hidden="true"
-              // The one spinner on this surface. `animate-spin` is a CSS
-              // animation, so `motion.css`'s blanket reduced-motion rule
-              // already stills it — no second suppression here.
-              className="animate-spin"
-            />
-          ) : (
-            <RefreshCw size={ICON_SIZE.medium} aria-hidden="true" />
-          )}
-        </button>
-      </ToolbarControl>
+        <ToolbarControl placement={refreshPlacement} testId="plan-refresh-slot">
+          <button
+            type="button"
+            data-testid="plan-refresh"
+            data-busy={isActivityIndicated ? 'true' : 'false'}
+            aria-label={isActivityIndicated ? 'Syncing' : 'Refresh'}
+            aria-busy={isActivityIndicated}
+            disabled={isActivityIndicated}
+            onClick={onTapRefresh}
+            className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent disabled:cursor-default"
+          >
+            {isActivityIndicated ? (
+              <Loader2
+                size={ICON_SIZE.medium}
+                aria-hidden="true"
+                // The one spinner on this surface. `animate-spin` is a CSS
+                // animation, so `motion.css`'s blanket reduced-motion rule
+                // already stills it — no second suppression here.
+                className="animate-spin"
+              />
+            ) : (
+              <RefreshCw size={ICON_SIZE.medium} aria-hidden="true" />
+            )}
+          </button>
+        </ToolbarControl>
 
-      {/* The visibility eye — canon's `ToolbarItemGroup(placement: .topBarTrailing)`. */}
-      <ToolbarControl
-        placement={visibilityPlacement}
-        testId="plan-visibility-slot"
-      >
-        <button
-          type="button"
-          data-testid="plan-visibility-toggle"
-          aria-label="Visibility Filters"
-          aria-expanded={isVisibilityOpen}
-          data-filtered={allFiltersEnabled ? 'false' : 'true'}
-          onClick={() => onToggleVisibilityPanel(!isVisibilityOpen)}
-          className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent"
+        {/* The visibility eye — canon's `ToolbarItemGroup(placement: .topBarTrailing)`. */}
+        <ToolbarControl
+          placement={visibilityPlacement}
+          testId="plan-visibility-slot"
         >
-          {allFiltersEnabled ? (
-            <Eye size={ICON_SIZE.medium} aria-hidden="true" />
-          ) : (
-            <EyeOff size={ICON_SIZE.medium} aria-hidden="true" />
-          )}
-        </button>
-      </ToolbarControl>
+          <button
+            type="button"
+            data-testid="plan-visibility-toggle"
+            aria-label="Visibility Filters"
+            aria-expanded={isVisibilityOpen}
+            data-filtered={allFiltersEnabled ? 'false' : 'true'}
+            onClick={() => onToggleVisibilityPanel(!isVisibilityOpen)}
+            className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent"
+          >
+            {allFiltersEnabled ? (
+              <Eye size={ICON_SIZE.medium} aria-hidden="true" />
+            ) : (
+              <EyeOff size={ICON_SIZE.medium} aria-hidden="true" />
+            )}
+          </button>
+        </ToolbarControl>
       </div>
 
       <PlanBannersFragment

@@ -52,7 +52,7 @@ const renderSidebar = (
   )
 
 describe('the shipping sidebar', () => {
-  it('shows the three sections plus Lists, in canon\'s order', () => {
+  it("shows the three sections plus Lists, in canon's order", () => {
     renderSidebar()
 
     const headers = screen.getAllByRole('heading', { level: 2 })
@@ -67,7 +67,9 @@ describe('the shipping sidebar', () => {
     renderSidebar()
 
     expect(
-      screen.getByRole('button', { name: 'Today' }).getAttribute('aria-current'),
+      screen
+        .getByRole('button', { name: 'Today' })
+        .getAttribute('aria-current'),
     ).toBe('page')
   })
 
@@ -97,7 +99,7 @@ describe('the shipping sidebar', () => {
     expect(screen.getByRole('button', { name: 'Tweak' })).toBeTruthy()
   })
 
-  it('uses canon\'s macOS row names, not the phone\'s', () => {
+  it("uses canon's macOS row names, not the phone's", () => {
     renderSidebar()
 
     expect(screen.getByRole('button', { name: 'Today' })).toBeTruthy()

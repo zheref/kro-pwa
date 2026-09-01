@@ -7,7 +7,12 @@ afterEach(cleanup)
 
 describe('EmptyStateCard', () => {
   it('says what the thing is, rather than showing a blank value', () => {
-    render(<EmptyStateCard icon="clock.arrow.circlepath" title="No performances yet" />)
+    render(
+      <EmptyStateCard
+        icon="clock.arrow.circlepath"
+        title="No performances yet"
+      />,
+    )
 
     expect(screen.getByText('No performances yet')).not.toBeNull()
   })
@@ -48,8 +53,12 @@ describe('EmptyStateCard', () => {
   })
 
   it('hides its illustration from readers — the title already says it', () => {
-    const { container } = render(<EmptyStateCard icon="tray" title="Inbox is empty" />)
+    const { container } = render(
+      <EmptyStateCard icon="tray" title="Inbox is empty" />,
+    )
 
-    expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    )
   })
 })

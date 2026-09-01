@@ -126,7 +126,11 @@ export function springEasing(spring: CanonSpring): string {
 export function springTransition(
   name: ChromeSpringName,
   properties: readonly string[],
-): { transitionProperty: string; transitionDuration: string; transitionTimingFunction: string } {
+): {
+  transitionProperty: string
+  transitionDuration: string
+  transitionTimingFunction: string
+} {
   const spring = CHROME_SPRINGS[name]
   return {
     transitionProperty: properties.join(', '),

@@ -216,7 +216,9 @@ describe('reading Google’s error envelopes', () => {
   })
 
   it('extracts the OAuth error code that means “reconnect”', () => {
-    expect(googleOAuthErrorCode({ error: 'invalid_grant' })).toBe('invalid_grant')
+    expect(googleOAuthErrorCode({ error: 'invalid_grant' })).toBe(
+      'invalid_grant',
+    )
     expect(googleOAuthErrorCode({})).toBeNull()
     expect(googleOAuthErrorCode('invalid_grant')).toBeNull()
   })

@@ -56,7 +56,9 @@ describe('mount', () => {
     )
 
     await waitFor(() => {
-      expect(store.getState().find.find.enabledFlags).toEqual(['endeavorDetail'])
+      expect(store.getState().find.find.enabledFlags).toEqual([
+        'endeavorDetail',
+      ])
     })
   })
 
@@ -79,7 +81,7 @@ describe('mount', () => {
 })
 
 describe('the saved lens survives the mount that reads it', () => {
-  it('restores the user\'s filters instead of the vista\'s defaults', async () => {
+  it("restores the user's filters instead of the vista's defaults", async () => {
     const store = mount(
       makeSeededStore({
         endeavors: allFindEndeavorMocks,
@@ -139,8 +141,8 @@ describe('the saved lens survives the mount that reads it', () => {
   })
 })
 
-describe('the sidebar\'s query seeds this surface', () => {
-  it('narrows the lens to what the shell\'s field was submitted with', async () => {
+describe("the sidebar's query seeds this surface", () => {
+  it("narrows the lens to what the shell's field was submitted with", async () => {
     const store = makeSeededStore({ endeavors: allFindEndeavorMocks })
     store.dispatch(userDidChangeSearchQuery({ query: 'slides' }))
 
@@ -224,7 +226,9 @@ describe('the bulk operations act on exactly the visible rows', () => {
       expect(screen.getByText('Team sync')).toBeTruthy()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
     await userEvent.click(
       screen.getByRole('menuitem', { name: 'Delete all visible (2)' }),
     )
@@ -243,7 +247,9 @@ describe('the bulk operations act on exactly the visible rows', () => {
       expect(screen.getByText('Prepare quarterly slides')).toBeTruthy()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
     await userEvent.click(
       screen.getByRole('menuitem', { name: 'Archive all visible (1)' }),
     )
@@ -266,16 +272,16 @@ describe('the bulk operations act on exactly the visible rows', () => {
       expect(screen.queryByText('Team sync')).toBeNull()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endeavor actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Endeavor actions' }),
+    )
     await userEvent.click(
       screen.getByRole('menuitem', { name: /^Delete all visible/ }),
     )
 
     await waitFor(() => {
       expect(
-        store
-          .getState()
-          .find.find.endeavors.map((endeavor) => endeavor.id),
+        store.getState().find.find.endeavors.map((endeavor) => endeavor.id),
       ).toContain(findEndeavorMocks.teamSync.id)
     })
   })

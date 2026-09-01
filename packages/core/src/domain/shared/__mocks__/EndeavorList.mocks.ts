@@ -56,7 +56,8 @@ export const endeavorListMocks = {
    */
   malformedColor: makeRemindersList({
     id: 'reminders-malformed',
-    title: '🎯 プロジェクト — a list title that keeps going and going and going',
+    title:
+      '🎯 プロジェクト — a list title that keeps going and going and going',
     color: 'not-a-hex-colour',
   }),
 } satisfies Record<string, AnyEndeavorList>

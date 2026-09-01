@@ -15,8 +15,10 @@ import { earnFragmentPropsFrom } from './earnFixtures'
 afterEach(cleanup)
 
 describe('EarnFragment', () => {
-  it('renders the typical catalog\'s three sections', () => {
-    render(<EarnFragment {...earnFragmentPropsFrom(earnStateMocks.loadedTypical)} />)
+  it("renders the typical catalog's three sections", () => {
+    render(
+      <EarnFragment {...earnFragmentPropsFrom(earnStateMocks.loadedTypical)} />,
+    )
 
     expect(screen.getByText('Available to Claim')).toBeTruthy()
     expect(screen.getByText('Keep Earning')).toBeTruthy()
@@ -61,7 +63,9 @@ describe('EarnFragment', () => {
   })
 
   it("shows canon's empty-catalog copy inside Get Started, never a separate empty screen", () => {
-    render(<EarnFragment {...earnFragmentPropsFrom(earnStateMocks.loadedEmpty)} />)
+    render(
+      <EarnFragment {...earnFragmentPropsFrom(earnStateMocks.loadedEmpty)} />,
+    )
 
     expect(screen.getByText('Get Started')).toBeTruthy()
     expect(

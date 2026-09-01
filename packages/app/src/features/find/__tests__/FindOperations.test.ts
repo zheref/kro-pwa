@@ -198,9 +198,9 @@ describe('endeavorAfterOperation is the one definition of each local effect', ()
   })
 
   it('leaves the row untouched for a delete — the row is removed, not rewritten', () => {
-    expect(endeavorAfterOperation(task, request(EndeavorOperation.delete))).toBe(
-      task,
-    )
+    expect(
+      endeavorAfterOperation(task, request(EndeavorOperation.delete)),
+    ).toBe(task)
     expect(findOperationBinding(EndeavorOperation.delete).effect).toBe(
       OperationEffect.softDelete,
     )

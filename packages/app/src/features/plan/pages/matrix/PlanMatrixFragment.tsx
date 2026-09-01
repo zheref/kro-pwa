@@ -257,7 +257,11 @@ function QuadrantBox({
                   {Icon === null ? (
                     <span aria-hidden>{glyph.symbol}</span>
                   ) : (
-                    <Icon size={26} aria-hidden style={{ color: colorVar(tint) }} />
+                    <Icon
+                      size={26}
+                      aria-hidden
+                      style={{ color: colorVar(tint) }}
+                    />
                   )}
                 </button>
               </li>

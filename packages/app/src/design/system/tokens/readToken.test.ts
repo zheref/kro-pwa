@@ -34,8 +34,14 @@ describe('readToken', () => {
   })
 
   it('maps a base role and a semantic role to their properties', () => {
-    document.documentElement.style.setProperty('--kro-color-badge-blue', '#1a5bc7')
-    document.documentElement.style.setProperty('--kro-role-kind-task', '#1a5bc7')
+    document.documentElement.style.setProperty(
+      '--kro-color-badge-blue',
+      '#1a5bc7',
+    )
+    document.documentElement.style.setProperty(
+      '--kro-role-kind-task',
+      '#1a5bc7',
+    )
 
     expect(readColorRole('badgeBlue')).toBe('#1a5bc7')
     expect(readSemanticRole('kindTask')).toBe('#1a5bc7')

@@ -77,26 +77,35 @@ export const EndeavorSyncExceptions = {
     exception('pushFailed', `Couldn't write to Kro Cloud: ${reason}`, true),
 
   unknown: (message: string): EndeavorSyncException =>
-    exception('unknown', message.length === 0 ? 'Unexpected error.' : message, true),
+    exception(
+      'unknown',
+      message.length === 0 ? 'Unexpected error.' : message,
+      true,
+    ),
 } as const
 
 /** Every `kind`, for the exhaustiveness test and the recogniser below. */
-export const endeavorSyncExceptionKinds: readonly EndeavorSyncException['kind'][] = [
-  'unavailable',
-  'notSignedIn',
-  'ownerUnresolved',
-  'localStoreFailed',
-  'pullFailed',
-  'pushFailed',
-  'unknown',
-]
+export const endeavorSyncExceptionKinds: readonly EndeavorSyncException['kind'][] =
+  [
+    'unavailable',
+    'notSignedIn',
+    'ownerUnresolved',
+    'localStoreFailed',
+    'pullFailed',
+    'pushFailed',
+    'unknown',
+  ]
 
 /** Whether an arbitrary caught value already is one of ours. */
 export const isEndeavorSyncException = (
   value: unknown,
 ): value is EndeavorSyncException => {
   if (typeof value !== 'object' || value === null) return false
-  const candidate = value as { kind?: unknown; message?: unknown; recoverable?: unknown }
+  const candidate = value as {
+    kind?: unknown
+    message?: unknown
+    recoverable?: unknown
+  }
   return (
     typeof candidate.kind === 'string' &&
     typeof candidate.message === 'string' &&
@@ -111,7 +120,9 @@ export const isEndeavorSyncException = (
  */
 export const endeavorSyncExceptionFrom = (
   error: unknown,
-  fallback: (reason: string) => EndeavorSyncException = EndeavorSyncExceptions.unknown,
+  fallback: (
+    reason: string,
+  ) => EndeavorSyncException = EndeavorSyncExceptions.unknown,
 ): EndeavorSyncException => {
   if (isEndeavorSyncException(error)) return error
   if (error instanceof TypeError) {

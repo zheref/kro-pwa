@@ -34,7 +34,7 @@ const signedIn = {
 }
 
 describe('the signed-out header', () => {
-  it("invites the user in, in canon words", () => {
+  it('invites the user in, in canon words', () => {
     renderPopover()
 
     expect(screen.getByText('Sign In to Kro')).toBeTruthy()

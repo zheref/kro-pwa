@@ -111,7 +111,10 @@ export function AuthSurfaceFragment({
           >
             Kro
           </span>
-          <span className="text-[15px]" style={{ color: colorVar('foreSecondary') }}>
+          <span
+            className="text-[15px]"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             {isSignIn ? 'Welcome back' : 'Create your account'}
           </span>
         </header>
@@ -239,7 +242,10 @@ export function AuthSurfaceFragment({
             className="h-px flex-1"
             style={{ backgroundColor: colorVar('hairline') }}
           />
-          <span className="text-[12px]" style={{ color: colorVar('foreSecondary') }}>
+          <span
+            className="text-[12px]"
+            style={{ color: colorVar('foreSecondary') }}
+          >
             or continue with
           </span>
           <span
@@ -338,7 +344,10 @@ function Field({
           'w-full bg-transparent text-[15px] outline-none',
           'disabled:cursor-not-allowed',
         )}
-        style={{ color: colorVar('fore'), opacity: isDisabled ? 0.62 : undefined }}
+        style={{
+          color: colorVar('fore'),
+          opacity: isDisabled ? 0.62 : undefined,
+        }}
       />
     </div>
   )

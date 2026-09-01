@@ -69,7 +69,10 @@ export function EmojiPickerPopover({
         // `p-0` because the grid brings its own padding and the pinned headers
         // have to reach the panel's edges to read as pinned rather than inset.
         className="p-0 overflow-hidden"
-        style={{ width: EMOJI_POPOVER_SIZE.width, height: EMOJI_POPOVER_SIZE.height }}
+        style={{
+          width: EMOJI_POPOVER_SIZE.width,
+          height: EMOJI_POPOVER_SIZE.height,
+        }}
       >
         <EmojiPicker
           selection={selection}

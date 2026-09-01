@@ -270,8 +270,9 @@ export const LAST_USED_DESTINATION_KEY = 'lastEndeavorHostingDestination'
 export const lastUsedDestinationFromStored = (
   stored: unknown,
 ): CaptureDestination =>
-  (typeof stored === 'string' ? captureDestinationFromRawValue(stored) : null) ??
-  CaptureDestination.local
+  (typeof stored === 'string'
+    ? captureDestinationFromRawValue(stored)
+    : null) ?? CaptureDestination.local
 
 /**
  * `availableHostingDestinations` — canon's derivation from integration state,
@@ -317,7 +318,11 @@ export type CaptureRecurrence =
       readonly interval: number
       readonly weekdays: readonly WeekDay[]
     }
-  | { readonly kind: 'monthly'; readonly interval: number; readonly day: number }
+  | {
+      readonly kind: 'monthly'
+      readonly interval: number
+      readonly day: number
+    }
   | {
       readonly kind: 'yearly'
       readonly interval: number
@@ -366,7 +371,10 @@ export const repeatConfigFromCaptureRecurrence = (
     case 'daily':
       return makeRepeatConfig(dailyBase(), recurrence.interval)
     case 'weekly':
-      return makeRepeatConfig(weeklyBase(recurrence.weekdays), recurrence.interval)
+      return makeRepeatConfig(
+        weeklyBase(recurrence.weekdays),
+        recurrence.interval,
+      )
     case 'monthly':
       return makeRepeatConfig(monthlyBase(recurrence.day), recurrence.interval)
     case 'yearly':
@@ -400,7 +408,8 @@ const MINUTE_MS = 60_000
 export const nextQuarterHourSlot = (reference: Date): Date => {
   const topOfHour = new Date(reference)
   topOfHour.setMinutes(0, 0, 0)
-  const bumped = (Math.floor(reference.getMinutes() / QUARTER_HOUR_MINUTES) + 1) *
+  const bumped =
+    (Math.floor(reference.getMinutes() / QUARTER_HOUR_MINUTES) + 1) *
     QUARTER_HOUR_MINUTES
   return new Date(topOfHour.getTime() + bumped * MINUTE_MS)
 }

@@ -21,12 +21,7 @@
  * than from a second rule that could drift, and its desktop width is named once
  * here — see `CAPTURE_PROMPT_POPOVER_WIDTH`.
  */
-import {
-  type Month,
-  type WeekDay,
-  monthFromDate,
-  weekDays,
-} from '@kro/core'
+import { type Month, type WeekDay, monthFromDate, weekDays } from '@kro/core'
 import { displayTitle } from '../../../design/endeavor/endeavorCardModel'
 import type { DoSurfaceLayout } from '../../main/DoSurfaceLayout'
 import {
@@ -122,7 +117,8 @@ const TIME_INPUT = /^\d{2}:\d{2}(:\d{2})?$/
 export const parseDateInput = (value: string): Date | null => {
   if (!DATE_INPUT.test(value)) return null
   const [year, month, day] = value.split('-').map(Number)
-  if (year === undefined || month === undefined || day === undefined) return null
+  if (year === undefined || month === undefined || day === undefined)
+    return null
   const parsed = new Date(year, month - 1, day, 0, 0, 0, 0)
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }

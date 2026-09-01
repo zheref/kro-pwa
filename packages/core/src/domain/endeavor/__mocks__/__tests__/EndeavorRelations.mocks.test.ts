@@ -54,9 +54,9 @@ describe('repeatConfigMocks', () => {
   })
 
   it('exercises everyOther beyond the default of 1', () => {
-    expect(
-      allRepeatConfigMocks.some((config) => config.everyOther > 1),
-    ).toBe(true)
+    expect(allRepeatConfigMocks.some((config) => config.everyOther > 1)).toBe(
+      true,
+    )
   })
 })
 
@@ -132,8 +132,8 @@ describe('shadowMocks', () => {
   })
 
   it('spans more than one provider', () => {
-    expect(new Set(allShadowMocks.map((shadow) => shadow.source)).size).toBeGreaterThan(
-      2,
-    )
+    expect(
+      new Set(allShadowMocks.map((shadow) => shadow.source)).size,
+    ).toBeGreaterThan(2)
   })
 })

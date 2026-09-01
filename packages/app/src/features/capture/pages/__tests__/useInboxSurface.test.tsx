@@ -94,7 +94,7 @@ describe('the view model', () => {
     expect(screen.getByTestId('totalCount').textContent).toBe('0')
   })
 
-  it('carries the Inbox vista\'s own operations, never a hand-written pair', () => {
+  it("carries the Inbox vista's own operations, never a hand-written pair", () => {
     mount(makeCaptureStore({ endeavors: [] }))
 
     expect(screen.getByTestId('capabilities').textContent).toBe(
@@ -116,7 +116,7 @@ describe('the view model', () => {
 })
 
 describe('the intents it raises', () => {
-  it('seeds a Triage request with today\'s first free gap, computed at the tap', async () => {
+  it("seeds a Triage request with today's first free gap, computed at the tap", async () => {
     const store = makeCaptureStore({ endeavors: captureFixtureRecords() })
     mount(store)
     // The probe is not a Page, so nothing loads the pool for it — and a row id

@@ -6,7 +6,11 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { StoreProvider } from '../../../library/StoreProvider'
-import { makeStore, stubbedThunkExtra, type ThunkExtra } from '../../../library/store'
+import {
+  makeStore,
+  stubbedThunkExtra,
+  type ThunkExtra,
+} from '../../../library/store'
 import { makeStubbedThirstService } from '../../../services/thirst/ThirstService'
 import { thirstCountsFixture } from '../ThirstMocks'
 import { ComingSoonPage } from '../ComingSoonPage'
@@ -65,7 +69,9 @@ describe('ComingSoonPage', () => {
       </StoreProvider>,
     )
 
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('unknown')
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
+      'unknown',
+    )
     expect(screen.queryByRole('button')).toBeNull()
     expect(thirstService.operations()).toEqual([])
   })
@@ -76,7 +82,9 @@ describe('ComingSoonPage', () => {
         <ComingSoonPage featureKey="unknown" fallbackTitle="Unknown" />
       </StoreProvider>,
     )
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Unknown')
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
+      'Unknown',
+    )
   })
 
   it('a tap on the vote CTA reaches the store as a cast vote', async () => {
@@ -92,7 +100,9 @@ describe('ComingSoonPage', () => {
     })
     screen.getByRole('button', { name: /vote to get it sooner/i }).click()
     await waitFor(() =>
-      expect(store.getState().thirst.byFeatureKey.matrix?.alreadyVoted).toBe(true),
+      expect(store.getState().thirst.byFeatureKey.matrix?.alreadyVoted).toBe(
+        true,
+      ),
     )
   })
 })

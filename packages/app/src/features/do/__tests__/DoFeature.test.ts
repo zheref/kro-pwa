@@ -36,8 +36,10 @@ import {
 import { DoLane, doCardKey, initialDoVisibility } from '../DoRules'
 import { DoSuggestionSource } from '../DoSuggestions'
 
-const reduce = (state: DoState, action: Parameters<typeof doSlice.reducer>[1]) =>
-  doSlice.reducer(state, action)
+const reduce = (
+  state: DoState,
+  action: Parameters<typeof doSlice.reducer>[1],
+) => doSlice.reducer(state, action)
 
 const loaded = doStateMocks.loadedTypicalDay
 
@@ -74,7 +76,8 @@ describe('onViewLoaded', () => {
 describe('onFeaturedCapacityChanged', () => {
   it('records a wider window', () => {
     expect(
-      reduce(loaded, onFeaturedCapacityChanged({ capacity: 9 })).featuredCapacity,
+      reduce(loaded, onFeaturedCapacityChanged({ capacity: 9 }))
+        .featuredCapacity,
     ).toBe(9)
   })
 
@@ -150,7 +153,10 @@ describe('childVisibilityDelegatedSelectionChanged', () => {
     const next = reduce(
       loaded,
       childVisibilityDelegatedSelectionChanged({
-        visibility: { ...initialDoVisibility, hiddenKinds: [EndeavorKind.habit] },
+        visibility: {
+          ...initialDoVisibility,
+          hiddenKinds: [EndeavorKind.habit],
+        },
         now: DO_MOCK_NOW,
       }),
     )
@@ -161,7 +167,10 @@ describe('childVisibilityDelegatedSelectionChanged', () => {
     const hidden = reduce(
       loaded,
       childVisibilityDelegatedSelectionChanged({
-        visibility: { ...initialDoVisibility, hiddenComputedStates: ['overdue'] },
+        visibility: {
+          ...initialDoVisibility,
+          hiddenComputedStates: ['overdue'],
+        },
         now: DO_MOCK_NOW,
       }),
     )
@@ -260,9 +269,9 @@ describe('userDidToggleMarkCompleteMode', () => {
 
 describe('userDidTapNotifications', () => {
   it('arms the jump to Overdue when there is something to jump to', () => {
-    expect(reduce(loaded, userDidTapNotifications()).shouldScrollToOverdue).toBe(
-      true,
-    )
+    expect(
+      reduce(loaded, userDidTapNotifications()).shouldScrollToOverdue,
+    ).toBe(true)
   })
 
   it('refuses to arm the jump on a day with nothing overdue', () => {
@@ -512,7 +521,10 @@ describe('the fetch lifecycle arms', () => {
   it('shows the spinner on pending and clears any prior exception', () => {
     const failed = {
       ...loaded,
-      load: { kind: 'failed' as const, exception: DoExceptions.fetchFailed('x') },
+      load: {
+        kind: 'failed' as const,
+        exception: DoExceptions.fetchFailed('x'),
+      },
     }
     const next = reduce(
       failed,

@@ -39,7 +39,10 @@ describe('userDidTapSection', () => {
       getInitialState(),
       userDidTapSection(SettingsSectionId.general),
     )
-    const second = reducer(first, userDidTapSection(SettingsSectionId.integrations))
+    const second = reducer(
+      first,
+      userDidTapSection(SettingsSectionId.integrations),
+    )
 
     expect(second.pane).toEqual({
       kind: 'section',
@@ -59,9 +62,9 @@ describe('userDidTapSection', () => {
 
 describe('userDidTapBackToHub', () => {
   it('returns from a pane to the hub — the back affordance', () => {
-    expect(reducer(SettingsMocks.generalPane, userDidTapBackToHub()).pane).toEqual(
-      { kind: 'hub' },
-    )
+    expect(
+      reducer(SettingsMocks.generalPane, userDidTapBackToHub()).pane,
+    ).toEqual({ kind: 'hub' })
   })
 
   it('is a no-op on the hub — a stray back press changes nothing', () => {
@@ -122,7 +125,8 @@ describe('userDidTapSignIn', () => {
 describe('dismissing the auth surface', () => {
   it('hides it on Cancel', () => {
     expect(
-      reducer(SettingsMocks.authPresented, userDidDismissAuth()).authPresentation,
+      reducer(SettingsMocks.authPresented, userDidDismissAuth())
+        .authPresentation,
     ).toEqual({ kind: 'hidden' })
   })
 

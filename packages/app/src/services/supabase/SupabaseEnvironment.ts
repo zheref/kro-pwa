@@ -68,7 +68,10 @@ export interface SupabaseConfiguration {
  * an `error` (`RC-24`, `UZF-9`).
  */
 export type SupabaseAvailability =
-  | { readonly kind: 'configured'; readonly configuration: SupabaseConfiguration }
+  | {
+      readonly kind: 'configured'
+      readonly configuration: SupabaseConfiguration
+    }
   /** `missing` names the variables that were absent, blank, or unusable. */
   | { readonly kind: 'unconfigured'; readonly missing: readonly string[] }
 
@@ -123,7 +126,8 @@ export const supabaseAvailabilityFrom = (
   const anonKey = presentValue(environment, SUPABASE_ANON_KEY_VARIABLE)
 
   const missing: string[] = []
-  if (url === null || !isUsableProjectUrl(url)) missing.push(SUPABASE_URL_VARIABLE)
+  if (url === null || !isUsableProjectUrl(url))
+    missing.push(SUPABASE_URL_VARIABLE)
   if (anonKey === null) missing.push(SUPABASE_ANON_KEY_VARIABLE)
 
   if (url === null || anonKey === null || missing.length > 0) {
@@ -175,7 +179,9 @@ export const processEnvironment: EnvironmentProvider = {
   read: (name) => {
     if (name in staticPublicEnvironment) return staticPublicEnvironment[name]
     const host = globalThis as {
-      readonly process?: { readonly env?: Readonly<Record<string, string | undefined>> }
+      readonly process?: {
+        readonly env?: Readonly<Record<string, string | undefined>>
+      }
     }
     return host.process?.env?.[name]
   },

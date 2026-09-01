@@ -58,11 +58,15 @@ describe('secondsBetween', () => {
 
 describe('dateAddingSeconds', () => {
   it('advances by the given number of seconds', () => {
-    expect(dateAddingSeconds(NOW, 1800)).toEqual(new Date(2026, 0, 15, 9, 30, 0))
+    expect(dateAddingSeconds(NOW, 1800)).toEqual(
+      new Date(2026, 0, 15, 9, 30, 0),
+    )
   })
 
   it('accepts a negative interval and goes backwards', () => {
-    expect(dateAddingSeconds(NOW, -3600)).toEqual(new Date(2026, 0, 15, 8, 0, 0))
+    expect(dateAddingSeconds(NOW, -3600)).toEqual(
+      new Date(2026, 0, 15, 8, 0, 0),
+    )
   })
 
   it('never mutates the date it was given', () => {
@@ -74,21 +78,21 @@ describe('dateAddingSeconds', () => {
 
 describe('isWithinLast', () => {
   it('accepts an instant inside the window', () => {
-    expect(isWithinLast(new Date(2026, 0, 14, 12, 0, 0), hoursInSeconds(48), NOW)).toBe(
-      true,
-    )
+    expect(
+      isWithinLast(new Date(2026, 0, 14, 12, 0, 0), hoursInSeconds(48), NOW),
+    ).toBe(true)
   })
 
   it('rejects an instant older than the window', () => {
-    expect(isWithinLast(new Date(2026, 0, 12, 8, 0, 0), hoursInSeconds(48), NOW)).toBe(
-      false,
-    )
+    expect(
+      isWithinLast(new Date(2026, 0, 12, 8, 0, 0), hoursInSeconds(48), NOW),
+    ).toBe(false)
   })
 
   it('rejects a future instant — the window looks backwards only', () => {
-    expect(isWithinLast(new Date(2026, 0, 15, 10, 0, 0), hoursInSeconds(48), NOW)).toBe(
-      false,
-    )
+    expect(
+      isWithinLast(new Date(2026, 0, 15, 10, 0, 0), hoursInSeconds(48), NOW),
+    ).toBe(false)
   })
 
   it('includes both boundaries', () => {
@@ -101,43 +105,55 @@ describe('isWithinLast', () => {
 
 describe('isWithinNext', () => {
   it('accepts an instant inside the window', () => {
-    expect(isWithinNext(new Date(2026, 0, 16, 9, 0, 0), hoursInSeconds(72), NOW)).toBe(
-      true,
-    )
+    expect(
+      isWithinNext(new Date(2026, 0, 16, 9, 0, 0), hoursInSeconds(72), NOW),
+    ).toBe(true)
   })
 
   it('rejects an instant beyond the window', () => {
-    expect(isWithinNext(new Date(2026, 0, 20, 9, 0, 0), hoursInSeconds(72), NOW)).toBe(
-      false,
-    )
+    expect(
+      isWithinNext(new Date(2026, 0, 20, 9, 0, 0), hoursInSeconds(72), NOW),
+    ).toBe(false)
   })
 
   it('rejects a past instant — the window looks forwards only', () => {
-    expect(isWithinNext(new Date(2026, 0, 14, 9, 0, 0), hoursInSeconds(72), NOW)).toBe(
-      false,
-    )
+    expect(
+      isWithinNext(new Date(2026, 0, 14, 9, 0, 0), hoursInSeconds(72), NOW),
+    ).toBe(false)
   })
 })
 
 describe('isSameCalendarDay', () => {
   it('is true for two moments on the same local day', () => {
     expect(
-      isSameCalendarDay(new Date(2026, 0, 15, 0, 1, 0), new Date(2026, 0, 15, 23, 59, 0)),
+      isSameCalendarDay(
+        new Date(2026, 0, 15, 0, 1, 0),
+        new Date(2026, 0, 15, 23, 59, 0),
+      ),
     ).toBe(true)
   })
 
   it('is false one minute either side of midnight', () => {
     expect(
-      isSameCalendarDay(new Date(2026, 0, 15, 23, 59, 0), new Date(2026, 0, 16, 0, 1, 0)),
+      isSameCalendarDay(
+        new Date(2026, 0, 15, 23, 59, 0),
+        new Date(2026, 0, 16, 0, 1, 0),
+      ),
     ).toBe(false)
   })
 
   it('is false for the same day number in a different month or year', () => {
     expect(
-      isSameCalendarDay(new Date(2026, 0, 15, 9, 0, 0), new Date(2026, 1, 15, 9, 0, 0)),
+      isSameCalendarDay(
+        new Date(2026, 0, 15, 9, 0, 0),
+        new Date(2026, 1, 15, 9, 0, 0),
+      ),
     ).toBe(false)
     expect(
-      isSameCalendarDay(new Date(2026, 0, 15, 9, 0, 0), new Date(2025, 0, 15, 9, 0, 0)),
+      isSameCalendarDay(
+        new Date(2026, 0, 15, 9, 0, 0),
+        new Date(2025, 0, 15, 9, 0, 0),
+      ),
     ).toBe(false)
   })
 })

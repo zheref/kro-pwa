@@ -12,7 +12,9 @@ describe('Stage', () => {
       </Stage>,
     )
 
-    const stage = container.querySelector('[data-slot="story-stage"]') as HTMLElement
+    const stage = container.querySelector(
+      '[data-slot="story-stage"]',
+    ) as HTMLElement
     expect(stage.dataset.theme).toBe('dark')
   })
 
@@ -22,7 +24,8 @@ describe('Stage', () => {
         <span>content</span>
       </Stage>,
     )
-    const stage = () => container.querySelector('[data-slot="story-stage"]') as HTMLElement
+    const stage = () =>
+      container.querySelector('[data-slot="story-stage"]') as HTMLElement
 
     expect(stage().style.background).toContain('--kro-color-back')
 

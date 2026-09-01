@@ -108,7 +108,10 @@ function PopoverShell({
 }) {
   return (
     <div className="flex min-w-65 flex-col gap-3.5">
-      <p className="m-0 text-base font-semibold" style={{ color: colorVar('fore') }}>
+      <p
+        className="m-0 text-base font-semibold"
+        style={{ color: colorVar('fore') }}
+      >
         {title}
       </p>
       {children}
@@ -180,7 +183,11 @@ export interface DeferPopoverProps {
   readonly onSkip?: () => void
 }
 
-export function DeferPopover({ initialTarget, onConfirm, onSkip }: DeferPopoverProps) {
+export function DeferPopover({
+  initialTarget,
+  onConfirm,
+  onSkip,
+}: DeferPopoverProps) {
   const [value, setValue] = useState(() => localInputValue(initialTarget))
 
   useEffect(() => {

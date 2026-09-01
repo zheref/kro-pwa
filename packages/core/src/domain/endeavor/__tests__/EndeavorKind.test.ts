@@ -47,7 +47,9 @@ describe('endeavorKindFromRawValue', () => {
 
 describe('endeavorKindDisplayName', () => {
   it('splits `calendarEvent` into two words', () => {
-    expect(endeavorKindDisplayName(EndeavorKind.calendarEvent)).toBe('Calendar Event')
+    expect(endeavorKindDisplayName(EndeavorKind.calendarEvent)).toBe(
+      'Calendar Event',
+    )
   })
 
   it('title-cases the single-word kinds', () => {

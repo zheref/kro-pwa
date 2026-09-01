@@ -102,9 +102,9 @@ describe('PickEndeavorFragment — the seven cap', () => {
       await userEvent.click(rows[index]!)
     }
 
-    expect(screen.getByTestId('pick-endeavor-cap-notice').textContent).toContain(
-      '7 tasks at a time',
-    )
+    expect(
+      screen.getByTestId('pick-endeavor-cap-notice').textContent,
+    ).toContain('7 tasks at a time')
     const remaining = toggles().filter((row) => !row.checked)
     expect(remaining.length).toBeGreaterThan(0)
     for (const row of remaining) {
@@ -171,7 +171,8 @@ describe('PickEndeavorFragment — Confirm', () => {
     mount()
     await userEvent.click(toggles()[0]!)
     expect(
-      (screen.getByTestId('pick-endeavor-confirm') as HTMLButtonElement).disabled,
+      (screen.getByTestId('pick-endeavor-confirm') as HTMLButtonElement)
+        .disabled,
     ).toBe(false)
     expect(screen.queryByTestId('pick-endeavor-blocker')).toBeNull()
   })

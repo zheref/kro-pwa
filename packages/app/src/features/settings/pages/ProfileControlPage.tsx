@@ -61,7 +61,11 @@ import { ICON_SIZE } from '../../../design/system/icons/icons'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
-import { PRESENTATION_SIZE, PresentationSurface, presentationFor } from '../../main/MainPresentation'
+import {
+  PRESENTATION_SIZE,
+  PresentationSurface,
+  presentationFor,
+} from '../../main/MainPresentation'
 import { navigateToDestinationThunk } from '../../main/MainProducer'
 import { selectSurface } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
@@ -124,7 +128,9 @@ export function ProfileControlPage() {
       accountEmail={user === null ? null : primaryEmail(user)}
       accountInitials={initials}
       planName={SUBSCRIPTION_PLAN_NAME}
-      onTapSignIn={() => dispatch(userDidTapSignIn({ origin: 'profilePopover' }))}
+      onTapSignIn={() =>
+        dispatch(userDidTapSignIn({ origin: 'profilePopover' }))
+      }
       onTapAllEndeavors={() => goTo('tasks')}
       onTapSettings={() => goTo('settings')}
       onTapSignOut={() => {
@@ -217,10 +223,14 @@ export function ProfileControlPage() {
 
       <LocalDataDialogFragment
         isPresented={localData.kind === 'shown'}
-        anonymousCount={localData.kind === 'shown' ? localData.anonymousCount : 0}
+        anonymousCount={
+          localData.kind === 'shown' ? localData.anonymousCount : 0
+        }
         isResolving={localData.kind === 'resolving'}
         onChoose={(choice: LocalDataChoice) => {
-          void dispatch(resolveLocalDataChoiceThunk({ choice, now: new Date() }))
+          void dispatch(
+            resolveLocalDataChoiceThunk({ choice, now: new Date() }),
+          )
         }}
         // Canon routes swipe-to-dismiss into the same arm as Cancel; this only
         // hides the prompt and touches no rows, which is what the slice's own

@@ -236,14 +236,23 @@ const slotIndexFrom = (target: EventTarget | null): number | null => {
 export function useSlotPress(options: UseSlotPressOptions): {
   readonly handlers: SlotPressHandlers
 } {
-  const { onCreate, holdMs, maxDistancePx, doubleTapMs, disabled = false } = options
+  const {
+    onCreate,
+    holdMs,
+    maxDistancePx,
+    doubleTapMs,
+    disabled = false,
+  } = options
 
   const origin = useRef<{ x: number; y: number; index: number } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const didHold = useRef(false)
-  const lastTap = useRef<{ index: number; at: number; x: number; y: number } | null>(
-    null,
-  )
+  const lastTap = useRef<{
+    index: number
+    at: number
+    x: number
+    y: number
+  } | null>(null)
 
   const clearTimer = useCallback(() => {
     if (timer.current !== null) {
@@ -327,7 +336,12 @@ export function useSlotPress(options: UseSlotPressOptions): {
   )
 
   return {
-    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: cancel },
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onPointerCancel: cancel,
+    },
   }
 }
 
@@ -405,7 +419,13 @@ export interface UseVerticalDragOptions {
 export function useVerticalDrag(options: UseVerticalDragOptions): {
   readonly handlers: VerticalDragHandlers
 } {
-  const { onBegin, onDrag, onEnd, minimumDistancePx = 0, disabled = false } = options
+  const {
+    onBegin,
+    onDrag,
+    onEnd,
+    minimumDistancePx = 0,
+    disabled = false,
+  } = options
 
   const origin = useRef<{ x: number; y: number } | null>(null)
   const isDragging = useRef(false)

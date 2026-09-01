@@ -1,14 +1,14 @@
 // Duration units in seconds
-const SECOND = 1;
-const MINUTE = 60 * SECOND;
-const HOUR = 60 * MINUTE;
+const SECOND = 1
+const MINUTE = 60 * SECOND
+const HOUR = 60 * MINUTE
 
 declare module 'numberEnhancements' {
-    interface Number {
-        get seconds(): number;
-        get minutes(): number;
-        get hours(): number;
-    }
+  interface Number {
+    get seconds(): number
+    get minutes(): number
+    get hours(): number
+  }
 }
 
 // Implementation of the duration methods

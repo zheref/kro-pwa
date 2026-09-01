@@ -62,13 +62,7 @@ import type {
   EndeavorKind,
   EndeavorStatus,
 } from '@kro/core'
-import {
-  type KeyboardEvent,
-  useCallback,
-  useId,
-  useRef,
-  useState,
-} from 'react'
+import { type KeyboardEvent, useCallback, useId, useRef, useState } from 'react'
 import { EmptyStateCard } from '../../../design/endeavor/EmptyStateCard'
 import { EndeavorRow } from '../../../design/endeavor/EndeavorRow'
 import { InlineBanner } from '../../../design/endeavor/InlineBanner'
@@ -78,10 +72,7 @@ import type { OnEndeavorOperation } from '../../../design/endeavor/rowActions'
 import type { InputCapability } from '../../../design/endeavor/useInputCapability'
 import { colorVar, radiusVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
-import {
-  ToolbarSlot,
-  useToolbarOutletPresent,
-} from '../../main/ToolbarSlots'
+import { ToolbarSlot, useToolbarOutletPresent } from '../../main/ToolbarSlots'
 import type { EndeavorRowAdapter } from '../FindAdapters'
 import type { FindException } from '../FindException'
 import type { FindEmptyState, FindFilterToggle } from '../FindState'

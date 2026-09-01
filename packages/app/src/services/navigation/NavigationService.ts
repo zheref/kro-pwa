@@ -81,19 +81,20 @@ export interface RecordingNavigationService extends NavigationService {
  * suite see another's calls, which is the same objection `makeStore` answers
  * (`RC-22`).
  */
-export const makeRecordingNavigationService = (): RecordingNavigationService => {
-  const calls: NavigationCall[] = []
+export const makeRecordingNavigationService =
+  (): RecordingNavigationService => {
+    const calls: NavigationCall[] = []
 
-  return {
-    calls,
-    navigate: (path) => {
-      calls.push({ kind: 'navigate', path })
-    },
-    replace: (path) => {
-      calls.push({ kind: 'replace', path })
-    },
-    back: () => {
-      calls.push({ kind: 'back', path: null })
-    },
+    return {
+      calls,
+      navigate: (path) => {
+        calls.push({ kind: 'navigate', path })
+      },
+      replace: (path) => {
+        calls.push({ kind: 'replace', path })
+      },
+      back: () => {
+        calls.push({ kind: 'back', path: null })
+      },
+    }
   }
-}

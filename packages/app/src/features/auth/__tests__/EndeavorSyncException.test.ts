@@ -43,7 +43,9 @@ describe('recoverability', () => {
 
 describe('the messages', () => {
   it('name the account whose owner row could not be resolved', () => {
-    expect(EndeavorSyncExceptions.ownerUnresolved('u-7').message).toContain('u-7')
+    expect(EndeavorSyncExceptions.ownerUnresolved('u-7').message).toContain(
+      'u-7',
+    )
   })
 
   it('name the missing environment variables when they are known', () => {

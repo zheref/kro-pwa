@@ -50,7 +50,8 @@ export const GreetingMapper = {
     if (error instanceof TypeError) return GreetingExceptions.offline()
 
     const status = statusOf(error)
-    if (status === 401 || status === 403) return GreetingExceptions.unauthorized()
+    if (status === 401 || status === 403)
+      return GreetingExceptions.unauthorized()
     if (status === 404) return GreetingExceptions.notFound()
 
     const unknown: Exception<'unknown'> = toUnknownException(error)

@@ -101,8 +101,7 @@ export const sessionCueSchedule = (params: {
 
   const terminalRole: SessionSoundRole =
     params.isBreak === true ? 'breakComplete' : 'sessionComplete'
-  const fractions =
-    params.progressFractions ?? SESSION_PROGRESS_CUE_FRACTIONS
+  const fractions = params.progressFractions ?? SESSION_PROGRESS_CUE_FRACTIONS
 
   const marks = new Map<TimeIntervalSeconds, SessionCueMark>()
   for (const fraction of fractions) {

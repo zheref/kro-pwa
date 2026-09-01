@@ -6,7 +6,13 @@
  * from it), so a story cannot show a filter family the registry does not
  * declare — which is the whole point of the exposes gate.
  */
-import { EndeavorHost, EndeavorsVistas, UserFilter, makeEndeavorsLens, vistaWithLens } from '@kro/core'
+import {
+  EndeavorHost,
+  EndeavorsVistas,
+  UserFilter,
+  makeEndeavorsLens,
+  vistaWithLens,
+} from '@kro/core'
 import { Stage } from '../../../../design/endeavor/storyStage'
 import { initialPlanVisibility } from '../../PlanState'
 import { PlanVisibilityFragment } from './PlanVisibilityFragment'

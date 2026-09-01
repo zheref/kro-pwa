@@ -28,7 +28,9 @@ describe('ComingSoonFragment', () => {
       'Priority Matrix',
     )
     expect(screen.getByText('42')).toBeTruthy()
-    expect(screen.getByRole('button', { name: /vote to get it sooner/i })).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /vote to get it sooner/i }),
+    ).toBeTruthy()
   })
 
   it('shows the voted chip and no vote CTA once voted', () => {
@@ -69,7 +71,10 @@ describe('ComingSoonFragment', () => {
     render(
       <ComingSoonFragment
         featureTitle="Blueprints"
-        status={{ kind: 'unavailable', message: 'Sign in to vote for upcoming features.' }}
+        status={{
+          kind: 'unavailable',
+          message: 'Sign in to vote for upcoming features.',
+        }}
         hasCounts
         totalCount={17}
         perPlatform={[{ platform: 'ios', count: 17 }]}
@@ -77,7 +82,9 @@ describe('ComingSoonFragment', () => {
       />,
     )
 
-    expect(screen.getByText('Sign in to vote for upcoming features.')).toBeTruthy()
+    expect(
+      screen.getByText('Sign in to vote for upcoming features.'),
+    ).toBeTruthy()
     const cta = screen.getByRole('button', {
       name: /vote to get it sooner/i,
     }) as HTMLButtonElement
@@ -88,7 +95,10 @@ describe('ComingSoonFragment', () => {
     render(
       <ComingSoonFragment
         featureTitle="Blueprints"
-        status={{ kind: 'unavailable', message: 'No internet connection. Please try again.' }}
+        status={{
+          kind: 'unavailable',
+          message: 'No internet connection. Please try again.',
+        }}
         hasCounts={false}
         totalCount={0}
         perPlatform={[]}
@@ -96,7 +106,9 @@ describe('ComingSoonFragment', () => {
       />,
     )
 
-    expect(screen.getByText('No internet connection. Please try again.')).toBeTruthy()
+    expect(
+      screen.getByText('No internet connection. Please try again.'),
+    ).toBeTruthy()
     expect(screen.queryByText('0')).toBeNull()
   })
 
@@ -112,7 +124,9 @@ describe('ComingSoonFragment', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Unknown')
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(
+      'Unknown',
+    )
     expect(screen.queryByRole('button')).toBeNull()
     expect(screen.queryByRole('status')).toBeNull()
   })
@@ -166,7 +180,9 @@ describe('ComingSoonFragment', () => {
       />,
     )
 
-    expect(screen.getByText("Couldn't record that vote. Try again.")).toBeTruthy()
+    expect(
+      screen.getByText("Couldn't record that vote. Try again."),
+    ).toBeTruthy()
     const cta = screen.getByRole('button', {
       name: /vote to get it sooner/i,
     }) as HTMLButtonElement
@@ -195,8 +211,12 @@ describe('ComingSoonFragment', () => {
       </>,
     )
 
-    const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id)
+    const ids = Array.from(container.querySelectorAll('[id]')).map(
+      (el) => el.id,
+    )
     expect(new Set(ids).size).toBe(ids.length)
-    expect(screen.getAllByRole('heading', { level: 2, name: 'Priority Matrix' })).toHaveLength(2)
+    expect(
+      screen.getAllByRole('heading', { level: 2, name: 'Priority Matrix' }),
+    ).toHaveLength(2)
   })
 })

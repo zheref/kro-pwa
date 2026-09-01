@@ -43,7 +43,7 @@ describe('selectDetailIntentRequest', () => {
     expect(findStateMocks.loaded.find.clockAnchor).toEqual(FIND_REFERENCE_NOW)
   })
 
-  it('resolves an edit intent too — canon\'s second entry point into the editor', () => {
+  it("resolves an edit intent too — canon's second entry point into the editor", () => {
     const request = selectDetailIntentRequest(
       rootWith(withIntent({ ...viewDetail, operation: 'edit' })),
     )
@@ -51,7 +51,7 @@ describe('selectDetailIntentRequest', () => {
     expect(request?.operation).toBe('edit')
   })
 
-  it('leaves another feature\'s intent alone, so the session surface still gets it', () => {
+  it("leaves another feature's intent alone, so the session surface still gets it", () => {
     const request = selectDetailIntentRequest(
       rootWith(withIntent({ ...viewDetail, operation: 'startSession' })),
     )
@@ -60,7 +60,9 @@ describe('selectDetailIntentRequest', () => {
   })
 
   it('resolves nothing when the queue is empty', () => {
-    expect(selectDetailIntentRequest(rootWith(findStateMocks.loaded))).toBeNull()
+    expect(
+      selectDetailIntentRequest(rootWith(findStateMocks.loaded)),
+    ).toBeNull()
   })
 
   it('refuses an intent whose row is no longer on the surface — a stale tap', () => {

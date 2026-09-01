@@ -18,7 +18,12 @@
  */
 
 import { Children, Fragment, type ReactNode, isValidElement } from 'react'
-import { colorVar, radiusVar, shadowVar, spacingVar } from '../system/tokens/roles'
+import {
+  colorVar,
+  radiusVar,
+  shadowVar,
+  spacingVar,
+} from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
 
@@ -76,7 +81,10 @@ export function CardRowStack({
   const rows = Children.toArray(children).filter(isValidElement)
 
   return (
-    <div data-slot="card-row-stack" className={cn('flex w-full flex-col', className)}>
+    <div
+      data-slot="card-row-stack"
+      className={cn('flex w-full flex-col', className)}
+    >
       {rows.map((row, index) => (
         <Fragment key={row.key ?? index}>
           {index === 0 ? null : (

@@ -48,7 +48,7 @@ const renderedLaneOrder = (): string[] =>
     document.querySelectorAll<HTMLElement>('[data-testid^="do-lane-"]'),
   ).map((node) => node.dataset.testid ?? '')
 
-describe('the lane order is canon\'s', () => {
+describe("the lane order is canon's", () => {
   it('renders Reminders, Calendar, Now! and the task lanes in canon order', () => {
     render(<DoLanesFragment {...propsFor(doSurfaceMocks.typicalDay)} />)
 
@@ -130,7 +130,11 @@ describe('the hero lane', () => {
     const row = screen.getByTestId('do-featured-row')
     const hero = row.querySelectorAll<HTMLElement>(
       '[data-slot="endeavor-card-shell"]',
-    )[Math.floor(row.querySelectorAll('[data-slot="endeavor-card-shell"]').length / 2)]
+    )[
+      Math.floor(
+        row.querySelectorAll('[data-slot="endeavor-card-shell"]').length / 2,
+      )
+    ]
     expect(Number.parseFloat(hero?.style.width ?? '0')).toBeLessThan(200)
   })
 })
@@ -145,7 +149,9 @@ describe('badges open the expanded list', () => {
     )
 
     const lane = screen.getByTestId('do-lane-overdue')
-    const badge = lane.querySelector<HTMLButtonElement>('button[aria-label^="Overdue"]')
+    const badge = lane.querySelector<HTMLButtonElement>(
+      'button[aria-label^="Overdue"]',
+    )
     if (badge === null) throw new Error('the Overdue badge is not a button')
     await userEvent.click(badge)
 
@@ -171,8 +177,9 @@ describe('mark-complete mode', () => {
     for (const card of cards) {
       expect(card.dataset.markCompleteMode).toBe('true')
     }
-    expect(screen.getAllByRole('button', { name: 'Mark complete' }).length)
-      .toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('button', { name: 'Mark complete' }).length,
+    ).toBeGreaterThan(0)
   })
 
   it('refuses to prepare a card while bulk mode is on', async () => {

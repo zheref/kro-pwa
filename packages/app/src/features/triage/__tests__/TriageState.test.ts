@@ -137,16 +137,18 @@ describe('the mock clock', () => {
 
 describe('prefill normalization — durations that map to no chip', () => {
   it('treats a zero-length duration as no estimate yet', () => {
-    const form = triageFormFromEndeavor(
-      { ...triageEndeavorFixtures.startOnlyTask, duration: 0 },
-    )
+    const form = triageFormFromEndeavor({
+      ...triageEndeavorFixtures.startOnlyTask,
+      duration: 0,
+    })
     expect(form.durationMinutes).toBeNull()
   })
 
   it('truncates a sub-minute duration up to 1, never down to 0', () => {
-    const form = triageFormFromEndeavor(
-      { ...triageEndeavorFixtures.startOnlyTask, duration: 30 },
-    )
+    const form = triageFormFromEndeavor({
+      ...triageEndeavorFixtures.startOnlyTask,
+      duration: 30,
+    })
     expect(form.durationMinutes).toBe(1)
   })
 })

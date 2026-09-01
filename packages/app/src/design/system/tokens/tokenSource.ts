@@ -76,7 +76,10 @@ export function stripComments(css: string): string {
  * Splits a stylesheet into its blocks, recursing one level into at-rules so a
  * `@media`-wrapped rule is reachable by its own selector.
  */
-export function parseBlocks(css: string, within: string | null = null): CssBlock[] {
+export function parseBlocks(
+  css: string,
+  within: string | null = null,
+): CssBlock[] {
   const blocks: CssBlock[] = []
   let prelude = ''
   let index = 0
@@ -129,7 +132,10 @@ export function parseDeclarations(body: string): Record<string, string> {
     const colon = text.indexOf(':')
     if (colon === -1) return
     const name = text.slice(0, colon).trim()
-    const value = text.slice(colon + 1).trim().replace(/\s+/g, ' ')
+    const value = text
+      .slice(colon + 1)
+      .trim()
+      .replace(/\s+/g, ' ')
     if (name !== '') declarations[name] = value
   }
 
@@ -163,7 +169,9 @@ function selectorList(selector: string): string[] {
 function blockBodies(selector: string, within: string | null): string[] {
   const source = stripComments(TOKENS_CSS)
   const matches = parseBlocks(source).filter(
-    (block) => block.within === within && selectorList(block.selector).includes(selector),
+    (block) =>
+      block.within === within &&
+      selectorList(block.selector).includes(selector),
   )
   if (matches.length === 0) {
     throw new Error(
@@ -197,7 +205,10 @@ export function darkDeclarations(): Record<string, string> {
 
 /** The overrides carried by the `prefers-color-scheme` block. */
 export function darkPreferenceDeclarations(): Record<string, string> {
-  return mergedDeclarations(THEME_SELECTORS.darkPreference, DARK_PREFERENCE_AT_RULE)
+  return mergedDeclarations(
+    THEME_SELECTORS.darkPreference,
+    DARK_PREFERENCE_AT_RULE,
+  )
 }
 
 /** The declarations a browser would compute for `theme`, dark falling back to light. */
@@ -224,13 +235,17 @@ export function resolveToken(name: string, theme: Theme): string {
 
   while (true) {
     if (seen.has(current)) {
-      throw new Error(`tokens.css: "${name}" resolves in a cycle via "${current}"`)
+      throw new Error(
+        `tokens.css: "${name}" resolves in a cycle via "${current}"`,
+      )
     }
     seen.add(current)
 
     const value = declarations[current]
     if (value === undefined) {
-      throw new Error(`tokens.css declares no "${current}" (following "${name}")`)
+      throw new Error(
+        `tokens.css declares no "${current}" (following "${name}")`,
+      )
     }
 
     const alias = VAR_REFERENCE.exec(value)
@@ -241,7 +256,9 @@ export function resolveToken(name: string, theme: Theme): string {
 
 /** Every custom property declared in `:root`, in source order. */
 export function declaredTokenNames(): string[] {
-  return Object.keys(lightDeclarations()).filter((name) => name.startsWith('--'))
+  return Object.keys(lightDeclarations()).filter((name) =>
+    name.startsWith('--'),
+  )
 }
 
 /**

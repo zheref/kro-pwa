@@ -69,9 +69,9 @@ describe('selectIsPlatformLoading', () => {
 
 describe('selectPlatformException', () => {
   it('surfaces the exception a failed probe left behind', () => {
-    expect(
-      selectPlatformException(rootWith(PlatformMocks.errored))?.kind,
-    ).toBe('statusProbeFailed')
+    expect(selectPlatformException(rootWith(PlatformMocks.errored))?.kind).toBe(
+      'statusProbeFailed',
+    )
   })
 
   it('is null on a healthy device', () => {
@@ -131,9 +131,9 @@ describe('selectAreNotificationsBlocked', () => {
   })
 
   it('is false for "never asked" — the two must not be conflated', () => {
-    expect(selectAreNotificationsBlocked(rootWith(PlatformMocks.notAsked))).toBe(
-      false,
-    )
+    expect(
+      selectAreNotificationsBlocked(rootWith(PlatformMocks.notAsked)),
+    ).toBe(false)
   })
 
   it('is false on a browser with no Notification API at all', () => {
@@ -165,13 +165,15 @@ describe('selectPendingOverdueAlertIds', () => {
 
 describe('selectPendingOverdueAlertCount', () => {
   it('counts the armed alerts', () => {
-    expect(selectPendingOverdueAlertCount(rootWith(PlatformMocks.armed))).toBe(2)
+    expect(selectPendingOverdueAlertCount(rootWith(PlatformMocks.armed))).toBe(
+      2,
+    )
   })
 
   it('is zero with the gate off', () => {
-    expect(selectPendingOverdueAlertCount(rootWith(PlatformMocks.gateOff))).toBe(
-      0,
-    )
+    expect(
+      selectPendingOverdueAlertCount(rootWith(PlatformMocks.gateOff)),
+    ).toBe(0)
   })
 
   it('is zero on a cold mount', () => {

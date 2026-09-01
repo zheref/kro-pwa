@@ -106,9 +106,9 @@ describe('PlanMatrixFragment — admission', () => {
   it('draws an EMPTY quadrant with its own two add buttons, not a blank box', () => {
     mount({ items: [] })
     expect(screen.getAllByTestId('plan-matrix-empty-add-new')).toHaveLength(4)
-    expect(screen.getAllByTestId('plan-matrix-empty-add-existing')).toHaveLength(
-      4,
-    )
+    expect(
+      screen.getAllByTestId('plan-matrix-empty-add-existing'),
+    ).toHaveLength(4)
     expect(screen.queryAllByTestId('plan-matrix-card')).toHaveLength(0)
   })
 })

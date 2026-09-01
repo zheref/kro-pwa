@@ -1,6 +1,10 @@
 import { LiquidGlassFAB } from '../fab/LiquidGlassFAB'
 import { BothSchemes, Stage } from '../Stage'
-import { CHROME_LAYOUT, FAB_INSETS, pillTrailingPadding } from '../layout/chromeLayout'
+import {
+  CHROME_LAYOUT,
+  FAB_INSETS,
+  pillTrailingPadding,
+} from '../layout/chromeLayout'
 import { ActiveToastLayer } from './ActiveToastLayer'
 import { ActiveToastView } from './ActiveToastView'
 import { type ActiveToastInput, toActiveToast } from './activeToast'
@@ -131,7 +135,10 @@ export const Placement = {
       {() => (
         <>
           <CornerFab />
-          <ActiveToastLayer toast={toActiveToast(COMPLETED)} position="absolute" />
+          <ActiveToastLayer
+            toast={toActiveToast(COMPLETED)}
+            position="absolute"
+          />
         </>
       )}
     </BothSchemes>

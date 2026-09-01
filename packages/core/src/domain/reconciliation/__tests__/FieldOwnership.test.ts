@@ -118,7 +118,10 @@ describe('merging shadows', () => {
     // distinct across providers and dedupe within one.
     const merged = mergeShadows(
       [appleShadow({ sourceIdentifier: 'a b' })],
-      [appleShadow({ sourceIdentifier: 'a b' }), appleShadow({ sourceIdentifier: 'a' })],
+      [
+        appleShadow({ sourceIdentifier: 'a b' }),
+        appleShadow({ sourceIdentifier: 'a' }),
+      ],
     )
     expect(merged).toHaveLength(2)
   })

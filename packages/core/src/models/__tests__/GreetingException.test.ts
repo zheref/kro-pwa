@@ -23,15 +23,21 @@ describe('GreetingExceptions factories', () => {
 
 describe('greetingExceptionCopy', () => {
   it('offers reconnect guidance when the request never left the device', () => {
-    expect(greetingExceptionCopy(GreetingExceptions.offline())).toMatch(/offline/i)
+    expect(greetingExceptionCopy(GreetingExceptions.offline())).toMatch(
+      /offline/i,
+    )
   })
 
   it('says the greeting is missing, not that something broke, on a 404', () => {
-    expect(greetingExceptionCopy(GreetingExceptions.notFound())).toMatch(/could not find/i)
+    expect(greetingExceptionCopy(GreetingExceptions.notFound())).toMatch(
+      /could not find/i,
+    )
   })
 
   it('never leaks the developer-facing message into user copy — a malformed payload', () => {
-    const copy = greetingExceptionCopy(GreetingExceptions.malformed('issued_at was not a date'))
+    const copy = greetingExceptionCopy(
+      GreetingExceptions.malformed('issued_at was not a date'),
+    )
 
     expect(copy).not.toContain('issued_at')
   })

@@ -47,9 +47,7 @@ describe('the regular-width header', () => {
 
   it('prints the "N left today" line the day actually has', () => {
     const content = headerFor(doSurfaceMocks.typicalDay, true)
-    render(
-      <DoHeaderFragment content={content} rings={[]} showsRings={false} />,
-    )
+    render(<DoHeaderFragment content={content} rings={[]} showsRings={false} />)
 
     expect(screen.getByTestId('do-header-subtitle').textContent).toBe(
       `${remainingCountOf(doSurfaceMocks.typicalDay)} left today`,

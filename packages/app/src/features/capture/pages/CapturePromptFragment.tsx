@@ -55,7 +55,10 @@ import { Input } from '../../../design/system/primitives/input'
 import { SheetContent } from '../../../design/system/primitives/sheet'
 import { colorVar, radiusVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
-import type { CaptureTimeEditOutcome, CaptureTimeField } from '../CaptureFeature'
+import type {
+  CaptureTimeEditOutcome,
+  CaptureTimeField,
+} from '../CaptureFeature'
 import {
   type CaptureDestination,
   type CaptureDraft,
@@ -708,7 +711,11 @@ function TimePanel({
           Clear
         </Button>
         <span className="flex-1" />
-        <Button variant="primary" size="sm" onClick={() => onEnd(field, 'done')}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => onEnd(field, 'done')}
+        >
           <Check size={12} aria-hidden />
           Done
         </Button>

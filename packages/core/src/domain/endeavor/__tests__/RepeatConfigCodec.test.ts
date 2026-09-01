@@ -43,14 +43,19 @@ describe('encoded shape matches Swift’s Codable output', () => {
   })
 
   it('writes a weekly base with the lowercase day NAMES', () => {
-    expect(encodeRepeatBase(weeklyBase([WeekDay.monday, WeekDay.friday]))).toEqual({
+    expect(
+      encodeRepeatBase(weeklyBase([WeekDay.monday, WeekDay.friday])),
+    ).toEqual({
       type: 'weekly',
       weekdays: ['monday', 'friday'],
     })
   })
 
   it('writes a monthly base with just `day`', () => {
-    expect(encodeRepeatBase(monthlyBase(15))).toEqual({ type: 'monthly', day: 15 })
+    expect(encodeRepeatBase(monthlyBase(15))).toEqual({
+      type: 'monthly',
+      day: 15,
+    })
   })
 
   it('writes a yearly base with `month` as a NUMBER, not a name', () => {
@@ -69,9 +74,9 @@ describe('encoded shape matches Swift’s Codable output', () => {
   })
 
   it('serializes to the exact JSON KroApple writes', () => {
-    expect(JSON.stringify(encodeRepeatConfig(makeRepeatConfig(dailyBase())))).toBe(
-      '{"base":{"type":"daily"},"everyOther":1}',
-    )
+    expect(
+      JSON.stringify(encodeRepeatConfig(makeRepeatConfig(dailyBase()))),
+    ).toBe('{"base":{"type":"daily"},"everyOther":1}')
     expect(
       JSON.stringify(
         encodeRepeatConfig(makeRepeatConfig(yearlyBase(29, Month.february), 4)),
@@ -136,7 +141,9 @@ describe('round-trip — all four bases (AC 3)', () => {
 describe('decoding a rule written by KroApple', () => {
   it('accepts a literal Swift-encoded daily rule', () => {
     expect(
-      decodeRepeatConfig(JSON.parse('{"base":{"type":"daily"},"everyOther":1}')),
+      decodeRepeatConfig(
+        JSON.parse('{"base":{"type":"daily"},"everyOther":1}'),
+      ),
     ).toEqual({ ok: true, value: makeRepeatConfig(dailyBase(), 1) })
   })
 
@@ -155,7 +162,10 @@ describe('decoding a rule written by KroApple', () => {
 
   it('defaults a missing `everyOther` to canon’s 1', () => {
     const decoded = decodeRepeatConfig({ base: { type: 'monthly', day: 5 } })
-    expect(decoded).toEqual({ ok: true, value: makeRepeatConfig(monthlyBase(5), 1) })
+    expect(decoded).toEqual({
+      ok: true,
+      value: makeRepeatConfig(monthlyBase(5), 1),
+    })
   })
 
   it('ignores keys the case does not use', () => {
@@ -177,12 +187,19 @@ describe('wire tolerance matches canon, deliberately', () => {
 
   it('accepts a day of 0, which no calendar has', () => {
     const decoded = decodeRepeatConfig({ base: { type: 'monthly', day: 0 } })
-    expect(decoded).toEqual({ ok: true, value: makeRepeatConfig(monthlyBase(0)) })
+    expect(decoded).toEqual({
+      ok: true,
+      value: makeRepeatConfig(monthlyBase(0)),
+    })
   })
 
   it('accepts a negative day and a day past the end of any month', () => {
-    expect(decodeRepeatConfig({ base: { type: 'monthly', day: -5 } }).ok).toBe(true)
-    expect(decodeRepeatConfig({ base: { type: 'monthly', day: 99 } }).ok).toBe(true)
+    expect(decodeRepeatConfig({ base: { type: 'monthly', day: -5 } }).ok).toBe(
+      true,
+    )
+    expect(decodeRepeatConfig({ base: { type: 'monthly', day: 99 } }).ok).toBe(
+      true,
+    )
   })
 
   it('accepts an everyOther of 0 and a negative one', () => {
@@ -195,9 +212,9 @@ describe('wire tolerance matches canon, deliberately', () => {
   })
 
   it('still rejects the SHAPE — a non-number day or multiplier', () => {
-    expect(decodeRepeatConfig({ base: { type: 'monthly', day: '15' } }).ok).toBe(
-      false,
-    )
+    expect(
+      decodeRepeatConfig({ base: { type: 'monthly', day: '15' } }).ok,
+    ).toBe(false)
     expect(
       decodeRepeatConfig({ base: { type: 'daily' }, everyOther: 'two' }).ok,
     ).toBe(false)
@@ -265,7 +282,9 @@ describe('decoding failures are typed, never thrown', () => {
       ok: false,
       error: expect.objectContaining({ kind: 'missingField' }),
     })
-    expect(decodeRepeatConfig({ base: { type: 'monthly', day: '15' } })).toEqual({
+    expect(
+      decodeRepeatConfig({ base: { type: 'monthly', day: '15' } }),
+    ).toEqual({
       ok: false,
       error: expect.objectContaining({ kind: 'invalidDay' }),
     })
@@ -335,7 +354,9 @@ describe('repeatConfigExceptionCopy', () => {
     const failure = decodeRepeatConfig({ base: { type: 'hourly' } })
     expect(failure.ok).toBe(false)
     if (failure.ok) return
-    expect(repeatConfigExceptionCopy(failure.error)).not.toBe(failure.error.message)
+    expect(repeatConfigExceptionCopy(failure.error)).not.toBe(
+      failure.error.message,
+    )
   })
 
   it('gives a distinct sentence to each of the eight kinds', () => {

@@ -45,13 +45,17 @@ describe('makePerformFragment', () => {
   })
 
   it('keeps an explicit null end', () => {
-    expect(makePerformFragment({ startedAt: DATE, endedAt: null }).endedAt).toBeNull()
+    expect(
+      makePerformFragment({ startedAt: DATE, endedAt: null }).endedAt,
+    ).toBeNull()
   })
 })
 
 describe('performFragmentDuration', () => {
   it('measures a closed fragment in seconds', () => {
-    expect(performFragmentDuration(performFragmentMocks.fullPomodoro)).toBe(1500)
+    expect(performFragmentDuration(performFragmentMocks.fullPomodoro)).toBe(
+      1500,
+    )
   })
 
   it('is null while the fragment is still running — never "so far"', () => {
@@ -63,13 +67,15 @@ describe('performFragmentDuration', () => {
   })
 
   it('is negative when the end precedes the start, rather than clamping', () => {
-    expect(performFragmentDuration(performFragmentMocks.endsBeforeItStarts)).toBe(
-      -1500,
-    )
+    expect(
+      performFragmentDuration(performFragmentMocks.endsBeforeItStarts),
+    ).toBe(-1500)
   })
 
   it('measures across midnight without losing the day boundary', () => {
-    expect(performFragmentDuration(performFragmentMocks.acrossMidnight)).toBe(2400)
+    expect(performFragmentDuration(performFragmentMocks.acrossMidnight)).toBe(
+      2400,
+    )
   })
 })
 

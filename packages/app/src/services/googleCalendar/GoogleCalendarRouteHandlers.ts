@@ -492,7 +492,10 @@ export const resolveGoogleConnection = async (
 /** `from` / `to` as instants, or the typed failure. */
 export const parseGoogleEventsQuery = (
   url: string,
-): Result<{ readonly from: Date; readonly to: Date }, GoogleCalendarException> => {
+): Result<
+  { readonly from: Date; readonly to: Date },
+  GoogleCalendarException
+> => {
   let parsed: URL
   try {
     parsed = new URL(url)
@@ -567,7 +570,10 @@ export const listGoogleCalendars = async (
       accessToken: access.value.accessToken,
     })
     return ok(
-      json({ calendars: googleCalendarSummariesFrom(entries) }, renewalExtras(access.value)),
+      json(
+        { calendars: googleCalendarSummariesFrom(entries) },
+        renewalExtras(access.value),
+      ),
     )
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))
@@ -618,7 +624,10 @@ export const logGoogleSession = async (
       calendarName: null,
     }
     return ok(
-      json({ events: [envelope] }, { status: 201, ...renewalExtras(access.value) }),
+      json(
+        { events: [envelope] },
+        { status: 201, ...renewalExtras(access.value) },
+      ),
     )
   } catch (error) {
     return err(googleCalendarExceptionFrom(error))

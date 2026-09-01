@@ -10,7 +10,9 @@ describe('EmptyDayStateView — the Do tab promotion inset', () => {
     render(<EmptyDayStateView />)
 
     expect(screen.getByText('Start Building Your Day')).not.toBeNull()
-    expect(screen.getByText(/Connect your calendar and reminders/)).not.toBeNull()
+    expect(
+      screen.getByText(/Connect your calendar and reminders/),
+    ).not.toBeNull()
   })
 
   it('raises the create intent, at the 44px touch floor', async () => {
@@ -33,19 +35,30 @@ describe('EmptyDayStateView — the Do tab promotion inset', () => {
     render(<EmptyDayStateView onCreateEndeavor={() => undefined} />)
 
     const button = screen.getByRole('button', { name: /Create/ })
-    expect(button.style.backgroundImage).toContain('--kro-color-header-gradient-indigo')
-    expect(button.style.backgroundImage).toContain('--kro-color-header-gradient-grape')
+    expect(button.style.backgroundImage).toContain(
+      '--kro-color-header-gradient-indigo',
+    )
+    expect(button.style.backgroundImage).toContain(
+      '--kro-color-header-gradient-grape',
+    )
   })
 
   it('draws the inset as a pressed-in surface, not a raised card', () => {
     const { container } = render(<EmptyDayStateView />)
 
-    const inset = container.querySelector('[data-slot="empty-day-state"]') as HTMLElement
+    const inset = container.querySelector(
+      '[data-slot="empty-day-state"]',
+    ) as HTMLElement
     expect(inset.style.boxShadow).toContain('inset')
   })
 
   it('lets a surface supply its own copy without forking the component', () => {
-    render(<EmptyDayStateView title="Nothing scheduled" message="Your day is clear." />)
+    render(
+      <EmptyDayStateView
+        title="Nothing scheduled"
+        message="Your day is clear."
+      />,
+    )
 
     expect(screen.getByText('Nothing scheduled')).not.toBeNull()
   })
@@ -56,7 +69,9 @@ describe('InboxTrayEmptyState', () => {
     render(<InboxTrayEmptyState />)
 
     expect(screen.getByText('Inbox is empty')).not.toBeNull()
-    expect(screen.getByText('Recently added endeavors will appear here')).not.toBeNull()
+    expect(
+      screen.getByText('Recently added endeavors will appear here'),
+    ).not.toBeNull()
   })
 
   it('centres itself in whatever height the pinned header leaves — canon’s Spacer/Spacer', () => {

@@ -210,10 +210,8 @@ export const withSessionPoints = (
   editingField(endeavor, EndeavorField.sessionPoints, { sessionPoints })
 
 /** The Kro-enhanced 1–5 value rating. Guarded on `.value`. */
-export const withValue = (
-  endeavor: Endeavor,
-  value: number | null,
-): Endeavor => editingField(endeavor, EndeavorField.value, { value })
+export const withValue = (endeavor: Endeavor, value: number | null): Endeavor =>
+  editingField(endeavor, EndeavorField.value, { value })
 
 /** The Kro-enhanced 1–5 effort rating. Guarded on `.effort`. */
 export const withEffort = (
@@ -222,10 +220,8 @@ export const withEffort = (
 ): Endeavor => editingField(endeavor, EndeavorField.effort, { effort })
 
 /** The Kro-enhanced expiry — **not** `due`. Guarded on `.expiry`. */
-export const withExpiry = (
-  endeavor: Endeavor,
-  expiry: Date | null,
-): Endeavor => editingField(endeavor, EndeavorField.expiry, { expiry })
+export const withExpiry = (endeavor: Endeavor, expiry: Date | null): Endeavor =>
+  editingField(endeavor, EndeavorField.expiry, { expiry })
 
 /** Guarded on `.tags`. `null` restores "never tagged". */
 export const withTags = (
@@ -299,10 +295,7 @@ export const withAddedDefer = (endeavor: Endeavor, entry: Defer): Endeavor =>
   }))
 
 /** `withRemovedDefer(at:)`. No-op on an out-of-bounds index, as canon is. */
-export const withRemovedDefer = (
-  endeavor: Endeavor,
-  index: number,
-): Endeavor =>
+export const withRemovedDefer = (endeavor: Endeavor, index: number): Endeavor =>
   editingRelation(endeavor, EndeavorRelation.defers, (current) =>
     index < 0 || index >= current.defers.length
       ? current

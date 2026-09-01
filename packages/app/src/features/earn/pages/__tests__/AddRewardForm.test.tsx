@@ -24,9 +24,9 @@ describe('AddRewardForm', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Add' }).hasAttribute('disabled')).toBe(
-      true,
-    )
+    expect(
+      screen.getByRole('button', { name: 'Add' }).hasAttribute('disabled'),
+    ).toBe(true)
   })
 
   it('enables Add once a title is present', () => {
@@ -45,9 +45,9 @@ describe('AddRewardForm', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Add' }).hasAttribute('disabled')).toBe(
-      false,
-    )
+    expect(
+      screen.getByRole('button', { name: 'Add' }).hasAttribute('disabled'),
+    ).toBe(false)
   })
 
   it('dispatches title/glyph/notes changes as the user types', () => {

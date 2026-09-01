@@ -67,7 +67,9 @@ export interface DurationDialProps {
 }
 
 /** `SessionSetupFeature.availablePresets`, verbatim. */
-export const DEFAULT_DURATION_PRESETS: readonly number[] = [15, 20, 25, 45, 60, 90]
+export const DEFAULT_DURATION_PRESETS: readonly number[] = [
+  15, 20, 25, 45, 60, 90,
+]
 
 /** `DurationDial.maxDuration`. */
 export const DEFAULT_MAX_SECONDS = 3600
@@ -225,7 +227,10 @@ export function DurationDial({
 
   return (
     <div
-      className={cn('inline-flex flex-col items-center gap-kro-medium', className)}
+      className={cn(
+        'inline-flex flex-col items-center gap-kro-medium',
+        className,
+      )}
       style={style}
       data-kro-duration-dial=""
     >

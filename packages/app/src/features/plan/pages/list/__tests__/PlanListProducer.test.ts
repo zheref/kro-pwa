@@ -16,7 +16,11 @@ import {
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../../services/localStore/InMemoryLocalStore'
-import { PLAN_REFERENCE_DAY, PLAN_REFERENCE_NOW, planAt } from '../../../PlanMocks'
+import {
+  PLAN_REFERENCE_DAY,
+  PLAN_REFERENCE_NOW,
+  planAt,
+} from '../../../PlanMocks'
 import { deletePlanEndeavorThunk } from '../PlanListProducer'
 
 const task = (id: string): Endeavor =>
@@ -67,7 +71,10 @@ describe('deletePlanEndeavorThunk', () => {
     ])
 
     await store.dispatch(
-      deletePlanEndeavorThunk({ endeavorId: 'doomed', now: PLAN_REFERENCE_NOW }),
+      deletePlanEndeavorThunk({
+        endeavorId: 'doomed',
+        now: PLAN_REFERENCE_NOW,
+      }),
     )
 
     const records = await localStore.endeavors.all()

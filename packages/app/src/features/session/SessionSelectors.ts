@@ -421,7 +421,9 @@ export const SESSION_TOMATO_DISPLAY_CAP = 10
 
 export const selectTomatoRow = createSelector(
   [selectTomatoCount],
-  (count): { readonly glyphs: number; readonly overflowLabel: string | null } => ({
+  (
+    count,
+  ): { readonly glyphs: number; readonly overflowLabel: string | null } => ({
     glyphs: Math.min(count, SESSION_TOMATO_DISPLAY_CAP),
     overflowLabel: count > SESSION_TOMATO_DISPLAY_CAP ? `× ${count}` : null,
   }),

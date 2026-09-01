@@ -25,7 +25,11 @@ import {
   tabletSurface,
 } from '../MainMocks'
 import { MainShellFragment } from '../MainShellFragment'
-import { searchDestination, sidebarSections, tabBarElements } from '../NavigationSections'
+import {
+  searchDestination,
+  sidebarSections,
+  tabBarElements,
+} from '../NavigationSections'
 import { DestinationKind } from '../SidebarDestination'
 import { ToolbarSlot, ToolbarSlotsProvider } from '../ToolbarSlots'
 
@@ -83,7 +87,7 @@ describe('acceptance criterion 1 — narrow', () => {
     expect(screen.queryByTestId('shell-sidebar')).toBeNull()
   })
 
-  it('carries Profile and Inbox on the shell\'s own bar, as canon\'s phone toolbar does', () => {
+  it("carries Profile and Inbox on the shell's own bar, as canon's phone toolbar does", () => {
     renderShell(handheldSurface)
 
     const toolbar = screen.getByTestId('shell-tab-bar-toolbar')

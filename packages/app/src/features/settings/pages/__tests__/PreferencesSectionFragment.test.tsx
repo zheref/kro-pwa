@@ -88,10 +88,14 @@ describe('the control matches the declared value shape', () => {
 
     expect(chips).toHaveLength(7)
     expect(
-      within(group).getByRole('button', { name: 'Monday' }).getAttribute('aria-pressed'),
+      within(group)
+        .getByRole('button', { name: 'Monday' })
+        .getAttribute('aria-pressed'),
     ).toBe('true')
     expect(
-      within(group).getByRole('button', { name: 'Sunday' }).getAttribute('aria-pressed'),
+      within(group)
+        .getByRole('button', { name: 'Sunday' })
+        .getAttribute('aria-pressed'),
     ).toBe('false')
   })
 
@@ -107,12 +111,16 @@ describe('the control matches the declared value shape', () => {
     expect(value).not.toBe(defaultSettingValues['general.workingDays'])
   })
 
-  it("renders an int as canon Stepper, stepping by canon step", async () => {
+  it('renders an int as canon Stepper, stepping by canon step', async () => {
     const onChangeSetting = vi.fn()
     renderPane({ group: SettingGroup.session, onChangeSetting })
 
-    expect(screen.getAllByTestId('stepper-value')[0]?.textContent).toBe('20 min')
-    await userEvent.click(screen.getByRole('button', { name: 'Increase Session' }))
+    expect(screen.getAllByTestId('stepper-value')[0]?.textContent).toBe(
+      '20 min',
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Increase Session' }),
+    )
 
     expect(onChangeSetting).toHaveBeenCalledWith('session.defaultDuration', 25)
   })
@@ -128,13 +136,15 @@ describe('the control matches the declared value shape', () => {
     expect(onChangeSetting).toHaveBeenCalledWith('earn.pointsFormula', 'legacy')
   })
 
-  it("renders the accent choice as canon swatch radio group", () => {
+  it('renders the accent choice as canon swatch radio group', () => {
     renderPane()
 
     const swatches = screen.getByRole('radiogroup', { name: 'Accent color' })
     expect(within(swatches).getAllByRole('radio')).toHaveLength(6)
     expect(
-      within(swatches).getByRole('radio', { name: 'Blue' }).getAttribute('aria-checked'),
+      within(swatches)
+        .getByRole('radio', { name: 'Blue' })
+        .getAttribute('aria-checked'),
     ).toBe('true')
   })
 })
@@ -145,7 +155,7 @@ describe('the working-hours warning', () => {
     expect(screen.queryByTestId('working-hours-warning')).toBeNull()
   })
 
-  it("shows canon sentence when the end is not after the start", () => {
+  it('shows canon sentence when the end is not after the start', () => {
     renderPane({
       values: SettingsMocks.generalPaneInvalidHours.values,
       isWorkingHoursValid: false,
@@ -162,20 +172,28 @@ describe('the working-hours warning', () => {
       isWorkingHoursValid: false,
     })
 
-    expect((screen.getByLabelText('Start') as HTMLInputElement).value).toBe('18:00')
-    expect((screen.getByLabelText('End') as HTMLInputElement).value).toBe('09:00')
+    expect((screen.getByLabelText('Start') as HTMLInputElement).value).toBe(
+      '18:00',
+    )
+    expect((screen.getByLabelText('End') as HTMLInputElement).value).toBe(
+      '09:00',
+    )
   })
 })
 
 describe('the schema drives the badges', () => {
-  it("marks the device-local options with canon On this device", () => {
+  it('marks the device-local options with canon On this device', () => {
     renderPane()
 
     const themeRow = screen
       .getAllByTestId('setting-row')
-      .find((row) => row.getAttribute('data-setting-key') === 'general.appearance')
+      .find(
+        (row) => row.getAttribute('data-setting-key') === 'general.appearance',
+      )
 
-    expect(within(themeRow as HTMLElement).getByTestId('scope-badge')).toBeTruthy()
+    expect(
+      within(themeRow as HTMLElement).getByTestId('scope-badge'),
+    ).toBeTruthy()
   })
 
   it('does not badge a cloud-scoped option', () => {
@@ -183,7 +201,10 @@ describe('the schema drives the badges', () => {
 
     const row = screen
       .getAllByTestId('setting-row')
-      .find((candidate) => candidate.getAttribute('data-setting-key') === 'plan.listSort')
+      .find(
+        (candidate) =>
+          candidate.getAttribute('data-setting-key') === 'plan.listSort',
+      )
 
     expect(within(row as HTMLElement).queryByTestId('scope-badge')).toBeNull()
   })
@@ -195,35 +216,48 @@ describe('the schema drives the badges', () => {
       .getAllByTestId('setting-row')
       .find(
         (candidate) =>
-          candidate.getAttribute('data-setting-key') === 'earn.showWeeklyChallenge',
+          candidate.getAttribute('data-setting-key') ===
+          'earn.showWeeklyChallenge',
       )
 
-    expect(within(row as HTMLElement).getByTestId('declared-badge')).toBeTruthy()
+    expect(
+      within(row as HTMLElement).getByTestId('declared-badge'),
+    ).toBeTruthy()
   })
 })
 
 describe('the pre-load guard', () => {
-  it("disables every control until the values arrive — canon disabled(!isLoaded)", () => {
+  it('disables every control until the values arrive — canon disabled(!isLoaded)', () => {
     renderPane({ isLoaded: false })
 
     expect(
-      (screen.getByRole('switch', { name: 'Overdue alerts' }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole('switch', {
+          name: 'Overdue alerts',
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true)
-    expect((screen.getByLabelText('Start') as HTMLInputElement).disabled).toBe(true)
+    expect((screen.getByLabelText('Start') as HTMLInputElement).disabled).toBe(
+      true,
+    )
   })
 
   it('re-enables them once loaded', () => {
     renderPane({ isLoaded: true })
 
     expect(
-      (screen.getByRole('switch', { name: 'Overdue alerts' }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole('switch', {
+          name: 'Overdue alerts',
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(false)
   })
 
   it('surfaces a failure banner above the form without hiding it', () => {
-    renderPane({ errorCopy: 'Your preferences could not be read on this device.' })
+    renderPane({
+      errorCopy: 'Your preferences could not be read on this device.',
+    })
 
     expect(
       screen.getByText('Your preferences could not be read on this device.'),

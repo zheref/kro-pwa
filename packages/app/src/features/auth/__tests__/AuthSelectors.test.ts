@@ -76,7 +76,9 @@ describe('the session', () => {
 
   it('reports nobody while a sign-in is in flight', () => {
     expect(selectCurrentUser(rootWith(AuthMocks.authenticating))).toBeNull()
-    expect(selectIsAuthenticated(rootWith(AuthMocks.authenticating))).toBe(false)
+    expect(selectIsAuthenticated(rootWith(AuthMocks.authenticating))).toBe(
+      false,
+    )
   })
 
   it('distinguishes "not resolved yet" from "signed out", so the shell does not flash', () => {
@@ -90,7 +92,9 @@ describe('the session', () => {
       AuthFlow.emailPassword,
     )
     expect(selectAuthenticatingFlow(rootWith(AuthMocks.signedIn))).toBeNull()
-    expect(selectIsAuthenticating(rootWith(AuthMocks.authenticating))).toBe(true)
+    expect(selectIsAuthenticating(rootWith(AuthMocks.authenticating))).toBe(
+      true,
+    )
   })
 })
 
@@ -136,7 +140,9 @@ describe('the error surface', () => {
         exception: AuthExceptions.incompleteForm('Please enter your name.'),
       },
     }
-    expect(selectAuthErrorCopy(rootWith(incomplete))).toBe('Please enter your name.')
+    expect(selectAuthErrorCopy(rootWith(incomplete))).toBe(
+      'Please enter your name.',
+    )
   })
 })
 
@@ -214,9 +220,9 @@ describe('the profile control', () => {
 
 describe('the existing-local-data dialog', () => {
   it('is presented when the dialog is shown', () => {
-    expect(selectIsLocalDataDialogPresented(rootWith(AuthMocks.localDataDialog))).toBe(
-      true,
-    )
+    expect(
+      selectIsLocalDataDialogPresented(rootWith(AuthMocks.localDataDialog)),
+    ).toBe(true)
   })
 
   it('is not presented while a choice is being applied, so it cannot be answered twice', () => {
@@ -226,11 +232,15 @@ describe('the existing-local-data dialog', () => {
   })
 
   it('is not presented in an ordinary signed-in session', () => {
-    expect(selectIsLocalDataDialogPresented(rootWith(AuthMocks.signedIn))).toBe(false)
+    expect(selectIsLocalDataDialogPresented(rootWith(AuthMocks.signedIn))).toBe(
+      false,
+    )
   })
 
   it('reports the count the message interpolates, and zero when hidden', () => {
-    expect(selectLocalDataAnonymousCount(rootWith(AuthMocks.localDataDialog))).toBe(3)
+    expect(
+      selectLocalDataAnonymousCount(rootWith(AuthMocks.localDataDialog)),
+    ).toBe(3)
     expect(selectLocalDataAnonymousCount(rootWith(AuthMocks.signedIn))).toBe(0)
   })
 })
@@ -241,7 +251,9 @@ describe('the Settings hub footer', () => {
   })
 
   it('says Synced after a success', () => {
-    expect(selectSettingsSyncFooter(rootWith(AuthMocks.settingsSynced))).toBe('Synced')
+    expect(selectSettingsSyncFooter(rootWith(AuthMocks.settingsSynced))).toBe(
+      'Synced',
+    )
   })
 
   it('says the change is kept and will sync later when offline', () => {
@@ -251,12 +263,18 @@ describe('the Settings hub footer', () => {
   })
 
   it('prompts a signed-out user to sign in rather than reporting a failure', () => {
-    const signedOut = withSettingsSyncState(AuthMocks.signedOut, { kind: 'signedOut' })
-    expect(selectSettingsSyncFooter(rootWith(signedOut))).toBe('Sign in to sync')
+    const signedOut = withSettingsSyncState(AuthMocks.signedOut, {
+      kind: 'signedOut',
+    })
+    expect(selectSettingsSyncFooter(rootWith(signedOut))).toBe(
+      'Sign in to sync',
+    )
   })
 
   it('says it is syncing while an attempt is in flight', () => {
-    const syncing = withSettingsSyncState(AuthMocks.signedIn, { kind: 'syncing' })
+    const syncing = withSettingsSyncState(AuthMocks.signedIn, {
+      kind: 'syncing',
+    })
     expect(selectSettingsSyncFooter(rootWith(syncing))).toBe('Syncing…')
   })
 })
@@ -269,29 +287,37 @@ describe('the endeavor engine', () => {
   })
 
   it('reports a completed sweep with its tombstone count', () => {
-    const state = selectEndeavorSyncState(rootWith(AuthMocks.endeavorSyncCompleted))
+    const state = selectEndeavorSyncState(
+      rootWith(AuthMocks.endeavorSyncCompleted),
+    )
     expect(state).toMatchObject({ kind: 'completed', deleted: 1, pushed: 2 })
   })
 
   it('reports a failure with its typed exception', () => {
-    expect(selectEndeavorSyncState(rootWith(AuthMocks.endeavorSyncFailed))).toMatchObject(
-      { kind: 'failed' },
-    )
+    expect(
+      selectEndeavorSyncState(rootWith(AuthMocks.endeavorSyncFailed)),
+    ).toMatchObject({ kind: 'failed' })
   })
 })
 
 describe('the sign-out intents queue', () => {
   it('reports the withdrawal a sign-out raised', () => {
     expect(
-      selectPendingSignOutIntents(rootWith(AuthMocks.signedOutWithPendingIntents)),
+      selectPendingSignOutIntents(
+        rootWith(AuthMocks.signedOutWithPendingIntents),
+      ),
     ).toEqual(signOutIntents())
   })
 
   it('is empty in an ordinary signed-in session', () => {
-    expect(selectPendingSignOutIntents(rootWith(AuthMocks.signedIn))).toEqual([])
+    expect(selectPendingSignOutIntents(rootWith(AuthMocks.signedIn))).toEqual(
+      [],
+    )
   })
 
   it('is empty after a plain signed-out state with nothing owed', () => {
-    expect(selectPendingSignOutIntents(rootWith(AuthMocks.signedOut))).toEqual([])
+    expect(selectPendingSignOutIntents(rootWith(AuthMocks.signedOut))).toEqual(
+      [],
+    )
   })
 })

@@ -22,14 +22,27 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       >
         {label}
       </div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
         {children}
       </div>
     </div>
   )
 }
 
-function Stage({ theme = 'light', children }: { theme?: 'light' | 'dark'; children: ReactNode }) {
+function Stage({
+  theme = 'light',
+  children,
+}: {
+  theme?: 'light' | 'dark'
+  children: ReactNode
+}) {
   return (
     <div
       data-theme={theme}
@@ -115,10 +128,16 @@ export const Disabled = {
           Delete
         </Button>
       </Row>
-      <p style={{ fontSize: 13, color: 'var(--kro-color-fore-secondary)', maxWidth: '52ch' }}>
-        0.62 opacity, once per control. A wrapper that dims its subtree as well would
-        multiply the two to roughly 0.38 and put the control under the 3:1 floor for UI
-        elements.
+      <p
+        style={{
+          fontSize: 13,
+          color: 'var(--kro-color-fore-secondary)',
+          maxWidth: '52ch',
+        }}
+      >
+        0.62 opacity, once per control. A wrapper that dims its subtree as well
+        would multiply the two to roughly 0.38 and put the control under the 3:1
+        floor for UI elements.
       </p>
     </Stage>
   ),

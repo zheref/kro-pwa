@@ -29,10 +29,12 @@ describe('liveVibrationService', () => {
 
   it('reports supported where navigator.vibrate exists', () => {
     const { nav } = vibratingNavigator()
-    expect(makeLiveVibrationService({ navigator: nav }).isSupported()).toBe(true)
+    expect(makeLiveVibrationService({ navigator: nav }).isSupported()).toBe(
+      true,
+    )
   })
 
-  it('fires canon\'s single haptic as one short pulse on a timeline hold', () => {
+  it("fires canon's single haptic as one short pulse on a timeline hold", () => {
     const { nav, fired } = vibratingNavigator()
     const service = makeLiveVibrationService({ navigator: nav })
 

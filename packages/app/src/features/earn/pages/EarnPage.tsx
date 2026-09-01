@@ -117,14 +117,22 @@ export function EarnPage() {
     void dispatch(
       // Identity is the composition root's to supply, never the Producer's
       // — the same rule `MainShellPage.tsx`'s `onCommitDraftProject` states.
-      addRewardThunk({ draft: addRewardDraft, id: crypto.randomUUID(), now: new Date() }),
+      addRewardThunk({
+        draft: addRewardDraft,
+        id: crypto.randomUUID(),
+        now: new Date(),
+      }),
     )
   }, [dispatch, addRewardDraft])
 
   const onTapAddSuggestion = useCallback(
     (suggestion: Reward) => {
       void dispatch(
-        addSuggestionThunk({ suggestion, id: crypto.randomUUID(), now: new Date() }),
+        addSuggestionThunk({
+          suggestion,
+          id: crypto.randomUUID(),
+          now: new Date(),
+        }),
       )
     },
     [dispatch],
@@ -132,7 +140,9 @@ export function EarnPage() {
 
   const onTapEarnPreferences = useCallback(() => {
     void dispatch(
-      navigateToDestinationThunk({ destination: { kind: DestinationKind.settings } }),
+      navigateToDestinationThunk({
+        destination: { kind: DestinationKind.settings },
+      }),
     )
   }, [dispatch])
 
@@ -156,12 +166,18 @@ export function EarnPage() {
       onCancelClaim={onCancelClaim}
       onDelete={onDelete}
       onTapAddReward={onTapAddReward}
-      onChangeDraftTitle={(title) => dispatch(userDidChangeDraftTitle({ title }))}
-      onChangeDraftGlyph={(glyph) => dispatch(userDidChangeDraftGlyph({ glyph }))}
+      onChangeDraftTitle={(title) =>
+        dispatch(userDidChangeDraftTitle({ title }))
+      }
+      onChangeDraftGlyph={(glyph) =>
+        dispatch(userDidChangeDraftGlyph({ glyph }))
+      }
       onChangeDraftPoints={(pointsRequired) =>
         dispatch(userDidChangeDraftPoints({ pointsRequired }))
       }
-      onChangeDraftNotes={(notes) => dispatch(userDidChangeDraftNotes({ notes }))}
+      onChangeDraftNotes={(notes) =>
+        dispatch(userDidChangeDraftNotes({ notes }))
+      }
       onConfirmAddReward={onConfirmAddReward}
       onCancelAddReward={onCancelAddReward}
       onTapAddSuggestion={onTapAddSuggestion}

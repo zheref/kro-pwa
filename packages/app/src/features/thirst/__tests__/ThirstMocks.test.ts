@@ -1,6 +1,10 @@
 import { initialSettingsState } from '../../settings/SettingsState'
 import { describe, expect, it } from 'vitest'
-import { thirstEntryMocks, thirstStateMocks, THIRST_MOCK_FEATURE_KEY } from '../ThirstMocks'
+import {
+  thirstEntryMocks,
+  thirstStateMocks,
+  THIRST_MOCK_FEATURE_KEY,
+} from '../ThirstMocks'
 import { selectThirstVoteStatus } from '../ThirstSelectors'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
@@ -57,7 +61,9 @@ describe('thirstEntryMocks', () => {
   })
 
   it('unavailableOffline carries the offline exception with no counts loaded — offline before anything resolved', () => {
-    expect(thirstEntryMocks.unavailableOffline.voteStateException?.kind).toBe('offline')
+    expect(thirstEntryMocks.unavailableOffline.voteStateException?.kind).toBe(
+      'offline',
+    )
     expect(thirstEntryMocks.unavailableOffline.counts).toBeNull()
   })
 

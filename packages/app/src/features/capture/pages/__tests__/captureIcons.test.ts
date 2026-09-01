@@ -25,14 +25,14 @@ import {
 } from '../captureIcons'
 
 describe('the three maps stay disjoint', () => {
-  it('shadows no row of the design system\'s map', () => {
+  it("shadows no row of the design system's map", () => {
     const collisions = Object.keys(CAPTURE_SF_SYMBOL_TO_LUCIDE).filter(
       (name) => name in SF_SYMBOL_TO_LUCIDE,
     )
     expect(collisions).toEqual([])
   })
 
-  it('shadows no row of the endeavor kit\'s extension map', () => {
+  it("shadows no row of the endeavor kit's extension map", () => {
     const collisions = Object.keys(CAPTURE_SF_SYMBOL_TO_LUCIDE).filter(
       (name) => name in ENDEAVOR_SF_SYMBOL_TO_LUCIDE,
     )

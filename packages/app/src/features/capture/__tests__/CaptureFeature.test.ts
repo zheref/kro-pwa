@@ -146,13 +146,15 @@ describe('userDidEditTitle', () => {
 
   it('accepts a cleared field', () => {
     const typed = reduce(openPrompt, userDidEditTitle({ title: 'Book' }))
-    expect(reduce(typed, userDidEditTitle({ title: '' })).prompt?.draft.title).toBe(
-      '',
-    )
+    expect(
+      reduce(typed, userDidEditTitle({ title: '' })).prompt?.draft.title,
+    ).toBe('')
   })
 
   it('ignores a keystroke that lands after the prompt closed', () => {
-    expect(reduce(loaded, userDidEditTitle({ title: 'orphan' }))).toEqual(loaded)
+    expect(reduce(loaded, userDidEditTitle({ title: 'orphan' }))).toEqual(
+      loaded,
+    )
   })
 })
 
@@ -167,15 +169,15 @@ describe('userDidSelectKind', () => {
   it('keeps the typed title across the switch', () => {
     const typed = reduce(openPrompt, userDidEditTitle({ title: 'Team sync' }))
     expect(
-      reduce(typed, userDidSelectKind({ kind: CaptureKind.event })).prompt?.draft
-        .title,
+      reduce(typed, userDidSelectKind({ kind: CaptureKind.event })).prompt
+        ?.draft.title,
     ).toBe('Team sync')
   })
 
   it('ignores the chip when no prompt is open', () => {
-    expect(reduce(loaded, userDidSelectKind({ kind: CaptureKind.habit }))).toEqual(
-      loaded,
-    )
+    expect(
+      reduce(loaded, userDidSelectKind({ kind: CaptureKind.habit })),
+    ).toEqual(loaded)
   })
 })
 
@@ -276,8 +278,10 @@ describe('userDidPickRecurrence', () => {
       userDidPickRecurrence({ recurrence: { kind: 'daily', interval: 1 } }),
     )
     expect(
-      reduce(repeating, userDidPickRecurrence({ recurrence: { kind: 'never' } }))
-        .prompt?.draft.recurrence,
+      reduce(
+        repeating,
+        userDidPickRecurrence({ recurrence: { kind: 'never' } }),
+      ).prompt?.draft.recurrence,
     ).toEqual({ kind: 'never' })
   })
 
@@ -396,7 +400,9 @@ describe('onTriageRequestConsumed', () => {
       loaded,
       userDidTapTriage({ endeavorId: 'fresh-task', now: CAPTURE_MOCK_NOW }),
     )
-    expect(reduce(requested, onTriageRequestConsumed()).triageRequest).toBeNull()
+    expect(
+      reduce(requested, onTriageRequestConsumed()).triageRequest,
+    ).toBeNull()
   })
 
   it('is harmless when nothing was requested', () => {
@@ -504,7 +510,10 @@ describe('userDidRequestAddForToday', () => {
     expect(
       reduce(
         loaded,
-        userDidRequestAddForToday({ endeavorId: 'gone', now: CAPTURE_MOCK_NOW }),
+        userDidRequestAddForToday({
+          endeavorId: 'gone',
+          now: CAPTURE_MOCK_NOW,
+        }),
       ).addForToday,
     ).toBeNull()
   })
@@ -592,9 +601,9 @@ describe('onUndoWindowTicked', () => {
   })
 
   it('is harmless when nothing is armed', () => {
-    expect(reduce(loaded, onUndoWindowTicked({ now: CAPTURE_MOCK_NOW }))).toEqual(
-      loaded,
-    )
+    expect(
+      reduce(loaded, onUndoWindowTicked({ now: CAPTURE_MOCK_NOW })),
+    ).toEqual(loaded)
   })
 })
 
@@ -701,9 +710,7 @@ describe('submitting a capture', () => {
     expect(endeavors.map((value) => value.id)).not.toContain('never-captured')
     expect(load.kind).toBe('failed')
     if (load.kind === 'failed') {
-      expect(load.exception.message).toBe(
-        'Pick an end time to add this event.',
-      )
+      expect(load.exception.message).toBe('Pick an end time to add this event.')
     }
   })
 
@@ -730,7 +737,8 @@ describe('submitting a capture', () => {
     const { load, endeavors } = store.getState().capture
     expect(endeavors).toHaveLength(before)
     expect(load.kind).toBe('failed')
-    if (load.kind === 'failed') expect(load.exception.kind).toBe('captureFailed')
+    if (load.kind === 'failed')
+      expect(load.exception.kind).toBe('captureFailed')
   })
 })
 

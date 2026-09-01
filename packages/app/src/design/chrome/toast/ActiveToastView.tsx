@@ -64,7 +64,11 @@ const ACTION_STYLES: Record<ToastActionStyle, CSSProperties> = {
   },
 }
 
-export function ActiveToastView({ toast, className, style }: ActiveToastViewProps) {
+export function ActiveToastView({
+  toast,
+  className,
+  style,
+}: ActiveToastViewProps) {
   const Icon = toast.icon ? iconForSymbol(toast.icon) : null
   const iconColor = TOAST_ICON_COLOR_VAR[toast.iconColor ?? 'primary']
   const hasReward = typeof toast.rewardAmount === 'number'
@@ -87,7 +91,15 @@ export function ActiveToastView({ toast, className, style }: ActiveToastViewProp
       }}
     >
       {/* Leading: icon + message + reward. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
         {Icon ? (
           <Icon
             aria-hidden="true"
@@ -103,7 +115,14 @@ export function ActiveToastView({ toast, className, style }: ActiveToastViewProp
           />
         ) : null}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            minWidth: 0,
+          }}
+        >
           <span
             data-kro-toast-message=""
             style={{
@@ -140,7 +159,11 @@ export function ActiveToastView({ toast, className, style }: ActiveToastViewProp
                 point value beside it is what actually conveys the amount, and
                 it is text, so a screen reader gets it either way.
               */}
-              <RewardGlyph className="size-3.5" aria-hidden="true" strokeWidth={2.5} />
+              <RewardGlyph
+                className="size-3.5"
+                aria-hidden="true"
+                strokeWidth={2.5}
+              />
               <span>{`+${toast.rewardAmount}`}</span>
             </span>
           ) : null}
@@ -162,7 +185,9 @@ export function ActiveToastView({ toast, className, style }: ActiveToastViewProp
             flexShrink: 0,
           }}
         >
-          {toast.secondaryAction ? <ToastActionButton action={toast.secondaryAction} /> : null}
+          {toast.secondaryAction ? (
+            <ToastActionButton action={toast.secondaryAction} />
+          ) : null}
           <ToastActionButton action={toast.primaryAction} />
         </div>
       ) : null}

@@ -18,7 +18,7 @@ import {
 afterEach(cleanup)
 
 describe('ToolbarSlot', () => {
-  it('renders a destination\'s control into the shell\'s outlet', () => {
+  it("renders a destination's control into the shell's outlet", () => {
     render(
       <ToolbarSlotsProvider>
         <header>
@@ -72,7 +72,7 @@ describe('ToolbarSlot', () => {
     ).toBe('eye')
   })
 
-  it('keeps the slotted control inside its OWNER\'s context, not the shell\'s', async () => {
+  it("keeps the slotted control inside its OWNER's context, not the shell's", async () => {
     // The whole reason this is a portal rather than a node registry: the
     // control's handlers keep working, and its owner's state drives it.
     const onClick = vi.fn()
@@ -107,7 +107,7 @@ describe('ToolbarSlot', () => {
     expect(screen.getByRole('button', { name: 'tapped 1' })).toBeTruthy()
   })
 
-  it('does not re-render the shell when a slot\'s content changes', () => {
+  it("does not re-render the shell when a slot's content changes", () => {
     // A registry would need a setState per render of the slot's owner; this
     // asserts the shell renders once and stays put.
     let shellRenders = 0
@@ -156,7 +156,7 @@ describe('useToolbarOutletPresent', () => {
     expect(screen.getByText('false')).toBeTruthy()
   })
 
-  it('reports true once the shell\'s outlet has mounted', () => {
+  it("reports true once the shell's outlet has mounted", () => {
     function Probe() {
       return <span>present: {String(useToolbarOutletPresent('primary'))}</span>
     }
@@ -173,7 +173,7 @@ describe('useToolbarOutletPresent', () => {
 })
 
 describe('the placement set', () => {
-  it('covers both toolbars canon has — the Mac\'s two groups and the phone\'s two sides', () => {
+  it("covers both toolbars canon has — the Mac's two groups and the phone's two sides", () => {
     expect(TOOLBAR_PLACEMENTS).toEqual([
       'navigation',
       'primary',
@@ -188,7 +188,11 @@ describe('the placement set', () => {
 })
 
 describe('a slot claims its placement while it is mounted', () => {
-  function FillProbe({ placement }: { readonly placement: 'profile' | 'primary' }) {
+  function FillProbe({
+    placement,
+  }: {
+    readonly placement: 'profile' | 'primary'
+  }) {
     const filled = useToolbarSlotFilled(placement)
     return <p>{`filled: ${String(filled)}`}</p>
   }

@@ -96,7 +96,11 @@ export const GoogleCalendarExceptions = {
   rateLimited: (): GoogleCalendarException =>
     exception('rateLimited', 'Google is rate-limiting this app.', true),
   conflict: (): GoogleCalendarException =>
-    exception('conflict', 'The event changed in Google since it was read.', true),
+    exception(
+      'conflict',
+      'The event changed in Google since it was read.',
+      true,
+    ),
   notFound: (): GoogleCalendarException =>
     exception('notFound', 'Google has no such calendar or event.', false),
   offline: (): GoogleCalendarException =>
@@ -104,7 +108,11 @@ export const GoogleCalendarExceptions = {
   server: (status: number): GoogleCalendarException =>
     exception('server', `Google answered HTTP ${status}.`, true),
   malformedResponse: (what: string): GoogleCalendarException =>
-    exception('malformedResponse', `Google returned an unreadable ${what}.`, true),
+    exception(
+      'malformedResponse',
+      `Google returned an unreadable ${what}.`,
+      true,
+    ),
   invalidRequest: (why: string): GoogleCalendarException =>
     exception('invalidRequest', why, false),
   unknown: (message: string): GoogleCalendarException =>

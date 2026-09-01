@@ -75,7 +75,8 @@ export const selectDoLanes = createSelector(
  */
 export const selectDoFeaturedNowLane = createSelector(
   [selectDoSlice],
-  (slice) => centredFeaturedWindow(slice.lanes.featuredNow, slice.featuredCapacity),
+  (slice) =>
+    centredFeaturedWindow(slice.lanes.featuredNow, slice.featuredCapacity),
 )
 
 /**

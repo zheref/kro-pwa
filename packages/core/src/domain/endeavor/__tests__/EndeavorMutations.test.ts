@@ -8,7 +8,11 @@
  */
 import { describe, expect, it } from 'vitest'
 import { makeProject } from '../../shared/EndeavorList'
-import { deferMocks, performMocks, shadowMocks } from '../__mocks__/EndeavorRelations.mocks'
+import {
+  deferMocks,
+  performMocks,
+  shadowMocks,
+} from '../__mocks__/EndeavorRelations.mocks'
 import { endeavorMocks } from '../__mocks__/Endeavor.mocks'
 import { makeEndeavor } from '../Endeavor'
 import { EndeavorHost } from '../EndeavorHost'
@@ -81,13 +85,15 @@ describe('AC 2: relation helpers no-op when the matrix refuses the kind', () => 
   })
 
   it('adding a performance to a calendarEvent is a no-op', () => {
-    expect(withAddedPerformance(event, performMocks.completedPomodoro)).toBe(event)
+    expect(withAddedPerformance(event, performMocks.completedPomodoro)).toBe(
+      event,
+    )
   })
 
   it('adding a performance to a blueprint is a no-op', () => {
-    expect(withAddedPerformance(blueprint, performMocks.completedPomodoro)).toBe(
-      blueprint,
-    )
+    expect(
+      withAddedPerformance(blueprint, performMocks.completedPomodoro),
+    ).toBe(blueprint)
   })
 
   it('removing a host from a habit is a no-op even when the host is present', () => {
@@ -176,7 +182,9 @@ describe('withDeferred', () => {
   })
 
   it('defaults the reason to null when none is given', () => {
-    expect(withDeferred(task, { target: DATE, made: DATE }).defers.at(-1)?.reason).toBeNull()
+    expect(
+      withDeferred(task, { target: DATE, made: DATE }).defers.at(-1)?.reason,
+    ).toBeNull()
   })
 
   it('keeps earlier deferrals in order', () => {
@@ -184,7 +192,10 @@ describe('withDeferred', () => {
       withDeferred(task, { target: DATE, made: DATE, reason: 'first' }),
       { target: DATE, made: DATE, reason: 'second' },
     )
-    expect(twice.defers.map((entry) => entry.reason)).toEqual(['first', 'second'])
+    expect(twice.defers.map((entry) => entry.reason)).toEqual([
+      'first',
+      'second',
+    ])
   })
 })
 
@@ -221,7 +232,11 @@ describe('performance helpers', () => {
 
   it('replaces the performance at an index', () => {
     const seeded = withAddedPerformance(task, performMocks.abortedEarly)
-    const updated = withUpdatedPerformance(seeded, 0, performMocks.completedPomodoro)
+    const updated = withUpdatedPerformance(
+      seeded,
+      0,
+      performMocks.completedPomodoro,
+    )
     expect(updated.performances).toEqual([performMocks.completedPomodoro])
   })
 
@@ -236,7 +251,9 @@ describe('performance helpers', () => {
   })
 
   it('no-ops on an out-of-bounds index for both update and remove', () => {
-    expect(withUpdatedPerformance(task, 5, performMocks.abortedEarly)).toBe(task)
+    expect(withUpdatedPerformance(task, 5, performMocks.abortedEarly)).toBe(
+      task,
+    )
     expect(withRemovedPerformance(task, 0)).toBe(task)
   })
 })
@@ -338,7 +355,9 @@ describe('core and enrichment setters', () => {
   })
 
   it('withTags accepts null to restore "never tagged"', () => {
-    expect(withTags(task, [EndeavorTag.engaging]).tags).toEqual([EndeavorTag.engaging])
+    expect(withTags(task, [EndeavorTag.engaging]).tags).toEqual([
+      EndeavorTag.engaging,
+    ])
     expect(withTags(task, null).tags).toBeNull()
     expect(withTags(task, []).tags).toEqual([])
   })

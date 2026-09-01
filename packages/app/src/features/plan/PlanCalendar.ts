@@ -52,7 +52,11 @@ export const startOfPlanDay = (date: Date): Date => {
  */
 export const addingPlanDays = (date: Date, days: number): Date => {
   const shifted = new Date(2000, 0, 1)
-  shifted.setFullYear(date.getFullYear(), date.getMonth(), date.getDate() + days)
+  shifted.setFullYear(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate() + days,
+  )
   shifted.setHours(0, 0, 0, 0)
   return shifted
 }
@@ -75,11 +79,7 @@ export const isSamePlanDay = (left: Date, right: Date): boolean =>
 export const planDayDistance = (from: Date, to: Date): number => {
   const left = startOfPlanDay(from)
   const right = startOfPlanDay(to)
-  const leftUtc = Date.UTC(
-    left.getFullYear(),
-    left.getMonth(),
-    left.getDate(),
-  )
+  const leftUtc = Date.UTC(left.getFullYear(), left.getMonth(), left.getDate())
   const rightUtc = Date.UTC(
     right.getFullYear(),
     right.getMonth(),
@@ -142,7 +142,5 @@ export const planDateAdding = (
 ): Date => new Date(date.getTime() + seconds * 1000)
 
 /** Seconds from `from` to `to`; negative when `to` precedes `from`. */
-export const planSecondsBetween = (
-  from: Date,
-  to: Date,
-): TimeIntervalSeconds => (to.getTime() - from.getTime()) / 1000
+export const planSecondsBetween = (from: Date, to: Date): TimeIntervalSeconds =>
+  (to.getTime() - from.getTime()) / 1000

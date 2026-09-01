@@ -110,11 +110,7 @@ export const SideBySide = {
  * exactly on top of them. Both are browser-only, so this story is also the
  * fixture `apps/web/e2e-kit/action-surface.spec.ts` drives in Chromium.
  */
-function InboxTrailingButtons({
-  input,
-}: {
-  readonly input: InputCapability
-}) {
+function InboxTrailingButtons({ input }: { readonly input: InputCapability }) {
   const [tapped, setTapped] = useState<readonly string[]>([])
 
   return (
@@ -159,7 +155,10 @@ function InboxTrailingButtons({
         />
       </EndeavorActionSurface>
 
-      <p data-testid="tap-log" style={{ margin: 0, color: 'var(--kro-color-fore-secondary)' }}>
+      <p
+        data-testid="tap-log"
+        style={{ margin: 0, color: 'var(--kro-color-fore-secondary)' }}
+      >
         {tapped.length === 0 ? 'No button tapped yet' : tapped.join(', ')}
       </p>
     </div>

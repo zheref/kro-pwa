@@ -141,7 +141,11 @@ export {
   colorTint,
   semanticTint,
 } from './KroChip'
-export { type InlineBannerKind, type InlineBannerProps, InlineBanner } from './InlineBanner'
+export {
+  type InlineBannerKind,
+  type InlineBannerProps,
+  InlineBanner,
+} from './InlineBanner'
 export {
   type SectionCardProps,
   type SurfaceCardProps,

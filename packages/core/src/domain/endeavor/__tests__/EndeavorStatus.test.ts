@@ -54,7 +54,10 @@ describe('endeavorStatusIndexValue', () => {
   it('matches canon for all ten', () => {
     expect(
       Object.fromEntries(
-        endeavorStatuses.map((status) => [status, endeavorStatusIndexValue(status)]),
+        endeavorStatuses.map((status) => [
+          status,
+          endeavorStatusIndexValue(status),
+        ]),
       ),
     ).toEqual({
       blocked: -1,
@@ -124,7 +127,9 @@ describe('endeavorStatusDisplayName', () => {
 
   it('title-cases the other nine', () => {
     expect(endeavorStatusDisplayName(EndeavorStatus.pending)).toBe('Pending')
-    expect(endeavorStatusDisplayName(EndeavorStatus.delegated)).toBe('Delegated')
+    expect(endeavorStatusDisplayName(EndeavorStatus.delegated)).toBe(
+      'Delegated',
+    )
   })
 
   it('names all ten, each distinctly', () => {
@@ -136,12 +141,18 @@ describe('endeavorStatusDisplayName', () => {
 describe('endeavorStatusCaptionPrefix', () => {
   it('keeps canon’s trailing space, which is the separator', () => {
     expect(endeavorStatusCaptionPrefix(EndeavorStatus.pending)).toBe('Due ')
-    expect(endeavorStatusCaptionPrefix(EndeavorStatus.closed)).toBe('Completed ')
+    expect(endeavorStatusCaptionPrefix(EndeavorStatus.closed)).toBe(
+      'Completed ',
+    )
   })
 
   it('uses "Blocked Since " and "Paused Since " for the two since-states', () => {
-    expect(endeavorStatusCaptionPrefix(EndeavorStatus.blocked)).toBe('Blocked Since ')
-    expect(endeavorStatusCaptionPrefix(EndeavorStatus.paused)).toBe('Paused Since ')
+    expect(endeavorStatusCaptionPrefix(EndeavorStatus.blocked)).toBe(
+      'Blocked Since ',
+    )
+    expect(endeavorStatusCaptionPrefix(EndeavorStatus.paused)).toBe(
+      'Paused Since ',
+    )
   })
 
   it('matches canon for all ten', () => {

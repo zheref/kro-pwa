@@ -30,7 +30,7 @@ const event = (params: {
 
 const at = (hour: number, minute = 0) => doMockAt(17, hour, minute)
 
-describe('eligibility — canon\'s four guards', () => {
+describe("eligibility — canon's four guards", () => {
   it('drops an event with no start, which cannot be placed on the day', () => {
     const events = [event({ id: 'no-start', start: null })]
     expect(eligibleDoEvents({ events, lens, now: DO_MOCK_NOW })).toEqual([])
@@ -46,7 +46,11 @@ describe('eligibility — canon\'s four guards', () => {
 
   it('keeps a reviewing event, which canon never filtered out', () => {
     const events = [
-      event({ id: 'reviewing', start: at(9), status: EndeavorStatus.reviewing }),
+      event({
+        id: 'reviewing',
+        start: at(9),
+        status: EndeavorStatus.reviewing,
+      }),
     ]
     expect(
       eligibleDoEvents({ events, lens, now: DO_MOCK_NOW }).map((e) => e.id),
@@ -64,9 +68,9 @@ describe('eligibility — canon\'s four guards', () => {
       hiddenKinds: [EndeavorKind.calendarEvent],
     })
     const events = [event({ id: 'visible-otherwise', start: at(9) })]
-    expect(eligibleDoEvents({ events, lens: hidden, now: DO_MOCK_NOW })).toEqual(
-      [],
-    )
+    expect(
+      eligibleDoEvents({ events, lens: hidden, now: DO_MOCK_NOW }),
+    ).toEqual([])
   })
 })
 

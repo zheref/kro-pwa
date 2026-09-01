@@ -74,7 +74,8 @@ export const OpenedOnUnscheduledTask = {
 
 /** The same, dark. */
 export const OpenedDark = {
-  render: () => stage(opened(triageEndeavorFixtures.unscheduledTask.id), 'dark'),
+  render: () =>
+    stage(opened(triageEndeavorFixtures.unscheduledTask.id), 'dark'),
 }
 
 /**

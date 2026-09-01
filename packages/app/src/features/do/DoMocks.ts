@@ -303,9 +303,8 @@ export const doEndeavorFixtures = {
 } as const
 
 /** The whole fixture day, in one array — what a fetch would install. */
-export const doFixtureDay: readonly Endeavor[] = Object.values(
-  doEndeavorFixtures,
-)
+export const doFixtureDay: readonly Endeavor[] =
+  Object.values(doEndeavorFixtures)
 
 /**
  * The same day as stored rows, for seeding a stubbed `LocalStore`.

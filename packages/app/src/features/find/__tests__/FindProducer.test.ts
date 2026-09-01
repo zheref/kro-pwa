@@ -74,7 +74,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('resolves every stored row for the surface that asked', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -86,7 +88,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('hands the rows through RAW — reconciliation is the install shifter’s', async () => {
     const { store } = storeWith()
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok && result.value.now).toEqual(FIND_REFERENCE_NOW)
   })
@@ -94,7 +98,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('resolves a typed failure rather than throwing when the store is broken', async () => {
     const store = failingStore('disk gone')
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.kind).toBe('fetchFailed')
@@ -103,7 +109,9 @@ describe('fetchFindEndeavorsThunk reads the whole surface, unnarrowed', () => {
   it('answers an empty store with an empty list, not a failure', async () => {
     const { store } = storeWith([])
     const result = await store
-      .dispatch(fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }))
+      .dispatch(
+        fetchFindEndeavorsThunk({ surface: 'find', now: FIND_REFERENCE_NOW }),
+      )
       .unwrap()
     expect(result.ok && result.value.endeavors).toEqual([])
   })
@@ -215,9 +223,13 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.markComplete, findEndeavorMocks.morningTask.id, {
-            completionDate: backdated,
-          }),
+          request(
+            EndeavorOperation.markComplete,
+            findEndeavorMocks.morningTask.id,
+            {
+              completionDate: backdated,
+            },
+          ),
         ),
       )
       .unwrap()
@@ -308,7 +320,10 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.startSession, findEndeavorMocks.morningTask.id),
+          request(
+            EndeavorOperation.startSession,
+            findEndeavorMocks.morningTask.id,
+          ),
         ),
       )
       .unwrap()
@@ -333,7 +348,10 @@ describe('performEndeavorOperationThunk wires every declared capability', () => 
     const result = await store
       .dispatch(
         performEndeavorOperationThunk(
-          request(EndeavorOperation.markComplete, findEndeavorMocks.morningTask.id),
+          request(
+            EndeavorOperation.markComplete,
+            findEndeavorMocks.morningTask.id,
+          ),
         ),
       )
       .unwrap()
@@ -378,7 +396,8 @@ describe('performBulkOperationThunk applies to exactly the visible rows', () => 
       )
       .unwrap()
     expect(
-      (await localStore.endeavors.get(findEndeavorMocks.morningTask.id))?.status,
+      (await localStore.endeavors.get(findEndeavorMocks.morningTask.id))
+        ?.status,
     ).toBe(EndeavorStatus.closed)
     expect(
       (await localStore.endeavors.get(findEndeavorMocks.afternoonTask.id))

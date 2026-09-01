@@ -44,7 +44,11 @@ import {
 } from '@kro/core'
 import type { ReactNode } from 'react'
 import { StoreProvider } from '../../../../library/StoreProvider'
-import { type AppStore, makeStore, stubbedThunkExtra } from '../../../../library/store'
+import {
+  type AppStore,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { endeavorRowAdapters } from '../../FindAdapters'
 import { groupEndeavors, limitGroups } from '../../FindGrouping'
@@ -143,8 +147,9 @@ export const findCapabilitiesWith = (
 export const tasksCapabilitiesWith = (
   enabledFlags: readonly string[] = [],
 ): EndeavorCapabilities =>
-  resolveEndeavorCapabilities(EndeavorsVistas.tasksDefault.capabilities, (flag) =>
-    enabledFlags.includes(flag),
+  resolveEndeavorCapabilities(
+    EndeavorsVistas.tasksDefault.capabilities,
+    (flag) => enabledFlags.includes(flag),
   )
 
 /** Rows, adapted the way `selectFindRowAdapters` adapts them. */
@@ -164,7 +169,10 @@ export const adaptedGroups = (
   } = {},
 ) =>
   limitGroups(
-    groupEndeavors(endeavors, options.grouping ?? EndeavorGroupingCriteria.status),
+    groupEndeavors(
+      endeavors,
+      options.grouping ?? EndeavorGroupingCriteria.status,
+    ),
     options.limit === undefined ? 7 : options.limit,
     options.expandedGroupKey ?? null,
   ).map((group) => ({

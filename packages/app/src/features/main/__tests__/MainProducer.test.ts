@@ -134,7 +134,9 @@ describe('createProjectThunk', () => {
       },
     })
 
-    await store.dispatch(createProjectThunk({ id: 'p-1', title: 'Garden', now }))
+    await store.dispatch(
+      createProjectThunk({ id: 'p-1', title: 'Garden', now }),
+    )
 
     const { load } = store.getState().main
     expect(load.kind).toBe('failed')
@@ -195,7 +197,7 @@ describe('deleteProjectThunk', () => {
 })
 
 describe('navigateToDestinationThunk — the router as a Service (RC-17)', () => {
-  it('navigates to the destination\'s own path', async () => {
+  it("navigates to the destination's own path", async () => {
     const navigation = makeRecordingNavigationService()
     const store = makeStore({ ...stubbedThunkExtra, navigation })
 
@@ -300,7 +302,11 @@ describe('deliverCaptureRouteThunk — the capture one-shot', () => {
     expect(navigation.calls).toEqual([{ kind: 'navigate', path: '/plan' }])
 
     const context = store.getState().main.routeContext
-    expect(context).toMatchObject({ endeavorId: 'e-1', highlight: true, listMode: true })
+    expect(context).toMatchObject({
+      endeavorId: 'e-1',
+      highlight: true,
+      listMode: true,
+    })
     expect(store.getState().main.selected.kind).toBe(DestinationKind.plan)
   })
 
@@ -330,7 +336,9 @@ describe('deliverCaptureRouteThunk — the capture one-shot', () => {
     )
 
     expect(navigation.calls).toEqual([])
-    expect(store.getState().main.routeContext).toMatchObject({ endeavorId: 'e-2' })
+    expect(store.getState().main.routeContext).toMatchObject({
+      endeavorId: 'e-2',
+    })
     expect(store.getState().main.selected).toEqual(before)
   })
 })

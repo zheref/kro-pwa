@@ -90,7 +90,9 @@ describe('isSamePlanDay', () => {
   })
 
   it('does not confuse the same day-of-month in different months', () => {
-    expect(isSamePlanDay(new Date(2026, 4, 18), new Date(2026, 5, 18))).toBe(false)
+    expect(isSamePlanDay(new Date(2026, 4, 18), new Date(2026, 5, 18))).toBe(
+      false,
+    )
   })
 })
 
@@ -102,7 +104,9 @@ describe('planDayDistance', () => {
   })
 
   it('is negative when the target day precedes the origin', () => {
-    expect(planDayDistance(new Date(2026, 5, 18), new Date(2026, 5, 15))).toBe(-3)
+    expect(planDayDistance(new Date(2026, 5, 18), new Date(2026, 5, 15))).toBe(
+      -3,
+    )
   })
 
   it('is zero for two moments on the same day', () => {
@@ -131,11 +135,7 @@ describe('planDayKey', () => {
       planDayKey(new Date(2026, 0, 31)),
       planDayKey(new Date(2026, 1, 1)),
     ]
-    expect([...keys].sort()).toEqual([
-      '2026-01-31',
-      '2026-02-01',
-      '2026-11-02',
-    ])
+    expect([...keys].sort()).toEqual(['2026-01-31', '2026-02-01', '2026-11-02'])
   })
 })
 

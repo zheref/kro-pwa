@@ -40,7 +40,7 @@ export const planModeEntryEdge = (
   const fromIndex = planViewModes.indexOf(from)
   const toIndex = planViewModes.indexOf(to)
   if (fromIndex < 0 || toIndex < 0) return 'trailing'
-  const forwardSteps = ((toIndex - fromIndex) % count + count) % count
+  const forwardSteps = (((toIndex - fromIndex) % count) + count) % count
   return forwardSteps * 2 <= count ? 'trailing' : 'leading'
 }
 

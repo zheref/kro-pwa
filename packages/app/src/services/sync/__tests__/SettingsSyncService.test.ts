@@ -9,7 +9,8 @@ import {
 } from '../SettingsSyncService'
 
 const firstCloudOption = cloudSyncOptions[0]
-if (firstCloudOption === undefined) throw new Error('no cloud-scoped option declared')
+if (firstCloudOption === undefined)
+  throw new Error('no cloud-scoped option declared')
 
 const entry = (
   key: string,
@@ -75,7 +76,9 @@ describe('the stubbed service', () => {
     const service = makeStubbedSettingsSyncService({
       pushFailure: new TypeError('Failed to fetch'),
     })
-    await expect(service.push([entry('a', true)])).rejects.toBeInstanceOf(TypeError)
+    await expect(service.push([entry('a', true)])).rejects.toBeInstanceOf(
+      TypeError,
+    )
   })
 })
 
@@ -85,7 +88,9 @@ describe('the live service with no project configured', () => {
   })
 
   it('reports cloud sync cleanly unavailable on a pull rather than crashing the launch', async () => {
-    await expect(service.pullAll()).rejects.toMatchObject({ kind: 'unavailable' })
+    await expect(service.pullAll()).rejects.toMatchObject({
+      kind: 'unavailable',
+    })
   })
 
   it('reports the same on a push', async () => {

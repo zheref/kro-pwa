@@ -70,9 +70,9 @@ describe('isOverdueAlertEligible', () => {
   })
 
   it('refuses a completed task — the alert is withdrawn on completion (flow 2)', () => {
-    expect(isOverdueAlertEligible(endeavorMocks.completedWithPerformances)).toBe(
-      false,
-    )
+    expect(
+      isOverdueAlertEligible(endeavorMocks.completedWithPerformances),
+    ).toBe(false)
   })
 
   it('refuses a reminder: canon gates on kind == task, not on the resolved kind', () => {
@@ -90,7 +90,9 @@ describe('isOverdueAlertEligible', () => {
 
 describe('overdueAlertId', () => {
   it('keys the alert on the item, so the same item always resolves one id', () => {
-    expect(overdueAlertId('endeavor-1')).toBe(`${OVERDUE_ALERT_ID_PREFIX}endeavor-1`)
+    expect(overdueAlertId('endeavor-1')).toBe(
+      `${OVERDUE_ALERT_ID_PREFIX}endeavor-1`,
+    )
   })
 
   it('recognises its own identifiers and disowns everything else', () => {
@@ -99,7 +101,9 @@ describe('overdueAlertId', () => {
   })
 
   it('quotes the task in the body, exactly as canon words it', () => {
-    expect(overdueAlertBody('Pay Mortgage')).toBe('"Pay Mortgage" is now overdue.')
+    expect(overdueAlertBody('Pay Mortgage')).toBe(
+      '"Pay Mortgage" is now overdue.',
+    )
   })
 })
 
@@ -314,8 +318,12 @@ describe('applyOverdueAlertReconciliation', () => {
       isGateEnabled: true,
     })
 
-    expect(report.scheduled).toEqual([overdueAlertId(endeavorMocks.plannedTask.id)])
-    expect(report.pending).toEqual([overdueAlertId(endeavorMocks.plannedTask.id)])
+    expect(report.scheduled).toEqual([
+      overdueAlertId(endeavorMocks.plannedTask.id),
+    ])
+    expect(report.pending).toEqual([
+      overdueAlertId(endeavorMocks.plannedTask.id),
+    ])
     expect(service.recordedSchedules()).toHaveLength(1)
   })
 
@@ -357,7 +365,9 @@ describe('applyOverdueAlertReconciliation', () => {
     })
 
     expect(service.recordedWithdrawals()).toEqual([stale])
-    expect(report.pending).toEqual([overdueAlertId(endeavorMocks.plannedTask.id)])
+    expect(report.pending).toEqual([
+      overdueAlertId(endeavorMocks.plannedTask.id),
+    ])
   })
 
   it('ends a reschedule armed, not withdrawn — withdrawals run before schedules', async () => {

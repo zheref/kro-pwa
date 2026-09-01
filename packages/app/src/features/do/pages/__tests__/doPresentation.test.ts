@@ -139,7 +139,7 @@ describe('the two date strings', () => {
     expect(doShortDateString(DO_MOCK_NOW, LOCALE)).toBe('Mar 17')
   })
 
-  it('prints the weekday alone, without canon\'s comma split', () => {
+  it("prints the weekday alone, without canon's comma split", () => {
     expect(doWeekdayString(DO_MOCK_NOW, LOCALE)).toBe('Tuesday')
   })
 
@@ -225,7 +225,7 @@ describe('visibility', () => {
   })
 })
 
-describe('card projection goes through the kit\'s one seam', () => {
+describe("card projection goes through the kit's one seam", () => {
   it('projects an overdue task as High urgency at the parked instant', () => {
     const [card] = doCardModels(
       [doEndeavorFixtures.overdueThisMorning],
@@ -236,10 +236,7 @@ describe('card projection goes through the kit\'s one seam', () => {
   })
 
   it('projects a task due inside two hours as Medium, so it warns', () => {
-    const [card] = doCardModels(
-      [doEndeavorFixtures.habitDueSoon],
-      DO_MOCK_NOW,
-    )
+    const [card] = doCardModels([doEndeavorFixtures.habitDueSoon], DO_MOCK_NOW)
     expect(card?.urgency).toBe('medium')
     expect(card?.showWarning).toBe(true)
   })

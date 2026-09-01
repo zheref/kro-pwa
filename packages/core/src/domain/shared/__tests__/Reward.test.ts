@@ -110,8 +110,21 @@ describe('rewardSuggestions', () => {
 
   it('carries canon’s glyphs', () => {
     expect(rewardSuggestions.map((reward) => reward.glyph)).toEqual([
-      '🎮', '🏖️', '💞', '📺', '📱', '🍔', '👟', '🍿', '💆', '🥡', '🧋', '🧳',
-      '💤', '🕹️', '📚',
+      '🎮',
+      '🏖️',
+      '💞',
+      '📺',
+      '📱',
+      '🍔',
+      '👟',
+      '🍿',
+      '💆',
+      '🥡',
+      '🧋',
+      '🧳',
+      '💤',
+      '🕹️',
+      '📚',
     ])
   })
 })

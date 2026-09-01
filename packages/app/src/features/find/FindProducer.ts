@@ -50,10 +50,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
 import type { FindException } from './FindException'
 import { FindExceptions, findExceptionMessage } from './FindException'
-import type {
-  EndeavorOperationRequest,
-  FindSurface,
-} from './FindOperations'
+import type { EndeavorOperationRequest, FindSurface } from './FindOperations'
 import {
   OperationEffect,
   OperationHandling,
@@ -105,11 +102,13 @@ export type FindOperationOutcome =
 const readStoredEndeavors = async (
   localStore: LocalStore,
 ): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all([
-    localStore.endeavors.all(),
-    localStore.defers.all(),
-    localStore.performances.all(),
-  ])
+  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
+    [
+      localStore.endeavors.all(),
+      localStore.defers.all(),
+      localStore.performances.all(),
+    ],
+  )
 
   const defersByEndeavor = new Map<string, Defer[]>()
   for (const record of livingChildRecords(deferRecords)) {

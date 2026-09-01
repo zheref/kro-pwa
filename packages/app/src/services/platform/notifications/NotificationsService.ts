@@ -251,16 +251,17 @@ const defaultNotificationApi = (): NotificationApiLike | null =>
         requestPermission: () => Notification.requestPermission(),
       }
 
-const defaultResolveDisplay = async (): Promise<NotificationDisplayLike | null> => {
-  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
-    return null
+const defaultResolveDisplay =
+  async (): Promise<NotificationDisplayLike | null> => {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+      return null
+    }
+    const registration = await navigator.serviceWorker.ready
+    return {
+      showNotification: (title, options) =>
+        registration.showNotification(title, options),
+    }
   }
-  const registration = await navigator.serviceWorker.ready
-  return {
-    showNotification: (title, options) =>
-      registration.showNotification(title, options),
-  }
-}
 
 const defaultResolvePushManager = async (): Promise<PushManagerLike | null> => {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
@@ -290,7 +291,8 @@ export const makeLiveNotificationsService = (
       ? defaultNotificationApi()
       : options.notificationApi
   const resolveDisplay = options.resolveDisplay ?? defaultResolveDisplay
-  const resolvePushManager = options.resolvePushManager ?? defaultResolvePushManager
+  const resolvePushManager =
+    options.resolvePushManager ?? defaultResolvePushManager
   const timers = options.timers ?? defaultTimers
   const now = options.now ?? (() => Date.now())
   const icon = options.icon ?? NOTIFICATION_ICON_PATH

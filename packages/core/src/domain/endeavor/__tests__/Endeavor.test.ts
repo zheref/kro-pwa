@@ -57,15 +57,19 @@ describe('makeEndeavor', () => {
   })
 
   it('distinguishes an absent tag list (null) from an empty one', () => {
-    expect(makeEndeavor({ id: 'e-3', title: 'x', kind: EndeavorKind.task }).tags).toBeNull()
     expect(
-      makeEndeavor({ id: 'e-4', title: 'x', kind: EndeavorKind.task, tags: [] }).tags,
+      makeEndeavor({ id: 'e-3', title: 'x', kind: EndeavorKind.task }).tags,
+    ).toBeNull()
+    expect(
+      makeEndeavor({ id: 'e-4', title: 'x', kind: EndeavorKind.task, tags: [] })
+        .tags,
     ).toEqual([])
   })
 
   it('leaves `createdAt` null rather than stamping a clock this tier does not have', () => {
     expect(
-      makeEndeavor({ id: 'e-5', title: 'x', kind: EndeavorKind.task }).createdAt,
+      makeEndeavor({ id: 'e-5', title: 'x', kind: EndeavorKind.task })
+        .createdAt,
     ).toBeNull()
   })
 })
@@ -141,8 +145,11 @@ describe('eventEndeavor', () => {
 describe('taskEndeavor', () => {
   it('builds a pending task by default', () => {
     expect(
-      taskEndeavor({ id: 't-1', title: 'Pay Mortgage', host: EndeavorHost.local })
-        .status,
+      taskEndeavor({
+        id: 't-1',
+        title: 'Pay Mortgage',
+        host: EndeavorHost.local,
+      }).status,
     ).toBe(EndeavorStatus.pending)
   })
 

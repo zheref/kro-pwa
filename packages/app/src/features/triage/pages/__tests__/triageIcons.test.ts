@@ -19,7 +19,7 @@ import {
 } from '../triageIcons'
 
 describe('the map never shadows a more general one', () => {
-  it('shares no key with the design system\'s map', () => {
+  it("shares no key with the design system's map", () => {
     const system = Object.keys(SF_SYMBOL_TO_LUCIDE)
     const overlap = Object.keys(TRIAGE_SF_SYMBOL_TO_LUCIDE).filter((key) =>
       system.includes(key),
@@ -27,7 +27,7 @@ describe('the map never shadows a more general one', () => {
     expect(overlap).toEqual([])
   })
 
-  it('shares no key with the endeavor kit\'s extension', () => {
+  it("shares no key with the endeavor kit's extension", () => {
     const kit = Object.keys(ENDEAVOR_SF_SYMBOL_TO_LUCIDE)
     const overlap = Object.keys(TRIAGE_SF_SYMBOL_TO_LUCIDE).filter((key) =>
       kit.includes(key),
@@ -35,7 +35,7 @@ describe('the map never shadows a more general one', () => {
     expect(overlap).toEqual([])
   })
 
-  it('resolves a shared name from the more general file (bolt.fill is the kit\'s)', () => {
+  it("resolves a shared name from the more general file (bolt.fill is the kit's)", () => {
     expect(triageIcon('bolt.fill')).toBe(
       ENDEAVOR_SF_SYMBOL_TO_LUCIDE['bolt.fill'],
     )

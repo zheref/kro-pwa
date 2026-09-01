@@ -45,10 +45,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DoSurfaceLayout, ShellShape } from '../../main/DoSurfaceLayout'
 import type { DoSuggestionSource } from '../DoSuggestions'
 import { DoHeaderFragment } from './DoHeaderFragment'
-import {
-  DoLanesFragment,
-  type DoLanesFragmentProps,
-} from './DoLanesFragment'
+import { DoLanesFragment, type DoLanesFragmentProps } from './DoLanesFragment'
 import {
   DoTasksListFragment,
   type DoTasksListDestination,
@@ -145,10 +142,7 @@ export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
     <div
       data-testid="do-surface"
       data-shell-shape={props.shape}
-      className={cn(
-        'relative flex h-full min-h-0 flex-col',
-        props.className,
-      )}
+      className={cn('relative flex h-full min-h-0 flex-col', props.className)}
     >
       <DoSurfaceBody {...props} />
     </div>
@@ -293,7 +287,9 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           const target = event.target
           if (
             target instanceof Element &&
-            target.closest('[data-slot="endeavor-card"], button, a, [role="dialog"]')
+            target.closest(
+              '[data-slot="endeavor-card"], button, a, [role="dialog"]',
+            )
           ) {
             return
           }

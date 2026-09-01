@@ -34,7 +34,9 @@ const mount = (
   overrides: {
     isSaving?: boolean
     isValid?: boolean
-    exception?: ReturnType<typeof EndeavorDetailExceptions.localPersistenceFailed> | null
+    exception?: ReturnType<
+      typeof EndeavorDetailExceptions.localPersistenceFailed
+    > | null
     onChangeField?: (change: unknown) => void
     onOpenDuration?: () => void
   } = {},
@@ -86,7 +88,7 @@ describe('the form is the matrix, rendered', () => {
 })
 
 describe('editing reports one change at a time', () => {
-  it('reports a title edit as the domain\'s own field change', async () => {
+  it("reports a title edit as the domain's own field change", async () => {
     const onChangeField = vi.fn()
     mount(detailEndeavorMocks.task, { onChangeField })
 
@@ -110,7 +112,7 @@ describe('editing reports one change at a time', () => {
     })
   })
 
-  it('toggles a tag by its own letter — canon\'s `applyTagToggled`', async () => {
+  it("toggles a tag by its own letter — canon's `applyTagToggled`", async () => {
     const onChangeField = vi.fn()
     mount(detailEndeavorMocks.task, { onChangeField })
 
@@ -133,7 +135,10 @@ describe('editing reports one change at a time', () => {
     })
 
     await userEvent.selectOptions(screen.getByLabelText('Project'), '')
-    expect(onChangeField).toHaveBeenCalledWith({ field: 'project', value: null })
+    expect(onChangeField).toHaveBeenCalledWith({
+      field: 'project',
+      value: null,
+    })
   })
 
   it('hands the duration profile to its own screen rather than editing one number', async () => {

@@ -105,7 +105,7 @@ export function SettingsHubFragment({
               className="truncate text-[15px] font-semibold"
               style={{ color: colorVar('fore') }}
             >
-              {isSignedIn ? accountName ?? 'Kro User' : 'Sign In to Kro'}
+              {isSignedIn ? (accountName ?? 'Kro User') : 'Sign In to Kro'}
             </span>
             <span
               className="truncate text-[13px]"
@@ -124,7 +124,11 @@ export function SettingsHubFragment({
         onTapSection={onTapSection}
       />
 
-      <HubGroup title={null} sections={accountSections} onTapSection={onTapSection} />
+      <HubGroup
+        title={null}
+        sections={accountSections}
+        onTapSection={onTapSection}
+      />
 
       {syncFooter === null ? null : (
         <p

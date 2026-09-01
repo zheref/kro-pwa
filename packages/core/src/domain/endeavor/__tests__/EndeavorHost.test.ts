@@ -41,7 +41,9 @@ describe('endeavorHostDisplayName', () => {
 
   it('shortens the two Apple hosts to their app names', () => {
     expect(endeavorHostDisplayName(EndeavorHost.appleCalendar)).toBe('Calendar')
-    expect(endeavorHostDisplayName(EndeavorHost.appleReminders)).toBe('Reminders')
+    expect(endeavorHostDisplayName(EndeavorHost.appleReminders)).toBe(
+      'Reminders',
+    )
   })
 
   it('spells the two third-party calendars out in full', () => {
@@ -110,6 +112,8 @@ describe('isKroOwnedHost', () => {
 
   it('partitions the six hosts two-to-four', () => {
     expect(endeavorHosts.filter(isKroOwnedHost)).toHaveLength(2)
-    expect(endeavorHosts.filter((host) => !isKroOwnedHost(host))).toHaveLength(4)
+    expect(endeavorHosts.filter((host) => !isKroOwnedHost(host))).toHaveLength(
+      4,
+    )
   })
 })

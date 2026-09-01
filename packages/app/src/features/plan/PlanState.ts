@@ -100,7 +100,8 @@ export const PlanLoadReason = {
   appWide: 'appWide',
 } as const
 
-export type PlanLoadReason = (typeof PlanLoadReason)[keyof typeof PlanLoadReason]
+export type PlanLoadReason =
+  (typeof PlanLoadReason)[keyof typeof PlanLoadReason]
 
 /** The three concurrent in-flight markers behind one rendered signal. */
 export interface PlanActivity {

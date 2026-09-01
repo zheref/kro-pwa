@@ -19,5 +19,7 @@
  * unreachable `default` is never bolted onto a reducer arm.
  */
 export function assertNever(value: never): never {
-  throw new Error(`Unhandled discriminated-union case: ${JSON.stringify(value)}`)
+  throw new Error(
+    `Unhandled discriminated-union case: ${JSON.stringify(value)}`,
+  )
 }

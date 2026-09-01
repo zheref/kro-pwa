@@ -22,7 +22,9 @@ describe('the kit’s icon extension', () => {
 
   it('resolves every one of its own rows to a real component', () => {
     for (const name of Object.keys(ENDEAVOR_SF_SYMBOL_TO_LUCIDE)) {
-      const Icon = endeavorIcon(name as keyof typeof ENDEAVOR_SF_SYMBOL_TO_LUCIDE)
+      const Icon = endeavorIcon(
+        name as keyof typeof ENDEAVOR_SF_SYMBOL_TO_LUCIDE,
+      )
       expect(typeof Icon, `${name} resolved to nothing`).not.toBe('undefined')
     }
   })
@@ -42,7 +44,8 @@ describe('binding icons, which arrive as plain strings', () => {
     const unmapped: string[] = []
     for (const vista of fixedEndeavorsVistas) {
       for (const binding of vista.capabilities.operations) {
-        if (!isMappedSymbol(binding.icon)) unmapped.push(`${vista.id}: ${binding.icon}`)
+        if (!isMappedSymbol(binding.icon))
+          unmapped.push(`${vista.id}: ${binding.icon}`)
       }
     }
     expect(unmapped).toEqual([])

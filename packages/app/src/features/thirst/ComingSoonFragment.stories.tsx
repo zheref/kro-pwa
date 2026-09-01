@@ -81,7 +81,10 @@ export const UnavailableSignedOut = {
       <ComingSoonFragment
         featureTitle="Blueprints"
         featureBlurb="Reusable templates to start endeavors faster."
-        status={{ kind: 'unavailable', message: 'Sign in to vote for upcoming features.' }}
+        status={{
+          kind: 'unavailable',
+          message: 'Sign in to vote for upcoming features.',
+        }}
         hasCounts
         totalCount={17}
         perPlatform={[{ platform: 'ios', count: 17 }]}
@@ -97,7 +100,10 @@ export const UnavailableOfflineNoCounts = {
       <ComingSoonFragment
         featureTitle="Blueprints"
         featureBlurb="Reusable templates to start endeavors faster."
-        status={{ kind: 'unavailable', message: 'No internet connection. Please try again.' }}
+        status={{
+          kind: 'unavailable',
+          message: 'No internet connection. Please try again.',
+        }}
         hasCounts={false}
         totalCount={0}
         perPlatform={[]}

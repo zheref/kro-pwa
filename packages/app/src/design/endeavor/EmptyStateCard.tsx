@@ -58,11 +58,17 @@ export function EmptyStateCard({
           color: `color-mix(in srgb, ${colorVar('foreSecondary')} 65%, transparent)`,
         }}
       />
-      <p className="m-0 text-sm font-semibold" style={{ color: colorVar('fore') }}>
+      <p
+        className="m-0 text-sm font-semibold"
+        style={{ color: colorVar('fore') }}
+      >
         {title}
       </p>
       {message === undefined ? null : (
-        <p className="m-0 text-[13px]" style={{ color: colorVar('foreSecondary') }}>
+        <p
+          className="m-0 text-[13px]"
+          style={{ color: colorVar('foreSecondary') }}
+        >
           {message}
         </p>
       )}

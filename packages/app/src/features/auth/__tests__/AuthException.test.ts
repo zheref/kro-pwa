@@ -38,9 +38,9 @@ describe('AuthExceptions', () => {
   })
 
   it('names the missing variables when it has them, and stays generic when it does not', () => {
-    expect(AuthExceptions.unavailable(['NEXT_PUBLIC_SUPABASE_URL']).message).toContain(
-      'NEXT_PUBLIC_SUPABASE_URL',
-    )
+    expect(
+      AuthExceptions.unavailable(['NEXT_PUBLIC_SUPABASE_URL']).message,
+    ).toContain('NEXT_PUBLIC_SUPABASE_URL')
     expect(AuthExceptions.unavailable().message).not.toContain('NEXT_PUBLIC')
   })
 
@@ -94,7 +94,9 @@ describe('EndeavorSyncExceptions', () => {
   })
 
   it('names the account whose owner row could not be resolved', () => {
-    expect(EndeavorSyncExceptions.ownerUnresolved('u-1').message).toContain('u-1')
+    expect(EndeavorSyncExceptions.ownerUnresolved('u-1').message).toContain(
+      'u-1',
+    )
   })
 })
 
@@ -129,7 +131,9 @@ describe('endeavorSyncExceptionFrom', () => {
 
 describe('isEndeavorSyncException', () => {
   it('recognises one of ours and refuses everything else', () => {
-    expect(isEndeavorSyncException(EndeavorSyncExceptions.pullFailed('x'))).toBe(true)
+    expect(
+      isEndeavorSyncException(EndeavorSyncExceptions.pullFailed('x')),
+    ).toBe(true)
     expect(isEndeavorSyncException(new Error('x'))).toBe(false)
     expect(isEndeavorSyncException({ kind: 'pullFailed' })).toBe(false)
   })

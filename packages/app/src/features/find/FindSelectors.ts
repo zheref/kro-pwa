@@ -109,7 +109,10 @@ const vistaCarrying = (
   base: EndeavorsVista,
   lens: FindLensState,
 ): EndeavorsVista =>
-  vistaWithLens(base, lensApplyingSnapshot(base.lens, makeEndeavorsLensSnapshot(lens)))
+  vistaWithLens(
+    base,
+    lensApplyingSnapshot(base.lens, makeEndeavorsLensSnapshot(lens)),
+  )
 
 // ---------------------------------------------------------------------------
 // Vistas and capabilities
@@ -117,7 +120,8 @@ const vistaCarrying = (
 
 export const selectFindVista = createSelector(
   [selectFindSurface],
-  (surface): EndeavorsVista => vistaCarrying(EndeavorsVistas.find, surface.lens),
+  (surface): EndeavorsVista =>
+    vistaCarrying(EndeavorsVistas.find, surface.lens),
 )
 
 export const selectTasksVista = createSelector(

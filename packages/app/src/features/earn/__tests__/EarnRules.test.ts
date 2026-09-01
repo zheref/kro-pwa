@@ -62,28 +62,42 @@ describe('currentPoints', () => {
 
   it('is earned minus spent', () => {
     expect(
-      currentPoints([perform(200)], [rewardMocks.bobaTea], [rewardMocks.bobaTea.id]),
+      currentPoints(
+        [perform(200)],
+        [rewardMocks.bobaTea],
+        [rewardMocks.bobaTea.id],
+      ),
     ).toBe(200 - rewardMocks.bobaTea.pointsRequired)
   })
 
   it('never goes negative when spent exceeds earned', () => {
     expect(
-      currentPoints([perform(10)], [rewardMocks.weekendTrip], [rewardMocks.weekendTrip.id]),
+      currentPoints(
+        [perform(10)],
+        [rewardMocks.weekendTrip],
+        [rewardMocks.weekendTrip.id],
+      ),
     ).toBe(0)
   })
 })
 
 describe('pointsToGo', () => {
   it('is the full cost when nothing has been earned', () => {
-    expect(pointsToGo(rewardMocks.bobaTea, 0)).toBe(rewardMocks.bobaTea.pointsRequired)
+    expect(pointsToGo(rewardMocks.bobaTea, 0)).toBe(
+      rewardMocks.bobaTea.pointsRequired,
+    )
   })
 
   it('is zero once affordable', () => {
-    expect(pointsToGo(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired)).toBe(0)
+    expect(
+      pointsToGo(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired),
+    ).toBe(0)
   })
 
   it('never goes negative once overfunded', () => {
-    expect(pointsToGo(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired + 500)).toBe(0)
+    expect(
+      pointsToGo(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired + 500),
+    ).toBe(0)
   })
 })
 
@@ -93,11 +107,18 @@ describe('claimProgress', () => {
   })
 
   it('is 1 once the cost is met exactly', () => {
-    expect(claimProgress(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired)).toBe(1)
+    expect(
+      claimProgress(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired),
+    ).toBe(1)
   })
 
   it('caps at 1 rather than reporting over 100%', () => {
-    expect(claimProgress(rewardMocks.bobaTea, rewardMocks.bobaTea.pointsRequired * 10)).toBe(1)
+    expect(
+      claimProgress(
+        rewardMocks.bobaTea,
+        rewardMocks.bobaTea.pointsRequired * 10,
+      ),
+    ).toBe(1)
   })
 
   it('is always 1 for a free reward — division-by-zero guard (canon: `pointsRequired > 0 else return 1`)', () => {
@@ -118,8 +139,12 @@ describe('partitionRewards', () => {
       [],
       rewardMocks.bobaTea.pointsRequired,
     )
-    expect(partition.claimable.map((r) => r.id)).toEqual([rewardMocks.bobaTea.id])
-    expect(partition.locked.map((r) => r.id)).toEqual([rewardMocks.weekendTrip.id])
+    expect(partition.claimable.map((r) => r.id)).toEqual([
+      rewardMocks.bobaTea.id,
+    ])
+    expect(partition.locked.map((r) => r.id)).toEqual([
+      rewardMocks.weekendTrip.id,
+    ])
   })
 
   it('excludes an already-claimed reward from both lanes', () => {
@@ -164,13 +189,23 @@ describe('availableSuggestions', () => {
 
   it('filters out a suggestion already in the catalog, by title', () => {
     const suggestions = availableSuggestions([rewardMocks.bobaTea])
-    expect(suggestions.some((s) => s.title === rewardMocks.bobaTea.title)).toBe(false)
+    expect(suggestions.some((s) => s.title === rewardMocks.bobaTea.title)).toBe(
+      false,
+    )
   })
 
   it('matches titles case-insensitively', () => {
-    const shouted = { ...rewardMocks.bobaTea, title: rewardMocks.bobaTea.title.toUpperCase() }
+    const shouted = {
+      ...rewardMocks.bobaTea,
+      title: rewardMocks.bobaTea.title.toUpperCase(),
+    }
     const suggestions = availableSuggestions([shouted])
-    expect(suggestions.some((s) => s.title.toLowerCase() === rewardMocks.bobaTea.title.toLowerCase())).toBe(false)
+    expect(
+      suggestions.some(
+        (s) =>
+          s.title.toLowerCase() === rewardMocks.bobaTea.title.toLowerCase(),
+      ),
+    ).toBe(false)
   })
 })
 

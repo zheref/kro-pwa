@@ -10,13 +10,12 @@
 import type { SettingValue } from '@kro/core'
 import type { SettingsException } from './SettingsException'
 import type { SettingsSectionId } from './SettingsSection'
-import type {
-  GoogleConnectionState,
-  SettingsState,
-} from './SettingsState'
+import type { GoogleConnectionState, SettingsState } from './SettingsState'
 
 /** The snapshot read started. Clears a previous failure so a retry is clean. */
-export const withPreferencesLoading = (state: SettingsState): SettingsState => ({
+export const withPreferencesLoading = (
+  state: SettingsState,
+): SettingsState => ({
   ...state,
   load: { kind: 'loading' },
 })

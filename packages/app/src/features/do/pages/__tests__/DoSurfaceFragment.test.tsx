@@ -33,8 +33,7 @@ const InToastHost = ({ children }: { children: ReactNode }) => (
   <ActiveToastHost position="absolute">{children}</ActiveToastHost>
 )
 
-const renderSurface = (ui: ReactElement) =>
-  render(ui, { wrapper: InToastHost })
+const renderSurface = (ui: ReactElement) => render(ui, { wrapper: InToastHost })
 
 /** One touch drag down the scroller, in the shape React's synthetic events want. */
 const pullBy = (scroller: HTMLElement, distance: number) => {
@@ -50,7 +49,7 @@ describe('the surface composes the header, the lanes and the FAB', () => {
     expect(screen.getByTestId('do-lanes')).toBeTruthy()
   })
 
-  it('offers canon\'s four quick actions behind the FAB', async () => {
+  it("offers canon's four quick actions behind the FAB", async () => {
     const onEnterMarkCompleteMode = vi.fn()
     renderSurface(
       <DoSurfaceFragment
@@ -69,7 +68,9 @@ describe('the surface composes the header, the lanes and the FAB', () => {
       expect(screen.getByRole('button', { name: label })).toBeTruthy()
     }
 
-    await userEvent.click(screen.getByRole('button', { name: 'Mark Complete…' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark Complete…' }),
+    )
     expect(onEnterMarkCompleteMode).toHaveBeenCalledTimes(1)
   })
 
@@ -78,9 +79,7 @@ describe('the surface composes the header, the lanes and the FAB', () => {
     renderSurface(<DoSurfaceFragment {...failed} />)
 
     // The copy is the domain's — `DoException.message`, never assembled here.
-    expect(
-      screen.getByText(/Couldn't refresh the Do screen/),
-    ).toBeTruthy()
+    expect(screen.getByText(/Couldn't refresh the Do screen/)).toBeTruthy()
     expect(screen.getByTestId('do-lane-overdue')).toBeTruthy()
   })
 })

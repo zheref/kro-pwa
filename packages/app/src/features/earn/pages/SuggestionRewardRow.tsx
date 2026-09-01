@@ -17,7 +17,10 @@ export interface SuggestionRewardRowProps {
   readonly onAdd: (reward: Reward) => void
 }
 
-export function SuggestionRewardRow({ reward, onAdd }: SuggestionRewardRowProps) {
+export function SuggestionRewardRow({
+  reward,
+  onAdd,
+}: SuggestionRewardRowProps) {
   return (
     <div
       data-slot="suggestion-reward-row"

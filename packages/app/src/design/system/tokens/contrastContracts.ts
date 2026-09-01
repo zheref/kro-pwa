@@ -42,7 +42,10 @@ export const CHIP_ROLES: readonly SemanticRole[] = Object.keys(
 ) as SemanticRole[]
 
 /** Banner fills — a different contract: always white text, in both schemes. */
-export const BANNER_ROLES: readonly ColorRole[] = ['bannerWarning', 'bannerDanger']
+export const BANNER_ROLES: readonly ColorRole[] = [
+  'bannerWarning',
+  'bannerDanger',
+]
 
 /**
  * Text roles and the surfaces they are allowed to be painted on.
@@ -98,13 +101,18 @@ export const UNMEASURED_ROLES: Readonly<Record<string, string>> = {
   payneGray:
     'decorative fill; it happens to share a value with the light accent but carries no label of its own',
   charcoal: 'decorative fill for illustrations and empty-state art',
-  cozyBlue: 'decorative endeavor-list tint; the label on it comes from a chip role',
-  celeste: 'decorative endeavor-list tint; the label on it comes from a chip role',
-  melon: 'decorative endeavor-list tint; the label on it comes from a chip role',
-  focusGreen: 'session ring stroke; the sheet reads its numbers from text roles',
+  cozyBlue:
+    'decorative endeavor-list tint; the label on it comes from a chip role',
+  celeste:
+    'decorative endeavor-list tint; the label on it comes from a chip role',
+  melon:
+    'decorative endeavor-list tint; the label on it comes from a chip role',
+  focusGreen:
+    'session ring stroke; the sheet reads its numbers from text roles',
   breakBeige: 'break-session ring stroke; carries no label',
   pastryGreen: 'break-action fill; its label is a chip role',
-  ringGold: 'activity-ring stroke; rings are paired with a text counter (epic AC 9)',
+  ringGold:
+    'activity-ring stroke; rings are paired with a text counter (epic AC 9)',
   ringEmerald: 'activity-ring stroke; paired with a text counter',
   rewardYellow: 'reward-glyph fill; paired with a numeric label in a text role',
   glowLime: 'the rotating FAB glow; decorative and stilled by reduced motion',
@@ -112,7 +120,8 @@ export const UNMEASURED_ROLES: Readonly<Record<string, string>> = {
     'selection outline drawn at 2px over the accent chip — owned by the timeline child (#19)',
   timelineTodaySelectedForeground:
     'the today glyph on the accent-filled selected chip; the accent is user-tunable, so the pair is asserted by the chip that owns it (#19), not here',
-  hairline: 'a translucent row divider, not a boundary of an interactive element',
+  hairline:
+    'a translucent row divider, not a boundary of an interactive element',
 }
 
 /** One measurement the suite performs. */
@@ -197,7 +206,10 @@ export function measuredPairs(): MeasuredPair[] {
   }
 
   for (const theme of THEMES) {
-    for (const stop of ['headerGradientIndigo', 'headerGradientGrape'] as const) {
+    for (const stop of [
+      'headerGradientIndigo',
+      'headerGradientGrape',
+    ] as const) {
       pairs.push({
         contract: 'header date on the fixed indigoGrape gradient',
         label: stop,

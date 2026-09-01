@@ -39,7 +39,11 @@ export function formatTime(date: Date, locale?: string): string {
 }
 
 /** `"2:00 PM – 3:30 PM"`, canon's `TimedEventCard.timeRangeString` separator. */
-export function formatTimeRange(start: Date, end: Date, locale?: string): string {
+export function formatTimeRange(
+  start: Date,
+  end: Date,
+  locale?: string,
+): string {
   return `${formatTime(start, locale)} – ${formatTime(end, locale)}`
 }
 
@@ -87,7 +91,10 @@ function calendarDaysBetween(date: Date, now: Date): number {
  * the counted form ("3 days ago", "vor 3 Tagen") where it does not.
  */
 function relativeDays(days: number, locale?: string): string {
-  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-days, 'day')
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(
+    -days,
+    'day',
+  )
 }
 
 /**
@@ -113,8 +120,16 @@ function sentenceCase(text: string, locale?: string): string {
  * earlier the same day and a moment "1 day ago" that is not calendar-yesterday
  * both fall through to the time, which is what canon prints.
  */
-export function formatRelativeTime(date: Date, now: Date, locale?: string): string {
-  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+export function formatRelativeTime(
+  date: Date,
+  now: Date,
+  locale?: string,
+): string {
+  const yesterday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - 1,
+  )
   if (isSameDay(date, yesterday)) {
     return `${sentenceCase(relativeDays(1, locale), locale)}, ${formatTime(date, locale)}`
   }
@@ -130,7 +145,11 @@ export function formatRelativeTime(date: Date, now: Date, locale?: string): stri
  * passed, the plain time until then. Canon inlines this ternary at four call
  * sites; one name means the four cannot disagree.
  */
-export function formatDueCaption(due: Date, now: Date, locale?: string): string {
+export function formatDueCaption(
+  due: Date,
+  now: Date,
+  locale?: string,
+): string {
   return due.getTime() < now.getTime()
     ? formatRelativeTime(due, now, locale)
     : formatTime(due, locale)

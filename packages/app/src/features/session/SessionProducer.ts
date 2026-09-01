@@ -265,7 +265,10 @@ export const loadSessionPreferencesThunk = createAsyncThunk<
         defaultBreakDuration: minutesInSeconds(
           preferenceInt(preferences, sessionDefaultBreakDurationOption),
         ),
-        autoStartBreak: preferenceBool(preferences, sessionAutoStartBreakOption),
+        autoStartBreak: preferenceBool(
+          preferences,
+          sessionAutoStartBreakOption,
+        ),
         keepScreenAwake: preferenceBool(
           preferences,
           sessionKeepScreenAwakeOption,

@@ -7,12 +7,34 @@ import { type FABMenuEntry, LiquidGlassFABMenu } from './LiquidGlassFABMenu'
 afterEach(cleanup)
 
 /** KroApple's own quick-input set — Event, Task, Reminder, Habit. */
-function captureEntries(overrides: Partial<Record<string, () => void>> = {}): FABMenuEntry[] {
+function captureEntries(
+  overrides: Partial<Record<string, () => void>> = {},
+): FABMenuEntry[] {
   return [
-    { id: 'event', label: 'Event', glyph: 'calendar', onSelect: overrides.event ?? vi.fn() },
-    { id: 'task', label: 'Task', glyph: 'checkmark.circle.fill', onSelect: overrides.task ?? vi.fn() },
-    { id: 'reminder', label: 'Reminder', glyph: 'bell', onSelect: overrides.reminder ?? vi.fn() },
-    { id: 'habit', label: 'Habit', glyph: 'repeat', onSelect: overrides.habit ?? vi.fn() },
+    {
+      id: 'event',
+      label: 'Event',
+      glyph: 'calendar',
+      onSelect: overrides.event ?? vi.fn(),
+    },
+    {
+      id: 'task',
+      label: 'Task',
+      glyph: 'checkmark.circle.fill',
+      onSelect: overrides.task ?? vi.fn(),
+    },
+    {
+      id: 'reminder',
+      label: 'Reminder',
+      glyph: 'bell',
+      onSelect: overrides.reminder ?? vi.fn(),
+    },
+    {
+      id: 'habit',
+      label: 'Habit',
+      glyph: 'repeat',
+      onSelect: overrides.habit ?? vi.fn(),
+    },
   ]
 }
 
@@ -27,9 +49,12 @@ function renderMenu(items = captureEntries()) {
 }
 
 const rows = () =>
-  Array.from(document.querySelectorAll<HTMLButtonElement>('[data-kro-fab-menu-item]'))
+  Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-kro-fab-menu-item]'),
+  )
 
-const rowNamed = (label: string) => screen.getByRole('button', { name: new RegExp(label) })
+const rowNamed = (label: string) =>
+  screen.getByRole('button', { name: new RegExp(label) })
 
 describe('opening and closing the menu', () => {
   it('starts collapsed, with the trigger saying so', () => {
@@ -49,10 +74,14 @@ describe('opening and closing the menu', () => {
 
     expect(document.querySelector('[role="menu"]')).toBeNull()
     expect(document.querySelector('[role="menuitem"]')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-haspopup')).toBeNull()
-    expect(document.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe(
-      'Quick input',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-haspopup'),
+    ).toBeNull()
+    expect(
+      document.querySelector('[role="group"]')?.getAttribute('aria-label'),
+    ).toBe('Quick input')
   })
 
   it('unfurls the labelled actions when the user taps the FAB', async () => {
@@ -60,9 +89,11 @@ describe('opening and closing the menu', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
 
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
-      'true',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
     expect(rows()).toHaveLength(4)
     expect(rowNamed('Event')).toBeDefined()
   })
@@ -93,7 +124,9 @@ describe('opening and closing the menu', () => {
     const fab = root.querySelector('[data-kro-fab]') as HTMLElement
     const group = root.querySelector('[role="group"]') as HTMLElement
 
-    expect(fab.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      fab.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(root.className).toContain('flex-col-reverse')
   })
 
@@ -114,7 +147,9 @@ describe('opening and closing the menu', () => {
 
     await userEvent.click(trigger)
 
-    expect(screen.getByRole('button', { name: 'Quick input' }).innerHTML).not.toBe(closed)
+    expect(
+      screen.getByRole('button', { name: 'Quick input' }).innerHTML,
+    ).not.toBe(closed)
   })
 
   it('closes again on a second tap', async () => {
@@ -124,9 +159,11 @@ describe('opening and closing the menu', () => {
     await userEvent.click(trigger)
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
 
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
-      'false',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
   })
 
   it('closes on Escape — the keyboard user`s way out', async () => {
@@ -135,9 +172,11 @@ describe('opening and closing the menu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
     await userEvent.keyboard('{Escape}')
 
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
-      'false',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
   })
 
   it('hands focus back to the disc on Escape, rather than dropping it', async () => {
@@ -150,7 +189,9 @@ describe('opening and closing the menu', () => {
     rows()[0]?.focus()
     await userEvent.keyboard('{Escape}')
 
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Quick input' }))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Quick input' }),
+    )
   })
 })
 
@@ -173,9 +214,11 @@ describe('choosing an action', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
     await userEvent.click(rowNamed('Habit'))
 
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
-      'false',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
   })
 
   it('hands focus back to the disc after a choice, for the same reason', async () => {
@@ -184,7 +227,9 @@ describe('choosing an action', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Quick input' }))
     await userEvent.click(rowNamed('Habit'))
 
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Quick input' }))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Quick input' }),
+    )
   })
 
   it('does not fire a disabled action', async () => {
@@ -216,9 +261,11 @@ describe('choosing an action', () => {
 
     expect(onExpandedChange).toHaveBeenCalledWith(true)
     // Controlled: the menu did NOT open itself.
-    expect(screen.getByRole('button', { name: 'Quick input' }).getAttribute('aria-expanded')).toBe(
-      'false',
-    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
   })
 })
 

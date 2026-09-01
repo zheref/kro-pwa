@@ -25,7 +25,12 @@ import { TriageCarouselFragment } from '../TriageCarouselFragment'
 const WIDTH = 390
 const THRESHOLD = WIDTH * TRIAGE_DISMISS_THRESHOLD_FRACTION // 70.2px
 
-let teardown: (() => void) & { readonly capture: { readonly captured: readonly number[]; readonly released: readonly number[] } }
+let teardown: (() => void) & {
+  readonly capture: {
+    readonly captured: readonly number[]
+    readonly released: readonly number[]
+  }
+}
 
 beforeEach(() => {
   teardown = installPointerEvents()
@@ -70,7 +75,7 @@ const swipe = (
 }
 
 describe('the 72px leading edge strip', () => {
-  it('draws the strip at canon\'s width', () => {
+  it("draws the strip at canon's width", () => {
     mount()
     expect(screen.getByTestId('triage-edge-strip').style.width).toBe(
       `${TRIAGE_EDGE_STRIP_WIDTH}px`,
@@ -95,7 +100,7 @@ describe('the 72px leading edge strip', () => {
     expect(teardown.capture.captured).toEqual([])
   })
 
-  it('accepts a drag starting on the strip\'s last pixel and refuses the next one', () => {
+  it("accepts a drag starting on the strip's last pixel and refuses the next one", () => {
     const first = mount()
     swipe(first.panel, { startX: TRIAGE_EDGE_STRIP_WIDTH, dx: 200 })
     expect(first.onDismiss).toHaveBeenCalledTimes(1)
@@ -148,7 +153,7 @@ describe('the ~18% dismissal threshold, both sides', () => {
   })
 })
 
-describe('the kit\'s post-KC-IS-#73 pointer grammar', () => {
+describe("the kit's post-KC-IS-#73 pointer grammar", () => {
   it('captures nothing on pointerdown, so a tap inside the form keeps its click', () => {
     const { panel } = mount()
 
@@ -175,7 +180,7 @@ describe('the kit\'s post-KC-IS-#73 pointer grammar', () => {
     expect(onDismiss).not.toHaveBeenCalled()
   })
 
-  it('yields a mostly-vertical gesture to the form\'s scroller', () => {
+  it("yields a mostly-vertical gesture to the form's scroller", () => {
     const { panel, onDismiss } = mount()
 
     // A thumb starting a scroll at the leading edge: 20px across, 90px down.

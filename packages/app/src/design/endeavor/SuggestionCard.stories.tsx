@@ -60,7 +60,14 @@ export const BannerWidth = {
   name: 'fillsWidth · the Plan tab banner',
   render: () => (
     <Stage gradient>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          width: '100%',
+        }}
+      >
         <SuggestionCard
           model={{ ...COPY.googleCalendar, source: 'googleCalendar' }}
           fillsWidth

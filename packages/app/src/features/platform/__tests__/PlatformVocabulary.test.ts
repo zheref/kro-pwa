@@ -129,6 +129,8 @@ describe('the overdue-alert id prefix restatement', () => {
     const service = await import(
       '../../../services/platform/notifications/OverdueAlertReconciliation'
     )
-    expect(PLATFORM_OVERDUE_ALERT_ID_PREFIX).toBe(service.OVERDUE_ALERT_ID_PREFIX)
+    expect(PLATFORM_OVERDUE_ALERT_ID_PREFIX).toBe(
+      service.OVERDUE_ALERT_ID_PREFIX,
+    )
   })
 })

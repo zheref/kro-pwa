@@ -28,7 +28,9 @@ export const Plain = {
       </SurfaceCard>
       <Cell label="isElevated={false}">
         <SurfaceCard isElevated={false}>
-          <p style={{ margin: 0, color: 'var(--kro-color-fore)' }}>Flat, for a nested card.</p>
+          <p style={{ margin: 0, color: 'var(--kro-color-fore)' }}>
+            Flat, for a nested card.
+          </p>
         </SurfaceCard>
       </Cell>
     </Stage>
@@ -84,7 +86,9 @@ export const SectionWithAction = {
         actionTitle="Manage"
         onAction={() => undefined}
       >
-        <p style={{ margin: 0, color: 'var(--kro-color-fore)' }}>2 sessions logged</p>
+        <p style={{ margin: 0, color: 'var(--kro-color-fore)' }}>
+          2 sessions logged
+        </p>
       </SectionCard>
     </Stage>
   ),
@@ -97,10 +101,16 @@ export const BothThemes = {
       <SectionCard title="Core" padding={null}>
         <CardRowStack>
           <CardRow>
-            <PropertyRow label="Status" value={{ kind: 'text', text: 'Pending' }} />
+            <PropertyRow
+              label="Status"
+              value={{ kind: 'text', text: 'Pending' }}
+            />
           </CardRow>
           <CardRow>
-            <PropertyRow label="Duration" value={{ kind: 'emphasis', text: '45m' }} />
+            <PropertyRow
+              label="Duration"
+              value={{ kind: 'emphasis', text: '45m' }}
+            />
           </CardRow>
         </CardRowStack>
       </SectionCard>

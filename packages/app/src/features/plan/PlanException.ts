@@ -41,7 +41,10 @@ export const PlanExceptions = {
   matrixLoadFailed: (message: string): PlanException =>
     exception('matrixLoadFailed', message, true),
 
-  preloadFailed: (centerDayKey: PlanDayKey, message: string): PlanException => ({
+  preloadFailed: (
+    centerDayKey: PlanDayKey,
+    message: string,
+  ): PlanException => ({
     ...exception('preloadFailed', message, true),
     centerDayKey,
   }),
@@ -49,7 +52,8 @@ export const PlanExceptions = {
   malformedRow: (message: string): PlanException =>
     exception('malformedRow', message, false),
 
-  unknown: (message: string): PlanException => exception('unknown', message, true),
+  unknown: (message: string): PlanException =>
+    exception('unknown', message, true),
 }
 
 /** Normalises an arbitrary caught value. The one place `unknown` is minted. */

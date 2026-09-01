@@ -60,7 +60,8 @@ export function Stage({
           pointerEvents: 'none',
         }}
       >
-        Plan · Do · Earn · Find. Plan · Do · Earn · Find. Plan · Do · Earn · Find.
+        Plan · Do · Earn · Find. Plan · Do · Earn · Find. Plan · Do · Earn ·
+        Find.
       </p>
       {label ? (
         <p

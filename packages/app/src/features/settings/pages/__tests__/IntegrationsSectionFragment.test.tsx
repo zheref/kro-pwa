@@ -60,9 +60,12 @@ describe('the pane lists canon four rows', () => {
   it('renders the two Apple rows with a disabled Connect and says why', () => {
     renderPane({ kind: 'connected' })
 
-    const button = within(rowFor(IntegrationId.appleCalendar)).getByRole('button', {
-      name: 'Connect Apple Calendar',
-    }) as HTMLButtonElement
+    const button = within(rowFor(IntegrationId.appleCalendar)).getByRole(
+      'button',
+      {
+        name: 'Connect Apple Calendar',
+      },
+    ) as HTMLButtonElement
 
     expect(button.disabled).toBe(true)
     expect(rowFor(IntegrationId.appleCalendar).textContent).toContain(
@@ -141,7 +144,9 @@ describe('a failure is reported without hiding the rows', () => {
     )
 
     expect(
-      screen.getByText('The connection could not be changed. Please try again.'),
+      screen.getByText(
+        'The connection could not be changed. Please try again.',
+      ),
     ).toBeTruthy()
   })
 

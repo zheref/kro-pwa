@@ -1,5 +1,9 @@
 import { StoreProvider } from '../../../library/StoreProvider'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../../../library/store'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../../library/store'
 import { makeStubbedAuthService } from '../../../services/auth/AuthService'
 import { AuthExceptions } from '../AuthException'
 import {
@@ -42,7 +46,10 @@ function Stage({
       style={{ width: 420, padding: 16, background: 'var(--kro-color-back)' }}
     >
       <StoreProvider store={store}>
-        <AuthSurfacePage redirectTo="https://kro.example" onDismiss={() => {}} />
+        <AuthSurfacePage
+          redirectTo="https://kro.example"
+          onDismiss={() => {}}
+        />
       </StoreProvider>
     </div>
   )

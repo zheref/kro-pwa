@@ -128,7 +128,9 @@ describe('PlanListFragment — grouping', () => {
     mount({ onSelectGrouping })
 
     const group = screen.getByRole('group', { name: 'Group by' })
-    await userEvent.click(within(group).getByRole('button', { name: 'Project' }))
+    await userEvent.click(
+      within(group).getByRole('button', { name: 'Project' }),
+    )
 
     expect(onSelectGrouping).toHaveBeenCalledWith(PlanListGrouping.project)
   })
@@ -148,7 +150,9 @@ describe('PlanListFragment — grouping', () => {
     mount({ onSelectSort, onSelectGrouping })
 
     const group = screen.getByRole('group', { name: 'Sort by' })
-    await userEvent.click(within(group).getByRole('button', { name: 'Priority' }))
+    await userEvent.click(
+      within(group).getByRole('button', { name: 'Priority' }),
+    )
 
     expect(onSelectSort).toHaveBeenCalledWith(PlanListSort.priority)
     expect(onSelectGrouping).not.toHaveBeenCalled()
@@ -162,7 +166,8 @@ describe('PlanListFragment — row operations', () => {
       container.querySelectorAll('[data-slot="endeavor-swipe-leading"]').length,
     ).toBeGreaterThan(0)
     expect(
-      container.querySelectorAll('[data-slot="endeavor-swipe-trailing"]').length,
+      container.querySelectorAll('[data-slot="endeavor-swipe-trailing"]')
+        .length,
     ).toBeGreaterThan(0)
   })
 

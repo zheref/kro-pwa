@@ -28,7 +28,11 @@ import { err } from '@kro/core'
 import { createSlice } from '@reduxjs/toolkit'
 import { ThirstExceptions, type ThirstException } from './ThirstException'
 import type { FeatureVoteCounts } from './ThirstModels'
-import { castVoteThunk, checkVoteStateThunk, fetchCountsThunk } from './ThirstProducer'
+import {
+  castVoteThunk,
+  checkVoteStateThunk,
+  fetchCountsThunk,
+} from './ThirstProducer'
 import {
   withCountsFetchStarted,
   withCountsResult,
@@ -159,7 +163,9 @@ export const thirstSlice = createSlice({
             state,
             action.meta.arg.featureKey,
             action.meta.requestId,
-            err(ThirstExceptions.unknown(action.error.message ?? 'Unknown error')),
+            err(
+              ThirstExceptions.unknown(action.error.message ?? 'Unknown error'),
+            ),
           ),
         )
       })
@@ -168,7 +174,11 @@ export const thirstSlice = createSlice({
       .addCase(fetchCountsThunk.pending, (state, action) => {
         Object.assign(
           state,
-          withCountsFetchStarted(state, action.meta.arg.featureKey, action.meta.requestId),
+          withCountsFetchStarted(
+            state,
+            action.meta.arg.featureKey,
+            action.meta.requestId,
+          ),
         )
       })
       .addCase(fetchCountsThunk.fulfilled, (state, action) => {
@@ -192,7 +202,9 @@ export const thirstSlice = createSlice({
             state,
             action.meta.arg.featureKey,
             action.meta.requestId,
-            err(ThirstExceptions.unknown(action.error.message ?? 'Unknown error')),
+            err(
+              ThirstExceptions.unknown(action.error.message ?? 'Unknown error'),
+            ),
           ),
         )
       })
@@ -214,7 +226,9 @@ export const thirstSlice = createSlice({
           withVoteResult(
             state,
             action.meta.arg.featureKey,
-            err(ThirstExceptions.unknown(action.error.message ?? 'Unknown error')),
+            err(
+              ThirstExceptions.unknown(action.error.message ?? 'Unknown error'),
+            ),
           ),
         )
       })

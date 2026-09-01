@@ -185,9 +185,9 @@ describe('the confirm gate, end to end', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
-        false,
-      )
+      expect(
+        screen.getByTestId('triage-confirm').hasAttribute('disabled'),
+      ).toBe(false)
     })
     expect(screen.getByTestId('triage-blocked-reason').className).toContain(
       'sr-only',
@@ -244,9 +244,9 @@ describe('confirming returns to the Inbox with the row drained', () => {
       screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.decide}`),
     )
     await waitFor(() => {
-      expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
-        false,
-      )
+      expect(
+        screen.getByTestId('triage-confirm').hasAttribute('disabled'),
+      ).toBe(false)
     })
     fireEvent.click(screen.getByTestId('triage-confirm'))
 
@@ -273,22 +273,24 @@ describe('confirming returns to the Inbox with the row drained', () => {
       screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.delete}`),
     )
     await waitFor(() => {
-      expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
-        false,
-      )
+      expect(
+        screen.getByTestId('triage-confirm').hasAttribute('disabled'),
+      ).toBe(false)
     })
     fireEvent.click(screen.getByTestId('triage-secondary-archive'))
 
     await waitFor(() => {
       expect(store.getState().triage.save.kind).toBe('saved')
     })
-    const stored = await store.getState().capture.endeavors.find(
-      (endeavor) => endeavor.id === triageEndeavorFixtures.unscheduledTask.id,
-    )
-    await waitFor(() => {
-      expect(stored === undefined || stored.status === EndeavorStatus.closed).toBe(
-        true,
+    const stored = await store
+      .getState()
+      .capture.endeavors.find(
+        (endeavor) => endeavor.id === triageEndeavorFixtures.unscheduledTask.id,
       )
+    await waitFor(() => {
+      expect(
+        stored === undefined || stored.status === EndeavorStatus.closed,
+      ).toBe(true)
     })
   })
 
@@ -332,7 +334,7 @@ describe('Share — the Web Share hand-off and its clipboard fallback', () => {
     return store
   }
 
-  it('hands canon\'s blurb to the share sheet when the browser has one', async () => {
+  it("hands canon's blurb to the share sheet when the browser has one", async () => {
     const share = vi.fn().mockResolvedValue(undefined)
     const store = await openedOnDelegate({ share })
 
@@ -419,9 +421,9 @@ describe('one instant per operation', () => {
       screen.getByTestId(`triage-quadrant-${EisenhowerQuadrant.decide}`),
     )
     await waitFor(() => {
-      expect(screen.getByTestId('triage-confirm').hasAttribute('disabled')).toBe(
-        false,
-      )
+      expect(
+        screen.getByTestId('triage-confirm').hasAttribute('disabled'),
+      ).toBe(false)
     })
     fireEvent.click(screen.getByTestId('triage-confirm'))
 

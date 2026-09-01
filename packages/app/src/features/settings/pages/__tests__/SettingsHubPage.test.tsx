@@ -74,7 +74,7 @@ describe('opening the surface', () => {
     })
   })
 
-  it("does NOT pull settings on open — canon rule, made observable", async () => {
+  it('does NOT pull settings on open — canon rule, made observable', async () => {
     const settingsSync = makeStubbedSettingsSyncService()
     renderPage({ ...stubbedThunkExtra, settingsSync })
 
@@ -150,7 +150,9 @@ describe('drilling into a pane', () => {
   it('opens the General pane with every schema row on it', async () => {
     renderPage()
 
-    await userEvent.click(await screen.findByRole('button', { name: /General/ }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: /General/ }),
+    )
 
     expect(screen.getByTestId('preferences-section')).toBeTruthy()
     expect(screen.getByLabelText('Start')).toBeTruthy()
@@ -161,7 +163,9 @@ describe('drilling into a pane', () => {
     renderPage({
       ...stubbedThunkExtra,
       googleCalendar: makeStubbedGoogleCalendarService({
-        connection: GoogleCalendarConnections.unconfigured(['GOOGLE_CLIENT_ID']),
+        connection: GoogleCalendarConnections.unconfigured([
+          'GOOGLE_CLIENT_ID',
+        ]),
       }),
     })
 
@@ -184,7 +188,9 @@ describe('drilling into a pane', () => {
   it('returns to the hub from a pane', async () => {
     renderPage()
 
-    await userEvent.click(await screen.findByRole('button', { name: /Earn Preferences/ }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: /Earn Preferences/ }),
+    )
     expect(screen.queryByTestId('settings-hub')).toBeNull()
 
     await userEvent.click(screen.getByTestId('pane-back'))
@@ -209,7 +215,9 @@ describe('drilling into a pane', () => {
       },
     })
 
-    await userEvent.click(await screen.findByRole('button', { name: /General/ }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: /General/ }),
+    )
     await waitFor(() => {
       expect(store.getState().settings.load.kind).toBe('failed')
     })
@@ -230,7 +238,9 @@ describe('drilling into a pane', () => {
     await waitFor(() => {
       expect(store.getState().settings.load.kind).toBe('loaded')
     })
-    await userEvent.click(screen.getByRole('button', { name: 'Increase Session' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Increase Session' }),
+    )
 
     await waitFor(() => {
       expect(localStore.preferences.get('kro:session.defaultDuration')).toBe(25)
@@ -239,7 +249,7 @@ describe('drilling into a pane', () => {
 })
 
 describe('the desktop frame', () => {
-  it("carries canon minimum sheet size on a pointer-driven surface", async () => {
+  it('carries canon minimum sheet size on a pointer-driven surface', async () => {
     const { store } = renderPage()
 
     await screen.findByTestId('settings-surface')
@@ -248,7 +258,9 @@ describe('the desktop frame', () => {
     // written in this Page.
     expect(store.getState().main.surface).toBeTruthy()
     const panel = screen.getByTestId('settings-surface')
-    expect(['modal', 'sheet']).toContain(panel.getAttribute('data-presentation'))
+    expect(['modal', 'sheet']).toContain(
+      panel.getAttribute('data-presentation'),
+    )
   })
 
   it('tells the shell which destination is mounted, so the URL stays the authority', async () => {

@@ -138,7 +138,10 @@ const OPTION_LABELS: Readonly<Record<string, string>> = {
  * to no control at all — see `settingControlFor`.
  */
 const STEPPER_BOUNDS: Readonly<
-  Record<string, { min: number; max: number; step: number; unit: string | null }>
+  Record<
+    string,
+    { min: number; max: number; step: number; unit: string | null }
+  >
 > = {
   'plan.defaultSlotDuration': { min: 5, max: 120, step: 5, unit: 'min' },
   'do.nowThresholdHours': { min: 1, max: 12, step: 1, unit: 'h' },
@@ -166,7 +169,9 @@ export const DEFAULT_STEPPER_BOUNDS = {
 export const settingChoiceLabel = (optionKey: string, raw: string): string => {
   switch (optionKey) {
     case 'general.appearance':
-      return appearanceModeLabel(raw as Parameters<typeof appearanceModeLabel>[0])
+      return appearanceModeLabel(
+        raw as Parameters<typeof appearanceModeLabel>[0],
+      )
     case 'general.accentColor':
       return accentChoiceLabel(raw as Parameters<typeof accentChoiceLabel>[0])
     case 'general.defaultLandingSection':
@@ -448,7 +453,12 @@ export const settingSubgroupsFor = (
         placed.add(key)
         return [elementFor(option)]
       })
-      return { id: spec.id, title: spec.title, footnote: spec.footnote, elements }
+      return {
+        id: spec.id,
+        title: spec.title,
+        footnote: spec.footnote,
+        elements,
+      }
     })
     .filter((subgroup) => subgroup.elements.length > 0)
 

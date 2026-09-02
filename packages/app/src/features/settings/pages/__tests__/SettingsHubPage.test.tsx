@@ -123,7 +123,7 @@ describe('closing the surface pushes the synced preferences', () => {
     })
   })
 
-  it('never pushes a device-local option — the five stay on the device', async () => {
+  it('never pushes a device-local option — the six stay on the device', async () => {
     const settingsSync = makeStubbedSettingsSyncService()
     const { view } = renderPage({ ...stubbedThunkExtra, settingsSync })
 
@@ -136,6 +136,7 @@ describe('closing the surface pushes the synced preferences', () => {
     const keys = (settingsSync.pushes()[0] ?? []).map((entry) => entry.key)
     for (const local of [
       'general.appearance',
+      'general.palette',
       'general.haptics',
       'earn.milestoneHaptics',
       'session.keepScreenAwake',
@@ -147,7 +148,7 @@ describe('closing the surface pushes the synced preferences', () => {
 })
 
 describe('drilling into a pane', () => {
-  it('opens the General pane with every schema row on it', async () => {
+  it('opens the General pane without Theme once Appearance owns it', async () => {
     renderPage()
 
     await userEvent.click(
@@ -157,6 +158,20 @@ describe('drilling into a pane', () => {
     expect(screen.getByTestId('preferences-section')).toBeTruthy()
     expect(screen.getByLabelText('Start')).toBeTruthy()
     expect(screen.getByRole('switch', { name: 'Overdue alerts' })).toBeTruthy()
+    expect(screen.queryByLabelText('Theme')).toBeNull()
+  })
+
+  it('opens Appearance with Theme and the four palette swatches', async () => {
+    renderPage()
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^Appearance$/ }),
+    )
+
+    expect(screen.getByTestId('preferences-section')).toBeTruthy()
+    expect(screen.getByLabelText('Theme')).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Purple' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Green' })).toBeTruthy()
   })
 
   it('opens the Integrations pane with the honest unconfigured Google row', async () => {

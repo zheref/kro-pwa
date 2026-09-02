@@ -1,7 +1,7 @@
 /**
- * The Settings hub's information architecture — canon
- * `SettingsFeature.Section` (id, title, `systemImage`) and the three groups
- * `SettingsHubView` draws them in.
+ * The Settings hub's information architecture — canon `SettingsFeature.Section`
+ * (id, title, `systemImage`) and the three groups `SettingsHubView` draws
+ * them in.
  *
  * Canon keeps the section list and its grouping in two different files: the
  * `Section` enum carries id/title/glyph, and `SettingsHubScreen` decides which
@@ -18,13 +18,10 @@
  *
  * ## Appearance
  *
- * Canon at `2117efc` has a sixth preferences section, `appearance`, listed only
- * while the `appearanceThemes` flag is enabled. That flag is not in this repo's
- * registry (`@kro/core`'s `FeatureFlags` has 28 entries and no
- * `appearanceThemes`), so porting the section would mean inventing a flag —
- * and canon's own General pane still renders the Theme and Accent rows when the
- * flag is off, which is the shipping layout this port reproduces. The
- * divergence is named in the PR body.
+ * Canon's sixth preferences section, listed immediately after General while
+ * the `appearanceThemes` flag is on. The section is always in this table; the
+ * hub Selector hides it when the flag is off. Theme and palette live here
+ * rather than in General when the flag is on.
  */
 import { SettingGroup, assertNever } from '@kro/core'
 
@@ -32,6 +29,7 @@ import { SettingGroup, assertNever } from '@kro/core'
 export const SettingsSectionId = {
   profile: 'profile',
   general: 'general',
+  appearance: 'appearance',
   planPreferences: 'planPreferences',
   doPreferences: 'doPreferences',
   earnPreferences: 'earnPreferences',
@@ -64,15 +62,16 @@ export interface SettingsSection {
   readonly group: SettingsHubGroup
   /**
    * The preference group this section renders from the schema, or `null` for a
-   * section whose content is not schema-driven (Profile, Integrations,
-   * Subscription).
+   * section whose content is not schema-driven (Profile, Appearance,
+   * Integrations, Subscription). Appearance has options, but they are not a
+   * `SettingGroup` — the palette is spliced beside General, not inside it.
    */
   readonly settingGroup: SettingGroup | null
 }
 
 /**
- * Every section, in canon's hub order: Profile, then the five preference
- * sections, then Integrations and Subscription.
+ * Every section, in canon's hub order: Profile, General, Appearance, the four
+ * remaining preference sections, then Integrations and Subscription.
  *
  * Titles and glyphs are transcribed from `SettingsFeature.Section` verbatim.
  */
@@ -90,6 +89,17 @@ export const settingsSections: readonly SettingsSection[] = [
     glyph: 'gearshape',
     group: SettingsHubGroup.preferences,
     settingGroup: SettingGroup.general,
+  },
+  {
+    id: SettingsSectionId.appearance,
+    title: 'Appearance',
+    // `circle.lefthalf.filled`, not `paintpalette`: it is the glyph
+    // `SettingOption.appearance` already declares, so the hub row and
+    // the stored option agree — and `paintpalette` is already spent on
+    // the accent/palette options themselves.
+    glyph: 'circle.lefthalf.filled',
+    group: SettingsHubGroup.preferences,
+    settingGroup: null,
   },
   {
     id: SettingsSectionId.planPreferences,
@@ -141,6 +151,20 @@ export const settingsSectionsIn = (
 ): readonly SettingsSection[] =>
   settingsSections.filter((section) => section.group === group)
 
+/**
+ * Preference rows with Appearance included or omitted, matching the
+ * `appearanceThemes` flag.
+ */
+export const preferencesHubSectionsFor = (
+  isAppearanceThemesEnabled: boolean,
+): readonly SettingsSection[] => {
+  const sections = settingsSectionsIn(SettingsHubGroup.preferences)
+  if (isAppearanceThemesEnabled) return sections
+  return sections.filter(
+    (section) => section.id !== SettingsSectionId.appearance,
+  )
+}
+
 /** The section a raw id names, or `null` when nothing declares it. */
 export const settingsSectionForId = (id: string): SettingsSection | null =>
   settingsSections.find((section) => section.id === id) ?? null
@@ -161,6 +185,8 @@ export const settingsSectionTitle = (id: SettingsSectionId): string => {
 export const SettingsPaneKind = {
   /** Rows built from the preference schema. */
   preferences: 'preferences',
+  /** Theme + palette — schema options, but not a `SettingGroup`. */
+  appearance: 'appearance',
   profile: 'profile',
   integrations: 'integrations',
   subscription: 'subscription',
@@ -177,6 +203,8 @@ export const settingsPaneKind = (id: SettingsSectionId): SettingsPaneKind => {
       return SettingsPaneKind.integrations
     case SettingsSectionId.subscription:
       return SettingsPaneKind.subscription
+    case SettingsSectionId.appearance:
+      return SettingsPaneKind.appearance
     case SettingsSectionId.general:
     case SettingsSectionId.planPreferences:
     case SettingsSectionId.doPreferences:

@@ -33,12 +33,15 @@
  *   none of those has a surface to hang off.
  */
 import {
+  type AppStore,
+  type ThunkExtra,
   StoreProvider,
+  applyStoredAppearance,
   liveThunkExtra,
   makeStore,
   observeAuthState,
 } from '@kro/app'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { makeLiveNavigationService } from './liveNavigationService'
@@ -89,8 +92,38 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
+        <AppearanceSync extra={extra} store={store} />
         {children}
       </ThemeProvider>
     </StoreProvider>
   )
+}
+
+/**
+ * Paints the stored theme and palette onto the document, and keeps
+ * `next-themes` in step so it cannot overwrite `data-theme` from its own
+ * storage after a preference write.
+ */
+function AppearanceSync({
+  extra,
+  store,
+}: {
+  extra: ThunkExtra
+  store: AppStore
+}) {
+  const { setTheme } = useTheme()
+
+  useEffect(() => {
+    const sync = () => {
+      applyStoredAppearance(extra.localStore)
+      const explicit = document.documentElement.getAttribute('data-theme')
+      setTheme(
+        explicit === 'light' || explicit === 'dark' ? explicit : 'system',
+      )
+    }
+    sync()
+    return store.subscribe(sync)
+  }, [extra, store, setTheme])
+
+  return null
 }

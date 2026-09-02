@@ -5,12 +5,16 @@
 import {
   FeatureFlags,
   allSettingOptions,
+  appearanceOption,
+  appearancePaletteOption,
   disabledAssignment,
   makeHardcodedFeatureFlagService,
   sessionDefaultDurationOption,
   workingHoursEndOption,
 } from '@kro/core'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { PALETTE_ATTRIBUTE } from '../../../design/system/tokens/appPalette'
+import { THEME_ATTRIBUTE } from '../../../design/system/tokens/readToken'
 import {
   type ThunkExtra,
   makeStore,
@@ -31,6 +35,11 @@ import {
 const extraWith = (overrides: Partial<ThunkExtra>): ThunkExtra => ({
   ...stubbedThunkExtra,
   ...overrides,
+})
+
+afterEach(() => {
+  document.documentElement.removeAttribute(THEME_ATTRIBUTE)
+  document.documentElement.removeAttribute(PALETTE_ATTRIBUTE)
 })
 
 describe('loadSettingsThunk', () => {
@@ -59,9 +68,24 @@ describe('loadSettingsThunk', () => {
     await store.dispatch(loadSettingsThunk())
 
     expect(store.getState().settings.google.isEnabled).toBe(true)
+    expect(store.getState().settings.isAppearanceThemesEnabled).toBe(true)
   })
 
-  it('reports the flag as off when the registry says so', async () => {
+  it('reports the appearanceThemes flag as off when the registry says so', async () => {
+    const store = makeStore(
+      extraWith({
+        featureFlags: makeHardcodedFeatureFlagService({
+          overrides: [disabledAssignment(FeatureFlags.appearanceThemes)],
+        }),
+      }),
+    )
+
+    await store.dispatch(loadSettingsThunk())
+
+    expect(store.getState().settings.isAppearanceThemesEnabled).toBe(false)
+  })
+
+  it('reports the googleCalendar flag as off when the registry says so', async () => {
     const store = makeStore(
       extraWith({
         featureFlags: makeHardcodedFeatureFlagService({
@@ -154,6 +178,30 @@ describe('updateSettingThunk', () => {
       8 * 60,
     )
     expect(store.getState().settings.load.kind).toBe('loaded')
+  })
+
+  it('paints a stored theme onto the document', async () => {
+    const localStore = makeInMemoryLocalStore({})
+    const store = makeStore(extraWith({ localStore }))
+
+    await store.dispatch(loadSettingsThunk())
+    await store.dispatch(
+      updateSettingThunk({ key: appearanceOption.key, value: 'dark' }),
+    )
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('dark')
+  })
+
+  it('paints a stored palette onto the document', async () => {
+    const localStore = makeInMemoryLocalStore({})
+    const store = makeStore(extraWith({ localStore }))
+
+    await store.dispatch(loadSettingsThunk())
+    await store.dispatch(
+      updateSettingThunk({ key: appearancePaletteOption.key, value: 'red' }),
+    )
+
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe('red')
   })
 })
 

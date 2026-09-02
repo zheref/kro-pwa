@@ -56,7 +56,7 @@ export * from './vistas'
 // every option's key, value shape, glyph, default and sync scope, the five
 // groups, the cloud-sync subset, the stored-value codec and the narrow
 // key-value port #10's persistence satisfies. `flags/` is the `UZF-22` central
-// registry: all 28 declared flags, the `statusQuoSet` baseline, the
+// registry: all 29 declared flags, the `statusQuoSet` baseline, the
 // last-match-wins override service and the flag × preference AND-ing helper.
 //
 // Appended after the vistas block for the same reason that block exists — a

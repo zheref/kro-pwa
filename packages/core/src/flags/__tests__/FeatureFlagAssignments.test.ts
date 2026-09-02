@@ -41,6 +41,7 @@ const CANON_DISABLED: readonly string[] = [
   'notifications',
   'endeavorDetail',
   'outlookCalendarIntegration',
+  'appearanceThemes',
 ]
 
 const namesWithState = (state: 'enabled' | 'disabled') =>
@@ -54,13 +55,13 @@ describe('statusQuoSet', () => {
     expect(namesWithState('enabled')).toHaveLength(15)
   })
 
-  it('holds off exactly the nine features KroApple has staged but not shipped', () => {
+  it('holds off exactly the ten features KroApple has staged but not shipped', () => {
     expect(new Set(namesWithState('disabled'))).toEqual(new Set(CANON_DISABLED))
-    expect(namesWithState('disabled')).toHaveLength(9)
+    expect(namesWithState('disabled')).toHaveLength(10)
   })
 
-  it('assigns 24 of the 28 declared flags', () => {
-    expect(statusQuoSet).toHaveLength(24)
+  it('assigns 25 of the 29 declared flags', () => {
+    expect(statusQuoSet).toHaveLength(25)
   })
 
   it('leaves matrix, board, blueprints and developmentActions unassigned — declared, never staged', () => {
@@ -84,7 +85,7 @@ describe('statusQuoSet', () => {
 
 describe('the allEnabled baseline', () => {
   it('turns on every declared flag, including the four statusQuo never assigns', () => {
-    expect(allEnabledSet).toHaveLength(28)
+    expect(allEnabledSet).toHaveLength(29)
     for (const assignment of allEnabledSet) {
       expect(assignment.state).toBe('enabled')
     }

@@ -21,6 +21,7 @@ import {
   type SettingValue,
   FeatureFlags,
   allSettingOptions,
+  appearanceOptionKeys,
   err,
   makePreferences,
   ok,
@@ -30,6 +31,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
 import { type SettingsException, SettingsExceptions } from './SettingsException'
 import type { GoogleConnectionState } from './SettingsState'
+import { applyStoredAppearance } from './applyStoredAppearance'
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
@@ -39,6 +41,8 @@ export interface SettingsSnapshot {
   readonly values: Readonly<Record<string, SettingValue | null>>
   /** The `googleCalendar` flag, resolved in the same pass. */
   readonly isGoogleEnabled: boolean
+  /** The `appearanceThemes` flag — off hides the Appearance hub row. */
+  readonly isAppearanceThemesEnabled: boolean
 }
 
 /** What one write produced — the value the store actually took. */
@@ -101,6 +105,9 @@ export const loadSettingsThunk = createAsyncThunk<
       isGoogleEnabled: extra.featureFlags.isEnabled(
         FeatureFlags.googleCalendar,
       ),
+      isAppearanceThemesEnabled: extra.featureFlags.isEnabled(
+        FeatureFlags.appearanceThemes,
+      ),
     })
   } catch (error) {
     return err(SettingsExceptions.preferencesUnavailable(messageOf(error)))
@@ -136,6 +143,9 @@ export const updateSettingThunk = createAsyncThunk<
       return err(
         SettingsExceptions.preferenceRejected(`${key} refused the given value`),
       )
+    }
+    if (appearanceOptionKeys.has(key)) {
+      applyStoredAppearance(extra.localStore)
     }
     return ok({ key, value: preferences.read(option) })
   } catch (error) {

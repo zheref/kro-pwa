@@ -18,6 +18,8 @@ import {
   type FeatureFlagService,
   type LocalStore,
   type SignOutWipe,
+  FeatureFlags,
+  enabledAssignment,
   makeHardcodedFeatureFlagService,
 } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
@@ -209,8 +211,18 @@ export interface ThunkExtra {
  * Built once here so the endeavor engine's gate and any Selector reading a flag
  * see the same overrides within one browser session. `apps/web` will hand the
  * same instance down when the composition root lands (#13).
+ *
+ * `appearanceThemes` ships **enabled** here even though `statusQuoSet` keeps
+ * it disabled (Apple's dark launch). Adjust is asked to offer Appearance, so
+ * the web extras turn the flag on as a product override.
  */
-const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService()
+const shippingAppearanceOverride = enabledAssignment(
+  FeatureFlags.appearanceThemes,
+)
+
+const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
+  overrides: [shippingAppearanceOverride],
+})
 
 /**
  * The live Google binding, built once so the service and the `PlanHost` adapted
@@ -274,9 +286,11 @@ export const stubbedThunkExtra: ThunkExtra = {
   shareService: stubbedShareService,
   documentTitleService: stubbedDocumentTitleService,
   signOutWipe,
-  // `statusQuo` by default, so a suite that asserts on shipping behaviour gets
-  // shipping behaviour — `supabaseHosting` disabled, exactly like canon.
-  featureFlags: makeHardcodedFeatureFlagService(),
+  // `statusQuo` by default, plus the web product override that turns
+  // Appearance on — `supabaseHosting` stays disabled, exactly like canon.
+  featureFlags: makeHardcodedFeatureFlagService({
+    overrides: [shippingAppearanceOverride],
+  }),
   authService: stubbedAuthService,
   settingsSync: stubbedSettingsSyncService,
   endeavorSync: stubbedEndeavorSyncService,

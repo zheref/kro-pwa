@@ -79,6 +79,11 @@ export const GeneralPane = {
   render: () => <Stage section={SettingsSectionId.general} />,
 }
 
+/** Appearance — Theme and the four palettes. */
+export const AppearancePane = {
+  render: () => <Stage section={SettingsSectionId.appearance} />,
+}
+
 /** The Session pane over stored values rather than defaults. */
 export const SessionPane = {
   render: () => (

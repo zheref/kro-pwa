@@ -1,15 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { PALETTE_ATTRIBUTE } from './appPalette'
 import {
   THEME_ATTRIBUTE,
+  applyAppearanceValues,
   readColorRole,
   readSemanticRole,
   readToken,
   resolveTheme,
+  setPalettePreference,
   setThemePreference,
 } from './readToken'
 
 afterEach(() => {
   document.documentElement.removeAttribute(THEME_ATTRIBUTE)
+  document.documentElement.removeAttribute(PALETTE_ATTRIBUTE)
   document.documentElement.style.cssText = ''
   vi.unstubAllGlobals()
 })
@@ -94,5 +98,54 @@ describe('setThemePreference', () => {
     setThemePreference('dark')
     setThemePreference('system')
     expect(document.documentElement.hasAttribute(THEME_ATTRIBUTE)).toBe(false)
+  })
+})
+
+describe('setPalettePreference', () => {
+  it('writes the palette onto data-palette', () => {
+    setPalettePreference('green')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'green',
+    )
+  })
+
+  it('falls back to purple for an unknown stored value', () => {
+    setPalettePreference('chartreuse')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'purple',
+    )
+  })
+
+  it('still writes purple rather than omitting the attribute', () => {
+    setPalettePreference('purple')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'purple',
+    )
+  })
+})
+
+describe('applyAppearanceValues', () => {
+  it('applies a pinned theme and a palette together', () => {
+    applyAppearanceValues('dark', 'orange')
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('dark')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'orange',
+    )
+  })
+
+  it('treats a missing theme as system', () => {
+    applyAppearanceValues(null, 'green')
+    expect(document.documentElement.hasAttribute(THEME_ATTRIBUTE)).toBe(false)
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'green',
+    )
+  })
+
+  it('treats a missing palette as purple', () => {
+    applyAppearanceValues('light', null)
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('light')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'purple',
+    )
   })
 })

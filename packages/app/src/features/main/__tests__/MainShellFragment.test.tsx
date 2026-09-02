@@ -390,6 +390,17 @@ describe('the content column reaches the window edge', () => {
     expect(screen.getByTestId('shell-title-slab-host')).toBeTruthy()
   })
 
+  it('insets the sidebar from the top the same way the chrome row already insets the bottom', () => {
+    renderShell(desktopSurface)
+
+    const chrome = screen.getByTestId('shell-sidebar').parentElement
+    expect(chrome?.className).toContain('pb-kro-small')
+    expect(chrome?.className).not.toContain('pt-kro-small')
+    expect(screen.getByTestId('shell-sidebar').className).toContain(
+      'mt-kro-small',
+    )
+  })
+
   it('drops the glass bar and the redundant title so the slab shows through', () => {
     renderShell(desktopSurface)
 

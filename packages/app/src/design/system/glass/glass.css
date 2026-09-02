@@ -155,17 +155,19 @@
 }
 
 /**
- * A selected, "pressed in" surface — frosted glass with a deeper inner shadow
- * so the pane reads recessed rather than floating. No scale: this is a
- * persistent selected state, not a pointer `:active`.
+ * A selected, "pressed in" surface — frosted glass stamped into the page.
+ * The extra inner bezel (a darker top lip and a 1.5px inset outline) is
+ * what reads as recessed against the field, not merely frosted. No scale:
+ * this is a persistent selected state, not a pointer `:active`.
  */
 .kro-glass--pressed {
   box-shadow:
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 3px 12px rgb(0 0 0 / 0.32),
-    inset 0 1px 2px rgb(0 0 0 / 0.18),
+    inset 0 2px 0 0 rgb(0 0 0 / 0.42),
+    inset 0 0 0 1.5px rgb(0 0 0 / 0.32),
+    inset 0 6px 14px rgb(0 0 0 / 0.28),
     inset 0 1px 0 var(--kro-glass-hi),
-    inset 0 -12px 20px -10px rgb(0 0 0 / 0.4);
+    inset 0 -1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -14px 22px -12px rgb(0 0 0 / 0.45);
 }
 
 .kro-glass--pressed::before {

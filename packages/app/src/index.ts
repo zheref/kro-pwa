@@ -174,6 +174,7 @@ export {
  * lets the root say it.
  */
 export { observeAuthState } from './features/auth/AuthProducer'
+export { applyStoredAppearance } from './features/settings/applyStoredAppearance'
 
 /**
  * The Triage render tier (KC-IS-#26) — the carousel that mounts **inside** the

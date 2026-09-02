@@ -34,6 +34,7 @@ import {
   settingElementsFor,
   settingLabel,
   settingSubgroupsFor,
+  settingSubgroupsForAppearance,
 } from '../SettingsElements'
 
 describe('every declared option is rendered exactly once', () => {
@@ -50,12 +51,17 @@ describe('every declared option is rendered exactly once', () => {
     },
   )
 
-  it('covers the whole preference schema across the five panes — nothing is orphaned', () => {
-    const rendered = settingGroups.flatMap((group) =>
-      settingElementsFor(group).map((element) => element.option.key),
-    )
+  it('covers the whole preference schema across the five panes plus Appearance — nothing is orphaned', () => {
+    const rendered = [
+      ...settingGroups.flatMap((group) =>
+        settingElementsFor(group).map((element) => element.option.key),
+      ),
+      ...settingSubgroupsForAppearance().flatMap((subgroup) =>
+        subgroup.elements.map((element) => element.option.key),
+      ),
+    ]
 
-    expect([...rendered].sort()).toEqual(
+    expect([...new Set(rendered)].sort()).toEqual(
       allPreferenceOptions.map((option) => option.key).sort(),
     )
   })
@@ -222,12 +228,39 @@ describe('the schema decides the badges, not the row', () => {
     expect(element?.isDeviceLocal).toBe(false)
   })
 
-  it('reports the one consumed General option and marks the rest declared', () => {
+  it('reports overdue alerts and theme as consumed in General, and marks the rest declared', () => {
     const elements = settingElementsFor(SettingGroup.general)
     const consumed = elements.filter((element) => element.isConsumed)
 
-    expect(consumed.map((element) => element.option.key)).toEqual([
+    expect(consumed.map((element) => element.option.key).sort()).toEqual([
+      appearanceOption.key,
       overdueAlertsOption.key,
     ])
+  })
+})
+
+describe('the Appearance pane', () => {
+  it('offers Theme then Palette, and nothing else', () => {
+    expect(
+      settingSubgroupsForAppearance().map((subgroup) => subgroup.id),
+    ).toEqual(['theme', 'palette'])
+  })
+
+  it('draws the palette as a four-swatch grid rather than a dropdown', () => {
+    const palette = settingSubgroupsForAppearance()
+      .flatMap((subgroup) => subgroup.elements)
+      .find((element) => element.option.key === 'general.palette')
+
+    expect(palette?.control.kind).toBe('paletteSwatches')
+  })
+
+  it('drops Theme and Accent from General when Appearance owns them', () => {
+    const keys = settingElementsFor(SettingGroup.general, {
+      isAppearanceThemesEnabled: true,
+    }).map((element) => element.option.key)
+
+    expect(keys).not.toContain('general.appearance')
+    expect(keys).not.toContain('general.accentColor')
+    expect(keys).toContain('general.overdueAlerts')
   })
 })

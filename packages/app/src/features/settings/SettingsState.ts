@@ -101,6 +101,12 @@ export interface SettingsState {
   readonly values: Readonly<Record<string, SettingValue | null>>
   readonly pane: SettingsPaneState
   readonly google: GoogleIntegrationState
+  /**
+   * Whether the Appearance hub row and pane are offered. Seeded true because
+   * kro-pwa ships `appearanceThemes` on; `loadSettingsThunk` overwrites it
+   * from the registry so a kill-switch override still hides the section.
+   */
+  readonly isAppearanceThemesEnabled: boolean
   readonly authPresentation: AuthPresentationState
 }
 
@@ -114,6 +120,7 @@ export const initialSettingsState: SettingsState = {
     isEnabled: false,
     exception: null,
   },
+  isAppearanceThemesEnabled: true,
   authPresentation: { kind: 'hidden' },
 }
 

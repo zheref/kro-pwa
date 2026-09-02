@@ -31,6 +31,10 @@
  */
 import type { SettingValue, WeekDay } from '@kro/core'
 import { type SettingGroup, weekDays } from '@kro/core'
+import {
+  APP_PALETTES,
+  appPaletteNamed,
+} from '../../../design/system/tokens/appPalette'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
@@ -44,7 +48,10 @@ import type {
   SettingElement,
   SettingSubgroup,
 } from '../SettingsElements'
-import { settingSubgroupsFor } from '../SettingsElements'
+import {
+  settingSubgroupsFor,
+  settingSubgroupsForAppearance,
+} from '../SettingsElements'
 import { settingValueIn } from '../SettingsSelectors'
 import { settingsIcon } from './settingsIcons'
 import {
@@ -61,8 +68,11 @@ import {
 } from './settingsFormatting'
 
 export interface PreferencesSectionFragmentProps {
-  /** Which schema group this pane renders. */
-  readonly group: SettingGroup
+  /**
+   * Which pane this renders. `'appearance'` is the Theme + Palette pane,
+   * which is not a `SettingGroup`.
+   */
+  readonly group: SettingGroup | 'appearance'
   /** The current snapshot. A missing key falls back to the declared default. */
   readonly values: Readonly<Record<string, SettingValue | null>>
   /** Canon's `isLoaded` — the whole form is inert until the values arrive. */
@@ -72,6 +82,10 @@ export interface PreferencesSectionFragmentProps {
    * anything for it; every other pane passes the default.
    */
   readonly isWorkingHoursValid?: boolean
+  /**
+   * When on, General hides Theme and Accent — Appearance owns them.
+   */
+  readonly isAppearanceThemesEnabled?: boolean
   /** Copy for a failure banner above the form, or `null`. */
   readonly errorCopy?: string | null
   readonly onChangeSetting: (key: string, value: SettingValue) => void
@@ -85,10 +99,14 @@ export function PreferencesSectionFragment({
   values,
   isLoaded,
   isWorkingHoursValid = true,
+  isAppearanceThemesEnabled = false,
   errorCopy = null,
   onChangeSetting,
 }: PreferencesSectionFragmentProps) {
-  const subgroups = settingSubgroupsFor(group)
+  const subgroups =
+    group === 'appearance'
+      ? settingSubgroupsForAppearance()
+      : settingSubgroupsFor(group, { isAppearanceThemesEnabled })
 
   return (
     <div
@@ -210,6 +228,7 @@ function SettingRow({
   const isStacked =
     element.control.kind === 'days' ||
     element.control.kind === 'swatches' ||
+    element.control.kind === 'paletteSwatches' ||
     element.control.kind === 'timezone'
 
   return (
@@ -336,6 +355,8 @@ function SettingControlView(props: ControlProps) {
       return <ChoiceControl {...props} choices={props.control.choices} />
     case 'swatches':
       return <SwatchControl {...props} choices={props.control.choices} />
+    case 'paletteSwatches':
+      return <PaletteSwatchControl {...props} choices={props.control.choices} />
     case 'timezone':
       return <TimeZoneControl {...props} />
   }
@@ -644,6 +665,73 @@ function SwatchControl({
               opacity: isDisabled ? 0.62 : undefined,
             }}
           />
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Canon's `PaletteSwatch` grid — each cell paints the exact two-stop ramp a
+ * page will wear, so what the picker promises is what the app delivers.
+ */
+function PaletteSwatchControl({
+  controlId,
+  label,
+  optionKey,
+  value,
+  isDisabled,
+  choices,
+  onChangeSetting,
+}: ControlProps & {
+  readonly choices: readonly { value: string; label: string }[]
+}) {
+  const CheckIcon = settingsIcon('checkmark')
+  const selected = typeof value === 'string' ? appPaletteNamed(value) : 'purple'
+
+  return (
+    <div
+      id={controlId}
+      role="radiogroup"
+      aria-label={label}
+      className="grid w-full grid-cols-2 gap-kro-small"
+    >
+      {choices.map((choice) => {
+        const isSelected = selected === choice.value
+        const spec = APP_PALETTES[appPaletteNamed(choice.value)]
+        return (
+          <button
+            key={choice.value}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            aria-label={choice.label}
+            disabled={isDisabled}
+            onClick={() => onChangeSetting(optionKey, choice.value)}
+            className={cn(
+              'relative flex min-h-16 flex-col justify-end overflow-hidden rounded-kro-medium p-kro-small',
+              'outline-none focus-visible:shadow-[var(--kro-ring)]',
+              'disabled:cursor-not-allowed',
+            )}
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${spec.light.start}, ${spec.light.end})`,
+              boxShadow: isSelected
+                ? `0 0 0 2px ${colorVar('absolute')}, 0 0 0 4px ${colorVar('fore')}`
+                : `inset 0 0 0 1px ${colorVar('hairline')}`,
+              opacity: isDisabled ? 0.62 : undefined,
+              color: '#f7f7ff',
+            }}
+          >
+            {isSelected ? (
+              <CheckIcon
+                size={16}
+                strokeWidth={2.5}
+                aria-hidden
+                className="absolute top-2 right-2"
+              />
+            ) : null}
+            <span className="text-[13px] font-medium">{choice.label}</span>
+          </button>
         )
       })}
     </div>

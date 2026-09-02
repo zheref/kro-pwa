@@ -15,6 +15,7 @@ import { SettingSyncScope } from '../SettingOption'
 import {
   allPreferenceOptions,
   appearanceOption,
+  appearancePaletteOption,
   appleCalendarOption,
   appleRemindersOption,
   cloudSyncOptions,
@@ -43,6 +44,7 @@ describe('the cloud-sync subset', () => {
   it('excludes every device-local option, so nothing device-shaped reaches the account', () => {
     const localKeys = keysOf([
       appearanceOption,
+      appearancePaletteOption,
       hapticsOption,
       earnMilestoneHapticsOption,
       sessionKeepScreenAwakeOption,
@@ -76,13 +78,13 @@ describe('the cloud-sync subset', () => {
     )
   })
 
-  it('adds up: 34 preferences = 29 synced + 5 local', () => {
+  it('adds up: 35 preferences = 29 synced + 6 local', () => {
     const local = allPreferenceOptions.filter(
       (option) => option.syncScope === SettingSyncScope.local,
     )
     expect(cloudSyncOptions.length + local.length).toBe(
       allPreferenceOptions.length,
     )
-    expect(local).toHaveLength(5)
+    expect(local).toHaveLength(6)
   })
 })

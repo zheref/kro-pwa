@@ -2,7 +2,7 @@
  * `FeatureFlagAssignment.statusQuoSet` — canon
  * `KroCore/Domain/FeatureFlags.swift`, ported assignment for assignment.
  *
- * The ship baseline: 24 of the 28 declared flags carry an explicit assignment;
+ * The ship baseline: 25 of the 29 declared flags carry an explicit assignment;
  * **`matrix`, `board`, `blueprints` and `developmentActions` carry none**, so
  * `state(for:)` resolves `null` for them and `enabledResolver` reads that as
  * off. That is not an omission to tidy up — an unassigned flag is how canon
@@ -64,6 +64,13 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   // handoff that already exist, so the flag is a kill switch for the gesture
   // rather than a rollout gate.
   enabledAssignment(FeatureFlags.timelineQuickEventCreation),
+  // Appearance themes — the Appearance preferences pane, the selectable
+  // palette, and the theme/palette actually being applied app-wide.
+  // Ships disabled: this is a status-quo-preserving dark launch. With the
+  // flag off the app renders exactly as it did before palettes existed;
+  // kro-pwa turns it on in `liveThunkExtra` / `stubbedThunkExtra` so Adjust
+  // offers the section the maintainer asked for.
+  disabledAssignment(FeatureFlags.appearanceThemes),
 ]
 
 /**

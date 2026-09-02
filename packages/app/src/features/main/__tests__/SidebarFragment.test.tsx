@@ -251,3 +251,29 @@ describe('intent leaves as a callback, never a dispatch (RC-15)', () => {
     expect(onSubmitSearch).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('the column inset', () => {
+  it('sits the same distance from the top as the shell already sits from the bottom', () => {
+    renderSidebar()
+
+    expect(screen.getByTestId('shell-sidebar').className).toContain(
+      'mt-kro-small',
+    )
+  })
+
+  it('stretches in the chrome row instead of claiming 100% height, so the top margin does not overflow', () => {
+    renderSidebar()
+
+    const sidebar = screen.getByTestId('shell-sidebar')
+    expect(sidebar.className).toContain('self-stretch')
+    expect(sidebar.className).not.toContain('h-full')
+  })
+
+  it('does not add a matching bottom margin — the parent already pads the bottom', () => {
+    renderSidebar()
+
+    expect(screen.getByTestId('shell-sidebar').className).not.toContain(
+      'mb-kro-small',
+    )
+  })
+})

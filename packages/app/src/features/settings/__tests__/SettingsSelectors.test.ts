@@ -28,9 +28,11 @@ import {
   preferencesHubSections,
   profileHubSection,
   selectIntegrationRows,
+  selectIsAppearanceThemesEnabled,
   selectIsSettingsEditable,
   selectIsSettingsLoaded,
   selectOpenSection,
+  selectPreferencesHubSections,
   selectSettingValues,
   selectSettingsErrorCopy,
   selectSettingsSyncFooter,
@@ -275,8 +277,15 @@ describe('the hub groups', () => {
     expect(profileHubSection.id).toBe(SettingsSectionId.profile)
   })
 
-  it('exposes the five preference rows', () => {
-    expect(preferencesHubSections).toHaveLength(5)
+  it('exposes the six preference rows, Appearance after General', () => {
+    expect(preferencesHubSections.map((section) => section.id)).toEqual([
+      SettingsSectionId.general,
+      SettingsSectionId.appearance,
+      SettingsSectionId.planPreferences,
+      SettingsSectionId.doPreferences,
+      SettingsSectionId.earnPreferences,
+      SettingsSectionId.sessionPreferences,
+    ])
   })
 
   it('exposes the two account rows', () => {
@@ -284,5 +293,32 @@ describe('the hub groups', () => {
       SettingsSectionId.integrations,
       SettingsSectionId.subscription,
     ])
+  })
+})
+
+describe('Appearance gating', () => {
+  it('reports the flag from state', () => {
+    expect(
+      selectIsAppearanceThemesEnabled(rootWith(SettingsMocks.loaded)),
+    ).toBe(true)
+  })
+
+  it('lists Appearance on the hub while the flag is on', () => {
+    expect(
+      selectPreferencesHubSections(rootWith(SettingsMocks.loaded)).map(
+        (section) => section.id,
+      ),
+    ).toContain(SettingsSectionId.appearance)
+  })
+
+  it('hides Appearance when the flag is off', () => {
+    const off: SettingsState = {
+      ...SettingsMocks.loaded,
+      isAppearanceThemesEnabled: false,
+    }
+
+    expect(
+      selectPreferencesHubSections(rootWith(off)).map((section) => section.id),
+    ).not.toContain(SettingsSectionId.appearance)
   })
 })

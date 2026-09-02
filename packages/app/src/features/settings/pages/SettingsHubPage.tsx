@@ -66,11 +66,12 @@ import {
 } from '../SettingsProducer'
 import {
   accountHubSections,
-  preferencesHubSections,
   profileHubSection,
   selectIntegrationRows,
+  selectIsAppearanceThemesEnabled,
   selectIsSettingsEditable,
   selectOpenSection,
+  selectPreferencesHubSections,
   selectSettingValues,
   selectSettingsErrorCopy,
   selectSettingsSyncFooter,
@@ -99,6 +100,10 @@ export function SettingsHubPage() {
   const errorCopy = useAppSelector(selectSettingsErrorCopy)
   const syncFooter = useAppSelector(selectSettingsSyncFooter)
   const integrationRows = useAppSelector(selectIntegrationRows)
+  const preferencesSections = useAppSelector(selectPreferencesHubSections)
+  const isAppearanceThemesEnabled = useAppSelector(
+    selectIsAppearanceThemesEnabled,
+  )
   const user = useAppSelector(selectCurrentUser)
   const initials = useAppSelector(selectUserInitials)
   const surface = useAppSelector(selectSurface)
@@ -173,7 +178,7 @@ export function SettingsHubPage() {
         {section === null ? (
           <SettingsHubFragment
             profileSection={profileHubSection}
-            preferencesSections={preferencesHubSections}
+            preferencesSections={preferencesSections}
             accountSections={accountHubSections}
             syncFooter={syncFooter}
             accountName={user?.name ?? null}
@@ -201,6 +206,18 @@ export function SettingsHubPage() {
                 values={values}
                 isLoaded={isEditable}
                 isWorkingHoursValid={isWorkingHoursValid}
+                isAppearanceThemesEnabled={isAppearanceThemesEnabled}
+                errorCopy={errorCopy}
+                onChangeSetting={onChangeSetting}
+              />
+            ) : null}
+
+            {settingsPaneKind(section.id) === SettingsPaneKind.appearance ? (
+              <PreferencesSectionFragment
+                group="appearance"
+                values={values}
+                isLoaded={isEditable}
+                isAppearanceThemesEnabled={isAppearanceThemesEnabled}
                 errorCopy={errorCopy}
                 onChangeSetting={onChangeSetting}
               />

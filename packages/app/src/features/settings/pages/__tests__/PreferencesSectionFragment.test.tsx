@@ -265,3 +265,38 @@ describe('the pre-load guard', () => {
     expect(screen.getAllByTestId('setting-row').length).toBeGreaterThan(0)
   })
 })
+
+describe('the Appearance pane', () => {
+  it('offers Theme and the four palette swatches', () => {
+    renderPane({ group: 'appearance' })
+
+    expect(screen.getByLabelText('Theme')).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Purple' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Green' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Orange' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Red' })).toBeTruthy()
+  })
+
+  it('rings the stored palette as selected', () => {
+    renderPane({
+      group: 'appearance',
+      values: { ...defaultSettingValues, 'general.palette': 'green' },
+    })
+
+    expect(
+      screen.getByRole('radio', { name: 'Green' }).getAttribute('aria-checked'),
+    ).toBe('true')
+    expect(
+      screen
+        .getByRole('radio', { name: 'Purple' })
+        .getAttribute('aria-checked'),
+    ).toBe('false')
+  })
+
+  it('hides Theme on General when Appearance owns it', () => {
+    renderPane({ isAppearanceThemesEnabled: true })
+
+    expect(screen.queryByLabelText('Theme')).toBeNull()
+    expect(screen.getByLabelText('Start')).toBeTruthy()
+  })
+})

@@ -7,6 +7,7 @@ import { SettingsSectionId } from '../SettingsSection'
 import {
   withAuthDismissed,
   withAuthPresented,
+  withAppearanceThemesEnabled,
   withGoogleBusy,
   withGoogleConnection,
   withGoogleEnabled,
@@ -157,6 +158,28 @@ describe('the Google integration', () => {
 
     expect(next.google.isEnabled).toBe(true)
     expect(next.google.connection).toEqual({ kind: 'needsReconnect' })
+  })
+})
+
+describe('withAppearanceThemesEnabled', () => {
+  it('turns the Appearance hub row on', () => {
+    const off = withAppearanceThemesEnabled(base, false)
+    expect(
+      withAppearanceThemesEnabled(off, true).isAppearanceThemesEnabled,
+    ).toBe(true)
+  })
+
+  it('turns the Appearance hub row off — the kill switch', () => {
+    expect(
+      withAppearanceThemesEnabled(base, false).isAppearanceThemesEnabled,
+    ).toBe(false)
+  })
+
+  it('leaves the preference snapshot untouched', () => {
+    const loaded = withPreferencesLoaded(base, { 'general.appearance': 'dark' })
+    expect(withAppearanceThemesEnabled(loaded, false).values).toEqual(
+      loaded.values,
+    )
   })
 })
 

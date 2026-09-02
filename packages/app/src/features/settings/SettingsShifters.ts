@@ -121,6 +121,14 @@ export const withGoogleEnabled = (
   google: { ...state.google, isEnabled },
 })
 
+export const withAppearanceThemesEnabled = (
+  state: SettingsState,
+  isEnabled: boolean,
+): SettingsState => ({
+  ...state,
+  isAppearanceThemesEnabled: isEnabled,
+})
+
 /** The auth surface was asked for, from one of its two entry points. */
 export const withAuthPresented = (
   state: SettingsState,

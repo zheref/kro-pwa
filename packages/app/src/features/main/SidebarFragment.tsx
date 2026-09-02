@@ -97,7 +97,7 @@ export function SidebarFragment(props: SidebarFragmentProps) {
         // `relative z-10` is load-bearing: the page field is an absolutely-
         // positioned decoration behind this column. Without a stacking context
         // here it would paint over the sidebar's own top rows.
-        'relative z-10 h-full shrink-0 overflow-y-auto text-kro-fore',
+        'relative z-10 mt-kro-small self-stretch shrink-0 overflow-y-auto text-kro-fore',
       )}
       style={{
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,

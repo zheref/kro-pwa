@@ -14,6 +14,7 @@ import {
  * reason the option table's snapshot is: it is the diff against canon.
  */
 const CANON_FLAG_NAMES: readonly string[] = [
+  'appearanceThemes',
   'authenticationEnforced',
   'blueprints',
   'board',
@@ -45,9 +46,9 @@ const CANON_FLAG_NAMES: readonly string[] = [
 ]
 
 describe('the declared flag registry', () => {
-  it('declares the 28 flags canon declares, and no others', () => {
+  it('declares the 29 flags canon declares, and no others', () => {
     expect(allKnownFlagNames).toEqual(CANON_FLAG_NAMES)
-    expect(allKnownFlags).toHaveLength(28)
+    expect(allKnownFlags).toHaveLength(29)
   })
 
   it('keeps every constant in step with its own name, so a persisted key resolves', () => {

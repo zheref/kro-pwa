@@ -55,12 +55,24 @@ export {
   THEME_ATTRIBUTE,
   type ResolvedTheme,
   type ThemePreference,
+  applyAppearanceValues,
   readColorRole,
   readSemanticRole,
   readToken,
   resolveTheme,
+  setPalettePreference,
   setThemePreference,
 } from './system/tokens/readToken'
+export {
+  APP_PALETTES,
+  APP_PALETTE_IDS,
+  DEFAULT_APP_PALETTE,
+  PALETTE_ATTRIBUTE,
+  type AppPaletteId,
+  type AppPaletteRamp,
+  type AppPaletteSpec,
+  appPaletteNamed,
+} from './system/tokens/appPalette'
 export {
   AA_NON_TEXT,
   AA_TEXT,

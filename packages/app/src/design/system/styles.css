@@ -31,6 +31,7 @@
    ========================================================================== */
 
 @import "./tokens/tokens.css";
+@import "./tokens/palettes.css";
 @import "./motion/motion.css";
 @import "./glass/glass.css" layer(components);
 @import "./gradient/gradient.css";

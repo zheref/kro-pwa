@@ -3,7 +3,7 @@
  * `KroCore/Domain/FeatureFlags.swift`, `extension FeatureFlag` and
  * `FeatureFlag.allKnownFlags`.
  *
- * All **28** flags KroApple declares, ported name for name. The name is the
+ * All **29** flags KroApple declares, ported name for name. The name is the
  * stable identity: it is what a persisted `debug.ff.<name>` override keys on,
  * what the Debug flag list renders, and what a cross-platform reader compares.
  *
@@ -61,6 +61,7 @@ export const FeatureFlags = {
   outlookCalendarIntegration: { name: 'outlookCalendarIntegration' },
   doActivityRings: { name: 'doActivityRings' },
   timelineQuickEventCreation: { name: 'timelineQuickEventCreation' },
+  appearanceThemes: { name: 'appearanceThemes' },
 } as const satisfies Record<string, FeatureFlag>
 
 /** The key set of `FeatureFlags` — every declared flag's name, as a type. */

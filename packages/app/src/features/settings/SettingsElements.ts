@@ -437,15 +437,21 @@ const SUBGROUPS: Readonly<Record<SettingGroup, readonly SubgroupSpec[]>> = {
 /** The subgroup id an unspecified option lands in. */
 export const OTHER_SUBGROUP_ID = 'other'
 
-const GENERAL_KEYS_MOVED_TO_APPEARANCE: ReadonlySet<string> = new Set([
-  'general.appearance',
-  'general.accentColor',
-])
+const GENERAL_KEYS_SUPERSEDED_BY_APPEARANCE_PANE: ReadonlySet<string> = new Set(
+  [
+    'general.appearance',
+    // Declared leftover. Canon's Appearance pane has no accent row: the palette
+    // highlight *is* the accent (`docs/Features/Appearance.md`). The stored
+    // choice is kept, not rewritten, so the flag-off path can still show it.
+    'general.accentColor',
+  ],
+)
 
 export interface SettingSubgroupsOptions {
   /**
-   * When the Appearance pane owns Theme and Palette, General drops its
-   * Appearance subgroup (and the leftover accent row).
+   * When the Appearance pane owns Theme and Palette, General drops that
+   * subgroup. Accent colour is hidden with it: the palette's highlight is the
+   * accent, and there is deliberately no third control.
    */
   readonly isAppearanceThemesEnabled?: boolean
 }
@@ -494,7 +500,7 @@ export const settingSubgroupsFor = (
 ): readonly SettingSubgroup[] => {
   const hide =
     options.isAppearanceThemesEnabled === true && group === 'general'
-      ? GENERAL_KEYS_MOVED_TO_APPEARANCE
+      ? GENERAL_KEYS_SUPERSEDED_BY_APPEARANCE_PANE
       : null
   const listed = settingOptionsByGroup[group].filter(
     (option) => hide === null || !hide.has(option.key),

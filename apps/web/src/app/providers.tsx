@@ -40,6 +40,8 @@ import {
   liveThunkExtra,
   makeStore,
   observeAuthState,
+  readStoredAppearance,
+  storedAppearanceKey,
 } from '@kro/app'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
@@ -114,12 +116,18 @@ function AppearanceSync({
   const { setTheme } = useTheme()
 
   useEffect(() => {
+    let lastKey = ''
     const sync = () => {
+      const stored = readStoredAppearance(extra.localStore)
+      const key = storedAppearanceKey(stored)
+      if (key === lastKey) return
+      lastKey = key
       applyStoredAppearance(extra.localStore)
-      const explicit = document.documentElement.getAttribute('data-theme')
-      setTheme(
-        explicit === 'light' || explicit === 'dark' ? explicit : 'system',
-      )
+      const explicit =
+        stored.theme === 'light' || stored.theme === 'dark'
+          ? stored.theme
+          : 'system'
+      setTheme(explicit)
     }
     sync()
     return store.subscribe(sync)

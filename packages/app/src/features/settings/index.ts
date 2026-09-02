@@ -95,7 +95,11 @@ export {
   selectWorkingHoursValid,
   settingValueIn,
 } from './SettingsSelectors'
-export { applyStoredAppearance } from './applyStoredAppearance'
+export {
+  applyStoredAppearance,
+  readStoredAppearance,
+  storedAppearanceKey,
+} from './applyStoredAppearance'
 export { SettingsMocks, defaultSettingValues } from './SettingsMocks'
 
 // --- the render tier -------------------------------------------------------

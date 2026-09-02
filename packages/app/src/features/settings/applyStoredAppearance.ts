@@ -15,12 +15,32 @@ import {
 } from '@kro/core'
 import { applyAppearanceValues } from '../../design/system/tokens/readToken'
 
-export const applyStoredAppearance = (localStore: LocalStore): void => {
+export interface StoredAppearance {
+  readonly theme: string | null
+  readonly palette: string | null
+}
+
+/** The two stored choices the composition root paints. */
+export const readStoredAppearance = (
+  localStore: LocalStore,
+): StoredAppearance => {
   const preferences = makePreferences(localStore.preferences)
   const theme = preferences.read(appearanceOption)
   const palette = preferences.read(appearancePaletteOption)
-  applyAppearanceValues(
-    typeof theme === 'string' ? theme : null,
-    typeof palette === 'string' ? palette : null,
-  )
+  return {
+    theme: typeof theme === 'string' ? theme : null,
+    palette: typeof palette === 'string' ? palette : null,
+  }
+}
+
+/** Stable identity of a stored pair, so a store subscriber can no-op. */
+export const storedAppearanceKey = (stored: StoredAppearance): string =>
+  `${stored.theme ?? ''}|${stored.palette ?? ''}`
+
+export const applyStoredAppearance = (
+  localStore: LocalStore,
+): StoredAppearance => {
+  const stored = readStoredAppearance(localStore)
+  applyAppearanceValues(stored.theme, stored.palette)
+  return stored
 }

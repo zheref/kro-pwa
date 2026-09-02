@@ -51,7 +51,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-:where(input, textarea, select):focus,
+:where(input, textarea, select):focus {
+  outline: none;
+}
+
 :where(input, textarea, select):focus-visible {
   outline: none;
+  box-shadow: var(--kro-ring);
 }

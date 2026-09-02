@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   GradientBackdrop,
   GradientContent,
@@ -125,6 +125,29 @@ describe('GradientBackdrop', () => {
     expect(screen.getByTestId('host').contains(slab)).toBe(true)
     expect(screen.getByTestId('header').contains(slab)).toBe(false)
     expect(slab.className).toContain('kro-gradient-backdrop--window-bleed')
+  })
+
+  it('coalesces scroll measures onto one animation frame', () => {
+    const raf = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        callback(0)
+        return 1
+      })
+
+    render(
+      <div data-testid="shell" style={{ position: 'relative' }}>
+        <div data-kro-title-slab-host="" data-testid="host" />
+        <header data-testid="header" style={{ position: 'relative' }}>
+          <GradientBackdrop clip="bottomTrailing" bleed="window" />
+        </header>
+      </div>,
+    )
+
+    raf.mockClear()
+    window.dispatchEvent(new Event('scroll'))
+    expect(raf).toHaveBeenCalled()
+    raf.mockRestore()
   })
 
   it('names the host selector the shell paints', () => {

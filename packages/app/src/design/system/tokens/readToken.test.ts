@@ -94,10 +94,12 @@ describe('setThemePreference', () => {
     expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('light')
   })
 
-  it('hands the choice back to the OS by removing the attribute entirely', () => {
+  it('does not rewrite an attribute it already holds', () => {
     setThemePreference('dark')
-    setThemePreference('system')
-    expect(document.documentElement.hasAttribute(THEME_ATTRIBUTE)).toBe(false)
+    const spy = vi.spyOn(document.documentElement, 'setAttribute')
+    setThemePreference('dark')
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
   })
 })
 
@@ -116,11 +118,12 @@ describe('setPalettePreference', () => {
     )
   })
 
-  it('still writes purple rather than omitting the attribute', () => {
+  it('does not rewrite purple when the attribute is already purple', () => {
     setPalettePreference('purple')
-    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
-      'purple',
-    )
+    const spy = vi.spyOn(document.documentElement, 'setAttribute')
+    setPalettePreference('purple')
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
   })
 })
 

@@ -26,4 +26,10 @@ describe('the Chromium field-outline reset', () => {
       /:where\(input, textarea, select\):focus-visible[\s\S]*?outline:\s*none/,
     )
   })
+
+  it('pairs that kill with the design-system ring, so keyboard focus stays visible', () => {
+    expect(STYLES).toMatch(
+      /:where\(input, textarea, select\):focus-visible[\s\S]*?box-shadow:\s*var\(--kro-ring\)/,
+    )
+  })
 })

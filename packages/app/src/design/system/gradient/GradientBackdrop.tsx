@@ -145,16 +145,27 @@ export function GradientBackdrop({
     }
 
     measure()
+    let frame = 0
+    const scheduleMeasure = () => {
+      if (frame !== 0) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        measure()
+      })
+    }
     const observer =
-      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(scheduleMeasure)
     observer?.observe(header)
     observer?.observe(host)
-    window.addEventListener('resize', measure)
-    window.addEventListener('scroll', measure, true)
+    window.addEventListener('resize', scheduleMeasure)
+    window.addEventListener('scroll', scheduleMeasure, true)
     return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
       observer?.disconnect()
-      window.removeEventListener('resize', measure)
-      window.removeEventListener('scroll', measure, true)
+      window.removeEventListener('resize', scheduleMeasure)
+      window.removeEventListener('scroll', scheduleMeasure, true)
     }
   }, [wantsWindow])
 

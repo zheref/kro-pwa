@@ -254,7 +254,7 @@ describe('the Appearance pane', () => {
     expect(palette?.control.kind).toBe('paletteSwatches')
   })
 
-  it('drops Theme and Accent from General when Appearance owns them', () => {
+  it('drops Theme from General and hides the declared accent leftover', () => {
     const keys = settingElementsFor(SettingGroup.general, {
       isAppearanceThemesEnabled: true,
     }).map((element) => element.option.key)
@@ -262,5 +262,14 @@ describe('the Appearance pane', () => {
     expect(keys).not.toContain('general.appearance')
     expect(keys).not.toContain('general.accentColor')
     expect(keys).toContain('general.overdueAlerts')
+  })
+
+  it('does not offer accent colour on Appearance — the palette highlight is the accent', () => {
+    const keys = settingSubgroupsForAppearance().flatMap((subgroup) =>
+      subgroup.elements.map((element) => element.option.key),
+    )
+
+    expect(keys).toEqual(['general.appearance', 'general.palette'])
+    expect(keys).not.toContain('general.accentColor')
   })
 })

@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { PALETTE_ATTRIBUTE } from '../../../design/system/tokens/appPalette'
 import { THEME_ATTRIBUTE } from '../../../design/system/tokens/readToken'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import { applyStoredAppearance } from '../applyStoredAppearance'
+import {
+  applyStoredAppearance,
+  storedAppearanceKey,
+} from '../applyStoredAppearance'
 
 afterEach(() => {
   document.documentElement.removeAttribute(THEME_ATTRIBUTE)
@@ -39,5 +42,19 @@ describe('applyStoredAppearance', () => {
     expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
       'purple',
     )
+  })
+
+  it('gives the same key for the same stored pair, so a subscriber can no-op', () => {
+    const localStore = makeInMemoryLocalStore({
+      preferences: {
+        'kro:general.appearance': 'dark',
+        'kro:general.palette': 'green',
+      },
+    })
+
+    const first = applyStoredAppearance(localStore)
+    const second = applyStoredAppearance(localStore)
+    expect(storedAppearanceKey(first)).toBe(storedAppearanceKey(second))
+    expect(storedAppearanceKey(first)).toBe('dark|green')
   })
 })

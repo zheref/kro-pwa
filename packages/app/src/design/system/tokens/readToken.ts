@@ -78,8 +78,13 @@ export function setThemePreference(
 ): void {
   const target = rootOf(element)
   if (target === null) return
-  if (preference === 'system') target.removeAttribute(THEME_ATTRIBUTE)
-  else target.setAttribute(THEME_ATTRIBUTE, preference)
+  if (preference === 'system') {
+    if (!target.hasAttribute(THEME_ATTRIBUTE)) return
+    target.removeAttribute(THEME_ATTRIBUTE)
+    return
+  }
+  if (target.getAttribute(THEME_ATTRIBUTE) === preference) return
+  target.setAttribute(THEME_ATTRIBUTE, preference)
 }
 
 /**
@@ -93,7 +98,9 @@ export function setPalettePreference(
 ): void {
   const target = rootOf(element)
   if (target === null) return
-  target.setAttribute(PALETTE_ATTRIBUTE, appPaletteNamed(palette))
+  const next = appPaletteNamed(palette)
+  if (target.getAttribute(PALETTE_ATTRIBUTE) === next) return
+  target.setAttribute(PALETTE_ATTRIBUTE, next)
 }
 
 /** Applies both choices the Appearance pane owns, in one pass. */

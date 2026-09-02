@@ -149,4 +149,31 @@ describe('Providers', () => {
       expect(document.documentElement.hasAttribute('data-theme')).toBe(true)
     })
   })
+
+  it('does not re-apply appearance on an unrelated dispatch', async () => {
+    const setAttribute = vi.spyOn(document.documentElement, 'setAttribute')
+
+    render(
+      <Providers>
+        <Navigator />
+      </Providers>,
+    )
+
+    await waitFor(() => {
+      expect(document.documentElement.hasAttribute('data-theme')).toBe(true)
+    })
+    setAttribute.mockClear()
+
+    await userEvent.click(screen.getByRole('button', { name: 'go' }))
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith('/inbox')
+    })
+
+    expect(
+      setAttribute.mock.calls.filter(
+        ([name]) => name === 'data-theme' || name === 'data-palette',
+      ),
+    ).toEqual([])
+    setAttribute.mockRestore()
+  })
 })

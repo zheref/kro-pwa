@@ -56,7 +56,6 @@ import {
   Moon,
   Network,
   OctagonAlert,
-  Palette,
   Repeat2,
   SkipForward,
   Undo2,
@@ -117,9 +116,9 @@ export const ENDEAVOR_SF_SYMBOL_TO_LUCIDE = {
   'checkmark.circle': CircleCheckBig,
   'arrow.uturn.forward.circle': Undo2,
 
-  // Detail / property rows
+  // Detail / property rows. `paintpalette` moved UP into the system map
+  // with the appearance preference glyph; the two sets stay disjoint.
   hourglass: Hourglass,
-  paintpalette: Palette,
   'heart.circle.fill': Heart,
   'calendar.circle.fill': CalendarClock,
 

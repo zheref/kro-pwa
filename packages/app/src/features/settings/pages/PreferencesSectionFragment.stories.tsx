@@ -101,6 +101,21 @@ export const EarnDefaults = {
   render: () => <Stage>{pane({ group: SettingGroup.earn })}</Stage>,
 }
 
+/** Appearance — Theme plus the four palette swatches. */
+export const AppearanceDefaults = {
+  render: () => <Stage>{pane({ group: 'appearance' })}</Stage>,
+}
+
+/** Appearance in dark, so the swatch ramps can be checked against the dark stops. */
+export const AppearanceDark = {
+  render: () => <Stage theme="dark">{pane({ group: 'appearance' })}</Stage>,
+}
+
+/** Appearance at handheld width — the 2×2 grid has to wrap, not overflow. */
+export const AppearanceHandheld = {
+  render: () => <Stage width={390}>{pane({ group: 'appearance' })}</Stage>,
+}
+
 /** Before the stored values arrive — canon's `.disabled(!isLoaded)`. */
 export const NotLoadedYet = {
   render: () => (

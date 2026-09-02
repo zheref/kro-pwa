@@ -70,6 +70,32 @@
 }
 
 /**
+ * LargeScreenTitle's own slab — a diagonal indigo→grape fill clipped to a
+ * 50px bottom-trailing round, with no fade into a page colour. The page field
+ * (`DetailBackdrop`) shows through around the round; fading to `--kro-color-back`
+ * here would paint a grey band on top of it.
+ */
+.kro-gradient-backdrop--large-title {
+  /* Fill the title component, not a fixed 360px drop into the day's content. */
+  inset: 0;
+  height: auto;
+  overflow: hidden;
+  border-end-end-radius: 50px;
+}
+
+/**
+ * LargeScreenTitle grown to the window origin. Size is inline (the title's
+ * bottom-trailing corner, measured against the shell host). `inset: auto`
+ * must win over `--large-title`'s `inset: 0` so the slab can start at (0, 0)
+ * rather than at the header box.
+ */
+.kro-gradient-backdrop--window-bleed {
+  inset: auto;
+  position: absolute;
+  height: auto;
+}
+
+/**
  * The content that sits over the slab. Establishes the stacking order once, so
  * a surface does not have to remember to raise itself above a decoration.
  */
@@ -81,6 +107,49 @@
 /** A label painted on the slab. `headerDate` is contrast-asserted on both stops. */
 .kro-gradient-headline {
   color: var(--kro-color-header-date);
+}
+
+/* ==========================================================================
+   DetailBackdrop — the page's own field, not a header slab.
+
+   Canon: KroApple `KroUI/Main/DetailBackdrop.swift`. Glass renders as glass
+   by refracting what is under it; a flat `back` fill is pixel-identical at
+   every height and the only possible result is uniform frost. This layer is
+   a *vertical* indigo→grape ramp (measured 11 distinct samples under an
+   iPad sidebar vs 7 on a diagonal) plus two soft meshes so a web engine has
+   something to blur even in a short column.
+
+   It is a background and nothing else — `aria-hidden`, no pointer events,
+   never the thing a destination sits *in*.
+   ========================================================================== */
+
+.kro-detail-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--kro-color-header-gradient-indigo);
+  background-image:
+    radial-gradient(
+      120% 70% at 8% -10%,
+      rgb(255 255 255 / 0.22),
+      transparent 52%
+    ),
+    radial-gradient(90% 60% at 100% 110%, rgb(0 0 0 / 0.28), transparent 58%),
+    linear-gradient(
+      to bottom,
+      var(--kro-color-header-gradient-indigo),
+      var(--kro-color-header-gradient-grape)
+    );
+}
+
+.kro-detail-backdrop--fixed {
+  position: fixed;
+}
+
+/** On-gradient ink. White in both schemes — the ramp is dark either way. */
+.kro-on-gradient {
+  color: var(--kro-color-snow);
 }
 
 /* --------------------------------------------------------------------------
@@ -97,6 +166,15 @@
   }
 
   .kro-gradient-headline {
+    color: CanvasText;
+  }
+
+  .kro-detail-backdrop {
+    background-image: none;
+    background-color: Canvas;
+  }
+
+  .kro-on-gradient {
     color: CanvasText;
   }
 }

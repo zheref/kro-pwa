@@ -452,7 +452,7 @@ export function PlanViewModePickerFragment({
             onClick={() => {
               if (relativeIndex !== 0) settle(relativeIndex)
             }}
-            className="cursor-pointer border-none bg-transparent p-0"
+            className="border-none bg-transparent p-0"
             style={style}
           >
             {content}

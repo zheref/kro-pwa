@@ -100,6 +100,11 @@ const Check = captureIcon('checkmark')
 export const captureRewardStep = (points: number): number =>
   points >= 50 ? 10 : 5
 
+const promptControlMinHeight = (isCompact: boolean): string =>
+  isCompact
+    ? 'var(--kro-size-min-pointer-target)'
+    : 'var(--kro-size-min-touch-target)'
+
 /** Which inline panel is expanded. Only one at a time, exactly as canon. */
 type PromptPanel = 'date' | 'rewards' | 'repeat' | 'destination' | null
 
@@ -188,6 +193,12 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           style={{
             width: `${CAPTURE_PROMPT_POPOVER_WIDTH}px`,
             maxWidth: 'calc(100vw - 3rem)',
+            // `p-kro-large` / `gap-kro-medium` on DialogContent do not lose
+            // to `p-0 gap-0` — twMerge does not treat the kro-* spacing
+            // utilities as the same group. Inline wins, which is what keeps
+            // the desktop popover compact.
+            padding: 0,
+            gap: 0,
           }}
         >
           {heading}
@@ -210,6 +221,7 @@ function PromptForm({
   availableDestinations,
   canSubmit,
   blockedReason,
+  presentation,
   now,
   locale,
   onEditTitle,
@@ -241,6 +253,7 @@ function PromptForm({
   const isEvent = draft.kind === CaptureKind.event
   const isHabit = draft.kind === CaptureKind.habit
   const earnsRewards = draft.kind === CaptureKind.task || isHabit
+  const isCompact = presentation === 'popover'
 
   /** Canon closes any open editor when another one expands. */
   const closeOpenTimeEditors = () => {
@@ -268,10 +281,17 @@ function PromptForm({
   }
 
   return (
-    <div className="flex flex-col" data-slot="capture-prompt-form">
+    <div
+      className="flex flex-col"
+      data-slot="capture-prompt-form"
+      data-kro-density={isCompact ? 'compact' : 'touch'}
+    >
       {/* ── Kind picker ─────────────────────────────────────────────── */}
       <div
-        className="flex gap-2 overflow-x-auto px-3 pt-4 pb-3"
+        className={cn(
+          'flex gap-2 overflow-x-auto px-3',
+          isCompact ? 'pt-2 pb-2' : 'pt-4 pb-3',
+        )}
         role="group"
         aria-label="Kind"
       >
@@ -280,6 +300,7 @@ function PromptForm({
             key={kind}
             kind={kind}
             isSelected={kind === draft.kind}
+            isCompact={isCompact}
             onSelect={() => {
               setPanel(null)
               onSelectKind(kind)
@@ -296,7 +317,8 @@ function PromptForm({
         data-testid="capture-title"
         aria-label="Title"
         className={cn(
-          'w-full bg-transparent px-4 py-3.5 text-base outline-none',
+          'w-full bg-transparent outline-none',
+          isCompact ? 'px-3 py-2 text-sm' : 'px-4 py-3.5 text-base',
           'placeholder:text-kro-fore-secondary',
         )}
         style={{ color: colorVar('fore') }}
@@ -313,10 +335,16 @@ function PromptForm({
       <Separator />
 
       {/* ── Date / time row ─────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 py-2.5">
+      <div
+        className={cn(
+          'flex flex-col',
+          isCompact ? 'gap-1.5 py-1.5' : 'gap-2 py-2.5',
+        )}
+      >
         <div className="flex gap-2 overflow-x-auto px-3">
           {earnsRewards ? (
             <PromptChip
+              isCompact={isCompact}
               glyph={<Star size={12} aria-hidden />}
               label={String(draft.rewards)}
               isSet
@@ -329,6 +357,7 @@ function PromptForm({
           {isHabit ? null : (
             <>
               <PromptChip
+                isCompact={isCompact}
                 glyph={<CalendarGlyph size={12} aria-hidden />}
                 label={
                   draft.hasDate
@@ -350,12 +379,17 @@ function PromptForm({
                 enforces the same invariant at the state layer (`KC-IS-#75`).
               */}
               {!isEvent && draft.hasDate ? (
-                <ClearButton label="Clear date" onSelect={onClearDate} />
+                <ClearButton
+                  label="Clear date"
+                  isCompact={isCompact}
+                  onSelect={onClearDate}
+                />
               ) : null}
             </>
           )}
 
           <PromptChip
+            isCompact={isCompact}
             glyph={<ClockGlyph size={12} aria-hidden />}
             label={
               draft.hasTime
@@ -373,6 +407,7 @@ function PromptForm({
           {isEvent ? (
             <>
               <PromptChip
+                isCompact={isCompact}
                 glyph={<ClockEndGlyph size={12} aria-hidden />}
                 label={
                   draft.hasEndTime
@@ -387,6 +422,7 @@ function PromptForm({
               {draft.hasEndTime ? (
                 <ClearButton
                   label="Clear end time"
+                  isCompact={isCompact}
                   onSelect={() => onEndTimeEdit('end', 'clear')}
                 />
               ) : null}
@@ -394,11 +430,13 @@ function PromptForm({
           ) : draft.hasTime ? (
             <ClearButton
               label="Clear time"
+              isCompact={isCompact}
               onSelect={() => onEndTimeEdit('start', 'clear')}
             />
           ) : null}
 
           <PromptChip
+            isCompact={isCompact}
             glyph={<RepeatGlyph size={12} aria-hidden />}
             label={captureRepeatChipLabel(draft.recurrence)}
             isSet={draft.recurrence.kind !== 'never'}
@@ -453,7 +491,11 @@ function PromptForm({
         ) : null}
 
         {panel === 'rewards' && earnsRewards ? (
-          <RewardsEditor points={draft.rewards} onPick={onPickRewards} />
+          <RewardsEditor
+            points={draft.rewards}
+            isCompact={isCompact}
+            onPick={onPickRewards}
+          />
         ) : null}
 
         {panel === 'repeat' ? (
@@ -466,6 +508,7 @@ function PromptForm({
             {captureRecurrencePresets(draft.date).map((preset) => (
               <PromptChip
                 key={preset.id}
+                isCompact={isCompact}
                 label={preset.label}
                 isSet={preset.recurrence.kind === draft.recurrence.kind}
                 isExpanded={preset.recurrence.kind === draft.recurrence.kind}
@@ -483,12 +526,18 @@ function PromptForm({
       <Separator />
 
       {/* ── Bottom bar ──────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 px-3 py-3">
+      <div
+        className={cn(
+          'flex flex-col px-3',
+          isCompact ? 'gap-1.5 py-2' : 'gap-2 py-3',
+        )}
+      >
         <div className="flex items-start justify-between gap-2">
           <DestinationPicker
             selected={draft.destination}
             available={availableDestinations}
             isExpanded={panel === 'destination'}
+            isCompact={isCompact}
             onToggle={() => togglePanel('destination')}
             onSelect={(destination) => {
               onSelectDestination(destination)
@@ -499,7 +548,7 @@ function PromptForm({
           <div className="flex shrink-0 items-center gap-2">
             <Button
               variant="secondary"
-              size="pill"
+              size={isCompact ? 'sm' : 'pill'}
               className="w-24 px-0"
               aria-label={`Discard new ${captureKindLabel(draft.kind).toLowerCase()}`}
               onClick={onDiscard}
@@ -508,7 +557,7 @@ function PromptForm({
             </Button>
             <Button
               variant="primary"
-              size="pill"
+              size={isCompact ? 'sm' : 'pill'}
               className="w-24 px-0"
               data-testid="capture-add"
               disabled={!canSubmit}
@@ -561,10 +610,12 @@ function Separator() {
 function KindChip({
   kind,
   isSelected,
+  isCompact,
   onSelect,
 }: {
   readonly kind: CaptureKind
   readonly isSelected: boolean
+  readonly isCompact: boolean
   readonly onSelect: () => void
 }) {
   const Glyph = captureIconFor(captureKindGlyph(kind))
@@ -579,18 +630,20 @@ function KindChip({
       aria-label={captureKindLabel(kind)}
       onClick={onSelect}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill px-3',
-        'font-semibold text-sm',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill',
+        isCompact
+          ? 'px-2.5 font-semibold text-xs'
+          : 'px-3 font-semibold text-sm',
         'kro-motion-quick transition-[background-color,color]',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
       )}
       style={{
-        minHeight: 'var(--kro-size-min-touch-target)',
+        minHeight: promptControlMinHeight(isCompact),
         backgroundColor: isSelected ? colorVar('accent') : 'transparent',
         color: isSelected ? colorVar('onAccent') : colorVar('foreSecondary'),
       }}
     >
-      <Glyph size={13} aria-hidden />
+      <Glyph size={isCompact ? 11 : 13} aria-hidden />
       {captureKindLabel(kind)}
     </button>
   )
@@ -601,6 +654,7 @@ function PromptChip({
   label,
   isSet,
   isExpanded,
+  isCompact,
   accessibilityLabel,
   onSelect,
 }: {
@@ -608,6 +662,7 @@ function PromptChip({
   readonly label: string
   readonly isSet: boolean
   readonly isExpanded: boolean
+  readonly isCompact: boolean
   readonly accessibilityLabel: string
   readonly onSelect: () => void
 }) {
@@ -618,12 +673,12 @@ function PromptChip({
       aria-expanded={isExpanded}
       onClick={onSelect}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill px-2.5',
-        'font-medium text-sm',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill',
+        isCompact ? 'px-2 font-medium text-xs' : 'px-2.5 font-medium text-sm',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
       )}
       style={{
-        minHeight: 'var(--kro-size-min-touch-target)',
+        minHeight: promptControlMinHeight(isCompact),
         backgroundColor: isExpanded
           ? `color-mix(in srgb, ${colorVar('accent')} 15%, transparent)`
           : colorVar('backInner'),
@@ -638,9 +693,11 @@ function PromptChip({
 
 function ClearButton({
   label,
+  isCompact,
   onSelect,
 }: {
   readonly label: string
+  readonly isCompact: boolean
   readonly onSelect: () => void
 }) {
   return (
@@ -650,8 +707,8 @@ function ClearButton({
       onClick={onSelect}
       className="inline-flex shrink-0 items-center justify-center rounded-kro-pill outline-none focus-visible:shadow-[var(--kro-ring)]"
       style={{
-        minWidth: 'var(--kro-size-min-touch-target)',
-        minHeight: 'var(--kro-size-min-touch-target)',
+        minWidth: promptControlMinHeight(isCompact),
+        minHeight: promptControlMinHeight(isCompact),
         color: colorVar('foreSecondary'),
       }}
     >
@@ -725,9 +782,11 @@ function TimePanel({
 /** Canon's inline `rewardsEditor` — the 1…999 stepper, 5/10 by magnitude. */
 function RewardsEditor({
   points,
+  isCompact,
   onPick,
 }: {
   readonly points: number
+  readonly isCompact: boolean
   readonly onPick: (points: number) => void
 }) {
   return (
@@ -735,7 +794,10 @@ function RewardsEditor({
       className="flex items-center gap-4 px-3 py-1"
       data-testid="capture-rewards-editor"
     >
-      <span className="text-sm" style={{ color: colorVar('foreSecondary') }}>
+      <span
+        className={isCompact ? 'text-xs' : 'text-sm'}
+        style={{ color: colorVar('foreSecondary') }}
+      >
         Reward points
       </span>
       <span className="flex-1" />
@@ -748,7 +810,7 @@ function RewardsEditor({
       >
         <Button
           variant="ghost"
-          size="icon"
+          size={isCompact ? 'icon-sm' : 'icon'}
           aria-label="Decrease reward points"
           disabled={points <= MINIMUM_CAPTURE_REWARDS}
           onClick={() => onPick(points - captureRewardStep(points))}
@@ -756,14 +818,17 @@ function RewardsEditor({
           −
         </Button>
         <span
-          className="min-w-9 text-center font-semibold text-base"
+          className={cn(
+            'min-w-9 text-center font-semibold',
+            isCompact ? 'text-sm' : 'text-base',
+          )}
           style={{ color: colorVar('fore') }}
         >
           {points}
         </span>
         <Button
           variant="ghost"
-          size="icon"
+          size={isCompact ? 'icon-sm' : 'icon'}
           aria-label="Increase reward points"
           disabled={points >= MAXIMUM_CAPTURE_REWARDS}
           onClick={() => onPick(points + captureRewardStep(points))}
@@ -790,12 +855,14 @@ function DestinationPicker({
   selected,
   available,
   isExpanded,
+  isCompact,
   onToggle,
   onSelect,
 }: {
   readonly selected: CaptureDestination
   readonly available: readonly CaptureDestination[]
   readonly isExpanded: boolean
+  readonly isCompact: boolean
   readonly onToggle: () => void
   readonly onSelect: (destination: CaptureDestination) => void
 }) {
@@ -810,10 +877,11 @@ function DestinationPicker({
         onClick={onToggle}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-kro-pill px-2.5',
-          'font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]',
+          isCompact ? 'font-medium text-xs' : 'font-medium text-sm',
+          'outline-none focus-visible:shadow-[var(--kro-ring)]',
         )}
         style={{
-          minHeight: 'var(--kro-size-min-touch-target)',
+          minHeight: promptControlMinHeight(isCompact),
           color: colorVar('fore'),
         }}
       >
@@ -838,11 +906,12 @@ function DestinationPicker({
                 aria-pressed={destination === selected}
                 onClick={() => onSelect(destination)}
                 className={cn(
-                  'inline-flex w-full items-center gap-1.5 rounded-kro-small px-2.5 text-sm',
+                  'inline-flex w-full items-center gap-1.5 rounded-kro-small px-2.5',
+                  isCompact ? 'text-xs' : 'text-sm',
                   'outline-none focus-visible:shadow-[var(--kro-ring)]',
                 )}
                 style={{
-                  minHeight: 'var(--kro-size-min-touch-target)',
+                  minHeight: promptControlMinHeight(isCompact),
                   color: colorVar('fore'),
                   backgroundColor:
                     destination === selected

@@ -11,6 +11,7 @@
 
 import type { ColorRole, SemanticRole } from './roles'
 import { COLOR_ROLE_VARS, SEMANTIC_ROLE_VARS } from './roles'
+import { PALETTE_ATTRIBUTE, appPaletteNamed } from './appPalette'
 
 export type ThemePreference = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
@@ -77,6 +78,41 @@ export function setThemePreference(
 ): void {
   const target = rootOf(element)
   if (target === null) return
-  if (preference === 'system') target.removeAttribute(THEME_ATTRIBUTE)
-  else target.setAttribute(THEME_ATTRIBUTE, preference)
+  if (preference === 'system') {
+    if (!target.hasAttribute(THEME_ATTRIBUTE)) return
+    target.removeAttribute(THEME_ATTRIBUTE)
+    return
+  }
+  if (target.getAttribute(THEME_ATTRIBUTE) === preference) return
+  target.setAttribute(THEME_ATTRIBUTE, preference)
+}
+
+/**
+ * Pins the appearance palette. Purple is still written, not omitted: the
+ * stylesheet keys off `[data-palette]`, and leaving the attribute off would
+ * make a later read unable to tell "default" from "never applied".
+ */
+export function setPalettePreference(
+  palette: string,
+  element?: Element | null,
+): void {
+  const target = rootOf(element)
+  if (target === null) return
+  const next = appPaletteNamed(palette)
+  if (target.getAttribute(PALETTE_ATTRIBUTE) === next) return
+  target.setAttribute(PALETTE_ATTRIBUTE, next)
+}
+
+/** Applies both choices the Appearance pane owns, in one pass. */
+export function applyAppearanceValues(
+  theme: string | null | undefined,
+  palette: string | null | undefined,
+  element?: Element | null,
+): void {
+  const preference: ThemePreference =
+    theme === 'light' || theme === 'dark' || theme === 'system'
+      ? theme
+      : 'system'
+  setThemePreference(preference, element)
+  setPalettePreference(palette ?? 'purple', element)
 }

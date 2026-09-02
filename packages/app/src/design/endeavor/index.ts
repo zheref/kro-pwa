@@ -176,6 +176,8 @@ export {
 export {
   type SuggestionCardModel,
   type SuggestionCardProps,
+  SUGGESTION_CARD_MAX_WIDTH_PX,
+  SUGGESTION_CARD_MIN_WIDTH_PX,
   SuggestionCard,
   SuggestionSource,
   suggestionActionIcon,
@@ -212,7 +214,9 @@ export {
   type EndeavorCardMetrics,
   type EndeavorCardProps,
   type EndeavorCardSize,
+  type EndeavorPreparationPresentation,
   EndeavorCard,
+  usesDetailedMacOSPreparation,
 } from './EndeavorCard'
 export {
   type DeferPopoverProps,

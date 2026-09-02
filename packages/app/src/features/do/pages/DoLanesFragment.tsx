@@ -46,6 +46,7 @@ import {
   EmptyDayStateView,
   EndeavorCard,
   type EndeavorCardModel,
+  type EndeavorPreparationPresentation,
   REWARD_BACKGROUND_ROLE,
   REWARD_FOREGROUND_ROLE,
   SuggestionCard,
@@ -53,6 +54,10 @@ import {
   formatTime,
   formatTimeRange,
 } from '../../../design/endeavor'
+import {
+  type ControlDensity,
+  controlMinSizeVar,
+} from '../../../design/system/primitives/button'
 import {
   colorVar,
   radiusVar,
@@ -149,6 +154,17 @@ export interface DoLanesFragmentProps {
   readonly handlers: DoCardHandlers
   readonly suggestionHandlers: DoSuggestionHandlers
   readonly className?: string
+  /**
+   * Canon's `preparationPresentation`. Pointer Do uses the compact macOS
+   * glass card; touch keeps the iOS action stack.
+   */
+  readonly preparationPresentation?: EndeavorPreparationPresentation
+  /**
+   * Compact CTAs on pointer Do; comfortable (44px) when the primary input is
+   * a finger. Defaults compact so a story without a layout still matches
+   * desktop.
+   */
+  readonly controlDensity?: ControlDensity
 }
 
 export function DoLanesFragment(props: DoLanesFragmentProps) {
@@ -164,6 +180,8 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     locale,
     onCreateEndeavor,
     suggestionHandlers,
+    preparationPresentation = 'automatic',
+    controlDensity = 'compact',
     className,
   } = props
 
@@ -193,56 +211,18 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     <div
       data-testid="do-lanes"
       className={cn('flex flex-col gap-kro-large pt-kro-medium', className)}
-      /*
-        The day's own surface, with the shell's header slab fading into it over
-        its first 32px.
-
-        Without this the first lane's title lands on whatever the slab happens
-        to be at that height — a dark title on mid-ramp purple, which measures
-        around 3:1 and fails the epic's own 4.5:1 bar on a compact window where
-        the header is short. Canon has the same problem solved a different way
-        (`DoScreen` paints indigoGrape behind the WHOLE surface and every title
-        is white); the web shell paints a 180px slab instead, so the day is a
-        page surface and the fade is what keeps the join from being a hard
-        line. 32px is `--kro-space-x-large`, the same distance
-        `GradientBackdrop`'s own fade uses.
-
-        `color-mix(… 0%, transparent)` rather than the `transparent` keyword:
-        the keyword interpolates through transparent BLACK, which greys the
-        ramp in light mode.
-      */
-      style={{
-        backgroundImage: `linear-gradient(to bottom, color-mix(in srgb, ${colorVar('back')} 0%, transparent), ${colorVar('back')} var(--kro-space-x-large))`,
-      }}
     >
       {showsSuggestions && suggestions.length > 0 ? (
         <SuggestionsLane
           suggestions={suggestions}
           handlers={suggestionHandlers}
+          density={controlDensity}
         />
       ) : null}
 
       {hasNoEndeavors ? (
-        /*
-          The promotion inset is drawn white-on-translucent-black, because canon
-          shows it over `DoScreen`'s full-screen indigoGrape gradient. The web
-          shell's slab stops 180px down, so the inset would otherwise land on
-          the page surface and paint 0.85-white text on light grey — measured
-          well under the 4.5:1 the epic's own contrast bar requires. Restoring
-          the field the component was designed against is a wrapper, not a fork
-          of the component: the two gradient stops are the design system's own,
-          so the inset and the header slab cannot drift apart.
-        */
-        <div className="px-kro-medium">
-          <div
-            data-testid="do-empty-day"
-            style={{
-              borderRadius: radiusVar('surface'),
-              backgroundImage: `linear-gradient(to bottom right, ${colorVar('headerGradientIndigo')}, ${colorVar('headerGradientGrape')})`,
-            }}
-          >
-            <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
-          </div>
+        <div className="px-kro-medium" data-testid="do-empty-day">
+          <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
         </div>
       ) : (
         <>
@@ -276,6 +256,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
               initialWidth={props.initialLaneWidth}
               onWidthChanged={props.onLaneWidthChanged}
               handlers={props.handlers}
+              preparationPresentation={preparationPresentation}
             />
           ) : null}
 
@@ -293,6 +274,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
                 locale={locale}
                 handlers={props.handlers}
                 onExpand={props.onExpandSection}
+                preparationPresentation={preparationPresentation}
               />
             )
           })}
@@ -322,25 +304,17 @@ function SectionHeader({
   return (
     <div className="flex items-center gap-2 px-kro-medium">
       {Glyph === null ? null : (
-        <span className="shrink-0" style={{ color: colorVar('fore') }}>
+        <span className="kro-on-gradient shrink-0">
           {Glyph({ size: SECTION_TITLE_GLYPH_SIZE, 'aria-hidden': true })}
         </span>
       )}
       {/*
-        WEB ADAPTATION, and the reason is a real difference in the two
-        backgrounds. Canon draws every section title in white because `DoScreen`
-        paints the indigoGrape gradient behind the WHOLE surface, so every lane
-        sits on it. The web shell (`KC-IS-#13`) paints a 180px header slab
-        instead and lets the day scroll onto the page's own surface, so a white
-        title below the slab is white on white — invisible in light, and only
-        accidentally legible in dark. The token foreground is the same decision
-        canon made (ink that contrasts with what is behind it), read against
-        the background this shell actually provides. Named in the PR as a
-        cross-lane observation for the shell child.
+        Canon draws every section title in white because `DoScreen` paints the
+        indigoGrape gradient behind the whole surface. The web shell now does
+        the same (`DetailBackdrop`), so the on-gradient ink is the one that
+        clears 4.5:1 on both stops.
       */}
-      <h2 className="m-0 font-bold text-xl" style={{ color: colorVar('fore') }}>
-        {title}
-      </h2>
+      <h2 className="kro-on-gradient m-0 font-bold text-xl">{title}</h2>
 
       {badgeText === null ? null : (
         <span className="ml-auto">
@@ -406,55 +380,60 @@ const badgeStyle = {
 function SuggestionsLane({
   suggestions,
   handlers,
+  density,
 }: {
   readonly suggestions: readonly (SuggestionCardModel & {
     readonly source: DoSuggestionSource
   })[]
   readonly handlers: DoSuggestionHandlers
+  readonly density: ControlDensity
 }) {
+  const cards = suggestions.map((suggestion) => (
+    <div
+      key={suggestion.source}
+      className="flex shrink-0 items-center gap-kro-small"
+    >
+      <SuggestionCard
+        model={suggestion}
+        density={density}
+        onAction={() => handlers.onAction(suggestion.source)}
+      />
+      {/*
+        Canon dismisses with a swipe-up gesture and a swipe action. On
+        the web a gesture with no visible control is unreachable by
+        keyboard and invisible to a pointer, so the same intent is a
+        real button — the swipe stays available through the card kit's
+        own action surface where a surface opts into it.
+      */}
+      <button
+        type="button"
+        aria-label={`Dismiss ${suggestion.title}`}
+        onClick={() => handlers.onDismiss(suggestion.source)}
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
+          'kro-on-gradient outline-none focus-visible:shadow-[var(--kro-ring)]',
+        )}
+        style={{
+          minWidth: controlMinSizeVar(density),
+          minHeight: controlMinSizeVar(density),
+        }}
+      >
+        <span aria-hidden className="text-lg leading-none">
+          ×
+        </span>
+      </button>
+    </div>
+  ))
+
   return (
     <section data-testid="do-lane-suggestions" aria-label="Suggestions">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-kro-medium">
         <SectionHeader
           title="Suggestions"
           glyph="suggestions"
           badgeText={null}
         />
-        <Carousel>
-          {suggestions.map((suggestion) => (
-            <div key={suggestion.source} className="flex items-center gap-2">
-              <SuggestionCard
-                model={suggestion}
-                onAction={() => handlers.onAction(suggestion.source)}
-              />
-              {/*
-                Canon dismisses with a swipe-up gesture and a swipe action. On
-                the web a gesture with no visible control is unreachable by
-                keyboard and invisible to a pointer, so the same intent is a
-                real button — the swipe stays available through the card kit's
-                own action surface where a surface opts into it.
-              */}
-              <button
-                type="button"
-                aria-label={`Dismiss ${suggestion.title}`}
-                onClick={() => handlers.onDismiss(suggestion.source)}
-                className={cn(
-                  'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
-                  'outline-none focus-visible:shadow-[var(--kro-ring)]',
-                )}
-                style={{
-                  minWidth: 'var(--kro-size-min-touch-target)',
-                  minHeight: 'var(--kro-size-min-touch-target)',
-                  color: colorVar('foreSecondary'),
-                }}
-              >
-                <span aria-hidden className="text-lg leading-none">
-                  ×
-                </span>
-              </button>
-            </div>
-          ))}
-        </Carousel>
+        <Carousel className="overflow-y-visible py-kro-small">{cards}</Carousel>
       </div>
     </section>
   )
@@ -740,6 +719,7 @@ function FeaturedLane({
   initialWidth,
   onWidthChanged,
   handlers,
+  preparationPresentation,
 }: {
   readonly cards: readonly EndeavorCardModel[]
   readonly selectedCardKey: string | null
@@ -749,6 +729,7 @@ function FeaturedLane({
   readonly initialWidth?: number
   readonly onWidthChanged?: (width: number) => void
   readonly handlers: DoCardHandlers
+  readonly preparationPresentation: EndeavorPreparationPresentation
 }) {
   const laneRef = useRef<HTMLDivElement | null>(null)
   /**
@@ -835,6 +816,7 @@ function FeaturedLane({
                   }}
                   now={now}
                   locale={locale}
+                  preparationPresentation={preparationPresentation}
                   isSelected={
                     selectedCardKey === `${DoLane.featured}:${card.id}`
                   }
@@ -875,6 +857,7 @@ function TaskLane({
   locale,
   handlers,
   onExpand,
+  preparationPresentation,
 }: {
   readonly section: DoSectionDescriptor
   readonly cards: readonly EndeavorCardModel[]
@@ -884,6 +867,7 @@ function TaskLane({
   readonly locale?: string
   readonly handlers: DoCardHandlers
   readonly onExpand: (destination: DoTasksListDestination) => void
+  readonly preparationPresentation: EndeavorPreparationPresentation
 }) {
   return (
     <section
@@ -925,6 +909,7 @@ function TaskLane({
                 size="medium"
                 now={now}
                 locale={locale}
+                preparationPresentation={preparationPresentation}
                 isSelected={selectedCardKey === `${section.tag}:${card.id}`}
                 isInMarkCompleteMode={isInMarkCompleteMode}
                 onPrepare={

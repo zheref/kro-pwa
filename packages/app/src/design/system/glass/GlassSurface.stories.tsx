@@ -228,3 +228,69 @@ export const BothSchemes = {
     </div>
   ),
 }
+
+export const SidebarColumn = {
+  name: 'Sidebar · a split-view column over the ramp',
+  render: () => (
+    <Stage height={480}>
+      <GlassSurface
+        as="nav"
+        material="sidebar"
+        style={{ width: 220, minHeight: 360, padding: 12 }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontWeight: 600,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
+          Kro
+        </p>
+        <p style={{ margin: '12px 0 0', color: 'var(--kro-color-fore)' }}>
+          Today
+        </p>
+        <p
+          style={{
+            margin: '4px 0 0',
+            color: 'var(--kro-color-fore-secondary)',
+          }}
+        >
+          Plan
+        </p>
+      </GlassSurface>
+    </Stage>
+  ),
+}
+
+export const FloatingDock = {
+  name: 'Dock · the floating tab bar',
+  render: () => (
+    <Stage height={240}>
+      <div
+        style={{
+          position: 'absolute',
+          right: 16,
+          bottom: 16,
+          left: 16,
+        }}
+      >
+        <GlassSurface
+          as="nav"
+          material="dock"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            padding: 12,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
+          <span>Search</span>
+          <span>Plan</span>
+          <span>Do</span>
+          <span>Earn</span>
+        </GlassSurface>
+      </div>
+    </Stage>
+  ),
+}

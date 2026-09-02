@@ -63,6 +63,20 @@ describe('GlassSurface', () => {
     )
   })
 
+  it('asks for the sidebar column material', () => {
+    render(<GlassSurface material="sidebar" data-testid="surface" />)
+
+    expect(screen.getByTestId('surface').className).toContain(
+      'kro-glass--sidebar',
+    )
+  })
+
+  it('asks for the floating dock material', () => {
+    render(<GlassSurface material="dock" data-testid="surface" />)
+
+    expect(screen.getByTestId('surface').className).toContain('kro-glass--dock')
+  })
+
   it('renders the element the caller asked for, so semantics stay with them', () => {
     render(
       <GlassSurface as="header" material="bar" fixed data-testid="bar">

@@ -29,6 +29,7 @@ import {
   type SettingsSection,
   SettingsHubGroup,
   type SettingsSectionId,
+  preferencesHubSectionsFor,
   settingsSectionsIn,
 } from './SettingsSection'
 import type {
@@ -179,10 +180,9 @@ export const selectIsAuthPresented = createSelector(
 // ---------------------------------------------------------------------------
 
 /*
- * The hub's three groups are constants, not Selectors: they derive from the
- * section table and from no state at all, and a `createSelector` with no inputs
- * would be a memoization wrapper around a value that never changes. `RC-5`
- * forbids *derived state* read inline in a component, which these are not.
+ * The hub's three groups: Profile and Account are constants (they derive from
+ * the section table and from no state). Preferences is a Selector because
+ * Appearance is gated on `appearanceThemes`.
  */
 
 /** Canon's lone top row. The table declares exactly one; `?? …` is unreachable. */
@@ -197,7 +197,17 @@ export const profileHubSection: SettingsSection = settingsSectionsIn(
 }
 
 export const preferencesHubSections: readonly SettingsSection[] =
-  settingsSectionsIn(SettingsHubGroup.preferences)
+  preferencesHubSectionsFor(true)
+
+export const selectIsAppearanceThemesEnabled = createSelector(
+  [slice],
+  (settings): boolean => settings.isAppearanceThemesEnabled,
+)
+
+export const selectPreferencesHubSections = createSelector(
+  [selectIsAppearanceThemesEnabled],
+  preferencesHubSectionsFor,
+)
 
 export const accountHubSections: readonly SettingsSection[] =
   settingsSectionsIn(SettingsHubGroup.account)

@@ -33,6 +33,9 @@ import {
   type SettingOption,
   accentColorOption,
   appearanceModeLabel,
+  appearanceOption,
+  appearancePaletteLabel,
+  appearancePaletteOption,
   accentChoiceLabel,
   assertNever,
   dayViewRangeLabel,
@@ -80,6 +83,11 @@ export type SettingControl =
   | { readonly kind: 'choice'; readonly choices: readonly SettingChoice[] }
   /** `enumeration`, drawn as canon's `AccentColorPicker` swatch row. */
   | { readonly kind: 'swatches'; readonly choices: readonly SettingChoice[] }
+  /** `enumeration`, drawn as canon's four-swatch palette grid. */
+  | {
+      readonly kind: 'paletteSwatches'
+      readonly choices: readonly SettingChoice[]
+    }
   /** `string` — canon's timezone `Picker` over the known identifiers. */
   | { readonly kind: 'timezone' }
 
@@ -98,6 +106,7 @@ const OPTION_LABELS: Readonly<Record<string, string>> = {
   'general.streakReminders': 'Streak reminders',
   'general.overdueAlerts': 'Overdue alerts',
   'general.appearance': 'Theme',
+  'general.palette': 'Palette',
   'general.accentColor': 'Accent color',
   'general.weekStartDay': 'Week starts on',
   'general.defaultLandingSection': 'Open to',
@@ -172,6 +181,10 @@ export const settingChoiceLabel = (optionKey: string, raw: string): string => {
       return appearanceModeLabel(
         raw as Parameters<typeof appearanceModeLabel>[0],
       )
+    case 'general.palette':
+      return appearancePaletteLabel(
+        raw as Parameters<typeof appearancePaletteLabel>[0],
+      )
     case 'general.accentColor':
       return accentChoiceLabel(raw as Parameters<typeof accentChoiceLabel>[0])
     case 'general.defaultLandingSection':
@@ -234,6 +247,9 @@ export const settingControlFor = (option: SettingOption): SettingControl => {
         value,
         label: settingChoiceLabel(option.key, value),
       }))
+      if (option.key === appearancePaletteOption.key) {
+        return { kind: 'paletteSwatches', choices }
+      }
       return option.key === accentColorOption.key
         ? { kind: 'swatches', choices }
         : { kind: 'choice', choices }
@@ -421,6 +437,25 @@ const SUBGROUPS: Readonly<Record<SettingGroup, readonly SubgroupSpec[]>> = {
 /** The subgroup id an unspecified option lands in. */
 export const OTHER_SUBGROUP_ID = 'other'
 
+const GENERAL_KEYS_SUPERSEDED_BY_APPEARANCE_PANE: ReadonlySet<string> = new Set(
+  [
+    'general.appearance',
+    // Declared leftover. Canon's Appearance pane has no accent row: the palette
+    // highlight *is* the accent (`docs/Features/Appearance.md`). The stored
+    // choice is kept, not rewritten, so the flag-off path can still show it.
+    'general.accentColor',
+  ],
+)
+
+export interface SettingSubgroupsOptions {
+  /**
+   * When the Appearance pane owns Theme and Palette, General drops that
+   * subgroup. Accent colour is hidden with it: the palette's highlight is the
+   * accent, and there is deliberately no third control.
+   */
+  readonly isAppearanceThemesEnabled?: boolean
+}
+
 const elementFor = (option: SettingOption): SettingElement => ({
   option,
   label: settingLabel(option),
@@ -428,6 +463,27 @@ const elementFor = (option: SettingOption): SettingElement => ({
   isDeviceLocal: option.syncScope === SettingSyncScope.local,
   isConsumed: option.consumption === SettingConsumption.live,
 })
+
+/**
+ * The Appearance pane — Theme (segmented via the choice control) and Palette
+ * (the four-swatch grid). Both are device-local; both are live.
+ */
+export const settingSubgroupsForAppearance = (): readonly SettingSubgroup[] => [
+  {
+    id: 'theme',
+    title: 'Theme',
+    footnote:
+      "System follows your device's light or dark setting. Saved on this device only.",
+    elements: [elementFor(appearanceOption)],
+  },
+  {
+    id: 'palette',
+    title: 'Palette',
+    footnote:
+      "Colors the app's headers, backdrops, and highlights. Saved on this device only.",
+    elements: [elementFor(appearancePaletteOption)],
+  },
+]
 
 /**
  * One preferences pane's subgroups, in canon's display order.
@@ -440,9 +496,16 @@ const elementFor = (option: SettingOption): SettingElement => ({
  */
 export const settingSubgroupsFor = (
   group: SettingGroup,
+  options: SettingSubgroupsOptions = {},
 ): readonly SettingSubgroup[] => {
-  const options = settingOptionsByGroup[group]
-  const byKey = new Map(options.map((option) => [option.key, option]))
+  const hide =
+    options.isAppearanceThemesEnabled === true && group === 'general'
+      ? GENERAL_KEYS_SUPERSEDED_BY_APPEARANCE_PANE
+      : null
+  const listed = settingOptionsByGroup[group].filter(
+    (option) => hide === null || !hide.has(option.key),
+  )
+  const byKey = new Map(listed.map((option) => [option.key, option]))
   const placed = new Set<string>()
 
   const named = SUBGROUPS[group]
@@ -462,7 +525,7 @@ export const settingSubgroupsFor = (
     })
     .filter((subgroup) => subgroup.elements.length > 0)
 
-  const leftovers = options.filter((option) => !placed.has(option.key))
+  const leftovers = listed.filter((option) => !placed.has(option.key))
   if (leftovers.length === 0) return named
 
   return [
@@ -479,5 +542,6 @@ export const settingSubgroupsFor = (
 /** Every element of a pane, flattened — what a completeness check counts. */
 export const settingElementsFor = (
   group: SettingGroup,
+  options: SettingSubgroupsOptions = {},
 ): readonly SettingElement[] =>
-  settingSubgroupsFor(group).flatMap((subgroup) => subgroup.elements)
+  settingSubgroupsFor(group, options).flatMap((subgroup) => subgroup.elements)

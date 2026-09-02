@@ -209,7 +209,7 @@ function ToastActionButton({ action }: { action: ToastAction }) {
         padding: '6px 12px',
         borderRadius: 8,
         border: 'none',
-        cursor: 'pointer',
+        cursor: 'default',
         fontSize: 14,
         fontWeight: 600,
         whiteSpace: 'nowrap',

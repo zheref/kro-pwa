@@ -54,6 +54,47 @@ export const appearanceModeLabel = (mode: AppearanceMode): string => {
 }
 
 /**
+ * The four selectable appearance palettes. **Local-only**, same as theme.
+ *
+ * Raw values are spelled here rather than imported from the UI's `AppPalette`:
+ * `@kro/core` cannot see the design tier. The lists must stay in lockstep —
+ * `appearancePalettes` is what `general.palette` persists.
+ */
+export const AppearancePalette = {
+  purple: 'purple',
+  green: 'green',
+  orange: 'orange',
+  red: 'red',
+} as const
+
+export type AppearancePalette =
+  (typeof AppearancePalette)[keyof typeof AppearancePalette]
+
+/** `AppearancePalette.allCases`, in canon declaration order. */
+export const appearancePalettes: readonly AppearancePalette[] = [
+  AppearancePalette.purple,
+  AppearancePalette.green,
+  AppearancePalette.orange,
+  AppearancePalette.red,
+]
+
+/** `var displayName: String` — a plain colour name, not a mood. */
+export const appearancePaletteLabel = (palette: AppearancePalette): string => {
+  switch (palette) {
+    case AppearancePalette.purple:
+      return 'Purple'
+    case AppearancePalette.green:
+      return 'Green'
+    case AppearancePalette.orange:
+      return 'Orange'
+    case AppearancePalette.red:
+      return 'Red'
+    default:
+      return assertNever(palette)
+  }
+}
+
+/**
  * The user's accent color choice (cloud-synced). The concrete color mapping is
  * the UI layer's — #6 binds these names to KroTokens.
  */

@@ -17,6 +17,7 @@ export {
   settingsSectionTitle,
   settingsSections,
   settingsSectionsIn,
+  preferencesHubSectionsFor,
 } from './SettingsSection'
 export {
   DEFAULT_STEPPER_BOUNDS,
@@ -30,6 +31,7 @@ export {
   settingElementsFor,
   settingLabel,
   settingSubgroupsFor,
+  settingSubgroupsForAppearance,
 } from './SettingsElements'
 export {
   IntegrationAction,
@@ -79,9 +81,11 @@ export {
   selectGoogleIntegration,
   selectIntegrationRows,
   selectIsAuthPresented,
+  selectIsAppearanceThemesEnabled,
   selectIsSettingsEditable,
   selectIsSettingsLoaded,
   selectOpenSection,
+  selectPreferencesHubSections,
   selectSettingValues,
   selectSettingsErrorCopy,
   selectSettingsException,
@@ -91,6 +95,11 @@ export {
   selectWorkingHoursValid,
   settingValueIn,
 } from './SettingsSelectors'
+export {
+  applyStoredAppearance,
+  readStoredAppearance,
+  storedAppearanceKey,
+} from './applyStoredAppearance'
 export { SettingsMocks, defaultSettingValues } from './SettingsMocks'
 
 // --- the render tier -------------------------------------------------------

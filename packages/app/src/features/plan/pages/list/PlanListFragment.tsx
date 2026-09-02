@@ -325,7 +325,7 @@ function ModeRow({
           onClick={() => onSelect(option.value)}
           className={cn(
             'inline-flex shrink-0 items-center px-kro-small py-1',
-            'cursor-pointer border-none text-xs outline-none',
+            'border-none text-xs outline-none',
             'focus-visible:shadow-[var(--kro-ring)]',
           )}
           style={{

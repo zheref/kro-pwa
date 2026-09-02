@@ -2,10 +2,13 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  DEFAULT_GLOW_BLUR_RADIUS,
   DEFAULT_GLOW_HUES,
+  DEFAULT_GLOW_SPREAD,
   GLOW_SHAPES,
   RotatingGlow,
   conicSweep,
+  glowPlumeMargin,
   shouldGlowAnimate,
 } from './RotatingGlow'
 
@@ -26,6 +29,60 @@ describe('the sweep is two hues, and closes on itself', () => {
     // The reason the pair matters is in the component's header: one hue rotates
     // invisibly, so a single-colour glow reads as a pulse, not as travel.
     expect(DEFAULT_GLOW_HUES).toEqual(['ringEmerald', 'glowLime'])
+  })
+
+  it('keeps the band thin and the blur the reach — canon`s spread 3 / blur 5', () => {
+    expect(DEFAULT_GLOW_SPREAD).toBe(3)
+    expect(DEFAULT_GLOW_BLUR_RADIUS).toBe(5)
+    expect(DEFAULT_GLOW_BLUR_RADIUS).toBeGreaterThan(DEFAULT_GLOW_SPREAD)
+  })
+
+  it('gives the plume room to spill, matching canon`s spread + blur×2 margin', () => {
+    expect(glowPlumeMargin(DEFAULT_GLOW_SPREAD, DEFAULT_GLOW_BLUR_RADIUS)).toBe(
+      DEFAULT_GLOW_SPREAD + DEFAULT_GLOW_BLUR_RADIUS * 2,
+    )
+  })
+
+  it('does not put a 0 0 halo on the host — that reads as an outline', () => {
+    render(
+      <RotatingGlow>
+        <button type="button">Quick add</button>
+      </RotatingGlow>,
+    )
+
+    const host = document.querySelector('[data-kro-glow]') as HTMLElement
+    expect(host.style.boxShadow).toBe('')
+  })
+
+  it('casts a coloured shadow from beneath the disc rather than ringing it', () => {
+    render(
+      <RotatingGlow>
+        <button type="button">Quick add</button>
+      </RotatingGlow>,
+    )
+
+    const cast = document.querySelector('[data-kro-glow-cast]') as HTMLElement
+    expect(cast).not.toBeNull()
+    expect(cast.style.top).toBe('42%')
+    expect(cast.style.bottom).toBe('0px')
+    expect(cast.style.background).toMatch(/ring-emerald|glow-lime/)
+  })
+
+  it('blurs a canvas larger than the ring, so the plume is not clipped into a rim', () => {
+    render(
+      <RotatingGlow>
+        <button type="button">Quick add</button>
+      </RotatingGlow>,
+    )
+
+    const band = document.querySelector('[data-kro-glow-band]') as HTMLElement
+    const ring = document.querySelector('[data-kro-glow-ring]') as HTMLElement
+    const plume = glowPlumeMargin(DEFAULT_GLOW_SPREAD, DEFAULT_GLOW_BLUR_RADIUS)
+    expect(band.style.filter).toBe(`blur(${DEFAULT_GLOW_BLUR_RADIUS}px)`)
+    expect(band.style.inset).toBe(`-${plume}px`)
+    expect(band.style.padding).toBe(`${plume - DEFAULT_GLOW_SPREAD}px`)
+    expect(ring.style.padding).toBe(`${DEFAULT_GLOW_SPREAD}px`)
+    expect(ring.style.filter).toBe('')
   })
 
   it('repeats the first stop so the ramp has no seam at 0 degrees', () => {

@@ -63,6 +63,16 @@ describe('PlanFragment', () => {
     expect(screen.getByTestId('plan-subtitle').textContent).toBe('3 events')
   })
 
+  it('paints LargeScreenTitle on the header itself, not a column-tall slab', () => {
+    mount()
+
+    const header = screen.getByTestId('plan-header')
+    const slab = screen.getByTestId('plan-header-title-slab')
+    expect(header.contains(slab)).toBe(true)
+    expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(slab.dataset.gradientBleed).toBe('window')
+  })
+
   it('renders the timeline destination it was handed', () => {
     mount()
 

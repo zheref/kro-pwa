@@ -158,10 +158,29 @@ export type EndeavorCardIntent = 'do' | 'plan'
 
 export type EndeavorCardLayout = 'vertical' | 'horizontal'
 
+/**
+ * Canon's `PreparationPresentation`. `automatic` follows the surface: Do
+ * passes `macOS` on a pointer window and `mobile` on a touch one, so jsdom
+ * (and any caller that omits the prop) keeps the iOS overlay.
+ */
+export type EndeavorPreparationPresentation = 'automatic' | 'mobile' | 'macOS'
+
+/** Canon's `usesDetailedMacOSPreparation` — only the explicit macOS case. */
+export function usesDetailedMacOSPreparation(
+  presentation: EndeavorPreparationPresentation,
+): boolean {
+  return presentation === 'macOS'
+}
+
 export interface EndeavorCardProps {
   readonly model: EndeavorCardModel
   readonly intent?: EndeavorCardIntent
   readonly layout?: EndeavorCardLayout
+  /**
+   * Platform preparation. Canon's `preparationPresentation`.
+   * Default `automatic` keeps the iOS overlay — Do passes `macOS` on desktop.
+   */
+  readonly preparationPresentation?: EndeavorPreparationPresentation
   /** Preparation mode. Controlled by the parent, as in canon. */
   readonly isSelected?: boolean
   readonly size?: EndeavorCardSize
@@ -277,8 +296,8 @@ function VerticalCard({
   model,
   size = 'medium',
   cardSize,
-  isSelected = false,
   isInMarkCompleteMode = false,
+  preparationPresentation = 'automatic',
   showsOverlay,
   now,
   locale,
@@ -292,26 +311,39 @@ function VerticalCard({
   onDelete,
 }: EndeavorCardProps & { readonly showsOverlay: boolean }) {
   const metrics = CARD_METRICS[size]
+  const macOSPrep = usesDetailedMacOSPreparation(preparationPresentation)
+  const usesGlass = macOSPrep && showsOverlay
 
   return (
     <div
       data-slot="endeavor-card-shell"
-      className="relative flex flex-col overflow-hidden"
+      data-preparation={macOSPrep ? 'macOS' : 'mobile'}
+      className={cn(
+        'relative flex flex-col overflow-hidden',
+        usesGlass && 'kro-glass kro-glass--pressed',
+      )}
       style={{
         width: cardSize?.width ?? DEFAULT_CARD_WIDTH,
         height: cardSize?.height ?? DEFAULT_CARD_HEIGHT,
         borderRadius: radiusVar('surface'),
-        backgroundColor: colorVar('absolute'),
-        boxShadow: shadowVar('card'),
+        backgroundColor: usesGlass ? undefined : colorVar('absolute'),
+        boxShadow: usesGlass ? undefined : shadowVar('card'),
       }}
     >
-      {/* Layer 1 — the card content, blurred behind the overlay (canon: 10). */}
+      {/* Layer 1 — the card content. Mobile blurs it; macOS replaces it. */}
       <div
         data-slot="endeavor-card-content"
         className="absolute inset-0 flex flex-col p-3"
         style={{
-          filter: showsOverlay ? 'blur(10px)' : undefined,
-          transition: 'filter 200ms var(--kro-ease-standard)',
+          opacity: macOSPrep && showsOverlay ? 0 : 1,
+          filter: macOSPrep
+            ? undefined
+            : showsOverlay
+              ? 'blur(10px)'
+              : undefined,
+          transition: macOSPrep
+            ? undefined
+            : 'filter 200ms var(--kro-ease-standard)',
         }}
       >
         <div className="flex items-start justify-between gap-1">
@@ -381,68 +413,86 @@ function VerticalCard({
         </div>
       </div>
 
-      {/* Layer 2 — the preparation overlay. Always in the tree, opacity-driven,
-          so revealing it never changes layout (canon's own note). */}
-      <div
-        data-slot="endeavor-card-prep-overlay"
-        aria-hidden={!showsOverlay}
-        className="absolute inset-0 flex flex-col items-center justify-center"
-        style={{
-          gap: metrics.stackSpacing,
-          opacity: showsOverlay ? 1 : 0,
-          pointerEvents: showsOverlay ? 'auto' : 'none',
-          transition: 'opacity 200ms var(--kro-ease-standard)',
-        }}
-      >
-        <MarkCompleteControl
+      {/* Layer 2 — platform preparation. Mobile is the floating action stack;
+          macOS replaces the content with a compact glass card. Always in the
+          tree, opacity-driven, so revealing it never changes layout. */}
+      {macOSPrep ? (
+        <MacOSVerticalPreparation
           model={model}
-          diameter={metrics.secondaryButton}
-          glyphSize={metrics.secondaryIconSize}
-          tabbable={showsOverlay}
+          size={size}
+          showsOverlay={showsOverlay}
+          now={now}
+          locale={locale}
+          onExecute={onExecute}
           onMarkComplete={onMarkComplete}
           onSkip={onSkip}
+          onDefer={onDefer}
+          onDelegate={onDelegate}
+          onShowDetails={onShowDetails}
+          onDelete={onDelete}
         />
-
-        <CircleAction
-          label="Start"
-          diameter={metrics.primaryButton}
-          glyphSize={metrics.primaryIconSize}
-          fill="badgeGreen"
-          tabbable={showsOverlay}
-          onPress={() => onExecute?.()}
-        >
-          <Play size={metrics.primaryIconSize} aria-hidden />
-        </CircleAction>
-
+      ) : (
         <div
-          className="flex items-center"
-          style={{ gap: metrics.stackSpacing }}
+          data-slot="endeavor-card-prep-overlay"
+          aria-hidden={!showsOverlay}
+          className="absolute inset-0 flex flex-col items-center justify-center"
+          style={{
+            gap: metrics.stackSpacing,
+            opacity: showsOverlay ? 1 : 0,
+            pointerEvents: showsOverlay ? 'auto' : 'none',
+            transition: 'opacity 200ms var(--kro-ease-standard)',
+          }}
         >
-          <OverflowMenu
+          <MarkCompleteControl
             model={model}
             diameter={metrics.secondaryButton}
             glyphSize={metrics.secondaryIconSize}
             tabbable={showsOverlay}
-            now={now}
+            onMarkComplete={onMarkComplete}
             onSkip={onSkip}
-            onDefer={onDefer}
-            onDelegate={onDelegate}
-            onShowDetails={onShowDetails}
-            onDelete={onDelete}
           />
-          {size === 'large' ? (
-            <DeferControl
+
+          <CircleAction
+            label="Start"
+            diameter={metrics.primaryButton}
+            glyphSize={metrics.primaryIconSize}
+            fill="badgeGreen"
+            tabbable={showsOverlay}
+            onPress={() => onExecute?.()}
+          >
+            <Play size={metrics.primaryIconSize} aria-hidden />
+          </CircleAction>
+
+          <div
+            className="flex items-center"
+            style={{ gap: metrics.stackSpacing }}
+          >
+            <OverflowMenu
               model={model}
               diameter={metrics.secondaryButton}
               glyphSize={metrics.secondaryIconSize}
               tabbable={showsOverlay}
               now={now}
-              onDefer={onDefer}
               onSkip={onSkip}
+              onDefer={onDefer}
+              onDelegate={onDelegate}
+              onShowDetails={onShowDetails}
+              onDelete={onDelete}
             />
-          ) : null}
+            {size === 'large' ? (
+              <DeferControl
+                model={model}
+                diameter={metrics.secondaryButton}
+                glyphSize={metrics.secondaryIconSize}
+                tabbable={showsOverlay}
+                now={now}
+                onDefer={onDefer}
+                onSkip={onSkip}
+              />
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
       {/*
         NO selection ring here, deliberately. Canon draws the 3pt accent stroke
@@ -463,6 +513,7 @@ function HorizontalCard({
   model,
   isSelected = false,
   isInMarkCompleteMode = false,
+  preparationPresentation = 'automatic',
   showsOverlay,
   now,
   locale,
@@ -471,20 +522,28 @@ function HorizontalCard({
   onMarkComplete,
   onSkip,
   onDefer,
+  onDelegate,
+  onShowDetails,
   onDelete,
 }: EndeavorCardProps & { readonly showsOverlay: boolean }) {
   const overdue =
     model.dueTime !== null && model.dueTime.getTime() < now.getTime()
+  const macOSPrep = usesDetailedMacOSPreparation(preparationPresentation)
+  const usesGlass = macOSPrep && showsOverlay
 
   return (
     <div
       data-slot="endeavor-card-shell"
-      className="relative flex w-full items-center overflow-hidden"
+      data-preparation={macOSPrep ? 'macOS' : 'mobile'}
+      className={cn(
+        'relative flex w-full items-center overflow-hidden',
+        usesGlass && 'kro-glass kro-glass--pressed',
+      )}
       style={{
         minHeight: HORIZONTAL_MIN_HEIGHT,
         borderRadius: radiusVar('surface'),
-        backgroundColor: colorVar('absolute'),
-        boxShadow: shadowVar('card'),
+        backgroundColor: usesGlass ? undefined : colorVar('absolute'),
+        boxShadow: usesGlass ? undefined : shadowVar('card'),
       }}
     >
       {/*
@@ -499,6 +558,9 @@ function HorizontalCard({
       <div
         data-slot="endeavor-card-content"
         className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3.5 px-4 py-3.5"
+        style={{
+          opacity: macOSPrep && showsOverlay ? 0 : 1,
+        }}
       >
         <span className="relative inline-flex shrink-0">
           <span
@@ -584,77 +646,82 @@ function HorizontalCard({
         ) : null}
       </div>
 
-      {/* The horizontal preparation overlay: canon's five circles in a row. */}
-      {/*
-        `kro-glass` MUST NOT sit on the positioned element.
-        `glass.css` declares `.kro-glass { position: relative }` as UNLAYERED
-        css, and unlayered css outranks every `@layer` — including Tailwind's
-        utilities. So `absolute inset-0 … kro-glass` silently resolves to
-        `position: relative`, the overlay rejoins the flow, and it eats a
-        column of the row: measured at 268px of a 1232px card, which is what
-        pushed the trailing warning glyph into the middle of the row. The
-        material therefore lives on an inner element that fills this one.
-      */}
-      <div
-        data-slot="endeavor-card-prep-overlay"
-        aria-hidden={!showsOverlay}
-        className="absolute inset-0"
-        style={{
-          opacity: showsOverlay ? 1 : 0,
-          pointerEvents: showsOverlay ? 'auto' : 'none',
-          transition: 'opacity 200ms var(--kro-ease-standard)',
-        }}
-      >
-        <div className="kro-glass flex size-full items-center justify-center gap-3.5">
-          <MarkCompleteControl
-            model={model}
-            diameter={40}
-            glyphSize={16}
-            tabbable={showsOverlay}
-            onMarkComplete={onMarkComplete}
-            onSkip={onSkip}
-          />
-          <DeferControl
-            model={model}
-            diameter={40}
-            glyphSize={16}
-            tabbable={showsOverlay}
-            now={now}
-            onDefer={onDefer}
-          />
-          <CircleAction
-            label="Start"
-            diameter={52}
-            glyphSize={20}
-            fill="badgeGreen"
-            tabbable={showsOverlay}
-            onPress={() => onExecute?.()}
-          >
-            <Play size={20} aria-hidden />
-          </CircleAction>
-          {model.isEvent ? null : (
-            <CircleAction
-              label="Skip"
+      {macOSPrep ? (
+        <MacOSHorizontalPreparation
+          model={model}
+          showsOverlay={showsOverlay}
+          now={now}
+          locale={locale}
+          onExecute={onExecute}
+          onMarkComplete={onMarkComplete}
+          onSkip={onSkip}
+          onDefer={onDefer}
+          onDelegate={onDelegate}
+          onShowDetails={onShowDetails}
+          onDelete={onDelete}
+        />
+      ) : (
+        <div
+          data-slot="endeavor-card-prep-overlay"
+          aria-hidden={!showsOverlay}
+          className="absolute inset-0"
+          style={{
+            opacity: showsOverlay ? 1 : 0,
+            pointerEvents: showsOverlay ? 'auto' : 'none',
+            transition: 'opacity 200ms var(--kro-ease-standard)',
+          }}
+        >
+          <div className="kro-glass flex size-full items-center justify-center gap-3.5">
+            <MarkCompleteControl
+              model={model}
               diameter={40}
               glyphSize={16}
-              fill="badgeNeutral"
               tabbable={showsOverlay}
-              onPress={() => onSkip?.()}
+              onMarkComplete={onMarkComplete}
+              onSkip={onSkip}
+            />
+            <DeferControl
+              model={model}
+              diameter={40}
+              glyphSize={16}
+              tabbable={showsOverlay}
+              now={now}
+              onDefer={onDefer}
+            />
+            <CircleAction
+              label="Start"
+              diameter={52}
+              glyphSize={20}
+              fill="badgeGreen"
+              tabbable={showsOverlay}
+              onPress={() => onExecute?.()}
             >
-              <Skip size={16} aria-hidden />
+              <Play size={20} aria-hidden />
             </CircleAction>
-          )}
-          <DeleteControl
-            model={model}
-            diameter={40}
-            glyphSize={16}
-            tabbable={showsOverlay}
-            onDelete={onDelete}
-          />
+            {model.isEvent ? null : (
+              <CircleAction
+                label="Skip"
+                diameter={40}
+                glyphSize={16}
+                fill="badgeNeutral"
+                tabbable={showsOverlay}
+                onPress={() => onSkip?.()}
+              >
+                <Skip size={16} aria-hidden />
+              </CircleAction>
+            )}
+            <DeleteControl
+              model={model}
+              diameter={40}
+              glyphSize={16}
+              tabbable={showsOverlay}
+              onDelete={onDelete}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {isSelected ? (
+      {isSelected && !macOSPrep ? (
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -665,6 +732,432 @@ function HorizontalCard({
         />
       ) : null}
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------------ */
+/* macOS preparation — compact details, 28px action row, no blur             */
+/* ------------------------------------------------------------------------ */
+
+const MACOS_ACTION_HEIGHT = 28
+const MACOS_SQUARE_ACTION = 32
+
+function MacOSVerticalPreparation({
+  model,
+  size = 'medium',
+  showsOverlay,
+  now,
+  locale,
+  onExecute,
+  onMarkComplete,
+  onSkip,
+  onDefer,
+  onDelegate,
+  onShowDetails,
+  onDelete,
+}: Pick<
+  EndeavorCardProps,
+  | 'model'
+  | 'size'
+  | 'now'
+  | 'locale'
+  | 'onExecute'
+  | 'onMarkComplete'
+  | 'onSkip'
+  | 'onDefer'
+  | 'onDelegate'
+  | 'onShowDetails'
+  | 'onDelete'
+> & { readonly showsOverlay: boolean }) {
+  const compactStart = size === 'small'
+
+  return (
+    <div
+      data-slot="endeavor-card-macos-prep"
+      aria-hidden={!showsOverlay}
+      className="absolute inset-0 flex flex-col gap-1.5 p-2.5"
+      style={{
+        opacity: showsOverlay ? 1 : 0,
+        pointerEvents: showsOverlay ? 'auto' : 'none',
+      }}
+    >
+      <div className="flex items-start justify-between gap-1">
+        {model.urgency === EndeavorUrgency.low ? (
+          <span />
+        ) : (
+          <UrgencyBadge urgency={model.urgency} compact={size === 'small'} />
+        )}
+        <RewardBadge amount={model.reward} />
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden className="shrink-0 text-2xl leading-none">
+            {model.symbol}
+          </span>
+          <p
+            className="m-0 line-clamp-3 min-w-0 flex-1 text-xs font-semibold"
+            style={{ color: colorVar('fore') }}
+          >
+            {model.title}
+          </p>
+        </div>
+        <MacOSCompactDetails model={model} now={now} locale={locale} />
+      </div>
+
+      <MacOSActionRow
+        model={model}
+        compactStart={compactStart}
+        tabbable={showsOverlay}
+        now={now}
+        onExecute={onExecute}
+        onMarkComplete={onMarkComplete}
+        onSkip={onSkip}
+        onDefer={onDefer}
+        onDelegate={onDelegate}
+        onShowDetails={onShowDetails}
+        onDelete={onDelete}
+      />
+    </div>
+  )
+}
+
+function MacOSHorizontalPreparation({
+  model,
+  showsOverlay,
+  now,
+  locale,
+  onExecute,
+  onMarkComplete,
+  onSkip,
+  onDefer,
+  onDelegate,
+  onShowDetails,
+  onDelete,
+}: Pick<
+  EndeavorCardProps,
+  | 'model'
+  | 'now'
+  | 'locale'
+  | 'onExecute'
+  | 'onMarkComplete'
+  | 'onSkip'
+  | 'onDefer'
+  | 'onDelegate'
+  | 'onShowDetails'
+  | 'onDelete'
+> & { readonly showsOverlay: boolean }) {
+  return (
+    <div
+      data-slot="endeavor-card-macos-prep"
+      aria-hidden={!showsOverlay}
+      className="absolute inset-0 flex flex-col gap-1.5 p-2.5"
+      style={{
+        opacity: showsOverlay ? 1 : 0,
+        pointerEvents: showsOverlay ? 'auto' : 'none',
+      }}
+    >
+      <div className="flex items-start justify-between gap-1">
+        {model.urgency === EndeavorUrgency.low ? null : (
+          <UrgencyBadge urgency={model.urgency} />
+        )}
+        <RewardBadge amount={model.reward} />
+      </div>
+      <div className="flex min-h-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <span aria-hidden className="shrink-0 text-2xl leading-none">
+            {model.symbol}
+          </span>
+          <p
+            className="m-0 line-clamp-3 min-w-0 text-xs font-semibold"
+            style={{ color: colorVar('fore') }}
+          >
+            {model.title}
+          </p>
+        </div>
+        <MacOSCompactDetails model={model} now={now} locale={locale} />
+      </div>
+      <MacOSActionRow
+        model={model}
+        compactStart
+        showsInlineSkip={!model.isEvent}
+        tabbable={showsOverlay}
+        now={now}
+        onExecute={onExecute}
+        onMarkComplete={onMarkComplete}
+        onSkip={onSkip}
+        onDefer={onDefer}
+        onDelegate={onDelegate}
+        onShowDetails={onShowDetails}
+        onDelete={onDelete}
+      />
+    </div>
+  )
+}
+
+function MacOSCompactDetails({
+  model,
+  now,
+  locale,
+}: {
+  readonly model: EndeavorCardModel
+  readonly now: Date
+  readonly locale?: string
+}) {
+  const overdue =
+    model.dueTime !== null && model.dueTime.getTime() < now.getTime()
+
+  return (
+    <div
+      className="flex flex-col gap-0.5"
+      data-slot="endeavor-card-macos-details"
+    >
+      <MacOSDetail
+        glyph={
+          model.isEvent ? (
+            <Clock size={10} aria-hidden />
+          ) : (
+            <Check size={10} aria-hidden />
+          )
+        }
+        label="Kind"
+        value={model.isEvent ? 'Event' : 'Task'}
+      />
+      {model.dueTime === null ? null : (
+        <MacOSDetail
+          glyph={<Clock size={10} aria-hidden />}
+          label="Due"
+          value={formatDueCaption(model.dueTime, now, locale)}
+          emphasis={overdue ? 'bannerWarning' : undefined}
+        />
+      )}
+      {model.duration === null ? null : (
+        <MacOSDetail
+          glyph={<TimerGlyph size={10} aria-hidden />}
+          label="Duration"
+          value={formatDuration(model.duration)}
+        />
+      )}
+    </div>
+  )
+}
+
+function MacOSDetail({
+  glyph,
+  label,
+  value,
+  emphasis,
+}: {
+  readonly glyph: React.ReactNode
+  readonly label: string
+  readonly value: string
+  readonly emphasis?: 'bannerWarning'
+}) {
+  return (
+    <span
+      className="inline-flex min-w-0 items-center gap-1 text-[10px] font-medium"
+      style={{
+        color:
+          emphasis === undefined
+            ? colorVar('foreSecondary')
+            : colorVar(emphasis),
+      }}
+    >
+      <span aria-hidden className="inline-flex shrink-0">
+        {glyph}
+      </span>
+      <span className="truncate">
+        <span className="sr-only">{label}: </span>
+        {value}
+      </span>
+    </span>
+  )
+}
+
+function MacOSActionRow({
+  model,
+  compactStart,
+  showsInlineSkip = false,
+  tabbable,
+  now,
+  onExecute,
+  onMarkComplete,
+  onSkip,
+  onDefer,
+  onDelegate,
+  onShowDetails,
+  onDelete,
+}: {
+  readonly model: EndeavorCardModel
+  readonly compactStart: boolean
+  readonly showsInlineSkip?: boolean
+  readonly tabbable: boolean
+  readonly now: Date
+  readonly onExecute?: () => void
+  readonly onMarkComplete?: (
+    model: EndeavorCardModel,
+    completedAt: Date,
+  ) => void
+  readonly onSkip?: () => void
+  readonly onDefer?: (target: Date) => void
+  readonly onDelegate?: () => void
+  readonly onShowDetails?: () => void
+  readonly onDelete?: () => void
+}) {
+  return (
+    <div
+      data-slot="endeavor-card-macos-actions"
+      className="flex h-7 w-full items-center gap-1"
+    >
+      <MacOSCompletionButton
+        model={model}
+        tabbable={tabbable}
+        onMarkComplete={onMarkComplete}
+        onSkip={onSkip}
+      />
+      <button
+        type="button"
+        aria-label="Start"
+        tabIndex={tabbable ? 0 : -1}
+        onClick={(event) => {
+          event.stopPropagation()
+          onExecute?.()
+        }}
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md',
+          'outline-none focus-visible:shadow-[var(--kro-ring)]',
+        )}
+        style={{
+          height: MACOS_ACTION_HEIGHT,
+          paddingInline: compactStart ? 3 : 7,
+          color: colorVar('badgeGreen'),
+          boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${colorVar('badgeGreen')} 55%, transparent)`,
+        }}
+      >
+        <Play size={12} aria-hidden />
+        {compactStart ? null : (
+          <span className="text-xs font-medium">Start</span>
+        )}
+      </button>
+      {showsInlineSkip ? (
+        <button
+          type="button"
+          aria-label="Skip"
+          tabIndex={tabbable ? 0 : -1}
+          onClick={(event) => {
+            event.stopPropagation()
+            onSkip?.()
+          }}
+          className={cn(
+            'inline-flex shrink-0 items-center justify-center rounded-md',
+            'outline-none focus-visible:shadow-[var(--kro-ring)]',
+          )}
+          style={{
+            width: MACOS_SQUARE_ACTION,
+            height: MACOS_ACTION_HEIGHT,
+            color: colorVar('foreSecondary'),
+            boxShadow: `inset 0 0 0 1px ${colorVar('hairline')}`,
+          }}
+        >
+          <Skip size={14} aria-hidden />
+        </button>
+      ) : null}
+      <span className="min-w-0 flex-1" />
+      <OverflowMenu
+        model={model}
+        diameter={MACOS_SQUARE_ACTION}
+        glyphSize={14}
+        tabbable={tabbable}
+        compact
+        now={now}
+        onSkip={onSkip}
+        onDefer={onDefer}
+        onDelegate={onDelegate}
+        onShowDetails={onShowDetails}
+        onDelete={onDelete}
+      />
+    </div>
+  )
+}
+
+function MacOSCompletionButton({
+  model,
+  tabbable,
+  onMarkComplete,
+  onSkip,
+}: {
+  readonly model: EndeavorCardModel
+  readonly tabbable: boolean
+  readonly onMarkComplete?: (
+    model: EndeavorCardModel,
+    completedAt: Date,
+  ) => void
+  readonly onSkip?: () => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  if (model.isEvent) {
+    return (
+      <button
+        type="button"
+        aria-label="Skip event"
+        tabIndex={tabbable ? 0 : -1}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSkip?.()
+        }}
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-md',
+          'outline-none focus-visible:shadow-[var(--kro-ring)]',
+        )}
+        style={{
+          width: MACOS_SQUARE_ACTION,
+          height: MACOS_ACTION_HEIGHT,
+          color: colorVar('foreSecondary'),
+          boxShadow: `inset 0 0 0 1px ${colorVar('hairline')}`,
+        }}
+      >
+        <Skip size={14} aria-hidden />
+      </button>
+    )
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Mark complete"
+          tabIndex={tabbable ? 0 : -1}
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            'inline-flex shrink-0 items-center justify-center rounded-md',
+            'outline-none focus-visible:shadow-[var(--kro-ring)]',
+          )}
+          style={{
+            width: MACOS_SQUARE_ACTION,
+            height: MACOS_ACTION_HEIGHT,
+            color: colorVar('completeBlue'),
+            boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${colorVar('completeBlue')} 55%, transparent)`,
+          }}
+        >
+          <Check size={14} strokeWidth={3} aria-hidden />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <MarkCompletePopover
+          initialDate={new Date()}
+          onConfirm={(completedAt) => {
+            setOpen(false)
+            onMarkComplete?.(model, completedAt)
+          }}
+          onCancel={() => setOpen(false)}
+        />
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -978,6 +1471,7 @@ function OverflowMenu({
   diameter,
   glyphSize,
   tabbable = true,
+  compact = false,
   now,
   onSkip,
   onDefer,
@@ -989,6 +1483,7 @@ function OverflowMenu({
   readonly diameter: number
   readonly glyphSize: number
   readonly tabbable?: boolean
+  readonly compact?: boolean
   readonly now: Date
   readonly onSkip?: () => void
   readonly onDefer?: (target: Date) => void
@@ -1027,15 +1522,18 @@ function OverflowMenu({
                 tabIndex={tabbable ? 0 : -1}
                 onClick={(event) => event.stopPropagation()}
                 className={cn(
-                  'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
+                  'inline-flex shrink-0 items-center justify-center',
+                  compact ? 'rounded-md' : 'rounded-kro-pill',
                   'outline-none focus-visible:shadow-[var(--kro-ring)]',
                 )}
                 style={{
                   width: diameter,
-                  height: diameter,
-                  backgroundColor: colorVar('charcoal'),
-                  color: colorVar('absolute'),
-                  boxShadow: shadowVar('subtle'),
+                  height: compact ? MACOS_ACTION_HEIGHT : diameter,
+                  backgroundColor: compact ? undefined : colorVar('charcoal'),
+                  color: compact ? colorVar('fore') : colorVar('absolute'),
+                  boxShadow: compact
+                    ? `inset 0 0 0 1px ${colorVar('hairline')}`
+                    : shadowVar('subtle'),
                 }}
               >
                 <Ellipsis size={glyphSize} aria-hidden />

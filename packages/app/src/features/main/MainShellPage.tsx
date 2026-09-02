@@ -76,6 +76,7 @@ import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { searchDestination } from './NavigationSections'
 import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
+import { SHELL_GUTTER } from '../../design/chrome/layout/chromeLayout'
 import { SIDEBAR_IDEAL_WIDTH } from './SidebarFragment'
 import { ToolbarSlotsProvider } from './ToolbarSlots'
 import { useSurfaceLayout } from './useSurfaceLayout'
@@ -227,7 +228,9 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
         capture of the built app showed.
       */
       leadingInset={
-        shape === 'sidebar' && isSidebarVisible ? SIDEBAR_IDEAL_WIDTH : 0
+        shape === 'sidebar' && isSidebarVisible
+          ? SHELL_GUTTER + SIDEBAR_IDEAL_WIDTH + SHELL_GUTTER
+          : SHELL_GUTTER
       }
     >
       <ToolbarSlotsProvider>

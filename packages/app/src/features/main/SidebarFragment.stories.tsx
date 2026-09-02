@@ -131,8 +131,8 @@ export const AddingAProject = {
 }
 
 /**
- * The same sidebar on a touch tablet: 44px rows and 8px gaps instead of 28/4,
- * decided by the table rather than by this story.
+ * The same sidebar on a touch tablet: still the 36px rows, with the table's
+ * 8px gaps rather than the pointer 4.
  */
 export const TouchSized = {
   render: () => (

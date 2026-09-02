@@ -617,7 +617,7 @@ function TimelineBlock({
         type="button"
         data-testid="plan-timeline-block-surface"
         aria-label={endeavor.title}
-        className="relative block h-full w-full cursor-pointer overflow-hidden border-none bg-transparent p-0 text-left"
+        className="relative block h-full w-full overflow-hidden border-none bg-transparent p-0 text-left"
         style={{
           borderRadius: 8,
           // While armed the card owns the vertical gesture outright; otherwise

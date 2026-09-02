@@ -47,19 +47,17 @@ import type { ColorRole } from '../../system/tokens/roles'
  * surface samples it and takes on the tint". A tinted FAB is the bug.
  *
  * On the web the same cut-out is a two-layer mask with `mask-composite:
- * exclude` — the standard gradient-border construction. The band element is
- * the content grown by `spread` on every side with `padding: spread`, so its
- * CONTENT box is exactly the content's silhouette; excluding a content-box
- * mask from a border-box mask leaves precisely the `spread`-thick ring
- * outside the silhouette. `border-radius` gives that ring any rounded shape,
- * which is what lets one construction serve circle, capsule and rounded
- * rectangle alike.
+ * exclude` — the standard gradient-border construction — on an INNER ring
+ * whose content box is the silhouette. The BLUR lives on an OUTER canvas
+ * grown by `margin = spread + blurRadius * 2`. CSS `filter: blur()` clips its
+ * plume to the element's border box, so putting the filter on the ring itself
+ * (a box only `spread` larger than the disc) is exactly how the falloff
+ * becomes a hard rim. The canvas's extra padding is canon's `.padding(-margin)`.
  *
- * The blur is then the reach control, exactly as in canon: the band stays thin
- * and is blurred far wider than it is thick, so the light falls off from the
- * edge instead of drawing a flat ring. Canon draws the band three times to
- * deepen it without thickening it; `LAYERS` below does the same, for the same
- * reason.
+ * The ring stays thin and is blurred far wider than it is thick, so the light
+ * falls off from the edge instead of drawing a flat ring. Canon draws the
+ * band three times to deepen it without thickening it; `LAYERS` below does
+ * the same, for the same reason.
  *
  * ==========================================================================
  * WHY THE ROTATION IS JAVASCRIPT
@@ -140,6 +138,21 @@ export const DEFAULT_GLOW_HUES = [
   'ringEmerald',
   'glowLime',
 ] as const satisfies readonly ColorRole[]
+
+/**
+ * Canon's defaults. Spread is the *brightness at the edge* (keep it thin —
+ * a thick band draws a flat ring). Blur is the *reach* of the falloff.
+ */
+export const DEFAULT_GLOW_SPREAD = 3
+export const DEFAULT_GLOW_BLUR_RADIUS = 5
+
+/**
+ * Room the blur plume needs around the silhouette, matching canon's
+ * `margin = spread + blurRadius * 2` then `.padding(-margin)`.
+ */
+export function glowPlumeMargin(spread: number, blurRadius: number): number {
+  return spread + blurRadius * 2
+}
 
 /**
  * Canon draws the band three times: "a band that thin, blurred that far, is
@@ -224,8 +237,8 @@ export function RotatingGlow({
   hues = DEFAULT_GLOW_HUES,
   shape = GLOW_SHAPES.circle,
   secondsPerRevolution = 4,
-  spread = 3,
-  blurRadius = 5,
+  spread = DEFAULT_GLOW_SPREAD,
+  blurRadius = DEFAULT_GLOW_BLUR_RADIUS,
   inset = 0,
   isActive = true,
   className,
@@ -268,33 +281,43 @@ export function RotatingGlow({
     }
   }, [animate, secondsPerRevolution])
 
-  const outerInset = spread + inset
+  const plume = glowPlumeMargin(spread, blurRadius)
   const radius = borderRadiusFor(shape, spread)
   const sweep = conicSweep(hues)
+  const firstHue = hues[0] ?? DEFAULT_GLOW_HUES[0]
+  const secondHue = hues[1] ?? firstHue
+  // Extra room under the disc so the under-cast can bloom downward instead of
+  // clipping into a hairline at the FAB's bottom edge.
+  const underReach = blurRadius * 2
 
-  const bandStyle: CSSProperties = {
+  const canvasStyle: CSSProperties = {
     position: 'absolute',
-    inset: -outerInset,
+    inset: -plume,
+    // The ring hugs the silhouette (grown by `spread`). Everything between
+    // that outer edge and this canvas's border is empty padding — the room
+    // CSS `filter: blur()` needs, because a filter's plume is clipped to the
+    // element's own border box. Putting the blur ON the ring (a box only
+    // `spread` larger than the disc) is how the falloff becomes a hard rim.
+    padding: plume - spread + inset,
+    overflow: 'visible',
+    filter: `blur(${blurRadius}px)`,
+    zIndex: -1,
+    pointerEvents: 'none',
+  }
+
+  const ringStyle: CSSProperties = {
+    position: 'relative',
+    boxSizing: 'border-box',
+    width: '100%',
+    height: '100%',
     padding: spread,
     borderRadius: radius,
-    // NO `overflow: hidden`. The blur is the reach control, and a filter's
-    // plume paints OUTSIDE the element's own box — clipping it flush turns the
-    // falloff into a hard-edged ring, which is the exact failure canon's
-    // `.padding(-margin)` exists to avoid. The oversized sweep child does not
-    // need clipping either: the mask below already confines it to the ring.
-    // The cut-out. Both spellings: `mask-composite` is the standard, and
-    // WebKit still needs the prefixed `xor` form.
     WebkitMaskImage: 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)',
     WebkitMaskClip: 'content-box, border-box',
     WebkitMaskComposite: 'xor',
     maskImage: 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)',
     maskClip: 'content-box, border-box',
     maskComposite: 'exclude',
-    filter: `blur(${blurRadius}px)`,
-    // Behind the child, and never in the way of it — the two properties AC 2
-    // is about. `pointer-events: none` is asserted directly in the suite.
-    zIndex: -1,
-    pointerEvents: 'none',
   }
 
   return (
@@ -302,15 +325,53 @@ export function RotatingGlow({
       className={className}
       data-kro-glow={isActive ? 'active' : 'off'}
       data-kro-glow-animating={animate ? 'true' : 'false'}
+      data-kro-glow-plume={String(plume)}
       style={{
         position: 'relative',
         // Without its own stacking context the `z-index: -1` band can fall
         // behind an ancestor's background and disappear.
         isolation: 'isolate',
         display: 'inline-flex',
+        overflow: 'visible',
         ...style,
       }}
     >
+      {isActive ? (
+        <div
+          aria-hidden="true"
+          data-kro-glow-spill=""
+          style={{
+            position: 'absolute',
+            inset: -plume,
+            bottom: -(plume + underReach),
+            zIndex: -1,
+            pointerEvents: 'none',
+            overflow: 'visible',
+          }}
+        >
+          {/*
+            Coloured light pooling under the disc. Canon's even-odd band is
+            omnidirectional; without this extra cast the web engine's clipped
+            blur reads as a neon outline and nothing reaches the floor. A
+            filled oval, blurred on a tall canvas, is a drop-shadow — light
+            coming from behind and spilling out the bottom — which is the
+            silhouette RotatingGlow's header describes.
+          */}
+          <div
+            data-kro-glow-cast=""
+            style={{
+              position: 'absolute',
+              left: '8%',
+              right: '8%',
+              top: '42%',
+              bottom: 0,
+              borderRadius: '50%',
+              background: `radial-gradient(ellipse at 50% 15%, color-mix(in srgb, ${colorVar(secondHue)} 90%, transparent), color-mix(in srgb, ${colorVar(firstHue)} 55%, transparent) 45%, transparent 74%)`,
+              filter: `blur(${Math.max(blurRadius * 2, 10)}px)`,
+            }}
+          />
+        </div>
+      ) : null}
       {isActive
         ? Array.from({ length: LAYERS }, (_, layer) => (
             <div
@@ -318,25 +379,27 @@ export function RotatingGlow({
               key={`glow-layer-${layer}`}
               aria-hidden="true"
               data-kro-glow-band=""
-              style={bandStyle}
+              style={canvasStyle}
             >
-              <div
-                ref={(node) => {
-                  sweepsRef.current[layer] = node
-                }}
-                data-kro-glow-sweep=""
-                style={{
-                  position: 'absolute',
-                  // Twice the band box and centred, so a rotation of any angle
-                  // still covers the corners rather than sweeping a blank
-                  // quadrant across the ring.
-                  left: '-50%',
-                  top: '-50%',
-                  width: '200%',
-                  height: '200%',
-                  background: sweep,
-                }}
-              />
+              <div data-kro-glow-ring="" style={ringStyle}>
+                <div
+                  ref={(node) => {
+                    sweepsRef.current[layer] = node
+                  }}
+                  data-kro-glow-sweep=""
+                  style={{
+                    position: 'absolute',
+                    // Twice the ring box and centred, so a rotation of any
+                    // angle still covers the corners rather than sweeping a
+                    // blank quadrant across the band.
+                    left: '-50%',
+                    top: '-50%',
+                    width: '200%',
+                    height: '200%',
+                    background: sweep,
+                  }}
+                />
+              </div>
             </div>
           ))
         : null}

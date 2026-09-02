@@ -1,0 +1,82 @@
+/**
+ * Appearance palettes — the four `[data-palette]` ramps.
+ *
+ * Light values live on `[data-palette]`. Dark values repeat in both the
+ * `prefers-color-scheme` block (system) and the explicit `[data-theme="dark"]`
+ * block, matching `tokens.css`. Purple's light stops are the same indigo→grape
+ * pair `:root` already declares.
+ */
+
+[data-palette="purple"] {
+  --kro-color-header-gradient-indigo: #5856d6;
+  --kro-color-header-gradient-grape: #663399;
+  --kro-color-accent: #5856d6;
+}
+
+[data-palette="green"] {
+  --kro-color-header-gradient-indigo: #1b7d3e;
+  --kro-color-header-gradient-grape: #0b4f2a;
+  --kro-color-accent: #1b7d3e;
+}
+
+[data-palette="orange"] {
+  --kro-color-header-gradient-indigo: #c2410c;
+  --kro-color-header-gradient-grape: #7c2d12;
+  --kro-color-accent: #c2410c;
+}
+
+[data-palette="red"] {
+  --kro-color-header-gradient-indigo: #b7162f;
+  --kro-color-header-gradient-grape: #7a0f22;
+  --kro-color-accent: #b7162f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="purple"] {
+    --kro-color-header-gradient-indigo: #3b3a94;
+    --kro-color-header-gradient-grape: #42216b;
+    --kro-color-accent: #9c99f7;
+  }
+
+  :root:not([data-theme="light"])[data-palette="green"] {
+    --kro-color-header-gradient-indigo: #12542a;
+    --kro-color-header-gradient-grape: #07351c;
+    --kro-color-accent: #34c759;
+  }
+
+  :root:not([data-theme="light"])[data-palette="orange"] {
+    --kro-color-header-gradient-indigo: #822c08;
+    --kro-color-header-gradient-grape: #531e0c;
+    --kro-color-accent: #ffa21f;
+  }
+
+  :root:not([data-theme="light"])[data-palette="red"] {
+    --kro-color-header-gradient-indigo: #7b0f1f;
+    --kro-color-header-gradient-grape: #520a17;
+    --kro-color-accent: #ff7373;
+  }
+}
+
+[data-theme="dark"][data-palette="purple"] {
+  --kro-color-header-gradient-indigo: #3b3a94;
+  --kro-color-header-gradient-grape: #42216b;
+  --kro-color-accent: #9c99f7;
+}
+
+[data-theme="dark"][data-palette="green"] {
+  --kro-color-header-gradient-indigo: #12542a;
+  --kro-color-header-gradient-grape: #07351c;
+  --kro-color-accent: #34c759;
+}
+
+[data-theme="dark"][data-palette="orange"] {
+  --kro-color-header-gradient-indigo: #822c08;
+  --kro-color-header-gradient-grape: #531e0c;
+  --kro-color-accent: #ffa21f;
+}
+
+[data-theme="dark"][data-palette="red"] {
+  --kro-color-header-gradient-indigo: #7b0f1f;
+  --kro-color-header-gradient-grape: #520a17;
+  --kro-color-accent: #ff7373;
+}

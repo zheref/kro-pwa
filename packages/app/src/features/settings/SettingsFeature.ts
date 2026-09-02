@@ -28,6 +28,7 @@ import type { SettingsSectionId } from './SettingsSection'
 import {
   withAuthDismissed,
   withAuthPresented,
+  withAppearanceThemesEnabled,
   withGoogleBusy,
   withGoogleConnection,
   withGoogleEnabled,
@@ -99,6 +100,13 @@ export const settingsSlice = createSlice({
         Object.assign(
           state,
           withGoogleEnabled(state, result.value.isGoogleEnabled),
+        )
+        Object.assign(
+          state,
+          withAppearanceThemesEnabled(
+            state,
+            result.value.isAppearanceThemesEnabled,
+          ),
         )
       })
       .addCase(loadSettingsThunk.rejected, (state, action) => {

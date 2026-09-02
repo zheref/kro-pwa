@@ -274,15 +274,23 @@
      (`src/styles/global.css`). The layering lives in `glass.css`.
      ================================================================== */
 
-  /** The translucent elevated fill. `absolute` is our `--bg-elevated`. */
+  /**
+   * The translucent elevated fill.
+   *
+   * WEB ADAPTATION of Apple Liquid Glass. 24% `absolute` was frost, not glass:
+   * over a flat page there is nothing to refract, and in dark mode `absolute`
+   * is black so the pane disappeared. 62% is opaque enough for `fore` labels
+   * (WCAG 4.5:1) while the full-window indigo→grape backdrop still shows
+   * through. Dark overrides the mix below — black-on-gradient, not black-on-grey.
+   */
   --kro-glass-surface: color-mix(
     in srgb,
-    var(--kro-color-absolute) 24%,
+    var(--kro-color-absolute) 62%,
     transparent
   );
   --kro-glass-surface-hover: color-mix(
     in srgb,
-    var(--kro-color-absolute) 85%,
+    var(--kro-color-absolute) 78%,
     transparent
   );
   /** Opaque stand-in for reduced-transparency and no-backdrop-filter engines. */
@@ -292,7 +300,7 @@
     var(--kro-color-back)
   );
   /** The thin rim, drawn as an inset ring rather than a border. */
-  --kro-glass-rim: color-mix(in srgb, var(--kro-color-fore) 14%, transparent);
+  --kro-glass-rim: color-mix(in srgb, var(--kro-color-fore) 22%, transparent);
   /** The inner top highlight. */
   --kro-glass-hi: rgb(255 255 255 / 0.55);
   /** The specular sheen: a radial hotspot over a top-down linear falloff. */
@@ -303,9 +311,9 @@
       transparent 55%
     ),
     linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 60%);
-  --kro-glass-filter: blur(20px) saturate(180%);
+  --kro-glass-filter: blur(24px) saturate(190%);
   /** Small controls get a shallower blur so their label stays crisp. */
-  --kro-glass-filter-control: blur(14px) saturate(160%);
+  --kro-glass-filter-control: blur(16px) saturate(170%);
 }
 
 /* ==========================================================================
@@ -364,6 +372,17 @@
     --kro-color-timeline-today-selected-foreground: #b7162f;
     --kro-color-timeline-selection-outline: #cf8dff;
     --kro-color-on-accent: #000000;
+    --kro-glass-surface: color-mix(
+      in srgb,
+      var(--kro-color-absolute) 52%,
+      transparent
+    );
+    --kro-glass-surface-hover: color-mix(
+      in srgb,
+      var(--kro-color-absolute) 68%,
+      transparent
+    );
+    --kro-glass-rim: color-mix(in srgb, var(--kro-color-fore) 28%, transparent);
     --kro-glass-hi: rgb(255 255 255 / 0.2);
     --kro-glass-sheen:
       radial-gradient(
@@ -435,6 +454,17 @@
   --kro-color-timeline-today-selected-foreground: #b7162f;
   --kro-color-timeline-selection-outline: #cf8dff;
   --kro-color-on-accent: #000000;
+  --kro-glass-surface: color-mix(
+    in srgb,
+    var(--kro-color-absolute) 52%,
+    transparent
+  );
+  --kro-glass-surface-hover: color-mix(
+    in srgb,
+    var(--kro-color-absolute) 68%,
+    transparent
+  );
+  --kro-glass-rim: color-mix(in srgb, var(--kro-color-fore) 28%, transparent);
   --kro-glass-hi: rgb(255 255 255 / 0.2);
   --kro-glass-sheen:
     radial-gradient(

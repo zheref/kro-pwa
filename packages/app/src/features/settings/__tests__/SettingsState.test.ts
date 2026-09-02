@@ -30,6 +30,10 @@ describe('the initial state claims nothing it does not know', () => {
     expect(initialSettingsState.google.isBusy).toBe(false)
     expect(initialSettingsState.google.exception).toBeNull()
   })
+
+  it('seeds Appearance on, matching the web product override', () => {
+    expect(initialSettingsState.isAppearanceThemesEnabled).toBe(true)
+  })
 })
 
 describe('the subscription plan is a constant, because canon has no flow', () => {

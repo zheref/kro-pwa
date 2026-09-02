@@ -205,7 +205,7 @@
 
 @layer base {
   html {
-    background: var(--kro-color-back);
+    background: var(--kro-color-header-gradient-indigo);
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -213,7 +213,7 @@
   body {
     margin: 0;
     color: var(--kro-color-fore);
-    background: var(--kro-color-back);
+    background: transparent;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -230,5 +230,21 @@
     outline: none;
     box-shadow: var(--kro-ring);
     border-radius: var(--kro-radius-small);
+  }
+
+  /*
+    Native-app chrome. The pointing hand is a web document convention; Kro is
+    an app, so interactive controls keep the default arrow. Resize handles and
+    text fields set their own cursor inline and win over this.
+  */
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  [role="switch"],
+  summary {
+    cursor: default;
   }
 }

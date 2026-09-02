@@ -20,6 +20,7 @@ import {
   allSettingOptions,
   appleCalendarOption,
   appleRemindersOption,
+  appearancePaletteOption,
   doNowThresholdHoursOption,
   doOptions,
   earnDefaultRewardThresholdOption,
@@ -75,6 +76,12 @@ describe('General preferences', () => {
       AppearanceMode.system,
       AppearanceMode.light,
       AppearanceMode.dark,
+    ])
+    expect(casesFor('general.palette')).toEqual([
+      'purple',
+      'green',
+      'orange',
+      'red',
     ])
     expect(casesFor('general.accentColor')?.[0]).toBe(AccentChoice.blue)
     expect(casesFor('general.defaultLandingSection')).toEqual([
@@ -215,9 +222,10 @@ describe('groups and lookup', () => {
     expect(settingOptionsByGroup[SettingGroup.session]).toBe(sessionOptions)
   })
 
-  it('concatenates the five sections into allPreferenceOptions, in that order', () => {
+  it('concatenates the five sections plus the Appearance palette into allPreferenceOptions', () => {
     expect(allPreferenceOptions).toEqual([
       ...generalOptions,
+      appearancePaletteOption,
       ...planOptions,
       ...doOptions,
       ...earnOptions,

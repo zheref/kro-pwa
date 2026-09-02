@@ -4,6 +4,7 @@ import {
   FAB_INSETS,
   SHELL_BOTTOM_INSET_FALLBACK,
   SHELL_BOTTOM_INSET_VAR,
+  SHELL_GUTTER,
   TOAST_DURATION_SECONDS,
   clampToastDuration,
   pillBottomOffset,
@@ -63,6 +64,12 @@ describe('the toast placement constants match ActiveToastModifier', () => {
     expect(CHROME_LAYOUT.toastCornerRadius).toBe(16)
     expect(CHROME_LAYOUT.toastMinHeight).toBe(72)
     expect(CHROME_LAYOUT.toastMaxWidth).toBe(360)
+  })
+})
+
+describe('the shell gutter around floating glass', () => {
+  it('matches the 8px spacing token so chrome and destinations cannot drift', () => {
+    expect(SHELL_GUTTER).toBe(8)
   })
 })
 

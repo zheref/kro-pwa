@@ -279,7 +279,7 @@ export function PickEndeavorFragment({
                       */}
                       <label
                         className={cn(
-                          'flex min-w-0 flex-1 cursor-pointer items-center gap-kro-small',
+                          'flex min-w-0 flex-1 items-center gap-kro-small',
                           'text-left',
                           !isEnabled &&
                             'cursor-not-allowed opacity-[var(--kro-opacity-disabled)]',

@@ -67,11 +67,12 @@ general.workingDays | daysSet | calendar | 31 | cloud | declared
 general.morningPlanTime | timeOfDay | bell.badge | 480 | cloud | declared
 general.streakReminders | bool | flame | true | cloud | declared
 general.overdueAlerts | bool | exclamationmark.circle | true | cloud | live
-general.appearance | enumeration(system|light|dark) | circle.lefthalf.filled | system | local | declared
+general.appearance | enumeration(system|light|dark) | circle.lefthalf.filled | system | local | live
 general.accentColor | enumeration(blue|purple|green|orange|pink|graphite) | paintpalette | blue | cloud | declared
 general.weekStartDay | enumeration(monday|tuesday|wednesday|thursday|friday|saturday|sunday) | calendar.day.timeline.left | monday | cloud | declared
 general.defaultLandingSection | enumeration(plan|doNow|earn) | house | plan | cloud | declared
 general.haptics | bool | hand.tap | true | local | declared
+general.palette | enumeration(purple|green|orange|red) | paintpalette | purple | local | live
 plan.defaultSlotDuration | int | clock | 25 | cloud | declared
 plan.autoCommitDrafts | bool | sparkles | false | cloud | declared
 plan.dayViewRange | enumeration(full|waking|business) | arrow.up.and.down | full | cloud | live
@@ -101,10 +102,10 @@ describe('the ported option table against canon', () => {
     expect(renderTable(allSettingOptions)).toBe(CANON_TABLE)
   })
 
-  it('declares 37 options — 3 non-preferences and 34 preferences', () => {
+  it('declares 38 options — 3 non-preferences and 35 preferences', () => {
     expect(nonPreferenceOptions).toHaveLength(3)
-    expect(allPreferenceOptions).toHaveLength(34)
-    expect(allSettingOptions).toHaveLength(37)
+    expect(allPreferenceOptions).toHaveLength(35)
+    expect(allSettingOptions).toHaveLength(38)
   })
 
   it('splits the preferences across the five sections canon groups them into', () => {
@@ -120,7 +121,7 @@ describe('the ported option table against canon', () => {
     expect(new Set(keys).size).toBe(keys.length)
   })
 
-  it('leaves exactly five preferences on the device, so 29 of 34 reach the account', () => {
+  it('leaves exactly six preferences on the device, so 29 of 35 reach the account', () => {
     const localKeys = allPreferenceOptions
       .filter((option) => option.syncScope === 'local')
       .map((option) => option.key)
@@ -128,6 +129,7 @@ describe('the ported option table against canon', () => {
     expect(localKeys).toEqual([
       'general.appearance',
       'general.haptics',
+      'general.palette',
       'earn.milestoneHaptics',
       'session.keepScreenAwake',
       'session.soundOnEnd',
@@ -135,7 +137,7 @@ describe('the ported option table against canon', () => {
     expect(cloudSyncOptions).toHaveLength(29)
   })
 
-  it('marks the seventeen options no KroApple surface reads outside its own Preferences screen', () => {
+  it('marks the sixteen options no KroApple surface reads outside its own Preferences screen', () => {
     const declaredKeys = allSettingOptions
       .filter((option) => option.consumption === 'declared')
       .map((option) => option.key)
@@ -148,7 +150,6 @@ describe('the ported option table against canon', () => {
       'general.workingDays',
       'general.morningPlanTime',
       'general.streakReminders',
-      'general.appearance',
       'general.accentColor',
       'general.weekStartDay',
       'general.defaultLandingSection',

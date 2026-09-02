@@ -30,6 +30,7 @@ import {
 import { MainShellPage } from '../MainShellPage'
 import {
   CHROME_LAYOUT,
+  SHELL_GUTTER,
   toastBottomOffset,
   toastLiftAbovePill,
 } from '../../../design/chrome'
@@ -314,7 +315,9 @@ describe('the Active Toast host, mounted once at the shell', () => {
     const layer = document.querySelector(
       '[data-kro-toast-layer]',
     ) as HTMLElement
-    expect(layer.style.left).toBe(`${SIDEBAR_IDEAL_WIDTH}px`)
+    expect(layer.style.left).toBe(
+      `${SHELL_GUTTER + SIDEBAR_IDEAL_WIDTH + SHELL_GUTTER}px`,
+    )
   })
 
   it('sits against the viewport edge on the shell that has no sidebar', async () => {
@@ -328,7 +331,7 @@ describe('the Active Toast host, mounted once at the shell', () => {
     const layer = document.querySelector(
       '[data-kro-toast-layer]',
     ) as HTMLElement
-    expect(layer.style.left).toBe('0px')
+    expect(layer.style.left).toBe(`${SHELL_GUTTER}px`)
   })
 
   it('does not lift while no session is running', () => {

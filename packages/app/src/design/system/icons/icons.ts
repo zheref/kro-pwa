@@ -38,6 +38,8 @@
  *
  *   · **Settings** (item 8) — ~30 preference-schema glyphs (`sunrise`,
  *     `cup.and.saucer`, `speaker.wave.2`, the sign-in methods, the sync footer).
+ *     `paintpalette` later moved UP from the endeavor kit the same way, so
+ *     Appearance's palette glyph has one answer.
  *   · **Session** (item 16, from KC-PR-#72) — `stop.fill`, `cup.and.saucer.fill`,
  *     `timer`, `stopwatch`, `arrow.clockwise`, `wind`, `arrow.right.circle`,
  *     `bolt.fill`.
@@ -100,6 +102,7 @@ import {
   Mail,
   Menu,
   Minus,
+  Palette,
   Pause,
   Pencil,
   Play,
@@ -242,6 +245,7 @@ export const SF_SYMBOL_TO_LUCIDE = {
   'sun.max': SunMedium,
   'bell.badge': Bell,
   'circle.lefthalf.filled': Contrast,
+  paintpalette: Palette,
   'calendar.day.timeline.left': CalendarRange,
   'hand.tap': Hand,
   'speaker.wave.2': Volume2,

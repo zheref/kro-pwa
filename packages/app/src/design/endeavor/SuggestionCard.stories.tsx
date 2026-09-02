@@ -107,6 +107,26 @@ export const Compression = {
   ),
 }
 
+export const Density = {
+  name: 'Density · compact pointer vs comfortable touch',
+  render: () => (
+    <Stage gradient>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <SuggestionCard
+          model={{ ...COPY.googleCalendar, source: 'googleCalendar' }}
+          density="compact"
+          onAction={() => undefined}
+        />
+        <SuggestionCard
+          model={{ ...COPY.googleCalendar, source: 'googleCalendar' }}
+          density="comfortable"
+          onAction={() => undefined}
+        />
+      </div>
+    </Stage>
+  ),
+}
+
 export const BothThemes = {
   name: 'Both schemes',
   render: () => (

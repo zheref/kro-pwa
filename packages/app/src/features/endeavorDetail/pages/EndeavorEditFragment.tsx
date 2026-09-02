@@ -333,7 +333,7 @@ function EditField({
                   value: event.target.value,
                 })
               }
-              className="size-11 cursor-pointer rounded-kro-small border-0 bg-transparent p-0"
+              className="size-11 rounded-kro-small border-0 bg-transparent p-0"
             />
             <button
               type="button"

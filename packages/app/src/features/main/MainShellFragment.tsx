@@ -33,8 +33,7 @@
 import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
-import { GlassSurface } from '../../design/system/glass/GlassSurface'
-import { GradientBackdrop } from '../../design/system/gradient/GradientBackdrop'
+import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import { cn } from '../../design/system/utils/cn'
 import {
@@ -48,11 +47,7 @@ import {
   type SidebarDestination,
   destinationHeading,
 } from './SidebarDestination'
-import {
-  SIDEBAR_IDEAL_WIDTH,
-  SidebarFragment,
-  type SidebarFragmentProps,
-} from './SidebarFragment'
+import { SidebarFragment, type SidebarFragmentProps } from './SidebarFragment'
 import { TabBarFragment } from './TabBarFragment'
 import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
 
@@ -108,82 +103,114 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     <div
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
-      className="flex h-dvh w-full overflow-hidden bg-kro-back"
+      className="relative flex h-dvh w-full overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
-      {isSidebarVisible && (
-        <SidebarFragment
-          {...sidebar}
-          sections={sections}
-          selected={selected}
-          layout={layout}
-        />
-      )}
+      <DetailBackdrop />
+      <div
+        data-kro-title-slab-host=""
+        data-testid="shell-title-slab-host"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1]"
+      />
 
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        {/*
-          Canon's `extendsHeaderGradientToLeadingEdge`: on a desktop-shaped
-          surface the slab reaches the window edge behind the sidebar; on a
-          narrow one it stops at the content's own edge.
-        */}
-        <GradientBackdrop
-          height="180px"
-          className="absolute top-0 right-0"
-          style={{
-            left:
-              layout.extendsHeaderGradientToLeadingEdge && isSidebarVisible
-                ? `-${SIDEBAR_IDEAL_WIDTH}px`
-                : 0,
-          }}
-        />
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small pb-kro-small pl-kro-small">
+        {isSidebarVisible && (
+          <SidebarFragment
+            {...sidebar}
+            sections={sections}
+            selected={selected}
+            layout={layout}
+          />
+        )}
 
-        <ContentToolbar
-          layout={layout}
-          selected={selected}
-          onToggleSidebar={onToggleSidebar}
-          onTapProfile={onTapProfile}
-          onTapInbox={onTapInbox}
-        />
+        <ContentColumn>
+          <ContentToolbar
+            layout={layout}
+            selected={selected}
+            onToggleSidebar={onToggleSidebar}
+            onTapProfile={onTapProfile}
+            onTapInbox={onTapInbox}
+          />
 
-        <main className="relative min-h-0 flex-1 overflow-y-auto">
-          {children}
-        </main>
+          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </ContentColumn>
       </div>
     </div>
   ) : (
     <div
       data-testid="shell-tab-bar-shape"
       data-shell-shape="tabBar"
-      className="flex h-dvh w-full flex-col overflow-hidden bg-kro-back"
+      className="relative flex h-dvh w-full flex-col overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
-      <GradientBackdrop height="180px" fixed />
-
-      <TabBarToolbar
-        layout={layout}
-        selected={selected}
-        onTapProfile={onTapProfile}
-        onTapInbox={onTapInbox}
-        onTapSettings={onTapSettings}
+      <DetailBackdrop />
+      <div
+        data-kro-title-slab-host=""
+        data-testid="shell-title-slab-host"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1]"
       />
 
-      <main className="relative min-h-0 flex-1 overflow-y-auto">
-        {children}
-      </main>
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-kro-small pb-kro-small">
+        <TabBarToolbar
+          layout={layout}
+          selected={selected}
+          onTapProfile={onTapProfile}
+          onTapInbox={onTapInbox}
+          onTapSettings={onTapSettings}
+        />
 
-      <TabBarFragment
-        elements={tabs}
-        selected={selected}
-        layout={layout}
-        searchDestination={searchDestination}
-        onSelectDestination={sidebar.onSelectDestination}
-      />
+        <ContentColumn>
+          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </ContentColumn>
+
+        <div className="relative z-10 px-kro-small">
+          <TabBarFragment
+            elements={tabs}
+            selected={selected}
+            layout={layout}
+            searchDestination={searchDestination}
+            onSelectDestination={sidebar.onSelectDestination}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The content column reaches the window's trailing edge so a destination's
+ * own LargeScreenTitle slab can too.
+ *
+ * The diagonal indigo→grape clip is **the title component's background**, not
+ * this column's — canon anchors a 1000pt ramp at the title's bottom edge so
+ * extra height reaches *up* through the toolbar, never *down* through
+ * Suggestions. The toolbar is transparent so that slab shows through; the
+ * slab itself portals into `data-kro-title-slab-host` to start at the
+ * window origin.
+ */
+function ContentColumn({ children }: { readonly children: ReactNode }) {
+  return (
+    <div
+      data-testid="shell-content-column"
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+    >
+      {children}
     </div>
   )
 }
 
 /**
  * The sidebar shell's content toolbar — canon's `macDoToolbar`.
+ *
+ * Transparent on purpose: LargeScreenTitle's slab grows from the window's
+ * origin and passes *under* these controls. The destination heading lives on
+ * that title (My Day, Plan); every other destination still prints one here.
  *
  * `navigation` group: Profile (shell-owned) then whatever a feature slots
  * beside it, which is canon's Notifications bell.
@@ -203,12 +230,12 @@ function ContentToolbar({
   readonly onTapProfile: () => void
   readonly onTapInbox: () => void
 }) {
+  const paintsLargeTitle = destinationPaintsLargeTitle(selected)
+
   return (
-    <GlassSurface
-      as="header"
-      material="bar"
+    <header
       data-testid="shell-content-toolbar"
-      className="relative z-10 flex items-center justify-between px-kro-medium"
+      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 16}px`,
@@ -235,14 +262,16 @@ function ContentToolbar({
           className="flex items-center gap-kro-small"
         />
 
-        <h1
-          className={cn(
-            'font-semibold text-kro-fore',
-            layout.usesExpandedDayTitle ? 'text-xl' : 'text-base',
-          )}
-        >
-          {destinationHeading(selected)}
-        </h1>
+        {paintsLargeTitle ? null : (
+          <h1
+            className={cn(
+              'font-semibold kro-on-gradient',
+              layout.usesExpandedDayTitle ? 'text-xl' : 'text-base',
+            )}
+          >
+            {destinationHeading(selected)}
+          </h1>
+        )}
       </div>
 
       <div
@@ -269,7 +298,7 @@ function ContentToolbar({
           className="flex items-center gap-kro-small"
         />
       </div>
-    </GlassSurface>
+    </header>
   )
 }
 
@@ -296,13 +325,12 @@ function TabBarToolbar({
   const isPrimaryTab =
     selected.kind === DestinationKind.myDay ||
     selected.kind === DestinationKind.plan
+  const paintsLargeTitle = destinationPaintsLargeTitle(selected)
 
   return (
-    <GlassSurface
-      as="header"
-      material="bar"
+    <header
       data-testid="shell-tab-bar-toolbar"
-      className="relative z-10 flex items-center justify-between px-kro-medium"
+      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 8}px`,
@@ -330,9 +358,11 @@ function TabBarToolbar({
         />
       </div>
 
-      <h1 className="truncate font-semibold text-base text-kro-fore">
-        {destinationHeading(selected)}
-      </h1>
+      {paintsLargeTitle ? null : (
+        <h1 className="truncate font-semibold text-base kro-on-gradient">
+          {destinationHeading(selected)}
+        </h1>
+      )}
 
       <div
         className="flex items-center"
@@ -347,7 +377,7 @@ function TabBarToolbar({
           <Inbox size={ICON_SIZE.medium} aria-hidden="true" />
         </ToolbarButton>
       </div>
-    </GlassSurface>
+    </header>
   )
 }
 
@@ -401,7 +431,7 @@ function ToolbarButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex items-center justify-center rounded-kro-small text-kro-fore hover:text-kro-accent"
+      className="flex items-center justify-center rounded-kro-small kro-on-gradient hover:opacity-80"
       style={{
         minWidth: `${layout.minimumControlSide}px`,
         minHeight: `${layout.minimumControlSide}px`,
@@ -409,5 +439,12 @@ function ToolbarButton({
     >
       {children}
     </button>
+  )
+}
+
+function destinationPaintsLargeTitle(destination: SidebarDestination): boolean {
+  return (
+    destination.kind === DestinationKind.myDay ||
+    destination.kind === DestinationKind.plan
   )
 }

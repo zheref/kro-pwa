@@ -13,9 +13,14 @@
  * | `frame(height: 80)`          | `h-20`                   |
  * | `padding(16)`                | `p-kro-medium`           |
  * | icon `36×36`, `size: 26`     | `size-9`, `size={26}`    |
- * | carousel `minWidth 280 / maxWidth 340` | `min-w-70 max-w-85` |
+ * | carousel `minWidth 373 / maxWidth 453` | inline, canon 280–340 × 4/3 |
  * | `layoutPriority(1)` on text  | `grow shrink-0 basis-0`  |
  * | `Spacer(minLength: 0)`       | the flex gap             |
+ *
+ * Canon pins the carousel card at exactly 80pt. `fillsWidth` is Plan's stacked
+ * banner placement, **not** Do's. The carousel is a third wider than canon's
+ * 280–340 so the title and subtitle stop wrapping beside the CTA; the CTA
+ * itself then sizes by `density` (28px on pointer, 44px on touch).
  *
  * ## `layoutPriority(1)`, and the way it is easy to get backwards
  *
@@ -51,7 +56,16 @@ import {
   shadowVar,
 } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
+import {
+  type ControlDensity,
+  controlMinSizeVar,
+} from '../system/primitives/button'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
+
+/** Canon 280 × 4/3 — wide enough that the title does not wrap beside the CTA. */
+export const SUGGESTION_CARD_MIN_WIDTH_PX = 373
+/** Canon 340 × 4/3. */
+export const SUGGESTION_CARD_MAX_WIDTH_PX = 453
 
 export const SuggestionSource = {
   appleReminders: 'appleReminders',
@@ -142,8 +156,14 @@ export interface SuggestionCardProps {
   readonly model: SuggestionCardModel
   /** Set while an async flow is in flight, to prevent a double-tap. */
   readonly isActionDisabled?: boolean
-  /** Banner placement instead of the carousel's 280–340px. */
+  /** Banner placement instead of the carousel's 373–453px. */
   readonly fillsWidth?: boolean
+  /**
+   * Compact is the 28px pointer CTA; comfortable is the 44px touch floor.
+   * Defaults compact so a carousel card on desktop does not wrap its title
+   * around a 44px pill.
+   */
+  readonly density?: ControlDensity
   readonly onAction: () => void
   readonly className?: string
 }
@@ -152,6 +172,7 @@ export function SuggestionCard({
   model,
   isActionDisabled = false,
   fillsWidth = false,
+  density = 'compact',
   onAction,
   className,
 }: SuggestionCardProps) {
@@ -162,15 +183,23 @@ export function SuggestionCard({
   return (
     <div
       data-slot="suggestion-card"
+      data-density={density}
       className={cn(
         'flex h-20 items-center gap-kro-small overflow-hidden p-kro-medium',
-        fillsWidth ? 'w-full' : 'w-70 min-w-70 max-w-85 shrink-0',
+        fillsWidth ? 'w-full' : 'shrink-0',
         className,
       )}
       style={{
         backgroundColor: colorVar('absolute'),
         borderRadius: radiusVar('surface'),
         boxShadow: shadowVar('subtle'),
+        ...(fillsWidth
+          ? {}
+          : {
+              width: SUGGESTION_CARD_MIN_WIDTH_PX,
+              minWidth: SUGGESTION_CARD_MIN_WIDTH_PX,
+              maxWidth: SUGGESTION_CARD_MAX_WIDTH_PX,
+            }),
       }}
     >
       <Icon
@@ -214,7 +243,7 @@ export function SuggestionCard({
           'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
         )}
         style={{
-          minHeight: 'var(--kro-size-min-touch-target)',
+          minHeight: controlMinSizeVar(density),
           borderRadius: radiusVar('pill'),
           backgroundColor: tint,
         }}

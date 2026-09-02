@@ -31,6 +31,31 @@
    ========================================================================== */
 
 @import "./tokens/tokens.css";
+@import "./tokens/palettes.css";
 @import "./motion/motion.css";
 @import "./glass/glass.css" layer(components);
 @import "./gradient/gradient.css";
+
+/* ==========================================================================
+   Form controls — kill the Chromium user-agent focus outline.
+
+   The design system paints `--kro-ring` on `:focus-visible`. Chromium still
+   draws its own `outline` on focused `input`/`textarea`/`select`, which sits
+   outside that ring as a second, usually black, stroke. Components already
+   say `outline-none`; this is the floor so a one-off field (sidebar search,
+   a date picker) cannot forget.
+   ========================================================================== */
+
+:where(input, textarea, select) {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(input, textarea, select):focus {
+  outline: none;
+}
+
+:where(input, textarea, select):focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}

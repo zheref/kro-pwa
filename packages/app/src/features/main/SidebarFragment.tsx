@@ -16,16 +16,17 @@
  *   · the Lists section: one row per project, an inline "New project…" row,
  *     and a per-row delete.
  *
- * **The decision table drives the pixels.** Row height and the gap between
- * adjacent controls come from `layout.minimumControlSide` /
- * `minimumControlSpacing`, so a touch tablet gets 44/8 and a Mac 28/4 without
- * this component knowing which it is on.
+ * **Row height sits between the two floors.** Canon's Mac sidebar uses
+ * `minimumControlSide` (28 on a pointer desktop); the first web cut used the
+ * 44pt iOS list floor, which read as a phone `List` in a 200px column. 36pt
+ * is the denser desktop row without dropping to the 28pt pointer minimum.
  */
 import { Plus, Search, Trash2, X } from 'lucide-react'
-import { GlassSurface } from '../../design/system/glass/GlassSurface'
+import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
+import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
-import type { DoSurfaceLayout } from './DoSurfaceLayout'
+import { TOUCH_CONTROL_SPACING, type DoSurfaceLayout } from './DoSurfaceLayout'
 import type { NavigationSection } from './NavigationSections'
 import {
   type SidebarDestination,
@@ -38,6 +39,15 @@ import {
 /** Canon's `navigationSplitViewColumnWidth(min: 180, ideal: 200)`. */
 export const SIDEBAR_MIN_WIDTH = 180
 export const SIDEBAR_IDEAL_WIDTH = 200
+
+/**
+ * Destination-row / search-field height. Between Mac's 28pt pointer minimum
+ * and the 44pt iOS list floor — see the file header.
+ */
+export const SIDEBAR_ROW_HEIGHT = 36
+
+/** iOS `.title` — 28pt bold. Canon's `.navigationTitle("Kro")` in this column. */
+export const SIDEBAR_APP_TITLE_SIZE_PX = 28
 
 export interface SidebarFragmentProps {
   readonly sections: readonly NavigationSection[]
@@ -78,24 +88,22 @@ export function SidebarFragment(props: SidebarFragmentProps) {
   } = props
 
   return (
-    <GlassSurface
+    <GlassPanel
       as="nav"
-      material="bar"
+      kind="sidebar"
       aria-label="Sidebar"
       data-testid="shell-sidebar"
       className={cn(
-        // `relative z-10` is load-bearing: the header gradient is an
-        // absolutely-positioned decoration that deliberately extends PAST the
-        // content's leading edge, over this column. Without a stacking context
-        // here it paints over the sidebar's own top rows.
-        'relative z-10 flex h-full flex-col overflow-y-auto',
-        'border-kro-hairline border-r text-kro-fore',
+        // `relative z-10` is load-bearing: the page field is an absolutely-
+        // positioned decoration behind this column. Without a stacking context
+        // here it would paint over the sidebar's own top rows.
+        'relative z-10 mt-kro-small self-stretch shrink-0 overflow-y-auto text-kro-fore',
       )}
       style={{
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,
         width: `${SIDEBAR_IDEAL_WIDTH}px`,
-        gap: `${layout.minimumControlSpacing}px`,
-        padding: `${layout.minimumControlSpacing}px`,
+        gap: `${TOUCH_CONTROL_SPACING}px`,
+        padding: `${TOUCH_CONTROL_SPACING}px`,
       }}
     >
       {/*
@@ -105,8 +113,17 @@ export function SidebarFragment(props: SidebarFragmentProps) {
         before the first project exists, and that is the only way the section
         ever appears.
       */}
-      <div className="flex items-center justify-between px-kro-small">
-        <span className="font-semibold text-kro-fore text-sm">Kro</span>
+      <div className="flex items-center justify-between px-kro-small py-kro-tiny">
+        <span
+          data-testid="sidebar-app-title"
+          className="font-bold tracking-tight text-kro-fore"
+          style={{
+            fontSize: `${SIDEBAR_APP_TITLE_SIZE_PX}px`,
+            lineHeight: 1.1,
+          }}
+        >
+          Kro
+        </span>
         {canManageProjects && (
           <button
             type="button"
@@ -114,8 +131,8 @@ export function SidebarFragment(props: SidebarFragmentProps) {
             onClick={onTapAddProject}
             className="rounded-kro-small text-kro-fore-secondary hover:text-kro-fore"
             style={{
-              minWidth: `${layout.minimumControlSide}px`,
-              minHeight: `${layout.minimumControlSide}px`,
+              minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+              minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
             }}
           >
             <Plus size={ICON_SIZE.small} className="mx-auto" />
@@ -124,7 +141,6 @@ export function SidebarFragment(props: SidebarFragmentProps) {
       </div>
 
       <SidebarSearchField
-        layout={layout}
         query={searchQuery}
         onChange={onChangeSearchQuery}
         onSubmit={onSubmitSearch}
@@ -153,17 +169,15 @@ export function SidebarFragment(props: SidebarFragmentProps) {
           onDeleteProject={onDeleteProject}
         />
       ))}
-    </GlassSurface>
+    </GlassPanel>
   )
 }
 
 function SidebarSearchField({
-  layout,
   query,
   onChange,
   onSubmit,
 }: {
-  readonly layout: DoSurfaceLayout
   readonly query: string
   readonly onChange: (query: string) => void
   readonly onSubmit: () => void
@@ -177,9 +191,9 @@ function SidebarSearchField({
       }}
       className={cn(
         'flex items-center gap-kro-small rounded-kro-field',
-        'bg-kro-back px-kro-small',
+        'bg-kro-absolute/40 px-kro-small',
       )}
-      style={{ minHeight: `${layout.minimumControlSide}px` }}
+      style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
     >
       <Search
         size={ICON_SIZE.small}
@@ -258,7 +272,6 @@ function SidebarSection({
         {isLists && isAddingProject && (
           <li>
             <NewProjectRow
-              layout={layout}
               title={draftProjectTitle}
               onEdit={onEditDraftProjectTitle}
               onCommit={onCommitDraftProject}
@@ -296,17 +309,22 @@ function SidebarRow({
         type="button"
         aria-current={isSelected ? 'page' : undefined}
         onClick={() => onSelect(destination)}
+        data-theme={isSelected ? 'dark' : undefined}
         className={cn(
           'flex flex-1 items-center gap-kro-small rounded-kro-small px-kro-small',
-          'text-left text-kro-fore text-sm',
-          // Canon's macOS sidebar selection is a filled accent capsule with a
-          // light label, not a tinted one. It also survives being drawn over
-          // the header gradient, which a 15%-accent wash does not.
+          'text-left text-sm',
           isSelected
-            ? 'bg-kro-accent font-semibold text-kro-on-accent'
-            : 'hover:bg-kro-back',
+            ? 'font-semibold'
+            : 'text-kro-fore hover:bg-kro-absolute/25',
         )}
-        style={{ minHeight: `${layout.minimumControlSide}px` }}
+        style={{
+          minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
+          // Same trick as TaskRow: `absolute` inside a forced dark scope is
+          // black in both page schemes (the token flips to white in light).
+          // `snow` is white in both, so the label stays white on that fill.
+          backgroundColor: isSelected ? colorVar('absolute') : undefined,
+          color: isSelected ? colorVar('snow') : undefined,
+        }}
       >
         <Icon size={ICON_SIZE.small} aria-hidden="true" className="shrink-0" />
         <span className="truncate">{title}</span>
@@ -323,8 +341,8 @@ function SidebarRow({
             'group-hover:opacity-100',
           )}
           style={{
-            minWidth: `${layout.minimumControlSide}px`,
-            minHeight: `${layout.minimumControlSide}px`,
+            minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+            minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
           }}
         >
           <Trash2 size={ICON_SIZE.small} className="mx-auto" />
@@ -335,13 +353,11 @@ function SidebarRow({
 }
 
 function NewProjectRow({
-  layout,
   title,
   onEdit,
   onCommit,
   onCancel,
 }: {
-  readonly layout: DoSurfaceLayout
   readonly title: string
   readonly onEdit: (title: string) => void
   readonly onCommit: () => void
@@ -354,7 +370,7 @@ function NewProjectRow({
         onCommit()
       }}
       className="flex items-center gap-kro-small px-kro-small"
-      style={{ minHeight: `${layout.minimumControlSide}px` }}
+      style={{ minHeight: `${SIDEBAR_ROW_HEIGHT}px` }}
     >
       <input
         // biome-ignore lint/a11y/noAutofocus: the row exists only because the user just asked for it; focusing anywhere else makes them click twice to type a name
@@ -367,7 +383,7 @@ function NewProjectRow({
           if (event.key === 'Escape') onCancel()
         }}
         className={cn(
-          'w-full rounded-kro-field bg-kro-back px-kro-small py-kro-tiny',
+          'w-full rounded-kro-field bg-kro-absolute/40 px-kro-small py-kro-tiny',
           'text-kro-fore text-sm outline-none',
           'placeholder:text-kro-fore-secondary',
         )}
@@ -378,8 +394,8 @@ function NewProjectRow({
         onClick={onCancel}
         className="rounded-kro-small text-kro-fore-secondary hover:text-kro-fore"
         style={{
-          minWidth: `${layout.minimumControlSide}px`,
-          minHeight: `${layout.minimumControlSide}px`,
+          minWidth: `${SIDEBAR_ROW_HEIGHT}px`,
+          minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
         }}
       >
         <X size={ICON_SIZE.small} className="mx-auto" />

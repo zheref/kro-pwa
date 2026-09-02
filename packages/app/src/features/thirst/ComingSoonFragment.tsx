@@ -11,6 +11,7 @@
 import { Apple, Globe, Heart, Monitor, Smartphone } from 'lucide-react'
 import { InlineBanner } from '../../design/endeavor/InlineBanner'
 import { KroChip } from '../../design/endeavor/KroChip'
+import { OnGradient } from '../../design/system/gradient/OnGradient'
 import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
 import { Button } from '../../design/system/primitives/button'
@@ -82,16 +83,18 @@ export function ComingSoonFragment({
           aria-hidden="true"
           style={{ color: colorVar('accent') }}
         />
-        <h2 className="font-semibold text-2xl text-kro-fore">{featureTitle}</h2>
-        <p className="font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide">
+        <h2 className="kro-on-gradient font-semibold text-2xl">
+          {featureTitle}
+        </h2>
+        <p className="kro-on-gradient font-semibold text-xs uppercase tracking-wide">
           Available soon
         </p>
         {featureBlurb === null ||
         featureBlurb === undefined ||
         featureBlurb.length === 0 ? null : (
-          <p className="max-w-prose text-kro-fore-secondary text-sm">
+          <OnGradient as="p" className="max-w-prose text-sm">
             {featureBlurb}
-          </p>
+          </OnGradient>
         )}
       </div>
 
@@ -146,12 +149,12 @@ function CountsPanel({
 
   return (
     <div className="flex flex-col items-center gap-kro-tiny">
-      <span className="font-extrabold text-5xl text-kro-fore tabular-nums">
+      <OnGradient as="span" className="font-extrabold text-5xl tabular-nums">
         {totalCount}
-      </span>
-      <span className="text-kro-fore-secondary text-sm">
+      </OnGradient>
+      <OnGradient as="span" className="text-sm">
         {totalCount === 1 ? 'person wants this' : 'people want this'}
-      </span>
+      </OnGradient>
       {perPlatform.length === 0 ? null : (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
           {perPlatform.map((tally) => (

@@ -50,6 +50,8 @@ import {
   springEasing,
 } from '../../../design/chrome'
 import { ICON_SIZE } from '../../../design/system/icons/icons'
+import { PageFieldEmpty } from '../../../design/system/gradient/OnGradient'
+import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { cn } from '../../../design/system/utils/cn'
 import {
   type ToolbarPlacement,
@@ -192,25 +194,30 @@ export function PlanFragment({
       {/*
         `kro-gradient-headline` on the whole title block, not `text-kro-fore`.
 
-        Plan sits under the shell's `indigoGrape` slab, which is a DARK purple
-        in **both** schemes — so a foreground that inverts with the theme is
-        legible in one of them and not the other. `headerDate` is the one token
-        the contrast suite asserts against both gradient stops in both themes
-        (`contrastContracts.ts`: *"header date on the fixed indigoGrape
-        gradient"*), which is exactly this surface. The first screenshot pass
-        caught the alternative: near-black "Monday · 8 events" on purple.
+        Plan's LargeScreenTitle paints the same diagonal indigo→grape clip
+        *on the header itself* — My Day's twin. The page field is a vertical
+        mesh; this slab is the title's own background. `headerDate` is the one
+        token the contrast suite asserts against both gradient stops in both
+        themes (`contrastContracts.ts`: *"header date on the fixed indigoGrape
+        gradient"*).
       */}
       <header
         data-testid="plan-header"
-        className="kro-gradient-content kro-gradient-headline flex shrink-0 items-start justify-between gap-kro-medium px-kro-medium pt-kro-small pb-kro-small"
+        className="relative flex shrink-0 items-start justify-between gap-kro-medium px-kro-medium pt-kro-small pb-kro-small"
       >
+        <GradientBackdrop
+          hardEdge
+          clip="bottomTrailing"
+          bleed="window"
+          data-testid="plan-header-title-slab"
+        />
         {/*
           Hierarchy is WEIGHT and SIZE, never opacity. Fading a token that was
           contrast-asserted at full strength spends the very margin the
           assertion measured — the same reason `InlineBanner` fills opaquely
           rather than at canon's 0.12.
         */}
-        <div className="min-w-0">
+        <div className="relative z-10 min-w-0 kro-gradient-headline">
           <h2 className="truncate font-semibold text-2xl">
             {planTitleDate(selectedDate)}{' '}
             <span className="font-normal">
@@ -222,10 +229,12 @@ export function PlanFragment({
           </p>
         </div>
 
-        <PlanViewModePickerFragment
-          selection={viewMode}
-          onSelect={onSelectViewMode}
-        />
+        <div className="relative z-10">
+          <PlanViewModePickerFragment
+            selection={viewMode}
+            onSelect={onSelectViewMode}
+          />
+        </div>
       </header>
 
       {/*
@@ -353,7 +362,7 @@ export function PlanFragment({
       {isFabAvailable && (
         <div
           data-testid="plan-fab"
-          className="pointer-events-none absolute right-0 bottom-0 z-30 flex justify-end"
+          className="pointer-events-none absolute right-0 bottom-0 z-30 flex justify-end overflow-visible"
           style={{ padding: PLAN_FAB_INSET }}
         >
           <div className="pointer-events-auto">
@@ -451,17 +460,11 @@ function PlanModePlaceholder({ mode }: { readonly mode: PlanViewMode }) {
   const label = mode === Mode.list ? 'List' : 'Priority Matrix'
 
   return (
-    <div
+    <PageFieldEmpty
       data-testid="plan-mode-placeholder"
       data-mode={mode}
-      className="flex h-full flex-col items-center justify-center gap-kro-small p-kro-x-large text-center"
-    >
-      <h3 className="font-semibold text-kro-fore text-xl">{label}</h3>
-      <p className="max-w-prose text-kro-fore-secondary text-sm">
-        {label} is not built yet — it arrives with the Plan list and priority
-        matrix child (KC-IS-#20). The timeline is the destination this child
-        ships.
-      </p>
-    </div>
+      title={label}
+      description={`${label} is not built yet — it arrives with the Plan list and priority matrix child (KC-IS-#20). The timeline is the destination this child ships.`}
+    />
   )
 }

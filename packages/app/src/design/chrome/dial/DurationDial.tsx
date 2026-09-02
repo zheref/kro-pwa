@@ -261,7 +261,7 @@ export function DurationDial({
           placeItems: 'center',
           touchAction: 'none',
           userSelect: 'none',
-          cursor: readOnly ? 'default' : 'pointer',
+          cursor: 'default',
         }}
       >
         {/*
@@ -378,7 +378,7 @@ export function DurationDial({
                   padding: '8px 16px',
                   fontSize: 14,
                   fontWeight: selected ? 700 : 500,
-                  cursor: 'pointer',
+                  cursor: 'default',
                   color: selected
                     ? 'var(--kro-color-on-accent)'
                     : 'var(--kro-color-fore)',

@@ -216,3 +216,62 @@ describe('the empty day', () => {
     expect(renderedLaneOrder()).toEqual([])
   })
 })
+
+describe('the Suggestions lane', () => {
+  it('carousels the cards — Do never stacks them, even on a regular surface', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    const lane = screen.getByTestId('do-lane-suggestions')
+    expect(lane.querySelector('[data-testid="do-carousel"]')).not.toBeNull()
+    expect(
+      lane.querySelector('[data-testid="do-suggestions-stack"]'),
+    ).toBeNull()
+  })
+
+  it('keeps each card a third wider than canon`s 280–340 carousel', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.style.minWidth).toBe('373px')
+    expect(card.style.maxWidth).toBe('453px')
+    expect(card.className).not.toContain('w-full')
+  })
+
+  it('keeps a named dismiss next to every suggestion', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    expect(screen.getByRole('button', { name: /Dismiss/ })).toBeTruthy()
+  })
+
+  it('defaults suggestion controls to the compact pointer target', () => {
+    render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
+
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.dataset.density).toBe('compact')
+    expect(
+      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
+    ).toBe('var(--kro-size-min-pointer-target)')
+  })
+
+  it('uses the touch floor when the surface asks for comfortable density', () => {
+    render(
+      <DoLanesFragment
+        {...propsFor(doSurfaceMocks.suggestionOffered, {
+          controlDensity: 'comfortable',
+        })}
+      />,
+    )
+
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]') as HTMLElement
+    expect(card.dataset.density).toBe('comfortable')
+    expect(
+      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
+    ).toBe('var(--kro-size-min-touch-target)')
+  })
+})

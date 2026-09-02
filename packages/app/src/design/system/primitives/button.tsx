@@ -23,7 +23,7 @@ import { cn } from '../utils/cn'
 const buttonVariants = cva(
   cn(
     'inline-flex shrink-0 items-center justify-center gap-kro-small',
-    'whitespace-nowrap font-medium',
+    'cursor-default whitespace-nowrap font-medium',
     'kro-motion-quick transition-[color,background-color,box-shadow,transform]',
     'outline-none focus-visible:shadow-[var(--kro-ring)]',
     'active:scale-[0.97]',
@@ -99,6 +99,36 @@ export function Button({
       {...rest}
     />
   )
+}
+
+/**
+ * Pointer chrome vs a finger. Compact is the 28px target; comfortable is the
+ * 44px touch floor. Surfaces pass `controlDensity(layout.isTouchPrimary)` so a
+ * design-kit component never has to know a shell exists.
+ */
+export type ControlDensity = 'compact' | 'comfortable'
+
+export function controlDensity(isTouchPrimary: boolean): ControlDensity {
+  return isTouchPrimary ? 'comfortable' : 'compact'
+}
+
+export function buttonSizeForDensity(
+  density: ControlDensity,
+): NonNullable<ButtonProps['size']> {
+  return density === 'compact' ? 'sm' : 'md'
+}
+
+export function iconButtonSizeForDensity(
+  density: ControlDensity,
+): 'icon-sm' | 'icon' {
+  return density === 'compact' ? 'icon-sm' : 'icon'
+}
+
+/** The CSS length a control of this density must not fall below. */
+export function controlMinSizeVar(density: ControlDensity): string {
+  return density === 'compact'
+    ? 'var(--kro-size-min-pointer-target)'
+    : 'var(--kro-size-min-touch-target)'
 }
 
 export { buttonVariants }

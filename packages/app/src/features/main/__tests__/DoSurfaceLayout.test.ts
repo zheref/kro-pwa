@@ -19,6 +19,7 @@ import {
   POINTER_CONTROL_SPACING,
   REGULAR_WIDTH_BREAKPOINT,
   SSR_DEFAULT_SURFACE,
+  TAB_DOCK_INSET,
   TOUCH_CONTROL_SIDE,
   TOUCH_CONTROL_SPACING,
   doSurfaceLayout,
@@ -164,6 +165,11 @@ describe('doSurfaceLayout — canon KroUI/Do/DoSurfaceLayout.swift', () => {
     expect(TOKENS_CSS).toContain(
       `--kro-size-min-pointer-target: ${POINTER_CONTROL_SIDE}px`,
     )
+  })
+
+  it('insets the floating tab dock by the same 8px gutter the shell paints', () => {
+    expect(TAB_DOCK_INSET).toBe(TOUCH_CONTROL_SPACING)
+    expect(TAB_DOCK_INSET).toBe(8)
   })
 })
 

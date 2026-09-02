@@ -13,6 +13,7 @@ import {
   settingsSectionTitle,
   settingsSections,
   settingsSectionsIn,
+  preferencesHubSectionsFor,
 } from '../SettingsSection'
 
 describe('the hub groups match canon three sections', () => {
@@ -22,11 +23,12 @@ describe('the hub groups match canon three sections', () => {
     ).toEqual([SettingsSectionId.profile])
   })
 
-  it('lists the five preference panes under Preferences, in canon order', () => {
+  it('lists the six preference panes under Preferences, Appearance after General', () => {
     expect(
       settingsSectionsIn(SettingsHubGroup.preferences).map((s) => s.title),
     ).toEqual([
       'General',
+      'Appearance',
       'Plan Preferences',
       'Do Preferences',
       'Earn Preferences',
@@ -54,7 +56,7 @@ describe('the hub groups match canon three sections', () => {
 })
 
 describe('a preferences section names the schema group it renders', () => {
-  it('covers every schema group exactly once across the five panes', () => {
+  it('covers every schema group exactly once across the five schema panes', () => {
     const covered = settingsSections
       .map((section) => section.settingGroup)
       .filter((group): group is SettingGroup => group !== null)
@@ -68,16 +70,24 @@ describe('a preferences section names the schema group it renders', () => {
     )
   })
 
-  it('leaves the three non-schema sections without a group', () => {
-    for (const id of ['profile', 'integrations', 'subscription']) {
+  it('leaves the four non-schema sections without a group', () => {
+    for (const id of [
+      'profile',
+      'appearance',
+      'integrations',
+      'subscription',
+    ]) {
       expect(settingsSectionForId(id)?.settingGroup).toBeNull()
     }
   })
 })
 
 describe('glyphs and titles are canon own', () => {
-  it('uses canon person glyph for Profile and creditcard for Subscription', () => {
+  it('uses canon person glyph for Profile, lefthalf circle for Appearance, creditcard for Subscription', () => {
     expect(settingsSectionForId('profile')?.glyph).toBe('person.crop.circle')
+    expect(settingsSectionForId('appearance')?.glyph).toBe(
+      'circle.lefthalf.filled',
+    )
     expect(settingsSectionForId('subscription')?.glyph).toBe('creditcard')
   })
 
@@ -105,6 +115,12 @@ describe('pane kinds route the surface', () => {
     }
   })
 
+  it('routes Appearance to its own renderer', () => {
+    expect(settingsPaneKind(SettingsSectionId.appearance)).toBe(
+      SettingsPaneKind.appearance,
+    )
+  })
+
   it('routes Integrations to its own renderer', () => {
     expect(settingsPaneKind(SettingsSectionId.integrations)).toBe(
       SettingsPaneKind.integrations,
@@ -118,5 +134,41 @@ describe('pane kinds route the surface', () => {
     expect(settingsPaneKind(SettingsSectionId.subscription)).toBe(
       SettingsPaneKind.subscription,
     )
+  })
+})
+
+describe('preferencesHubSectionsFor', () => {
+  it('lists Appearance immediately after General when the flag is on', () => {
+    expect(
+      preferencesHubSectionsFor(true).map((section) => section.id),
+    ).toEqual([
+      SettingsSectionId.general,
+      SettingsSectionId.appearance,
+      SettingsSectionId.planPreferences,
+      SettingsSectionId.doPreferences,
+      SettingsSectionId.earnPreferences,
+      SettingsSectionId.sessionPreferences,
+    ])
+  })
+
+  it('hides Appearance when the flag is off, leaving the five shipping rows', () => {
+    expect(
+      preferencesHubSectionsFor(false).map((section) => section.id),
+    ).toEqual([
+      SettingsSectionId.general,
+      SettingsSectionId.planPreferences,
+      SettingsSectionId.doPreferences,
+      SettingsSectionId.earnPreferences,
+      SettingsSectionId.sessionPreferences,
+    ])
+  })
+
+  it('does not reorder the remaining preference rows when Appearance drops out', () => {
+    const without = preferencesHubSectionsFor(false).map((s) => s.id)
+    const withFlag = preferencesHubSectionsFor(true)
+      .filter((s) => s.id !== SettingsSectionId.appearance)
+      .map((s) => s.id)
+
+    expect(without).toEqual(withFlag)
   })
 })

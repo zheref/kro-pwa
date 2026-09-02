@@ -55,12 +55,24 @@ export {
   THEME_ATTRIBUTE,
   type ResolvedTheme,
   type ThemePreference,
+  applyAppearanceValues,
   readColorRole,
   readSemanticRole,
   readToken,
   resolveTheme,
+  setPalettePreference,
   setThemePreference,
 } from './system/tokens/readToken'
+export {
+  APP_PALETTES,
+  APP_PALETTE_IDS,
+  DEFAULT_APP_PALETTE,
+  PALETTE_ATTRIBUTE,
+  type AppPaletteId,
+  type AppPaletteRamp,
+  type AppPaletteSpec,
+  appPaletteNamed,
+} from './system/tokens/appPalette'
 export {
   AA_NON_TEXT,
   AA_TEXT,
@@ -105,12 +117,30 @@ export {
   GlassSurface,
 } from './system/glass/GlassSurface'
 export {
+  type GlassPanelProps,
+  type GlassPanelKind,
+  GlassPanel,
+} from './system/glass/GlassPanel'
+export {
   type GradientBackdropProps,
   type GradientContentProps,
   type GradientStyle,
   GradientBackdrop,
   GradientContent,
+  LARGE_TITLE_TRAILING_RADIUS_PX,
+  TITLE_SLAB_HOST_SELECTOR,
 } from './system/gradient/GradientBackdrop'
+export {
+  type DetailBackdropProps,
+  DetailBackdrop,
+} from './system/gradient/DetailBackdrop'
+export {
+  type OnGradientProps,
+  type PageFieldEmptyProps,
+  FieldSectionLabel,
+  OnGradient,
+  PageFieldEmpty,
+} from './system/gradient/OnGradient'
 
 // Icons
 export {
@@ -126,8 +156,13 @@ export {
 export { cn } from './system/utils/cn'
 export {
   type ButtonProps,
+  type ControlDensity,
   Button,
+  buttonSizeForDensity,
   buttonVariants,
+  controlDensity,
+  controlMinSizeVar,
+  iconButtonSizeForDensity,
 } from './system/primitives/button'
 export { type InputProps, Input } from './system/primitives/input'
 export {

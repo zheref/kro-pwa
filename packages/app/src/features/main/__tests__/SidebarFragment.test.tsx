@@ -110,21 +110,56 @@ describe('the shipping sidebar', () => {
   })
 })
 
-describe('control sizing follows the decision table', () => {
-  it('draws 28px rows on a pointer surface', () => {
+describe('control sizing is denser than the iOS list floor', () => {
+  it('draws 36px rows on a pointer desktop', () => {
     renderSidebar()
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
-      '28px',
+      '36px',
     )
   })
 
-  it('draws 44px rows when the same sidebar is touch-driven', () => {
+  it('keeps the same 36px rows when the sidebar is touch-driven', () => {
     renderSidebar({ layout: doSurfaceLayout(handheldSurface) })
 
     expect(screen.getByRole('button', { name: 'Today' }).style.minHeight).toBe(
-      '44px',
+      '36px',
     )
+  })
+
+  it('sizes the search field to the same 36px row', () => {
+    renderSidebar()
+
+    expect(screen.getByRole('search').style.minHeight).toBe('36px')
+  })
+})
+
+describe('the selected row', () => {
+  it('fills black with white type, not the accent wash', () => {
+    renderSidebar()
+
+    const today = screen.getByRole('button', { name: 'Today' })
+    expect(today.getAttribute('data-theme')).toBe('dark')
+    expect(today.style.backgroundColor).toBe('var(--kro-color-absolute)')
+    expect(today.style.color).toBe('var(--kro-color-snow)')
+  })
+
+  it('leaves an unselected row on the page ink, with no fill', () => {
+    renderSidebar()
+
+    const jot = screen.getByRole('button', { name: 'Jot Down' })
+    expect(jot.getAttribute('data-theme')).toBeNull()
+    expect(jot.style.backgroundColor).toBe('')
+  })
+})
+
+describe('the app title', () => {
+  it('paints Kro at iOS title size, not a caption', () => {
+    renderSidebar()
+
+    const title = screen.getByTestId('sidebar-app-title')
+    expect(title.textContent).toBe('Kro')
+    expect(title.style.fontSize).toBe('28px')
   })
 })
 
@@ -214,5 +249,31 @@ describe('intent leaves as a callback, never a dispatch (RC-15)', () => {
 
     expect(onChangeSearchQuery).toHaveBeenCalled()
     expect(onSubmitSearch).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('the column inset', () => {
+  it('sits the same distance from the top as the shell already sits from the bottom', () => {
+    renderSidebar()
+
+    expect(screen.getByTestId('shell-sidebar').className).toContain(
+      'mt-kro-small',
+    )
+  })
+
+  it('stretches in the chrome row instead of claiming 100% height, so the top margin does not overflow', () => {
+    renderSidebar()
+
+    const sidebar = screen.getByTestId('shell-sidebar')
+    expect(sidebar.className).toContain('self-stretch')
+    expect(sidebar.className).not.toContain('h-full')
+  })
+
+  it('does not add a matching bottom margin — the parent already pads the bottom', () => {
+    renderSidebar()
+
+    expect(screen.getByTestId('shell-sidebar').className).not.toContain(
+      'mb-kro-small',
+    )
   })
 })

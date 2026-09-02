@@ -29,6 +29,7 @@ export {
   FAB_INSETS,
   SHELL_BOTTOM_INSET_FALLBACK,
   SHELL_BOTTOM_INSET_VAR,
+  SHELL_GUTTER,
   TOAST_DURATION_SECONDS,
   type FabInsetVariant,
   clampToastDuration,
@@ -52,11 +53,14 @@ export {
 export { useDisclosure } from './useDisclosure'
 
 export {
+  DEFAULT_GLOW_BLUR_RADIUS,
   DEFAULT_GLOW_HUES,
+  DEFAULT_GLOW_SPREAD,
   GLOW_SHAPES,
   type RotatingGlowProps,
   type RotatingGlowShape,
   RotatingGlow,
+  glowPlumeMargin,
   shouldGlowAnimate,
 } from './glow/RotatingGlow'
 

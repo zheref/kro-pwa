@@ -238,7 +238,7 @@ function QuadrantBox({
                   title={item.title}
                   onClick={() => onTapItem(item.id)}
                   className={cn(
-                    'flex w-full cursor-pointer items-center justify-center',
+                    'flex w-full items-center justify-center',
                     'border-none outline-none focus-visible:shadow-[var(--kro-ring)]',
                   )}
                   style={{

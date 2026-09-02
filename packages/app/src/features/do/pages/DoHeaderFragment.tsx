@@ -9,16 +9,14 @@
  * the compact/regular composition be a table test rather than a rendered
  * assertion about which branch a media query took.
  *
- * ## The gradient is NOT painted here
+ * ## The gradient IS this header's background
  *
- * Canon's `LargeScreenTitle` carries its own `LinearGradient` because SwiftUI
- * has no shared slab above it. The web shell already renders one
- * (`MainShellFragment`'s `GradientBackdrop`), and it is the shell that answers
- * `extendsHeaderGradientToLeadingEdge` — on a desktop-shaped surface the slab
- * reaches past the content's leading edge behind the sidebar, on a narrow one
- * it stops. Painting a second gradient here would double the ramp and put the
- * `extends…` decision in two places. So this header is transparent and draws
- * its copy in the on-gradient ink.
+ * Canon's `LargeScreenTitle` carries its own `LinearGradient`,
+ * `.background(alignment: .bottom)`, clipped to a 50px bottom-trailing round.
+ * The 1000pt frame is taller than the title so it reaches *up* through the
+ * toolbar — it is not a slab that covers Suggestions. This Fragment paints
+ * that clip on **itself** (My Day, the remaining-count line, the rings), so
+ * the day's content sits on the page field, not on the title.
  *
  * ## Ink
  *
@@ -31,6 +29,7 @@
  */
 import { Sun } from 'lucide-react'
 import { ActivityRings, type ActivityRing } from '../../../design/chrome'
+import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import type { DoHeaderContent } from './doPresentation'
@@ -69,11 +68,17 @@ export function DoHeaderFragment({
       data-testid="do-header"
       data-expanded={content.showsSunGlyph}
       className={cn(
-        'flex items-center gap-kro-medium px-kro-medium py-[13px]',
+        'relative flex items-center gap-kro-medium px-kro-medium py-[13px]',
         className,
       )}
     >
-      <div className="flex min-w-0 flex-col gap-0.5">
+      <GradientBackdrop
+        hardEdge
+        clip="bottomTrailing"
+        bleed="window"
+        data-testid="do-header-title-slab"
+      />
+      <div className="relative z-10 flex min-w-0 flex-col gap-0.5">
         <div className="flex flex-wrap items-baseline gap-1.5">
           {content.showsSunGlyph ? (
             <Sun
@@ -132,7 +137,10 @@ export function DoHeaderFragment({
         screen reader to walk past.
       */}
       {drawsRings ? (
-        <div className="ml-auto shrink-0" data-testid="do-header-rings">
+        <div
+          className="relative z-10 ml-auto shrink-0"
+          data-testid="do-header-rings"
+        >
           <ActivityRings rings={rings} />
         </div>
       ) : null}

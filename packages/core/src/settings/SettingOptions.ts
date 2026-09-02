@@ -49,9 +49,11 @@ import {
 import {
   AccentChoice,
   AppearanceMode,
+  AppearancePalette,
   LandingChoice,
   accentChoices,
   appearanceModes,
+  appearancePalettes,
   landingChoices,
 } from './SettingChoices'
 import type { SettingOption } from './SettingOption'
@@ -206,8 +208,35 @@ export const appearanceOption: SettingOption = makeSettingOption({
   glyph: 'circle.lefthalf.filled',
   defaultValue: AppearanceMode.system,
   syncScope: SettingSyncScope.local,
-  consumption: SettingConsumption.declared,
 })
+
+/**
+ * Selectable appearance palette (`AppearancePalette` raw value). **Local-only.**
+ *
+ * Owned by the Appearance pane, not by General — it is spliced into
+ * `allPreferenceOptions` beside the General block rather than living inside
+ * `generalOptions`. Default Purple is byte-identical to the indigo→grape look
+ * the app shipped before palettes existed.
+ */
+export const appearancePaletteOption: SettingOption = makeSettingOption({
+  key: 'general.palette',
+  type: enumerationSetting(appearancePalettes),
+  glyph: 'paintpalette',
+  defaultValue: AppearancePalette.purple,
+  syncScope: SettingSyncScope.local,
+})
+
+/** The keys of the two options the Appearance pane owns. */
+export const appearanceOptionKeys: ReadonlySet<string> = new Set([
+  appearanceOption.key,
+  appearancePaletteOption.key,
+])
+
+/** Every option surfaced by the Appearance preferences pane, in display order. */
+export const appearanceOptions: readonly SettingOption[] = [
+  appearanceOption,
+  appearancePaletteOption,
+]
 
 /** Accent color preference (`AccentChoice` raw value). */
 export const accentColorOption: SettingOption = makeSettingOption({
@@ -555,8 +584,14 @@ export const settingGroups: readonly SettingGroup[] = [
 
 /**
  * `allPreferenceOptions` — every preference, across all sections, in a stable
- * order (`generalOptions + planOptions + doOptions + earnOptions +
- * sessionOptions`).
+ * order (`generalOptions + [appearancePalette] + planOptions + doOptions +
+ * earnOptions + sessionOptions`).
+ *
+ * `appearancePalette` is spliced in beside the General block rather than
+ * living inside `generalOptions`: the palette is owned by the Appearance
+ * pane, not by General. `appearance` itself stays in `generalOptions` (it has
+ * been stored under that key since the General pane and keeps that key after
+ * moving panes).
  *
  * The integration toggles and the Do visibility filter are **intentionally
  * excluded**: they describe per-device capability and UI state, not portable
@@ -565,6 +600,7 @@ export const settingGroups: readonly SettingGroup[] = [
  */
 export const allPreferenceOptions: readonly SettingOption[] = [
   ...generalOptions,
+  appearancePaletteOption,
   ...planOptions,
   ...doOptions,
   ...earnOptions,
@@ -581,7 +617,7 @@ export const allSettingOptions: readonly SettingOption[] = [
  * `cloudSyncOptions` — the subset that participates in account cloud sync
  * (#31): every preference declared `syncScope: cloud`.
  *
- * The five `local` options (appearance, haptics, milestone haptics,
+ * The six `local` options (appearance, palette, haptics, milestone haptics,
  * keep-screen-awake, end sound) are filtered out here and **never** leave the
  * device. `__tests__/SettingOptions.cloudSync.test.ts` pins that as an exact
  * set equality rather than a spot check, so adding a `local` option can never

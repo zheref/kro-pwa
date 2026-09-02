@@ -20,8 +20,12 @@
  * `DoTaskListRow` — and a tap on the background deselects, so the prepared card
  * can be dismissed without hitting a control.
  */
-import { EndeavorCard, type EndeavorCardModel } from '../../../design/endeavor'
-import { CompactPresentationHeader } from '../../../design/endeavor'
+import {
+  CompactPresentationHeader,
+  EndeavorCard,
+  type EndeavorCardModel,
+  type EndeavorPreparationPresentation,
+} from '../../../design/endeavor'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import type { DoCardHandlers } from './doCardHandlers'
@@ -42,6 +46,7 @@ export interface DoTasksListFragmentProps {
   readonly onBack: () => void
   readonly handlers: DoCardHandlers
   readonly className?: string
+  readonly preparationPresentation?: EndeavorPreparationPresentation
 }
 
 export function DoTasksListFragment({
@@ -54,6 +59,7 @@ export function DoTasksListFragment({
   onBack,
   handlers,
   className,
+  preparationPresentation = 'automatic',
 }: DoTasksListFragmentProps) {
   return (
     <section
@@ -102,6 +108,7 @@ export function DoTasksListFragment({
                   layout="horizontal"
                   now={now}
                   locale={locale}
+                  preparationPresentation={preparationPresentation}
                   isSelected={
                     selectedCardKey === `${destination.tag}:${task.id}`
                   }

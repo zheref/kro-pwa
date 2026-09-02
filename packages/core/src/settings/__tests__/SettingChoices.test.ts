@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest'
 import {
   AccentChoice,
   AppearanceMode,
+  AppearancePalette,
   LandingChoice,
   accentChoiceLabel,
   accentChoices,
   appearanceModeLabel,
   appearanceModes,
+  appearancePaletteLabel,
+  appearancePalettes,
   landingChoiceLabel,
   landingChoices,
 } from '../SettingChoices'
@@ -27,6 +30,28 @@ describe('AppearanceMode', () => {
       'System',
       'Light',
       'Dark',
+    ])
+  })
+})
+
+describe('AppearancePalette', () => {
+  it('persists the case name, so a value written by KroApple still resolves', () => {
+    expect(AppearancePalette.purple).toBe('purple')
+    expect(AppearancePalette.green).toBe('green')
+    expect(AppearancePalette.orange).toBe('orange')
+    expect(AppearancePalette.red).toBe('red')
+  })
+
+  it('offers the picker Purple, Green, Orange, Red in canon declaration order', () => {
+    expect(appearancePalettes).toEqual(['purple', 'green', 'orange', 'red'])
+  })
+
+  it('titles each choice as a plain colour name', () => {
+    expect(appearancePalettes.map(appearancePaletteLabel)).toEqual([
+      'Purple',
+      'Green',
+      'Orange',
+      'Red',
     ])
   })
 })

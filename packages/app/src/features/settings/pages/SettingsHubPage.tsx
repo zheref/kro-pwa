@@ -66,11 +66,12 @@ import {
 } from '../SettingsProducer'
 import {
   accountHubSections,
-  preferencesHubSections,
   profileHubSection,
   selectIntegrationRows,
+  selectIsAppearanceThemesEnabled,
   selectIsSettingsEditable,
   selectOpenSection,
+  selectPreferencesHubSections,
   selectSettingValues,
   selectSettingsErrorCopy,
   selectSettingsSyncFooter,
@@ -99,6 +100,10 @@ export function SettingsHubPage() {
   const errorCopy = useAppSelector(selectSettingsErrorCopy)
   const syncFooter = useAppSelector(selectSettingsSyncFooter)
   const integrationRows = useAppSelector(selectIntegrationRows)
+  const preferencesSections = useAppSelector(selectPreferencesHubSections)
+  const isAppearanceThemesEnabled = useAppSelector(
+    selectIsAppearanceThemesEnabled,
+  )
   const user = useAppSelector(selectCurrentUser)
   const initials = useAppSelector(selectUserInitials)
   const surface = useAppSelector(selectSurface)
@@ -173,7 +178,7 @@ export function SettingsHubPage() {
         {section === null ? (
           <SettingsHubFragment
             profileSection={profileHubSection}
-            preferencesSections={preferencesHubSections}
+            preferencesSections={preferencesSections}
             accountSections={accountHubSections}
             syncFooter={syncFooter}
             accountName={user?.name ?? null}
@@ -194,16 +199,6 @@ export function SettingsHubPage() {
               onTapBack={() => dispatch(userDidTapBackToHub())}
             />
 
-            {/*
-              The shell's `indigoGrape` slab is 180px tall and a pane opens
-              inside it. The header is legible on it and so is a white card, but
-              a *subgroup label* — small, secondary, uppercase — is not: without
-              this spacer "WORKING HOURS" landed in the solid part of the
-              gradient and disappeared. The hub needs none because its profile
-              card already pushes the first label past the fade.
-            */}
-            <div className="pt-kro-large" />
-
             {settingsPaneKind(section.id) === SettingsPaneKind.preferences &&
             section.settingGroup !== null ? (
               <PreferencesSectionFragment
@@ -211,6 +206,18 @@ export function SettingsHubPage() {
                 values={values}
                 isLoaded={isEditable}
                 isWorkingHoursValid={isWorkingHoursValid}
+                isAppearanceThemesEnabled={isAppearanceThemesEnabled}
+                errorCopy={errorCopy}
+                onChangeSetting={onChangeSetting}
+              />
+            ) : null}
+
+            {settingsPaneKind(section.id) === SettingsPaneKind.appearance ? (
+              <PreferencesSectionFragment
+                group="appearance"
+                values={values}
+                isLoaded={isEditable}
+                isAppearanceThemesEnabled={isAppearanceThemesEnabled}
                 errorCopy={errorCopy}
                 onChangeSetting={onChangeSetting}
               />

@@ -134,3 +134,51 @@ describe('bulk mark-complete mode', () => {
     expect(screen.queryByTestId('do-header-rings')).toBeNull()
   })
 })
+
+describe('the LargeScreenTitle slab', () => {
+  it('paints the diagonal clip on the header itself, not the content column', () => {
+    render(
+      <DoHeaderFragment
+        content={headerFor(doSurfaceMocks.typicalDay, true)}
+        rings={[]}
+        showsRings={false}
+      />,
+    )
+
+    const header = screen.getByTestId('do-header')
+    const slab = screen.getByTestId('do-header-title-slab')
+    expect(header.contains(slab)).toBe(true)
+    expect(slab.className).toContain('kro-gradient-backdrop--large-title')
+    expect(slab.className).toContain('kro-gradient-backdrop--hard')
+    expect(slab.dataset.gradientBleed).toBe('window')
+  })
+
+  it('does not pin a 360px drop — the clip fills the title, remaining-count and rings', () => {
+    render(
+      <DoHeaderFragment
+        content={headerFor(doSurfaceMocks.typicalDay, true)}
+        rings={[]}
+        showsRings={false}
+      />,
+    )
+
+    const slab = screen.getByTestId('do-header-title-slab')
+    expect(slab.style.getPropertyValue('--kro-gradient-height')).toBe('')
+  })
+
+  it('keeps Suggestions out of the title — the slab is a descendant of the header only', () => {
+    render(
+      <DoHeaderFragment
+        content={headerFor(doSurfaceMocks.typicalDay, true)}
+        rings={[]}
+        showsRings={false}
+      />,
+    )
+
+    expect(
+      screen
+        .getByTestId('do-header-title-slab')
+        .parentElement?.getAttribute('data-testid'),
+    ).toBe('do-header')
+  })
+})

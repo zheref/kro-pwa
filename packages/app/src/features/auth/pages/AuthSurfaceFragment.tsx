@@ -27,7 +27,7 @@
 import type { ReactNode } from 'react'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { GlassSurface } from '../../../design/system/glass/GlassSurface'
-import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
+import { DetailBackdrop } from '../../../design/system/gradient/DetailBackdrop'
 import { cn } from '../../../design/system/utils/cn'
 import { AuthFlow, AuthMode } from '../AuthState'
 import { AppleMark, GoogleMark } from './ProviderMarks'
@@ -86,7 +86,7 @@ export function AuthSurfaceFragment({
       data-mode={mode}
       className="relative flex w-full flex-col overflow-hidden rounded-kro-surface"
     >
-      <GradientBackdrop height="100%" hardEdge className="absolute inset-0" />
+      <DetailBackdrop />
 
       <div className="relative flex w-full flex-col items-stretch gap-kro-medium p-kro-large">
         <div className="flex items-start justify-between">

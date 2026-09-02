@@ -138,13 +138,26 @@ describe('acceptance criterion 1 — wide', () => {
     ).toBe(true)
   })
 
-  it('shows the expanded heading on a wide surface and the plain one when narrow', () => {
+  it('does not repeat My Day in the content toolbar — LargeScreenTitle owns that', () => {
     renderShell(desktopSurface)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('My Day')
+
+    const toolbar = screen.getByTestId('shell-content-toolbar')
+    expect(toolbar.querySelector('h1')).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
 
     cleanup()
     renderShell(handheldSurface)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('My Day')
+    expect(
+      screen.getByTestId('shell-tab-bar-toolbar').querySelector('h1'),
+    ).toBeNull()
+  })
+
+  it('still titles destinations that do not paint a LargeScreenTitle', () => {
+    renderShell(desktopSurface, {
+      selected: { kind: DestinationKind.inbox },
+    })
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Inbox')
   })
 
   it('collapses the sidebar column on request', () => {
@@ -165,6 +178,15 @@ describe('acceptance criterion 1 — wide', () => {
 })
 
 describe('the destination is rendered inside the shell', () => {
+  it('paints the page field behind both shells so glass has something to refract', () => {
+    renderShell(desktopSurface)
+    expect(screen.getByTestId('detail-backdrop')).toBeTruthy()
+
+    cleanup()
+    renderShell(handheldSurface)
+    expect(screen.getByTestId('detail-backdrop')).toBeTruthy()
+  })
+
   it('renders its children in the sidebar shape', () => {
     renderShell(desktopSurface)
     expect(screen.getByText('destination content')).toBeTruthy()
@@ -318,7 +340,9 @@ describe('the bottom inset the shell publishes for the design system', () => {
     const layout = doSurfaceLayout(handheldSurface)
 
     expect(tabBarReservedHeight(layout)).toBe(
-      layout.minimumControlSide + 2 * layout.minimumControlSpacing,
+      layout.minimumControlSide +
+        2 * layout.minimumControlSpacing +
+        8 /* TAB_DOCK_INSET */,
     )
   })
 
@@ -328,5 +352,60 @@ describe('the bottom inset the shell publishes for the design system', () => {
     const shell = screen.getByTestId('shell-sidebar-shape')
     expect(shell.style.getPropertyValue(SHELL_BOTTOM_INSET_VAR)).toBe('0px')
     expect(shellBottomInset('sidebar', doSurfaceLayout(desktopSurface))).toBe(0)
+  })
+})
+
+describe('the content column reaches the window edge', () => {
+  it('has no right gutter on a sidebar shell, so a title slab can', () => {
+    renderShell(desktopSurface)
+
+    const column = screen.getByTestId('shell-content-column')
+    expect(column.className).not.toContain('pr-')
+    expect(screen.queryByTestId('shell-large-title-slab')).toBeNull()
+  })
+
+  it('does not paint LargeScreenTitle on the column — that clip belongs to the header', () => {
+    renderShell(desktopSurface)
+
+    expect(screen.queryByTestId('shell-large-title-slab')).toBeNull()
+    expect(screen.getByTestId('shell-content-column')).toBeTruthy()
+  })
+
+  it('still leaves the tab-bar shell without a column-tall slab', () => {
+    renderShell(handheldSurface)
+
+    expect(screen.queryByTestId('shell-large-title-slab')).toBeNull()
+    expect(screen.getByTestId('shell-tab-bar')).toBeTruthy()
+  })
+
+  it('offers a window-origin host so the title slab can grow from the edges', () => {
+    renderShell(desktopSurface)
+
+    const host = screen.getByTestId('shell-title-slab-host')
+    expect(host.hasAttribute('data-kro-title-slab-host')).toBe(true)
+    expect(host.getAttribute('aria-hidden')).toBe('true')
+
+    cleanup()
+    renderShell(handheldSurface)
+    expect(screen.getByTestId('shell-title-slab-host')).toBeTruthy()
+  })
+
+  it('insets the sidebar from the top the same way the chrome row already insets the bottom', () => {
+    renderShell(desktopSurface)
+
+    const chrome = screen.getByTestId('shell-sidebar').parentElement
+    expect(chrome?.className).toContain('pb-kro-small')
+    expect(chrome?.className).not.toContain('pt-kro-small')
+    expect(screen.getByTestId('shell-sidebar').className).toContain(
+      'mt-kro-small',
+    )
+  })
+
+  it('drops the glass bar and the redundant title so the slab shows through', () => {
+    renderShell(desktopSurface)
+
+    const toolbar = screen.getByTestId('shell-content-toolbar')
+    expect(toolbar.className).not.toContain('kro-glass')
+    expect(toolbar.tagName).toBe('HEADER')
   })
 })

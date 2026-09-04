@@ -104,7 +104,7 @@ export const MainMocks = {
     projects: [projectMocks.inbox, projectMocks.work],
   } satisfies MainState as MainState,
 
-  /** A development build: every destination visible, Tweak included. */
+  /** A development build: every destination visible, Tweak and Storybook included. */
   desktopAllFlags: {
     ...base,
     load: { kind: 'loaded' },

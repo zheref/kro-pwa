@@ -97,6 +97,16 @@ describe('the shipping sidebar', () => {
     expect(screen.getByRole('button', { name: 'Board' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Blueprints' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Tweak' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Storybook' })).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Design System' }),
+    ).toBeTruthy()
+  })
+
+  it('keeps Storybook off the shipping sidebar', () => {
+    renderSidebar()
+
+    expect(screen.queryByRole('button', { name: 'Storybook' })).toBeNull()
   })
 
   it("uses canon's macOS row names, not the phone's", () => {

@@ -192,3 +192,29 @@ export const storyOrDefault = (
   catalog: StoryCatalog,
   id: string,
 ): CatalogStory => storyById(catalog, id) ?? catalog.stories[0] ?? defaultStory
+
+/** The group (and component) a story sits under, used to open that section. */
+export interface CatalogPlacement {
+  readonly groupId: string
+  readonly componentId: string
+}
+
+export const placementOfStory = (
+  catalog: StoryCatalog,
+  storyId: string,
+): CatalogPlacement => {
+  const story = storyOrDefault(catalog, storyId)
+  for (const nextGroup of catalog.groups) {
+    for (const nextComponent of nextGroup.components) {
+      if (
+        nextComponent.stories.some((candidate) => candidate.id === story.id)
+      ) {
+        return { groupId: nextGroup.id, componentId: nextComponent.id }
+      }
+    }
+  }
+  return {
+    groupId: catalog.groups[0]?.id ?? '',
+    componentId: catalog.groups[0]?.components[0]?.id ?? '',
+  }
+}

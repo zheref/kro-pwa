@@ -33,6 +33,40 @@ describe('DesignSystemFragment', () => {
     ).toBeTruthy()
   })
 
+  it("opens the selected story's section and leaves the others collapsed", () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    expect(
+      screen
+        .getByRole('button', { name: 'Tokens' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(
+      screen
+        .getByRole('button', { name: 'Primitives' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
+    expect(screen.queryByRole('button', { name: 'Variants' })).toBeNull()
+    expect(
+      screen.getByRole('button', {
+        name: STORY_CATALOG.stories.find(
+          (story) => story.id === STORY_CATALOG.defaultStoryId,
+        )?.name,
+      }),
+    ).toBeTruthy()
+  })
+
+  it('scrolls the tree inside the glass pane, not the pane itself', () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Component library' })
+    const scroller = screen.getByTestId('design-system-nav-scroll')
+
+    expect(nav.contains(scroller)).toBe(true)
+    expect(nav.className).not.toMatch(/overflow-y-auto/)
+    expect(scroller.className).toMatch(/overflow-y-auto/)
+  })
+
   it('marks the selected story and paints its name on the canvas', () => {
     render(<DesignSystemFragment {...designSystemMocks.buttonVariants} />)
 
@@ -56,9 +90,44 @@ describe('DesignSystemFragment', () => {
       />,
     )
 
+    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
     await userEvent.click(screen.getByRole('button', { name: 'Variants' }))
 
     expect(onSelectStory).toHaveBeenCalledWith('Button/Variants')
+  })
+
+  it('expands a collapsed section so its stories can be reached', async () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    expect(screen.queryByRole('button', { name: 'Variants' })).toBeNull()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
+
+    expect(
+      screen
+        .getByRole('button', { name: 'Primitives' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(screen.getByRole('button', { name: 'Variants' })).toBeTruthy()
+  })
+
+  it('collapses an open section so its stories leave the tree', async () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Tokens' }))
+
+    expect(
+      screen
+        .getByRole('button', { name: 'Tokens' })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
+    expect(
+      screen.queryByRole('button', {
+        name: STORY_CATALOG.stories.find(
+          (story) => story.id === STORY_CATALOG.defaultStoryId,
+        )?.name,
+      }),
+    ).toBeNull()
   })
 
   it('falls back to the default story when the selected id is unknown', () => {

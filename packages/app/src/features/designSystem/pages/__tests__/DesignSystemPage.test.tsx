@@ -46,6 +46,7 @@ describe('DesignSystemPage', () => {
   it('switches the canvas when a story row is tapped', async () => {
     renderPage()
 
+    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
     await userEvent.click(screen.getByRole('button', { name: 'Variants' }))
 
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(

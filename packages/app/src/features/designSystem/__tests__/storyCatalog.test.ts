@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   STORY_CATALOG,
   STORY_CATALOG_GROUPS,
+  placementOfStory,
   storyById,
   storyOrDefault,
 } from '../storyCatalog'
@@ -57,5 +58,29 @@ describe('storyOrDefault', () => {
   it('keeps every story id unique', () => {
     const ids = STORY_CATALOG.stories.map((story) => story.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('placementOfStory', () => {
+  it('puts a primitive under Primitives / Button', () => {
+    expect(placementOfStory(STORY_CATALOG, 'Button/Variants')).toEqual({
+      groupId: 'Primitives',
+      componentId: 'Button',
+    })
+  })
+
+  it('puts the catalog default under Tokens', () => {
+    expect(
+      placementOfStory(STORY_CATALOG, STORY_CATALOG.defaultStoryId),
+    ).toEqual({
+      groupId: 'Tokens',
+      componentId: 'Tokens',
+    })
+  })
+
+  it('follows the fallback story when the id is unknown', () => {
+    expect(placementOfStory(STORY_CATALOG, 'NotAComponent/Missing')).toEqual(
+      placementOfStory(STORY_CATALOG, STORY_CATALOG.defaultStoryId),
+    )
   })
 })

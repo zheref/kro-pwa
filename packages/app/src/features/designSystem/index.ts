@@ -19,8 +19,10 @@ export {
   STORY_CATALOG_GROUPS,
   type CatalogComponent,
   type CatalogGroup,
+  type CatalogPlacement,
   type CatalogStory,
   type StoryCatalog,
+  placementOfStory,
   storyById,
   storyOrDefault,
 } from './storyCatalog'

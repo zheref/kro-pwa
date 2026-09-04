@@ -56,6 +56,17 @@ describe('DesignSystemFragment', () => {
     ).toBeTruthy()
   })
 
+  it('paints the canvas on the page field, not in a glass well', () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    const canvas = screen.getByTestId('design-system-canvas')
+    const nav = screen.getByRole('navigation', { name: 'Component library' })
+
+    expect(nav.className).toMatch(/kro-glass/)
+    expect(canvas.className).not.toMatch(/kro-glass/)
+    expect(canvas.tagName).toBe('SECTION')
+  })
+
   it('scrolls the tree inside the glass pane, not the pane itself', () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 

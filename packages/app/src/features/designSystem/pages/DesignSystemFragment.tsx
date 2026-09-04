@@ -11,10 +11,13 @@
  *
  * The catalog column is a glass pane of fixed height; the tree scrolls
  * *inside* it. Scrolling the glass element itself would let the material grow
- * with the tree and clip at the viewport.
+ * with the tree and clip at the viewport. The canvas is not glass: stories
+ * sit on the destination page field (`DetailBackdrop`), the same surface
+ * My Day and Plan paint on.
  */
 import { useState } from 'react'
 import { GlassPanel } from '../../../design/system/glass/GlassPanel'
+import { OnGradient } from '../../../design/system/gradient/OnGradient'
 import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
@@ -54,7 +57,7 @@ export function DesignSystemFragment({
   return (
     <div
       data-testid="design-system-catalog"
-      className="absolute inset-0 flex min-h-0 overflow-hidden"
+      className="absolute inset-0 flex min-h-0 gap-kro-small overflow-hidden"
     >
       <GlassPanel
         as="nav"
@@ -80,26 +83,29 @@ export function DesignSystemFragment({
         </div>
       </GlassPanel>
 
-      <GlassPanel
-        kind="content"
+      <section
         data-testid="design-system-canvas"
-        className="h-full min-w-0 flex-1 self-stretch"
+        className="flex h-full min-h-0 min-w-0 flex-1 flex-col self-stretch"
       >
-        <header className="shrink-0 border-b border-kro-hairline px-kro-large py-kro-medium">
-          <p className="text-kro-fore-secondary text-xs uppercase tracking-wide">
+        <header className="shrink-0 px-kro-medium py-kro-medium">
+          <OnGradient
+            as="p"
+            className="m-0 font-semibold text-[13px] uppercase tracking-wide"
+          >
             {selected.id.split('/')[0]}
-          </p>
-          <h2
+          </OnGradient>
+          <OnGradient
+            as="h2"
             data-testid="design-system-story-name"
-            className="text-kro-fore text-lg font-semibold"
+            className="m-0 font-semibold text-lg"
           >
             {selected.name}
-          </h2>
+          </OnGradient>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {selected.render()}
         </div>
-      </GlassPanel>
+      </section>
     </div>
   )
 }

@@ -7,7 +7,10 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { designSystemMocks } from '../../DesignSystemMocks'
-import { DesignSystemFragment } from '../DesignSystemFragment'
+import {
+  CATALOG_STORY_ROW_HEIGHT,
+  DesignSystemFragment,
+} from '../DesignSystemFragment'
 import { STORY_CATALOG } from '../../storyCatalog'
 
 afterEach(cleanup)
@@ -76,6 +79,24 @@ describe('DesignSystemFragment', () => {
     expect(nav.contains(scroller)).toBe(true)
     expect(nav.className).not.toMatch(/overflow-y-auto/)
     expect(scroller.className).toMatch(/overflow-y-auto/)
+  })
+
+  it('packs component titles and variant rows denser than the product sidebar', () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    const componentTitle = screen.getByRole('heading', {
+      level: 3,
+      name: 'Tokens',
+    })
+    const variant = screen.getByRole('button', {
+      name: STORY_CATALOG.stories.find(
+        (story) => story.id === STORY_CATALOG.defaultStoryId,
+      )?.name,
+    })
+
+    expect(componentTitle.className).toMatch(/text-\[11px\]/)
+    expect(variant.className).toMatch(/text-\[11px\]/)
+    expect(variant.style.minHeight).toBe(`${CATALOG_STORY_ROW_HEIGHT}px`)
   })
 
   it('marks the selected story and paints its name on the canvas', () => {

@@ -21,13 +21,15 @@ import { OnGradient } from '../../../design/system/gradient/OnGradient'
 import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
-import { SIDEBAR_ROW_HEIGHT } from '../../main/SidebarFragment'
 import {
   type CatalogGroup,
   type StoryCatalog,
   placementOfStory,
   storyOrDefault,
 } from '../storyCatalog'
+
+/** Compact explorer rows — denser than the product sidebar's 36px. */
+export const CATALOG_STORY_ROW_HEIGHT = 24
 
 export interface DesignSystemFragmentProps {
   readonly catalog: StoryCatalog
@@ -143,8 +145,8 @@ function CatalogGroupSection({
       {isExpanded ? (
         <div id={panelId} role="region" aria-label={group.title}>
           {group.components.map((component) => (
-            <div key={component.id} className="mt-kro-tiny">
-              <h3 className="px-kro-small py-kro-tiny text-kro-fore text-xs font-semibold">
+            <div key={component.id} className="mt-px">
+              <h3 className="px-kro-small py-px text-[11px] font-semibold leading-tight text-kro-fore">
                 {component.title}
               </h3>
               <ul className="flex list-none flex-col">
@@ -158,13 +160,13 @@ function CatalogGroupSection({
                         onClick={() => onSelectStory(story.id)}
                         data-theme={isSelected ? 'dark' : undefined}
                         className={cn(
-                          'w-full truncate rounded-kro-small px-kro-small text-left text-sm',
+                          'w-full truncate rounded-kro-small px-kro-small text-left text-[11px] leading-tight',
                           isSelected
                             ? 'font-semibold'
                             : 'text-kro-fore hover:bg-kro-absolute/25',
                         )}
                         style={{
-                          minHeight: `${SIDEBAR_ROW_HEIGHT}px`,
+                          minHeight: `${CATALOG_STORY_ROW_HEIGHT}px`,
                           backgroundColor: isSelected
                             ? colorVar('absolute')
                             : undefined,

@@ -1,12 +1,14 @@
 /**
  * The two full-surface empty states.
  *
- * `EmptyDayStateView` belongs on the gradient — its whole palette is
- * white-on-translucent-dark, so on a flat page it is unreadable by design, and
- * the story puts it where it lives. `InboxTrayEmptyState` belongs under a pinned
- * header, which the third story supplies so the vertical centring can be judged.
+ * `EmptyDayStateView` belongs on the page field — on-gradient ink, no inset
+ * well, a KroGlass Create control — so the stories put it on `DetailBackdrop`
+ * at a real content height. `InboxTrayEmptyState` belongs under a pinned
+ * header, which the tray story supplies so the vertical centring can be judged.
  */
 
+import type { ReactNode } from 'react'
+import { DetailBackdrop } from '../system/gradient/DetailBackdrop'
 import { CompactPresentationHeader } from './CompactPresentationHeader'
 import { EmptyDayStateView, InboxTrayEmptyState } from './EmptyDayStateView'
 import { BothSchemes, Stage } from './storyStage'
@@ -17,24 +19,74 @@ export default {
   parameters: { layout: 'fullscreen' },
 }
 
+function Field({
+  theme = 'light',
+  height = '100%',
+  children,
+}: {
+  readonly theme?: 'light' | 'dark'
+  readonly height?: number | string
+  readonly children: ReactNode
+}) {
+  return (
+    <div
+      data-theme={theme}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        height,
+        minHeight: typeof height === 'number' ? height : 560,
+      }}
+    >
+      <DetailBackdrop />
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flex: 1,
+          width: '100%',
+          minHeight: 0,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export const DoPromotion = {
-  name: 'Do tab · the first-launch promotion inset',
+  name: 'Do tab · centred on the page field',
   render: () => (
-    <Stage gradient>
+    <Field>
       <EmptyDayStateView onCreateEndeavor={() => undefined} />
-    </Stage>
+    </Field>
   ),
 }
 
 export const PromotionWithoutAction = {
   name: 'Do tab · read-only, no CTA',
   render: () => (
-    <Stage gradient>
+    <Field>
       <EmptyDayStateView
         title="Nothing scheduled"
         message="Your day is clear. Connect a calendar to see what is already booked."
       />
-    </Stage>
+    </Field>
+  ),
+}
+
+export const BothSchemesOnField = {
+  name: 'Do tab · both schemes, centred',
+  render: () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+      <Field theme="light" height={480}>
+        <EmptyDayStateView onCreateEndeavor={() => undefined} />
+      </Field>
+      <Field theme="dark" height={480}>
+        <EmptyDayStateView onCreateEndeavor={() => undefined} />
+      </Field>
+    </div>
   ),
 }
 
@@ -66,7 +118,7 @@ export const InboxTray = {
 }
 
 export const BothThemes = {
-  name: 'Both schemes',
+  name: 'Inbox tray · both schemes',
   render: () => (
     <BothSchemes>
       <div style={{ display: 'flex', height: 260, width: '100%' }}>

@@ -210,7 +210,11 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
   return (
     <div
       data-testid="do-lanes"
-      className={cn('flex flex-col gap-kro-large pt-kro-medium', className)}
+      className={cn(
+        'flex min-h-0 flex-col',
+        hasNoEndeavors ? 'flex-1' : 'gap-kro-large pt-kro-medium',
+        className,
+      )}
     >
       {showsSuggestions && suggestions.length > 0 ? (
         <SuggestionsLane
@@ -221,7 +225,10 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
       ) : null}
 
       {hasNoEndeavors ? (
-        <div className="px-kro-medium" data-testid="do-empty-day">
+        <div
+          className="flex min-h-0 flex-1 flex-col"
+          data-testid="do-empty-day"
+        >
           <EmptyDayStateView onCreateEndeavor={onCreateEndeavor} />
         </div>
       ) : (

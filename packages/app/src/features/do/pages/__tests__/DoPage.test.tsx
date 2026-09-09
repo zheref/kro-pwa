@@ -493,7 +493,7 @@ describe('the intents this surface hands to other features', () => {
 })
 
 describe('the empty day', () => {
-  it('shows the promotion inset when nothing exists anywhere', async () => {
+  it('shows the centred empty day when nothing exists anywhere', async () => {
     const { store } = mountPage({
       localStore: makeInMemoryLocalStore({ endeavors: [] }),
     })

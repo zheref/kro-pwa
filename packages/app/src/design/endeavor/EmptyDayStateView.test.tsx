@@ -5,7 +5,7 @@ import { EmptyDayStateView, InboxTrayEmptyState } from './EmptyDayStateView'
 
 afterEach(cleanup)
 
-describe('EmptyDayStateView — the Do tab promotion inset', () => {
+describe('EmptyDayStateView — the Do tab promotion on the page field', () => {
   it('leads with canon’s headline and its explanation', () => {
     render(<EmptyDayStateView />)
 
@@ -15,12 +15,13 @@ describe('EmptyDayStateView — the Do tab promotion inset', () => {
     ).not.toBeNull()
   })
 
-  it('raises the create intent, at the 44px touch floor', async () => {
+  it('raises the create intent from a KroGlass control', async () => {
     const onCreate = vi.fn()
     render(<EmptyDayStateView onCreateEndeavor={onCreate} />)
 
     const button = screen.getByRole('button', { name: /Create/ })
-    expect(button.style.minHeight).toBe('var(--kro-size-min-touch-target)')
+    expect(button.className).toContain('kro-glass')
+    expect(button.className).toContain('kro-glass--control')
 
     await userEvent.click(button)
     expect(onCreate).toHaveBeenCalledOnce()
@@ -31,25 +32,16 @@ describe('EmptyDayStateView — the Do tab promotion inset', () => {
     expect(screen.queryByRole('button')).toBeNull()
   })
 
-  it('draws the CTA from the indigoGrape header tokens, so it cannot drift from the slab', () => {
-    render(<EmptyDayStateView onCreateEndeavor={() => undefined} />)
-
-    const button = screen.getByRole('button', { name: /Create/ })
-    expect(button.style.backgroundImage).toContain(
-      '--kro-color-header-gradient-indigo',
-    )
-    expect(button.style.backgroundImage).toContain(
-      '--kro-color-header-gradient-grape',
-    )
-  })
-
-  it('draws the inset as a pressed-in surface, not a raised card', () => {
+  it('sits on the page field, centred, with no inset well', () => {
     const { container } = render(<EmptyDayStateView />)
 
-    const inset = container.querySelector(
+    const field = container.querySelector(
       '[data-slot="empty-day-state"]',
     ) as HTMLElement
-    expect(inset.style.boxShadow).toContain('inset')
+    expect(field.className).toContain('items-center')
+    expect(field.className).toContain('justify-center')
+    expect(field.style.boxShadow).toBe('')
+    expect(field.style.backgroundColor).toBe('')
   })
 
   it('lets a surface supply its own copy without forking the component', () => {

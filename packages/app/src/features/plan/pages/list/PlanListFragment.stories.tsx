@@ -11,6 +11,7 @@
 import { PlanListGrouping, PlanListSort } from '@kro/core'
 import type { ReactNode } from 'react'
 import { Stage } from '../../../../design/endeavor/storyStage'
+import { DetailBackdrop } from '../../../../design/system/gradient/DetailBackdrop'
 import { planListSections } from './planListModel'
 import { PlanListFragment } from './PlanListFragment'
 import {
@@ -114,5 +115,15 @@ export const PointerRows = {
 
 /** A day with nothing on it — the honest empty state, not four empty headers. */
 export const EmptyDay = {
-  render: () => <Stage>{canvas({ sections: [] })}</Stage>,
+  render: () => (
+    <div
+      data-theme="light"
+      style={{ position: 'relative', overflow: 'hidden' }}
+    >
+      <DetailBackdrop />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {canvas({ sections: [] })}
+      </div>
+    </div>
+  ),
 }

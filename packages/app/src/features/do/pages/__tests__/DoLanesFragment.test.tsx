@@ -203,7 +203,7 @@ describe('mark-complete mode', () => {
 })
 
 describe('the empty day', () => {
-  it('shows the promotion inset with its Create call to action', async () => {
+  it('shows the centred empty day with a KroGlass Create', async () => {
     const onCreateEndeavor = vi.fn()
     render(
       <DoLanesFragment
@@ -211,7 +211,16 @@ describe('the empty day', () => {
       />,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }))
+    const create = screen.getByRole('button', { name: 'Create' })
+    expect(create.className).toContain('kro-glass')
+    expect(screen.getByTestId('do-empty-day').className).toContain('flex-1')
+    expect(
+      screen
+        .getByTestId('do-empty-day')
+        .querySelector('[data-slot="empty-day-state"]')?.className,
+    ).toContain('justify-center')
+
+    await userEvent.click(create)
     expect(onCreateEndeavor).toHaveBeenCalledTimes(1)
     expect(renderedLaneOrder()).toEqual([])
   })

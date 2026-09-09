@@ -305,6 +305,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           during render — same picture, impure for no gain.
         */}
         <div
+          className="flex min-h-full flex-col"
           style={{
             transform: pull > 0 ? `translateY(${pull}px)` : undefined,
             transition: pull === 0 ? 'transform 200ms' : undefined,
@@ -328,6 +329,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           ) : null}
 
           <DoHeaderFragment
+            className="shrink-0"
             content={header}
             rings={rings}
             showsRings={showsRings}
@@ -375,7 +377,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           />
 
           {/* Canon's `Spacer(minLength: 80)` — the last lane clears the FAB. */}
-          <div aria-hidden className="h-20" />
+          <div aria-hidden className="h-20 shrink-0" />
         </div>
       </div>
 

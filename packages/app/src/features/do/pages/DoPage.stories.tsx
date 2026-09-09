@@ -1,5 +1,6 @@
 import type { EndeavorRecord } from '@kro/core'
 import { type ReactNode, useState } from 'react'
+import { DetailBackdrop } from '../../../design/system/gradient/DetailBackdrop'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { StoreProvider } from '../../../library/StoreProvider'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
@@ -32,12 +33,14 @@ function Preview({
   height = 760,
   surface,
   records = doFixtureRecords(),
+  field = false,
 }: {
   theme?: 'light' | 'dark'
   width: number
   height?: number
   surface: DoSurface
   records?: readonly EndeavorRecord[]
+  field?: boolean
 }): ReactNode {
   // Built ONCE, in a lazy initialiser — the same shape `MainShellPage` uses.
   // Calling `makeStore` in the body would hand out a fresh store on every
@@ -62,12 +65,12 @@ function Preview({
         width,
         height,
         overflow: 'hidden',
-        background: 'var(--kro-color-back)',
+        background: field ? undefined : 'var(--kro-color-back)',
         border: '1px solid var(--kro-color-hairline)',
       }}
     >
-      <GradientBackdrop height="220px" />
-      <div style={{ position: 'relative', height: '100%' }}>
+      {field ? <DetailBackdrop /> : <GradientBackdrop height="220px" />}
+      <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
         <StoreProvider store={store}>
           <DoPage
             now={DO_MOCK_NOW}
@@ -90,9 +93,9 @@ export const Handheld = {
   render: () => <Preview width={390} height={800} surface={handheld} />,
 }
 
-/** First launch — nothing anywhere. */
+/** First launch — centred empty day on the page field, KroGlass Create. */
 export const EmptyDay = {
-  render: () => <Preview width={1120} surface={desktop} records={[]} />,
+  render: () => <Preview width={1120} surface={desktop} records={[]} field />,
 }
 
 /** Both schemes at the desktop width. */

@@ -91,6 +91,25 @@ describe('the sidebar — canon .macOS branch', () => {
     ).toEqual(['Blueprints', 'Adjust', 'Tweak'])
   })
 
+  it('appends Storybook last, and only in a development build', () => {
+    expect(
+      desktop({ gates: allOpenGates }).map((section) => section.title),
+    ).toEqual([null, 'Workflow', 'Settings'])
+    const developed = desktop({
+      gates: allOpenGates,
+      isDevelopment: true,
+      projects: [projectMocks.inbox],
+    })
+    expect(developed.map((section) => section.title)).toEqual([
+      null,
+      'Workflow',
+      'Settings',
+      'Lists',
+      'Design System',
+    ])
+    expect(titlesOf(developed, 'Design System')).toEqual(['Storybook'])
+  })
+
   it('pins the Settings section to the bottom, and only that one', () => {
     const pinned = desktop().filter((section) => section.shouldGoToBottom)
     expect(pinned.map((section) => section.title)).toEqual(['Settings'])

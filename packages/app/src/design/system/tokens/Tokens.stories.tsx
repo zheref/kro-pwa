@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { CHIP_ROLES } from './contrastContracts'
 import { readColorRole, readSemanticRole } from './readToken'
 import {
   COLOR_ROLES,
   COLOR_ROLE_VARS,
   DISABLED_OPACITY_VAR,
   RADIUS_VARS,
+  SEMANTIC_ROLES,
   SEMANTIC_ROLE_VARS,
   SHADOW_VARS,
   SIZE_VARS,
@@ -20,6 +20,12 @@ import { decideAccent } from './useAccentColor'
  * computed style rather than from a list typed into this file — so what the
  * gallery shows is what the page paints, and adding a token to `tokens.css`
  * makes it appear here without an edit.
+ *
+ * `SEMANTIC_ROLES` from `roles.ts`, never `CHIP_ROLES` from
+ * `contrastContracts.ts`: the latter imports `tokenSource`, which reads the
+ * stylesheet with `node:fs` and belongs to the test tier. The two lists are
+ * the same set. Pulling `tokenSource` into this file would also pull it into
+ * the in-app Design System gallery, which is a client bundle.
  *
  * Every story renders light and dark SIDE BY SIDE. Two panes on one page is
  * only possible because the theme is keyed off `[data-theme]` as a plain
@@ -144,7 +150,7 @@ function PaletteGallery() {
 function SemanticGallery() {
   return (
     <Grid>
-      {CHIP_ROLES.map((role) => (
+      {SEMANTIC_ROLES.map((role) => (
         <div key={role}>
           <div
             style={{

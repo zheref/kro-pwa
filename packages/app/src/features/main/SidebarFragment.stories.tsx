@@ -87,7 +87,7 @@ export const ShippingBaseline = {
   ),
 }
 
-/** A development build: every destination, Tweak included. */
+/** A development build: every destination, Tweak and Storybook included. */
 export const AllFlagsOpen = {
   render: () => (
     <Stage>

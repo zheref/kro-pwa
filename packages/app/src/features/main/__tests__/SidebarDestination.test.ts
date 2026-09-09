@@ -72,6 +72,14 @@ describe('macOS naming — canon SidebarDestinationType.title / .heading', () =>
   it('calls the developer destination "Tweak", as canon does', () => {
     expect(destinationTitle({ kind: DestinationKind.dev })).toBe('Tweak')
   })
+
+  it('calls the Storybook gallery "Storybook" in the row and "Design System" in the heading', () => {
+    const designSystem: SidebarDestination = {
+      kind: DestinationKind.designSystem,
+    }
+    expect(destinationTitle(designSystem)).toBe('Storybook')
+    expect(destinationHeading(designSystem)).toBe('Design System')
+  })
 })
 
 describe("tab labels — canon's iOS strings", () => {

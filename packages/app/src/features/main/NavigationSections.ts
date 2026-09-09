@@ -144,9 +144,11 @@ export interface NavigationModelInput {
  *   Settings  Blueprints (`.blueprints`) · Adjust (`.settings`) ·
  *             Tweak (development only)          [shouldGoToBottom]
  *   Lists     one row per project, `.lists`     [when non-empty or adding]
+ *   Design System  Storybook (development only, web-only — not canon)
  *
  * An empty section is dropped, exactly as canon drops one whose
- * `elements.count == 0`.
+ * `elements.count == 0`. The Storybook row is appended last so a development
+ * build always offers it after every shipping section, Lists included.
  */
 export const sidebarSections = (
   input: NavigationModelInput,
@@ -204,6 +206,16 @@ export const sidebarSections = (
       title: 'Lists',
       shouldGoToBottom: false,
       elements: listElements,
+    })
+  }
+
+  // Web-only: the Storybook gallery. Not a canon row, so it sits after every
+  // shipping section rather than being folded into Settings next to Tweak.
+  if (input.isDevelopment) {
+    sections.push({
+      title: 'Design System',
+      shouldGoToBottom: false,
+      elements: [element(simple(DestinationKind.designSystem))],
     })
   }
 

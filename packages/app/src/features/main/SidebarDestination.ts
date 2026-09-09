@@ -70,6 +70,11 @@ export const DestinationKind = {
   settings: 'settings',
   /** `.dev` — "Tweak". Development builds only. */
   dev: 'dev',
+  /**
+   * Web-only. The Storybook design-system gallery. Development builds only;
+   * not a canon destination. Row "Storybook", heading "Design System".
+   */
+  designSystem: 'designSystem',
   /** `.search`. */
   search: 'search',
   /** `.tasksWithFilter(.list(_))` — one project. */
@@ -107,6 +112,7 @@ export const ALL_SIMPLE_DESTINATIONS: readonly SimpleDestination[] = [
   { kind: DestinationKind.blueprints },
   { kind: DestinationKind.settings },
   { kind: DestinationKind.dev },
+  { kind: DestinationKind.designSystem },
   { kind: DestinationKind.search },
 ]
 
@@ -134,6 +140,7 @@ const SIMPLE_TITLES: Record<Exclude<DestinationKind, 'list'>, string> = {
   blueprints: 'Blueprints',
   settings: 'Adjust',
   dev: 'Tweak',
+  designSystem: 'Storybook',
   search: 'Search',
 }
 
@@ -150,6 +157,7 @@ const SIMPLE_HEADINGS: Record<Exclude<DestinationKind, 'list'>, string> = {
   blueprints: 'Blueprints',
   settings: 'Settings',
   dev: 'Tweak',
+  designSystem: 'Design System',
   search: 'Search',
 }
 
@@ -206,6 +214,7 @@ export const DESTINATION_SF_SYMBOL: Record<
     'chevron.compact.up.chevron.compact.right.chevron.compact.down.chevron.compact.left',
   settings: 'gear',
   dev: 'digitalcrown.arrow.clockwise.fill',
+  designSystem: 'paintpalette',
   search: 'magnifyingglass',
 }
 
@@ -234,6 +243,7 @@ const SIMPLE_ICONS: Record<Exclude<DestinationKind, 'list'>, LucideIcon> = {
   blueprints: Shapes,
   settings: Settings,
   dev: SlidersHorizontal,
+  designSystem: iconForSymbol('paintpalette'),
   search: Search,
 }
 
@@ -296,6 +306,7 @@ const SIMPLE_PATHS: Record<Exclude<DestinationKind, 'list'>, string> = {
   blueprints: '/blueprints',
   settings: '/adjust',
   dev: '/tweak',
+  designSystem: '/storybook',
   search: '/search',
 }
 

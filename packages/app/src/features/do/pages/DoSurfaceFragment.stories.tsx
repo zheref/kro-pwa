@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ActiveToastHost } from '../../../design/chrome/toast/ActiveToastHost'
+import { DetailBackdrop } from '../../../design/system/gradient/DetailBackdrop'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { DoSurfaceFragment } from './DoSurfaceFragment'
 import { doSurfaceMocks, doSurfaceProps } from './doSurfaceMocks'
@@ -25,11 +26,13 @@ function Stage({
   theme = 'light',
   width,
   height = 720,
+  field = false,
   children,
 }: {
   theme?: 'light' | 'dark'
   width: number
   height?: number
+  field?: boolean
   children: ReactNode
 }) {
   return (
@@ -40,13 +43,15 @@ function Stage({
         width,
         height,
         overflow: 'hidden',
-        background: 'var(--kro-color-back)',
+        background: field ? undefined : 'var(--kro-color-back)',
         border: '1px solid var(--kro-color-hairline)',
       }}
     >
-      <GradientBackdrop height="220px" />
+      {field ? <DetailBackdrop /> : <GradientBackdrop height="220px" />}
       <ActiveToastHost position="absolute">
-        <div style={{ position: 'relative', height: '100%' }}>{children}</div>
+        <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
+          {children}
+        </div>
       </ActiveToastHost>
     </div>
   )
@@ -90,10 +95,10 @@ export const FailedRefresh = {
   ),
 }
 
-/** First launch: nothing anywhere. */
+/** First launch: centred empty day on the page field, KroGlass Create. */
 export const EmptyDay = {
   render: () => (
-    <Stage width={1120}>
+    <Stage width={1120} field>
       <DoSurfaceFragment {...doSurfaceProps(doSurfaceMocks.emptyDay)} />
     </Stage>
   ),

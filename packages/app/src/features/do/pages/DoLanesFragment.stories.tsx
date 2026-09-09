@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { DetailBackdrop } from '../../../design/system/gradient/DetailBackdrop'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { DoLanesFragment, type DoLanesFragmentProps } from './DoLanesFragment'
 import { noopDoCardHandlers } from './doCardHandlers'
@@ -22,25 +23,44 @@ export default {
 function Stage({
   theme = 'light',
   width,
+  height,
+  field = false,
   children,
 }: {
   theme?: 'light' | 'dark'
   width: number
+  height?: number
+  field?: boolean
   children: ReactNode
 }) {
+  const fills = height !== undefined
   return (
     <div
       data-theme={theme}
       style={{
         position: 'relative',
+        display: fills ? 'flex' : undefined,
+        flexDirection: fills ? 'column' : undefined,
         width,
-        paddingBlock: 16,
+        height,
+        paddingBlock: fills ? 0 : 16,
         overflow: 'hidden',
-        background: 'var(--kro-color-back)',
+        background: field ? undefined : 'var(--kro-color-back)',
       }}
     >
-      <GradientBackdrop height="220px" />
-      <div style={{ position: 'relative' }}>{children}</div>
+      {field ? <DetailBackdrop /> : <GradientBackdrop height="220px" />}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: fills ? 'flex' : undefined,
+          flex: fills ? 1 : undefined,
+          minHeight: fills ? 0 : undefined,
+          height: fills ? '100%' : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
@@ -127,10 +147,10 @@ export const WithSuggestion = {
   ),
 }
 
-/** Nothing anywhere — the promotion inset, not an empty scroll. */
+/** Nothing anywhere — centred on the page field, with a KroGlass Create. */
 export const EmptyDay = {
   render: () => (
-    <Stage width={1120}>
+    <Stage width={1120} height={560} field>
       <DoLanesFragment {...props(doSurfaceMocks.emptyDay)} />
     </Stage>
   ),

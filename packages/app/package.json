@@ -10,6 +10,7 @@
     "./design": "./src/design/index.ts",
     "./google": "./src/services/googleCalendar/index.ts",
     "./thirst": "./src/features/thirst/index.ts",
+    "./design-system": "./src/features/designSystem/index.ts",
     "./design/system/styles.css": "./src/design/system/styles.css",
     "./package.json": "./package.json"
   },

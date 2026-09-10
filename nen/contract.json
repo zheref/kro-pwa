@@ -1,0 +1,130 @@
+{
+  "$schema": "nen.contract/v0.1",
+  "$comment": "kro-pwa's own nen declaration -- one lane (web), the pnpm/Turborepo monorepo TOOLCHAIN.md and the Makefile already name as the canonical entry points. Every verb below is that Makefile's leaf command, cited by file and line in its 'why'; nothing here invents a command the repo does not already run. Scenario react-uzf-v1 (Stack Matrix Scenario 5 -- Web Only), per CLAUDE.md.",
+
+  "project": {
+    "scenario": "react-uzf-v1",
+
+    "lanes": {
+      "web": { "stack": "nextjs", "cwd": "." }
+    },
+    "defaultLane": "web",
+
+    "preconditions": {
+      "web": [
+        {
+          "kind": "path",
+          "value": "node_modules",
+          "why": "The workspace dependency install has run. Nen ASSERTS this and never performs it: 'make setup' / 'corepack enable && pnpm install' is the repo's own precondition (TOOLCHAIN.md 'First run'; Makefile 'setup')."
+        }
+      ]
+    },
+
+    "verbs": {
+      "web": {
+        "build": {
+          "exe": "pnpm",
+          "argv": ["turbo", "run", "build"],
+          "why": "Makefile 'build' -> 'pnpm turbo run build', fanning out to each workspace member's 'next build' (apps/web/package.json)."
+        },
+
+        "test": {
+          "exe": "pnpm",
+          "argv": ["turbo", "run", "test"],
+          "why": "Makefile 'test' -> 'pnpm turbo run test', fanning out to 'vitest run --coverage' in apps/web and 'vitest run' in the two packages."
+        },
+
+        "lint": {
+          "steps": [
+            { "exe": "pnpm", "argv": ["exec", "biome", "check", "."] },
+            { "exe": "pnpm", "argv": ["turbo", "run", "lint"] }
+          ],
+          "why": "Makefile 'lint' runs both, in order: the repo-wide Biome pass, then the per-workspace lint fan-out (which also runs @kro/core's platform-free check and @kro/app's UZF-boundary check). Running only the second step is a weaker check than 'make lint' itself performs."
+        },
+
+        "coverage": {
+          "steps": [
+            {
+              "exe": "pnpm",
+              "argv": ["--filter", "@kro/core", "test:coverage"]
+            },
+            {
+              "exe": "pnpm",
+              "argv": ["--filter", "@kro/app", "test:coverage"]
+            },
+            { "exe": "pnpm", "argv": ["--filter", "@kro/web", "test"] }
+          ],
+          "artifacts": [
+            "packages/core/coverage/lcov.info",
+            "packages/app/coverage/lcov.info",
+            "apps/web/coverage/lcov.info"
+          ],
+          "why": "Makefile 'test-coverage', verbatim -- kept out of 'make test' and out of pr.yml on purpose (instrumentation roughly doubles the run; TOOLCHAIN.md). @kro/web's own 'test' script already runs 'vitest run --coverage' (apps/web/package.json), so the third step's lcov is real, not a gap. All three vitest configs declare 'reporter: [\"text\",\"lcov\"]' with 'reportsDirectory: \"coverage\"' (packages/core/vitest.config.ts, packages/app/vitest.config.ts, apps/web/vitest.config.mts), so no reporter change was needed to name these paths. 'nen shu coverage' parses the first declared artifact whose format it recognises -- packages/core's lcov.info -- and reports the other two's existence without parsing them a second time."
+        },
+
+        "ui-test": {
+          "steps": [
+            {
+              "exe": "pnpm",
+              "argv": [
+                "--filter",
+                "@kro/web",
+                "exec",
+                "playwright",
+                "install",
+                "--with-deps",
+                "chromium"
+              ]
+            },
+            {
+              "exe": "pnpm",
+              "argv": ["--filter", "@kro/web", "run", "test:e2e"]
+            }
+          ],
+          "why": "Makefile 'test-e2e', verbatim: the browser install is part of this verb, not a precondition, because the repo runs it every time (Playwright is not in pr.yml yet, TOOLCHAIN.md)."
+        },
+
+        "dev": {
+          "exe": "pnpm",
+          "argv": ["turbo", "run", "dev"],
+          "why": "Makefile 'dev' -> 'pnpm turbo run dev', fanning out to 'next dev' on :3000 (apps/web/package.json)."
+        },
+
+        "run": {
+          "exe": "pnpm",
+          "argv": ["--filter", "@kro/web", "exec", "next", "start"],
+          "why": "The production server (apps/web/package.json 'start' -> 'next start'). Requires a prior 'build': this repo has no Makefile verb for it at all -- the Makefile stops at 'dev'/'build' -- so nen states the production-serve invocation directly against the workspace member."
+        },
+
+        "archive": {
+          "unsupported": "no packaging step exists for this lane. kro-pwa ships as a web application with no distributable artifact; the Makefile names no 'archive'-shaped verb and TOOLCHAIN.md documents none."
+        },
+
+        "release": {
+          "unsupported": "Kro Web is a PWA -- there is no package or store pipeline. Makefile 'publish': \"publish: n/a -- Kro Web is a PWA, there is no package or store pipeline. Releases ship via 'make deploy'.\""
+        },
+
+        "deploy": {
+          "unsupported": "no target is wired yet -- host undecided, see TOOLCHAIN.md. Makefile 'deploy' is a stub that prints the open decision (Vercel vs Google Cloud Run) and exits 1 on purpose."
+        }
+      }
+    },
+
+    "hosts": { "*": ["darwin", "linux", "win32"] },
+
+    "launch": {
+      "$comment": "project.launch is not read by nen 0.3.0 (preserved as an unknown key); the amaterasu skill reads it directly until 'nen shu dev --target' ships.",
+      "web": {
+        "verb": "dev",
+        "note": "port precondition (3000, listening -> reuse) arrives with nen 0.4; until then the skill checks lsof by hand"
+      }
+    },
+
+    "evidence": {
+      "$comment": "project.evidence is not read by nen 0.3.0 (preserved as an unknown key). Globs are the RC-11 stories-mirroring snapshot tests that are this stack's actual UZF-26 evidence carrier (kro-pwa/.claude/rules/react-uzf-v1/12-session-completion-checklist.md) -- vitest text snapshots under packages/app, all six tracked in git today. No PNG evidence is committed anywhere in this repo: apps/web/e2e/kc71-shots.spec.ts and kc79-shots.spec.ts write screenshots only when an env var (KC71_SHOTS / KC79_SHOTS) points at an external directory, and apps/web/playwright-report is gitignored (apps/web/.gitignore) -- neither is a path a glob here could honestly name.",
+      "globs": ["packages/app/src/**/__tests__/__snapshots__/*.snap"],
+      "mechanism": "files-changed",
+      "scene": "{suite}-{scene}"
+    }
+  }
+}

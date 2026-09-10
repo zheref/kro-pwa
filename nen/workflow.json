@@ -27,8 +27,8 @@
   "notifications": { "rungs": ["push", "os", "sound"], "sound": "Glass" },
 
   "commits": {
-    "allowedAttributionTrailers": ["Akatsuki-Agent"],
-    "forbiddenTrailers": ["Co-Authored-By", "Claude-Session", "Signed-off-by"]
+    "allowedAttributionTrailers": ["Akatsuki-Agent", "Hatsu-Agent"],
+    "forbiddenTrailers": ["Co-authored-by", "Claude-Session", "Signed-off-by"]
   },
 
   "monitor": { "maxCycles": 20, "pollSeconds": 300 },

@@ -1,0 +1,64 @@
+{
+  "$schema": "nen.workflow/v0.1",
+  "$comment": "Policy for the hatsu skill lattice on kro-pwa. Not validated by nen 0.3.0 (schema + loader arrive in wave 2 / P1); read as plain data by hatsu until then.",
+
+  "branch": { "template": "{model}/{persona}/{descriptor}", "base": "main" },
+
+  "iteration": { "checks": ["build", "lint"], "lane": "web" },
+
+  "tests": { "required": ["test"], "extra": [] },
+
+  "coverage": {
+    "minimum": 80,
+    "recommended": 85,
+    "ideal": 90,
+    "scope": "touched"
+  },
+
+  "launch": { "default": "web", "fallback": null },
+
+  "reports": {
+    "dir": "Reports",
+    "retain": "final-only",
+    "template": "rikugan",
+    "captures": "Reports/captures"
+  },
+
+  "notifications": { "rungs": ["push", "os", "sound"], "sound": "Glass" },
+
+  "commits": {
+    "allowedAttributionTrailers": ["Akatsuki-Agent"],
+    "forbiddenTrailers": ["Co-Authored-By", "Claude-Session", "Signed-off-by"]
+  },
+
+  "monitor": { "maxCycles": 20, "pollSeconds": 300 },
+
+  "models": {
+    "rule": "latest alias only, never a version; subagents never on the frontier tier",
+    "claude": {
+      "frontier": "fable",
+      "deep": "opus",
+      "fast": "sonnet",
+      "economy": "haiku"
+    },
+    "codex": {
+      "frontier": "astra",
+      "deep": "sol",
+      "fast": "terra",
+      "economy": "luna"
+    },
+    "cursor": {
+      "frontier": "grok",
+      "deep": "grok",
+      "fast": "composer",
+      "economy": "composer",
+      "note": "Cursor-native only; provider models there are reserved for Bugbot"
+    },
+    "roles": {
+      "reviewer": "deep",
+      "worker": "fast",
+      "measurer": "fast",
+      "orchestrator": "frontier"
+    }
+  }
+}

@@ -8,16 +8,16 @@
     "repository": "https://github.com/zheref/nen",
 
     "minimum": "0.7",
-    "minimum_semantics": "MAJOR.MINOR, exactly two components. While nen's line is 0.x this means >=0.7.0 <0.8.0 EXACTLY -- at major zero the MINOR is the breaking-change vehicle, so a HIGHER minor is out of range too, not just a lower one. This declaration's first pin was 0.6, set directly there rather than at the 0.5.0 floor `project.launch` itself would have needed, since 0.5 was never the merged state. Repinned to 0.7 per nen v0.7.0's own CHANGELOG repin note: `minimum` and `pinned_ref` move together and a v0.6.0 binary does not satisfy a `0.7` floor either. None of v0.7.0's other breaking notes (the --repo-relative path flags, the two new `stage triage` reasons) touch a field this repository's `nen/` tree declares.",
+    "minimum_semantics": "MAJOR.MINOR. At major zero a `0.A` pin is satisfied by an installed `0.B.z` when `A <= B` and either `A == B` or (`A` is at or above the binary's own compatibility floor and `B` is at or below the binary's own minor) -- nen decides this, and `nen shu tools --repo .` prints the exact range the verdict applied beside a `compat floor:` line naming the lowest `minimum` the installed nen satisfies; this prose is a convenience copy and nen's verdict wins. The floor moves only when a nen release's CHANGELOG carries a real `### Breaking / consumer notes` bullet -- v0.8.0 declared none, so this pin holds at `0.7` unchanged and `pinned_ref` moves on its own to the newer release already inside the range it admits. Above major zero this reverts to the ordinary rule: `X.Y` means `>=X.Y.0 <(X+1).0.0`.",
 
-    "pinned_ref": "v0.7.0",
+    "pinned_ref": "v0.8.0",
     "version_probe": ["nen", "--version"],
-    "version_probe_output": "a bare semver on stdout, e.g. '0.7.0' -- no 'v' prefix, no other text",
+    "version_probe_output": "a bare semver on stdout, e.g. '0.8.0' -- no 'v' prefix, no other text",
 
     "bootstrap": {
       "vendored": false,
       "script_path_in_source": "bootstrap/nen.sh",
-      "url": "https://raw.githubusercontent.com/zheref/nen/v0.7.0/bootstrap/nen.sh",
+      "url": "https://raw.githubusercontent.com/zheref/nen/v0.8.0/bootstrap/nen.sh",
       "published_binaries": [
         "nen-darwin-arm64",
         "nen-linux-x64",
@@ -26,7 +26,7 @@
       "manifest_asset": "SHA256SUMS"
     },
 
-    "$comment": "What this repository needs FROM nen, as opposed to what nen runs IN it (`project`, below). `nen shu tools` synthesises a `nen` row from this block -- always verify-only, since re-pinning nen is `nen bootstrap`'s job and this repository's decision, never a side effect of a tools run. v0.7.0 is a PUBLISHED release carrying SHA256SUMS and the three platform binaries, which is what `bootstrap/nen.sh` verifies against; a tag with no release is refused at exit 6 by that script, so the pin is deliberately a released tag and not a branch or a bare tag."
+    "$comment": "What this repository needs FROM nen, as opposed to what nen runs IN it (`project`, below). `nen shu tools` synthesises a `nen` row from this block -- always verify-only, since re-pinning nen is `nen bootstrap`'s job and this repository's decision, never a side effect of a tools run. v0.8.0 is a PUBLISHED release carrying SHA256SUMS and the three platform binaries, which is what `bootstrap/nen.sh` verifies against; a tag with no release is refused at exit 6 by that script, so the pin is deliberately a released tag and not a branch or a bare tag."
   },
 
   "project": {

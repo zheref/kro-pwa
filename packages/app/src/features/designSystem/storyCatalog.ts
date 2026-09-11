@@ -14,6 +14,7 @@
  * in-app gallery.
  */
 import type { ReactElement } from 'react'
+import type { StoryKind } from '../../design/storybook/storyKind'
 import * as toastStories from '../../design/chrome/toast/ActiveToast.stories'
 import * as ringsStories from '../../design/chrome/rings/ActivityRings.stories'
 import * as dialStories from '../../design/chrome/dial/DurationDial.stories'
@@ -47,6 +48,55 @@ import * as popoverStories from '../../design/system/primitives/popover.stories'
 import * as sheetStories from '../../design/system/primitives/sheet.stories'
 import * as tabsStories from '../../design/system/primitives/tabs.stories'
 import * as tokenStories from '../../design/system/tokens/Tokens.stories'
+import * as higOverviewStories from '../../design/hig/HIGOverview.stories'
+import * as higPopupButtonStories from '../../design/hig/actions/PopupButton.stories'
+import * as higPullDownButtonStories from '../../design/hig/actions/PullDownButton.stories'
+import * as higChartStories from '../../design/hig/content/Chart.stories'
+import * as higImageViewStories from '../../design/hig/content/ImageView.stories'
+import * as higTextViewStories from '../../design/hig/content/TextView.stories'
+import * as higWebViewStories from '../../design/hig/content/WebView.stories'
+import * as higButtonsStories from '../../design/hig/existing/Buttons.stories'
+import * as higMenusStories from '../../design/hig/existing/Menus.stories'
+import * as higContextMenusStories from '../../design/hig/existing/ContextMenus.stories'
+import * as higTabViewsStories from '../../design/hig/existing/TabViews.stories'
+import * as higSegmentedStories from '../../design/hig/existing/SegmentedControls.stories'
+import * as higTextFieldsStories from '../../design/hig/existing/TextFields.stories'
+import * as higPopoversStories from '../../design/hig/existing/Popovers.stories'
+import * as higSheetsStories from '../../design/hig/existing/Sheets.stories'
+import * as higTokenViewsStories from '../../design/hig/existing/TokenViews.stories'
+import * as higActivityRingsStories from '../../design/hig/existing/ActivityRings.stories'
+import * as higGroupedBoxStories from '../../design/hig/layout/GroupedBox.stories'
+import * as higCollectionStories from '../../design/hig/layout/Collection.stories'
+import * as higColumnViewStories from '../../design/hig/layout/ColumnView.stories'
+import * as higDisclosureStories from '../../design/hig/layout/Disclosure.stories'
+import * as higLabelStories from '../../design/hig/layout/Label.stories'
+import * as higListStories from '../../design/hig/layout/List.stories'
+import * as higLockupStories from '../../design/hig/layout/Lockup.stories'
+import * as higOutlineStories from '../../design/hig/layout/OutlineView.stories'
+import * as higSplitViewStories from '../../design/hig/layout/SplitView.stories'
+import * as higSeparatorStories from '../../design/hig/layout/Separator.stories'
+import * as higScrollViewStories from '../../design/hig/layout/ScrollView.stories'
+import * as higNavigationBarStories from '../../design/hig/navigation/NavigationBar.stories'
+import * as higPathControlStories from '../../design/hig/navigation/PathControl.stories'
+import * as higSearchFieldStories from '../../design/hig/navigation/SearchField.stories'
+import * as higSidebarStories from '../../design/hig/navigation/Sidebar.stories'
+import * as higTabBarStories from '../../design/hig/navigation/TabBar.stories'
+import * as higToolbarStories from '../../design/hig/navigation/Toolbar.stories'
+import * as higAlertStories from '../../design/hig/presentation/Alert.stories'
+import * as higActionSheetStories from '../../design/hig/presentation/ActionSheet.stories'
+import * as higPanelStories from '../../design/hig/presentation/Panel.stories'
+import * as higCheckboxStories from '../../design/hig/selection/Checkbox.stories'
+import * as higColorWellStories from '../../design/hig/selection/ColorWell.stories'
+import * as higComboBoxStories from '../../design/hig/selection/ComboBox.stories'
+import * as higDigitEntryStories from '../../design/hig/selection/DigitEntry.stories'
+import * as higPickerStories from '../../design/hig/selection/Picker.stories'
+import * as higRadioStories from '../../design/hig/selection/RadioGroup.stories'
+import * as higSliderStories from '../../design/hig/selection/Slider.stories'
+import * as higStepperStories from '../../design/hig/selection/Stepper.stories'
+import * as higToggleStories from '../../design/hig/selection/Toggle.stories'
+import * as higGaugeStories from '../../design/hig/status/Gauge.stories'
+import * as higProgressStories from '../../design/hig/status/ProgressIndicator.stories'
+import * as higRatingStories from '../../design/hig/status/RatingIndicator.stories'
 
 export interface CatalogStory {
   readonly id: string
@@ -58,6 +108,7 @@ export interface CatalogStory {
 export interface CatalogComponent {
   readonly id: string
   readonly title: string
+  readonly kind: StoryKind
   readonly stories: readonly CatalogStory[]
 }
 
@@ -99,9 +150,14 @@ const storiesOf = (
       render: story.render,
     }))
 
-const component = (title: string, module: StoryModule): CatalogComponent => ({
+const component = (
+  title: string,
+  module: StoryModule,
+  kind: StoryKind,
+): CatalogComponent => ({
   id: title,
   title,
+  kind,
   stories: storiesOf(title, module),
 })
 
@@ -120,46 +176,109 @@ const group = (
  * a catalog bug, caught by `storyCatalog.test.ts`.
  */
 export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
-  group('Tokens', [component('Tokens', tokenStories)]),
+  group('Tokens', [component('Tokens', tokenStories, 'token')]),
   group('Materials', [
-    component('KroGlass', glassStories),
-    component('GradientBackdrop', gradientStories),
-    component('DetailBackdrop', detailBackdropStories),
-    component('OnGradient', onGradientStories),
+    component('KroGlass', glassStories, 'material'),
+    component('GradientBackdrop', gradientStories, 'material'),
+    component('DetailBackdrop', detailBackdropStories, 'material'),
+    component('OnGradient', onGradientStories, 'modifier'),
   ]),
   group('Primitives', [
-    component('Button', buttonStories),
-    component('Input', inputStories),
-    component('Dialog', dialogStories),
-    component('Sheet', sheetStories),
-    component('Popover', popoverStories),
-    component('DropdownMenu', dropdownMenuStories),
-    component('Tabs', tabsStories),
+    component('Button', buttonStories, 'primitive'),
+    component('Input', inputStories, 'primitive'),
+    component('Dialog', dialogStories, 'primitive'),
+    component('Sheet', sheetStories, 'primitive'),
+    component('Popover', popoverStories, 'primitive'),
+    component('DropdownMenu', dropdownMenuStories, 'primitive'),
+    component('Tabs', tabsStories, 'primitive'),
   ]),
   group('Endeavor', [
-    component('CardBadge', cardBadgeStories),
-    component('KroChip', kroChipStories),
-    component('InlineBanner', inlineBannerStories),
-    component('SurfaceCard', surfaceCardStories),
-    component('PropertyRow', propertyRowStories),
-    component('EmptyStateCard', emptyStateCardStories),
-    component('EmptyStates', emptyDayStories),
-    component('CompactPresentationHeader', compactHeaderStories),
-    component('SuggestionCard', suggestionStories),
-    component('TaskRow', taskRowStories),
-    component('Popovers', endeavorPopoverStories),
-    component('EndeavorActionSurface', actionSurfaceStories),
-    component('EndeavorRow', rowStories),
-    component('EndeavorCard', cardStories),
+    component('CardBadge', cardBadgeStories, 'domain'),
+    component('KroChip', kroChipStories, 'domain'),
+    component('InlineBanner', inlineBannerStories, 'domain'),
+    component('SurfaceCard', surfaceCardStories, 'domain'),
+    component('PropertyRow', propertyRowStories, 'domain'),
+    component('EmptyStateCard', emptyStateCardStories, 'domain'),
+    component('EmptyStates', emptyDayStories, 'domain'),
+    component('CompactPresentationHeader', compactHeaderStories, 'domain'),
+    component('SuggestionCard', suggestionStories, 'domain'),
+    component('TaskRow', taskRowStories, 'domain'),
+    component('Popovers', endeavorPopoverStories, 'domain'),
+    component('EndeavorActionSurface', actionSurfaceStories, 'domain'),
+    component('EndeavorRow', rowStories, 'domain'),
+    component('EndeavorCard', cardStories, 'domain'),
   ]),
   group('Chrome', [
-    component('LiquidGlassFAB', fabStories),
-    component('LiquidGlassFABMenu', fabMenuStories),
-    component('RotatingGlow', glowStories),
-    component('ActiveToast', toastStories),
-    component('DurationDial', dialStories),
-    component('ActivityRings', ringsStories),
-    component('EmojiPicker', emojiStories),
+    component('LiquidGlassFAB', fabStories, 'chrome'),
+    component('LiquidGlassFABMenu', fabMenuStories, 'chrome'),
+    component('RotatingGlow', glowStories, 'chrome'),
+    component('ActiveToast', toastStories, 'chrome'),
+    component('DurationDial', dialStories, 'chrome'),
+    component('ActivityRings', ringsStories, 'chrome'),
+    component('EmojiPicker', emojiStories, 'chrome'),
+  ]),
+  group('HIG', [component('HIG Overview', higOverviewStories, 'catalog')]),
+  group('HIG · Actions', [
+    component('HIG Buttons', higButtonsStories, 'pattern'),
+    component('HIG Menus', higMenusStories, 'pattern'),
+    component('HIG Context menus', higContextMenusStories, 'pattern'),
+    component('HIG Pop-up buttons', higPopupButtonStories, 'component'),
+    component('HIG Pull-down buttons', higPullDownButtonStories, 'component'),
+  ]),
+  group('HIG · Content', [
+    component('HIG Charts', higChartStories, 'component'),
+    component('HIG Image views', higImageViewStories, 'component'),
+    component('HIG Text views', higTextViewStories, 'component'),
+    component('HIG Web views', higWebViewStories, 'component'),
+  ]),
+  group('HIG · Layout', [
+    component('HIG Boxes', higGroupedBoxStories, 'component'),
+    component('HIG Collections', higCollectionStories, 'component'),
+    component('HIG Column views', higColumnViewStories, 'component'),
+    component('HIG Disclosure controls', higDisclosureStories, 'component'),
+    component('HIG Labels', higLabelStories, 'component'),
+    component('HIG Lists and tables', higListStories, 'component'),
+    component('HIG Lockups', higLockupStories, 'component'),
+    component('HIG Outline views', higOutlineStories, 'component'),
+    component('HIG Split views', higSplitViewStories, 'component'),
+    component('HIG Separators', higSeparatorStories, 'component'),
+    component('HIG Tab views', higTabViewsStories, 'pattern'),
+  ]),
+  group('HIG · Navigation', [
+    component('HIG Navigation bars', higNavigationBarStories, 'component'),
+    component('HIG Path controls', higPathControlStories, 'component'),
+    component('HIG Search fields', higSearchFieldStories, 'component'),
+    component('HIG Sidebars', higSidebarStories, 'component'),
+    component('HIG Tab bars', higTabBarStories, 'component'),
+    component('HIG Token views', higTokenViewsStories, 'pattern'),
+    component('HIG Toolbars', higToolbarStories, 'component'),
+  ]),
+  group('HIG · Presentation', [
+    component('HIG Action sheets', higActionSheetStories, 'component'),
+    component('HIG Alerts', higAlertStories, 'component'),
+    component('HIG Panels', higPanelStories, 'component'),
+    component('HIG Popovers', higPopoversStories, 'pattern'),
+    component('HIG Scroll views', higScrollViewStories, 'component'),
+    component('HIG Sheets', higSheetsStories, 'pattern'),
+  ]),
+  group('HIG · Selection', [
+    component('HIG Checkboxes', higCheckboxStories, 'component'),
+    component('HIG Color wells', higColorWellStories, 'component'),
+    component('HIG Combo boxes', higComboBoxStories, 'component'),
+    component('HIG Digit entry', higDigitEntryStories, 'component'),
+    component('HIG Pickers', higPickerStories, 'component'),
+    component('HIG Radio buttons', higRadioStories, 'component'),
+    component('HIG Segmented controls', higSegmentedStories, 'pattern'),
+    component('HIG Sliders', higSliderStories, 'component'),
+    component('HIG Steppers', higStepperStories, 'component'),
+    component('HIG Text fields', higTextFieldsStories, 'pattern'),
+    component('HIG Toggles', higToggleStories, 'component'),
+  ]),
+  group('HIG · Status', [
+    component('HIG Activity rings', higActivityRingsStories, 'pattern'),
+    component('HIG Gauges', higGaugeStories, 'component'),
+    component('HIG Progress indicators', higProgressStories, 'component'),
+    component('HIG Rating indicators', higRatingStories, 'component'),
   ]),
 ]
 
@@ -217,4 +336,14 @@ export const placementOfStory = (
     groupId: catalog.groups[0]?.id ?? '',
     componentId: catalog.groups[0]?.components[0]?.id ?? '',
   }
+}
+
+export const componentOfStory = (
+  catalog: StoryCatalog,
+  storyId: string,
+): CatalogComponent | undefined => {
+  const placement = placementOfStory(catalog, storyId)
+  return catalog.groups
+    .find((group) => group.id === placement.groupId)
+    ?.components.find((next) => next.id === placement.componentId)
 }

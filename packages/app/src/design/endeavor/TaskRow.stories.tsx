@@ -12,6 +12,7 @@ import { TaskRow } from './TaskRow'
 import type { TaskRowModel } from './TaskRow'
 import { SurfaceCard } from './SurfaceCard'
 import { BothSchemes, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/TaskRow',
@@ -65,7 +66,7 @@ const rows: readonly TaskRowModel[] = [
   },
 ]
 
-export const List = {
+const List = {
   name: 'A list of rows',
   render: () => (
     <Stage width={640}>
@@ -87,7 +88,7 @@ export const List = {
   ),
 }
 
-export const Selected = {
+const Selected = {
   name: 'Selected · the row re-themes its subtree',
   render: () => (
     <Stage width={640}>
@@ -114,7 +115,7 @@ export const Selected = {
   ),
 }
 
-export const PointsWithoutDuration = {
+const PointsWithoutDuration = {
   name: 'Reward points standing in for a duration',
   render: () => (
     <Stage width={640}>
@@ -150,7 +151,7 @@ export const PointsWithoutDuration = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -172,5 +173,17 @@ export const BothThemes = {
         </div>
       </SurfaceCard>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {List.render()}
+      {Selected.render()}
+      {PointsWithoutDuration.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

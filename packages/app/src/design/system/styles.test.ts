@@ -33,3 +33,13 @@ describe('the Chromium field-outline reset', () => {
     )
   })
 })
+
+describe('the HIG control recipes', () => {
+  it('pulls hig.css in through the one stylesheet, so a component never side-effect-imports CSS', () => {
+    expect(STYLES).toContain('@import "../hig/hig.css"')
+  })
+
+  it('does not layer hig.css — those recipes are not meant to lose to a utility', () => {
+    expect(STYLES).not.toMatch(/hig\.css"\s+layer/)
+  })
+})

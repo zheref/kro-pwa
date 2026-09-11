@@ -72,8 +72,8 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
  * stories still build, and their theming contract is asserted directly in
  * `popover.test.tsx` and `dropdown-menu.test.tsx`.
  *
- * Every module is still counted below, so a component cannot drop below three
- * stories in either runner.
+ * Every module is still counted below, so a component cannot drop its
+ * gallery page — variants live on that page, not as extra sidebar rows.
  */
 const SNAPSHOTTED = MODULES.filter(
   ([component]) => component !== 'Popover' && component !== 'DropdownMenu',
@@ -115,10 +115,10 @@ afterEach(() => {
   teardown()
 })
 
-describe('every design-system component ships at least three stories', () => {
+describe('every design-system component ships one gallery page', () => {
   for (const [component, module] of MODULES) {
-    it(`${component} has 3 or more`, () => {
-      expect(storiesOf(module).length).toBeGreaterThanOrEqual(3)
+    it(`${component} is one Gallery`, () => {
+      expect(storiesOf(module).map(([name]) => name)).toEqual(['Gallery'])
     })
   }
 })

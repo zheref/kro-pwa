@@ -22,3 +22,17 @@ describe('the pressed-in glass bezel', () => {
     expect(pressed).not.toContain('scale')
   })
 })
+
+describe('control glass', () => {
+  it('does not force a 44px floor — height belongs to the control', () => {
+    const control = CSS.match(/\.kro-glass--control\s*\{[^}]+\}/)?.[0] ?? ''
+    expect(control).not.toContain('min-height')
+  })
+
+  it('tints filled buttons with the live accent and the danger role', () => {
+    expect(CSS).toContain('.kro-glass--accent')
+    expect(CSS).toContain('.kro-glass--danger')
+    expect(CSS).toContain('var(--kro-color-accent)')
+    expect(CSS).toContain('var(--kro-color-banner-danger)')
+  })
+})

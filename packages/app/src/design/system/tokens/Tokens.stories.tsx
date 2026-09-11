@@ -12,6 +12,7 @@ import {
   SPACING_VARS,
 } from './roles'
 import { decideAccent } from './useAccentColor'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * The token gallery.
@@ -280,7 +281,7 @@ function ElevationGallery() {
   )
 }
 
-export const Palette = {
+const Palette = {
   name: 'Palette · every role, both themes',
   render: () => (
     <BothThemes>
@@ -289,7 +290,7 @@ export const Palette = {
   ),
 }
 
-export const SemanticRoles = {
+const SemanticRoles = {
   name: 'Semantic roles · chips, both themes',
   render: () => (
     <BothThemes>
@@ -298,7 +299,7 @@ export const SemanticRoles = {
   ),
 }
 
-export const Scales = {
+const Scales = {
   name: 'Spacing, radii and sizing',
   render: () => (
     <BothThemes>
@@ -307,7 +308,7 @@ export const Scales = {
   ),
 }
 
-export const Elevation = {
+const Elevation = {
   name: 'Elevation',
   render: () => (
     <BothThemes>
@@ -316,7 +317,7 @@ export const Elevation = {
   ),
 }
 
-export const AccentTheming = {
+const AccentTheming = {
   name: 'Accent theming',
   render: () => (
     <BothThemes>
@@ -359,5 +360,18 @@ export const AccentTheming = {
         })}
       </div>
     </BothThemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Palette.render()}
+      {SemanticRoles.render()}
+      {Scales.render()}
+      {Elevation.render()}
+      {AccentTheming.render()}
+    </StoryGallery>
   ),
 }

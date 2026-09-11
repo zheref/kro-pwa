@@ -9,6 +9,7 @@
 
 import { SuggestionCard, suggestionSources } from './SuggestionCard'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/SuggestionCard',
@@ -39,7 +40,7 @@ const COPY = {
   },
 } as const
 
-export const EverySource = {
+const EverySource = {
   name: 'Every source · carousel width',
   render: () => (
     <Stage gradient>
@@ -56,7 +57,7 @@ export const EverySource = {
   ),
 }
 
-export const BannerWidth = {
+const BannerWidth = {
   name: 'fillsWidth · the Plan tab banner',
   render: () => (
     <Stage gradient>
@@ -88,7 +89,7 @@ export const BannerWidth = {
   ),
 }
 
-export const Compression = {
+const Compression = {
   name: 'Compression · the title yields last',
   render: () => (
     <Stage gradient>
@@ -107,7 +108,7 @@ export const Compression = {
   ),
 }
 
-export const Density = {
+const Density = {
   name: 'Density · compact pointer vs comfortable touch',
   render: () => (
     <Stage gradient>
@@ -127,7 +128,7 @@ export const Density = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -137,5 +138,18 @@ export const BothThemes = {
         onAction={() => undefined}
       />
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {EverySource.render()}
+      {BannerWidth.render()}
+      {Compression.render()}
+      {Density.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

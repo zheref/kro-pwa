@@ -81,7 +81,8 @@
  */
 .kro-glass--control {
   border-radius: var(--kro-radius-pill);
-  min-height: var(--kro-size-min-touch-target);
+  /* Height belongs to the control (compact vs comfortable). A 44px floor
+     here silently beat every `h-6` / `h-7` utility. */
   box-shadow:
     inset 0 0 0 1px var(--kro-glass-rim),
     inset 0 1px 0 var(--kro-glass-hi),
@@ -92,6 +93,51 @@
 .kro-glass--control::before {
   -webkit-backdrop-filter: var(--kro-glass-filter-control);
   backdrop-filter: var(--kro-glass-filter-control);
+}
+
+/**
+ * Accent- and danger-tinted glass. Solid HIG buttons are still glass — the
+ * live accent / banner-danger is mixed into layer 2, not a flat fill.
+ * Colour is never the only signal: the label still names the action.
+ */
+.kro-glass--accent {
+  color: var(--kro-color-on-accent);
+}
+
+.kro-glass.kro-glass--accent::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-accent) 58%,
+    var(--kro-glass-surface)
+  );
+}
+
+.kro-glass--danger {
+  color: var(--kro-color-snow);
+}
+
+.kro-glass.kro-glass--danger::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-banner-danger) 62%,
+    var(--kro-glass-surface)
+  );
+}
+
+.kro-glass--accent.kro-glass--interactive:hover::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-accent) 84%,
+    var(--kro-glass-surface-hover)
+  );
+}
+
+.kro-glass--danger.kro-glass--interactive:hover::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-banner-danger) 88%,
+    var(--kro-glass-surface-hover)
+  );
 }
 
 /**
@@ -237,6 +283,20 @@
 
   .kro-glass--pressed::before {
     background: var(--kro-glass-surface-opaque);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .kro-glass.kro-glass--accent::before,
+  .kro-glass--accent.kro-glass--interactive:hover::before {
+    background: var(--kro-color-accent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .kro-glass.kro-glass--danger::before,
+  .kro-glass--danger.kro-glass--interactive:hover::before {
+    background: var(--kro-color-banner-danger);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

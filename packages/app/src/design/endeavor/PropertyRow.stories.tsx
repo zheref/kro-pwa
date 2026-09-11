@@ -11,6 +11,7 @@ import { KroChip, colorTint, semanticTint } from './KroChip'
 import { PropertyRow } from './PropertyRow'
 import { CardRow, CardRowStack, SurfaceCard } from './SurfaceCard'
 import { BothSchemes, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/PropertyRow',
@@ -99,7 +100,7 @@ const ROWS = (
   </>
 )
 
-export const ValueKinds = {
+const ValueKinds = {
   name: 'Every value kind',
   render: () => (
     <Stage width={520}>
@@ -110,7 +111,7 @@ export const ValueKinds = {
   ),
 }
 
-export const Restacked = {
+const Restacked = {
   name: 'Narrow container · the accessibility-size restack',
   render: () => (
     <Stage width={300}>
@@ -121,7 +122,7 @@ export const Restacked = {
   ),
 }
 
-export const EmptyCollections = {
+const EmptyCollections = {
   name: 'Empty collections read as a placeholder, not a blank',
   render: () => (
     <Stage width={520}>
@@ -153,7 +154,7 @@ export const EmptyCollections = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -187,5 +188,17 @@ export const BothThemes = {
         size="small"
       />
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {ValueKinds.render()}
+      {Restacked.render()}
+      {EmptyCollections.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

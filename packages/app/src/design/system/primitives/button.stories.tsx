@@ -1,6 +1,7 @@
 import { Check, Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button, buttonSizeForDensity } from './button'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
   title: 'Design system/Primitives/Button',
@@ -47,7 +48,8 @@ function Stage({
     <div
       data-theme={theme}
       style={{
-        background: 'var(--kro-color-back)',
+        background:
+          'linear-gradient(135deg, var(--kro-color-header-gradient-indigo), var(--kro-color-header-gradient-grape))',
         color: 'var(--kro-color-fore)',
         padding: 24,
         minHeight: 200,
@@ -59,7 +61,7 @@ function Stage({
   )
 }
 
-export const Variants = {
+const Variants = {
   render: () => (
     <Stage>
       <Row label="Variants">
@@ -73,20 +75,20 @@ export const Variants = {
   ),
 }
 
-export const Sizes = {
+const Sizes = {
   render: () => (
     <Stage>
-      <Row label="Sizes — compact 28px pointer / comfortable 44px touch">
+      <Row label="Sizes — compact default / comfortable mobile / 44px lg">
         <Button size={buttonSizeForDensity('compact')}>Compact</Button>
         <Button size={buttonSizeForDensity('comfortable')}>Comfortable</Button>
-        <Button size="lg">Large</Button>
+        <Button size="lg">Large · 44px floor</Button>
         <Button size="pill">Pill</Button>
       </Row>
       <Row label="Icon only">
-        <Button size="icon" aria-label="Add endeavor">
+        <Button size="icon-sm" aria-label="Add endeavor">
           <Plus />
         </Button>
-        <Button size="icon-sm" aria-label="Add endeavor">
+        <Button size="icon" aria-label="Add endeavor">
           <Plus />
         </Button>
       </Row>
@@ -94,7 +96,7 @@ export const Sizes = {
   ),
 }
 
-export const WithIcons = {
+const WithIcons = {
   name: 'With icons · lucide, mapped from SF Symbols',
   render: () => (
     <Stage>
@@ -113,7 +115,7 @@ export const WithIcons = {
   ),
 }
 
-export const Disabled = {
+const Disabled = {
   name: 'Disabled · the fade is applied once',
   render: () => (
     <Stage>
@@ -143,7 +145,7 @@ export const Disabled = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
     <Stage theme="dark">
       <Row label="Variants">
@@ -153,5 +155,39 @@ export const DarkScheme = {
         <Button variant="destructive">Delete endeavor</Button>
       </Row>
     </Stage>
+  ),
+}
+
+const Densities = {
+  name: 'Densities · compact default, comfortable for mobile',
+  render: () => (
+    <Stage>
+      <Row label="Compact · default">
+        <Button size={buttonSizeForDensity('compact')} variant="primary">
+          Start session
+        </Button>
+        <Button size={buttonSizeForDensity('compact')}>Reschedule</Button>
+      </Row>
+      <Row label="Comfortable · mobile">
+        <Button size={buttonSizeForDensity('comfortable')} variant="primary">
+          Start session
+        </Button>
+        <Button size={buttonSizeForDensity('comfortable')}>Reschedule</Button>
+      </Row>
+    </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Variants.render()}
+      {Sizes.render()}
+      {WithIcons.render()}
+      {Disabled.render()}
+      {DarkScheme.render()}
+      {Densities.render()}
+    </StoryGallery>
   ),
 }

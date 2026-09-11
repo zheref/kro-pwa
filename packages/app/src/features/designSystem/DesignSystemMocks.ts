@@ -16,16 +16,16 @@ const fragment = (selectedStoryId: string): DesignSystemFragmentProps => ({
 })
 
 export const designSystemMocks = {
-  /** Lands on the first story — Tokens / Palette. */
+  /** Lands on the first gallery — Tokens. */
   default: fragment(STORY_CATALOG.defaultStoryId),
   /** A primitive, so the canvas is a control rather than a token grid. */
-  buttonVariants: fragment('Button/Variants'),
+  buttonVariants: fragment('Button/Gallery'),
   /** An overlay primitive — the trigger is what the gallery shows. */
-  dialogDefault: fragment('Dialog/Default'),
+  dialogDefault: fragment('Dialog/Gallery'),
   /** The endeavor card matrix, the kit's densest story. */
-  endeavorCard: fragment('EndeavorCard/BadgeMatrix'),
+  endeavorCard: fragment('EndeavorCard/Gallery'),
   /** Bottom chrome — the FAB against the busy backdrop. */
-  chromeFab: fragment('LiquidGlassFAB/PerTabGlyphs'),
+  chromeFab: fragment('LiquidGlassFAB/Gallery'),
   /** A story id the catalog does not have — the Fragment falls back. */
   unknown: fragment('NotAComponent/NotAStory'),
   /** The last chrome story, so the nav has to scroll to stay honest. */

@@ -10,6 +10,7 @@
 import { POPOVER_SIZE } from '../system/primitives/popover'
 import { CompactPresentationHeader } from './CompactPresentationHeader'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/CompactPresentationHeader',
@@ -38,7 +39,7 @@ function Panel({
   )
 }
 
-export const Dismiss = {
+const Dismiss = {
   name: 'Dismiss · the Inbox popover width',
   render: () => (
     <Stage>
@@ -53,7 +54,7 @@ export const Dismiss = {
   ),
 }
 
-export const Back = {
+const Back = {
   name: 'Back · a pushed Triage step',
   render: () => (
     <Stage>
@@ -68,7 +69,7 @@ export const Back = {
   ),
 }
 
-export const TitleOnly = {
+const TitleOnly = {
   name: 'Title only · no leading control',
   render: () => (
     <Stage>
@@ -90,7 +91,7 @@ export const TitleOnly = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -102,5 +103,17 @@ export const BothThemes = {
         />
       </Panel>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Dismiss.render()}
+      {Back.render()}
+      {TitleOnly.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

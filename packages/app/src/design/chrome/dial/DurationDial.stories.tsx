@@ -1,5 +1,6 @@
 import { BothSchemes, Stage } from '../Stage'
 import { DEFAULT_DURATION_PRESETS, DurationDial } from './DurationDial'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * DurationDial — drag the rim, or pick a preset.
@@ -43,7 +44,7 @@ function Centre({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const Pomodoro = {
+const Pomodoro = {
   name: 'A 25-minute pomodoro, both schemes',
   render: () => (
     <BothSchemes height={420}>
@@ -56,7 +57,7 @@ export const Pomodoro = {
   ),
 }
 
-export const AcrossTheRange = {
+const AcrossTheRange = {
   name: 'Across the range — 0, 15, 45, 60 minutes',
   render: () => (
     <Stage height={340} label="Arc from empty to closed">
@@ -75,7 +76,7 @@ export const AcrossTheRange = {
   ),
 }
 
-export const Presets = {
+const Presets = {
   name: `Preset pills — canon's ${DEFAULT_DURATION_PRESETS.join(' / ')}`,
   render: () => (
     <BothSchemes height={420}>
@@ -88,7 +89,7 @@ export const Presets = {
   ),
 }
 
-export const BetweenPresets = {
+const BetweenPresets = {
   name: 'Between presets — no pill is selected',
   render: () => (
     <Stage height={420} label="33 minutes">
@@ -99,7 +100,7 @@ export const BetweenPresets = {
   ),
 }
 
-export const NinetyMinutes = {
+const NinetyMinutes = {
   name: 'The 90-minute preset — closed arc, honest readout',
   render: () => (
     <Stage theme="dark" height={420} label="Canon's dial only sweeps 60">
@@ -111,7 +112,7 @@ export const NinetyMinutes = {
   ),
 }
 
-export const ReadOnly = {
+const ReadOnly = {
   name: 'Read-only — canon`s staticDuration form',
   render: () => (
     <Stage height={420} label="Not focusable, not draggable">
@@ -119,5 +120,19 @@ export const ReadOnly = {
         <DurationDial seconds={15 * 60} readOnly />
       </Centre>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Pomodoro.render()}
+      {AcrossTheRange.render()}
+      {Presets.render()}
+      {BetweenPresets.render()}
+      {NinetyMinutes.render()}
+      {ReadOnly.render()}
+    </StoryGallery>
   ),
 }

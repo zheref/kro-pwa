@@ -11,13 +11,14 @@
 import { CardBadge, RewardBadge, UrgencyBadge } from './CardBadge'
 import { endeavorUrgencies } from './endeavorCardModel'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/CardBadge',
   component: CardBadge,
 }
 
-export const Urgency = {
+const Urgency = {
   name: 'Urgency · all three levels',
   render: () => (
     <Stage>
@@ -32,7 +33,7 @@ export const Urgency = {
   ),
 }
 
-export const CompactUrgency = {
+const CompactUrgency = {
   name: 'Urgency · the circle form used on small cards',
   render: () => (
     <Stage>
@@ -47,7 +48,7 @@ export const CompactUrgency = {
   ),
 }
 
-export const Reward = {
+const Reward = {
   name: 'Reward · bolt plus amount',
   render: () => (
     <Stage>
@@ -62,7 +63,7 @@ export const Reward = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes · the pills do not flip',
   render: () => (
     <BothSchemes>
@@ -73,5 +74,17 @@ export const BothThemes = {
         <RewardBadge amount={50} />
       </div>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Urgency.render()}
+      {CompactUrgency.render()}
+      {Reward.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

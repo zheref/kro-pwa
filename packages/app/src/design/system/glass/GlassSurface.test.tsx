@@ -33,6 +33,22 @@ describe('GlassSurface', () => {
     )
   })
 
+  it('tints control glass with the live accent or the danger role', () => {
+    const { rerender } = render(
+      <GlassSurface material="control" tint="accent" data-testid="surface" />,
+    )
+    expect(screen.getByTestId('surface').className).toContain(
+      'kro-glass--accent',
+    )
+
+    rerender(
+      <GlassSurface material="control" tint="danger" data-testid="surface" />,
+    )
+    expect(screen.getByTestId('surface').className).toContain(
+      'kro-glass--danger',
+    )
+  })
+
   it('drops the ring for a hairline on a bar, and raises it once scrolled', () => {
     const { rerender } = render(
       <GlassSurface material="bar" data-testid="surface" />,

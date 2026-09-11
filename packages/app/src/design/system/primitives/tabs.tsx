@@ -1,5 +1,6 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import type { ComponentPropsWithoutRef } from 'react'
+import { type ControlDensity, DEFAULT_CONTROL_DENSITY } from '../density'
 import { cn } from '../utils/cn'
 
 /**
@@ -17,16 +18,24 @@ import { cn } from '../utils/cn'
  */
 export const Tabs = TabsPrimitive.Root
 
+export interface TabsListProps
+  extends ComponentPropsWithoutRef<typeof TabsPrimitive.List> {
+  readonly density?: ControlDensity
+}
+
 export function TabsList({
   className,
+  density = DEFAULT_CONTROL_DENSITY,
   ...rest
-}: ComponentPropsWithoutRef<typeof TabsPrimitive.List>) {
+}: TabsListProps) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
+      data-density={density}
       className={cn(
-        'kro-glass kro-glass--control inline-flex h-11 items-center justify-center',
+        'kro-glass kro-glass--control inline-flex items-center justify-center',
         'gap-kro-tiny p-kro-tiny',
+        density === 'compact' ? 'h-6' : 'h-9',
         className,
       )}
       {...rest}
@@ -34,23 +43,31 @@ export function TabsList({
   )
 }
 
+export interface TabsTriggerProps
+  extends ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
+  readonly density?: ControlDensity
+}
+
 export function TabsTrigger({
   className,
+  density = DEFAULT_CONTROL_DENSITY,
   ...rest
-}: ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>) {
+}: TabsTriggerProps) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
+      data-density={density}
       className={cn(
-        'inline-flex h-9 flex-1 items-center justify-center gap-kro-small',
-        'whitespace-nowrap rounded-kro-pill px-kro-medium font-medium text-sm',
+        'inline-flex flex-1 items-center justify-center gap-kro-small',
+        'whitespace-nowrap rounded-kro-pill px-kro-small font-medium',
+        density === 'compact' ? 'h-5 text-xs' : 'h-7 text-sm',
         'text-kro-fore-secondary',
         'kro-motion-quick transition-[color,background-color,box-shadow]',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
         'data-[state=active]:bg-kro-absolute data-[state=active]:text-kro-fore',
         'data-[state=active]:shadow-kro-subtle',
         'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
-        "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+        "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3.5",
         className,
       )}
       {...rest}

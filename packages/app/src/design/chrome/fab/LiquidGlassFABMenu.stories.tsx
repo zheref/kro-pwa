@@ -2,6 +2,7 @@ import { GLOW_SHAPES } from '../glow/RotatingGlow'
 import { BothSchemes, Stage } from '../Stage'
 import { FAB_INSETS } from '../layout/chromeLayout'
 import { type FABMenuEntry, LiquidGlassFABMenu } from './LiquidGlassFABMenu'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * LiquidGlassFABMenu — KroApple's quick-input menu.
@@ -49,7 +50,7 @@ function Anchored({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const Collapsed = {
+const Collapsed = {
   name: 'Collapsed — only the disc',
   render: () => (
     <BothSchemes height={320}>
@@ -67,7 +68,7 @@ export const Collapsed = {
   ),
 }
 
-export const Expanded = {
+const Expanded = {
   name: 'Expanded — four labelled actions',
   render: () => (
     <BothSchemes height={420}>
@@ -85,7 +86,7 @@ export const Expanded = {
   ),
 }
 
-export const Interactive = {
+const Interactive = {
   name: 'Interactive — tap to open, choose to close',
   render: () => (
     <Stage height={420} label="Uncontrolled">
@@ -100,7 +101,7 @@ export const Interactive = {
   ),
 }
 
-export const ExpandedWithGlow = {
+const ExpandedWithGlow = {
   name: 'Expanded, glowing — the halo stays on the disc',
   render: () => (
     <Stage theme="dark" height={420} label="Glow scoped to the button">
@@ -117,7 +118,7 @@ export const ExpandedWithGlow = {
   ),
 }
 
-export const SingleAction = {
+const SingleAction = {
   name: 'One action — the menu still unfurls',
   render: () => (
     <Stage height={320} label="Single entry">
@@ -130,5 +131,18 @@ export const SingleAction = {
         />
       </Anchored>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Collapsed.render()}
+      {Expanded.render()}
+      {Interactive.render()}
+      {ExpandedWithGlow.render()}
+      {SingleAction.render()}
+    </StoryGallery>
   ),
 }

@@ -9,7 +9,6 @@ import { StoreProvider } from '../../../../library/StoreProvider'
 import { makeStore, stubbedThunkExtra } from '../../../../library/store'
 import { DestinationKind } from '../../../main/SidebarDestination'
 import { DesignSystemPage } from '../DesignSystemPage'
-import { STORY_CATALOG } from '../../storyCatalog'
 
 afterEach(cleanup)
 
@@ -37,9 +36,7 @@ describe('DesignSystemPage', () => {
 
     expect(screen.getByTestId('design-system-catalog')).toBeTruthy()
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      STORY_CATALOG.stories.find(
-        (story) => story.id === STORY_CATALOG.defaultStoryId,
-      )?.name,
+      'Tokens',
     )
   })
 
@@ -47,10 +44,12 @@ describe('DesignSystemPage', () => {
     renderPage()
 
     await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Variants' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Button (Primitive)' }),
+    )
 
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      'Variants',
+      'Button',
     )
   })
 })

@@ -9,13 +9,14 @@
 
 import { InlineBanner } from './InlineBanner'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/InlineBanner',
   component: InlineBanner,
 }
 
-export const Kinds = {
+const Kinds = {
   name: 'The three kinds',
   render: () => (
     <Stage width={520}>
@@ -39,7 +40,7 @@ export const Kinds = {
   ),
 }
 
-export const WithRecovery = {
+const WithRecovery = {
   name: 'With a recovery action',
   render: () => (
     <Stage width={520}>
@@ -53,7 +54,7 @@ export const WithRecovery = {
   ),
 }
 
-export const LongMessage = {
+const LongMessage = {
   name: 'A message that wraps',
   render: () => (
     <Stage width={420}>
@@ -67,7 +68,7 @@ export const LongMessage = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -81,5 +82,17 @@ export const BothThemes = {
         message="Read-only: this host does not accept edits."
       />
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Kinds.render()}
+      {WithRecovery.render()}
+      {LongMessage.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

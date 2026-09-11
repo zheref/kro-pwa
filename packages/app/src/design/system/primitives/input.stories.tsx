@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Input } from './input'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
   title: 'Design system/Primitives/Input',
@@ -73,7 +74,7 @@ function Field({
   )
 }
 
-export const Default = {
+const Default = {
   name: 'Default · on a card',
   render: () => (
     <Stage>
@@ -87,7 +88,7 @@ export const Default = {
   ),
 }
 
-export const Invalid = {
+const Invalid = {
   name: 'Invalid · named, not just red',
   render: () => (
     <Stage>
@@ -98,7 +99,7 @@ export const Invalid = {
   ),
 }
 
-export const Disabled = {
+const Disabled = {
   render: () => (
     <Stage>
       <Field
@@ -111,7 +112,7 @@ export const Disabled = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme · the border is why it stays visible',
   render: () => (
     <Stage theme="dark">
@@ -122,5 +123,32 @@ export const DarkScheme = {
         <Input disabled defaultValue="Google Calendar" />
       </Field>
     </Stage>
+  ),
+}
+
+const Densities = {
+  name: 'Densities · compact default, comfortable for mobile',
+  render: () => (
+    <Stage>
+      <Field label="Compact · default">
+        <Input density="compact" placeholder="What needs doing?" />
+      </Field>
+      <Field label="Comfortable · mobile">
+        <Input density="comfortable" placeholder="What needs doing?" />
+      </Field>
+    </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Default.render()}
+      {Invalid.render()}
+      {Disabled.render()}
+      {DarkScheme.render()}
+      {Densities.render()}
+    </StoryGallery>
   ),
 }

@@ -1,4 +1,5 @@
 import { Button } from './button'
+import { StoryGallery } from '../../storybook/storyGallery'
 import {
   POPOVER_SIZE,
   Popover,
@@ -39,10 +40,10 @@ function Rows({ count }: { count: number }) {
   )
 }
 
-export const Inbox = {
+const Inbox = {
   name: `Inbox · ${POPOVER_SIZE.inbox.width}×${POPOVER_SIZE.inbox.height}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="secondary">Inbox</Button>
       </PopoverTrigger>
@@ -67,10 +68,10 @@ export const Inbox = {
   ),
 }
 
-export const Visibility = {
+const Visibility = {
   name: `Visibility · ${POPOVER_SIZE.visibility.width}×${POPOVER_SIZE.visibility.height}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="secondary">Visibility</Button>
       </PopoverTrigger>
@@ -95,10 +96,10 @@ export const Visibility = {
   ),
 }
 
-export const Profile = {
+const Profile = {
   name: `Profile · width ${POPOVER_SIZE.profile.width}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost">Profile</Button>
       </PopoverTrigger>
@@ -120,13 +121,13 @@ export const Profile = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
     <div
       data-theme="dark"
       style={{ padding: 40, background: 'var(--kro-color-back)' }}
     >
-      <Popover defaultOpen>
+      <Popover>
         <PopoverTrigger asChild>
           <Button variant="secondary">Visibility</Button>
         </PopoverTrigger>
@@ -135,5 +136,17 @@ export const DarkScheme = {
         </PopoverContent>
       </Popover>
     </div>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Inbox.render()}
+      {Visibility.render()}
+      {Profile.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

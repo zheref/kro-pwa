@@ -3,7 +3,7 @@
  * 1:1 (`RC-11`). Semantic queries only — never a DOM snapshot of a story
  * canvas, which belongs to the snapshot suites under `design/`.
  */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { designSystemMocks } from '../../DesignSystemMocks'
@@ -11,7 +11,6 @@ import {
   CATALOG_STORY_ROW_HEIGHT,
   DesignSystemFragment,
 } from '../DesignSystemFragment'
-import { STORY_CATALOG } from '../../storyCatalog'
 
 afterEach(cleanup)
 
@@ -19,20 +18,20 @@ describe('DesignSystemFragment', () => {
   it('lists every catalog group in the inner sidebar', () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 
+    const nav = screen.getByRole('navigation', { name: 'Component library' })
+
+    expect(nav).toBeTruthy()
     expect(
-      screen.getByRole('navigation', { name: 'Component library' }),
+      within(nav).getByRole('heading', { level: 2, name: 'Tokens' }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Tokens' }),
+      within(nav).getByRole('heading', { level: 2, name: 'Primitives' }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Primitives' }),
+      within(nav).getByRole('heading', { level: 2, name: 'Endeavor' }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Endeavor' }),
-    ).toBeTruthy()
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Chrome' }),
+      within(nav).getByRole('heading', { level: 2, name: 'Chrome' }),
     ).toBeTruthy()
   })
 
@@ -49,14 +48,10 @@ describe('DesignSystemFragment', () => {
         .getByRole('button', { name: 'Primitives' })
         .getAttribute('aria-expanded'),
     ).toBe('false')
-    expect(screen.queryByRole('button', { name: 'Variants' })).toBeNull()
     expect(
-      screen.getByRole('button', {
-        name: STORY_CATALOG.stories.find(
-          (story) => story.id === STORY_CATALOG.defaultStoryId,
-        )?.name,
-      }),
-    ).toBeTruthy()
+      screen.queryByRole('button', { name: 'Button (Primitive)' }),
+    ).toBeNull()
+    expect(screen.getByRole('button', { name: 'Tokens (Token)' })).toBeTruthy()
   })
 
   it('paints the canvas on the page field, not in a glass well', () => {
@@ -81,35 +76,27 @@ describe('DesignSystemFragment', () => {
     expect(scroller.className).toMatch(/overflow-y-auto/)
   })
 
-  it('packs component titles and variant rows denser than the product sidebar', () => {
+  it('packs one row per title, with the kind on the trailing edge', () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 
-    const componentTitle = screen.getByRole('heading', {
-      level: 3,
-      name: 'Tokens',
-    })
-    const variant = screen.getByRole('button', {
-      name: STORY_CATALOG.stories.find(
-        (story) => story.id === STORY_CATALOG.defaultStoryId,
-      )?.name,
-    })
+    const row = screen.getByRole('button', { name: 'Tokens (Token)' })
+    const badge = row.querySelector('[data-slot="story-kind-badge"]')
 
-    expect(componentTitle.className).toMatch(/text-\[11px\]/)
-    expect(variant.className).toMatch(/text-\[11px\]/)
-    expect(variant.style.minHeight).toBe(`${CATALOG_STORY_ROW_HEIGHT}px`)
+    expect(row.className).toMatch(/text-\[11px\]/)
+    expect(row.className).toMatch(/justify-between/)
+    expect(row.style.minHeight).toBe(`${CATALOG_STORY_ROW_HEIGHT}px`)
+    expect(badge?.textContent).toBe('Token')
   })
 
   it('marks the selected story and paints its name on the canvas', () => {
     render(<DesignSystemFragment {...designSystemMocks.buttonVariants} />)
 
     const selected = screen.getByRole('button', {
-      name: STORY_CATALOG.stories.find(
-        (story) => story.id === 'Button/Variants',
-      )?.name,
+      name: 'Button (Primitive)',
     })
     expect(selected.getAttribute('aria-current')).toBe('true')
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      'Variants',
+      'Button',
     )
   })
 
@@ -123,15 +110,19 @@ describe('DesignSystemFragment', () => {
     )
 
     await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Variants' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Button (Primitive)' }),
+    )
 
-    expect(onSelectStory).toHaveBeenCalledWith('Button/Variants')
+    expect(onSelectStory).toHaveBeenCalledWith('Button/Gallery')
   })
 
   it('expands a collapsed section so its stories can be reached', async () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 
-    expect(screen.queryByRole('button', { name: 'Variants' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: 'Button (Primitive)' }),
+    ).toBeNull()
 
     await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
 
@@ -140,7 +131,9 @@ describe('DesignSystemFragment', () => {
         .getByRole('button', { name: 'Primitives' })
         .getAttribute('aria-expanded'),
     ).toBe('true')
-    expect(screen.getByRole('button', { name: 'Variants' })).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: 'Button (Primitive)' }),
+    ).toBeTruthy()
   })
 
   it('collapses an open section so its stories leave the tree', async () => {
@@ -153,23 +146,14 @@ describe('DesignSystemFragment', () => {
         .getByRole('button', { name: 'Tokens' })
         .getAttribute('aria-expanded'),
     ).toBe('false')
-    expect(
-      screen.queryByRole('button', {
-        name: STORY_CATALOG.stories.find(
-          (story) => story.id === STORY_CATALOG.defaultStoryId,
-        )?.name,
-      }),
-    ).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Tokens (Token)' })).toBeNull()
   })
 
   it('falls back to the default story when the selected id is unknown', () => {
     render(<DesignSystemFragment {...designSystemMocks.unknown} />)
 
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      selectedStoryName(STORY_CATALOG.defaultStoryId),
+      'Tokens',
     )
   })
 })
-
-const selectedStoryName = (id: string): string =>
-  STORY_CATALOG.stories.find((story) => story.id === id)?.name ?? id

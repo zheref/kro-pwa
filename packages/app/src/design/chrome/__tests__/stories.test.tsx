@@ -51,19 +51,11 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
 ]
 
 /**
- * `EmojiPicker`'s last story mounts a Radix popover trigger, and anything built
- * on Radix's popper costs seconds per mount under jsdom — measured in
- * `system/primitives/__tests__/radixEnvironment.tsx`, where it turned
- * `make test` red. The design system excludes its own Popover and DropdownMenu
- * for the same reason.
- *
- * The story is excluded, not the component: the grid itself is snapshotted by
- * the three stories above it, and the trigger contract is asserted in
- * `EmojiPickerPopover.test.tsx`. The open panel belongs to the Storybook
- * test-runner (`pnpm --filter @kro/web test:storybook`) and to the screenshots
- * in the PR.
+ * `EmojiPicker`'s gallery includes the popover trigger. The open panel
+ * belongs to the Storybook test-runner; the grid itself is still in the
+ * gallery via the bounded-palette sections above it.
  */
-const SKIPPED_STORIES = new Set(['EmojiPicker/InPopover'])
+const SKIPPED_STORIES = new Set<string>()
 
 function storiesOf(module: StoryModule): Array<[string, Story]> {
   return Object.entries(module)
@@ -105,21 +97,21 @@ afterEach(() => {
   teardown()
 })
 
-describe('every chrome component ships at least three stories', () => {
+describe('every chrome component ships one gallery page', () => {
   for (const [component, module] of MODULES) {
-    it(`${component} has 3 or more`, () => {
-      expect(storiesOf(module).length).toBeGreaterThanOrEqual(3)
+    it(`${component} is one Gallery`, () => {
+      expect(storiesOf(module).map(([name]) => name)).toEqual(['Gallery'])
     })
   }
 })
 
-describe('every chrome component has at least three snapshotted stories', () => {
+describe('every chrome component has a snapshotted gallery', () => {
   for (const [component, module] of MODULES) {
-    it(`${component} snapshots 3 or more`, () => {
+    it(`${component} snapshots its gallery`, () => {
       const snapshotted = storiesOf(module).filter(
         ([exportName]) => !SKIPPED_STORIES.has(`${component}/${exportName}`),
       )
-      expect(snapshotted.length).toBeGreaterThanOrEqual(3)
+      expect(snapshotted.length).toBeGreaterThanOrEqual(1)
     })
   }
 })

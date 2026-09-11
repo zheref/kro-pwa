@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { GlassSurface } from './GlassSurface'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * KroGlass, on the busy backdrops it has to survive.
@@ -85,7 +86,7 @@ function CardBody() {
   )
 }
 
-export const Surface = {
+const Surface = {
   name: 'Surface · a floating card',
   render: () => (
     <Stage>
@@ -96,7 +97,7 @@ export const Surface = {
   ),
 }
 
-export const Control = {
+const Control = {
   name: 'Control · the shallower blur',
   render: () => (
     <Stage height={240}>
@@ -111,10 +112,12 @@ export const Control = {
           as="button"
           material="control"
           interactive
+          tint="accent"
           style={{
-            padding: '0 20px',
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
             fontWeight: 600,
-            color: 'var(--kro-color-fore)',
           }}
         >
           Start session
@@ -123,7 +126,39 @@ export const Control = {
           as="button"
           material="control"
           interactive
-          style={{ width: 44, color: 'var(--kro-color-fore)' }}
+          style={{
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
+          Reschedule
+        </GlassSurface>
+        <GlassSurface
+          as="button"
+          material="control"
+          interactive
+          tint="danger"
+          style={{
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          Delete
+        </GlassSurface>
+        <GlassSurface
+          as="button"
+          material="control"
+          interactive
+          style={{
+            width: 24,
+            height: 24,
+            color: 'var(--kro-color-fore)',
+          }}
         >
           +
         </GlassSurface>
@@ -138,7 +173,7 @@ export const Control = {
   ),
 }
 
-export const FixedBar = {
+const FixedBar = {
   name: 'Bar · fixed, with content scrolling beneath',
   render: () => (
     <div style={{ position: 'relative', height: '100vh', overflow: 'auto' }}>
@@ -187,7 +222,7 @@ export const FixedBar = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme',
   render: () => (
     <Stage theme="dark">
@@ -211,7 +246,7 @@ export const DarkScheme = {
   ),
 }
 
-export const BothSchemes = {
+const BothSchemes = {
   name: 'Both schemes, side by side',
   render: () => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -229,7 +264,7 @@ export const BothSchemes = {
   ),
 }
 
-export const SidebarColumn = {
+const SidebarColumn = {
   name: 'Sidebar · a split-view column over the ramp',
   render: () => (
     <Stage height={480}>
@@ -263,7 +298,7 @@ export const SidebarColumn = {
   ),
 }
 
-export const FloatingDock = {
+const FloatingDock = {
   name: 'Dock · the floating tab bar',
   render: () => (
     <Stage height={240}>
@@ -292,5 +327,20 @@ export const FloatingDock = {
         </GlassSurface>
       </div>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Surface.render()}
+      {Control.render()}
+      {FixedBar.render()}
+      {DarkScheme.render()}
+      {BothSchemes.render()}
+      {SidebarColumn.render()}
+      {FloatingDock.render()}
+    </StoryGallery>
   ),
 }

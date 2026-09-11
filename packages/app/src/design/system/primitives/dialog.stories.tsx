@@ -1,4 +1,5 @@
 import { Button } from './button'
+import { StoryGallery } from '../../storybook/storyGallery'
 import {
   Dialog,
   DialogClose,
@@ -16,7 +17,7 @@ export default {
   parameters: { layout: 'centered' },
 }
 
-export const Default = {
+const Default = {
   render: () => (
     <Dialog>
       <DialogTrigger asChild>
@@ -40,10 +41,13 @@ export const Default = {
   ),
 }
 
-export const NoClose = {
+const NoClose = {
   name: 'No close · a flow that must be completed',
   render: () => (
-    <Dialog defaultOpen>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="primary">Finish setup</Button>
+      </DialogTrigger>
       <DialogContent hideClose>
         <DialogHeader>
           <DialogTitle>Finish setting up Kro</DialogTitle>
@@ -60,10 +64,13 @@ export const NoClose = {
   ),
 }
 
-export const Destructive = {
+const Destructive = {
   name: 'Destructive · the action is named, not just red',
   render: () => (
-    <Dialog defaultOpen>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="destructive">Delete endeavor</Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete “Write the KroTokens port”?</DialogTitle>
@@ -83,10 +90,13 @@ export const Destructive = {
   ),
 }
 
-export const LongContent = {
+const LongContent = {
   name: 'Long content · the panel stays glass',
   render: () => (
-    <Dialog defaultOpen>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="secondary">Session history</Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Session history</DialogTitle>
@@ -115,5 +125,17 @@ export const LongContent = {
         </div>
       </DialogContent>
     </Dialog>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Default.render()}
+      {NoClose.render()}
+      {Destructive.render()}
+      {LongContent.render()}
+    </StoryGallery>
   ),
 }

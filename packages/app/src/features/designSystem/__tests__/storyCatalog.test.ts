@@ -1,41 +1,50 @@
 /**
  * The catalog against the three snapshot suites: every design-system
- * story module is present, each component still ships ≥3 stories, and an
+ * story module is present, each component ships one gallery page, and an
  * unknown id falls back to the default rather than rendering blank.
  */
 import { describe, expect, it } from 'vitest'
 import {
   STORY_CATALOG,
   STORY_CATALOG_GROUPS,
+  componentOfStory,
   placementOfStory,
   storyById,
   storyOrDefault,
 } from '../storyCatalog'
 
 describe('the design-system catalog', () => {
-  it('groups Tokens, Materials, Primitives, Endeavor and Chrome', () => {
+  it('groups Tokens, Materials, Primitives, Endeavor, Chrome and the HIG catalog', () => {
     expect(STORY_CATALOG.groups.map((group) => group.title)).toEqual([
       'Tokens',
       'Materials',
       'Primitives',
       'Endeavor',
       'Chrome',
+      'HIG',
+      'HIG · Actions',
+      'HIG · Content',
+      'HIG · Layout',
+      'HIG · Navigation',
+      'HIG · Presentation',
+      'HIG · Selection',
+      'HIG · Status',
     ])
   })
 
-  it('ships at least three stories per component, matching the snapshot floor', () => {
+  it('ships one gallery per component, matching the snapshot suites', () => {
     for (const group of STORY_CATALOG_GROUPS) {
       for (const component of group.components) {
         expect(
-          component.stories.length,
+          component.stories.map((story) => story.exportName),
           `${component.title} has ${component.stories.length} stories`,
-        ).toBeGreaterThanOrEqual(3)
+        ).toEqual(['Gallery'])
       }
     }
   })
 
   it('lands on a real default story rather than an empty canvas', () => {
-    expect(STORY_CATALOG.defaultStoryId).toBe('Tokens/Palette')
+    expect(STORY_CATALOG.defaultStoryId).toBe('Tokens/Gallery')
     expect(
       storyById(STORY_CATALOG, STORY_CATALOG.defaultStoryId)?.render,
     ).toBeTypeOf('function')
@@ -44,8 +53,8 @@ describe('the design-system catalog', () => {
 
 describe('storyOrDefault', () => {
   it('returns the named story when it exists', () => {
-    expect(storyOrDefault(STORY_CATALOG, 'Button/Variants').id).toBe(
-      'Button/Variants',
+    expect(storyOrDefault(STORY_CATALOG, 'Button/Gallery').id).toBe(
+      'Button/Gallery',
     )
   })
 
@@ -63,7 +72,7 @@ describe('storyOrDefault', () => {
 
 describe('placementOfStory', () => {
   it('puts a primitive under Primitives / Button', () => {
-    expect(placementOfStory(STORY_CATALOG, 'Button/Variants')).toEqual({
+    expect(placementOfStory(STORY_CATALOG, 'Button/Gallery')).toEqual({
       groupId: 'Primitives',
       componentId: 'Button',
     })
@@ -81,6 +90,20 @@ describe('placementOfStory', () => {
   it('follows the fallback story when the id is unknown', () => {
     expect(placementOfStory(STORY_CATALOG, 'NotAComponent/Missing')).toEqual(
       placementOfStory(STORY_CATALOG, STORY_CATALOG.defaultStoryId),
+    )
+  })
+})
+
+describe('componentOfStory', () => {
+  it('names the leaf and its kind so the sidebar can badge it', () => {
+    expect(componentOfStory(STORY_CATALOG, 'Button/Gallery')?.kind).toBe(
+      'primitive',
+    )
+    expect(componentOfStory(STORY_CATALOG, 'OnGradient/Gallery')?.kind).toBe(
+      'modifier',
+    )
+    expect(componentOfStory(STORY_CATALOG, 'HIG Buttons/Gallery')?.kind).toBe(
+      'pattern',
     )
   })
 })

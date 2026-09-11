@@ -1,5 +1,6 @@
 import { GlassSurface } from '../glass/GlassSurface'
 import { GradientBackdrop, GradientContent } from './GradientBackdrop'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * The `indigoGrape` header slab.
@@ -94,27 +95,27 @@ function Scroller({
   )
 }
 
-export const TopInset = {
+const TopInset = {
   name: 'Top inset · content scrolls beneath',
   render: () => <Scroller />,
 }
 
-export const FixedToViewport = {
+const FixedToViewport = {
   name: 'Fixed to the viewport · the mobile shell',
   render: () => <Scroller fixed />,
 }
 
-export const HardEdge = {
+const HardEdge = {
   name: 'Hard edge · the fade turned off',
   render: () => <Scroller hardEdge />,
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme',
   render: () => <Scroller theme="dark" />,
 }
 
-export const UnderGlass = {
+const UnderGlass = {
   name: 'Behind a glass bar · the desktop slab',
   render: () => (
     <div style={{ position: 'relative', height: '100vh', overflow: 'auto' }}>
@@ -145,5 +146,18 @@ export const UnderGlass = {
         <Day />
       </GradientContent>
     </div>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {TopInset.render()}
+      {FixedToViewport.render()}
+      {HardEdge.render()}
+      {DarkScheme.render()}
+      {UnderGlass.render()}
+    </StoryGallery>
   ),
 }

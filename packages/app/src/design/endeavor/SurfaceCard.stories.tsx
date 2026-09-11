@@ -11,13 +11,14 @@ import { PropertyRow } from './PropertyRow'
 import { CardRow, CardRowStack, SectionCard, SurfaceCard } from './SurfaceCard'
 import { semanticTint } from './KroChip'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/SurfaceCard',
   component: SurfaceCard,
 }
 
-export const Plain = {
+const Plain = {
   name: 'A plain grouped card',
   render: () => (
     <Stage width={460}>
@@ -37,7 +38,7 @@ export const Plain = {
   ),
 }
 
-export const SectionRows = {
+const SectionRows = {
   name: 'SectionCard · header outside, inset hairlines inside',
   render: () => (
     <Stage width={460}>
@@ -75,7 +76,7 @@ export const SectionRows = {
   ),
 }
 
-export const SectionWithAction = {
+const SectionWithAction = {
   name: 'SectionCard · count and a trailing action',
   render: () => (
     <Stage width={460}>
@@ -94,7 +95,7 @@ export const SectionWithAction = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -115,5 +116,17 @@ export const BothThemes = {
         </CardRowStack>
       </SectionCard>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Plain.render()}
+      {SectionRows.render()}
+      {SectionWithAction.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

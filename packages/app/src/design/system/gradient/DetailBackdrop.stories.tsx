@@ -1,5 +1,6 @@
 import { GlassSurface } from '../glass/GlassSurface'
 import { DetailBackdrop } from './DetailBackdrop'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * The page field glass has to refract. A static swatch of the two stops
@@ -11,7 +12,7 @@ export default {
   parameters: { layout: 'fullscreen' },
 }
 
-export const PageField = {
+const PageField = {
   name: 'Page field · vertical ramp',
   render: () => (
     <div style={{ position: 'relative', height: '100vh' }}>
@@ -20,7 +21,7 @@ export const PageField = {
   ),
 }
 
-export const UnderGlass = {
+const UnderGlass = {
   name: 'Behind a glass sidebar · the refraction the field exists for',
   render: () => (
     <div
@@ -55,7 +56,7 @@ export const UnderGlass = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme',
   render: () => (
     <div data-theme="dark" style={{ position: 'relative', height: '100vh' }}>
@@ -79,5 +80,16 @@ export const DarkScheme = {
         <span>Earn</span>
       </GlassSurface>
     </div>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {PageField.render()}
+      {UnderGlass.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

@@ -1,9 +1,9 @@
 /**
  * Where a Storybook title comes from, and how to use what it names.
  *
- * The gallery mixes HIG components, Kro primitives, materials, tokens and
- * HIG restages of an existing export. The sidebar title is the HIG or kit
- * name; the kind is how to treat it.
+ * The gallery mixes HIG components, Fluent 2 titles, Kro primitives,
+ * materials, tokens and restages of an existing export. The sidebar title
+ * is the HIG / Fluent / kit name; the kind is how to treat it.
  */
 
 export const STORY_KINDS = {
@@ -131,14 +131,52 @@ const HIG_PATTERN_TITLES: ReadonlySet<string> = new Set([
   'HIG/Status/Activity rings',
 ])
 
+/** Fluent 2 titles that restage an existing Kro/HIG export. */
+const FLUENT_PATTERN_TITLES: ReadonlySet<string> = new Set([
+  'Fluent 2/Actions/Button',
+  'Fluent 2/Forms/Checkbox',
+  'Fluent 2/Forms/Combobox',
+  'Fluent 2/Forms/Dropdown',
+  'Fluent 2/Forms/Input',
+  'Fluent 2/Forms/Label',
+  'Fluent 2/Forms/Radio group',
+  'Fluent 2/Forms/Rating',
+  'Fluent 2/Forms/Slider',
+  'Fluent 2/Forms/Switch',
+  'Fluent 2/Forms/Textarea',
+  'Fluent 2/Navigation/Tablist',
+  'Fluent 2/Navigation/Toolbar',
+  'Fluent 2/Navigation/Tree',
+  'Fluent 2/Surfaces/Dialog',
+  'Fluent 2/Surfaces/Divider',
+  'Fluent 2/Surfaces/Drawer',
+  'Fluent 2/Surfaces/List',
+  'Fluent 2/Surfaces/Menu',
+  'Fluent 2/Surfaces/Popover',
+  'Fluent 2/Status/Progress bar',
+  'Fluent 2/Status/Toast',
+  'Fluent 2/Content/Image',
+  'Fluent 2/Content/Icon',
+])
+
 export function kindFromStoryTitle(title: string): StoryKind {
   if (title === 'HIG/Overview' || title.startsWith('HIG/Overview/')) {
+    return 'catalog'
+  }
+  if (title === 'Fluent 2/Overview' || title.startsWith('Fluent 2/Overview/')) {
     return 'catalog'
   }
   if (HIG_PATTERN_TITLES.has(title) || title.startsWith('HIG/existing/')) {
     return 'pattern'
   }
+  if (
+    FLUENT_PATTERN_TITLES.has(title) ||
+    title.startsWith('Fluent 2/existing/')
+  ) {
+    return 'pattern'
+  }
   if (title.startsWith('HIG/')) return 'component'
+  if (title.startsWith('Fluent 2/')) return 'component'
   if (title.startsWith('Design system/Primitives/')) return 'primitive'
   if (title.startsWith('Design system/OnGradient')) return 'modifier'
   if (
@@ -234,6 +272,19 @@ export function storyTitleFromId(path: string): string {
     'hig-content-image-views': 'HIG/Content/Image views',
     'hig-content-text-views': 'HIG/Content/Text views',
     'hig-content-web-views': 'HIG/Content/Web views',
+    'fluent-2-overview': 'Fluent 2/Overview',
+    'fluent-2-actions-button': 'Fluent 2/Actions/Button',
+    'fluent-2-actions-link': 'Fluent 2/Actions/Link',
+    'fluent-2-actions-compound-button': 'Fluent 2/Actions/Compound button',
+    'fluent-2-actions-menu-button': 'Fluent 2/Actions/Menu button',
+    'fluent-2-actions-split-button': 'Fluent 2/Actions/Split button',
+    'fluent-2-actions-toggle-button': 'Fluent 2/Actions/Toggle button',
+    'fluent-2-forms-checkbox': 'Fluent 2/Forms/Checkbox',
+    'fluent-2-forms-input': 'Fluent 2/Forms/Input',
+    'fluent-2-forms-switch': 'Fluent 2/Forms/Switch',
+    'fluent-2-content-icon': 'Fluent 2/Content/Icon',
+    'fluent-2-content-image': 'Fluent 2/Content/Image',
+    'fluent-2-status-toast': 'Fluent 2/Status/Toast',
     'design-system-primitives-button': 'Design system/Primitives/Button',
     'design-system-primitives-input': 'Design system/Primitives/Input',
     'design-system-primitives-tabs': 'Design system/Primitives/Tabs',
@@ -266,6 +317,8 @@ export function storyTitleFromId(path: string): string {
   }
   if (mapped[path] !== undefined) return mapped[path]
   if (path.startsWith('hig-')) return `HIG/${path.slice(4)}`
+  if (path.startsWith('fluent-2-'))
+    return `Fluent 2/${path.slice('fluent-2-'.length)}`
   if (path.startsWith('design-system-primitives-')) {
     return `Design system/Primitives/${path.slice('design-system-primitives-'.length)}`
   }

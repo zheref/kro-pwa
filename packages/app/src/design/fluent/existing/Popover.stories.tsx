@@ -1,0 +1,77 @@
+import { Button } from '../../system/primitives/button'
+import { Popover, PopoverTrigger } from '../../system/primitives/popover'
+import { StoryGallery } from '../../storybook/storyGallery'
+import {
+  FluentBothSchemes,
+  FluentDensities,
+  FluentRow,
+  FluentStage,
+} from '../fluentStoryStage'
+
+export default {
+  title: 'Fluent 2/Surfaces/Popover',
+  component: Popover,
+}
+
+const Default = {
+  name: 'Trigger · the panel is Storybook-only (Radix stalls jsdom)',
+  render: () => (
+    <FluentStage>
+      <FluentRow label="Anchored surface">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="secondary">Profile</Button>
+          </PopoverTrigger>
+        </Popover>
+      </FluentRow>
+    </FluentStage>
+  ),
+}
+
+const Disabled = {
+  name: 'Disabled trigger',
+  render: () => (
+    <FluentStage>
+      <FluentRow label="Locked">
+        <Button variant="secondary" disabled>
+          Profile
+        </Button>
+      </FluentRow>
+    </FluentStage>
+  ),
+}
+
+const BothSchemes = {
+  name: 'Light and dark',
+  render: () => (
+    <FluentBothSchemes gradient>
+      <FluentRow label="Trigger">
+        <Button variant="secondary">Profile</Button>
+      </FluentRow>
+    </FluentBothSchemes>
+  ),
+}
+
+const Densities = {
+  name: 'Densities',
+  render: () => (
+    <FluentDensities
+      gradient
+      render={(density) => (
+        <Button size={density === 'compact' ? 'sm' : 'md'}>Profile</Button>
+      )}
+    />
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Default.render()}
+      {Disabled.render()}
+      {BothSchemes.render()}
+      {Densities.render()}
+    </StoryGallery>
+  ),
+}

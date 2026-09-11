@@ -1,4 +1,10 @@
-import type { CSSProperties, ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { readColorRole, readSemanticRole } from './readToken'
 import {
   COLOR_ROLES,
@@ -17,10 +23,11 @@ import { StoryGallery } from '../../storybook/storyGallery'
 /**
  * The token gallery.
  *
- * Swatches read their value through `readToken`, i.e. from the browser's
- * computed style rather than from a list typed into this file — so what the
- * gallery shows is what the page paints, and adding a token to `tokens.css`
- * makes it appear here without an edit.
+ * Computed values are read AFTER mount. Reading them during render is a
+ * hydration mismatch: SSR has no engine and falls back to `var(--kro-…)`,
+ * the client has one and paints a hex. The in-app `/storybook` gallery
+ * server-renders this module, so first paint is the variable; the hex
+ * fills in from `readToken` once the pane exists.
  *
  * `SEMANTIC_ROLES` from `roles.ts`, never `CHIP_ROLES` from
  * `contrastContracts.ts`: the latter imports `tokenSource`, which reads the
@@ -61,7 +68,7 @@ function Pane({
         color: 'var(--kro-color-fore)',
         padding: 'var(--kro-space-large)',
         minHeight: '100%',
-        flex: 1,
+        flex: '1 1 0%',
         fontFamily: 'system-ui, sans-serif',
       }}
     >
@@ -91,7 +98,15 @@ function BothThemes({ children }: { children: ReactNode }) {
   )
 }
 
-function Swatch({ name, value }: { name: string; value: string }) {
+function Swatch({
+  name,
+  paint,
+  caption,
+}: {
+  name: string
+  paint: string
+  caption: string
+}) {
   return (
     <div
       style={{
@@ -102,20 +117,50 @@ function Swatch({ name, value }: { name: string; value: string }) {
     >
       <div
         style={{
-          width: 44,
-          height: 44,
+          width: '44px',
+          height: '44px',
           flexShrink: 0,
           borderRadius: 'var(--kro-radius-small)',
-          background: value,
+          background: paint,
           boxShadow: 'inset 0 0 0 1px var(--kro-color-hairline)',
         }}
       />
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>{name}</div>
         <div style={{ fontSize: 11, color: 'var(--kro-color-fore-secondary)' }}>
-          {value}
+          {caption}
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Computed swatches cannot be read during render: SSR has no engine, the
+ * client does, and that pair is a hydration mismatch. First paint is the
+ * CSS variable (same on both sides); the hex is filled in after mount,
+ * scoped to the nearest `[data-theme]` pane so light and dark disagree.
+ */
+function PaintedSwatch({
+  name,
+  role,
+}: {
+  name: string
+  role: (typeof COLOR_ROLES)[number]
+}) {
+  const fallback = `var(${COLOR_ROLE_VARS[role]})`
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [caption, setCaption] = useState(fallback)
+
+  useEffect(() => {
+    const scope = rootRef.current?.closest('[data-theme]') ?? null
+    const next = readColorRole(role, scope)
+    setCaption(next === '' ? fallback : next)
+  }, [fallback, role])
+
+  return (
+    <div ref={rootRef}>
+      <Swatch name={name} paint={fallback} caption={caption} />
     </div>
   )
 }
@@ -138,13 +183,49 @@ function PaletteGallery() {
   return (
     <Grid>
       {COLOR_ROLES.map((role) => (
-        <Swatch
-          key={role}
-          name={role}
-          value={readColorRole(role) || `var(${COLOR_ROLE_VARS[role]})`}
-        />
+        <PaintedSwatch key={role} name={role} role={role} />
       ))}
     </Grid>
+  )
+}
+
+function SemanticChip({ role }: { role: (typeof SEMANTIC_ROLES)[number] }) {
+  const fallback = `var(${SEMANTIC_ROLE_VARS[role]})`
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [caption, setCaption] = useState('')
+
+  useEffect(() => {
+    const scope = rootRef.current?.closest('[data-theme]') ?? null
+    setCaption(readSemanticRole(role, scope))
+  }, [role])
+
+  return (
+    <div ref={rootRef}>
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          minHeight: '28px',
+          padding: '0 12px',
+          borderRadius: 'var(--kro-radius-pill)',
+          background: fallback,
+          color: 'var(--kro-color-absolute)',
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        {role}
+      </div>
+      <div
+        style={{
+          marginTop: 4,
+          fontSize: 12,
+          color: fallback,
+        }}
+      >
+        tint as label{caption === '' ? '' : ` · ${caption}`}
+      </div>
+    </div>
   )
 }
 
@@ -152,32 +233,7 @@ function SemanticGallery() {
   return (
     <Grid>
       {SEMANTIC_ROLES.map((role) => (
-        <div key={role}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              minHeight: 28,
-              padding: '0 12px',
-              borderRadius: 'var(--kro-radius-pill)',
-              background: `var(${SEMANTIC_ROLE_VARS[role]})`,
-              color: 'var(--kro-color-absolute)',
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            {role}
-          </div>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: 12,
-              color: `var(${SEMANTIC_ROLE_VARS[role]})`,
-            }}
-          >
-            tint as label · {readSemanticRole(role)}
-          </div>
-        </div>
+        <SemanticChip key={role} role={role} />
       ))}
     </Grid>
   )
@@ -200,10 +256,10 @@ function ScaleGallery() {
               marginBottom: 6,
             }}
           >
-            <span style={{ width: 84, fontSize: 12 }}>{name}</span>
+            <span style={{ width: '84px', fontSize: 12 }}>{name}</span>
             <div
               style={{
-                height: 16,
+                height: '16px',
                 width: `var(${variable})`,
                 background: 'var(--kro-color-accent)',
                 borderRadius: 'var(--kro-radius-small)',
@@ -220,8 +276,8 @@ function ScaleGallery() {
             <div key={name} style={{ textAlign: 'center' }}>
               <div
                 style={{
-                  width: 72,
-                  height: 56,
+                  width: '72px',
+                  height: '56px',
                   background: 'var(--kro-color-back-inner)',
                   borderRadius: `var(${variable})`,
                   boxShadow: 'inset 0 0 0 1px var(--kro-color-hairline)',
@@ -264,8 +320,8 @@ function ElevationGallery() {
         <div
           key={name}
           style={{
-            width: 180,
-            height: 110,
+            width: '180px',
+            height: '110px',
             display: 'grid',
             placeItems: 'center',
             background: 'var(--kro-color-absolute)',
@@ -344,7 +400,7 @@ const AccentTheming = {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  height: 44,
+                  height: '44px',
                   padding: '0 20px',
                   borderRadius: 'var(--kro-radius-pill)',
                   background: 'var(--kro-color-accent)',

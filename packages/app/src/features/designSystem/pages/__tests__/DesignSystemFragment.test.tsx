@@ -33,6 +33,12 @@ describe('DesignSystemFragment', () => {
     expect(
       within(nav).getByRole('heading', { level: 2, name: 'Chrome' }),
     ).toBeTruthy()
+    expect(
+      within(nav).getByRole('heading', { level: 2, name: 'HIG' }),
+    ).toBeTruthy()
+    expect(
+      within(nav).getByRole('heading', { level: 2, name: 'Fluent 2' }),
+    ).toBeTruthy()
   })
 
   it("opens the selected story's section and leaves the others collapsed", () => {

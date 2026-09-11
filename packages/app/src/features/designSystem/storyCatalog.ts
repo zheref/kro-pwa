@@ -97,6 +97,56 @@ import * as higToggleStories from '../../design/hig/selection/Toggle.stories'
 import * as higGaugeStories from '../../design/hig/status/Gauge.stories'
 import * as higProgressStories from '../../design/hig/status/ProgressIndicator.stories'
 import * as higRatingStories from '../../design/hig/status/RatingIndicator.stories'
+import * as fluentOverviewStories from '../../design/fluent/FluentOverview.stories'
+import * as fluentLinkStories from '../../design/fluent/actions/Link.stories'
+import * as fluentCompoundStories from '../../design/fluent/actions/CompoundButton.stories'
+import * as fluentMenuButtonStories from '../../design/fluent/actions/MenuButton.stories'
+import * as fluentSplitStories from '../../design/fluent/actions/SplitButton.stories'
+import * as fluentToggleButtonStories from '../../design/fluent/actions/ToggleButton.stories'
+import * as fluentButtonStories from '../../design/fluent/existing/Buttons.stories'
+import * as fluentAvatarStories from '../../design/fluent/content/Avatar.stories'
+import * as fluentAvatarGroupStories from '../../design/fluent/content/AvatarGroup.stories'
+import * as fluentPersonaStories from '../../design/fluent/content/Persona.stories'
+import * as fluentTextStories from '../../design/fluent/content/Text.stories'
+import * as fluentImageStories from '../../design/fluent/existing/Image.stories'
+import * as fluentIconStories from '../../design/fluent/existing/Icon.stories'
+import * as fluentFieldStories from '../../design/fluent/forms/Field.stories'
+import * as fluentInfoLabelStories from '../../design/fluent/forms/InfoLabel.stories'
+import * as fluentSelectStories from '../../design/fluent/forms/Select.stories'
+import * as fluentSpinStories from '../../design/fluent/forms/SpinButton.stories'
+import * as fluentTagPickerStories from '../../design/fluent/forms/TagPicker.stories'
+import * as fluentCheckboxStories from '../../design/fluent/existing/Checkbox.stories'
+import * as fluentComboboxStories from '../../design/fluent/existing/Combobox.stories'
+import * as fluentDropdownStories from '../../design/fluent/existing/Dropdown.stories'
+import * as fluentInputStories from '../../design/fluent/existing/Input.stories'
+import * as fluentLabelStories from '../../design/fluent/existing/Label.stories'
+import * as fluentRadioStories from '../../design/fluent/existing/RadioGroup.stories'
+import * as fluentRatingStories from '../../design/fluent/existing/Rating.stories'
+import * as fluentSliderStories from '../../design/fluent/existing/Slider.stories'
+import * as fluentSwitchStories from '../../design/fluent/existing/Switch.stories'
+import * as fluentTextareaStories from '../../design/fluent/existing/Textarea.stories'
+import * as fluentAccordionStories from '../../design/fluent/navigation/Accordion.stories'
+import * as fluentBreadcrumbStories from '../../design/fluent/navigation/Breadcrumb.stories'
+import * as fluentNavStories from '../../design/fluent/navigation/Nav.stories'
+import * as fluentTablistStories from '../../design/fluent/existing/Tablist.stories'
+import * as fluentToolbarStories from '../../design/fluent/existing/Toolbar.stories'
+import * as fluentTreeStories from '../../design/fluent/existing/Tree.stories'
+import * as fluentCardStories from '../../design/fluent/surfaces/Card.stories'
+import * as fluentCarouselStories from '../../design/fluent/surfaces/Carousel.stories'
+import * as fluentTooltipStories from '../../design/fluent/surfaces/Tooltip.stories'
+import * as fluentDialogStories from '../../design/fluent/existing/Dialog.stories'
+import * as fluentDividerStories from '../../design/fluent/existing/Divider.stories'
+import * as fluentDrawerStories from '../../design/fluent/existing/Drawer.stories'
+import * as fluentListStories from '../../design/fluent/existing/List.stories'
+import * as fluentMenuStories from '../../design/fluent/existing/Menu.stories'
+import * as fluentPopoverStories from '../../design/fluent/existing/Popover.stories'
+import * as fluentBadgeStories from '../../design/fluent/status/Badge.stories'
+import * as fluentMessageBarStories from '../../design/fluent/status/MessageBar.stories'
+import * as fluentSkeletonStories from '../../design/fluent/status/Skeleton.stories'
+import * as fluentSpinnerStories from '../../design/fluent/status/Spinner.stories'
+import * as fluentTagStories from '../../design/fluent/status/Tag.stories'
+import * as fluentProgressStories from '../../design/fluent/existing/ProgressBar.stories'
+import * as fluentToastStories from '../../design/fluent/existing/Toast.stories'
 
 export interface CatalogStory {
   readonly id: string
@@ -279,6 +329,70 @@ export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
     component('HIG Gauges', higGaugeStories, 'component'),
     component('HIG Progress indicators', higProgressStories, 'component'),
     component('HIG Rating indicators', higRatingStories, 'component'),
+  ]),
+  group('Fluent 2', [
+    component('Fluent 2 Overview', fluentOverviewStories, 'catalog'),
+  ]),
+  group('Fluent 2 · Actions', [
+    component('Fluent Button', fluentButtonStories, 'pattern'),
+    component('Fluent Compound button', fluentCompoundStories, 'component'),
+    component('Fluent Link', fluentLinkStories, 'component'),
+    component('Fluent Menu button', fluentMenuButtonStories, 'component'),
+    component('Fluent Split button', fluentSplitStories, 'component'),
+    component('Fluent Toggle button', fluentToggleButtonStories, 'component'),
+  ]),
+  group('Fluent 2 · Content', [
+    component('Fluent Avatar', fluentAvatarStories, 'component'),
+    component('Fluent Avatar group', fluentAvatarGroupStories, 'component'),
+    component('Fluent Icon', fluentIconStories, 'pattern'),
+    component('Fluent Image', fluentImageStories, 'pattern'),
+    component('Fluent Persona', fluentPersonaStories, 'component'),
+    component('Fluent Text', fluentTextStories, 'component'),
+  ]),
+  group('Fluent 2 · Forms', [
+    component('Fluent Checkbox', fluentCheckboxStories, 'pattern'),
+    component('Fluent Combobox', fluentComboboxStories, 'pattern'),
+    component('Fluent Dropdown', fluentDropdownStories, 'pattern'),
+    component('Fluent Field', fluentFieldStories, 'component'),
+    component('Fluent Info label', fluentInfoLabelStories, 'component'),
+    component('Fluent Input', fluentInputStories, 'pattern'),
+    component('Fluent Label', fluentLabelStories, 'pattern'),
+    component('Fluent Radio group', fluentRadioStories, 'pattern'),
+    component('Fluent Rating', fluentRatingStories, 'pattern'),
+    component('Fluent Select', fluentSelectStories, 'component'),
+    component('Fluent Slider', fluentSliderStories, 'pattern'),
+    component('Fluent Spin button', fluentSpinStories, 'component'),
+    component('Fluent Switch', fluentSwitchStories, 'pattern'),
+    component('Fluent Tag picker', fluentTagPickerStories, 'component'),
+    component('Fluent Textarea', fluentTextareaStories, 'pattern'),
+  ]),
+  group('Fluent 2 · Navigation', [
+    component('Fluent Accordion', fluentAccordionStories, 'component'),
+    component('Fluent Breadcrumb', fluentBreadcrumbStories, 'component'),
+    component('Fluent Nav', fluentNavStories, 'component'),
+    component('Fluent Tablist', fluentTablistStories, 'pattern'),
+    component('Fluent Toolbar', fluentToolbarStories, 'pattern'),
+    component('Fluent Tree', fluentTreeStories, 'pattern'),
+  ]),
+  group('Fluent 2 · Surfaces', [
+    component('Fluent Card', fluentCardStories, 'component'),
+    component('Fluent Carousel', fluentCarouselStories, 'component'),
+    component('Fluent Dialog', fluentDialogStories, 'pattern'),
+    component('Fluent Divider', fluentDividerStories, 'pattern'),
+    component('Fluent Drawer', fluentDrawerStories, 'pattern'),
+    component('Fluent List', fluentListStories, 'pattern'),
+    component('Fluent Menu', fluentMenuStories, 'pattern'),
+    component('Fluent Popover', fluentPopoverStories, 'pattern'),
+    component('Fluent Tooltip', fluentTooltipStories, 'component'),
+  ]),
+  group('Fluent 2 · Status', [
+    component('Fluent Badge', fluentBadgeStories, 'component'),
+    component('Fluent Message bar', fluentMessageBarStories, 'component'),
+    component('Fluent Progress bar', fluentProgressStories, 'pattern'),
+    component('Fluent Skeleton', fluentSkeletonStories, 'component'),
+    component('Fluent Spinner', fluentSpinnerStories, 'component'),
+    component('Fluent Tag', fluentTagStories, 'component'),
+    component('Fluent Toast', fluentToastStories, 'pattern'),
   ]),
 ]
 

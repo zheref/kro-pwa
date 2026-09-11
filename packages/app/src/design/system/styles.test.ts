@@ -43,3 +43,13 @@ describe('the HIG control recipes', () => {
     expect(STYLES).not.toMatch(/hig\.css"\s+layer/)
   })
 })
+
+describe('the Fluent 2 control recipes', () => {
+  it('pulls fluent.css in through the one stylesheet', () => {
+    expect(STYLES).toContain('@import "../fluent/fluent.css"')
+  })
+
+  it('does not layer fluent.css', () => {
+    expect(STYLES).not.toMatch(/fluent\.css"\s+layer/)
+  })
+})

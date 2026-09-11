@@ -38,6 +38,7 @@
 @import "./glass/glass.css" layer(components);
 @import "./gradient/gradient.css";
 @import "../hig/hig.css";
+@import "../fluent/fluent.css";
 
 /* ==========================================================================
    Form controls — kill the Chromium user-agent focus outline.

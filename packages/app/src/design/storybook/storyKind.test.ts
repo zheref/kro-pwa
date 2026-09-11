@@ -14,6 +14,9 @@ describe('storyKind', () => {
     )
     expect(kindFromStoryTitle('HIG/Actions/Buttons')).toBe('pattern')
     expect(kindFromStoryTitle('HIG/Overview')).toBe('catalog')
+    expect(kindFromStoryTitle('Fluent 2/Overview')).toBe('catalog')
+    expect(kindFromStoryTitle('Fluent 2/Actions/Link')).toBe('component')
+    expect(kindFromStoryTitle('Fluent 2/Actions/Button')).toBe('pattern')
   })
 
   it('classifies Kro kit titles by how they are used', () => {
@@ -42,6 +45,13 @@ describe('storyKind', () => {
     ).toBe('primitive')
     expect(kindFromStorybookId('design-system-ongradient--gallery')).toBe(
       'modifier',
+    )
+    expect(kindFromStorybookId('fluent-2-overview--gallery')).toBe('catalog')
+    expect(kindFromStorybookId('fluent-2-actions-button--gallery')).toBe(
+      'pattern',
+    )
+    expect(kindFromStorybookId('fluent-2-actions-link--gallery')).toBe(
+      'component',
     )
   })
 

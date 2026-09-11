@@ -59,6 +59,9 @@ describe('Button', () => {
       'ghost',
       'destructive',
       'glass',
+      'outline',
+      'subtle',
+      'transparent',
     ] as const) {
       cleanup()
       render(
@@ -168,5 +171,25 @@ describe('Button', () => {
 
     const className = screen.getByRole('button').className
     expect(className).toContain('rounded-kro-pill')
+  })
+
+  it('paints Fluent outline as a hairline, not a filled glass control', () => {
+    render(<Button variant="outline">Outline</Button>)
+
+    const className = screen.getByRole('button').className
+    expect(className).toContain('border-kro-hairline')
+    expect(className).not.toContain('kro-glass--accent')
+  })
+
+  it('honours Fluent circular and square shapes', () => {
+    const { rerender } = render(<Button shape="circular">Go</Button>)
+    expect(screen.getByRole('button').getAttribute('data-shape')).toBe(
+      'circular',
+    )
+    expect(screen.getByRole('button').className).toContain('rounded-kro-pill')
+
+    rerender(<Button shape="square">Go</Button>)
+    expect(screen.getByRole('button').getAttribute('data-shape')).toBe('square')
+    expect(screen.getByRole('button').className).toContain('rounded-none')
   })
 })

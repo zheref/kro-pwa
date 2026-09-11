@@ -58,6 +58,21 @@ const buttonVariants = cva(
          */
         glass:
           'kro-glass kro-glass--control kro-glass--interactive text-kro-fore',
+        /**
+         * Fluent 2 `outline`: a hairline, no fill. Colour is never the
+         * only signal — the word on the button is.
+         */
+        outline:
+          'border border-kro-hairline bg-transparent text-kro-fore hover:bg-kro-back-inner',
+        /**
+         * Fluent 2 `subtle`. Same job as `ghost`; kept as its own name so
+         * Fluent stories can say `subtle` without a mapping table.
+         */
+        subtle: 'text-kro-fore hover:bg-kro-back-inner',
+        /**
+         * Fluent 2 `transparent`: inline with copy, no chrome until hover.
+         */
+        transparent: 'text-kro-fore hover:text-kro-accent',
       },
       size: {
         /** Compact — default. Smaller type than Apple's compact control. */
@@ -71,6 +86,12 @@ const buttonVariants = cva(
         /** Icon-only, compact. */
         'icon-sm': 'size-6 rounded-kro-small',
         pill: 'h-9 rounded-kro-pill px-kro-medium text-sm',
+      },
+      shape: {
+        /** Fluent 2 `rounded` — the radius comes from `size`. */
+        rounded: '',
+        circular: 'rounded-kro-pill',
+        square: 'rounded-none',
       },
     },
     compoundVariants: [
@@ -91,7 +112,7 @@ const buttonVariants = cva(
         class: "[&_svg:not([class*='size-'])]:size-4",
       },
     ],
-    defaultVariants: { variant: 'secondary', size: 'sm' },
+    defaultVariants: { variant: 'secondary', size: 'sm', shape: 'rounded' },
   },
 )
 
@@ -110,6 +131,7 @@ export function Button({
   className,
   variant,
   size,
+  shape,
   asChild = false,
   type,
   ...rest
@@ -119,10 +141,11 @@ export function Button({
   return (
     <Component
       data-slot="button"
+      data-shape={shape ?? 'rounded'}
       // A button inside a form defaults to `submit` in HTML, which is how a
       // "Cancel" control ends up submitting the form it sits in.
       type={asChild ? undefined : (type ?? 'button')}
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={cn(buttonVariants({ variant, size, shape }), className)}
       {...rest}
     />
   )

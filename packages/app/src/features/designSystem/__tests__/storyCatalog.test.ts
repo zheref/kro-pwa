@@ -29,6 +29,13 @@ describe('the design-system catalog', () => {
       'HIG · Presentation',
       'HIG · Selection',
       'HIG · Status',
+      'Fluent 2',
+      'Fluent 2 · Actions',
+      'Fluent 2 · Content',
+      'Fluent 2 · Forms',
+      'Fluent 2 · Navigation',
+      'Fluent 2 · Surfaces',
+      'Fluent 2 · Status',
     ])
   })
 

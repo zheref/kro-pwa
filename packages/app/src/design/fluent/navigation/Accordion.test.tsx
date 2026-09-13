@@ -105,15 +105,15 @@ describe('Accordion', () => {
 
     const root = () => document.querySelector('[data-slot="accordion"]')
     expect(root()?.getAttribute('data-size')).toBe('medium')
-    expect(root()?.getAttribute('data-density')).toBe('comfortable')
-    expect(screen.getByRole('button', { name: 'Session' }).className).toContain(
-      'min-h-9',
-    )
-
-    rerender(<Accordion items={[...ITEMS]} size="small" />)
     expect(root()?.getAttribute('data-density')).toBe('compact')
     expect(screen.getByRole('button', { name: 'Session' }).className).toContain(
       'min-h-6',
+    )
+
+    rerender(<Accordion items={[...ITEMS]} size="large" />)
+    expect(root()?.getAttribute('data-density')).toBe('comfortable')
+    expect(screen.getByRole('button', { name: 'Session' }).className).toContain(
+      'min-h-9',
     )
   })
 })

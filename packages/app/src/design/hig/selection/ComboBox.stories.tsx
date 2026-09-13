@@ -16,7 +16,7 @@ const ENDEAVORS = [
 ] as const
 
 export default {
-  title: 'HIG/Selection and input/Combo boxes',
+  title: 'Forms/Combo box',
   component: ComboBox,
 }
 

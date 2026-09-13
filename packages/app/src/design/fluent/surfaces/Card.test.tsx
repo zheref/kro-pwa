@@ -97,7 +97,7 @@ describe('Card', () => {
 
     const card = () => document.querySelector('[data-slot="card"]')
     expect(card()?.getAttribute('data-size')).toBe('medium')
-    expect(card()?.getAttribute('data-density')).toBe('comfortable')
+    expect(card()?.getAttribute('data-density')).toBe('compact')
     expect(card()?.className).toContain('p-kro-medium')
 
     rerender(<Card size="small">Body</Card>)

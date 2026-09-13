@@ -10,7 +10,7 @@ import {
 } from './ActionSheet'
 
 export default {
-  title: 'HIG/Presentation/Action sheets',
+  title: 'Surfaces/Action sheet',
   component: ActionSheetContent,
   parameters: { layout: 'fullscreen' },
 }

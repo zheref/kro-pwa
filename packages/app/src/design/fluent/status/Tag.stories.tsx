@@ -9,7 +9,7 @@ import {
 } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Status/Tag',
+  title: 'Status/Tag',
   component: Tag,
 }
 

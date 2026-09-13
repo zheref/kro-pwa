@@ -9,7 +9,7 @@ import {
 import { fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Navigation/Accordion',
+  title: 'Navigation/Accordion',
   component: Accordion,
 }
 

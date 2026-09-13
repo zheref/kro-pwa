@@ -11,7 +11,7 @@ import { fluentSizeForDensity } from '../sizes'
 const LENSES = ['Work', 'Home', 'Health', 'Deep work', 'Waiting'] as const
 
 export default {
-  title: 'Fluent 2/Forms/Tag picker',
+  title: 'Forms/Tag picker',
   component: TagPicker,
 }
 

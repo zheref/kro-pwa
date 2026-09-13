@@ -99,4 +99,60 @@ describe('Sidebar', () => {
       'min-h-9',
     )
   })
+
+  it('expands a nested category and reveals children', async () => {
+    const onSelect = vi.fn()
+    const nested = [
+      {
+        id: 'do',
+        label: 'Do',
+        children: [
+          { id: 'today', label: 'Today' },
+          { id: 'inbox', label: 'Inbox' },
+        ],
+      },
+      { id: 'plan', label: 'Plan' },
+    ]
+    render(<Sidebar items={nested} onSelect={onSelect} />)
+
+    const category = screen.getByRole('button', { name: 'Do' })
+    expect(category.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('button', { name: 'Today' })).toBeNull()
+
+    await userEvent.click(category)
+
+    expect(category.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Today' })).toBeTruthy()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Today' }))
+    expect(onSelect).toHaveBeenCalledWith('today')
+  })
+
+  it('opens a category that contains the selected child', () => {
+    render(
+      <Sidebar
+        items={[
+          {
+            id: 'do',
+            label: 'Do',
+            children: [
+              { id: 'today', label: 'Today' },
+              { id: 'inbox', label: 'Inbox' },
+            ],
+          },
+        ]}
+        selectedId="inbox"
+        onSelect={() => {}}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Do' }).getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(
+      screen
+        .getByRole('button', { name: 'Inbox' })
+        .getAttribute('aria-current'),
+    ).toBe('page')
+  })
 })

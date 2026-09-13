@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Checkboxes',
+  title: 'Forms/Checkbox',
   component: Checkbox,
 }
 

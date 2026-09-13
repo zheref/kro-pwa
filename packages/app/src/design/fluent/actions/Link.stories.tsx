@@ -3,7 +3,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
 import { FluentBothSchemes, FluentRow, FluentStage } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Actions/Link',
+  title: 'Actions/Link',
   component: Link,
 }
 

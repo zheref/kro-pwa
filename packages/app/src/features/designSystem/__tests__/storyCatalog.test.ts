@@ -1,5 +1,5 @@
 /**
- * The catalog against the three snapshot suites: every design-system
+ * The catalog against the snapshot suites: every design-system
  * story module is present, each component ships one gallery page, and an
  * unknown id falls back to the default rather than rendering blank.
  */
@@ -14,28 +14,20 @@ import {
 } from '../storyCatalog'
 
 describe('the design-system catalog', () => {
-  it('groups Tokens, Materials, Primitives, Endeavor, Chrome and the HIG catalog', () => {
+  it('groups the one Kro gallery, with no HIG or Fluent 2 folders', () => {
     expect(STORY_CATALOG.groups.map((group) => group.title)).toEqual([
+      'Overview',
       'Tokens',
       'Materials',
-      'Primitives',
-      'Endeavor',
+      'Actions',
+      'Content',
+      'Forms',
+      'Layout',
+      'Navigation',
+      'Surfaces',
+      'Status',
       'Chrome',
-      'HIG',
-      'HIG · Actions',
-      'HIG · Content',
-      'HIG · Layout',
-      'HIG · Navigation',
-      'HIG · Presentation',
-      'HIG · Selection',
-      'HIG · Status',
-      'Fluent 2',
-      'Fluent 2 · Actions',
-      'Fluent 2 · Content',
-      'Fluent 2 · Forms',
-      'Fluent 2 · Navigation',
-      'Fluent 2 · Surfaces',
-      'Fluent 2 · Status',
+      'Endeavor',
     ])
   })
 
@@ -51,7 +43,7 @@ describe('the design-system catalog', () => {
   })
 
   it('lands on a real default story rather than an empty canvas', () => {
-    expect(STORY_CATALOG.defaultStoryId).toBe('Tokens/Gallery')
+    expect(STORY_CATALOG.defaultStoryId).toBe('Overview/Gallery')
     expect(
       storyById(STORY_CATALOG, STORY_CATALOG.defaultStoryId)?.render,
     ).toBeTypeOf('function')
@@ -78,19 +70,19 @@ describe('storyOrDefault', () => {
 })
 
 describe('placementOfStory', () => {
-  it('puts a primitive under Primitives / Button', () => {
+  it('puts Button under Actions', () => {
     expect(placementOfStory(STORY_CATALOG, 'Button/Gallery')).toEqual({
-      groupId: 'Primitives',
+      groupId: 'Actions',
       componentId: 'Button',
     })
   })
 
-  it('puts the catalog default under Tokens', () => {
+  it('puts the catalog default under Overview', () => {
     expect(
       placementOfStory(STORY_CATALOG, STORY_CATALOG.defaultStoryId),
     ).toEqual({
-      groupId: 'Tokens',
-      componentId: 'Tokens',
+      groupId: 'Overview',
+      componentId: 'Overview',
     })
   })
 
@@ -109,8 +101,8 @@ describe('componentOfStory', () => {
     expect(componentOfStory(STORY_CATALOG, 'OnGradient/Gallery')?.kind).toBe(
       'modifier',
     )
-    expect(componentOfStory(STORY_CATALOG, 'HIG Buttons/Gallery')?.kind).toBe(
-      'pattern',
+    expect(componentOfStory(STORY_CATALOG, 'Link/Gallery')?.kind).toBe(
+      'component',
     )
   })
 })

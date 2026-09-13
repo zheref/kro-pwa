@@ -100,7 +100,7 @@ describe('SplitButton', () => {
     )
 
     rerender(
-      <SplitButton items={ITEMS} size="medium">
+      <SplitButton items={ITEMS} size="large">
         Save
       </SplitButton>,
     )

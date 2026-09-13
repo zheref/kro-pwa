@@ -14,7 +14,7 @@ import {
  * sheet at desktop width is a shape nobody will ever see.
  */
 export default {
-  title: 'Design system/Primitives/Sheet',
+  title: 'Surfaces/Sheet',
   component: SheetContent,
   parameters: { layout: 'fullscreen' },
 }

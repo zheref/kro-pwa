@@ -4,7 +4,7 @@ import { HigBothSchemes, HigDensities, HigStage } from '../higStoryStage'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Layout and organization/Split views',
+  title: 'Layout/Split view',
   component: SplitView,
 }
 

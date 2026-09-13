@@ -34,7 +34,7 @@ function Stage({
   )
 }
 
-/** Lands on Tokens, the catalog's default gallery. */
+/** Lands on Overview, the catalog's default gallery. */
 export const Default = {
   render: () => (
     <Stage>

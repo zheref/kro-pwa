@@ -8,7 +8,7 @@ import {
 } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Content/Persona',
+  title: 'Content/Persona',
   component: Persona,
 }
 

@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Layout and organization/Lockups',
+  title: 'Content/Lockup',
   component: Lockup,
 }
 

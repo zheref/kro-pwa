@@ -1,5 +1,5 @@
 /**
- * `InlineBanner` — the three kinds, with and without a recovery path.
+ * `InlineBanner` — the four kinds, with and without a recovery path.
  *
  * The opaque fills are the point. Put the browser in dark mode and the warning
  * and danger banners do not move: their tokens are the same value in both
@@ -12,12 +12,12 @@ import { BothSchemes, Cell, Stage } from './storyStage'
 import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
-  title: 'Endeavor/InlineBanner',
+  title: 'Status/Inline banner',
   component: InlineBanner,
 }
 
 const Kinds = {
-  name: 'The three kinds',
+  name: 'The four kinds',
   render: () => (
     <Stage width={520}>
       <Cell label="error">
@@ -34,6 +34,13 @@ const Kinds = {
         <InlineBanner
           kind="info"
           message="This endeavor's kind doesn't support editing performances."
+        />
+      </Cell>
+      <Cell label="success">
+        <InlineBanner
+          kind="success"
+          message="Saved to the plan."
+          onDismiss={() => undefined}
         />
       </Cell>
     </Stage>

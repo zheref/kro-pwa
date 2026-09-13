@@ -15,7 +15,7 @@ const QUADRANTS = [
 ] as const
 
 export default {
-  title: 'HIG/Selection and input/Pickers',
+  title: 'Forms/Picker',
   component: Picker,
 }
 

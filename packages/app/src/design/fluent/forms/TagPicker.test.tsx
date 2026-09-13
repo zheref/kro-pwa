@@ -108,7 +108,7 @@ describe('TagPicker', () => {
     await userEvent.click(compact)
     expect(screen.getAllByRole('option')[0]?.className).toContain('min-h-6')
 
-    rerender(<TagPicker label="Lenses" options={LENSES} size="medium" />)
+    rerender(<TagPicker label="Lenses" options={LENSES} size="large" />)
     const comfortable = screen.getByRole('combobox', { name: 'Lenses' })
     expect(comfortable.getAttribute('data-density')).toBe('comfortable')
     await userEvent.click(comfortable)

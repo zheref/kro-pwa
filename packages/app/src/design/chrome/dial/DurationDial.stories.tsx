@@ -21,7 +21,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * last story is the same dial with the sweep widened to match.
  */
 export default {
-  title: 'Design system/Chrome/DurationDial',
+  title: 'Chrome/DurationDial',
   component: DurationDial,
   parameters: { layout: 'fullscreen' },
 }

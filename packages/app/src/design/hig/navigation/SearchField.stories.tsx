@@ -8,7 +8,7 @@ import { SearchField } from './SearchField'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Search fields',
+  title: 'Forms/Search field',
   component: SearchField,
 }
 

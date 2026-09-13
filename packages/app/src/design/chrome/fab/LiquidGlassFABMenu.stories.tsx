@@ -19,7 +19,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * which is exactly the mistake canon's own comment warns about.
  */
 export default {
-  title: 'Design system/Chrome/LiquidGlassFABMenu',
+  title: 'Chrome/LiquidGlassFABMenu',
   component: LiquidGlassFABMenu,
   parameters: { layout: 'fullscreen' },
 }

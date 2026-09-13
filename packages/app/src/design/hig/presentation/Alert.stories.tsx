@@ -12,7 +12,7 @@ import {
 } from './Alert'
 
 export default {
-  title: 'HIG/Presentation/Alerts',
+  title: 'Surfaces/Alert',
   component: AlertContent,
   parameters: { layout: 'centered' },
 }

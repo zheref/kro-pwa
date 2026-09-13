@@ -10,7 +10,7 @@ import {
 import { buttonSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Surfaces/Tooltip',
+  title: 'Surfaces/Tooltip',
   component: Tooltip,
 }
 

@@ -9,7 +9,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Status/Rating indicators',
+  title: 'Forms/Rating indicator',
   component: RatingIndicator,
 }
 

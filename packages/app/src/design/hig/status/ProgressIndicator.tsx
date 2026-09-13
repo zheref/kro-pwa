@@ -21,6 +21,12 @@ import { cn } from '../../system/utils/cn'
 
 export type ProgressIndicatorKind = 'bar' | 'circular' | 'indeterminate'
 export type ProgressIndicatorSize = 'sm' | 'md'
+export type ProgressIndicatorAppearance = 'primary' | 'inverted'
+export type ProgressIndicatorLabelPosition =
+  | 'before'
+  | 'after'
+  | 'above'
+  | 'below'
 
 export interface ProgressIndicatorProps {
   readonly kind: ProgressIndicatorKind
@@ -29,6 +35,10 @@ export interface ProgressIndicatorProps {
   readonly label?: string
   readonly size?: ProgressIndicatorSize
   readonly density?: ControlDensity
+  /** Fluent Spinner inverted paint, for sitting on accent glass. */
+  readonly appearance?: ProgressIndicatorAppearance
+  /** Fluent Spinner label placement around the indeterminate face. */
+  readonly labelPosition?: ProgressIndicatorLabelPosition
   readonly className?: string
 }
 
@@ -137,13 +147,17 @@ function Indeterminate({
   size,
   labelledBy,
   density,
+  appearance,
   className,
 }: {
   readonly size: ProgressIndicatorSize
   readonly labelledBy?: string
   readonly density: ControlDensity
+  readonly appearance: ProgressIndicatorAppearance
   readonly className?: string
 }) {
+  const inverted = appearance === 'inverted'
+  const onAccent = 'var(--kro-color-on-accent)'
   return (
     <div
       role="progressbar"
@@ -151,11 +165,20 @@ function Indeterminate({
       aria-labelledby={labelledBy}
       data-slot="progress-indeterminate"
       data-density={density}
+      data-appearance={appearance}
       className={cn(
         'kro-hig-spinner',
         size === 'sm' ? 'size-4 border-2' : 'size-6 border-[3px]',
         className,
       )}
+      style={
+        inverted
+          ? {
+              borderColor: `color-mix(in srgb, ${onAccent} 18%, transparent)`,
+              borderTopColor: onAccent,
+            }
+          : undefined
+      }
     />
   )
 }
@@ -170,12 +193,16 @@ export function ProgressIndicator({
   label,
   density = DEFAULT_CONTROL_DENSITY,
   size,
+  appearance = 'primary',
+  labelPosition = 'after',
   className,
 }: ProgressIndicatorProps) {
   const labelId = useId()
   const clamped = clampUnitInterval(value)
   const labelledBy = label === undefined ? undefined : labelId
   const resolvedSize = size ?? sizeForDensity(density)
+  const stacked = labelPosition === 'above' || labelPosition === 'below'
+  const labelFirst = labelPosition === 'before' || labelPosition === 'above'
 
   let indicator: ReactNode
   if (kind === 'bar') {
@@ -203,6 +230,7 @@ export function ProgressIndicator({
         size={resolvedSize}
         labelledBy={labelledBy}
         density={density}
+        appearance={appearance}
         className={className}
       />
     )
@@ -210,16 +238,34 @@ export function ProgressIndicator({
 
   if (label === undefined) return indicator
 
+  const caption = (
+    <span id={labelId} className={DENSITY_TYPE[density]}>
+      {label}
+    </span>
+  )
+
   return (
     <div
       data-slot="progress-indicator"
       data-density={density}
-      className="inline-flex items-center gap-kro-small text-kro-fore"
+      data-label-position={labelPosition}
+      className={cn(
+        'inline-flex gap-kro-small text-kro-fore',
+        stacked ? 'flex-col items-center' : 'items-center',
+        appearance === 'inverted' ? 'text-kro-on-accent' : undefined,
+      )}
     >
-      {indicator}
-      <span id={labelId} className={DENSITY_TYPE[density]}>
-        {label}
-      </span>
+      {labelFirst ? (
+        <>
+          {caption}
+          {indicator}
+        </>
+      ) : (
+        <>
+          {indicator}
+          {caption}
+        </>
+      )}
     </div>
   )
 }

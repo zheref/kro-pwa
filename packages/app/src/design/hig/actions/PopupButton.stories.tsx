@@ -9,7 +9,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Actions/Pop-up buttons',
+  title: 'Actions/Pop-up button',
   component: PopupButton,
 }
 

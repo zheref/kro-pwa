@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Status/Progress indicators',
+  title: 'Status/Progress indicator',
   component: ProgressIndicator,
 }
 
@@ -39,6 +39,14 @@ const CircularAndIndeterminate = {
       </HigRow>
       <HigRow label="Indeterminate">
         <ProgressIndicator kind="indeterminate" label="Opening session" />
+      </HigRow>
+      <HigRow label="Inverted · on accent">
+        <ProgressIndicator
+          kind="indeterminate"
+          appearance="inverted"
+          labelPosition="below"
+          label="Opening session"
+        />
       </HigRow>
       <HigRow label="Small">
         <ProgressIndicator

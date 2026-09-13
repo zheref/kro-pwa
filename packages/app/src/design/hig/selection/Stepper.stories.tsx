@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Steppers',
+  title: 'Forms/Stepper',
   component: Stepper,
 }
 

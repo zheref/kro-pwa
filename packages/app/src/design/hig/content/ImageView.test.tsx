@@ -94,4 +94,15 @@ describe('ImageView', () => {
     )
     expect(screen.getByText('Morning block').className).toContain('text-sm')
   })
+
+  it('can be circular with a shadow, the Fluent Image appearances', () => {
+    render(
+      <ImageView src={PIXEL} alt="Session capture" shape="circular" shadow />,
+    )
+
+    const img = screen.getByRole('img')
+    expect(img.getAttribute('data-shape')).toBe('circular')
+    expect(img.getAttribute('data-shadow')).toBe('true')
+    expect(img.className).toContain('rounded-kro-pill')
+  })
 })

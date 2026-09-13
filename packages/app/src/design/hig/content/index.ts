@@ -9,6 +9,7 @@ export {
   ImageView,
   type ImageViewAspect,
   type ImageViewProps,
+  type ImageViewShape,
 } from './ImageView'
 export { TextView, type TextViewProps } from './TextView'
 export { WebView, restrictedSandbox, type WebViewProps } from './WebView'

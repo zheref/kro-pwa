@@ -5,7 +5,7 @@ import {
   DEFAULT_CONTROL_DENSITY,
   buttonSizeForDensity,
 } from '../../system/density'
-import { Button } from '../../system/primitives/button'
+import { type ButtonProps, Button } from '../../system/primitives/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +41,8 @@ export interface PullDownButtonProps {
   readonly disabled?: boolean
   readonly className?: string
   readonly density?: ControlDensity
+  /** Fluent Menu button appearances fold in here. */
+  readonly appearance?: ButtonProps['variant']
 }
 
 export function pullDownItemIsDestructive(item: PullDownButtonItem): boolean {
@@ -69,6 +71,7 @@ export function PullDownButton({
   disabled,
   className,
   density = DEFAULT_CONTROL_DENSITY,
+  appearance = 'secondary',
 }: PullDownButtonProps) {
   const [open, setOpen] = useState(false)
 
@@ -76,11 +79,12 @@ export function PullDownButton({
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild disabled={disabled}>
         <Button
-          variant="secondary"
+          variant={appearance}
           size={buttonSizeForDensity(density)}
           disabled={disabled}
           data-slot="pull-down-button"
           data-density={density}
+          data-appearance={appearance}
           className={cn(className)}
         >
           {label}

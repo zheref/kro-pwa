@@ -10,7 +10,7 @@ import {
 import { fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Forms/Field',
+  title: 'Forms/Field',
   component: Field,
 }
 

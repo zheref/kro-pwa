@@ -8,7 +8,7 @@ import {
 } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Content/Avatar group',
+  title: 'Content/Avatar group',
   component: AvatarGroup,
 }
 

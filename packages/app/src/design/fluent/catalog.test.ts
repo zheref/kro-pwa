@@ -50,7 +50,7 @@ describe('Fluent 2 catalog', () => {
   it('looks up an entry by title and builds the canonical Fluent URL', () => {
     const button = fluentEntryNamed('Button')
     expect(button?.kroName).toBe('Button')
-    expect(button?.availability).toBe('conflict')
+    expect(button?.availability).toBe('existing')
     expect(button).toBeDefined()
     if (button === undefined) return
     expect(fluentUrl(button)).toContain('/components/web/react/')
@@ -60,7 +60,7 @@ describe('Fluent 2 catalog', () => {
     )
   })
 
-  it('flags every name collision for a human decision', () => {
+  it('records the Kro export every Fluent title folded into', () => {
     const conflicts = fluentConflicts()
     expect(conflicts.length).toBeGreaterThan(10)
     expect(conflicts.map((entry) => entry.title)).toEqual(

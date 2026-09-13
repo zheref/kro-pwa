@@ -16,7 +16,7 @@ const QUADRANTS = [
 ] as const
 
 export default {
-  title: 'Fluent 2/Forms/Select',
+  title: 'Forms/Select',
   component: Select,
 }
 

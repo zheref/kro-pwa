@@ -36,14 +36,14 @@ describe('DesignSystemPage', () => {
 
     expect(screen.getByTestId('design-system-catalog')).toBeTruthy()
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      'Tokens',
+      'Overview',
     )
   })
 
   it('switches the canvas when a story row is tapped', async () => {
     renderPage()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }))
     await userEvent.click(
       screen.getByRole('button', { name: 'Button (Primitive)' }),
     )

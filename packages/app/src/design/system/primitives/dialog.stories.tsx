@@ -12,7 +12,7 @@ import {
 } from './dialog'
 
 export default {
-  title: 'Design system/Primitives/Dialog',
+  title: 'Surfaces/Dialog',
   component: DialogContent,
   parameters: { layout: 'centered' },
 }

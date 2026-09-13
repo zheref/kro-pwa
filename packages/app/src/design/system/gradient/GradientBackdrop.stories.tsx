@@ -11,7 +11,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * about the thing being asked for.
  */
 export default {
-  title: 'Design system/GradientBackdrop',
+  title: 'Materials/GradientBackdrop',
   component: GradientBackdrop,
   parameters: { layout: 'fullscreen' },
 }

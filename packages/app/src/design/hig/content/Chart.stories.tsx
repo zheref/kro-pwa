@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Content/Charts',
+  title: 'Content/Chart',
   component: Chart,
 }
 

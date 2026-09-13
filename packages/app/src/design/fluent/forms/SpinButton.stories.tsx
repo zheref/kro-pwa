@@ -9,7 +9,7 @@ import {
 import { fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Forms/Spin button',
+  title: 'Forms/Spin button',
   component: SpinButton,
 }
 

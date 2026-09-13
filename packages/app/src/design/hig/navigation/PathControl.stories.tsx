@@ -8,7 +8,7 @@ import { PathControl } from './PathControl'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Path controls',
+  title: 'Navigation/Path control',
   component: PathControl,
 }
 
@@ -24,6 +24,18 @@ const Hierarchy = {
     <HigStage>
       <HigRow label="Three levels">
         <PathControl items={DEEP} />
+      </HigRow>
+      <HigRow label="Overflow">
+        <PathControl
+          items={[
+            { id: 'plan', label: 'Plan' },
+            { id: 'today', label: 'Today' },
+            { id: 'inbox', label: 'Inbox' },
+            { id: 'triage', label: 'Triage' },
+            { id: 'now', label: 'Write the KroTokens port' },
+          ]}
+          maxItems={3}
+        />
       </HigRow>
     </HigStage>
   ),

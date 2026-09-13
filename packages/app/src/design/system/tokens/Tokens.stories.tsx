@@ -41,7 +41,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * and make comparing them a matter of toggling and remembering.
  */
 export default {
-  title: 'Design system/Tokens',
+  title: 'Tokens',
   parameters: {
     layout: 'fullscreen',
     docs: {

@@ -63,15 +63,10 @@ describe('MenuButton', () => {
     expect(trigger.getAttribute('data-density')).toBe('compact')
     expect(trigger.className).toContain('h-6')
 
-    rerender(<MenuButton label="Add" items={ITEMS} size="medium" />)
+    rerender(<MenuButton label="Add" items={ITEMS} size="large" />)
     const comfortable = screen.getByRole('button', { name: 'Add' })
     expect(comfortable.getAttribute('data-density')).toBe('comfortable')
     expect(comfortable.className).toContain('h-9')
-
-    rerender(<MenuButton label="Add" items={ITEMS} size="large" />)
-    const large = screen.getByRole('button', { name: 'Add' })
-    expect(large.getAttribute('data-density')).toBe('comfortable')
-    expect(large.className).toContain('h-11')
   })
 
   it('names a destructive item in words, not only by tint', () => {

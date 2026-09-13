@@ -8,7 +8,7 @@ import { Panel } from './Panel'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Presentation/Panels',
+  title: 'Surfaces/Panel',
   component: Panel,
 }
 

@@ -4,7 +4,7 @@ import { HigBothSchemes, HigDensities, HigStage } from '../higStoryStage'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Layout and organization/Outline views',
+  title: 'Layout/Outline view',
   component: OutlineView,
 }
 

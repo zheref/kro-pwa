@@ -7,7 +7,7 @@ import { FieldSectionLabel, OnGradient, PageFieldEmpty } from './OnGradient'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'Design system/OnGradient',
+  title: 'Materials/OnGradient',
 }
 
 function Field({

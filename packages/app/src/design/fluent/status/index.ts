@@ -18,13 +18,6 @@ export {
   type CounterBadgeSize,
 } from './Badge'
 export {
-  MessageBar,
-  type MessageBarAction,
-  type MessageBarIntent,
-  type MessageBarLayout,
-  type MessageBarProps,
-} from './MessageBar'
-export {
   Skeleton,
   SkeletonItem,
   type SkeletonAnimation,
@@ -33,15 +26,6 @@ export {
   type SkeletonItemShape,
   type SkeletonProps,
 } from './Skeleton'
-export {
-  SPINNER_PX,
-  SPINNER_SIZES,
-  Spinner,
-  type SpinnerAppearance,
-  type SpinnerLabelPosition,
-  type SpinnerProps,
-  type SpinnerSize,
-} from './Spinner'
 export {
   TAG_APPEARANCES,
   TAG_SIZES,

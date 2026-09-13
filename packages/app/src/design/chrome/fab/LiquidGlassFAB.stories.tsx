@@ -14,7 +14,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * the right corner" is a question no unit test answers.
  */
 export default {
-  title: 'Design system/Chrome/LiquidGlassFAB',
+  title: 'Chrome/LiquidGlassFAB',
   component: LiquidGlassFAB,
   parameters: { layout: 'fullscreen' },
 }

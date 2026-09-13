@@ -1,12 +1,9 @@
 /**
- * `@kro/app/design` Fluent 2 catalog — Fluent's component titles, realised
- * in KroTokens and KroGlass.
+ * `@kro/app/design` Fluent 2 catalog — Fluent's unique controls, realised
+ * in KroTokens and KroGlass. Same-job titles are folded into the Kro
+ * name and listed on `alsoKnownAs`.
  *
- * Visual language is Kro's. Use cases, variants and sizes follow
- * https://fluent2.microsoft.design/components/web/react
- *
- * Exact-name collisions with a live HIG/Kro export are restaged, not
- * re-exported. `RC-14`: nothing here imports react-redux or a slice.
+ * `RC-14`: nothing here imports react-redux or a slice.
  */
 
 export {
@@ -43,18 +40,12 @@ export {
   FLUENT_BUTTON_APPEARANCES,
   CompoundButton,
   Link,
-  MenuButton,
-  MenuButtonChoiceRow,
   SplitButton,
   ToggleButton,
-  menuButtonItemIsDestructive,
   type CompoundButtonProps,
   type FluentButtonAppearance,
   type LinkAppearance,
   type LinkProps,
-  type MenuButtonItem,
-  type MenuButtonProps,
-  type MenuButtonTone,
   type SplitButtonProps,
   type ToggleButtonProps,
 } from './actions'
@@ -105,17 +96,8 @@ export {
 } from './forms'
 export {
   Accordion,
-  Breadcrumb,
-  Nav,
   type AccordionItem,
   type AccordionProps,
-  type BreadcrumbItem,
-  type BreadcrumbProps,
-  type NavAppearance,
-  type NavChild,
-  type NavItem,
-  type NavProps,
-  type NavSize,
 } from './navigation'
 export {
   Card,
@@ -140,12 +122,8 @@ export {
   BADGE_COLORS,
   Badge,
   CounterBadge,
-  MessageBar,
-  SPINNER_PX,
-  SPINNER_SIZES,
   Skeleton,
   SkeletonItem,
-  Spinner,
   TAG_APPEARANCES,
   TAG_SIZES,
   Tag,
@@ -156,18 +134,10 @@ export {
   type BadgeShape,
   type BadgeSize,
   type CounterBadgeProps,
-  type MessageBarAction,
-  type MessageBarIntent,
-  type MessageBarLayout,
-  type MessageBarProps,
   type SkeletonAnimation,
   type SkeletonAppearance,
   type SkeletonItemProps,
   type SkeletonProps,
-  type SpinnerAppearance,
-  type SpinnerLabelPosition,
-  type SpinnerProps,
-  type SpinnerSize,
   type TagAppearance,
   type TagGroupProps,
   type TagProps,

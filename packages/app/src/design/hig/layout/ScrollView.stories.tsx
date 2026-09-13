@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Presentation/Scroll views',
+  title: 'Layout/Scroll view',
   component: ScrollView,
 }
 

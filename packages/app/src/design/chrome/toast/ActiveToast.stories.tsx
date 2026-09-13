@@ -31,7 +31,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * bottom-right corner. In the app the layer is `fixed` to the viewport.
  */
 export default {
-  title: 'Design system/Chrome/ActiveToast',
+  title: 'Chrome/ActiveToast',
   component: ActiveToastView,
   parameters: { layout: 'fullscreen' },
 }

@@ -74,6 +74,27 @@ describe('ProgressIndicator', () => {
     unmount()
   })
 
+  it('inverts the spinner for accent glass and can stack the label', () => {
+    render(
+      <ProgressIndicator
+        kind="indeterminate"
+        appearance="inverted"
+        labelPosition="below"
+        label="Opening session"
+      />,
+    )
+
+    const spinner = screen.getByRole('progressbar', {
+      name: 'Opening session',
+    })
+    expect(spinner.getAttribute('data-appearance')).toBe('inverted')
+    expect(
+      document
+        .querySelector('[data-slot="progress-indicator"]')
+        ?.getAttribute('data-label-position'),
+    ).toBe('below')
+  })
+
   it('clamps a unit interval and treats a non-finite value as empty', () => {
     expect(clampUnitInterval(1.4)).toBe(1)
     expect(clampUnitInterval(-2)).toBe(0)

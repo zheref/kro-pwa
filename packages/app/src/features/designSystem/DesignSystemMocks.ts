@@ -16,7 +16,7 @@ const fragment = (selectedStoryId: string): DesignSystemFragmentProps => ({
 })
 
 export const designSystemMocks = {
-  /** Lands on the first gallery — Tokens. */
+  /** Lands on the first gallery — Overview. */
   default: fragment(STORY_CATALOG.defaultStoryId),
   /** A primitive, so the canvas is a control rather than a token grid. */
   buttonVariants: fragment('Button/Gallery'),

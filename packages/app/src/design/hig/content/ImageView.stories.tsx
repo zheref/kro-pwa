@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Content/Image views',
+  title: 'Content/Image view',
   component: ImageView,
 }
 
@@ -62,6 +62,24 @@ const Aspects = {
   ),
 }
 
+const Circular = {
+  name: 'Circular · Fluent Image shape and shadow',
+  render: () => (
+    <HigStage>
+      <HigRow label="Circular with shadow">
+        <ImageView
+          src=""
+          alt="Avatar"
+          aspect="1/1"
+          shape="circular"
+          shadow
+          fallback={<CoverFallback />}
+        />
+      </HigRow>
+    </HigStage>
+  ),
+}
+
 const BothSchemes = {
   name: 'Light and dark · the recessed frame still reads',
   render: () => (
@@ -103,6 +121,7 @@ export const Gallery = {
     <StoryGallery>
       {FallbackCover.render()}
       {Aspects.render()}
+      {Circular.render()}
       {BothSchemes.render()}
       {Densities.render()}
     </StoryGallery>

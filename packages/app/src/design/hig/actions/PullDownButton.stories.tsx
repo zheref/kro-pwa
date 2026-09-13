@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Actions/Pull-down buttons',
+  title: 'Actions/Pull-down button',
   component: PullDownButton,
 }
 
@@ -32,6 +32,19 @@ const Add = {
     <HigStage>
       <HigRow label="Always Add">
         <PullDownButton label="Add" items={addItems()} />
+      </HigRow>
+    </HigStage>
+  ),
+}
+
+const Appearances = {
+  name: 'Appearances · Fluent Menu button faces on the same trigger',
+  render: () => (
+    <HigStage>
+      <HigRow label="Secondary, outline, subtle">
+        <PullDownButton label="Add" items={addItems()} />
+        <PullDownButton appearance="outline" label="Add" items={addItems()} />
+        <PullDownButton appearance="subtle" label="Add" items={addItems()} />
       </HigRow>
     </HigStage>
   ),
@@ -75,6 +88,7 @@ export const Gallery = {
   render: () => (
     <StoryGallery>
       {Add.render()}
+      {Appearances.render()}
       {Disabled.render()}
       {BothSchemes.render()}
       {Densities.render()}

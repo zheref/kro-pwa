@@ -59,7 +59,7 @@ describe('InfoLabel', () => {
         ?.getAttribute('data-density'),
     ).toBe('compact')
 
-    rerender(<InfoLabel label="Host" info="Calendar." size="medium" />)
+    rerender(<InfoLabel label="Host" info="Calendar." size="large" />)
     expect(
       document
         .querySelector('[data-slot="info-label"]')

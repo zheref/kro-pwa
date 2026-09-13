@@ -136,7 +136,7 @@ describe('SpinButton', () => {
       screen.getByRole('button', { name: 'Increase' }).className,
     ).toContain('size-6')
 
-    rerender(<SpinButton label="Minutes" defaultValue={25} size="medium" />)
+    rerender(<SpinButton label="Minutes" defaultValue={25} size="large" />)
     expect(
       document
         .querySelector('[data-slot="spin-button"]')

@@ -9,7 +9,7 @@ import {
 import { fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Forms/Info label',
+  title: 'Forms/Info label',
   component: InfoLabel,
 }
 

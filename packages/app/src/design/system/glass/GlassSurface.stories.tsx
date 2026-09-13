@@ -18,7 +18,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  *     transparency) and reload — the stories need no switch of their own.
  */
 export default {
-  title: 'Design system/KroGlass',
+  title: 'Materials/KroGlass',
   component: GlassSurface,
   parameters: { layout: 'fullscreen' },
 }

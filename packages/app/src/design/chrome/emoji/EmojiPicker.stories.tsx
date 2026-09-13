@@ -23,7 +23,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * palette is the popover story, which is where it belongs anyway.
  */
 export default {
-  title: 'Design system/Chrome/EmojiPicker',
+  title: 'Chrome/EmojiPicker',
   component: EmojiPicker,
   parameters: { layout: 'fullscreen' },
 }

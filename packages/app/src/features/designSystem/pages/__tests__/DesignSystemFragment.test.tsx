@@ -22,22 +22,19 @@ describe('DesignSystemFragment', () => {
 
     expect(nav).toBeTruthy()
     expect(
+      within(nav).getByRole('heading', { level: 2, name: 'Overview' }),
+    ).toBeTruthy()
+    expect(
       within(nav).getByRole('heading', { level: 2, name: 'Tokens' }),
     ).toBeTruthy()
     expect(
-      within(nav).getByRole('heading', { level: 2, name: 'Primitives' }),
+      within(nav).getByRole('heading', { level: 2, name: 'Actions' }),
     ).toBeTruthy()
     expect(
       within(nav).getByRole('heading', { level: 2, name: 'Endeavor' }),
     ).toBeTruthy()
     expect(
       within(nav).getByRole('heading', { level: 2, name: 'Chrome' }),
-    ).toBeTruthy()
-    expect(
-      within(nav).getByRole('heading', { level: 2, name: 'HIG' }),
-    ).toBeTruthy()
-    expect(
-      within(nav).getByRole('heading', { level: 2, name: 'Fluent 2' }),
     ).toBeTruthy()
   })
 
@@ -46,18 +43,20 @@ describe('DesignSystemFragment', () => {
 
     expect(
       screen
-        .getByRole('button', { name: 'Tokens' })
+        .getByRole('button', { name: 'Overview' })
         .getAttribute('aria-expanded'),
     ).toBe('true')
     expect(
       screen
-        .getByRole('button', { name: 'Primitives' })
+        .getByRole('button', { name: 'Actions' })
         .getAttribute('aria-expanded'),
     ).toBe('false')
     expect(
       screen.queryByRole('button', { name: 'Button (Primitive)' }),
     ).toBeNull()
-    expect(screen.getByRole('button', { name: 'Tokens (Token)' })).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: 'Overview (Catalog)' }),
+    ).toBeTruthy()
   })
 
   it('paints the canvas on the page field, not in a glass well', () => {
@@ -85,13 +84,13 @@ describe('DesignSystemFragment', () => {
   it('packs one row per title, with the kind on the trailing edge', () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 
-    const row = screen.getByRole('button', { name: 'Tokens (Token)' })
+    const row = screen.getByRole('button', { name: 'Overview (Catalog)' })
     const badge = row.querySelector('[data-slot="story-kind-badge"]')
 
     expect(row.className).toMatch(/text-\[11px\]/)
     expect(row.className).toMatch(/justify-between/)
     expect(row.style.minHeight).toBe(`${CATALOG_STORY_ROW_HEIGHT}px`)
-    expect(badge?.textContent).toBe('Token')
+    expect(badge?.textContent).toBe('Catalog')
   })
 
   it('marks the selected story and paints its name on the canvas', () => {
@@ -115,7 +114,7 @@ describe('DesignSystemFragment', () => {
       />,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }))
     await userEvent.click(
       screen.getByRole('button', { name: 'Button (Primitive)' }),
     )
@@ -130,11 +129,11 @@ describe('DesignSystemFragment', () => {
       screen.queryByRole('button', { name: 'Button (Primitive)' }),
     ).toBeNull()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }))
 
     expect(
       screen
-        .getByRole('button', { name: 'Primitives' })
+        .getByRole('button', { name: 'Actions' })
         .getAttribute('aria-expanded'),
     ).toBe('true')
     expect(
@@ -145,21 +144,23 @@ describe('DesignSystemFragment', () => {
   it('collapses an open section so its stories leave the tree', async () => {
     render(<DesignSystemFragment {...designSystemMocks.default} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Tokens' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Overview' }))
 
     expect(
       screen
-        .getByRole('button', { name: 'Tokens' })
+        .getByRole('button', { name: 'Overview' })
         .getAttribute('aria-expanded'),
     ).toBe('false')
-    expect(screen.queryByRole('button', { name: 'Tokens (Token)' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: 'Overview (Catalog)' }),
+    ).toBeNull()
   })
 
   it('falls back to the default story when the selected id is unknown', () => {
     render(<DesignSystemFragment {...designSystemMocks.unknown} />)
 
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      'Tokens',
+      'Overview',
     )
   })
 })

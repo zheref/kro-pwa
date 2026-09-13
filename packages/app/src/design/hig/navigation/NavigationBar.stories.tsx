@@ -11,7 +11,7 @@ import { NavigationBar } from './NavigationBar'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Navigation bars',
+  title: 'Navigation/Navigation bar',
   component: NavigationBar,
 }
 

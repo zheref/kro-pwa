@@ -4,7 +4,7 @@ import { Button, buttonSizeForDensity } from './button'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'Design system/Primitives/Button',
+  title: 'Actions/Button',
   component: Button,
 }
 
@@ -115,6 +115,24 @@ const WithIcons = {
   ),
 }
 
+const Appearances = {
+  name: 'Appearances · outline, subtle and transparent live on Button',
+  render: () => (
+    <Stage>
+      <Row label="Fluent appearances">
+        <Button variant="outline">outline</Button>
+        <Button variant="subtle">subtle</Button>
+        <Button variant="transparent">transparent</Button>
+      </Row>
+      <Row label="Shapes">
+        <Button shape="rounded">Rounded</Button>
+        <Button shape="circular">Circular</Button>
+        <Button shape="square">Square</Button>
+      </Row>
+    </Stage>
+  ),
+}
+
 const Disabled = {
   name: 'Disabled · the fade is applied once',
   render: () => (
@@ -185,6 +203,7 @@ export const Gallery = {
       {Variants.render()}
       {Sizes.render()}
       {WithIcons.render()}
+      {Appearances.render()}
       {Disabled.render()}
       {DarkScheme.render()}
       {Densities.render()}

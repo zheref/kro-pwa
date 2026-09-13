@@ -10,7 +10,7 @@ import { Toolbar } from './Toolbar'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Toolbars',
+  title: 'Navigation/Toolbar',
   component: Toolbar,
 }
 

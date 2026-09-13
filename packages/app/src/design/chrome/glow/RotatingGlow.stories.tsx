@@ -25,7 +25,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  *     would test the switch rather than the setting.
  */
 export default {
-  title: 'Design system/Chrome/RotatingGlow',
+  title: 'Chrome/RotatingGlow',
   component: RotatingGlow,
   parameters: { layout: 'fullscreen' },
 }

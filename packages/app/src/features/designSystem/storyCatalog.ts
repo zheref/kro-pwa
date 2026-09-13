@@ -2,6 +2,9 @@
  * The design-system Storybook catalog — every `design/**` story module, in
  * the same groups Storybook's sidebar already uses.
  *
+ * One Kro gallery. HIG, Fluent 2, Material and Primer names live on the
+ * catalog's also-known-as column, not as sidebar groups.
+ *
  * The subject of the in-app gallery is THE STORY ITSELF, not a lookalike
  * retyped here. That is the same property the snapshot suites
  * (`design/__tests__/stories.test.tsx` and its chrome/endeavor twins) rely
@@ -15,6 +18,7 @@
  */
 import type { ReactElement } from 'react'
 import type { StoryKind } from '../../design/storybook/storyKind'
+import * as overviewStories from '../../design/Overview.stories'
 import * as toastStories from '../../design/chrome/toast/ActiveToast.stories'
 import * as ringsStories from '../../design/chrome/rings/ActivityRings.stories'
 import * as dialStories from '../../design/chrome/dial/DurationDial.stories'
@@ -48,105 +52,64 @@ import * as popoverStories from '../../design/system/primitives/popover.stories'
 import * as sheetStories from '../../design/system/primitives/sheet.stories'
 import * as tabsStories from '../../design/system/primitives/tabs.stories'
 import * as tokenStories from '../../design/system/tokens/Tokens.stories'
-import * as higOverviewStories from '../../design/hig/HIGOverview.stories'
-import * as higPopupButtonStories from '../../design/hig/actions/PopupButton.stories'
-import * as higPullDownButtonStories from '../../design/hig/actions/PullDownButton.stories'
-import * as higChartStories from '../../design/hig/content/Chart.stories'
-import * as higImageViewStories from '../../design/hig/content/ImageView.stories'
-import * as higTextViewStories from '../../design/hig/content/TextView.stories'
-import * as higWebViewStories from '../../design/hig/content/WebView.stories'
-import * as higButtonsStories from '../../design/hig/existing/Buttons.stories'
-import * as higMenusStories from '../../design/hig/existing/Menus.stories'
-import * as higContextMenusStories from '../../design/hig/existing/ContextMenus.stories'
-import * as higTabViewsStories from '../../design/hig/existing/TabViews.stories'
-import * as higSegmentedStories from '../../design/hig/existing/SegmentedControls.stories'
-import * as higTextFieldsStories from '../../design/hig/existing/TextFields.stories'
-import * as higPopoversStories from '../../design/hig/existing/Popovers.stories'
-import * as higSheetsStories from '../../design/hig/existing/Sheets.stories'
-import * as higTokenViewsStories from '../../design/hig/existing/TokenViews.stories'
-import * as higActivityRingsStories from '../../design/hig/existing/ActivityRings.stories'
-import * as higGroupedBoxStories from '../../design/hig/layout/GroupedBox.stories'
-import * as higCollectionStories from '../../design/hig/layout/Collection.stories'
-import * as higColumnViewStories from '../../design/hig/layout/ColumnView.stories'
-import * as higDisclosureStories from '../../design/hig/layout/Disclosure.stories'
-import * as higLabelStories from '../../design/hig/layout/Label.stories'
-import * as higListStories from '../../design/hig/layout/List.stories'
-import * as higLockupStories from '../../design/hig/layout/Lockup.stories'
-import * as higOutlineStories from '../../design/hig/layout/OutlineView.stories'
-import * as higSplitViewStories from '../../design/hig/layout/SplitView.stories'
-import * as higSeparatorStories from '../../design/hig/layout/Separator.stories'
-import * as higScrollViewStories from '../../design/hig/layout/ScrollView.stories'
-import * as higNavigationBarStories from '../../design/hig/navigation/NavigationBar.stories'
-import * as higPathControlStories from '../../design/hig/navigation/PathControl.stories'
-import * as higSearchFieldStories from '../../design/hig/navigation/SearchField.stories'
-import * as higSidebarStories from '../../design/hig/navigation/Sidebar.stories'
-import * as higTabBarStories from '../../design/hig/navigation/TabBar.stories'
-import * as higToolbarStories from '../../design/hig/navigation/Toolbar.stories'
-import * as higAlertStories from '../../design/hig/presentation/Alert.stories'
-import * as higActionSheetStories from '../../design/hig/presentation/ActionSheet.stories'
-import * as higPanelStories from '../../design/hig/presentation/Panel.stories'
-import * as higCheckboxStories from '../../design/hig/selection/Checkbox.stories'
-import * as higColorWellStories from '../../design/hig/selection/ColorWell.stories'
-import * as higComboBoxStories from '../../design/hig/selection/ComboBox.stories'
-import * as higDigitEntryStories from '../../design/hig/selection/DigitEntry.stories'
-import * as higPickerStories from '../../design/hig/selection/Picker.stories'
-import * as higRadioStories from '../../design/hig/selection/RadioGroup.stories'
-import * as higSliderStories from '../../design/hig/selection/Slider.stories'
-import * as higStepperStories from '../../design/hig/selection/Stepper.stories'
-import * as higToggleStories from '../../design/hig/selection/Toggle.stories'
-import * as higGaugeStories from '../../design/hig/status/Gauge.stories'
-import * as higProgressStories from '../../design/hig/status/ProgressIndicator.stories'
-import * as higRatingStories from '../../design/hig/status/RatingIndicator.stories'
-import * as fluentOverviewStories from '../../design/fluent/FluentOverview.stories'
-import * as fluentLinkStories from '../../design/fluent/actions/Link.stories'
-import * as fluentCompoundStories from '../../design/fluent/actions/CompoundButton.stories'
-import * as fluentMenuButtonStories from '../../design/fluent/actions/MenuButton.stories'
-import * as fluentSplitStories from '../../design/fluent/actions/SplitButton.stories'
-import * as fluentToggleButtonStories from '../../design/fluent/actions/ToggleButton.stories'
-import * as fluentButtonStories from '../../design/fluent/existing/Buttons.stories'
-import * as fluentAvatarStories from '../../design/fluent/content/Avatar.stories'
-import * as fluentAvatarGroupStories from '../../design/fluent/content/AvatarGroup.stories'
-import * as fluentPersonaStories from '../../design/fluent/content/Persona.stories'
-import * as fluentTextStories from '../../design/fluent/content/Text.stories'
-import * as fluentImageStories from '../../design/fluent/existing/Image.stories'
-import * as fluentIconStories from '../../design/fluent/existing/Icon.stories'
-import * as fluentFieldStories from '../../design/fluent/forms/Field.stories'
-import * as fluentInfoLabelStories from '../../design/fluent/forms/InfoLabel.stories'
-import * as fluentSelectStories from '../../design/fluent/forms/Select.stories'
-import * as fluentSpinStories from '../../design/fluent/forms/SpinButton.stories'
-import * as fluentTagPickerStories from '../../design/fluent/forms/TagPicker.stories'
-import * as fluentCheckboxStories from '../../design/fluent/existing/Checkbox.stories'
-import * as fluentComboboxStories from '../../design/fluent/existing/Combobox.stories'
-import * as fluentDropdownStories from '../../design/fluent/existing/Dropdown.stories'
-import * as fluentInputStories from '../../design/fluent/existing/Input.stories'
-import * as fluentLabelStories from '../../design/fluent/existing/Label.stories'
-import * as fluentRadioStories from '../../design/fluent/existing/RadioGroup.stories'
-import * as fluentRatingStories from '../../design/fluent/existing/Rating.stories'
-import * as fluentSliderStories from '../../design/fluent/existing/Slider.stories'
-import * as fluentSwitchStories from '../../design/fluent/existing/Switch.stories'
-import * as fluentTextareaStories from '../../design/fluent/existing/Textarea.stories'
-import * as fluentAccordionStories from '../../design/fluent/navigation/Accordion.stories'
-import * as fluentBreadcrumbStories from '../../design/fluent/navigation/Breadcrumb.stories'
-import * as fluentNavStories from '../../design/fluent/navigation/Nav.stories'
-import * as fluentTablistStories from '../../design/fluent/existing/Tablist.stories'
-import * as fluentToolbarStories from '../../design/fluent/existing/Toolbar.stories'
-import * as fluentTreeStories from '../../design/fluent/existing/Tree.stories'
-import * as fluentCardStories from '../../design/fluent/surfaces/Card.stories'
-import * as fluentCarouselStories from '../../design/fluent/surfaces/Carousel.stories'
-import * as fluentTooltipStories from '../../design/fluent/surfaces/Tooltip.stories'
-import * as fluentDialogStories from '../../design/fluent/existing/Dialog.stories'
-import * as fluentDividerStories from '../../design/fluent/existing/Divider.stories'
-import * as fluentDrawerStories from '../../design/fluent/existing/Drawer.stories'
-import * as fluentListStories from '../../design/fluent/existing/List.stories'
-import * as fluentMenuStories from '../../design/fluent/existing/Menu.stories'
-import * as fluentPopoverStories from '../../design/fluent/existing/Popover.stories'
-import * as fluentBadgeStories from '../../design/fluent/status/Badge.stories'
-import * as fluentMessageBarStories from '../../design/fluent/status/MessageBar.stories'
-import * as fluentSkeletonStories from '../../design/fluent/status/Skeleton.stories'
-import * as fluentSpinnerStories from '../../design/fluent/status/Spinner.stories'
-import * as fluentTagStories from '../../design/fluent/status/Tag.stories'
-import * as fluentProgressStories from '../../design/fluent/existing/ProgressBar.stories'
-import * as fluentToastStories from '../../design/fluent/existing/Toast.stories'
+import * as compoundButtonStories from '../../design/fluent/actions/CompoundButton.stories'
+import * as linkStories from '../../design/fluent/actions/Link.stories'
+import * as splitButtonStories from '../../design/fluent/actions/SplitButton.stories'
+import * as toggleButtonStories from '../../design/fluent/actions/ToggleButton.stories'
+import * as avatarStories from '../../design/fluent/content/Avatar.stories'
+import * as avatarGroupStories from '../../design/fluent/content/AvatarGroup.stories'
+import * as personaStories from '../../design/fluent/content/Persona.stories'
+import * as textStories from '../../design/fluent/content/Text.stories'
+import * as fieldStories from '../../design/fluent/forms/Field.stories'
+import * as infoLabelStories from '../../design/fluent/forms/InfoLabel.stories'
+import * as selectStories from '../../design/fluent/forms/Select.stories'
+import * as spinButtonStories from '../../design/fluent/forms/SpinButton.stories'
+import * as tagPickerStories from '../../design/fluent/forms/TagPicker.stories'
+import * as accordionStories from '../../design/fluent/navigation/Accordion.stories'
+import * as badgeStories from '../../design/fluent/status/Badge.stories'
+import * as skeletonStories from '../../design/fluent/status/Skeleton.stories'
+import * as tagStories from '../../design/fluent/status/Tag.stories'
+import * as cardSurfaceStories from '../../design/fluent/surfaces/Card.stories'
+import * as carouselStories from '../../design/fluent/surfaces/Carousel.stories'
+import * as tooltipStories from '../../design/fluent/surfaces/Tooltip.stories'
+import * as popupButtonStories from '../../design/hig/actions/PopupButton.stories'
+import * as pullDownButtonStories from '../../design/hig/actions/PullDownButton.stories'
+import * as chartStories from '../../design/hig/content/Chart.stories'
+import * as imageViewStories from '../../design/hig/content/ImageView.stories'
+import * as textViewStories from '../../design/hig/content/TextView.stories'
+import * as webViewStories from '../../design/hig/content/WebView.stories'
+import * as groupedBoxStories from '../../design/hig/layout/GroupedBox.stories'
+import * as collectionStories from '../../design/hig/layout/Collection.stories'
+import * as columnViewStories from '../../design/hig/layout/ColumnView.stories'
+import * as disclosureStories from '../../design/hig/layout/Disclosure.stories'
+import * as labelStories from '../../design/hig/layout/Label.stories'
+import * as listStories from '../../design/hig/layout/List.stories'
+import * as lockupStories from '../../design/hig/layout/Lockup.stories'
+import * as outlineStories from '../../design/hig/layout/OutlineView.stories'
+import * as splitViewStories from '../../design/hig/layout/SplitView.stories'
+import * as separatorStories from '../../design/hig/layout/Separator.stories'
+import * as scrollViewStories from '../../design/hig/layout/ScrollView.stories'
+import * as navigationBarStories from '../../design/hig/navigation/NavigationBar.stories'
+import * as pathControlStories from '../../design/hig/navigation/PathControl.stories'
+import * as searchFieldStories from '../../design/hig/navigation/SearchField.stories'
+import * as sidebarStories from '../../design/hig/navigation/Sidebar.stories'
+import * as tabBarStories from '../../design/hig/navigation/TabBar.stories'
+import * as toolbarStories from '../../design/hig/navigation/Toolbar.stories'
+import * as alertStories from '../../design/hig/presentation/Alert.stories'
+import * as actionSheetStories from '../../design/hig/presentation/ActionSheet.stories'
+import * as panelStories from '../../design/hig/presentation/Panel.stories'
+import * as checkboxStories from '../../design/hig/selection/Checkbox.stories'
+import * as colorWellStories from '../../design/hig/selection/ColorWell.stories'
+import * as comboBoxStories from '../../design/hig/selection/ComboBox.stories'
+import * as digitEntryStories from '../../design/hig/selection/DigitEntry.stories'
+import * as pickerStories from '../../design/hig/selection/Picker.stories'
+import * as radioStories from '../../design/hig/selection/RadioGroup.stories'
+import * as sliderStories from '../../design/hig/selection/Slider.stories'
+import * as stepperStories from '../../design/hig/selection/Stepper.stories'
+import * as toggleStories from '../../design/hig/selection/Toggle.stories'
+import * as gaugeStories from '../../design/hig/status/Gauge.stories'
+import * as progressStories from '../../design/hig/status/ProgressIndicator.stories'
+import * as ratingStories from '../../design/hig/status/RatingIndicator.stories'
 
 export interface CatalogStory {
   readonly id: string
@@ -221,11 +184,12 @@ const group = (
 })
 
 /**
- * One row per Storybook title. The three snapshot suites list the same
- * modules; a component that ships stories in one place and not the other is
- * a catalog bug, caught by `storyCatalog.test.ts`.
+ * One row per Storybook title. The snapshot suites list the same modules;
+ * a component that ships stories in one place and not the other is a
+ * catalog bug, caught by `storyCatalog.test.ts`.
  */
 export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
+  group('Overview', [component('Overview', overviewStories, 'catalog')]),
   group('Tokens', [component('Tokens', tokenStories, 'token')]),
   group('Materials', [
     component('KroGlass', glassStories, 'material'),
@@ -233,19 +197,98 @@ export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
     component('DetailBackdrop', detailBackdropStories, 'material'),
     component('OnGradient', onGradientStories, 'modifier'),
   ]),
-  group('Primitives', [
+  group('Actions', [
     component('Button', buttonStories, 'primitive'),
+    component('Compound button', compoundButtonStories, 'component'),
+    component('Link', linkStories, 'component'),
+    component('Pull-down button', pullDownButtonStories, 'component'),
+    component('Pop-up button', popupButtonStories, 'component'),
+    component('Split button', splitButtonStories, 'component'),
+    component('Toggle button', toggleButtonStories, 'component'),
+  ]),
+  group('Content', [
+    component('Avatar', avatarStories, 'component'),
+    component('Avatar group', avatarGroupStories, 'component'),
+    component('Chart', chartStories, 'component'),
+    component('Image view', imageViewStories, 'component'),
+    component('Lockup', lockupStories, 'component'),
+    component('Persona', personaStories, 'component'),
+    component('Text', textStories, 'component'),
+    component('Text view', textViewStories, 'component'),
+    component('Web view', webViewStories, 'component'),
+  ]),
+  group('Forms', [
+    component('Checkbox', checkboxStories, 'component'),
+    component('Color well', colorWellStories, 'component'),
+    component('Combo box', comboBoxStories, 'component'),
+    component('Digit entry', digitEntryStories, 'component'),
+    component('Field', fieldStories, 'component'),
+    component('Info label', infoLabelStories, 'component'),
     component('Input', inputStories, 'primitive'),
-    component('Dialog', dialogStories, 'primitive'),
-    component('Sheet', sheetStories, 'primitive'),
-    component('Popover', popoverStories, 'primitive'),
-    component('DropdownMenu', dropdownMenuStories, 'primitive'),
+    component('Label', labelStories, 'component'),
+    component('Picker', pickerStories, 'component'),
+    component('Radio group', radioStories, 'component'),
+    component('Rating indicator', ratingStories, 'component'),
+    component('Search field', searchFieldStories, 'component'),
+    component('Select', selectStories, 'component'),
+    component('Slider', sliderStories, 'component'),
+    component('Spin button', spinButtonStories, 'component'),
+    component('Stepper', stepperStories, 'component'),
+    component('Tag picker', tagPickerStories, 'component'),
+    component('Toggle', toggleStories, 'component'),
+  ]),
+  group('Layout', [
+    component('Collection', collectionStories, 'component'),
+    component('Column view', columnViewStories, 'component'),
+    component('Disclosure', disclosureStories, 'component'),
+    component('Grouped box', groupedBoxStories, 'component'),
+    component('List', listStories, 'component'),
+    component('Outline view', outlineStories, 'component'),
+    component('Scroll view', scrollViewStories, 'component'),
+    component('Separator', separatorStories, 'component'),
+    component('Split view', splitViewStories, 'component'),
+  ]),
+  group('Navigation', [
+    component('Accordion', accordionStories, 'component'),
+    component('Navigation bar', navigationBarStories, 'component'),
+    component('Path control', pathControlStories, 'component'),
+    component('Sidebar', sidebarStories, 'component'),
+    component('Tab bar', tabBarStories, 'component'),
     component('Tabs', tabsStories, 'primitive'),
+    component('Toolbar', toolbarStories, 'component'),
+  ]),
+  group('Surfaces', [
+    component('Action sheet', actionSheetStories, 'component'),
+    component('Alert', alertStories, 'component'),
+    component('Card', cardSurfaceStories, 'component'),
+    component('Carousel', carouselStories, 'component'),
+    component('Dialog', dialogStories, 'primitive'),
+    component('Menu', dropdownMenuStories, 'primitive'),
+    component('Panel', panelStories, 'component'),
+    component('Popover', popoverStories, 'primitive'),
+    component('Sheet', sheetStories, 'primitive'),
+    component('Tooltip', tooltipStories, 'component'),
+  ]),
+  group('Status', [
+    component('Badge', badgeStories, 'component'),
+    component('Gauge', gaugeStories, 'component'),
+    component('Inline banner', inlineBannerStories, 'component'),
+    component('Progress indicator', progressStories, 'component'),
+    component('Skeleton', skeletonStories, 'component'),
+    component('Tag', tagStories, 'component'),
+  ]),
+  group('Chrome', [
+    component('LiquidGlassFAB', fabStories, 'chrome'),
+    component('LiquidGlassFABMenu', fabMenuStories, 'chrome'),
+    component('RotatingGlow', glowStories, 'chrome'),
+    component('ActiveToast', toastStories, 'chrome'),
+    component('DurationDial', dialStories, 'chrome'),
+    component('ActivityRings', ringsStories, 'chrome'),
+    component('EmojiPicker', emojiStories, 'chrome'),
   ]),
   group('Endeavor', [
     component('CardBadge', cardBadgeStories, 'domain'),
     component('KroChip', kroChipStories, 'domain'),
-    component('InlineBanner', inlineBannerStories, 'domain'),
     component('SurfaceCard', surfaceCardStories, 'domain'),
     component('PropertyRow', propertyRowStories, 'domain'),
     component('EmptyStateCard', emptyStateCardStories, 'domain'),
@@ -257,142 +300,6 @@ export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
     component('EndeavorActionSurface', actionSurfaceStories, 'domain'),
     component('EndeavorRow', rowStories, 'domain'),
     component('EndeavorCard', cardStories, 'domain'),
-  ]),
-  group('Chrome', [
-    component('LiquidGlassFAB', fabStories, 'chrome'),
-    component('LiquidGlassFABMenu', fabMenuStories, 'chrome'),
-    component('RotatingGlow', glowStories, 'chrome'),
-    component('ActiveToast', toastStories, 'chrome'),
-    component('DurationDial', dialStories, 'chrome'),
-    component('ActivityRings', ringsStories, 'chrome'),
-    component('EmojiPicker', emojiStories, 'chrome'),
-  ]),
-  group('HIG', [component('HIG Overview', higOverviewStories, 'catalog')]),
-  group('HIG · Actions', [
-    component('HIG Buttons', higButtonsStories, 'pattern'),
-    component('HIG Menus', higMenusStories, 'pattern'),
-    component('HIG Context menus', higContextMenusStories, 'pattern'),
-    component('HIG Pop-up buttons', higPopupButtonStories, 'component'),
-    component('HIG Pull-down buttons', higPullDownButtonStories, 'component'),
-  ]),
-  group('HIG · Content', [
-    component('HIG Charts', higChartStories, 'component'),
-    component('HIG Image views', higImageViewStories, 'component'),
-    component('HIG Text views', higTextViewStories, 'component'),
-    component('HIG Web views', higWebViewStories, 'component'),
-  ]),
-  group('HIG · Layout', [
-    component('HIG Boxes', higGroupedBoxStories, 'component'),
-    component('HIG Collections', higCollectionStories, 'component'),
-    component('HIG Column views', higColumnViewStories, 'component'),
-    component('HIG Disclosure controls', higDisclosureStories, 'component'),
-    component('HIG Labels', higLabelStories, 'component'),
-    component('HIG Lists and tables', higListStories, 'component'),
-    component('HIG Lockups', higLockupStories, 'component'),
-    component('HIG Outline views', higOutlineStories, 'component'),
-    component('HIG Split views', higSplitViewStories, 'component'),
-    component('HIG Separators', higSeparatorStories, 'component'),
-    component('HIG Tab views', higTabViewsStories, 'pattern'),
-  ]),
-  group('HIG · Navigation', [
-    component('HIG Navigation bars', higNavigationBarStories, 'component'),
-    component('HIG Path controls', higPathControlStories, 'component'),
-    component('HIG Search fields', higSearchFieldStories, 'component'),
-    component('HIG Sidebars', higSidebarStories, 'component'),
-    component('HIG Tab bars', higTabBarStories, 'component'),
-    component('HIG Token views', higTokenViewsStories, 'pattern'),
-    component('HIG Toolbars', higToolbarStories, 'component'),
-  ]),
-  group('HIG · Presentation', [
-    component('HIG Action sheets', higActionSheetStories, 'component'),
-    component('HIG Alerts', higAlertStories, 'component'),
-    component('HIG Panels', higPanelStories, 'component'),
-    component('HIG Popovers', higPopoversStories, 'pattern'),
-    component('HIG Scroll views', higScrollViewStories, 'component'),
-    component('HIG Sheets', higSheetsStories, 'pattern'),
-  ]),
-  group('HIG · Selection', [
-    component('HIG Checkboxes', higCheckboxStories, 'component'),
-    component('HIG Color wells', higColorWellStories, 'component'),
-    component('HIG Combo boxes', higComboBoxStories, 'component'),
-    component('HIG Digit entry', higDigitEntryStories, 'component'),
-    component('HIG Pickers', higPickerStories, 'component'),
-    component('HIG Radio buttons', higRadioStories, 'component'),
-    component('HIG Segmented controls', higSegmentedStories, 'pattern'),
-    component('HIG Sliders', higSliderStories, 'component'),
-    component('HIG Steppers', higStepperStories, 'component'),
-    component('HIG Text fields', higTextFieldsStories, 'pattern'),
-    component('HIG Toggles', higToggleStories, 'component'),
-  ]),
-  group('HIG · Status', [
-    component('HIG Activity rings', higActivityRingsStories, 'pattern'),
-    component('HIG Gauges', higGaugeStories, 'component'),
-    component('HIG Progress indicators', higProgressStories, 'component'),
-    component('HIG Rating indicators', higRatingStories, 'component'),
-  ]),
-  group('Fluent 2', [
-    component('Fluent 2 Overview', fluentOverviewStories, 'catalog'),
-  ]),
-  group('Fluent 2 · Actions', [
-    component('Fluent Button', fluentButtonStories, 'pattern'),
-    component('Fluent Compound button', fluentCompoundStories, 'component'),
-    component('Fluent Link', fluentLinkStories, 'component'),
-    component('Fluent Menu button', fluentMenuButtonStories, 'component'),
-    component('Fluent Split button', fluentSplitStories, 'component'),
-    component('Fluent Toggle button', fluentToggleButtonStories, 'component'),
-  ]),
-  group('Fluent 2 · Content', [
-    component('Fluent Avatar', fluentAvatarStories, 'component'),
-    component('Fluent Avatar group', fluentAvatarGroupStories, 'component'),
-    component('Fluent Icon', fluentIconStories, 'pattern'),
-    component('Fluent Image', fluentImageStories, 'pattern'),
-    component('Fluent Persona', fluentPersonaStories, 'component'),
-    component('Fluent Text', fluentTextStories, 'component'),
-  ]),
-  group('Fluent 2 · Forms', [
-    component('Fluent Checkbox', fluentCheckboxStories, 'pattern'),
-    component('Fluent Combobox', fluentComboboxStories, 'pattern'),
-    component('Fluent Dropdown', fluentDropdownStories, 'pattern'),
-    component('Fluent Field', fluentFieldStories, 'component'),
-    component('Fluent Info label', fluentInfoLabelStories, 'component'),
-    component('Fluent Input', fluentInputStories, 'pattern'),
-    component('Fluent Label', fluentLabelStories, 'pattern'),
-    component('Fluent Radio group', fluentRadioStories, 'pattern'),
-    component('Fluent Rating', fluentRatingStories, 'pattern'),
-    component('Fluent Select', fluentSelectStories, 'component'),
-    component('Fluent Slider', fluentSliderStories, 'pattern'),
-    component('Fluent Spin button', fluentSpinStories, 'component'),
-    component('Fluent Switch', fluentSwitchStories, 'pattern'),
-    component('Fluent Tag picker', fluentTagPickerStories, 'component'),
-    component('Fluent Textarea', fluentTextareaStories, 'pattern'),
-  ]),
-  group('Fluent 2 · Navigation', [
-    component('Fluent Accordion', fluentAccordionStories, 'component'),
-    component('Fluent Breadcrumb', fluentBreadcrumbStories, 'component'),
-    component('Fluent Nav', fluentNavStories, 'component'),
-    component('Fluent Tablist', fluentTablistStories, 'pattern'),
-    component('Fluent Toolbar', fluentToolbarStories, 'pattern'),
-    component('Fluent Tree', fluentTreeStories, 'pattern'),
-  ]),
-  group('Fluent 2 · Surfaces', [
-    component('Fluent Card', fluentCardStories, 'component'),
-    component('Fluent Carousel', fluentCarouselStories, 'component'),
-    component('Fluent Dialog', fluentDialogStories, 'pattern'),
-    component('Fluent Divider', fluentDividerStories, 'pattern'),
-    component('Fluent Drawer', fluentDrawerStories, 'pattern'),
-    component('Fluent List', fluentListStories, 'pattern'),
-    component('Fluent Menu', fluentMenuStories, 'pattern'),
-    component('Fluent Popover', fluentPopoverStories, 'pattern'),
-    component('Fluent Tooltip', fluentTooltipStories, 'component'),
-  ]),
-  group('Fluent 2 · Status', [
-    component('Fluent Badge', fluentBadgeStories, 'component'),
-    component('Fluent Message bar', fluentMessageBarStories, 'component'),
-    component('Fluent Progress bar', fluentProgressStories, 'pattern'),
-    component('Fluent Skeleton', fluentSkeletonStories, 'component'),
-    component('Fluent Spinner', fluentSpinnerStories, 'component'),
-    component('Fluent Tag', fluentTagStories, 'component'),
-    component('Fluent Toast', fluentToastStories, 'pattern'),
   ]),
 ]
 

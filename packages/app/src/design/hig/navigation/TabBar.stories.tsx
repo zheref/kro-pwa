@@ -9,7 +9,7 @@ import { TabBar } from './TabBar'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Tab bars',
+  title: 'Navigation/Tab bar',
   component: TabBar,
 }
 

@@ -9,7 +9,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Layout and organization/Separators',
+  title: 'Layout/Separator',
   component: Separator,
 }
 

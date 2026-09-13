@@ -65,15 +65,15 @@ describe('Breadcrumb', () => {
     const { rerender } = render(<Breadcrumb items={[...ITEMS]} />)
 
     const nav = () => screen.getByRole('navigation', { name: 'Breadcrumb' })
-    expect(nav().getAttribute('data-density')).toBe('comfortable')
-    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
-      'min-h-9',
-    )
-
-    rerender(<Breadcrumb items={[...ITEMS]} size="small" />)
     expect(nav().getAttribute('data-density')).toBe('compact')
     expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
       'min-h-6',
+    )
+
+    rerender(<Breadcrumb items={[...ITEMS]} size="large" />)
+    expect(nav().getAttribute('data-density')).toBe('comfortable')
+    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
+      'min-h-9',
     )
   })
 })

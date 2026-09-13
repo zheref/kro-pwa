@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Layout and organization/Boxes',
+  title: 'Layout/Grouped box',
   component: GroupedBox,
 }
 

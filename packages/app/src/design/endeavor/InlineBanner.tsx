@@ -52,12 +52,14 @@
  * `info` banner is for.
  */
 
+import { type ControlDensity, DEFAULT_CONTROL_DENSITY } from '../system/density'
 import type { ColorRole } from '../system/tokens/roles'
 import { colorVar } from '../system/tokens/roles'
 import { cn } from '../system/utils/cn'
 import { type KitSymbolName, endeavorIcon } from './endeavorIcons'
 
-export type InlineBannerKind = 'info' | 'warning' | 'error'
+export type InlineBannerKind = 'info' | 'success' | 'warning' | 'error'
+export type InlineBannerLayout = 'singleline' | 'multiline'
 
 interface BannerStyle {
   readonly fill: ColorRole
@@ -86,6 +88,13 @@ const STYLES: Readonly<Record<InlineBannerKind, BannerStyle>> = {
     symbol: 'clock.badge.exclamationmark.fill',
     spokenPrefix: 'Warning',
   },
+  success: {
+    fill: 'focusGreen',
+    title: 'snow',
+    body: 'rgb(255 255 255 / 0.7)',
+    symbol: 'checkmark.circle.fill',
+    spokenPrefix: 'Success',
+  },
   info: {
     fill: 'backInner',
     title: 'fore',
@@ -103,6 +112,9 @@ export interface InlineBannerProps {
   /** The recovery path. Canon: an error with no next step is the third defect. */
   readonly actionTitle?: string
   readonly onAction?: () => void
+  readonly onDismiss?: () => void
+  readonly layout?: InlineBannerLayout
+  readonly density?: ControlDensity
   readonly className?: string
 }
 
@@ -112,23 +124,34 @@ export function InlineBanner({
   detail,
   actionTitle,
   onAction,
+  onDismiss,
+  layout = 'multiline',
+  density = DEFAULT_CONTROL_DENSITY,
   className,
 }: InlineBannerProps) {
   const style = STYLES[kind]
   const Icon = endeavorIcon(style.symbol)
+  const Dismiss = endeavorIcon('xmark')
   const hasAction = actionTitle !== undefined && onAction !== undefined
+  const single = layout === 'singleline'
+  const actionHeight = density === 'compact' ? 'h-6' : 'h-9'
+  const dismissSize = density === 'compact' ? 'size-6' : 'size-9'
+  const titleColor = colorVar(style.title)
 
   return (
     <div
       role="status"
       data-kind={kind}
+      data-layout={layout}
+      data-density={density}
       className={cn(
-        'flex w-full items-start gap-2.5 rounded-kro-field p-3',
+        'flex w-full gap-2.5 rounded-kro-field p-3',
+        single ? 'items-center' : 'items-start',
         className,
       )}
       style={{
         backgroundColor: colorVar(style.fill),
-        color: colorVar(style.title),
+        color: titleColor,
       }}
     >
       {/* The severity, spoken but not shown — the glyph shows it. Inside the
@@ -141,11 +164,28 @@ export function InlineBanner({
         className="mt-px shrink-0"
         aria-hidden
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <p className="m-0 text-[13px] font-semibold leading-snug">{message}</p>
+      <div
+        className={cn(
+          'flex min-w-0 flex-1',
+          single
+            ? 'flex-row items-center gap-2'
+            : 'flex-col items-stretch gap-2',
+        )}
+      >
+        <p
+          className={cn(
+            'm-0 text-[13px] font-semibold leading-snug',
+            single ? 'shrink-0' : undefined,
+          )}
+        >
+          {message}
+        </p>
         {detail === undefined ? null : (
           <p
-            className="m-0 text-[13px] leading-snug"
+            className={cn(
+              'm-0 text-[13px] leading-snug',
+              single ? 'truncate' : undefined,
+            )}
             style={{ color: style.body }}
           >
             {detail}
@@ -156,16 +196,33 @@ export function InlineBanner({
             type="button"
             onClick={onAction}
             className={cn(
-              'inline-flex h-11 w-fit items-center rounded-kro-small px-3',
+              'inline-flex w-fit shrink-0 items-center rounded-kro-small px-3',
+              actionHeight,
               'text-[13px] font-semibold underline underline-offset-2',
               'outline-none focus-visible:shadow-[var(--kro-ring)]',
             )}
-            style={{ color: colorVar(style.title) }}
+            style={{ color: titleColor }}
           >
             {actionTitle}
           </button>
         ) : null}
       </div>
+      {onDismiss === undefined ? null : (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className={cn(
+            'inline-flex shrink-0 items-center justify-center',
+            dismissSize,
+            'rounded-kro-small outline-none',
+            'focus-visible:shadow-[var(--kro-ring)]',
+          )}
+          style={{ color: titleColor }}
+        >
+          <Dismiss size={16} strokeWidth={2.5} aria-hidden />
+        </button>
+      )}
     </div>
   )
 }

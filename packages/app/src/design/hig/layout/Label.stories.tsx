@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Layout and organization/Labels',
+  title: 'Forms/Label',
   component: Label,
 }
 

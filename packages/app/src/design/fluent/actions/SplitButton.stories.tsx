@@ -9,7 +9,7 @@ import {
 import { FLUENT_CONTROL_SIZES, fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Actions/Split button',
+  title: 'Actions/Split button',
   component: SplitButton,
 }
 

@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Sliders',
+  title: 'Forms/Slider',
   component: Slider,
 }
 

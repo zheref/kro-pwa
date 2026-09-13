@@ -8,7 +8,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * (#13).
  */
 export default {
-  title: 'Design system/Primitives/Tabs',
+  title: 'Navigation/Tabs',
   component: TabsList,
 }
 

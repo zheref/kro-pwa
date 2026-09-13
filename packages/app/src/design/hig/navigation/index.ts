@@ -5,6 +5,12 @@ export {
   type PathControlProps,
 } from './PathControl'
 export { SearchField, type SearchFieldProps } from './SearchField'
-export { Sidebar, type SidebarItem, type SidebarProps } from './Sidebar'
+export {
+  Sidebar,
+  type SidebarAppearance,
+  type SidebarChild,
+  type SidebarItem,
+  type SidebarProps,
+} from './Sidebar'
 export { TabBar, type TabBarItem, type TabBarProps } from './TabBar'
 export { Toolbar, type ToolbarProps } from './Toolbar'

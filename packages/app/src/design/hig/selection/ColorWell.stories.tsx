@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Color wells',
+  title: 'Forms/Color well',
   component: ColorWell,
 }
 

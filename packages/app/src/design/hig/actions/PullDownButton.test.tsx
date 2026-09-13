@@ -68,6 +68,13 @@ describe('PullDownButton', () => {
     expect(comfortable.className).toContain('h-9')
   })
 
+  it('paints Fluent Menu button appearances on the same trigger', () => {
+    render(<PullDownButton label="Add" items={ITEMS} appearance="outline" />)
+    const trigger = screen.getByRole('button', { name: 'Add' })
+    expect(trigger.getAttribute('data-appearance')).toBe('outline')
+    expect(trigger.className).toContain('border-kro-hairline')
+  })
+
   it('still names the action when the menu has a destructive item', () => {
     render(<PullDownButton label="Add" items={ITEMS} />)
 

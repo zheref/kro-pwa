@@ -8,7 +8,7 @@ import {
 } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Content/Text',
+  title: 'Content/Text',
   component: Text,
 }
 

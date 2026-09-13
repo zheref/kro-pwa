@@ -80,10 +80,10 @@ describe('Nav', () => {
     )
 
     const pane = () => screen.getByLabelText('Navigation')
-    expect(pane().getAttribute('data-density')).toBe('comfortable')
+    expect(pane().getAttribute('data-density')).toBe('compact')
     expect(pane().getAttribute('data-appearance')).toBe('default')
     expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
-      'min-h-9',
+      'min-h-6',
     )
 
     rerender(
@@ -91,14 +91,10 @@ describe('Nav', () => {
         items={[...ITEMS]}
         selectedId="plan"
         onSelect={() => {}}
-        size="small"
         appearance="subtle"
       />,
     )
     expect(pane().getAttribute('data-density')).toBe('compact')
     expect(pane().getAttribute('data-appearance')).toBe('subtle')
-    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
-      'min-h-6',
-    )
   })
 })

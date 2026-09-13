@@ -7,7 +7,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * would show the colours and prove nothing about why this layer exists.
  */
 export default {
-  title: 'Design system/DetailBackdrop',
+  title: 'Materials/DetailBackdrop',
   component: DetailBackdrop,
   parameters: { layout: 'fullscreen' },
 }

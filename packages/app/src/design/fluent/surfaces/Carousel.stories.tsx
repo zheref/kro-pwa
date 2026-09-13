@@ -8,7 +8,7 @@ import {
 } from '../fluentStoryStage'
 
 export default {
-  title: 'Fluent 2/Surfaces/Carousel',
+  title: 'Surfaces/Carousel',
   component: Carousel,
 }
 

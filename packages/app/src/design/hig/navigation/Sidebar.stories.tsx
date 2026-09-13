@@ -9,7 +9,7 @@ import { Sidebar } from './Sidebar'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'HIG/Navigation and search/Sidebars',
+  title: 'Navigation/Sidebar',
   component: Sidebar,
 }
 
@@ -81,12 +81,39 @@ const Densities = {
   ),
 }
 
+const Nested = {
+  name: 'Nested · categories expand in place',
+  render: () => (
+    <HigStage gradient>
+      <HigRow label="Do is open">
+        <Sidebar
+          title="Kro"
+          items={[
+            {
+              id: 'do',
+              label: 'Do',
+              children: [
+                { id: 'today', label: 'Today' },
+                { id: 'inbox', label: 'Inbox' },
+              ],
+            },
+            { id: 'plan', label: 'Plan', icon: LayoutGrid },
+          ]}
+          selectedId="inbox"
+          onSelect={() => {}}
+        />
+      </HigRow>
+    </HigStage>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
     <StoryGallery>
       {Destinations.render()}
       {Unselected.render()}
+      {Nested.render()}
       {BothSchemes.render()}
       {Densities.render()}
     </StoryGallery>

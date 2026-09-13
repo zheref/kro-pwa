@@ -1,5 +1,5 @@
 /**
- * Snapshots of the HIG gallery's Storybook stories.
+ * Snapshots of the Kro gallery's HIG-origin Storybook stories.
  *
  * Same construction as `design/__tests__/stories.test.tsx`: the subject is
  * THE STORY ITSELF. Radix-popper stories (menus, popovers) are omitted from
@@ -10,23 +10,12 @@
 import { cleanup, render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
-import * as overviewStories from '../HIGOverview.stories'
 import * as popupButtonStories from '../actions/PopupButton.stories'
 import * as pullDownButtonStories from '../actions/PullDownButton.stories'
 import * as chartStories from '../content/Chart.stories'
 import * as imageViewStories from '../content/ImageView.stories'
 import * as textViewStories from '../content/TextView.stories'
 import * as webViewStories from '../content/WebView.stories'
-import * as activityRingsStories from '../existing/ActivityRings.stories'
-import * as buttonsStories from '../existing/Buttons.stories'
-import * as contextMenusStories from '../existing/ContextMenus.stories'
-import * as menusStories from '../existing/Menus.stories'
-import * as popoversStories from '../existing/Popovers.stories'
-import * as segmentedStories from '../existing/SegmentedControls.stories'
-import * as sheetsStories from '../existing/Sheets.stories'
-import * as tabViewsStories from '../existing/TabViews.stories'
-import * as textFieldsStories from '../existing/TextFields.stories'
-import * as tokenViewsStories from '../existing/TokenViews.stories'
 import * as collectionStories from '../layout/Collection.stories'
 import * as columnViewStories from '../layout/ColumnView.stories'
 import * as disclosureStories from '../layout/Disclosure.stories'
@@ -68,68 +57,49 @@ interface Story {
 type StoryModule = Record<string, unknown>
 
 const MODULES: ReadonlyArray<[string, StoryModule]> = [
-  ['Overview', overviewStories],
-  ['Buttons', buttonsStories],
-  ['Menus', menusStories],
-  ['Context menus', contextMenusStories],
-  ['Pop-up buttons', popupButtonStories],
-  ['Pull-down buttons', pullDownButtonStories],
-  ['Charts', chartStories],
-  ['Image views', imageViewStories],
-  ['Text views', textViewStories],
-  ['Web views', webViewStories],
-  ['Boxes', groupedBoxStories],
-  ['Collections', collectionStories],
-  ['Column views', columnViewStories],
-  ['Disclosure controls', disclosureStories],
-  ['Labels', labelStories],
-  ['Lists and tables', listStories],
-  ['Lockups', lockupStories],
-  ['Outline views', outlineStories],
-  ['Split views', splitViewStories],
-  ['Separators', separatorStories],
-  ['Tab views', tabViewsStories],
-  ['Navigation bars', navigationBarStories],
-  ['Path controls', pathControlStories],
-  ['Search fields', searchFieldStories],
-  ['Sidebars', sidebarStories],
-  ['Tab bars', tabBarStories],
-  ['Token views', tokenViewsStories],
-  ['Toolbars', toolbarStories],
-  ['Action sheets', actionSheetStories],
-  ['Alerts', alertStories],
-  ['Panels', panelStories],
-  ['Popovers', popoversStories],
-  ['Scroll views', scrollViewStories],
-  ['Sheets', sheetsStories],
-  ['Checkboxes', checkboxStories],
-  ['Color wells', colorWellStories],
-  ['Combo boxes', comboBoxStories],
+  ['Pop-up button', popupButtonStories],
+  ['Pull-down button', pullDownButtonStories],
+  ['Chart', chartStories],
+  ['Image view', imageViewStories],
+  ['Text view', textViewStories],
+  ['Web view', webViewStories],
+  ['Grouped box', groupedBoxStories],
+  ['Collection', collectionStories],
+  ['Column view', columnViewStories],
+  ['Disclosure', disclosureStories],
+  ['Label', labelStories],
+  ['List', listStories],
+  ['Lockup', lockupStories],
+  ['Outline view', outlineStories],
+  ['Split view', splitViewStories],
+  ['Separator', separatorStories],
+  ['Navigation bar', navigationBarStories],
+  ['Path control', pathControlStories],
+  ['Search field', searchFieldStories],
+  ['Sidebar', sidebarStories],
+  ['Tab bar', tabBarStories],
+  ['Toolbar', toolbarStories],
+  ['Action sheet', actionSheetStories],
+  ['Alert', alertStories],
+  ['Panel', panelStories],
+  ['Scroll view', scrollViewStories],
+  ['Checkbox', checkboxStories],
+  ['Color well', colorWellStories],
+  ['Combo box', comboBoxStories],
   ['Digit entry', digitEntryStories],
-  ['Pickers', pickerStories],
-  ['Radio buttons', radioStories],
-  ['Segmented controls', segmentedStories],
-  ['Sliders', sliderStories],
-  ['Steppers', stepperStories],
-  ['Text fields', textFieldsStories],
-  ['Toggles', toggleStories],
-  ['Activity rings', activityRingsStories],
-  ['Gauges', gaugeStories],
-  ['Progress indicators', progressStories],
-  ['Rating indicators', ratingStories],
+  ['Picker', pickerStories],
+  ['Radio group', radioStories],
+  ['Slider', sliderStories],
+  ['Stepper', stepperStories],
+  ['Toggle', toggleStories],
+  ['Gauge', gaugeStories],
+  ['Progress indicator', progressStories],
+  ['Rating indicator', ratingStories],
 ]
 
-/**
- * Radix popper Content in the tree stalls jsdom. These galleries still
- * have to exist; their theming contract lives in the component tests.
- */
 const SNAPSHOTTED = MODULES.filter(
   ([component]) =>
-    component !== 'Menus' &&
-    component !== 'Context menus' &&
-    component !== 'Popovers' &&
-    component !== 'Pop-up buttons' &&
-    component !== 'Pull-down buttons',
+    component !== 'Pop-up button' && component !== 'Pull-down button',
 )
 
 function storiesOf(module: StoryModule): Array<[string, Story]> {
@@ -155,7 +125,7 @@ function normalise(markup: string): string {
 
 afterEach(cleanup)
 
-describe('every HIG catalog story module ships one gallery page', () => {
+describe('every HIG-origin story module ships one gallery page', () => {
   for (const [component, module] of MODULES) {
     it(`${component} is one Gallery`, () => {
       expect(storiesOf(module).map(([name]) => name)).toEqual(['Gallery'])
@@ -163,7 +133,7 @@ describe('every HIG catalog story module ships one gallery page', () => {
   }
 })
 
-describe('HIG story snapshots', () => {
+describe('HIG-origin story snapshots', () => {
   for (const [component, module] of SNAPSHOTTED) {
     describe(component, () => {
       for (const [exportName, story] of storiesOf(module)) {

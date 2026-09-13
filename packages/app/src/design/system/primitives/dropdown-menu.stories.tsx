@@ -12,7 +12,7 @@ import {
 } from './dropdown-menu'
 
 export default {
-  title: 'Design system/Primitives/DropdownMenu',
+  title: 'Surfaces/Menu',
   component: DropdownMenuContent,
   parameters: { layout: 'centered' },
 }

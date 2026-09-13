@@ -11,17 +11,17 @@ describe('Fluent size mapping', () => {
     expect(FLUENT_CONTROL_SIZES).toEqual(['small', 'medium', 'large'])
   })
 
-  it('maps small onto compact and the rest onto comfortable', () => {
+  it('maps small and medium onto compact; large is the touch preview', () => {
     expect(densityForFluentSize('small')).toBe('compact')
-    expect(densityForFluentSize('medium')).toBe('comfortable')
+    expect(densityForFluentSize('medium')).toBe('compact')
     expect(densityForFluentSize('large')).toBe('comfortable')
   })
 
-  it('maps those sizes onto Button sm / md / lg', () => {
+  it('maps those sizes onto Button sm / md', () => {
     expect(buttonSizeForFluentSize('small')).toBe('sm')
-    expect(buttonSizeForFluentSize('medium')).toBe('md')
-    expect(buttonSizeForFluentSize('large')).toBe('lg')
+    expect(buttonSizeForFluentSize('medium')).toBe('sm')
+    expect(buttonSizeForFluentSize('large')).toBe('md')
     expect(fluentSizeForDensity('compact')).toBe('small')
-    expect(fluentSizeForDensity('comfortable')).toBe('medium')
+    expect(fluentSizeForDensity('comfortable')).toBe('large')
   })
 })

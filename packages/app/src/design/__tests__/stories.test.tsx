@@ -36,6 +36,7 @@ import * as gradientStories from '../system/gradient/GradientBackdrop.stories'
 import * as detailBackdropStories from '../system/gradient/DetailBackdrop.stories'
 import * as onGradientStories from '../system/gradient/OnGradient.stories'
 import * as tokenStories from '../system/tokens/Tokens.stories'
+import * as overviewStories from '../Overview.stories'
 
 interface Story {
   readonly name?: string
@@ -45,6 +46,7 @@ interface Story {
 type StoryModule = Record<string, unknown>
 
 const MODULES: ReadonlyArray<[string, StoryModule]> = [
+  ['Overview', overviewStories],
   ['Tokens', tokenStories],
   ['KroGlass', glassStories],
   ['GradientBackdrop', gradientStories],

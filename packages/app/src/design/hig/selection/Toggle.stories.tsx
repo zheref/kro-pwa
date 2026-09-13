@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Toggles',
+  title: 'Forms/Toggle',
   component: Toggle,
 }
 

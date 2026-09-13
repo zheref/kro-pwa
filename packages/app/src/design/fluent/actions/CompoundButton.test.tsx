@@ -74,7 +74,7 @@ describe('CompoundButton', () => {
     expect(compact.className).toContain('text-xs')
 
     rerender(
-      <CompoundButton size="medium" secondaryContent="Opens today's plan">
+      <CompoundButton size="large" secondaryContent="Opens today's plan">
         Start session
       </CompoundButton>,
     )

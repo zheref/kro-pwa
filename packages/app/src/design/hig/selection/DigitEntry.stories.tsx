@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Digit entry views',
+  title: 'Forms/Digit entry',
   component: DigitEntry,
 }
 

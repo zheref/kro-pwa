@@ -3,7 +3,7 @@ import { Input } from './input'
 import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'Design system/Primitives/Input',
+  title: 'Forms/Input',
   component: Input,
 }
 

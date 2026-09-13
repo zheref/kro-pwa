@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Selection and input/Radio buttons',
+  title: 'Forms/Radio group',
   component: RadioGroup,
 }
 

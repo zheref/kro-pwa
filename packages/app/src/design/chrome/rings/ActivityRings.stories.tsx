@@ -21,7 +21,7 @@ import { StoryGallery } from '../../storybook/storyGallery'
  * sweeping. Toggle it in the OS and use the "Animated transition" story.
  */
 export default {
-  title: 'Design system/Chrome/ActivityRings',
+  title: 'Chrome/ActivityRings',
   component: ActivityRings,
   parameters: { layout: 'fullscreen' },
 }

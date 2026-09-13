@@ -13,7 +13,7 @@ import {
  * the shell child will render, not approximations of them.
  */
 export default {
-  title: 'Design system/Primitives/Popover',
+  title: 'Surfaces/Popover',
   component: PopoverContent,
   parameters: { layout: 'centered' },
 }

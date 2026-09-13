@@ -143,6 +143,7 @@ export {
 } from './KroChip'
 export {
   type InlineBannerKind,
+  type InlineBannerLayout,
   type InlineBannerProps,
   InlineBanner,
 } from './InlineBanner'

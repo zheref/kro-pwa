@@ -17,6 +17,7 @@ import { cn } from '../../system/utils/cn'
  */
 
 export type ImageViewAspect = '1/1' | '4/3' | '16/9'
+export type ImageViewShape = 'default' | 'circular'
 
 export interface ImageViewProps {
   readonly src: string
@@ -27,6 +28,8 @@ export interface ImageViewProps {
   readonly fallback?: ReactNode
   readonly className?: string
   readonly density?: ControlDensity
+  readonly shape?: ImageViewShape
+  readonly shadow?: boolean
 }
 
 export function ImageView({
@@ -38,6 +41,8 @@ export function ImageView({
   fallback,
   className,
   density = DEFAULT_CONTROL_DENSITY,
+  shape = 'default',
+  shadow = false,
 }: ImageViewProps) {
   const [failed, setFailed] = useState(src.length === 0)
 
@@ -47,14 +52,22 @@ export function ImageView({
 
   const resolvedAlt = decorative ? '' : alt
   const showFallback = failed && fallback !== undefined
+  const frameClass = cn(
+    'h-full w-full overflow-hidden bg-kro-back-inner object-cover',
+    shape === 'circular' ? 'rounded-kro-pill' : 'rounded-kro-card',
+    shadow ? 'shadow-[var(--kro-shadow-subtle)]' : undefined,
+    className,
+  )
 
   const frame = showFallback ? (
     <div
       data-slot="image-view-fallback"
       data-density={density}
+      data-shape={shape}
+      data-shadow={shadow || undefined}
       className={cn(
-        'flex h-full w-full items-center justify-center overflow-hidden rounded-kro-card bg-kro-back-inner object-cover',
-        className,
+        'flex h-full w-full items-center justify-center',
+        frameClass,
       )}
       style={aspect === undefined ? undefined : { aspectRatio: aspect }}
     >
@@ -66,10 +79,9 @@ export function ImageView({
       data-density={density}
       src={src}
       alt={resolvedAlt}
-      className={cn(
-        'h-full w-full rounded-kro-card bg-kro-back-inner object-cover',
-        className,
-      )}
+      data-shape={shape}
+      data-shadow={shadow || undefined}
+      className={frameClass}
       style={aspect === undefined ? undefined : { aspectRatio: aspect }}
       onError={() => setFailed(true)}
     />

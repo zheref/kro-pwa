@@ -11,7 +11,7 @@ import {
 import { FLUENT_CONTROL_SIZES, fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Actions/Compound button',
+  title: 'Actions/Compound button',
   component: CompoundButton,
 }
 

@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Layout and organization/Disclosure controls',
+  title: 'Layout/Disclosure',
   component: Disclosure,
 }
 

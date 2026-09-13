@@ -9,7 +9,7 @@ import {
 import { fluentSizeForDensity } from '../sizes'
 
 export default {
-  title: 'Fluent 2/Surfaces/Card',
+  title: 'Surfaces/Card',
   component: Card,
 }
 

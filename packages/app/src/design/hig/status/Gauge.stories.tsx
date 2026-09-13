@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Status/Gauges',
+  title: 'Status/Gauge',
   component: Gauge,
 }
 

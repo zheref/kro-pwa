@@ -69,7 +69,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'Trigger a single action. One primary per surface; outline, subtle and transparent for the rest.',
     variants: ['primary', 'secondary', 'outline', 'subtle', 'transparent'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Button',
     conflict: {
       kind: 'exact',
@@ -98,8 +98,8 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'A button that only opens a menu. Unlike a split button, there is no primary action on the face.',
     variants: ['primary', 'secondary', 'outline'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'implemented',
-    kroName: 'MenuButton',
+    availability: 'existing',
+    kroName: 'PullDownButton',
     conflict: {
       kind: 'conceptual',
       kroName: 'PullDownButton',
@@ -275,7 +275,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Select several options, or switch one option on or off.',
     variants: ['unchecked', 'checked', 'mixed'],
     sizes: ['medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Checkbox',
     conflict: {
       kind: 'exact',
@@ -292,7 +292,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'Type a value or pick one (or more) from a list. The field stays editable.',
     variants: ['outline', 'underline', 'filled-darker', 'filled-lighter'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'ComboBox',
     conflict: {
       kind: 'exact',
@@ -348,7 +348,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Short free-form text. Outline, underline or filled.',
     variants: ['outline', 'underline', 'filled-darker', 'filled-lighter'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Input',
     conflict: {
       kind: 'exact',
@@ -364,7 +364,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Names a control or group. Required is a mark, not colour alone.',
     variants: ['regular', 'required', 'disabled'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Label',
     conflict: {
       kind: 'exact',
@@ -380,7 +380,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Pick exactly one item from a short list.',
     variants: ['vertical', 'horizontal'],
     sizes: ['medium'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'RadioGroup',
     conflict: {
       kind: 'exact',
@@ -429,7 +429,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'A value from a continuous range, by dragging a thumb.',
     variants: ['default', 'disabled'],
     sizes: ['small', 'medium'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Slider',
     conflict: {
       kind: 'exact',
@@ -526,8 +526,8 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'The current place in a hierarchy, with ancestors that jump back.',
     variants: ['default', 'overflow'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'implemented',
-    kroName: 'Breadcrumb',
+    availability: 'existing',
+    kroName: 'PathControl',
     conflict: {
       kind: 'conceptual',
       kroName: 'PathControl',
@@ -543,8 +543,8 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'A list of links through the main sections of an app. Categories can nest.',
     variants: ['default', 'subtle'],
     sizes: ['small', 'medium'],
-    availability: 'implemented',
-    kroName: 'Nav',
+    availability: 'existing',
+    kroName: 'Sidebar',
     conflict: {
       kind: 'conceptual',
       kroName: 'Sidebar',
@@ -576,7 +576,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Frequent actions for the current view, grouped.',
     variants: ['transparent', 'subtle'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Toolbar',
     conflict: {
       kind: 'exact',
@@ -640,7 +640,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'A supplemental surface that can require an action before work continues.',
     variants: ['modal', 'non-modal'],
     sizes: ['small', 'medium', 'large'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Dialog',
     conflict: {
       kind: 'exact',
@@ -688,7 +688,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'Like items stacked vertically.',
     variants: ['default'],
     sizes: ['medium'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'List',
     conflict: {
       kind: 'exact',
@@ -720,7 +720,7 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
     purpose: 'A small surface anchored to a control for nonessential context.',
     variants: ['default'],
     sizes: ['medium'],
-    availability: 'conflict',
+    availability: 'existing',
     kroName: 'Popover',
     conflict: {
       kind: 'exact',
@@ -768,8 +768,8 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'Important information about the product or the current surface. Intent is named in words.',
     variants: ['info', 'success', 'warning', 'error'],
     sizes: ['singleline', 'multiline'],
-    availability: 'implemented',
-    kroName: 'MessageBar',
+    availability: 'existing',
+    kroName: 'InlineBanner',
     conflict: {
       kind: 'conceptual',
       kroName: 'InlineBanner',
@@ -821,8 +821,8 @@ export const FLUENT_CATALOG: readonly FluentCatalogEntry[] = [
       'extra-large',
       'huge',
     ],
-    availability: 'implemented',
-    kroName: 'Spinner',
+    availability: 'existing',
+    kroName: 'ProgressIndicator',
     conflict: {
       kind: 'conceptual',
       kroName: 'ProgressIndicator',

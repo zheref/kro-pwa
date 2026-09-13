@@ -110,7 +110,7 @@ describe('Select', () => {
     )
     expect(screen.getByLabelText('Quadrant').className).toContain('h-6')
 
-    rerender(<Select label="Quadrant" options={QUADRANTS} size="medium" />)
+    rerender(<Select label="Quadrant" options={QUADRANTS} size="large" />)
     expect(screen.getByLabelText('Quadrant').getAttribute('data-density')).toBe(
       'comfortable',
     )

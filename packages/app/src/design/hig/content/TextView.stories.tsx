@@ -8,7 +8,7 @@ import {
 } from '../higStoryStage'
 
 export default {
-  title: 'HIG/Content/Text views',
+  title: 'Content/Text view',
   component: TextView,
 }
 

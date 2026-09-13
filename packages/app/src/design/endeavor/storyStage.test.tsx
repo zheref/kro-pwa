@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { GalleryAppearanceProvider } from '../storybook/galleryAppearance'
 import { BothSchemes, Cell, STAGE_BACKDROP, Stage } from './storyStage'
 
 afterEach(cleanup)
@@ -48,6 +49,23 @@ describe('Stage', () => {
     expect(stages).toHaveLength(2)
     expect((stages[0] as HTMLElement).dataset.theme).toBe('light')
     expect((stages[1] as HTMLElement).dataset.theme).toBe('dark')
+  })
+
+  it('collapses to the gallery scheme when the gallery is pinning one', () => {
+    const { container } = render(
+      <GalleryAppearanceProvider
+        appearance={{ scheme: 'light', palette: 'orange' }}
+      >
+        <BothSchemes>
+          <span>content</span>
+        </BothSchemes>
+      </GalleryAppearanceProvider>,
+    )
+
+    const stages = container.querySelectorAll('[data-slot="story-stage"]')
+    expect(stages).toHaveLength(1)
+    expect((stages[0] as HTMLElement).dataset.theme).toBe('light')
+    expect((stages[0] as HTMLElement).dataset.palette).toBe('orange')
   })
 
   it('labels a matrix cell', () => {

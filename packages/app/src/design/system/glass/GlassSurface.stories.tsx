@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
-import { GlassSurface } from './GlassSurface'
 import { StoryGallery } from '../../storybook/storyGallery'
+import {
+  bothSchemesGridStyle,
+  StoryTheme,
+  useSchemesToPaint,
+} from '../../storybook/galleryAppearance'
+import { GlassSurface } from './GlassSurface'
 
 /**
  * KroGlass, on the busy backdrops it has to survive.
@@ -24,7 +29,7 @@ export default {
 }
 
 const PHOTO_BACKDROP =
-  'linear-gradient(120deg, #5856d6 0%, #663399 40%, #b7162f 70%, #c78c00 100%)'
+  'linear-gradient(120deg, var(--kro-color-header-gradient-indigo) 0%, var(--kro-color-header-gradient-grape) 40%, var(--kro-color-badge-red) 70%, var(--kro-color-badge-orange) 100%)'
 
 function Stage({
   theme = 'light',
@@ -36,8 +41,8 @@ function Stage({
   height?: number
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         position: 'relative',
         minHeight: height,
@@ -63,7 +68,7 @@ function Stage({
         Find. Plan · Do · Earn · Find.
       </p>
       <div style={{ position: 'relative' }}>{children}</div>
-    </div>
+    </StoryTheme>
   )
 }
 
@@ -246,22 +251,24 @@ const DarkScheme = {
   ),
 }
 
+function BothSchemesPreview() {
+  const schemes = useSchemesToPaint()
+  return (
+    <div style={bothSchemesGridStyle(schemes.length)}>
+      {schemes.map((theme) => (
+        <Stage key={theme} theme={theme} height={320}>
+          <GlassSurface>
+            <CardBody />
+          </GlassSurface>
+        </Stage>
+      ))}
+    </div>
+  )
+}
+
 const BothSchemes = {
   name: 'Both schemes, side by side',
-  render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-      <Stage theme="light" height={320}>
-        <GlassSurface>
-          <CardBody />
-        </GlassSurface>
-      </Stage>
-      <Stage theme="dark" height={320}>
-        <GlassSurface>
-          <CardBody />
-        </GlassSurface>
-      </Stage>
-    </div>
-  ),
+  render: () => <BothSchemesPreview />,
 }
 
 const SidebarColumn = {

@@ -163,4 +163,41 @@ describe('DesignSystemFragment', () => {
       'Overview',
     )
   })
+
+  it('offers Light, Dark and the four palettes on the canvas', () => {
+    render(<DesignSystemFragment {...designSystemMocks.default} />)
+
+    expect(screen.getByRole('tab', { name: 'Light' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Dark' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Purple' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Green' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Orange' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'Red' })).toBeTruthy()
+  })
+
+  it('pins the catalog to the scheme and palette it was given', () => {
+    render(<DesignSystemFragment {...designSystemMocks.darkScheme} />)
+
+    const catalog = screen.getByTestId('design-system-catalog')
+    expect(catalog.getAttribute('data-theme')).toBe('dark')
+    expect(catalog.getAttribute('data-palette')).toBe('purple')
+  })
+
+  it('reports the scheme and palette that were picked (RC-15)', async () => {
+    const onSelectScheme = vi.fn()
+    const onSelectPalette = vi.fn()
+    render(
+      <DesignSystemFragment
+        {...designSystemMocks.default}
+        onSelectScheme={onSelectScheme}
+        onSelectPalette={onSelectPalette}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Dark' }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Green' }))
+
+    expect(onSelectScheme).toHaveBeenCalledWith('dark')
+    expect(onSelectPalette).toHaveBeenCalledWith('green')
+  })
 })

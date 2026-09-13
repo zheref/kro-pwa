@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Input } from './input'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Input } from './input'
 
 export default {
   title: 'Forms/Input',
@@ -15,8 +16,8 @@ function Stage({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         background: 'var(--kro-color-back)',
         padding: 24,
@@ -37,7 +38,7 @@ function Stage({
       >
         {children}
       </div>
-    </div>
+    </StoryTheme>
   )
 }
 

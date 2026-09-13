@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { GalleryAppearanceProvider } from '../storybook/galleryAppearance'
 import {
   HIG_STAGE_BACKDROP,
   HigBothSchemes,
@@ -54,6 +55,23 @@ describe('HigStage', () => {
     expect(stages).toHaveLength(2)
     expect((stages[0] as HTMLElement).dataset.theme).toBe('light')
     expect((stages[1] as HTMLElement).dataset.theme).toBe('dark')
+  })
+
+  it('collapses to the gallery scheme when the gallery is pinning one', () => {
+    const { container } = render(
+      <GalleryAppearanceProvider
+        appearance={{ scheme: 'dark', palette: 'green' }}
+      >
+        <HigBothSchemes>
+          <span>content</span>
+        </HigBothSchemes>
+      </GalleryAppearanceProvider>,
+    )
+
+    const stages = container.querySelectorAll('[data-slot="hig-story-stage"]')
+    expect(stages).toHaveLength(1)
+    expect((stages[0] as HTMLElement).dataset.theme).toBe('dark')
+    expect((stages[0] as HTMLElement).dataset.palette).toBe('green')
   })
 
   it('labels a variants row', () => {

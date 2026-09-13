@@ -8,12 +8,13 @@ import { designSystemMocks, selectedStoryFrom } from '../DesignSystemMocks'
 import { STORY_CATALOG, storyById } from '../storyCatalog'
 
 describe('designSystemMocks', () => {
-  it('covers seven named gallery states', () => {
+  it('covers eight named gallery states', () => {
     expect(Object.keys(designSystemMocks)).toEqual([
       'default',
       'buttonVariants',
       'dialogDefault',
       'endeavorCard',
+      'darkScheme',
       'chromeFab',
       'unknown',
       'lastChrome',

@@ -8,6 +8,7 @@
  */
 
 import type { ReactNode } from 'react'
+import { StoryTheme } from '../storybook/galleryAppearance'
 import { DetailBackdrop } from '../system/gradient/DetailBackdrop'
 import { CompactPresentationHeader } from './CompactPresentationHeader'
 import { EmptyDayStateView, InboxTrayEmptyState } from './EmptyDayStateView'
@@ -30,8 +31,8 @@ function Field({
   readonly children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         position: 'relative',
         display: 'flex',
@@ -52,7 +53,7 @@ function Field({
       >
         {children}
       </div>
-    </div>
+    </StoryTheme>
   )
 }
 

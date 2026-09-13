@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 
 /**
  * Plan's in-tab modes. This primitive is for switching a MODE inside a
@@ -20,8 +21,8 @@ function Stage({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         background:
           'linear-gradient(120deg, var(--kro-color-header-gradient-indigo), var(--kro-color-header-gradient-grape))',
@@ -31,7 +32,7 @@ function Stage({
       }}
     >
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 

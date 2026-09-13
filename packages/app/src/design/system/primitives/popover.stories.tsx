@@ -1,5 +1,6 @@
-import { Button } from './button'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Button } from './button'
 import {
   POPOVER_SIZE,
   Popover,
@@ -123,8 +124,8 @@ const Profile = {
 
 const DarkScheme = {
   render: () => (
-    <div
-      data-theme="dark"
+    <StoryTheme
+      theme="dark"
       style={{ padding: 40, background: 'var(--kro-color-back)' }}
     >
       <Popover>
@@ -135,7 +136,7 @@ const DarkScheme = {
           <Rows count={4} />
         </PopoverContent>
       </Popover>
-    </div>
+    </StoryTheme>
   ),
 }
 

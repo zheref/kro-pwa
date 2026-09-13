@@ -16,11 +16,17 @@
  * My Day and Plan paint on.
  */
 import { useState } from 'react'
+import {
+  GalleryAppearanceProvider,
+  type GalleryScheme,
+} from '../../../design/storybook/galleryAppearance'
+import { GalleryAppearanceToolbar } from '../../../design/storybook/GalleryAppearanceToolbar'
 import { StoryKindBadge } from '../../../design/storybook/StoryKindBadge'
 import { STORY_KINDS } from '../../../design/storybook/storyKind'
 import { GlassPanel } from '../../../design/system/glass/GlassPanel'
 import { OnGradient } from '../../../design/system/gradient/OnGradient'
 import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
+import type { AppPaletteId } from '../../../design/system/tokens/appPalette'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import {
@@ -39,12 +45,20 @@ export interface DesignSystemFragmentProps {
   readonly catalog: StoryCatalog
   readonly selectedStoryId: string
   readonly onSelectStory: (storyId: string) => void
+  readonly scheme: GalleryScheme
+  readonly palette: AppPaletteId
+  readonly onSelectScheme: (scheme: GalleryScheme) => void
+  readonly onSelectPalette: (palette: AppPaletteId) => void
 }
 
 export function DesignSystemFragment({
   catalog,
   selectedStoryId,
   onSelectStory,
+  scheme,
+  palette,
+  onSelectScheme,
+  onSelectPalette,
 }: DesignSystemFragmentProps) {
   const selected = storyOrDefault(catalog, selectedStoryId)
   const selectedPlacement = placementOfStory(catalog, selected.id)
@@ -62,58 +76,73 @@ export function DesignSystemFragment({
   }
 
   return (
-    <div
-      data-testid="design-system-catalog"
-      className="absolute inset-0 flex min-h-0 gap-kro-small overflow-hidden"
-    >
-      <GlassPanel
-        as="nav"
-        kind="sidebar"
-        aria-label="Component library"
-        data-testid="design-system-nav"
-        className="h-full w-[220px] shrink-0 self-stretch"
+    <GalleryAppearanceProvider appearance={{ scheme, palette }}>
+      <div
+        data-testid="design-system-catalog"
+        data-theme={scheme}
+        data-palette={palette}
+        className="absolute inset-0 flex min-h-0 gap-kro-small overflow-hidden"
       >
-        <div
-          data-testid="design-system-nav-scroll"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-kro-small py-kro-small"
+        <GlassPanel
+          as="nav"
+          kind="sidebar"
+          aria-label="Component library"
+          data-testid="design-system-nav"
+          className="h-full w-[220px] shrink-0 self-stretch"
         >
-          {catalog.groups.map((group) => (
-            <CatalogGroupSection
-              key={group.id}
-              group={group}
-              isExpanded={expandedGroupIds.includes(group.id)}
-              selectedStoryId={selected.id}
-              onToggle={() => onToggleGroup(group.id)}
-              onSelectStory={onSelectStory}
-            />
-          ))}
-        </div>
-      </GlassPanel>
+          <div
+            data-testid="design-system-nav-scroll"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-kro-small py-kro-small"
+          >
+            {catalog.groups.map((group) => (
+              <CatalogGroupSection
+                key={group.id}
+                group={group}
+                isExpanded={expandedGroupIds.includes(group.id)}
+                selectedStoryId={selected.id}
+                onToggle={() => onToggleGroup(group.id)}
+                onSelectStory={onSelectStory}
+              />
+            ))}
+          </div>
+        </GlassPanel>
 
-      <section
-        data-testid="design-system-canvas"
-        className="flex h-full min-h-0 min-w-0 flex-1 flex-col self-stretch"
-      >
-        <header className="shrink-0 px-kro-medium py-kro-medium">
-          <OnGradient
-            as="p"
-            className="m-0 font-semibold text-[13px] uppercase tracking-wide"
+        <section
+          data-testid="design-system-canvas"
+          className="flex h-full min-h-0 min-w-0 flex-1 flex-col self-stretch"
+        >
+          <header className="flex shrink-0 items-start justify-between gap-kro-medium px-kro-medium py-kro-medium">
+            <div className="min-w-0">
+              <OnGradient
+                as="p"
+                className="m-0 font-semibold text-[13px] uppercase tracking-wide"
+              >
+                {selectedPlacement.groupId}
+              </OnGradient>
+              <OnGradient
+                as="h2"
+                data-testid="design-system-story-name"
+                className="m-0 font-semibold text-lg"
+              >
+                {selectedComponent?.title ?? selected.name}
+              </OnGradient>
+            </div>
+            <GalleryAppearanceToolbar
+              scheme={scheme}
+              palette={palette}
+              onSelectScheme={onSelectScheme}
+              onSelectPalette={onSelectPalette}
+            />
+          </header>
+          <div
+            key={`${scheme}-${palette}`}
+            className="min-h-0 flex-1 overflow-y-auto"
           >
-            {selectedPlacement.groupId}
-          </OnGradient>
-          <OnGradient
-            as="h2"
-            data-testid="design-system-story-name"
-            className="m-0 font-semibold text-lg"
-          >
-            {selectedComponent?.title ?? selected.name}
-          </OnGradient>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {selected.render()}
-        </div>
-      </section>
-    </div>
+            {selected.render()}
+          </div>
+        </section>
+      </div>
+    </GalleryAppearanceProvider>
   )
 }
 

@@ -65,7 +65,7 @@ export const ChromeFab = {
 export const DarkScheme = {
   render: () => (
     <Stage theme="dark">
-      <DesignSystemFragment {...designSystemMocks.endeavorCard} />
+      <DesignSystemFragment {...designSystemMocks.darkScheme} />
     </Stage>
   ),
 }

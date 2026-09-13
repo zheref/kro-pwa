@@ -5,6 +5,11 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
+import {
+  StoryTheme,
+  useGalleryAppearance,
+  useSchemesToPaint,
+} from '../../storybook/galleryAppearance'
 import { readColorRole, readSemanticRole } from './readToken'
 import {
   COLOR_ROLES,
@@ -61,8 +66,8 @@ function Pane({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         background: 'var(--kro-color-back)',
         color: 'var(--kro-color-fore)',
@@ -85,15 +90,19 @@ function Pane({
         {theme}
       </h2>
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 
 function BothThemes({ children }: { children: ReactNode }) {
+  const schemes = useSchemesToPaint()
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Pane theme="light">{children}</Pane>
-      <Pane theme="dark">{children}</Pane>
+      {schemes.map((theme) => (
+        <Pane key={theme} theme={theme}>
+          {children}
+        </Pane>
+      ))}
     </div>
   )
 }
@@ -151,12 +160,14 @@ function PaintedSwatch({
   const fallback = `var(${COLOR_ROLE_VARS[role]})`
   const rootRef = useRef<HTMLDivElement>(null)
   const [caption, setCaption] = useState(fallback)
+  const gallery = useGalleryAppearance()
 
   useEffect(() => {
+    void gallery
     const scope = rootRef.current?.closest('[data-theme]') ?? null
     const next = readColorRole(role, scope)
     setCaption(next === '' ? fallback : next)
-  }, [fallback, role])
+  }, [fallback, gallery, role])
 
   return (
     <div ref={rootRef}>
@@ -193,11 +204,13 @@ function SemanticChip({ role }: { role: (typeof SEMANTIC_ROLES)[number] }) {
   const fallback = `var(${SEMANTIC_ROLE_VARS[role]})`
   const rootRef = useRef<HTMLDivElement>(null)
   const [caption, setCaption] = useState('')
+  const gallery = useGalleryAppearance()
 
   useEffect(() => {
+    void gallery
     const scope = rootRef.current?.closest('[data-theme]') ?? null
     setCaption(readSemanticRole(role, scope))
-  }, [role])
+  }, [gallery, role])
 
   return (
     <div ref={rootRef}>

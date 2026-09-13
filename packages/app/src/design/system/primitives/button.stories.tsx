@@ -1,7 +1,8 @@
 import { Check, Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Button, buttonSizeForDensity } from './button'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Button, buttonSizeForDensity } from './button'
 
 export default {
   title: 'Actions/Button',
@@ -45,8 +46,8 @@ function Stage({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         background:
           'linear-gradient(135deg, var(--kro-color-header-gradient-indigo), var(--kro-color-header-gradient-grape))',
@@ -57,7 +58,7 @@ function Stage({
       }}
     >
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 

@@ -1,6 +1,7 @@
 import { GlassSurface } from '../glass/GlassSurface'
 import { GradientBackdrop, GradientContent } from './GradientBackdrop'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 
 /**
  * The `indigoGrape` header slab.
@@ -76,8 +77,8 @@ function Scroller({
   hardEdge?: boolean
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         position: 'relative',
         height: '100vh',
@@ -91,7 +92,7 @@ function Scroller({
         <Headline />
         <Day />
       </GradientContent>
-    </div>
+    </StoryTheme>
   )
 }
 

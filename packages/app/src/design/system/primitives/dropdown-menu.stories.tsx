@@ -1,6 +1,7 @@
 import { Archive, Pencil, Repeat, Trash2 } from 'lucide-react'
-import { Button } from './button'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Button } from './button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -100,8 +101,8 @@ const WithDisabled = {
 
 const DarkScheme = {
   render: () => (
-    <div
-      data-theme="dark"
+    <StoryTheme
+      theme="dark"
       style={{ padding: 40, background: 'var(--kro-color-back)' }}
     >
       <DropdownMenu>
@@ -118,7 +119,7 @@ const DarkScheme = {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </StoryTheme>
   ),
 }
 

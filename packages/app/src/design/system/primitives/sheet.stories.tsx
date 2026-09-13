@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Button } from './button'
 import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
+import { Button } from './button'
 import {
   Sheet,
   SheetContent,
@@ -27,15 +28,15 @@ function Stage({
   readonly children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         padding: 24,
         background: 'var(--kro-color-back)',
       }}
     >
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 

@@ -1,11 +1,13 @@
 import type { Decorator, Preview } from '@storybook/nextjs'
 import '../src/app/globals.css'
+import { GalleryAppearanceProvider } from '../../../packages/app/src/design/storybook/galleryAppearance'
 import { StoryKindBadge } from '../../../packages/app/src/design/storybook/StoryKindBadge'
 import {
   STORY_KINDS,
   kindFromStoryTitle,
   type StoryKind,
 } from '../../../packages/app/src/design/storybook/storyKind'
+import { appPaletteNamed } from '../../../packages/app/src/design/system/tokens/appPalette'
 
 /**
  * Global story configuration.
@@ -16,6 +18,9 @@ import {
  *
  * The kind banner is the other: HIG titles, primitives, materials and
  * tokens share a sidebar, and a badge is how a reviewer tells them apart.
+ *
+ * Scheme and Theme live on the Storybook toolbar so every preview on the
+ * canvas follows the same pick the in-app `/storybook` page offers.
  */
 
 function KindBanner({
@@ -51,20 +56,64 @@ function KindBanner({
   )
 }
 
-const withKindBanner: Decorator = (Story, context) => {
+const withAppearance: Decorator = (Story, context) => {
   const kind =
     (context.parameters.kro?.kind as StoryKind | undefined) ??
     kindFromStoryTitle(context.title)
+  const scheme = context.globals.kroScheme === 'dark' ? 'dark' : 'light'
+  const palette = appPaletteNamed(
+    typeof context.globals.kroPalette === 'string'
+      ? context.globals.kroPalette
+      : undefined,
+  )
   return (
-    <>
-      <KindBanner kind={kind} title={context.title} />
-      <Story />
-    </>
+    <GalleryAppearanceProvider appearance={{ scheme, palette }}>
+      <div
+        data-theme={scheme}
+        data-palette={palette}
+        style={{ minHeight: '100%' }}
+      >
+        <KindBanner kind={kind} title={context.title} />
+        <Story />
+      </div>
+    </GalleryAppearanceProvider>
   )
 }
 
 const preview: Preview = {
-  decorators: [withKindBanner],
+  decorators: [withAppearance],
+  globalTypes: {
+    kroScheme: {
+      description: 'Color scheme',
+      toolbar: {
+        title: 'Scheme',
+        icon: 'mirror',
+        items: [
+          { value: 'light', title: 'Light' },
+          { value: 'dark', title: 'Dark' },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    kroPalette: {
+      description: 'Appearance theme',
+      toolbar: {
+        title: 'Theme',
+        icon: 'paintbrush',
+        items: [
+          { value: 'purple', title: 'Purple' },
+          { value: 'green', title: 'Green' },
+          { value: 'orange', title: 'Orange' },
+          { value: 'red', title: 'Red' },
+        ],
+        dynamicTitle: true,
+      },
+    },
+  },
+  initialGlobals: {
+    kroScheme: 'light',
+    kroPalette: 'purple',
+  },
   parameters: {
     controls: {
       matchers: {

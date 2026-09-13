@@ -7,15 +7,19 @@
  * gallery, once, so fifty story files do not each invent a slightly different
  * grey.
  *
- * `BothSchemes` renders light and dark SIDE BY SIDE because the tokens'
- * `[data-theme]` attribute selectors make a subtree the unit of theming. A
- * Storybook toolbar toggle would show one scheme at a time and turn
- * "does this pair still read?" into a memory test.
+ * `HigBothSchemes` paints light and dark SIDE BY SIDE in snapshots. The
+ * in-app gallery (and Storybook's toolbar) pin one scheme at a time via
+ * `GalleryAppearanceProvider`, so every preview on the page moves together.
  *
  * Not a story file itself: it exports no story, and it has a test.
  */
 
 import type { ReactNode } from 'react'
+import {
+  bothSchemesGridStyle,
+  useSchemesToPaint,
+  useStoryThemeAttributes,
+} from '../storybook/galleryAppearance'
 
 /** The indigoGrape field the shell actually sits on. */
 export const HIG_STAGE_BACKDROP =
@@ -35,9 +39,10 @@ export function HigStage({
   width = '100%',
   children,
 }: HigStageProps) {
+  const appearance = useStoryThemeAttributes(theme)
   return (
     <div
-      data-theme={theme}
+      {...appearance}
       data-slot="hig-story-stage"
       style={{
         display: 'flex',
@@ -65,14 +70,14 @@ export function HigBothSchemes({
   readonly gradient?: boolean
   readonly children: ReactNode
 }) {
+  const schemes = useSchemesToPaint()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-      <HigStage theme="light" gradient={gradient}>
-        {children}
-      </HigStage>
-      <HigStage theme="dark" gradient={gradient}>
-        {children}
-      </HigStage>
+    <div style={bothSchemesGridStyle(schemes.length)}>
+      {schemes.map((scheme) => (
+        <HigStage key={scheme} theme={scheme} gradient={gradient}>
+          {children}
+        </HigStage>
+      ))}
     </div>
   )
 }

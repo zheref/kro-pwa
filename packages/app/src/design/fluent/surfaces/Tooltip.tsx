@@ -1,5 +1,7 @@
 import {
   Children,
+  type FocusEvent,
+  type MouseEvent,
   type ReactElement,
   type ReactNode,
   cloneElement,
@@ -29,10 +31,55 @@ export interface TooltipProps {
 
 type TriggerProps = {
   readonly 'aria-describedby'?: string
-  readonly onMouseOver?: () => void
-  readonly onMouseOut?: () => void
-  readonly onFocus?: () => void
-  readonly onBlur?: () => void
+  readonly onMouseOver?: (event: MouseEvent<HTMLElement>) => void
+  readonly onMouseOut?: (event: MouseEvent<HTMLElement>) => void
+  readonly onFocus?: (event: FocusEvent<HTMLElement>) => void
+  readonly onBlur?: (event: FocusEvent<HTMLElement>) => void
+}
+
+function describedBy(
+  relationship: TooltipRelationship,
+  existing: string | undefined,
+  tooltipId: string,
+): string | undefined {
+  if (relationship !== 'description') return existing
+  return [existing, tooltipId].filter(Boolean).join(' ')
+}
+
+function withTooltipTrigger(
+  child: ReactElement<TriggerProps>,
+  tooltipId: string,
+  relationship: TooltipRelationship,
+  setHovered: (hovered: boolean) => void,
+  setFocused: (focused: boolean) => void,
+): ReactElement<TriggerProps> {
+  const existing = child.props
+  const nextDescribedBy = describedBy(
+    relationship,
+    existing['aria-describedby'],
+    tooltipId,
+  )
+  return cloneElement(child, {
+    ...(nextDescribedBy !== undefined
+      ? { 'aria-describedby': nextDescribedBy }
+      : {}),
+    onMouseOver: (event) => {
+      existing.onMouseOver?.(event)
+      setHovered(true)
+    },
+    onMouseOut: (event) => {
+      existing.onMouseOut?.(event)
+      setHovered(false)
+    },
+    onFocus: (event) => {
+      existing.onFocus?.(event)
+      setFocused(true)
+    },
+    onBlur: (event) => {
+      existing.onBlur?.(event)
+      setFocused(false)
+    },
+  })
 }
 
 export function Tooltip({
@@ -47,15 +94,13 @@ export function Tooltip({
   const open = hovered || focused
   const child = Children.only(children)
   const trigger = isValidElement(child)
-    ? cloneElement(child as ReactElement<TriggerProps>, {
-        ...(relationship === 'description'
-          ? { 'aria-describedby': tooltipId }
-          : {}),
-        onMouseOver: () => setHovered(true),
-        onMouseOut: () => setHovered(false),
-        onFocus: () => setFocused(true),
-        onBlur: () => setFocused(false),
-      })
+    ? withTooltipTrigger(
+        child as ReactElement<TriggerProps>,
+        tooltipId,
+        relationship,
+        setHovered,
+        setFocused,
+      )
     : child
 
   return (

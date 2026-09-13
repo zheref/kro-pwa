@@ -13,6 +13,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react'
@@ -104,6 +105,16 @@ export function StoryTheme({
  * Pins the document so portaled dialogs and the shell follow the gallery.
  * Restores whatever was on the root when the effect cleaned up.
  */
+export function PinDocumentAppearance({
+  appearance,
+}: {
+  readonly appearance: GalleryAppearance
+}) {
+  const { scheme, palette } = appearance
+  useEffect(() => pinDocumentAppearance({ scheme, palette }), [scheme, palette])
+  return null
+}
+
 export function pinDocumentAppearance(
   appearance: GalleryAppearance,
 ): () => void {

@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   DEFAULT_GALLERY_APPEARANCE,
-  pinDocumentAppearance,
+  PinDocumentAppearance,
   type GalleryScheme,
 } from '../../../design/storybook/galleryAppearance'
 import type { AppPaletteId } from '../../../design/system/tokens/appPalette'
@@ -46,8 +46,6 @@ export function DesignSystemPage() {
     )
   }, [dispatch])
 
-  useEffect(() => pinDocumentAppearance({ scheme, palette }), [scheme, palette])
-
   const onSelectStory = useCallback((storyId: string) => {
     setSelectedStoryId(storyId)
   }, [])
@@ -61,14 +59,17 @@ export function DesignSystemPage() {
   }, [])
 
   return (
-    <DesignSystemFragment
-      catalog={STORY_CATALOG}
-      selectedStoryId={selectedStoryId}
-      onSelectStory={onSelectStory}
-      scheme={scheme}
-      palette={palette}
-      onSelectScheme={onSelectScheme}
-      onSelectPalette={onSelectPalette}
-    />
+    <>
+      <PinDocumentAppearance appearance={{ scheme, palette }} />
+      <DesignSystemFragment
+        catalog={STORY_CATALOG}
+        selectedStoryId={selectedStoryId}
+        onSelectStory={onSelectStory}
+        scheme={scheme}
+        palette={palette}
+        onSelectScheme={onSelectScheme}
+        onSelectPalette={onSelectPalette}
+      />
+    </>
   )
 }

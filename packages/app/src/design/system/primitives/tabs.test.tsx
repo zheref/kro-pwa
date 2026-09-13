@@ -78,7 +78,22 @@ describe('Tabs', () => {
   it('defaults the list to compact height', () => {
     render(<PlanModes />)
 
-    expect(screen.getByRole('tablist').className).toContain('h-6')
+    expect(screen.getByRole('tablist').className).toContain('h-7')
+  })
+
+  it('sizes the compact list so the padded track still fits the trigger', () => {
+    render(
+      <Tabs defaultValue="timeline">
+        <TabsList aria-label="Plan mode">
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    )
+
+    expect(screen.getByRole('tablist').className).toContain('p-kro-tiny')
+    expect(screen.getByRole('tab', { name: 'Timeline' }).className).toContain(
+      'h-5',
+    )
   })
 
   it('grows the list for comfortable density', () => {

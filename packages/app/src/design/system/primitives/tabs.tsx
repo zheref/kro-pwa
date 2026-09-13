@@ -35,7 +35,9 @@ export function TabsList({
       className={cn(
         'kro-glass kro-glass--control inline-flex items-center justify-center',
         'gap-kro-tiny p-kro-tiny',
-        density === 'compact' ? 'h-6' : 'h-9',
+        // Height is border-box and includes `p-kro-tiny` (4px). Compact
+        // must clear the 20px trigger (`h-5`); 24px (`h-6`) clips it.
+        density === 'compact' ? 'h-7' : 'h-9',
         className,
       )}
       {...rest}

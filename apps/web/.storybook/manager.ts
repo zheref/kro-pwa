@@ -24,6 +24,9 @@ addons.setConfig({
       /**
        * Design-kit titles each ship one Gallery story. Hide that leaf so
        * the sidebar row is the component/modifier/style itself.
+       *
+       * Storybook keeps an item when the predicate returns true
+       * (`Array.filter`). Folders stay; `--gallery` leaves go.
        */
       hideGalleries: (item) => {
         if (item.type !== 'story') return true

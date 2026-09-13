@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Tooltip } from './Tooltip'
 
 afterEach(cleanup)
@@ -58,5 +58,49 @@ describe('Tooltip', () => {
 
     await userEvent.hover(trigger)
     expect(screen.getByRole('tooltip').id).toBe(describedBy)
+  })
+
+  it('keeps the trigger hover handler and appends to aria-describedby', async () => {
+    const onMouseOver = vi.fn()
+    render(
+      <Tooltip content="More about this control" relationship="description">
+        <button
+          type="button"
+          aria-describedby="hint"
+          onMouseOver={onMouseOver}
+          onFocus={() => {}}
+        >
+          Info
+        </button>
+      </Tooltip>,
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Info' })
+    expect(trigger.getAttribute('aria-describedby')?.split(/\s+/)).toContain(
+      'hint',
+    )
+
+    await userEvent.hover(trigger)
+
+    expect(onMouseOver).toHaveBeenCalled()
+    const ids = trigger.getAttribute('aria-describedby')?.split(/\s+/) ?? []
+    expect(ids).toContain('hint')
+    expect(ids).toContain(screen.getByRole('tooltip').id)
+  })
+
+  it('keeps the trigger focus handler', async () => {
+    const onFocus = vi.fn()
+    render(
+      <Tooltip content="Save the endeavor">
+        <button type="button" onFocus={onFocus}>
+          Save
+        </button>
+      </Tooltip>,
+    )
+
+    await userEvent.tab()
+
+    expect(onFocus).toHaveBeenCalled()
+    expect(screen.getByRole('tooltip').textContent).toBe('Save the endeavor')
   })
 })

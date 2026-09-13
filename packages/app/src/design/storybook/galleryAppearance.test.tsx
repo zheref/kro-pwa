@@ -4,6 +4,7 @@ import { PALETTE_ATTRIBUTE } from '../system/tokens/appPalette'
 import { THEME_ATTRIBUTE } from '../system/tokens/readToken'
 import {
   GalleryAppearanceProvider,
+  PinDocumentAppearance,
   StoryTheme,
   bothSchemesGridStyle,
   pinDocumentAppearance,
@@ -142,5 +143,54 @@ describe('pinDocumentAppearance', () => {
     restore()
 
     expect(document.documentElement.hasAttribute(THEME_ATTRIBUTE)).toBe(false)
+  })
+})
+
+describe('PinDocumentAppearance', () => {
+  it('pins the document while mounted', () => {
+    render(
+      <PinDocumentAppearance
+        appearance={{ scheme: 'dark', palette: 'green' }}
+      />,
+    )
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('dark')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'green',
+    )
+  })
+
+  it('restores the previous attributes on unmount', () => {
+    document.documentElement.setAttribute(THEME_ATTRIBUTE, 'light')
+    document.documentElement.setAttribute(PALETTE_ATTRIBUTE, 'purple')
+
+    const { unmount } = render(
+      <PinDocumentAppearance appearance={{ scheme: 'dark', palette: 'red' }} />,
+    )
+    unmount()
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('light')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'purple',
+    )
+  })
+
+  it('repins when the gallery pick changes', () => {
+    const { rerender } = render(
+      <PinDocumentAppearance
+        appearance={{ scheme: 'light', palette: 'purple' }}
+      />,
+    )
+
+    rerender(
+      <PinDocumentAppearance
+        appearance={{ scheme: 'dark', palette: 'orange' }}
+      />,
+    )
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('dark')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'orange',
+    )
   })
 })

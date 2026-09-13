@@ -1,6 +1,9 @@
 import type { Decorator, Preview } from '@storybook/nextjs'
 import '../src/app/globals.css'
-import { GalleryAppearanceProvider } from '../../../packages/app/src/design/storybook/galleryAppearance'
+import {
+  GalleryAppearanceProvider,
+  PinDocumentAppearance,
+} from '../../../packages/app/src/design/storybook/galleryAppearance'
 import { StoryKindBadge } from '../../../packages/app/src/design/storybook/StoryKindBadge'
 import {
   STORY_KINDS,
@@ -21,6 +24,8 @@ import { appPaletteNamed } from '../../../packages/app/src/design/system/tokens/
  *
  * Scheme and Theme live on the Storybook toolbar so every preview on the
  * canvas follows the same pick the in-app `/storybook` page offers.
+ * `PinDocumentAppearance` writes them on `<html>` so Radix portals
+ * (menus, dialogs) inherit the pick; stages already follow the provider.
  */
 
 function KindBanner({
@@ -68,6 +73,7 @@ const withAppearance: Decorator = (Story, context) => {
   )
   return (
     <GalleryAppearanceProvider appearance={{ scheme, palette }}>
+      <PinDocumentAppearance appearance={{ scheme, palette }} />
       <div
         data-theme={scheme}
         data-palette={palette}

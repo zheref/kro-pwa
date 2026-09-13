@@ -36,7 +36,7 @@ export function controlMinSizeVar(density: ControlDensity): string {
     : 'var(--kro-size-min-touch-target)'
 }
 
-/** Square hit area (checkbox, radio, icon well). */
+/** Square hit area (checkbox, radio, icon well). Visual chrome aligned to Button `sm`/`md`, not the 28/44 a11y floor. */
 export const DENSITY_HIT: Record<ControlDensity, string> = {
   compact: 'min-h-6 min-w-6',
   comfortable: 'min-h-9 min-w-9',

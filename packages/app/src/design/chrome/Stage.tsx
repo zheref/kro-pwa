@@ -1,4 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react'
+import {
+  bothSchemesGridStyle,
+  useSchemesToPaint,
+  useStoryThemeAttributes,
+} from '../storybook/galleryAppearance'
 
 /**
  * The backdrop every chrome story is judged against.
@@ -18,7 +23,7 @@ import type { CSSProperties, ReactNode } from 'react'
  */
 
 export const STAGE_BACKDROP =
-  'linear-gradient(120deg, #5856d6 0%, #663399 40%, #b7162f 70%, #c78c00 100%)'
+  'linear-gradient(120deg, var(--kro-color-header-gradient-indigo) 0%, var(--kro-color-header-gradient-grape) 40%, var(--kro-color-badge-red) 70%, var(--kro-color-badge-orange) 100%)'
 
 export interface StageProps {
   readonly theme?: 'light' | 'dark'
@@ -35,9 +40,10 @@ export function Stage({
   children,
   style,
 }: StageProps) {
+  const appearance = useStoryThemeAttributes(theme)
   return (
     <div
-      data-theme={theme}
+      {...appearance}
       style={{
         position: 'relative',
         minHeight: height,
@@ -93,14 +99,21 @@ export function BothSchemes({
   height?: number
   children: (theme: 'light' | 'dark') => ReactNode
 }) {
+  const schemes = useSchemesToPaint()
+  const labelFor = (scheme: 'light' | 'dark') =>
+    scheme === 'dark' ? 'Dark' : 'Light'
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-      <Stage theme="light" height={height} label="Light">
-        {children('light')}
-      </Stage>
-      <Stage theme="dark" height={height} label="Dark">
-        {children('dark')}
-      </Stage>
+    <div style={bothSchemesGridStyle(schemes.length)}>
+      {schemes.map((scheme) => (
+        <Stage
+          key={scheme}
+          theme={scheme}
+          height={height}
+          label={labelFor(scheme)}
+        >
+          {children(scheme)}
+        </Stage>
+      ))}
     </div>
   )
 }

@@ -82,11 +82,10 @@ describe('the menu’s theming contract', () => {
     expect(DROPDOWN_MENU_CLASSES.content).toContain('rounded-kro-field')
   })
 
-  it('keeps rows at the 44px touch floor, because menu rows sit flush', () => {
-    // The epic's 28px pointer target comes with 4px separation; a menu has
-    // none, so the smaller target would be a mis-tap waiting to happen.
-    expect(DROPDOWN_MENU_CLASSES.item).toContain('h-11')
-    expect(DROPDOWN_MENU_CLASSES.checkboxItem).toContain('h-11')
+  it('defaults rows to compact height, matching the rest of the kit', () => {
+    expect(DROPDOWN_MENU_CLASSES.item).toContain('h-6')
+    expect(DROPDOWN_MENU_CLASSES.item).toContain('text-xs')
+    expect(DROPDOWN_MENU_CLASSES.checkboxItem).toContain('h-6')
   })
 
   it('fades a disabled row exactly once', () => {
@@ -113,9 +112,9 @@ describe('the menu’s theming contract', () => {
     expect(DROPDOWN_MENU_CLASSES.label).toContain('text-kro-fore-secondary')
   })
 
-  it('sizes its glyphs from the icon scale', () => {
+  it('sizes its glyphs from the compact icon scale', () => {
     expect(DROPDOWN_MENU_CLASSES.item).toContain(
-      "[&_svg:not([class*='size-'])]:size-5",
+      "[&_svg:not([class*='size-'])]:size-3.5",
     )
   })
 })

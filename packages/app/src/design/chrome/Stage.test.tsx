@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { GalleryAppearanceProvider } from '../storybook/galleryAppearance'
 import { BothSchemes, STAGE_BACKDROP, Stage } from './Stage'
 
 afterEach(cleanup)
@@ -69,5 +70,21 @@ describe('BothSchemes', () => {
       (node) => node.getAttribute('data-theme'),
     )
     expect(new Set(themes).size).toBe(2)
+  })
+
+  it('collapses to the gallery scheme when the gallery is pinning one', () => {
+    render(
+      <GalleryAppearanceProvider
+        appearance={{ scheme: 'dark', palette: 'red' }}
+      >
+        <BothSchemes>
+          {(theme) => <span>{`subject-${theme}`}</span>}
+        </BothSchemes>
+      </GalleryAppearanceProvider>,
+    )
+
+    expect(screen.getByText('subject-dark')).toBeDefined()
+    expect(screen.queryByText('subject-light')).toBeNull()
+    expect(document.querySelectorAll('[data-theme]')).toHaveLength(1)
   })
 })

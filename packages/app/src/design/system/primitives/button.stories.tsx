@@ -1,9 +1,11 @@
 import { Check, Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 import { Button, buttonSizeForDensity } from './button'
 
 export default {
-  title: 'Design system/Primitives/Button',
+  title: 'Actions/Button',
   component: Button,
 }
 
@@ -44,10 +46,11 @@ function Stage({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
-        background: 'var(--kro-color-back)',
+        background:
+          'linear-gradient(135deg, var(--kro-color-header-gradient-indigo), var(--kro-color-header-gradient-grape))',
         color: 'var(--kro-color-fore)',
         padding: 24,
         minHeight: 200,
@@ -55,11 +58,11 @@ function Stage({
       }}
     >
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 
-export const Variants = {
+const Variants = {
   render: () => (
     <Stage>
       <Row label="Variants">
@@ -73,20 +76,20 @@ export const Variants = {
   ),
 }
 
-export const Sizes = {
+const Sizes = {
   render: () => (
     <Stage>
-      <Row label="Sizes — compact 28px pointer / comfortable 44px touch">
+      <Row label="Sizes — compact default / comfortable mobile / 44px lg">
         <Button size={buttonSizeForDensity('compact')}>Compact</Button>
         <Button size={buttonSizeForDensity('comfortable')}>Comfortable</Button>
-        <Button size="lg">Large</Button>
+        <Button size="lg">Large · 44px floor</Button>
         <Button size="pill">Pill</Button>
       </Row>
       <Row label="Icon only">
-        <Button size="icon" aria-label="Add endeavor">
+        <Button size="icon-sm" aria-label="Add endeavor">
           <Plus />
         </Button>
-        <Button size="icon-sm" aria-label="Add endeavor">
+        <Button size="icon" aria-label="Add endeavor">
           <Plus />
         </Button>
       </Row>
@@ -94,7 +97,7 @@ export const Sizes = {
   ),
 }
 
-export const WithIcons = {
+const WithIcons = {
   name: 'With icons · lucide, mapped from SF Symbols',
   render: () => (
     <Stage>
@@ -113,7 +116,25 @@ export const WithIcons = {
   ),
 }
 
-export const Disabled = {
+const Appearances = {
+  name: 'Appearances · outline, subtle and transparent live on Button',
+  render: () => (
+    <Stage>
+      <Row label="Fluent appearances">
+        <Button variant="outline">outline</Button>
+        <Button variant="subtle">subtle</Button>
+        <Button variant="transparent">transparent</Button>
+      </Row>
+      <Row label="Shapes">
+        <Button shape="rounded">Rounded</Button>
+        <Button shape="circular">Circular</Button>
+        <Button shape="square">Square</Button>
+      </Row>
+    </Stage>
+  ),
+}
+
+const Disabled = {
   name: 'Disabled · the fade is applied once',
   render: () => (
     <Stage>
@@ -143,7 +164,7 @@ export const Disabled = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
     <Stage theme="dark">
       <Row label="Variants">
@@ -153,5 +174,40 @@ export const DarkScheme = {
         <Button variant="destructive">Delete endeavor</Button>
       </Row>
     </Stage>
+  ),
+}
+
+const Densities = {
+  name: 'Densities · compact default, comfortable for mobile',
+  render: () => (
+    <Stage>
+      <Row label="Compact · default">
+        <Button size={buttonSizeForDensity('compact')} variant="primary">
+          Start session
+        </Button>
+        <Button size={buttonSizeForDensity('compact')}>Reschedule</Button>
+      </Row>
+      <Row label="Comfortable · mobile">
+        <Button size={buttonSizeForDensity('comfortable')} variant="primary">
+          Start session
+        </Button>
+        <Button size={buttonSizeForDensity('comfortable')}>Reschedule</Button>
+      </Row>
+    </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Variants.render()}
+      {Sizes.render()}
+      {WithIcons.render()}
+      {Appearances.render()}
+      {Disabled.render()}
+      {DarkScheme.render()}
+      {Densities.render()}
+    </StoryGallery>
   ),
 }

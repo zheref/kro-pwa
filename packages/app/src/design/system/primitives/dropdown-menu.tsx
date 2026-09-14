@@ -6,11 +6,8 @@ import { cn } from '../utils/cn'
 /**
  * DropdownMenu — the contextual action list.
  *
- * Items keep the 44px touch floor even on desktop, where the pointer target is
- * 28px, because a menu row is a list not a toolbar: rows sit flush against
- * each other, and a 28px row with no separation is a mis-tap waiting to
- * happen. The epic's idiom rule pairs its smaller target with 4px separation,
- * which a menu does not have.
+ * Compact is the default row. Menu rows sit flush, so comfortable (h-9)
+ * is the mobile preview rather than a silent 44px floor.
  *
  * A destructive item is red AND says what it does — colour is never the only
  * signal (epic AC 9).
@@ -36,16 +33,16 @@ export const DROPDOWN_MENU_CLASSES = {
     'origin-(--radix-dropdown-menu-content-transform-origin)',
   ),
   item: cn(
-    'relative flex h-11 cursor-default select-none items-center gap-kro-small',
-    'rounded-kro-small px-kro-small text-base outline-none',
+    'relative flex h-6 cursor-default select-none items-center gap-kro-small',
+    'rounded-kro-small px-kro-small text-xs outline-none',
     'text-kro-fore focus:bg-kro-back-inner',
     'data-[disabled]:pointer-events-none data-[disabled]:opacity-[var(--kro-opacity-disabled)]',
-    "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-5",
+    "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3.5",
   ),
   itemDestructive: 'text-kro-banner-danger focus:bg-kro-banner-danger/10',
   checkboxItem: cn(
-    'relative flex h-11 cursor-default select-none items-center gap-kro-small',
-    'rounded-kro-small py-kro-small pr-kro-small pl-8 text-base outline-none',
+    'relative flex h-6 cursor-default select-none items-center gap-kro-small',
+    'rounded-kro-small py-kro-tiny pr-kro-small pl-8 text-xs outline-none',
     'text-kro-fore focus:bg-kro-back-inner',
     'data-[disabled]:pointer-events-none data-[disabled]:opacity-[var(--kro-opacity-disabled)]',
   ),

@@ -9,13 +9,14 @@
 import { EmptyStateCard } from './EmptyStateCard'
 import { SurfaceCard } from './SurfaceCard'
 import { BothSchemes, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/EmptyStateCard',
   component: EmptyStateCard,
 }
 
-export const TitleOnly = {
+const TitleOnly = {
   name: 'Title only',
   render: () => (
     <Stage width={460}>
@@ -29,7 +30,7 @@ export const TitleOnly = {
   ),
 }
 
-export const WithMessage = {
+const WithMessage = {
   name: 'With a message',
   render: () => (
     <Stage width={460}>
@@ -44,7 +45,7 @@ export const WithMessage = {
   ),
 }
 
-export const WithAction = {
+const WithAction = {
   name: 'With the action that fills it',
   render: () => (
     <Stage width={460}>
@@ -61,7 +62,7 @@ export const WithAction = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -75,5 +76,17 @@ export const BothThemes = {
         />
       </SurfaceCard>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {TitleOnly.render()}
+      {WithMessage.render()}
+      {WithAction.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

@@ -19,6 +19,7 @@ import { NOW, endeavorCardMocks } from './endeavorMocks'
 import { EndeavorRow, endeavorRowPropsFromCardModel } from './EndeavorRow'
 import { BothSchemes, Cell, Stage } from './storyStage'
 import type { InputCapability } from './useInputCapability'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/EndeavorActionSurface',
@@ -39,7 +40,7 @@ function Row() {
   )
 }
 
-export const Touch = {
+const Touch = {
   name: 'Touch · swipe surfaces on both edges',
   render: () => (
     <Stage width={520}>
@@ -58,7 +59,7 @@ export const Touch = {
   ),
 }
 
-export const Pointer = {
+const Pointer = {
   name: 'Pointer · hover strip and right-click menu',
   render: () => (
     <Stage width={520}>
@@ -77,7 +78,7 @@ export const Pointer = {
   ),
 }
 
-export const SideBySide = {
+const SideBySide = {
   name: 'Side by side · the same props, twice',
   render: () => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -165,7 +166,7 @@ function InboxTrailingButtons({ input }: { readonly input: InputCapability }) {
   )
 }
 
-export const TouchWithTrailingButtons = {
+const TouchWithTrailingButtons = {
   name: 'Touch · in-row buttons must still fire',
   render: () => (
     <Stage width={520}>
@@ -176,7 +177,7 @@ export const TouchWithTrailingButtons = {
   ),
 }
 
-export const PointerWithTrailingButtons = {
+const PointerWithTrailingButtons = {
   name: 'Pointer · the chrome gets its own gutter',
   render: () => (
     <Stage width={560}>
@@ -187,7 +188,7 @@ export const PointerWithTrailingButtons = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -203,5 +204,19 @@ export const BothThemes = {
         </EndeavorActionSurface>
       </div>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Touch.render()}
+      {Pointer.render()}
+      {SideBySide.render()}
+      {TouchWithTrailingButtons.render()}
+      {PointerWithTrailingButtons.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

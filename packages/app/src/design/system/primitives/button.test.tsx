@@ -59,6 +59,9 @@ describe('Button', () => {
       'ghost',
       'destructive',
       'glass',
+      'outline',
+      'subtle',
+      'transparent',
     ] as const) {
       cleanup()
       render(
@@ -86,28 +89,47 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('paints the primary variant on the live accent, not a hardcoded colour', () => {
+  it('paints the primary variant as accent-tinted glass, not a flat fill', () => {
     render(<Button variant="primary">Go</Button>)
-
-    const className = screen.getByRole('button').className
-    expect(className).toContain('bg-kro-accent')
-    expect(className).toContain('text-kro-on-accent')
-  })
-
-  it('asks glass.css for the material rather than reimplementing it', () => {
-    render(<Button variant="glass">Focus</Button>)
 
     const className = screen.getByRole('button').className
     expect(className).toContain('kro-glass')
     expect(className).toContain('kro-glass--control')
+    expect(className).toContain('kro-glass--accent')
+    expect(className).toContain('text-kro-on-accent')
   })
 
-  it('meets the 44px touch floor by default and the 28px pointer target at sm', () => {
-    const { rerender } = render(<Button>Default</Button>)
-    expect(screen.getByRole('button').className).toContain('h-11')
+  it('paints secondary and glass as the same untinted control material', () => {
+    render(<Button variant="secondary">Reschedule</Button>)
+    const secondary = screen.getByRole('button').className
+    expect(secondary).toContain('kro-glass--control')
+    expect(secondary).not.toContain('kro-glass--accent')
 
-    rerender(<Button size="sm">Compact</Button>)
-    expect(screen.getByRole('button').className).toContain('h-7')
+    cleanup()
+    render(<Button variant="glass">Focus</Button>)
+    const glass = screen.getByRole('button').className
+    expect(glass).toContain('kro-glass')
+    expect(glass).toContain('kro-glass--control')
+  })
+
+  it('paints destructive as danger-tinted glass', () => {
+    render(<Button variant="destructive">Delete</Button>)
+
+    const className = screen.getByRole('button').className
+    expect(className).toContain('kro-glass--danger')
+  })
+
+  it('defaults to compact (h-6, text-xs) and uses h-9 for comfortable', () => {
+    const { rerender } = render(<Button>Default</Button>)
+    const compact = screen.getByRole('button').className
+    expect(compact).toContain('h-6')
+    expect(compact).toContain('text-xs')
+
+    rerender(<Button size="md">Comfortable</Button>)
+    const comfortable = screen.getByRole('button').className
+    expect(comfortable).toContain('h-9')
+    expect(comfortable).toContain('text-sm')
+    expect(comfortable).not.toContain('h-11')
   })
 
   it('maps pointer vs touch onto those two sizes', () => {
@@ -149,5 +171,25 @@ describe('Button', () => {
 
     const className = screen.getByRole('button').className
     expect(className).toContain('rounded-kro-pill')
+  })
+
+  it('paints Fluent outline as a hairline, not a filled glass control', () => {
+    render(<Button variant="outline">Outline</Button>)
+
+    const className = screen.getByRole('button').className
+    expect(className).toContain('border-kro-hairline')
+    expect(className).not.toContain('kro-glass--accent')
+  })
+
+  it('honours Fluent circular and square shapes', () => {
+    const { rerender } = render(<Button shape="circular">Go</Button>)
+    expect(screen.getByRole('button').getAttribute('data-shape')).toBe(
+      'circular',
+    )
+    expect(screen.getByRole('button').className).toContain('rounded-kro-pill')
+
+    rerender(<Button shape="square">Go</Button>)
+    expect(screen.getByRole('button').getAttribute('data-shape')).toBe('square')
+    expect(screen.getByRole('button').className).toContain('rounded-none')
   })
 })

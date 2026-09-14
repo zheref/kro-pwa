@@ -75,6 +75,41 @@ describe('Tabs', () => {
     expect(list.className).toContain('kro-glass--control')
   })
 
+  it('defaults the list to compact height', () => {
+    render(<PlanModes />)
+
+    expect(screen.getByRole('tablist').className).toContain('h-7')
+  })
+
+  it('sizes the compact list so the padded track still fits the trigger', () => {
+    render(
+      <Tabs defaultValue="timeline">
+        <TabsList aria-label="Plan mode">
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    )
+
+    expect(screen.getByRole('tablist').className).toContain('p-kro-tiny')
+    expect(screen.getByRole('tab', { name: 'Timeline' }).className).toContain(
+      'h-5',
+    )
+  })
+
+  it('grows the list for comfortable density', () => {
+    render(
+      <Tabs defaultValue="timeline">
+        <TabsList aria-label="Plan mode" density="comfortable">
+          <TabsTrigger value="timeline" density="comfortable">
+            Timeline
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    )
+
+    expect(screen.getByRole('tablist').className).toContain('h-9')
+  })
+
   it('fades a disabled mode exactly once and refuses to select it', async () => {
     render(<PlanModes />)
 

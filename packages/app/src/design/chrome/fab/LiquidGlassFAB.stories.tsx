@@ -1,6 +1,7 @@
 import { BothSchemes, Stage } from '../Stage'
 import { CHROME_LAYOUT, FAB_INSETS } from '../layout/chromeLayout'
 import { LiquidGlassFAB } from './LiquidGlassFAB'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * LiquidGlassFAB — the 62px disc, on the backdrops it has to survive.
@@ -13,12 +14,12 @@ import { LiquidGlassFAB } from './LiquidGlassFAB'
  * the right corner" is a question no unit test answers.
  */
 export default {
-  title: 'Design system/Chrome/LiquidGlassFAB',
+  title: 'Chrome/LiquidGlassFAB',
   component: LiquidGlassFAB,
   parameters: { layout: 'fullscreen' },
 }
 
-export const PerTabGlyphs = {
+const PerTabGlyphs = {
   name: 'Per-tab glyphs, both schemes',
   render: () => (
     <BothSchemes height={220}>
@@ -42,7 +43,7 @@ export const PerTabGlyphs = {
   ),
 }
 
-export const AnchoredModern = {
+const AnchoredModern = {
   name: `Anchored — iOS 26 insets (${FAB_INSETS.modern.trailing} / ${FAB_INSETS.modern.bottom})`,
   render: () => (
     <Stage height={320} label="iOS 26 tab bar">
@@ -69,7 +70,7 @@ export const AnchoredModern = {
   ),
 }
 
-export const AnchoredLegacy = {
+const AnchoredLegacy = {
   name: `Anchored — legacy insets (${FAB_INSETS.legacy.trailing} / ${FAB_INSETS.legacy.bottom})`,
   render: () => (
     <Stage theme="dark" height={320} label="Legacy tab bar">
@@ -95,7 +96,7 @@ export const AnchoredLegacy = {
   ),
 }
 
-export const Disabled = {
+const Disabled = {
   name: 'Disabled — the fade applied exactly once',
   render: () => (
     <BothSchemes height={200}>
@@ -122,7 +123,7 @@ export const Disabled = {
   ),
 }
 
-export const SizeAgainstTargets = {
+const SizeAgainstTargets = {
   name: `Size — ${CHROME_LAYOUT.fabDiameter}px against the 44px and 28px floors`,
   render: () => (
     <Stage height={220} label="Target floors">
@@ -155,5 +156,18 @@ export const SizeAgainstTargets = {
         />
       </div>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {PerTabGlyphs.render()}
+      {AnchoredModern.render()}
+      {AnchoredLegacy.render()}
+      {Disabled.render()}
+      {SizeAgainstTargets.render()}
+    </StoryGallery>
   ),
 }

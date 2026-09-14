@@ -1,0 +1,53 @@
+/**
+ * Trailing kind badges on sidebar leaves. The row is a flex item that
+ * fills the remaining width of Storybook's tree node so the badge sits
+ * on the trailing edge, not glued to the title.
+ *
+ * Storybook's node classes are emotion-hashed; `:has(.kro-sb-row)` is
+ * the stable hook.
+ */
+.kro-sb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.kro-sb-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.kro-sb-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.sidebar-container [data-nodetype] {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-container [data-nodetype]:has(.kro-sb-row) {
+  gap: 6px;
+}
+
+.sidebar-container :has(> .kro-sb-row) {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  width: 100%;
+}

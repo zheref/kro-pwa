@@ -14,6 +14,7 @@ import { EndeavorRow, endeavorRowPropsFromCardModel } from './EndeavorRow'
 import type { EndeavorRowConfigName } from './EndeavorRow'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/EndeavorRow',
@@ -28,7 +29,7 @@ const CONFIGS: readonly EndeavorRowConfigName[] = [
   'find',
 ]
 
-export const Presets = {
+const Presets = {
   name: 'The four canon presets',
   render: () => (
     <Stage>
@@ -50,7 +51,7 @@ export const Presets = {
   ),
 }
 
-export const FindPills = {
+const FindPills = {
   name: 'Find · kind and status pills on the trailing edge',
   render: () => (
     <Stage>
@@ -112,7 +113,7 @@ export const FindPills = {
   ),
 }
 
-export const InboxWithTrailingActions = {
+const InboxWithTrailingActions = {
   name: 'Inbox · trailing action buttons',
   render: () => (
     <Stage>
@@ -174,7 +175,7 @@ export const InboxWithTrailingActions = {
   ),
 }
 
-export const InputDuality = {
+const InputDuality = {
   name: 'Input duality · one capability set, two grammars',
   render: () => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -218,7 +219,7 @@ export const InputDuality = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -231,5 +232,18 @@ export const BothThemes = {
         />
       </div>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Presets.render()}
+      {FindPills.render()}
+      {InboxWithTrailingActions.render()}
+      {InputDuality.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

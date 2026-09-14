@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 
 /**
@@ -7,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
  * (#13).
  */
 export default {
-  title: 'Design system/Primitives/Tabs',
+  title: 'Navigation/Tabs',
   component: TabsList,
 }
 
@@ -19,8 +21,8 @@ function Stage({
   children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         background:
           'linear-gradient(120deg, var(--kro-color-header-gradient-indigo), var(--kro-color-header-gradient-grape))',
@@ -30,7 +32,7 @@ function Stage({
       }}
     >
       {children}
-    </div>
+    </StoryTheme>
   )
 }
 
@@ -51,7 +53,7 @@ function Panel({ children }: { children: ReactNode }) {
   )
 }
 
-export const PlanModes = {
+const PlanModes = {
   render: () => (
     <Stage>
       <Tabs defaultValue="timeline">
@@ -74,7 +76,7 @@ export const PlanModes = {
   ),
 }
 
-export const WithDisabled = {
+const WithDisabled = {
   name: 'With a disabled mode',
   render: () => (
     <Stage>
@@ -94,7 +96,7 @@ export const WithDisabled = {
   ),
 }
 
-export const TwoModes = {
+const TwoModes = {
   name: 'Two modes',
   render: () => (
     <Stage>
@@ -114,7 +116,7 @@ export const TwoModes = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
     <Stage theme="dark">
       <Tabs defaultValue="list">
@@ -128,5 +130,48 @@ export const DarkScheme = {
         </TabsContent>
       </Tabs>
     </Stage>
+  ),
+}
+
+const Densities = {
+  name: 'Densities · compact default, comfortable for mobile',
+  render: () => (
+    <Stage>
+      <div style={{ display: 'grid', gap: 24 }}>
+        <Tabs defaultValue="timeline">
+          <TabsList aria-label="Compact plan mode" density="compact">
+            <TabsTrigger value="timeline" density="compact">
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="list" density="compact">
+              List
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Tabs defaultValue="timeline">
+          <TabsList aria-label="Comfortable plan mode" density="comfortable">
+            <TabsTrigger value="timeline" density="comfortable">
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="list" density="comfortable">
+              List
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {PlanModes.render()}
+      {WithDisabled.render()}
+      {TwoModes.render()}
+      {DarkScheme.render()}
+      {Densities.render()}
+    </StoryGallery>
   ),
 }

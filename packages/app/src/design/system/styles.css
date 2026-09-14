@@ -25,9 +25,11 @@
    overlay). Importing this one file into `components` restores the intended
    cascade: the material is the default, a utility on the element wins.
 
-   The other three stay unlayered on purpose — `tokens.css` declares custom
-   properties (which no utility competes with) and the motion/gradient files
-   define behaviour a caller is not meant to override.
+   The other files stay unlayered on purpose — `tokens.css` declares custom
+   properties (which no utility competes with), the motion/gradient files
+   define behaviour a caller is not meant to override, and `hig.css` is
+   element-specific control geometry (thumbs, knobs, the spinner) that a
+   utility must not silently beat.
    ========================================================================== */
 
 @import "./tokens/tokens.css";
@@ -35,6 +37,8 @@
 @import "./motion/motion.css";
 @import "./glass/glass.css" layer(components);
 @import "./gradient/gradient.css";
+@import "../hig/hig.css";
+@import "../fluent/fluent.css";
 
 /* ==========================================================================
    Form controls — kill the Chromium user-agent focus outline.

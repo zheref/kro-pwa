@@ -8,10 +8,12 @@
  */
 
 import type { ReactNode } from 'react'
+import { StoryTheme } from '../storybook/galleryAppearance'
 import { DetailBackdrop } from '../system/gradient/DetailBackdrop'
 import { CompactPresentationHeader } from './CompactPresentationHeader'
 import { EmptyDayStateView, InboxTrayEmptyState } from './EmptyDayStateView'
 import { BothSchemes, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/Empty states',
@@ -29,8 +31,8 @@ function Field({
   readonly children: ReactNode
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         position: 'relative',
         display: 'flex',
@@ -51,11 +53,11 @@ function Field({
       >
         {children}
       </div>
-    </div>
+    </StoryTheme>
   )
 }
 
-export const DoPromotion = {
+const DoPromotion = {
   name: 'Do tab · centred on the page field',
   render: () => (
     <Field>
@@ -64,7 +66,7 @@ export const DoPromotion = {
   ),
 }
 
-export const PromotionWithoutAction = {
+const PromotionWithoutAction = {
   name: 'Do tab · read-only, no CTA',
   render: () => (
     <Field>
@@ -76,7 +78,7 @@ export const PromotionWithoutAction = {
   ),
 }
 
-export const BothSchemesOnField = {
+const BothSchemesOnField = {
   name: 'Do tab · both schemes, centred',
   render: () => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -90,7 +92,7 @@ export const BothSchemesOnField = {
   ),
 }
 
-export const InboxTray = {
+const InboxTray = {
   name: 'Inbox tray · pinned header, centred illustration',
   render: () => (
     <Stage>
@@ -117,7 +119,7 @@ export const InboxTray = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Inbox tray · both schemes',
   render: () => (
     <BothSchemes>
@@ -125,5 +127,18 @@ export const BothThemes = {
         <InboxTrayEmptyState />
       </div>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {DoPromotion.render()}
+      {PromotionWithoutAction.render()}
+      {BothSchemesOnField.render()}
+      {InboxTray.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

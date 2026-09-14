@@ -34,7 +34,7 @@ function Stage({
   )
 }
 
-/** Lands on Tokens / Palette, the catalog's default story. */
+/** Lands on Overview, the catalog's default gallery. */
 export const Default = {
   render: () => (
     <Stage>
@@ -43,7 +43,7 @@ export const Default = {
   ),
 }
 
-/** A primitive in the canvas — Button / Variants. */
+/** A primitive in the canvas — Button. */
 export const ButtonVariants = {
   render: () => (
     <Stage>
@@ -65,7 +65,7 @@ export const ChromeFab = {
 export const DarkScheme = {
   render: () => (
     <Stage theme="dark">
-      <DesignSystemFragment {...designSystemMocks.endeavorCard} />
+      <DesignSystemFragment {...designSystemMocks.darkScheme} />
     </Stage>
   ),
 }

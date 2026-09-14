@@ -17,6 +17,7 @@ import {
 } from './endeavorPopovers'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/Popovers',
@@ -37,7 +38,7 @@ function Panel({ children }: { readonly children: React.ReactNode }) {
   )
 }
 
-export const MarkComplete = {
+const MarkComplete = {
   name: 'Mark complete · the backdate picker',
   render: () => (
     <Stage gradient>
@@ -54,7 +55,7 @@ export const MarkComplete = {
   ),
 }
 
-export const Defer = {
+const Defer = {
   name: 'Defer · with and without Skip',
   render: () => (
     <Stage gradient>
@@ -82,7 +83,7 @@ export const Defer = {
   ),
 }
 
-export const DeleteConfirmation = {
+const DeleteConfirmation = {
   name: 'Delete · the confirmation',
   render: () => (
     <Stage gradient>
@@ -97,7 +98,7 @@ export const DeleteConfirmation = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes gradient>
@@ -109,5 +110,17 @@ export const BothThemes = {
         />
       </Panel>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {MarkComplete.render()}
+      {Defer.render()}
+      {DeleteConfirmation.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

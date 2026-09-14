@@ -1,5 +1,5 @@
 /**
- * `InlineBanner` — the three kinds, with and without a recovery path.
+ * `InlineBanner` — the four kinds, with and without a recovery path.
  *
  * The opaque fills are the point. Put the browser in dark mode and the warning
  * and danger banners do not move: their tokens are the same value in both
@@ -9,14 +9,15 @@
 
 import { InlineBanner } from './InlineBanner'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
-  title: 'Endeavor/InlineBanner',
+  title: 'Status/Inline banner',
   component: InlineBanner,
 }
 
-export const Kinds = {
-  name: 'The three kinds',
+const Kinds = {
+  name: 'The four kinds',
   render: () => (
     <Stage width={520}>
       <Cell label="error">
@@ -35,11 +36,18 @@ export const Kinds = {
           message="This endeavor's kind doesn't support editing performances."
         />
       </Cell>
+      <Cell label="success">
+        <InlineBanner
+          kind="success"
+          message="Saved to the plan."
+          onDismiss={() => undefined}
+        />
+      </Cell>
     </Stage>
   ),
 }
 
-export const WithRecovery = {
+const WithRecovery = {
   name: 'With a recovery action',
   render: () => (
     <Stage width={520}>
@@ -53,7 +61,7 @@ export const WithRecovery = {
   ),
 }
 
-export const LongMessage = {
+const LongMessage = {
   name: 'A message that wraps',
   render: () => (
     <Stage width={420}>
@@ -67,7 +75,7 @@ export const LongMessage = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -81,5 +89,17 @@ export const BothThemes = {
         message="Read-only: this host does not accept edits."
       />
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Kinds.render()}
+      {WithRecovery.render()}
+      {LongMessage.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

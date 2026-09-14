@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 import { Button } from './button'
 import {
   Sheet,
@@ -12,9 +15,29 @@ import {
  * sheet at desktop width is a shape nobody will ever see.
  */
 export default {
-  title: 'Design system/Primitives/Sheet',
+  title: 'Surfaces/Sheet',
   component: SheetContent,
   parameters: { layout: 'fullscreen' },
+}
+
+function Stage({
+  theme,
+  children,
+}: {
+  readonly theme?: 'light' | 'dark'
+  readonly children: ReactNode
+}) {
+  return (
+    <StoryTheme
+      theme={theme}
+      style={{
+        padding: 24,
+        background: 'var(--kro-color-back)',
+      }}
+    >
+      {children}
+    </StoryTheme>
+  )
 }
 
 function Items() {
@@ -39,17 +62,11 @@ function Items() {
   )
 }
 
-export const Bottom = {
+const Bottom = {
   name: 'Bottom · the default, where a thumb reaches',
   render: () => (
-    <div
-      style={{
-        height: '100vh',
-        padding: 24,
-        background: 'var(--kro-color-back)',
-      }}
-    >
-      <Sheet defaultOpen>
+    <Stage>
+      <Sheet>
         <SheetTrigger asChild>
           <Button variant="primary">Open inbox</Button>
         </SheetTrigger>
@@ -59,67 +76,69 @@ export const Bottom = {
           <Items />
         </SheetContent>
       </Sheet>
-    </div>
+    </Stage>
   ),
 }
 
-export const Right = {
+const Right = {
   name: 'Right · the desktop drawer',
   render: () => (
-    <div
-      style={{
-        height: '100vh',
-        padding: 24,
-        background: 'var(--kro-color-back)',
-      }}
-    >
-      <Sheet defaultOpen>
+    <Stage>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="secondary">Visibility</Button>
+        </SheetTrigger>
         <SheetContent side="right">
           <SheetTitle>Visibility</SheetTitle>
           <SheetDescription>What shows in My Day.</SheetDescription>
           <Items />
         </SheetContent>
       </Sheet>
-    </div>
+    </Stage>
   ),
 }
 
-export const Top = {
+const Top = {
   render: () => (
-    <div
-      style={{
-        height: '100vh',
-        padding: 24,
-        background: 'var(--kro-color-back)',
-      }}
-    >
-      <Sheet defaultOpen>
+    <Stage>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="secondary">Capture</Button>
+        </SheetTrigger>
         <SheetContent side="top">
           <SheetTitle>Capture</SheetTitle>
           <SheetDescription>Jot it down and route it later.</SheetDescription>
         </SheetContent>
       </Sheet>
-    </div>
+    </Stage>
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
-    <div
-      data-theme="dark"
-      style={{
-        height: '100vh',
-        padding: 24,
-        background: 'var(--kro-color-back)',
-      }}
-    >
-      <Sheet defaultOpen>
+    <Stage theme="dark">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="primary">Open inbox</Button>
+        </SheetTrigger>
         <SheetContent>
           <SheetTitle>Inbox</SheetTitle>
           <SheetDescription>Three items to triage.</SheetDescription>
           <Items />
         </SheetContent>
       </Sheet>
-    </div>
+    </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Bottom.render()}
+      {Right.render()}
+      {Top.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

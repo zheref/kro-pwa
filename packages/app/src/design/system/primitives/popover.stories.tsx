@@ -1,3 +1,5 @@
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 import { Button } from './button'
 import {
   POPOVER_SIZE,
@@ -12,7 +14,7 @@ import {
  * the shell child will render, not approximations of them.
  */
 export default {
-  title: 'Design system/Primitives/Popover',
+  title: 'Surfaces/Popover',
   component: PopoverContent,
   parameters: { layout: 'centered' },
 }
@@ -39,10 +41,10 @@ function Rows({ count }: { count: number }) {
   )
 }
 
-export const Inbox = {
+const Inbox = {
   name: `Inbox · ${POPOVER_SIZE.inbox.width}×${POPOVER_SIZE.inbox.height}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="secondary">Inbox</Button>
       </PopoverTrigger>
@@ -67,10 +69,10 @@ export const Inbox = {
   ),
 }
 
-export const Visibility = {
+const Visibility = {
   name: `Visibility · ${POPOVER_SIZE.visibility.width}×${POPOVER_SIZE.visibility.height}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="secondary">Visibility</Button>
       </PopoverTrigger>
@@ -95,10 +97,10 @@ export const Visibility = {
   ),
 }
 
-export const Profile = {
+const Profile = {
   name: `Profile · width ${POPOVER_SIZE.profile.width}`,
   render: () => (
-    <Popover defaultOpen>
+    <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost">Profile</Button>
       </PopoverTrigger>
@@ -120,13 +122,13 @@ export const Profile = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
-    <div
-      data-theme="dark"
+    <StoryTheme
+      theme="dark"
       style={{ padding: 40, background: 'var(--kro-color-back)' }}
     >
-      <Popover defaultOpen>
+      <Popover>
         <PopoverTrigger asChild>
           <Button variant="secondary">Visibility</Button>
         </PopoverTrigger>
@@ -134,6 +136,18 @@ export const DarkScheme = {
           <Rows count={4} />
         </PopoverContent>
       </Popover>
-    </div>
+    </StoryTheme>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Inbox.render()}
+      {Visibility.render()}
+      {Profile.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

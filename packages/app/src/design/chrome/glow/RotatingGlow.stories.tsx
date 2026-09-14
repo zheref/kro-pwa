@@ -1,6 +1,7 @@
 import { LiquidGlassFAB } from '../fab/LiquidGlassFAB'
 import { BothSchemes, Stage } from '../Stage'
 import { GLOW_SHAPES, RotatingGlow } from './RotatingGlow'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * RotatingGlow — the two-hue sweep cast from behind the FAB.
@@ -24,7 +25,7 @@ import { GLOW_SHAPES, RotatingGlow } from './RotatingGlow'
  *     would test the switch rather than the setting.
  */
 export default {
-  title: 'Design system/Chrome/RotatingGlow',
+  title: 'Chrome/RotatingGlow',
   component: RotatingGlow,
   parameters: { layout: 'fullscreen' },
 }
@@ -46,7 +47,7 @@ function Centre({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const OnTheFAB = {
+const OnTheFAB = {
   name: 'On the FAB — canon`s ringEmerald to glowLime',
   render: () => (
     <BothSchemes height={280}>
@@ -61,7 +62,7 @@ export const OnTheFAB = {
   ),
 }
 
-export const TwoHuesVersusOne = {
+const TwoHuesVersusOne = {
   name: 'Two hues versus one — why the second hue exists',
   render: () => (
     <Stage
@@ -81,7 +82,7 @@ export const TwoHuesVersusOne = {
   ),
 }
 
-export const Shapes = {
+const Shapes = {
   name: 'Every shape — circle, capsule, rounded rectangle',
   render: () => (
     <Stage height={280} label="One construction, three silhouettes">
@@ -109,7 +110,7 @@ export const Shapes = {
   ),
 }
 
-export const Settled = {
+const Settled = {
   name: 'Settled — what reduced motion shows',
   render: () => (
     <BothSchemes height={280}>
@@ -129,7 +130,7 @@ export const Settled = {
   ),
 }
 
-export const Inactive = {
+const Inactive = {
   name: 'Inactive — the glow is removed, not frozen',
   render: () => (
     <Stage height={240} label="isActive: false">
@@ -145,7 +146,7 @@ export const Inactive = {
   ),
 }
 
-export const Reach = {
+const Reach = {
   name: 'Spread versus blur — brightness against reach',
   render: () => (
     <Stage theme="dark" height={280} label="spread 3/5 = 5 · blur 5/10/2">
@@ -161,5 +162,19 @@ export const Reach = {
         </RotatingGlow>
       </Centre>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {OnTheFAB.render()}
+      {TwoHuesVersusOne.render()}
+      {Shapes.render()}
+      {Settled.render()}
+      {Inactive.render()}
+      {Reach.render()}
+    </StoryGallery>
   ),
 }

@@ -1,0 +1,84 @@
+/* ==========================================================================
+   Fluent 2 control recipes that Tailwind cannot express.
+
+   Skeleton pulse, tooltip geometry, avatar initials and the carousel
+   track. Colour, radius, motion and the disabled fade still come from
+   tokens — nothing below hardcodes a paint value.
+
+   Imported once from `system/styles.css` so a component never
+   side-effect-imports CSS.
+   ========================================================================== */
+
+@keyframes kro-fluent-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes kro-fluent-wave {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.kro-fluent-skeleton {
+  display: block;
+  background: var(--kro-color-back-inner);
+  border-radius: var(--kro-radius-small);
+}
+
+.kro-fluent-skeleton[data-animation="pulse"] {
+  animation: kro-fluent-pulse var(--kro-duration-standard-spring)
+    var(--kro-ease-standard) infinite;
+}
+
+.kro-fluent-skeleton[data-animation="wave"] {
+  background-image: linear-gradient(
+    90deg,
+    var(--kro-color-back-inner) 0%,
+    var(--kro-color-mist) 50%,
+    var(--kro-color-back-inner) 100%
+  );
+  background-size: 200% 100%;
+  animation: kro-fluent-wave var(--kro-duration-standard-spring)
+    var(--kro-ease-standard) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kro-fluent-skeleton[data-animation="pulse"],
+  .kro-fluent-skeleton[data-animation="wave"] {
+    animation: none;
+  }
+}
+
+.kro-fluent-tooltip {
+  position: absolute;
+  z-index: 40;
+  max-width: 16rem;
+  padding: 6px 8px;
+  pointer-events: none;
+}
+
+.kro-fluent-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+.kro-fluent-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}

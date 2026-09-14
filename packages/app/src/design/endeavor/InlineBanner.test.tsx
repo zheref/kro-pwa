@@ -109,7 +109,7 @@ describe('InlineBanner', () => {
     expect(screen.queryByRole('button')).toBeNull()
   })
 
-  it('keeps the action at the 44px touch floor', () => {
+  it('keeps the action compact by default', () => {
     render(
       <InlineBanner
         message="Offline."
@@ -119,7 +119,22 @@ describe('InlineBanner', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Retry' }).className).toContain(
-      'h-11',
+      'h-6',
     )
+  })
+
+  it('speaks success and offers a named dismiss', async () => {
+    const onDismiss = vi.fn()
+    render(
+      <InlineBanner kind="success" message="Saved." onDismiss={onDismiss} />,
+    )
+
+    expect(announced()).toBe('Success: Saved.')
+    expect(screen.getByRole('status').style.backgroundColor).toBe(
+      'var(--kro-color-focus-green)',
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+    expect(onDismiss).toHaveBeenCalledOnce()
   })
 })

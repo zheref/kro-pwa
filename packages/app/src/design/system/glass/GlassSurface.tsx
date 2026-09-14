@@ -18,6 +18,9 @@ export type GlassMaterial =
   /** A floating tab dock. Capsule inset from the viewport edge. */
   | 'dock'
 
+/** Mix the live accent or danger role into layer 2. `none` is the field tint. */
+export type GlassTint = 'none' | 'accent' | 'danger'
+
 export interface GlassSurfaceProps extends ComponentPropsWithoutRef<'div'> {
   /**
    * The element to render. A bar is usually a `header`, a control a `button`.
@@ -40,6 +43,8 @@ export interface GlassSurfaceProps extends ComponentPropsWithoutRef<'div'> {
   readonly interactive?: boolean
   /** Bars only: raise the shadow once content has scrolled beneath. */
   readonly scrolled?: boolean
+  /** Tint the glass with the live accent or the danger role. */
+  readonly tint?: GlassTint
   readonly children?: ReactNode
 }
 
@@ -49,6 +54,12 @@ const MATERIAL_CLASS: Record<GlassMaterial, string | null> = {
   bar: 'kro-glass--bar',
   sidebar: 'kro-glass--sidebar',
   dock: 'kro-glass--dock',
+}
+
+const TINT_CLASS: Record<GlassTint, string | null> = {
+  none: null,
+  accent: 'kro-glass--accent',
+  danger: 'kro-glass--danger',
 }
 
 /**
@@ -66,6 +77,7 @@ export function GlassSurface({
   fixed = false,
   interactive = false,
   scrolled = false,
+  tint = 'none',
   className,
   children,
   ...rest
@@ -77,6 +89,7 @@ export function GlassSurface({
       className={cn(
         'kro-glass',
         MATERIAL_CLASS[material],
+        TINT_CLASS[tint],
         fixed && 'kro-glass--fixed',
         interactive && 'kro-glass--interactive',
         material === 'bar' && scrolled && 'is-scrolled',

@@ -23,6 +23,7 @@ import { EndeavorUrgency } from './endeavorCardModel'
 import type { EndeavorCardModel } from './endeavorCardModel'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/EndeavorCard',
@@ -53,7 +54,7 @@ function matrixModel(
   }
 }
 
-export const BadgeMatrix = {
+const BadgeMatrix = {
   name: 'Badge matrix · urgency × reward × mode',
   render: () => (
     <Stage gradient>
@@ -95,7 +96,7 @@ export const BadgeMatrix = {
   ),
 }
 
-export const Sizes = {
+const Sizes = {
   name: 'Vertical · small / medium / large',
   render: () => (
     <Stage gradient>
@@ -124,7 +125,7 @@ export const Sizes = {
   ),
 }
 
-export const PreparationOverlay = {
+const PreparationOverlay = {
   name: 'Prepare on tap · the action overlay',
   render: () => {
     function Demo() {
@@ -172,7 +173,7 @@ export const PreparationOverlay = {
   },
 }
 
-export const HorizontalLayout = {
+const HorizontalLayout = {
   name: 'Horizontal · the full-width row (min-height 100)',
   render: () => (
     <Stage gradient>
@@ -203,7 +204,7 @@ export const HorizontalLayout = {
   ),
 }
 
-export const MarkCompleteMode = {
+const MarkCompleteMode = {
   name: 'Mark-complete mode · wiggle + corner glyph',
   render: () => (
     <Stage gradient>
@@ -241,7 +242,7 @@ export const MarkCompleteMode = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -259,5 +260,19 @@ export const BothThemes = {
         />
       </div>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {BadgeMatrix.render()}
+      {Sizes.render()}
+      {PreparationOverlay.render()}
+      {HorizontalLayout.render()}
+      {MarkCompleteMode.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

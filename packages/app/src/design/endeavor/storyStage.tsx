@@ -19,6 +19,11 @@
  */
 
 import type { ReactNode } from 'react'
+import {
+  bothSchemesGridStyle,
+  useSchemesToPaint,
+  useStoryThemeAttributes,
+} from '../storybook/galleryAppearance'
 
 /** The indigoGrape-adjacent gradient the Do surface sits on. */
 export const STAGE_BACKDROP =
@@ -38,9 +43,10 @@ export function Stage({
   width = '100%',
   children,
 }: StageProps) {
+  const appearance = useStoryThemeAttributes(theme)
   return (
     <div
-      data-theme={theme}
+      {...appearance}
       data-slot="story-stage"
       style={{
         display: 'flex',
@@ -67,14 +73,14 @@ export function BothSchemes({
   readonly gradient?: boolean
   readonly children: ReactNode
 }) {
+  const schemes = useSchemesToPaint()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-      <Stage theme="light" gradient={gradient}>
-        {children}
-      </Stage>
-      <Stage theme="dark" gradient={gradient}>
-        {children}
-      </Stage>
+    <div style={bothSchemesGridStyle(schemes.length)}>
+      {schemes.map((scheme) => (
+        <Stage key={scheme} theme={scheme} gradient={gradient}>
+          {children}
+        </Stage>
+      ))}
     </div>
   )
 }

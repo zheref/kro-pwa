@@ -1,0 +1,215 @@
+/* ==========================================================================
+   HIG control recipes that Tailwind cannot express.
+
+   Range thumbs, the switch track/knob geometry, the spinner sweep and the
+   native checkbox tick all need element-specific CSS. Colour, radius, motion
+   and the disabled fade still come from tokens — nothing below hardcodes a
+   paint value.
+
+   Imported once from `system/styles.css` so a component never side-effect
+   imports CSS (the same rule the rest of the design system follows).
+   ========================================================================== */
+
+@keyframes kro-hig-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.kro-hig-spinner {
+  display: inline-block;
+  border-radius: var(--kro-radius-pill);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--kro-color-fore) 18%, transparent);
+  border-top-color: var(--kro-color-accent);
+  animation: kro-hig-spin var(--kro-duration-standard-spring)
+    var(--kro-ease-standard) infinite;
+}
+
+.kro-hig-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  cursor: default;
+}
+
+.kro-hig-toggle[data-density="comfortable"] {
+  width: 51px;
+  height: 31px;
+}
+
+.kro-hig-toggle-knob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-absolute);
+  box-shadow: var(--kro-shadow-subtle);
+  transform: translateX(0);
+  transition:
+    transform var(--kro-duration-quick) var(--kro-ease-quick-spring),
+    background-color var(--kro-duration-quick) var(--kro-ease-standard);
+}
+
+.kro-hig-toggle[data-density="comfortable"] .kro-hig-toggle-knob {
+  width: 27px;
+  height: 27px;
+}
+
+.kro-hig-toggle[data-checked="true"] .kro-hig-toggle-knob {
+  transform: translateX(16px);
+  background: var(--kro-color-on-accent);
+}
+
+.kro-hig-toggle[data-density="comfortable"][data-checked="true"]
+  .kro-hig-toggle-knob {
+  transform: translateX(20px);
+}
+
+.kro-hig-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+.kro-hig-toggle:disabled {
+  pointer-events: none;
+  opacity: var(--kro-opacity-disabled);
+}
+
+.kro-hig-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-back-inner);
+  box-shadow: inset 0 0 0 1px var(--kro-color-hairline);
+  cursor: default;
+}
+
+.kro-hig-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-absolute);
+  box-shadow:
+    inset 0 0 0 1px var(--kro-glass-rim),
+    var(--kro-shadow-subtle);
+  border: 0;
+}
+
+.kro-hig-slider[data-density="comfortable"]::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+}
+
+.kro-hig-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-absolute);
+  box-shadow:
+    inset 0 0 0 1px var(--kro-glass-rim),
+    var(--kro-shadow-subtle);
+  border: 0;
+}
+
+.kro-hig-slider[data-density="comfortable"]::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+}
+
+.kro-hig-slider:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+.kro-hig-slider:disabled {
+  pointer-events: none;
+  opacity: var(--kro-opacity-disabled);
+}
+
+.kro-hig-check {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border-radius: var(--kro-radius-small);
+  background: var(--kro-color-back-inner);
+  box-shadow: inset 0 0 0 1px var(--kro-color-hairline);
+  display: grid;
+  place-content: center;
+  cursor: default;
+  transition:
+    background-color var(--kro-duration-quick) var(--kro-ease-standard),
+    box-shadow var(--kro-duration-quick) var(--kro-ease-standard);
+}
+
+.kro-hig-check:checked {
+  background: var(--kro-color-accent);
+  box-shadow: inset 0 0 0 1px var(--kro-color-accent);
+}
+
+.kro-hig-check:checked::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  border: solid var(--kro-color-on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.kro-hig-check:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+.kro-hig-check:disabled {
+  pointer-events: none;
+  opacity: var(--kro-opacity-disabled);
+}
+
+.kro-hig-radio {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-back-inner);
+  box-shadow: inset 0 0 0 1px var(--kro-color-hairline);
+  display: grid;
+  place-content: center;
+  cursor: default;
+}
+
+.kro-hig-radio:checked {
+  box-shadow: inset 0 0 0 1px var(--kro-color-accent);
+}
+
+.kro-hig-radio:checked::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-accent);
+}
+
+.kro-hig-radio:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+.kro-hig-radio:disabled {
+  pointer-events: none;
+  opacity: var(--kro-opacity-disabled);
+}

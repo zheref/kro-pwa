@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BothSchemes, Stage } from '../Stage'
 import { ActivityRings, dayProgressRings } from './ActivityRings'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * ActivityRings — the Day Progress Rings truth table.
@@ -20,7 +21,7 @@ import { ActivityRings, dayProgressRings } from './ActivityRings'
  * sweeping. Toggle it in the OS and use the "Animated transition" story.
  */
 export default {
-  title: 'Design system/Chrome/ActivityRings',
+  title: 'Chrome/ActivityRings',
   component: ActivityRings,
   parameters: { layout: 'fullscreen' },
 }
@@ -76,7 +77,7 @@ function Row({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const TruthTable = {
+const TruthTable = {
   name: 'Truth table — every row of DayProgressRings.md § States',
   render: () => (
     <Stage
@@ -144,7 +145,7 @@ export const TruthTable = {
   ),
 }
 
-export const NoDenominatorIsAbsent = {
+const NoDenominatorIsAbsent = {
   name: 'No denominator — absent, never an empty gold track',
   render: () => (
     <Stage
@@ -190,7 +191,7 @@ export const NoDenominatorIsAbsent = {
   ),
 }
 
-export const BothSchemesAtHeaderSize = {
+const BothSchemesAtHeaderSize = {
   name: 'Both schemes, at the Do header`s 44px',
   render: () => (
     <BothSchemes height={220}>
@@ -215,7 +216,7 @@ export const BothSchemesAtHeaderSize = {
   ),
 }
 
-export const AnimatedTransition = {
+const AnimatedTransition = {
   name: 'Animated transition — the arc sweeps, unless motion is reduced',
   render: () => <SweepDemo />,
 }
@@ -288,4 +289,16 @@ function SweepButton({
       {label}
     </button>
   )
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {TruthTable.render()}
+      {NoDenominatorIsAbsent.render()}
+      {BothSchemesAtHeaderSize.render()}
+      {AnimatedTransition.render()}
+    </StoryGallery>
+  ),
 }

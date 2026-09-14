@@ -8,6 +8,7 @@ import {
 import { ActiveToastLayer } from './ActiveToastLayer'
 import { ActiveToastView } from './ActiveToastView'
 import { type ActiveToastInput, toActiveToast } from './activeToast'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * ActiveToast — the placement, stacking and lift matrix.
@@ -30,7 +31,7 @@ import { type ActiveToastInput, toActiveToast } from './activeToast'
  * bottom-right corner. In the app the layer is `fixed` to the viewport.
  */
 export default {
-  title: 'Design system/Chrome/ActiveToast',
+  title: 'Chrome/ActiveToast',
   component: ActiveToastView,
   parameters: { layout: 'fullscreen' },
 }
@@ -128,7 +129,7 @@ function SessionPillStandIn() {
   )
 }
 
-export const Placement = {
+const Placement = {
   name: 'Placement — centred on the FAB, 96px clear of it',
   render: () => (
     <BothSchemes height={300}>
@@ -145,7 +146,7 @@ export const Placement = {
   ),
 }
 
-export const StackedActions = {
+const StackedActions = {
   name: 'Stacking — one action, two stacked, none',
   render: () => (
     <Stage height={420} label="Trailing actions">
@@ -169,7 +170,7 @@ export const StackedActions = {
   ),
 }
 
-export const ActionStyles = {
+const ActionStyles = {
   name: 'Action styles — standard, destructive, prominent',
   render: () => (
     <BothSchemes height={420}>
@@ -195,7 +196,7 @@ export const ActionStyles = {
   ),
 }
 
-export const LiftWithoutPill = {
+const LiftWithoutPill = {
   name: 'Lift — no session running (baseline)',
   render: () => (
     <Stage height={320} label="No pill">
@@ -205,7 +206,7 @@ export const LiftWithoutPill = {
   ),
 }
 
-export const LiftAbovePill = {
+const LiftAbovePill = {
   name: 'Lift — session running, toast fully above the pill',
   render: () => (
     <BothSchemes height={360}>
@@ -224,12 +225,26 @@ export const LiftAbovePill = {
   ),
 }
 
-export const LongMessage = {
+const LongMessage = {
   name: 'Long message — clamped at two lines, still 360px wide',
   render: () => (
     <Stage theme="dark" height={320} label="Two-line clamp">
       <CornerFab />
       <ActiveToastLayer toast={toActiveToast(LONG)} position="absolute" />
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Placement.render()}
+      {StackedActions.render()}
+      {ActionStyles.render()}
+      {LiftWithoutPill.render()}
+      {LiftAbovePill.render()}
+      {LongMessage.render()}
+    </StoryGallery>
   ),
 }

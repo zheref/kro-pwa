@@ -1,4 +1,6 @@
 import { Archive, Pencil, Repeat, Trash2 } from 'lucide-react'
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 import { Button } from './button'
 import {
   DropdownMenu,
@@ -11,14 +13,14 @@ import {
 } from './dropdown-menu'
 
 export default {
-  title: 'Design system/Primitives/DropdownMenu',
+  title: 'Surfaces/Menu',
   component: DropdownMenuContent,
   parameters: { layout: 'centered' },
 }
 
-export const Default = {
+const Default = {
   render: () => (
-    <DropdownMenu defaultOpen>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary">Actions</Button>
       </DropdownMenuTrigger>
@@ -38,10 +40,10 @@ export const Default = {
   ),
 }
 
-export const WithDestructive = {
+const WithDestructive = {
   name: 'With a destructive action · named, not just red',
   render: () => (
-    <DropdownMenu defaultOpen>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary">Actions</Button>
       </DropdownMenuTrigger>
@@ -58,10 +60,10 @@ export const WithDestructive = {
   ),
 }
 
-export const WithCheckboxes = {
+const WithCheckboxes = {
   name: 'Checkbox items · the visibility filter',
   render: () => (
-    <DropdownMenu defaultOpen>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary">Visibility</Button>
       </DropdownMenuTrigger>
@@ -79,9 +81,9 @@ export const WithCheckboxes = {
   ),
 }
 
-export const WithDisabled = {
+const WithDisabled = {
   render: () => (
-    <DropdownMenu defaultOpen>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary">Actions</Button>
       </DropdownMenuTrigger>
@@ -97,13 +99,13 @@ export const WithDisabled = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   render: () => (
-    <div
-      data-theme="dark"
+    <StoryTheme
+      theme="dark"
       style={{ padding: 40, background: 'var(--kro-color-back)' }}
     >
-      <DropdownMenu defaultOpen>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary">Actions</Button>
         </DropdownMenuTrigger>
@@ -117,6 +119,19 @@ export const DarkScheme = {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </StoryTheme>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Default.render()}
+      {WithDestructive.render()}
+      {WithCheckboxes.render()}
+      {WithDisabled.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

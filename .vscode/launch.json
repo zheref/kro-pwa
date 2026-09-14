@@ -1,0 +1,181 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Kro Web",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "make dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "run",
+        "order": 1
+      }
+    },
+    {
+      "name": "Debug Kro Web",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "serverReadyAction": {
+        "action": "debugWithChrome",
+        "killOnServerStop": true,
+        "pattern": "- Local:.+(https?://\\S+)",
+        "uriFormat": "%s"
+      },
+      "presentation": {
+        "group": "run",
+        "order": 2
+      }
+    },
+    {
+      "name": "Storybook",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @kro/web storybook",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "run",
+        "order": 3
+      }
+    },
+    {
+      "name": "Chrome: Kro Web",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "presentation": {
+        "group": "run",
+        "order": 4
+      }
+    },
+    {
+      "name": "Test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "make test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "test",
+        "order": 1
+      }
+    },
+    {
+      "name": "Test @kro/app",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @kro/app test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "test",
+        "order": 2
+      }
+    },
+    {
+      "name": "Test @kro/core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @kro/core test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "test",
+        "order": 3
+      }
+    },
+    {
+      "name": "Test @kro/web",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm --filter @kro/web test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "test",
+        "order": 4
+      }
+    },
+    {
+      "name": "Vitest: current file",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "command": "f='${file}'; case \"$f\" in */packages/app/*) p=@kro/app;; */packages/core/*) p=@kro/core;; */apps/web/*) p=@kro/web;; *) echo 'Open a test under packages/app, packages/core, or apps/web' >&2; exit 1;; esac; pnpm --filter \"$p\" exec vitest run \"$f\"",
+      "presentation": {
+        "group": "test",
+        "order": 5
+      }
+    },
+    {
+      "name": "Debug Vitest: current @kro/app file",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@kro/app",
+        "exec",
+        "vitest",
+        "run",
+        "--inspect-brk",
+        "--no-file-parallelism",
+        "${file}"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": {
+        "group": "test",
+        "order": 6
+      }
+    },
+    {
+      "name": "Playwright e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "make test-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "test",
+        "order": 7
+      }
+    },
+    {
+      "name": "Lint",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "make lint",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "check",
+        "order": 1
+      }
+    },
+    {
+      "name": "Typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "make typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "check",
+        "order": 2
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Kro Web + Storybook",
+      "configurations": ["Kro Web", "Storybook"],
+      "stopAll": true,
+      "presentation": {
+        "group": "run",
+        "order": 5
+      }
+    }
+  ]
+}

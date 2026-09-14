@@ -4,9 +4,10 @@ import { SurfaceCard } from '../../endeavor/SurfaceCard'
 import { ICON_SIZE } from '../icons/icons'
 import { DetailBackdrop } from './DetailBackdrop'
 import { FieldSectionLabel, OnGradient, PageFieldEmpty } from './OnGradient'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 export default {
-  title: 'Design system/OnGradient',
+  title: 'Materials/OnGradient',
 }
 
 function Field({
@@ -24,7 +25,7 @@ function Field({
   )
 }
 
-export const LargeTitle = {
+const LargeTitle = {
   name: 'Large title · full-strength snow',
   render: () => (
     <Field height={220}>
@@ -38,7 +39,7 @@ export const LargeTitle = {
   ),
 }
 
-export const SectionLabel = {
+const SectionLabel = {
   name: 'Section label · outside a grouped card',
   render: () => (
     <Field>
@@ -50,7 +51,7 @@ export const SectionLabel = {
   ),
 }
 
-export const EmptyDestination = {
+const EmptyDestination = {
   name: 'Empty destination · centred on the field',
   render: () => (
     <Field height={420}>
@@ -66,5 +67,16 @@ export const EmptyDestination = {
         description="Find is not built yet."
       />
     </Field>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {LargeTitle.render()}
+      {SectionLabel.render()}
+      {EmptyDestination.render()}
+    </StoryGallery>
   ),
 }

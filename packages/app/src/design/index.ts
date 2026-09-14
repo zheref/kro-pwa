@@ -12,6 +12,10 @@
  *   `system/motion/`     durations, easings, the spring ports, reduced motion.
  *   `system/primitives/` vendored shadcn/ui, themed on the tokens.
  *   `system/icons/`      lucide-react and the SF Symbols mapping.
+ *   `hig/`               Apple HIG titles, realised in Kro materials.
+ *   `fluent/`            Fluent 2 ideas folded into Kro names, or unique
+ *                        controls that HIG did not have.
+ *   `catalog.ts`         The one Kro catalog. Aliases live there.
  *
  * NOT exported here: `system/tokens/tokenSource.ts`. It reads the stylesheet
  * from disk with `node:fs` and belongs to the test tier — exporting it would
@@ -113,6 +117,7 @@ export {
 // Materials
 export {
   type GlassMaterial,
+  type GlassTint,
   type GlassSurfaceProps,
   GlassSurface,
 } from './system/glass/GlassSurface'
@@ -155,14 +160,22 @@ export {
 // Primitives
 export { cn } from './system/utils/cn'
 export {
-  type ButtonProps,
   type ControlDensity,
-  Button,
+  DEFAULT_CONTROL_DENSITY,
+  DENSITY_BOX,
+  DENSITY_FIELD,
+  DENSITY_HIT,
+  DENSITY_ROW,
+  DENSITY_TYPE,
   buttonSizeForDensity,
-  buttonVariants,
   controlDensity,
   controlMinSizeVar,
   iconButtonSizeForDensity,
+} from './system/density'
+export {
+  type ButtonProps,
+  Button,
+  buttonVariants,
 } from './system/primitives/button'
 export { type InputProps, Input } from './system/primitives/input'
 export {
@@ -210,8 +223,24 @@ export {
   DropdownMenuTrigger,
 } from './system/primitives/dropdown-menu'
 export {
+  type TabsListProps,
+  type TabsTriggerProps,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from './system/primitives/tabs'
+
+export * from './hig'
+export * from './fluent'
+export {
+  KRO_CATALOG,
+  KRO_CATEGORIES,
+  formatAlsoKnownAs,
+  kroEntriesByCategory,
+  kroEntryNamed,
+  type AlsoKnownAs,
+  type KroCatalogEntry,
+  type KroCategory,
+  type NameSource,
+} from './catalog'

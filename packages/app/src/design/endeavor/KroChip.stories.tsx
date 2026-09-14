@@ -13,13 +13,14 @@
 import { SEMANTIC_ROLES } from '../system/tokens/roles'
 import { ChipFlow, KroChip, colorTint, semanticTint } from './KroChip'
 import { BothSchemes, Cell, Stage } from './storyStage'
+import { StoryGallery } from '../storybook/storyGallery'
 
 export default {
   title: 'Endeavor/KroChip',
   component: KroChip,
 }
 
-export const Emphasis = {
+const Emphasis = {
   name: 'Emphasis · prominent, soft, outline',
   render: () => (
     <Stage>
@@ -58,7 +59,7 @@ export const Emphasis = {
   ),
 }
 
-export const EveryRole = {
+const EveryRole = {
   name: 'Every semantic role',
   render: () => (
     <Stage>
@@ -77,7 +78,7 @@ export const EveryRole = {
   ),
 }
 
-export const Wrapping = {
+const Wrapping = {
   name: 'ChipFlow · wraps rather than scrolling off-screen',
   render: () => (
     <Stage width={360}>
@@ -105,7 +106,7 @@ export const Wrapping = {
   ),
 }
 
-export const BothThemes = {
+const BothThemes = {
   name: 'Both schemes',
   render: () => (
     <BothSchemes>
@@ -129,5 +130,17 @@ export const BothThemes = {
         />
       </ChipFlow>
     </BothSchemes>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Emphasis.render()}
+      {EveryRole.render()}
+      {Wrapping.render()}
+      {BothThemes.render()}
+    </StoryGallery>
   ),
 }

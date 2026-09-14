@@ -1,30 +1,32 @@
 import { GlassSurface } from '../glass/GlassSurface'
 import { DetailBackdrop } from './DetailBackdrop'
+import { StoryGallery } from '../../storybook/storyGallery'
+import { StoryTheme } from '../../storybook/galleryAppearance'
 
 /**
  * The page field glass has to refract. A static swatch of the two stops
  * would show the colours and prove nothing about why this layer exists.
  */
 export default {
-  title: 'Design system/DetailBackdrop',
+  title: 'Materials/DetailBackdrop',
   component: DetailBackdrop,
   parameters: { layout: 'fullscreen' },
 }
 
-export const PageField = {
+const PageField = {
   name: 'Page field · vertical ramp',
   render: () => (
-    <div style={{ position: 'relative', height: '100vh' }}>
+    <StoryTheme style={{ position: 'relative', height: '100vh' }}>
       <DetailBackdrop />
-    </div>
+    </StoryTheme>
   ),
 }
 
-export const UnderGlass = {
+const UnderGlass = {
   name: 'Behind a glass sidebar · the refraction the field exists for',
   render: () => (
-    <div
-      data-theme="light"
+    <StoryTheme
+      theme="light"
       style={{
         position: 'relative',
         display: 'flex',
@@ -51,14 +53,14 @@ export const UnderGlass = {
       <div style={{ position: 'relative', flex: 1, color: '#fff' }}>
         <h1 style={{ margin: 16, fontSize: 32 }}>My Day</h1>
       </div>
-    </div>
+    </StoryTheme>
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme',
   render: () => (
-    <div data-theme="dark" style={{ position: 'relative', height: '100vh' }}>
+    <StoryTheme theme="dark" style={{ position: 'relative', height: '100vh' }}>
       <DetailBackdrop />
       <GlassSurface
         material="dock"
@@ -78,6 +80,17 @@ export const DarkScheme = {
         <span>Do</span>
         <span>Earn</span>
       </GlassSurface>
-    </div>
+    </StoryTheme>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {PageField.render()}
+      {UnderGlass.render()}
+      {DarkScheme.render()}
+    </StoryGallery>
   ),
 }

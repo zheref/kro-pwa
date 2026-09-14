@@ -5,13 +5,18 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
+import { PALETTE_ATTRIBUTE } from '../../../../design/system/tokens/appPalette'
+import { THEME_ATTRIBUTE } from '../../../../design/system/tokens/readToken'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import { makeStore, stubbedThunkExtra } from '../../../../library/store'
 import { DestinationKind } from '../../../main/SidebarDestination'
 import { DesignSystemPage } from '../DesignSystemPage'
-import { STORY_CATALOG } from '../../storyCatalog'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  document.documentElement.removeAttribute(THEME_ATTRIBUTE)
+  document.documentElement.removeAttribute(PALETTE_ATTRIBUTE)
+})
 
 const renderPage = () => {
   const store = makeStore(stubbedThunkExtra)
@@ -37,20 +42,32 @@ describe('DesignSystemPage', () => {
 
     expect(screen.getByTestId('design-system-catalog')).toBeTruthy()
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      STORY_CATALOG.stories.find(
-        (story) => story.id === STORY_CATALOG.defaultStoryId,
-      )?.name,
+      'Overview',
     )
   })
 
   it('switches the canvas when a story row is tapped', async () => {
     renderPage()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Primitives' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Variants' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Button (Primitive)' }),
+    )
 
     expect(screen.getByTestId('design-system-story-name').textContent).toBe(
-      'Variants',
+      'Button',
+    )
+  })
+
+  it('pins the document so portaled previews follow the gallery', async () => {
+    renderPage()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Dark' }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Green' }))
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe('dark')
+    expect(document.documentElement.getAttribute(PALETTE_ATTRIBUTE)).toBe(
+      'green',
     )
   })
 })

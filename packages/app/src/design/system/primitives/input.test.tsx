@@ -35,10 +35,14 @@ describe('Input', () => {
     expect(className).toContain('border-kro-hairline')
   })
 
-  it('meets the 44px minimum so a one-line field is still a comfortable target', () => {
-    render(<Input aria-label="Title" />)
+  it('defaults to compact height and grows for comfortable', () => {
+    const { rerender } = render(<Input aria-label="Title" />)
+    expect(screen.getByLabelText('Title').className).toContain('h-6')
+    expect(screen.getByLabelText('Title').className).toContain('text-xs')
 
-    expect(screen.getByLabelText('Title').className).toContain('h-11')
+    rerender(<Input aria-label="Title" density="comfortable" />)
+    expect(screen.getByLabelText('Title').className).toContain('h-9')
+    expect(screen.getByLabelText('Title').className).toContain('text-sm')
   })
 
   it('applies the disabled fade exactly once and stops accepting input', async () => {

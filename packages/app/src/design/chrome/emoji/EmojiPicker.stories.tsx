@@ -3,6 +3,7 @@ import { BothSchemes, Stage } from '../Stage'
 import { DEFAULT_EMOJI_CATEGORIES } from './emojiCategories'
 import { EmojiPicker } from './EmojiPicker'
 import { EmojiPickerPopover } from './EmojiPickerPopover'
+import { StoryGallery } from '../../storybook/storyGallery'
 
 /**
  * EmojiPicker — canon's categorised grid.
@@ -22,7 +23,7 @@ import { EmojiPickerPopover } from './EmojiPickerPopover'
  * palette is the popover story, which is where it belongs anyway.
  */
 export default {
-  title: 'Design system/Chrome/EmojiPicker',
+  title: 'Chrome/EmojiPicker',
   component: EmojiPicker,
   parameters: { layout: 'fullscreen' },
 }
@@ -49,7 +50,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const SingleCategory = {
+const SingleCategory = {
   name: 'One category — the grid, both schemes',
   render: () => (
     <BothSchemes height={380}>
@@ -62,7 +63,7 @@ export const SingleCategory = {
   ),
 }
 
-export const PinnedHeadings = {
+const PinnedHeadings = {
   name: 'Two categories — scroll to see the headings pin',
   render: () => (
     <Stage height={380} label="Scroll the panel">
@@ -79,7 +80,7 @@ export const PinnedHeadings = {
   ),
 }
 
-export const Selected = {
+const Selected = {
   name: 'A selection — the accent wash marks where you are',
   render: () => (
     <BothSchemes height={380}>
@@ -92,7 +93,7 @@ export const Selected = {
   ),
 }
 
-export const InPopover = {
+const InPopover = {
   name: 'In a popover — the full seven-category palette',
   render: () => <PopoverDemo />,
 }
@@ -127,4 +128,16 @@ function PopoverDemo() {
       </div>
     </Stage>
   )
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {SingleCategory.render()}
+      {PinnedHeadings.render()}
+      {Selected.render()}
+      {InPopover.render()}
+    </StoryGallery>
+  ),
 }

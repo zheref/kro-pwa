@@ -1,4 +1,10 @@
 import type { ReactNode } from 'react'
+import { StoryGallery } from '../../storybook/storyGallery'
+import {
+  bothSchemesGridStyle,
+  StoryTheme,
+  useSchemesToPaint,
+} from '../../storybook/galleryAppearance'
 import { GlassSurface } from './GlassSurface'
 
 /**
@@ -17,13 +23,13 @@ import { GlassSurface } from './GlassSurface'
  *     transparency) and reload — the stories need no switch of their own.
  */
 export default {
-  title: 'Design system/KroGlass',
+  title: 'Materials/KroGlass',
   component: GlassSurface,
   parameters: { layout: 'fullscreen' },
 }
 
 const PHOTO_BACKDROP =
-  'linear-gradient(120deg, #5856d6 0%, #663399 40%, #b7162f 70%, #c78c00 100%)'
+  'linear-gradient(120deg, var(--kro-color-header-gradient-indigo) 0%, var(--kro-color-header-gradient-grape) 40%, var(--kro-color-badge-red) 70%, var(--kro-color-badge-orange) 100%)'
 
 function Stage({
   theme = 'light',
@@ -35,8 +41,8 @@ function Stage({
   height?: number
 }) {
   return (
-    <div
-      data-theme={theme}
+    <StoryTheme
+      theme={theme}
       style={{
         position: 'relative',
         minHeight: height,
@@ -62,7 +68,7 @@ function Stage({
         Find. Plan · Do · Earn · Find.
       </p>
       <div style={{ position: 'relative' }}>{children}</div>
-    </div>
+    </StoryTheme>
   )
 }
 
@@ -85,7 +91,7 @@ function CardBody() {
   )
 }
 
-export const Surface = {
+const Surface = {
   name: 'Surface · a floating card',
   render: () => (
     <Stage>
@@ -96,7 +102,7 @@ export const Surface = {
   ),
 }
 
-export const Control = {
+const Control = {
   name: 'Control · the shallower blur',
   render: () => (
     <Stage height={240}>
@@ -111,10 +117,12 @@ export const Control = {
           as="button"
           material="control"
           interactive
+          tint="accent"
           style={{
-            padding: '0 20px',
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
             fontWeight: 600,
-            color: 'var(--kro-color-fore)',
           }}
         >
           Start session
@@ -123,7 +131,39 @@ export const Control = {
           as="button"
           material="control"
           interactive
-          style={{ width: 44, color: 'var(--kro-color-fore)' }}
+          style={{
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--kro-color-fore)',
+          }}
+        >
+          Reschedule
+        </GlassSurface>
+        <GlassSurface
+          as="button"
+          material="control"
+          interactive
+          tint="danger"
+          style={{
+            padding: '0 16px',
+            height: 24,
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          Delete
+        </GlassSurface>
+        <GlassSurface
+          as="button"
+          material="control"
+          interactive
+          style={{
+            width: 24,
+            height: 24,
+            color: 'var(--kro-color-fore)',
+          }}
         >
           +
         </GlassSurface>
@@ -138,7 +178,7 @@ export const Control = {
   ),
 }
 
-export const FixedBar = {
+const FixedBar = {
   name: 'Bar · fixed, with content scrolling beneath',
   render: () => (
     <div style={{ position: 'relative', height: '100vh', overflow: 'auto' }}>
@@ -187,7 +227,7 @@ export const FixedBar = {
   ),
 }
 
-export const DarkScheme = {
+const DarkScheme = {
   name: 'Dark scheme',
   render: () => (
     <Stage theme="dark">
@@ -211,25 +251,27 @@ export const DarkScheme = {
   ),
 }
 
-export const BothSchemes = {
-  name: 'Both schemes, side by side',
-  render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-      <Stage theme="light" height={320}>
-        <GlassSurface>
-          <CardBody />
-        </GlassSurface>
-      </Stage>
-      <Stage theme="dark" height={320}>
-        <GlassSurface>
-          <CardBody />
-        </GlassSurface>
-      </Stage>
+function BothSchemesPreview() {
+  const schemes = useSchemesToPaint()
+  return (
+    <div style={bothSchemesGridStyle(schemes.length)}>
+      {schemes.map((theme) => (
+        <Stage key={theme} theme={theme} height={320}>
+          <GlassSurface>
+            <CardBody />
+          </GlassSurface>
+        </Stage>
+      ))}
     </div>
-  ),
+  )
 }
 
-export const SidebarColumn = {
+const BothSchemes = {
+  name: 'Both schemes, side by side',
+  render: () => <BothSchemesPreview />,
+}
+
+const SidebarColumn = {
   name: 'Sidebar · a split-view column over the ramp',
   render: () => (
     <Stage height={480}>
@@ -263,7 +305,7 @@ export const SidebarColumn = {
   ),
 }
 
-export const FloatingDock = {
+const FloatingDock = {
   name: 'Dock · the floating tab bar',
   render: () => (
     <Stage height={240}>
@@ -292,5 +334,20 @@ export const FloatingDock = {
         </GlassSurface>
       </div>
     </Stage>
+  ),
+}
+
+export const Gallery = {
+  tags: ['showcase'],
+  render: () => (
+    <StoryGallery>
+      {Surface.render()}
+      {Control.render()}
+      {FixedBar.render()}
+      {DarkScheme.render()}
+      {BothSchemes.render()}
+      {SidebarColumn.render()}
+      {FloatingDock.render()}
+    </StoryGallery>
   ),
 }

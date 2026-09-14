@@ -17,7 +17,7 @@
  * blur, the glass material, the gradient and the wiggle are browser answers, and
  * the stories are where those get looked at.
  *
- * Every story module is counted, so no component can drop below three stories.
+ * Every story module is counted, so no component can drop its gallery.
  */
 
 import { cleanup, render } from '@testing-library/react'
@@ -99,10 +99,10 @@ afterEach(() => {
   teardown()
 })
 
-describe('every component in the kit ships at least three stories', () => {
+describe('every component in the kit ships one gallery page', () => {
   for (const [component, module] of MODULES) {
-    it(`${component} has 3 or more`, () => {
-      expect(storiesOf(module).length).toBeGreaterThanOrEqual(3)
+    it(`${component} is one Gallery`, () => {
+      expect(storiesOf(module).map(([name]) => name)).toEqual(['Gallery'])
     })
   }
 })

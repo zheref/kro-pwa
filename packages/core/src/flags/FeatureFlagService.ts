@@ -56,7 +56,14 @@ export interface FeatureFlagService {
 }
 
 export interface FeatureFlagServiceOptions {
-  /** Appended last, so they win over the baseline. */
+  /**
+   * An existing service whose layered assignments become the starting point
+   * instead of `baseline` — the shipping service, so a runtime (debug)
+   * override layers on top of the product's own overrides rather than
+   * silently discarding them.
+   */
+  readonly base?: FeatureFlagService
+  /** Appended last, so they win over the baseline (or the base). */
   readonly overrides?: readonly FeatureFlagAssignment[]
   /** What every flag starts at before overrides. Defaults to `statusQuo`. */
   readonly baseline?: FeatureFlagBaseline
@@ -75,9 +82,11 @@ export const makeHardcodedFeatureFlagService = (
   options: FeatureFlagServiceOptions = {},
 ): FeatureFlagService => {
   const assignments: FeatureFlagAssignment[] = [
-    ...baselineAssignments(options.baseline ?? Baseline.statusQuo, {
-      developmentActionsEnabled: options.developmentActionsEnabled,
-    }),
+    ...(options.base !== undefined
+      ? options.base.assignments()
+      : baselineAssignments(options.baseline ?? Baseline.statusQuo, {
+          developmentActionsEnabled: options.developmentActionsEnabled,
+        })),
     ...(options.overrides ?? []),
   ]
 

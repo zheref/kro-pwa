@@ -27,7 +27,6 @@
 import {
   type Endeavor,
   EndeavorOperation,
-  type EndeavorRecord,
   EndeavorStatus,
   FeatureFlags,
   type LocalStore,
@@ -36,7 +35,6 @@ import {
   deferFromRecord,
   deferRecordFromDefer,
   endeavorFromRecord,
-  endeavorRecordFromEndeavor,
   epochMillisFromDate,
   err,
   livingChildRecords,
@@ -47,13 +45,16 @@ import {
   overridesAsAssignments,
   performFromRecord,
   resolvedKind,
+  type OwnedEndeavorHosting,
+  type PersistOwnedEndeavorDeps,
+  persistOwnedEndeavor,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
 import { type CaptureException, CaptureExceptions } from './CaptureException'
 import {
   LAST_USED_DESTINATION_KEY,
-  type CaptureDestination,
+  CaptureDestination,
   type CaptureDraft,
   type CaptureSchedulingSnapshot,
   availableCaptureDestinations,
@@ -161,21 +162,19 @@ const readStoredEndeavor = async (
  * had never left the device.
  */
 const persistEndeavor = async (
-  localStore: LocalStore,
+  deps: PersistOwnedEndeavorDeps,
   endeavor: Endeavor,
   now: Date,
   context: ReconciliationContext,
+  hosting?: OwnedEndeavorHosting,
 ): Promise<void> => {
-  const existing: EndeavorRecord | null = await localStore.endeavors.get(
-    endeavor.id,
-  )
-  await localStore.endeavors.put(
-    endeavorRecordFromEndeavor(endeavor, {
-      now,
-      lastSyncedAtEpochMillis: existing?.lastSyncedAtEpochMillis ?? null,
-      resolvedKind: resolvedKind(endeavor, context),
-    }),
-  )
+  // Owner stamped, watermark carried, pushed cloud-first when the picker chose
+  // Kro Cloud — the shared write path (`@kro/core` persistence).
+  await persistOwnedEndeavor(deps, endeavor, {
+    now,
+    resolvedKind: resolvedKind(endeavor, context),
+    hosting,
+  })
 }
 
 /**
@@ -199,7 +198,11 @@ export const loadCaptureContextThunk = createAsyncThunk<
 >('capture/onCaptureContextLoadCompleted', async ({ now }, { extra }) => {
   try {
     const preferences = extra.localStore.preferences
+    // The shipping flag service first, then this device's debug overrides on
+    // top — never the overrides alone, which would drop the product's own
+    // overrides (Kro Cloud is one) and offer On Device only.
     const flags = makeHardcodedFeatureFlagService({
+      base: extra.featureFlags,
       overrides: overridesAsAssignments(
         makeFeatureFlagOverrideStore(preferences).all(),
       ),
@@ -264,10 +267,11 @@ export const submitCaptureThunk = createAsyncThunk<
 
     try {
       await persistEndeavor(
-        extra.localStore,
+        extra,
         endeavor,
         now,
         makeReconciliationContext({ now }),
+        result.destination === CaptureDestination.kroCloud ? 'cloud' : 'local',
       )
     } catch (error) {
       return err(CaptureExceptions.captureFailed(messageOf(error)))
@@ -329,7 +333,7 @@ export const scheduleForTodayThunk = createAsyncThunk<
 
     try {
       const context = makeReconciliationContext({ now })
-      await persistEndeavor(extra.localStore, scheduled, now, context)
+      await persistEndeavor(extra, scheduled, now, context)
       for (const entry of defersAddedBySnapshot(scheduled, snapshot)) {
         await extra.localStore.defers.put(
           deferRecordFromDefer(entry, {
@@ -381,7 +385,7 @@ export const undoScheduleForTodayThunk = createAsyncThunk<
 
     try {
       const context = makeReconciliationContext({ now })
-      await persistEndeavor(extra.localStore, restored, now, context)
+      await persistEndeavor(extra, restored, now, context)
 
       if (removed.length > 0) {
         const rows = await extra.localStore.defers.forEndeavor(
@@ -468,7 +472,7 @@ export const applyInboxOperationThunk = createAsyncThunk<
         completed: now,
       }
       await persistEndeavor(
-        extra.localStore,
+        extra,
         completed,
         now,
         makeReconciliationContext({ now }),

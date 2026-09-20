@@ -41,6 +41,7 @@ import type {
 } from '../../../design/endeavor'
 import { SuggestionSource } from '../../../design/endeavor'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
+import { useEndeavorSyncRefresh } from '../../../features/auth/useEndeavorSyncRefresh'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
@@ -414,6 +415,9 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const onRefresh = useCallback(() => {
     void dispatch(fetchDoEndeavorsThunk({ now: new Date() }))
   }, [dispatch])
+
+  // A cloud sweep that landed rows after the mount read: re-read the day.
+  useEndeavorSyncRefresh(onRefresh)
 
   const onChangeVisibility = useCallback(
     (next: DoVisibility) => {

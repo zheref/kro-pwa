@@ -3,10 +3,13 @@ import {
   EndeavorKind,
   EndeavorOperation,
   EndeavorStatus,
+  FeatureFlags,
   type LocalStore,
   type Result,
+  enabledAssignment,
   featureFlagOverrideKey,
   isRecordSoftDeleted,
+  makeHardcodedFeatureFlagService,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import {
@@ -15,6 +18,7 @@ import {
   stubbedThunkExtra,
 } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../services/sync/EndeavorSyncService'
 import type { CaptureException } from '../CaptureException'
 import {
   CAPTURE_MOCK_NOW,
@@ -583,5 +587,144 @@ describe('applyInboxOperationThunk', () => {
     )
 
     expect(errorOf(action.payload).kind).toBe('operationFailed')
+  })
+})
+
+describe('cloud-first creation while signed in', () => {
+  it('stamps the signed-in account as owner on a captured endeavor and pushes it at once', async () => {
+    const localStore = makeInMemoryLocalStore({
+      userProfiles: [
+        {
+          id: 'owner-1',
+          name: 'Ada',
+          username: null,
+          emailsCsv: 'ada@example.com',
+          birthDate: null,
+          nationality: null,
+          loginKind: 'google',
+          connectedServicesCsv: 'google',
+          avatarUrl: null,
+          createdAt: CAPTURE_MOCK_NOW,
+          updatedAtEpochMillis: 0,
+        },
+      ],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'succeeded',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    await store.dispatch(
+      submitCaptureThunk({
+        draft: {
+          ...captureDraftFixtures.titledTask,
+          destination: CaptureDestination.kroCloud,
+        },
+        id: 'cloud-task',
+        now: CAPTURE_MOCK_NOW,
+      }),
+    )
+
+    expect((await localStore.endeavors.get('cloud-task'))?.ownerUserId).toBe(
+      'owner-1',
+    )
+    expect(endeavorSync.operations()).toEqual(['pushOne'])
+  })
+
+  it('leaves a captured endeavor anonymous and unpushed on a signed-out device', async () => {
+    const localStore = makeInMemoryLocalStore({ userProfiles: [] })
+    const endeavorSync = makeStubbedEndeavorSyncService()
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    await store.dispatch(
+      submitCaptureThunk({
+        draft: captureDraftFixtures.titledTask,
+        id: 'local-task',
+        now: CAPTURE_MOCK_NOW,
+      }),
+    )
+
+    expect(
+      (await localStore.endeavors.get('local-task'))?.ownerUserId,
+    ).toBeNull()
+    expect(endeavorSync.operations()).toEqual([])
+  })
+
+  it('keeps a capture On Device — anonymous, unpushed — when the picker chose local, even signed in', async () => {
+    const localStore = makeInMemoryLocalStore({
+      userProfiles: [
+        {
+          id: 'owner-1',
+          name: 'Ada',
+          username: null,
+          emailsCsv: 'ada@example.com',
+          birthDate: null,
+          nationality: null,
+          loginKind: 'google',
+          connectedServicesCsv: 'google',
+          avatarUrl: null,
+          createdAt: CAPTURE_MOCK_NOW,
+          updatedAtEpochMillis: 0,
+        },
+      ],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'succeeded',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    await store.dispatch(
+      submitCaptureThunk({
+        draft: {
+          ...captureDraftFixtures.titledTask,
+          destination: CaptureDestination.local,
+        },
+        id: 'device-task',
+        now: CAPTURE_MOCK_NOW,
+      }),
+    )
+
+    expect(
+      (await localStore.endeavors.get('device-task'))?.ownerUserId,
+    ).toBeNull()
+    expect(endeavorSync.operations()).toEqual([])
+  })
+
+  it('offers Kro Cloud when the shipping flag service enables hosting, with no debug override at all', async () => {
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: seeded(),
+      featureFlags: makeHardcodedFeatureFlagService({
+        overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
+      }),
+    })
+
+    const action = await store.dispatch(
+      loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
+    )
+
+    expect(
+      okValueOf<CaptureContext>(action.payload).availableDestinations,
+    ).toEqual([CaptureDestination.local, CaptureDestination.kroCloud])
+  })
+
+  it('lets a debug override switch hosting off on top of the shipping service', async () => {
+    const localStore = seeded()
+    localStore.preferences.set(featureFlagOverrideKey('supabaseHosting'), false)
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore,
+      featureFlags: makeHardcodedFeatureFlagService({
+        overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
+      }),
+    })
+
+    const action = await store.dispatch(
+      loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
+    )
+
+    expect(
+      okValueOf<CaptureContext>(action.payload).availableDestinations,
+    ).toEqual([CaptureDestination.local])
   })
 })

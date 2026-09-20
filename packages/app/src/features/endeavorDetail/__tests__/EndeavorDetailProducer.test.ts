@@ -16,6 +16,7 @@ import {
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../services/sync/EndeavorSyncService'
 import {
   DETAIL_REFERENCE_NOW,
   allDetailEndeavorMocks,
@@ -405,5 +406,45 @@ describe('host attach/detach have no web binding, and say so', () => {
       )
       .unwrap()
     expect(result.ok === false && result.error.recoverable).toBe(false)
+  })
+})
+
+describe('editing keeps the row on the cloud path', () => {
+  it('pushes a saved edit immediately when the account is signed in', async () => {
+    const localStore = makeInMemoryLocalStore({
+      userProfiles: [
+        {
+          id: 'owner-1',
+          name: 'Ada',
+          username: null,
+          emailsCsv: 'ada@example.com',
+          birthDate: null,
+          nationality: null,
+          loginKind: 'google',
+          connectedServicesCsv: 'google',
+          avatarUrl: null,
+          createdAt: DETAIL_REFERENCE_NOW,
+          updatedAtEpochMillis: 0,
+        },
+      ],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'succeeded',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+    const edited = {
+      ...detailEndeavorMocks.task,
+      owner: null,
+      title: 'Renamed',
+    }
+
+    await store.dispatch(
+      saveEndeavorThunk({ endeavor: edited, now: DETAIL_REFERENCE_NOW }),
+    )
+
+    expect((await localStore.endeavors.get(edited.id))?.ownerUserId).toBe(
+      'owner-1',
+    )
+    expect(endeavorSync.operations()).toEqual(['pushOne'])
   })
 })

@@ -46,15 +46,38 @@ export interface EnvironmentProvider {
 export const SUPABASE_URL_VARIABLE = 'NEXT_PUBLIC_SUPABASE_URL'
 
 /**
- * The **anon** (publishable) key variable. Its authority is whatever RLS grants
- * an anonymous caller; it is not the service-role key and must never be one.
+ * The **publishable** key variable — the name the Supabase dashboard hands out
+ * today (`sb_publishable_…`). Its authority is whatever RLS grants an anonymous
+ * caller; it is not the service-role key and must never be one.
+ */
+export const SUPABASE_PUBLISHABLE_KEY_VARIABLE =
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'
+
+/**
+ * The **legacy anon** key variable. Older projects (and older `.env` files)
+ * carry the JWT-shaped anon key under this name. It is read as a fallback so a
+ * deploy configured before the rename keeps working; new setups use
+ * `SUPABASE_PUBLISHABLE_KEY_VARIABLE`.
  */
 export const SUPABASE_ANON_KEY_VARIABLE = 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
 
-/** Both variables, in the order an error message should list them. */
+/**
+ * The key variables, most-preferred first. The first one present wins; when
+ * none is present the failure names the preferred one, because that is the
+ * one an operator should set.
+ */
+export const supabaseKeyVariables: readonly string[] = [
+  SUPABASE_PUBLISHABLE_KEY_VARIABLE,
+  SUPABASE_ANON_KEY_VARIABLE,
+]
+
+/**
+ * The variables an operator must set, in the order an error message should
+ * list them. The legacy anon name is accepted but not advertised here.
+ */
 export const supabaseEnvironmentVariables: readonly string[] = [
   SUPABASE_URL_VARIABLE,
-  SUPABASE_ANON_KEY_VARIABLE,
+  SUPABASE_PUBLISHABLE_KEY_VARIABLE,
 ]
 
 /** A resolved project. Both fields are non-empty by construction. */
@@ -94,6 +117,18 @@ const presentValue = (
   return trimmed.length === 0 ? null : trimmed
 }
 
+/** The first non-blank value among `names`, in order; `null` when none is. */
+const firstPresentValue = (
+  environment: EnvironmentProvider,
+  names: readonly string[],
+): string | null => {
+  for (const name of names) {
+    const value = presentValue(environment, name)
+    if (value !== null) return value
+  }
+  return null
+}
+
 /**
  * Whether a string is a usable Supabase project URL.
  *
@@ -123,12 +158,12 @@ export const supabaseAvailabilityFrom = (
   environment: EnvironmentProvider,
 ): SupabaseAvailability => {
   const url = presentValue(environment, SUPABASE_URL_VARIABLE)
-  const anonKey = presentValue(environment, SUPABASE_ANON_KEY_VARIABLE)
+  const anonKey = firstPresentValue(environment, supabaseKeyVariables)
 
   const missing: string[] = []
   if (url === null || !isUsableProjectUrl(url))
     missing.push(SUPABASE_URL_VARIABLE)
-  if (anonKey === null) missing.push(SUPABASE_ANON_KEY_VARIABLE)
+  if (anonKey === null) missing.push(SUPABASE_PUBLISHABLE_KEY_VARIABLE)
 
   if (url === null || anonKey === null || missing.length > 0) {
     return { kind: 'unconfigured', missing }
@@ -159,15 +194,21 @@ export const makeRecordEnvironment = (
  * sides of that substitution.
  */
 /**
- * The two public variables read via LITERAL member expressions: Next.js
- * inlines `process.env.NEXT_PUBLIC_*` only where it appears as a static
- * member access, so a dynamic `env[name]` read returns `undefined` in
- * client bundles even when the variable is set at build time.
+ * The public variables read via LITERAL member expressions: Next.js inlines
+ * `process.env.NEXT_PUBLIC_*` only where it appears as a static member access,
+ * so a dynamic `env[name]` read returns `undefined` in client bundles even when
+ * the variable is set at build time. Every name `supabaseAvailabilityFrom` can
+ * ask for must have a literal here — a key the resolver accepts but this map
+ * omits would resolve on the server and vanish in the browser.
  */
 const staticPublicEnvironment: Readonly<Record<string, string | undefined>> = {
   NEXT_PUBLIC_SUPABASE_URL:
     typeof process !== 'undefined'
       ? process.env.NEXT_PUBLIC_SUPABASE_URL
+      : undefined,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+    typeof process !== 'undefined'
+      ? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
       : undefined,
   NEXT_PUBLIC_SUPABASE_ANON_KEY:
     typeof process !== 'undefined'

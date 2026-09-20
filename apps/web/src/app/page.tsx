@@ -28,6 +28,23 @@ import { redirect } from 'next/navigation'
  * addresses that hung off it (`/`, `/settings`, `/integrations`) are now three
  * passive redirects into the shell.
  */
-export default function RootRoute() {
-  redirect('/my-day')
+type SearchParams = Readonly<Record<string, string | string[] | undefined>>
+
+/**
+ * The query string survives the hop. Supabase Auth returns from a provider to
+ * the address it was given with `?code=…` appended, and the browser's own
+ * `start_url` is `/`; a redirect that dropped the query would strand the PKCE
+ * exchange one hop short of the page that performs it.
+ */
+export default async function RootRoute(props: {
+  readonly searchParams?: Promise<SearchParams>
+}) {
+  const params = (await props.searchParams) ?? {}
+  const query = new URLSearchParams()
+  for (const [name, value] of Object.entries(params)) {
+    if (Array.isArray(value)) for (const each of value) query.append(name, each)
+    else if (value !== undefined) query.append(name, value)
+  }
+  const suffix = query.toString()
+  redirect(suffix.length === 0 ? '/my-day' : `/my-day?${suffix}`)
 }

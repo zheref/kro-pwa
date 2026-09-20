@@ -219,6 +219,7 @@ const writeAnchorFor = async (
 /** The flag service, built the way `PlatformProducer` builds it (#11 + #34). */
 const flagServiceFor = (extra: ThunkExtra) =>
   makeHardcodedFeatureFlagService({
+    base: extra.featureFlags,
     overrides: overridesAsAssignments(
       makeFeatureFlagOverrideStore(extra.localStore.preferences).all(),
     ),

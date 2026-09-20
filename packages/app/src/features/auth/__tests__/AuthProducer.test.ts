@@ -17,7 +17,7 @@ import {
   preferenceStorageKey,
 } from '@kro/core'
 import { endeavorMocks } from '@kro/core/mocks'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   type ThunkExtra,
   makeStore,
@@ -32,6 +32,7 @@ import {
   type InMemoryLocalStoreSeed,
 } from '../../../services/localStore/InMemoryLocalStore'
 import { signOutWipe } from '../../../services/localStore/signOutWipe'
+import type { EndeavorRow } from '../../../services/sync/EndeavorRow'
 import { makeStubbedEndeavorCloudTransport } from '../../../services/sync/EndeavorCloudTransport'
 import {
   makeEndeavorSyncService,
@@ -85,6 +86,7 @@ interface HarnessOptions {
   readonly settingsPullFailure?: unknown
   readonly settingsPushFailure?: unknown
   readonly cloudEnabled?: boolean
+  readonly transportRows?: readonly EndeavorRow[]
 }
 
 const harness = (options: HarnessOptions = {}) => {
@@ -95,7 +97,9 @@ const harness = (options: HarnessOptions = {}) => {
     pullFailure: options.settingsPullFailure,
     pushFailure: options.settingsPushFailure,
   })
-  const transport = makeStubbedEndeavorCloudTransport()
+  const transport = makeStubbedEndeavorCloudTransport({
+    rows: options.transportRows,
+  })
   const featureFlags = makeHardcodedFeatureFlagService({
     overrides:
       options.cloudEnabled === true
@@ -956,5 +960,82 @@ describe('observeAuthState', () => {
       stop()
       stop()
     }).not.toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The profile cache — what makes the sync engine know who is signed in
+// ---------------------------------------------------------------------------
+
+describe('remembering the signed-in profile locally', () => {
+  it('writes the profile on a launch restore, so the sync engine has an owner (reload while signed in)', async () => {
+    const { store, localStore } = harness({
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.email,
+      }),
+    })
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    const cached = await localStore.userProfiles.current()
+    expect(cached?.id).toBe(authFixtureUsers.email.id)
+    expect(cached?.loginKind).toBe('email_password')
+  })
+
+  it('writes the profile on an email sign-in before the post-sign-in sweep runs', async () => {
+    const { store, localStore } = harness()
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    expect((await localStore.userProfiles.current())?.id).toBe(
+      authFixtureUsers.email.id,
+    )
+  })
+
+  it('writes nothing when the restore finds nobody (a fresh browser)', async () => {
+    const { store, localStore } = harness()
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    expect(await localStore.userProfiles.current()).toBeNull()
+  })
+
+  it('pulls the account endeavors into the local store on a sign-in with NO seeded profile — the bug that hid every card', async () => {
+    const { store, localStore } = harness({
+      cloudEnabled: true,
+      transportRows: [
+        {
+          id: 'cloud-1',
+          title: 'Pay Mortgage',
+          kind: 'task',
+          status: 'planned',
+          isDraft: false,
+        },
+      ],
+    })
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+    // The sweep is the sign-in's own post-sign-in effect; wait for it to land.
+    await vi.waitFor(() =>
+      expect(store.getState().auth.endeavorSync).toMatchObject({
+        kind: 'completed',
+        pulled: 1,
+      }),
+    )
+    expect((await localStore.endeavors.all()).map((r) => r.id)).toContain(
+      'cloud-1',
+    )
   })
 })

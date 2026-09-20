@@ -6,7 +6,13 @@ import {
 } from '../../features/greeting/GreetingFeature'
 import { fetchGreetingThunk } from '../../features/greeting/GreetingProducer'
 import type { GreetingService } from '../../services/greeting/GreetingService'
-import { type ThunkExtra, makeStore, stubbedThunkExtra } from '../store'
+import { FeatureFlags } from '@kro/core'
+import {
+  type ThunkExtra,
+  liveThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../store'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -71,5 +77,25 @@ describe('makeStore', () => {
     if (load.kind === 'loaded')
       expect(load.greeting.issuedAt).toEqual(greetingMocks.typical.issuedAt)
     expect(consoleError).not.toHaveBeenCalled()
+  })
+})
+
+describe('the shipping feature-flag overrides', () => {
+  it('turns Kro Cloud on for the web build — sign in, then see your endeavors', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.supabaseHosting),
+    ).toBe(true)
+  })
+
+  it('keeps Appearance on, the earlier product override', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.appearanceThemes),
+    ).toBe(true)
+  })
+
+  it('leaves the stubbed extra on the status-quo set, so tests never sync by accident', () => {
+    expect(
+      stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.supabaseHosting),
+    ).toBe(false)
   })
 })

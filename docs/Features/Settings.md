@@ -20,6 +20,12 @@ idea rather than learning two.
   are not separately flagged; a preference belonging to a feature that is itself
   switched off simply has nothing to affect.
 
+Kro Cloud — the account's endeavors travelling between devices — is its own
+switch, `supabaseHosting`. Apple stages it remotely; the web build ships it
+**on**, because on the web the whole point of signing in is to see your
+endeavors, and a build with no cloud project configured still runs local-only
+on its own.
+
 Two rows are gated by something other than a flag:
 
 - The **cloud-synced** preferences behave differently when nobody is signed in —
@@ -101,6 +107,19 @@ Two rows are gated by something other than a flag:
 - **Do**, **Earn**, **Session** — each reads its own group the same way.
 - **Sync** — the cloud-synced subset travels with the account; everything else
   stays on the device.
+- **Endeavors** — after a launch restore or a sign-in, the account's endeavors
+  are swept in from Kro Cloud. When that sweep brings rows in or removes rows
+  another device deleted, every surface showing endeavors — My Day, the tasks
+  vista, the search lens, Plan, Inbox — re-reads on the spot rather than on the
+  next visit. Signing in remembers the account on the device, which is what
+  lets the sweep know whose rows to fetch; signing out forgets it.
+- **Cloud-first writes** — the capture prompt offers Kro Cloud as a host
+  whenever Kro Cloud is on (a device-level debug switch can still turn it off).
+  An endeavor created with Kro Cloud as its host is written under the account
+  and sent immediately; if the send cannot happen it stays marked for the next
+  sweep. One created On Device stays on the device, and an edit never re-hosts
+  an endeavor: a cloud one stays cloud, a local one stays local. Signed out,
+  writes stay on the device and are offered for adoption at the next sign-in.
 
 ## Out of scope
 

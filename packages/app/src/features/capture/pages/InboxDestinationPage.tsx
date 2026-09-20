@@ -29,8 +29,9 @@
  * move the sidebar's highlight (`RC-17`, `RC-63`).
  */
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAppDispatch } from '../../../library/hooks'
+import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { DestinationKind } from '../../main/SidebarDestination'
 import { TriageCarouselPage } from '../../triage/pages/TriageCarouselPage'
@@ -51,6 +52,15 @@ export function InboxDestinationPage() {
     const effect = dispatch(loadCaptureContextThunk({ now: new Date() }))
     return () => effect.abort()
   }, [dispatch])
+
+  // A cloud sweep that landed rows after the mount read: re-read the inbox.
+  const reloadAfterSync = useCallback(
+    (landedAt: Date) => {
+      void dispatch(loadCaptureContextThunk({ now: landedAt }))
+    },
+    [dispatch],
+  )
+  useEndeavorSyncRefresh(reloadAfterSync)
 
   if (inbox.isOpen) return null
 

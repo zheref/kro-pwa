@@ -29,6 +29,7 @@ import type { EndeavorGroupingCriteria, EndeavorOperation } from '@kro/core'
 import { useCallback, useEffect, useMemo } from 'react'
 import type { InputCapability } from '../../../design/endeavor/useInputCapability'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
+import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { selectProjects } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
@@ -204,6 +205,17 @@ export function TasksPage({
     )
     return () => effect.abort()
   }, [dispatch, isLensRestored, vistaId, lens])
+
+  // A cloud sweep that landed rows after the mount read: re-read the vista.
+  const reloadAfterSync = useCallback(
+    (landedAt: Date) => {
+      void dispatch(
+        fetchFindEndeavorsThunk({ surface: FindSurface.tasks, now: landedAt }),
+      )
+    },
+    [dispatch],
+  )
+  useEndeavorSyncRefresh(reloadAfterSync)
 
   const onOperation = useCallback(
     (operation: EndeavorOperation, endeavorId: string) => {

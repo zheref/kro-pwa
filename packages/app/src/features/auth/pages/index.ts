@@ -12,7 +12,7 @@ export {
 export {
   type AuthSurfacePageProps,
   AuthSurfacePage,
-  currentOrigin,
+  currentPageAddress,
 } from './AuthSurfacePage'
 export {
   type LocalDataDialogFragmentProps,

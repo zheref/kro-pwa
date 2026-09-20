@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
 import { AuthExceptions } from '../../../features/auth/AuthException'
 import { makeStubbedSupabaseClientProvider } from '../../supabase/SupabaseClientProvider'
@@ -7,6 +8,7 @@ import {
   makeLiveAuthService,
   makeStubbedAuthService,
   oauthRedirectProviders,
+  providerFromSessionMetadata,
   supabaseProviderFor,
 } from '../AuthService'
 
@@ -224,5 +226,288 @@ describe('the live service with no project configured', () => {
       throw new Error('nothing should be announced')
     })
     expect(() => stop()).not.toThrow()
+  })
+})
+
+describe('the live service auth-state subscription against a configured project', () => {
+  type Handler = (
+    event: string,
+    session: { user: { id: string } } | null,
+  ) => void
+
+  const harness = () => {
+    let handler: Handler | null = null
+    let unsubscribed = 0
+    const fakeClient = {
+      auth: {
+        onAuthStateChange: (next: Handler) => {
+          handler = next
+          return {
+            data: {
+              subscription: {
+                unsubscribe: () => {
+                  unsubscribed += 1
+                },
+              },
+            },
+          }
+        },
+      },
+    }
+    const service = makeLiveAuthService({
+      clientProvider: {
+        availability: () => ({
+          kind: 'configured',
+          configuration: { url: 'https://project.supabase.co', anonKey: 'k' },
+        }),
+        client: () => fakeClient as unknown as SupabaseClient,
+      },
+      navigate: () => {},
+    })
+    const seen: AuthStateEvent[] = []
+    const stop = service.onAuthStateChange((event) => seen.push(event))
+    const emit: Handler = (event, session) => {
+      if (handler === null) throw new Error('no handler registered')
+      handler(event, session)
+    }
+    return { seen, stop, emit, unsubscribed: () => unsubscribed }
+  }
+
+  it('ignores the boot-time INITIAL_SESSION with no session — a signed-out device is not a sign-out', () => {
+    const h = harness()
+    h.emit('INITIAL_SESSION', null)
+    expect(h.seen).toEqual([])
+  })
+
+  it('announces a sign-out only on SIGNED_OUT itself (the user signed out here or in another tab)', () => {
+    const h = harness()
+    h.emit('SIGNED_OUT', null)
+    expect(h.seen).toEqual([{ kind: 'signedOut' }])
+  })
+
+  it('announces a restored session at boot as a sign-in (returning user opens the app)', () => {
+    const h = harness()
+    h.emit('INITIAL_SESSION', { user: { id: 'u-1' } })
+    expect(h.seen).toEqual([{ kind: 'signedIn', userId: 'u-1' }])
+  })
+
+  it('announces a token refresh as refreshed rather than a fresh sign-in', () => {
+    const h = harness()
+    h.emit('TOKEN_REFRESHED', { user: { id: 'u-1' } })
+    expect(h.seen).toEqual([{ kind: 'refreshed', userId: 'u-1' }])
+  })
+
+  it('ignores any other user-less event rather than wiping local data on it', () => {
+    const h = harness()
+    h.emit('PASSWORD_RECOVERY', null)
+    expect(h.seen).toEqual([])
+  })
+
+  it('releases the supabase subscription when the caller stops listening', () => {
+    const h = harness()
+    h.stop()
+    expect(h.unsubscribed()).toBe(1)
+  })
+})
+
+describe('the provider a session was established with', () => {
+  it('reads google off app_metadata (a Continue with Google return)', () => {
+    expect(providerFromSessionMetadata({ provider: 'google' })).toBe('google')
+  })
+
+  it('reads apple off app_metadata (a Continue with Apple return)', () => {
+    expect(providerFromSessionMetadata({ provider: 'apple' })).toBe('apple')
+  })
+
+  it('falls back to the email kind for a password session or an unmodelled provider', () => {
+    expect(providerFromSessionMetadata({ provider: 'email' })).toBe(
+      'email_password',
+    )
+    expect(providerFromSessionMetadata(undefined)).toBe('email_password')
+  })
+})
+
+describe('restoring a session on the first return from an OAuth redirect', () => {
+  interface Row {
+    readonly id: string
+    readonly username: string | null
+    readonly emails: readonly string[] | null
+    readonly name: string | null
+    readonly avatar_url: string | null
+    readonly birth_date: string | null
+    readonly nationality: string | null
+    readonly login_kind: string | null
+    readonly connected_services: readonly string[] | null
+    readonly created_at: string
+  }
+
+  interface SessionUser {
+    readonly id: string
+    readonly email: string
+    readonly user_metadata: Readonly<Record<string, unknown>>
+    readonly app_metadata: Readonly<Record<string, unknown>>
+  }
+
+  const sessionUser: SessionUser = {
+    id: 'g-1',
+    email: 'google@example.com',
+    user_metadata: {
+      full_name: 'Google User',
+      picture: 'https://avatars.example.com/google.png',
+    },
+    app_metadata: { provider: 'google' },
+  }
+
+  const harness = (options: {
+    readonly session: { user: SessionUser } | null
+    readonly rows?: Row[]
+  }) => {
+    const rows: Row[] = options.rows ?? []
+    const upserts: unknown[] = []
+    const table = {
+      upsert: async (seed: Row) => {
+        upserts.push(seed)
+        if (!rows.some((r) => r.id === seed.id)) rows.push(seed)
+        return { error: null }
+      },
+      select: () => ({
+        eq: async (_column: string, id: string) => ({
+          data: rows.filter((r) => r.id === id),
+          error: null,
+        }),
+      }),
+      update: (patch: Partial<Row>) => ({
+        eq: (_column: string, id: string) => ({
+          select: async () => {
+            const index = rows.findIndex((r) => r.id === id)
+            if (index >= 0) rows[index] = { ...rows[index], ...patch } as Row
+            return { data: index >= 0 ? [rows[index]] : [], error: null }
+          },
+        }),
+      }),
+    }
+    const fakeClient = {
+      auth: {
+        getSession: async () => ({
+          data: { session: options.session },
+          error: null,
+        }),
+      },
+      from: (_name: string) => table,
+    }
+    const service = makeLiveAuthService({
+      clientProvider: {
+        availability: () => ({
+          kind: 'configured',
+          configuration: { url: 'https://project.supabase.co', anonKey: 'k' },
+        }),
+        client: () => fakeClient as unknown as SupabaseClient,
+      },
+      navigate: () => {},
+    })
+    return { service, rows, upserts }
+  }
+
+  it('creates the profile row from the provider metadata when Supabase has a session and the users table has no row', async () => {
+    const h = harness({ session: { user: sessionUser } })
+
+    const user = await h.service.restoreSession()
+
+    expect(h.upserts).toHaveLength(1)
+    expect(user).toMatchObject({
+      id: 'g-1',
+      name: 'Google User',
+      avatarUrl: 'https://avatars.example.com/google.png',
+      authProvider: 'google',
+    })
+  })
+
+  it('reads the existing row without touching it on a later launch', async () => {
+    const h = harness({
+      session: { user: sessionUser },
+      rows: [
+        {
+          id: 'g-1',
+          username: null,
+          emails: ['google@example.com'],
+          name: 'Renamed Later',
+          avatar_url: null,
+          birth_date: null,
+          nationality: null,
+          login_kind: 'google',
+          connected_services: ['google'],
+          created_at: '2026-01-03T00:00:00.000Z',
+        },
+      ],
+    })
+
+    const user = await h.service.restoreSession()
+
+    expect(h.upserts).toHaveLength(0)
+    expect(user?.name).toBe('Renamed Later')
+  })
+
+  it('answers null with nothing written when there is no session at all', async () => {
+    const h = harness({ session: null })
+
+    expect(await h.service.restoreSession()).toBeNull()
+    expect(h.upserts).toHaveLength(0)
+  })
+
+  const appleUser: SessionUser = {
+    id: 'a-1',
+    email: 'abc123@privaterelay.appleid.com',
+    user_metadata: { full_name: 'Ada Lovelace' },
+    app_metadata: { provider: 'apple' },
+  }
+
+  it('creates an Apple profile from full_name with no avatar and the relay email (first Sign in with Apple on the web)', async () => {
+    const h = harness({ session: { user: appleUser } })
+
+    const user = await h.service.restoreSession()
+
+    expect(user).toMatchObject({
+      id: 'a-1',
+      name: 'Ada Lovelace',
+      avatarUrl: null,
+      authProvider: 'apple',
+    })
+    expect(user?.emails).toEqual(['abc123@privaterelay.appleid.com'])
+  })
+
+  it('leaves the name empty when Apple withheld it (a later authorisation, name shared only once)', async () => {
+    const h = harness({
+      session: { user: { ...appleUser, user_metadata: {} } },
+    })
+
+    const user = await h.service.restoreSession()
+
+    expect(user?.name).toBeNull()
+    expect(user?.authProvider).toBe('apple')
+  })
+
+  it('does not overwrite a name the user set in Kro with the provider one on a later return', async () => {
+    const h = harness({
+      session: { user: appleUser },
+      rows: [
+        {
+          id: 'a-1',
+          username: null,
+          emails: ['abc123@privaterelay.appleid.com'],
+          name: 'Countess',
+          avatar_url: null,
+          birth_date: null,
+          nationality: null,
+          login_kind: 'apple',
+          connected_services: ['apple'],
+          created_at: '2026-01-02T00:00:00.000Z',
+        },
+      ],
+    })
+
+    const user = await h.service.restoreSession()
+
+    expect(user?.name).toBe('Countess')
+    expect(h.upserts).toHaveLength(0)
   })
 })

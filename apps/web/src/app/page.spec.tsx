@@ -16,7 +16,7 @@ describe('the root route', () => {
   it('lands a cold visit on My Day, the destination canon flags initial', async () => {
     const { default: RootRoute } = await import('./page')
 
-    RootRoute()
+    await RootRoute({})
 
     expect(redirect).toHaveBeenCalledWith('/my-day')
   })
@@ -25,7 +25,7 @@ describe('the root route', () => {
     redirect.mockClear()
     const { default: RootRoute } = await import('./page')
 
-    RootRoute()
+    await RootRoute({})
 
     expect(redirect).toHaveBeenCalledTimes(1)
     expect(redirect).not.toHaveBeenCalledWith('/')
@@ -35,6 +35,39 @@ describe('the root route', () => {
     redirect.mockClear()
     const { default: RootRoute } = await import('./page')
 
-    expect(RootRoute()).toBeUndefined()
+    expect(await RootRoute({})).toBeUndefined()
+  })
+
+  it('carries the provider return query through the hop — Supabase appends ?code= to the address it was given', async () => {
+    redirect.mockClear()
+    const { default: RootRoute } = await import('./page')
+
+    await RootRoute({ searchParams: Promise.resolve({ code: 'abc-123' }) })
+
+    expect(redirect).toHaveBeenCalledWith('/my-day?code=abc-123')
+  })
+
+  it('keeps every repeated and encoded parameter intact', async () => {
+    redirect.mockClear()
+    const { default: RootRoute } = await import('./page')
+
+    await RootRoute({
+      searchParams: Promise.resolve({
+        a: ['1', '2'],
+        q: 'x y',
+        skip: undefined,
+      }),
+    })
+
+    expect(redirect).toHaveBeenCalledWith('/my-day?a=1&a=2&q=x+y')
+  })
+
+  it('adds no stray question mark when the visit carries no query', async () => {
+    redirect.mockClear()
+    const { default: RootRoute } = await import('./page')
+
+    await RootRoute({ searchParams: Promise.resolve({}) })
+
+    expect(redirect).toHaveBeenCalledWith('/my-day')
   })
 })

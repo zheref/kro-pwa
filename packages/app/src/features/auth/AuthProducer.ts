@@ -41,6 +41,7 @@ import {
   makePreferences,
   ok,
   type Result,
+  userProfileRecordFromUser,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { RootState, ThunkExtra } from '../../library/store'
@@ -116,6 +117,25 @@ const anonymousCount = async (extra: ThunkExtra): Promise<number> => {
 }
 
 /**
+ * Cache the signed-in profile locally — canon's `UserProfileRecord.from(_:)`
+ * written after every successful restore or sign-in.
+ *
+ * The endeavor sync engine reads the owner off this cache rather than taking
+ * an id from a caller, so a profile that was never written here is a sync that
+ * always answers `signedOut`. It is awaited before the post-sign-in effects are
+ * dispatched for exactly that reason. The sign-out wipe clears it.
+ */
+const rememberProfile = async (
+  extra: ThunkExtra,
+  user: User,
+  now: Date,
+): Promise<void> => {
+  await extra.localStore.userProfiles.put(
+    userProfileRecordFromUser(user, { now }),
+  )
+}
+
+/**
  * The two follow-ups a *settled* session owes: pull the account's settings and
  * sweep its endeavors. Fired from a launch restore, from a sign-in with no
  * local data, and from every arm of the local-data dialog — canon fires
@@ -144,6 +164,7 @@ export const restoreSessionThunk = createAsyncThunk<
   try {
     const user = await extra.authService.restoreSession()
     if (user !== null) {
+      await rememberProfile(extra, user, now)
       dispatchPostSignIn(dispatch, now, SettingsSyncTrigger.appLaunch)
     }
     return ok(user)
@@ -161,6 +182,7 @@ const completeSignIn = async (
     readonly now: Date
   },
 ): Promise<Result<AuthCompletion, AuthException>> => {
+  await rememberProfile(context.extra, user, context.now)
   const count = await anonymousCount(context.extra)
   if (count > 0) {
     // Hold the follow-ups: canon waits for the dialog before touching the

@@ -49,9 +49,10 @@ in to nothing — so the web build ships it on.
    sweep; nothing is lost and nothing is reported as sent.
 3. **Create on the device.** Capture with On Device as the host: it stays on
    the device, is never sent, and is offered for adoption at the next sign-in.
-4. **Edit.** Editing a cloud endeavor sends the edit immediately; editing a
-   device endeavor keeps it on the device. An edit never changes an endeavor's
-   host.
+4. **Edit.** An edit never changes an endeavor's host: a cloud endeavor stays
+   cloud, a device endeavor stays on the device. Edits made on My Day and in
+   the detail editor are sent immediately; edits made elsewhere (rescheduling
+   in Plan, a session outcome, a vista operation) are sent by the next sweep.
 5. **Return from a provider.** Apple and Google leave the app and come back to
    the page the person left; a first return provisions the account's profile.
 6. **Sign out.** The remembered account is forgotten and every endeavor on

@@ -330,6 +330,12 @@ describe('selectEndeavorSyncLandedAt', () => {
     ).toEqual(new Date('2026-08-31T09:05:00.000Z'))
   })
 
+  it('answers null when the sweep only sent local deletions up — tombstones are the push side', () => {
+    expect(
+      selectEndeavorSyncLandedAt(rootWith(AuthMocks.endeavorSyncDeletedOnly)),
+    ).toBeNull()
+  })
+
   it('answers null when the sweep only pushed — nothing local changed, nothing to re-read', () => {
     expect(
       selectEndeavorSyncLandedAt(rootWith(AuthMocks.endeavorSyncPushedOnly)),

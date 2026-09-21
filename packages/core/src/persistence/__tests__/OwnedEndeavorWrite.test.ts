@@ -174,4 +174,18 @@ describe('persistOwnedEndeavor', () => {
     expect(f.rows.get(endeavorMocks.plannedTask.id)?.ownerUserId).toBeNull()
     expect(f.pushes).toEqual([])
   })
+
+  it('keeps a group owner on a new row instead of dropping it (a group-hosted endeavor written for the first time)', async () => {
+    const f = fakes({ profile: profile('owner-1') })
+
+    await persistOwnedEndeavor(
+      f.deps,
+      { ...ownerless, owner: { type: 'group', groupId: 'team-7' } },
+      { now: NOW, hosting: 'local' },
+    )
+
+    const stored = f.rows.get(ownerless.id)
+    expect(stored?.ownerGroupId).toBe('team-7')
+    expect(stored?.ownerUserId).toBeNull()
+  })
 })

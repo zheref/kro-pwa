@@ -224,6 +224,35 @@ const completeSignIn = async (
 }
 
 /** Canon's `userDidTapSignIn` guard + `produceSignInWithEmailEffect`. */
+/**
+ * A sign-in that completed OUTSIDE this surface — the PKCE return from a
+ * provider redirect, or another tab signing in. supabase-js announces it as
+ * SIGNED_IN; the session is already established, so the only work left is the
+ * same completion a form sign-in gets: cache the profile, ask about anonymous
+ * local data before anything moves, else run the post-sign-in effects. A plain
+ * restore would skip that decision (canon's `migrationAlert`), which is why
+ * this is its own event rather than `restoreSessionThunk`.
+ */
+export const completeExternalSignInThunk = createAsyncThunk<
+  Result<AuthCompletion, AuthException>,
+  { now: Date },
+  { extra: ThunkExtra }
+>('auth/onExternalSignInCompleted', async ({ now }, { extra, dispatch }) => {
+  try {
+    const user = await extra.authService.restoreSession()
+    if (user === null) {
+      return err(
+        AuthExceptions.unknown(
+          'The provider reported a sign-in, but no session was found.',
+        ),
+      )
+    }
+    return await completeSignIn(user, { extra, dispatch, now })
+  } catch (error) {
+    return err(AuthMapper.toException(error))
+  }
+})
+
 export const signInWithEmailThunk = createAsyncThunk<
   Result<AuthCompletion, AuthException>,
   { email: string; password: string; now: Date },
@@ -529,6 +558,13 @@ export const observeAuthState = (context: {
       // A sign-out that happened elsewhere (another tab, an expired refresh)
       // still owes this tab the local wipe.
       context.dispatch(signOutThunk())
+      return
+    }
+    if (event.kind === 'signedIn') {
+      // A sign-in that completed elsewhere — the provider return, another
+      // tab — gets the same completion as a form sign-in, local-data
+      // decision included; a plain restore would skip it.
+      context.dispatch(completeExternalSignInThunk({ now: context.now() }))
       return
     }
     context.dispatch(restoreSessionThunk({ now: context.now() }))

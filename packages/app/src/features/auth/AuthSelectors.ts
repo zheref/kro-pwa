@@ -206,17 +206,16 @@ export const selectIsEndeavorSyncDisabled = createSelector(
 )
 
 /**
- * The instant the last sweep changed what is stored locally — pulled a row in
- * or deleted one — and `null` when it did not. A surface that reads endeavors
- * from the local store re-reads when this moves; a sweep that only pushed, or
+ * The instant the last sweep changed what is stored locally — pulled rows in —
+ * and `null` when it did not. `deleted` is the push side (local tombstones
+ * sent up), so it never counts: a surface that reads endeavors from the local
+ * store re-reads only when something arrived; a sweep that only pushed, or
  * pulled nothing, leaves it `null` so nothing re-renders for no reason.
  */
 export const selectEndeavorSyncLandedAt = createSelector(
   [selectEndeavorSyncState],
   (sync): Date | null =>
-    sync.kind === 'completed' && sync.pulled + sync.deleted > 0
-      ? sync.at
-      : null,
+    sync.kind === 'completed' && sync.pulled > 0 ? sync.at : null,
 )
 
 /** The platform actions sign-out raised and #34 has not performed yet. */

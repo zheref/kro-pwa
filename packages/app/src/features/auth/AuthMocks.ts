@@ -197,6 +197,20 @@ export const AuthMocks = {
     },
   } satisfies AuthState,
 
+  /** A sweep that only sent local deletions up — the push side, nothing arrived. */
+  endeavorSyncDeletedOnly: {
+    ...base,
+    session: { kind: 'signedIn', user: authUserMocks.typical },
+    endeavorSync: {
+      kind: 'completed',
+      at: new Date('2026-08-31T09:07:00.000Z'),
+      pushed: 0,
+      deleted: 2,
+      deferred: 0,
+      pulled: 0,
+    },
+  } satisfies AuthState,
+
   /** A failed sweep. */
   endeavorSyncFailed: {
     ...base,

@@ -96,7 +96,14 @@ export const persistOwnedEndeavor = async (
       resolvedKind: options.resolvedKind,
     }),
     ownerUserId,
-    ownerGroupId: existing?.ownerGroupId ?? null,
+    // Same two cases for the group column: an existing row keeps its group, a
+    // new row takes the one the domain value names, else none.
+    ownerGroupId:
+      existing !== null
+        ? existing.ownerGroupId
+        : endeavor.owner?.type === 'group'
+          ? endeavor.owner.groupId
+          : null,
   })
 
   if (ownerUserId === null) return { ownerUserId, push: 'unavailable' }

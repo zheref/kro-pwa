@@ -82,7 +82,7 @@ describe('useEndeavorSyncRefresh', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
-  it('reloads when a sweep deleted rows another device removed', async () => {
+  it('stays quiet when the sweep only sent local deletions up — tombstones are the push side, nothing arrived', async () => {
     const reload = vi.fn()
     const store = storeWith(report({ deleted: ['gone'] }))
     renderHook(() => useEndeavorSyncRefresh(reload), {
@@ -93,7 +93,7 @@ describe('useEndeavorSyncRefresh', () => {
       await store.dispatch(synchronizeEndeavorsThunk({ now: NOW }))
     })
 
-    expect(reload).toHaveBeenCalledTimes(1)
+    expect(reload).not.toHaveBeenCalled()
   })
 
   it('reloads zero times when mounted after a sweep already landed — the mount read already saw the rows', async () => {

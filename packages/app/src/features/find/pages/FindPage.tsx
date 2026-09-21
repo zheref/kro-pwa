@@ -49,6 +49,7 @@
 import { type EndeavorOperation, EndeavorsVistas } from '@kro/core'
 import { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
+import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
 import { selectSearchQuery } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
@@ -205,6 +206,17 @@ export function FindPage({ input, locale }: FindPageProps) {
     )
     return () => effect.abort()
   }, [dispatch, isLensRestored, lens])
+
+  // A cloud sweep that landed rows after the mount read: re-read the lens.
+  const reloadAfterSync = useCallback(
+    (landedAt: Date) => {
+      void dispatch(
+        fetchFindEndeavorsThunk({ surface: FindSurface.find, now: landedAt }),
+      )
+    },
+    [dispatch],
+  )
+  useEndeavorSyncRefresh(reloadAfterSync)
 
   const onChangeQuery = useCallback(
     (next: string) => {

@@ -20,6 +20,7 @@ import {
   selectHasAuthError,
   selectIsAuthenticated,
   selectIsAuthenticating,
+  selectEndeavorSyncLandedAt,
   selectIsEndeavorSyncDisabled,
   selectIsLocalDataDialogPresented,
   selectIsSessionResolved,
@@ -319,5 +320,35 @@ describe('the sign-out intents queue', () => {
     expect(selectPendingSignOutIntents(rootWith(AuthMocks.signedOut))).toEqual(
       [],
     )
+  })
+})
+
+describe('selectEndeavorSyncLandedAt', () => {
+  it('answers the landing instant when a sweep pulled rows in (a fresh sign-in on a new device)', () => {
+    expect(
+      selectEndeavorSyncLandedAt(rootWith(AuthMocks.endeavorSyncCompleted)),
+    ).toEqual(new Date('2026-08-31T09:05:00.000Z'))
+  })
+
+  it('answers null when the sweep only sent local deletions up — tombstones are the push side', () => {
+    expect(
+      selectEndeavorSyncLandedAt(rootWith(AuthMocks.endeavorSyncDeletedOnly)),
+    ).toBeNull()
+  })
+
+  it('answers null when the sweep only pushed — nothing local changed, nothing to re-read', () => {
+    expect(
+      selectEndeavorSyncLandedAt(rootWith(AuthMocks.endeavorSyncPushedOnly)),
+    ).toBeNull()
+  })
+
+  it('answers null while idle, syncing, disabled or failed', () => {
+    for (const state of [
+      AuthMocks.signedIn,
+      AuthMocks.endeavorSyncDisabled,
+      AuthMocks.endeavorSyncFailed,
+    ]) {
+      expect(selectEndeavorSyncLandedAt(rootWith(state))).toBeNull()
+    }
   })
 })

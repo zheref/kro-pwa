@@ -110,7 +110,7 @@ export const AuthMocks = {
       kind: 'failed',
       exception: AuthExceptions.unavailable([
         'NEXT_PUBLIC_SUPABASE_URL',
-        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
       ]),
     },
   } satisfies AuthState,
@@ -180,6 +180,34 @@ export const AuthMocks = {
       deleted: 1,
       deferred: 0,
       pulled: 4,
+    },
+  } satisfies AuthState,
+
+  /** A sweep that only pushed — nothing new landed locally. */
+  endeavorSyncPushedOnly: {
+    ...base,
+    session: { kind: 'signedIn', user: authUserMocks.typical },
+    endeavorSync: {
+      kind: 'completed',
+      at: new Date('2026-08-31T09:06:00.000Z'),
+      pushed: 3,
+      deleted: 0,
+      deferred: 0,
+      pulled: 0,
+    },
+  } satisfies AuthState,
+
+  /** A sweep that only sent local deletions up — the push side, nothing arrived. */
+  endeavorSyncDeletedOnly: {
+    ...base,
+    session: { kind: 'signedIn', user: authUserMocks.typical },
+    endeavorSync: {
+      kind: 'completed',
+      at: new Date('2026-08-31T09:07:00.000Z'),
+      pushed: 0,
+      deleted: 2,
+      deferred: 0,
+      pulled: 0,
     },
   } satisfies AuthState,
 

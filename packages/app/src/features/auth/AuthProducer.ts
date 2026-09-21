@@ -41,6 +41,7 @@ import {
   makePreferences,
   ok,
   type Result,
+  userProfileRecordFromUser,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { RootState, ThunkExtra } from '../../library/store'
@@ -116,6 +117,53 @@ const anonymousCount = async (extra: ThunkExtra): Promise<number> => {
 }
 
 /**
+ * Cache the signed-in profile locally — canon's `UserProfileRecord.from(_:)`
+ * written after every successful restore or sign-in.
+ *
+ * The endeavor sync engine reads the owner off this cache rather than taking
+ * an id from a caller, so a profile that was never written here is a sync that
+ * always answers `signedOut`. It is awaited before the post-sign-in effects are
+ * dispatched for exactly that reason. The sign-out wipe clears it.
+ */
+const rememberProfile = async (
+  extra: ThunkExtra,
+  user: User,
+  now: Date,
+): Promise<void> => {
+  try {
+    // The cache is a singleton keyed by id and `current()` answers the first
+    // row, so a second account signing in on the same device must REPLACE the
+    // row, never sit beside it — otherwise the sweep could own the new
+    // session's endeavors under the old account. Clear first; if the clear
+    // fails, write nothing (fail closed) rather than add a second row.
+    await extra.localStore.userProfiles.clear()
+    await extra.localStore.userProfiles.put(
+      userProfileRecordFromUser(user, { now }),
+    )
+  } catch {
+    // Same policy as `anonymousCount`: a storage failure must not fail a
+    // sign-in Supabase already accepted. The cost is a sweep that answers
+    // `signedOut` until the next restore writes the cache; the session stands.
+  }
+}
+
+/**
+ * Forget the cached profile when a restore finds no session — a device whose
+ * session ended without supabase-js's own SIGNED_OUT (project repointed,
+ * storage unreadable, a revocation never observed) must not keep stamping
+ * the previous account on new endeavors (`SEC-8`). Swallowed for the same
+ * reason as the write above: a cache that will not clear is not a failed
+ * restore.
+ */
+const forgetProfile = async (extra: ThunkExtra): Promise<void> => {
+  try {
+    await extra.localStore.userProfiles.clear()
+  } catch {
+    // see above
+  }
+}
+
+/**
  * The two follow-ups a *settled* session owes: pull the account's settings and
  * sweep its endeavors. Fired from a launch restore, from a sign-in with no
  * local data, and from every arm of the local-data dialog — canon fires
@@ -134,7 +182,7 @@ const dispatchPostSignIn = (
  * Canon's `onSessionRestored` — the silent launch restore.
  *
  * A `null` user is the ordinary signed-out case, not a failure, so it resolves
- * `ok(null)`. Only a transport or profile-row failure produces `err`.
+ * `ok(null)`. Only a transport or profile-row failure produces `err`; the local profile cache write is swallowed (`rememberProfile`).
  */
 export const restoreSessionThunk = createAsyncThunk<
   Result<User | null, AuthException>,
@@ -144,7 +192,10 @@ export const restoreSessionThunk = createAsyncThunk<
   try {
     const user = await extra.authService.restoreSession()
     if (user !== null) {
+      await rememberProfile(extra, user, now)
       dispatchPostSignIn(dispatch, now, SettingsSyncTrigger.appLaunch)
+    } else {
+      await forgetProfile(extra)
     }
     return ok(user)
   } catch (error) {
@@ -161,6 +212,7 @@ const completeSignIn = async (
     readonly now: Date
   },
 ): Promise<Result<AuthCompletion, AuthException>> => {
+  await rememberProfile(context.extra, user, context.now)
   const count = await anonymousCount(context.extra)
   if (count > 0) {
     // Hold the follow-ups: canon waits for the dialog before touching the
@@ -172,6 +224,35 @@ const completeSignIn = async (
 }
 
 /** Canon's `userDidTapSignIn` guard + `produceSignInWithEmailEffect`. */
+/**
+ * A sign-in that completed OUTSIDE this surface — the PKCE return from a
+ * provider redirect, or another tab signing in. supabase-js announces it as
+ * SIGNED_IN; the session is already established, so the only work left is the
+ * same completion a form sign-in gets: cache the profile, ask about anonymous
+ * local data before anything moves, else run the post-sign-in effects. A plain
+ * restore would skip that decision (canon's `migrationAlert`), which is why
+ * this is its own event rather than `restoreSessionThunk`.
+ */
+export const completeExternalSignInThunk = createAsyncThunk<
+  Result<AuthCompletion, AuthException>,
+  { now: Date },
+  { extra: ThunkExtra }
+>('auth/onExternalSignInCompleted', async ({ now }, { extra, dispatch }) => {
+  try {
+    const user = await extra.authService.restoreSession()
+    if (user === null) {
+      return err(
+        AuthExceptions.unknown(
+          'The provider reported a sign-in, but no session was found.',
+        ),
+      )
+    }
+    return await completeSignIn(user, { extra, dispatch, now })
+  } catch (error) {
+    return err(AuthMapper.toException(error))
+  }
+})
+
 export const signInWithEmailThunk = createAsyncThunk<
   Result<AuthCompletion, AuthException>,
   { email: string; password: string; now: Date },
@@ -186,7 +267,7 @@ export const signInWithEmailThunk = createAsyncThunk<
     }
     try {
       const user = await extra.authService.signInWithEmail(email, password)
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }
@@ -222,7 +303,7 @@ export const signUpWithEmailThunk = createAsyncThunk<
         password,
         name,
       )
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }
@@ -274,7 +355,7 @@ export const signInWithAppleThunk = createAsyncThunk<
         rawNonce,
         fullName,
       })
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }
@@ -477,6 +558,13 @@ export const observeAuthState = (context: {
       // A sign-out that happened elsewhere (another tab, an expired refresh)
       // still owes this tab the local wipe.
       context.dispatch(signOutThunk())
+      return
+    }
+    if (event.kind === 'signedIn') {
+      // A sign-in that completed elsewhere — the provider return, another
+      // tab — gets the same completion as a form sign-in, local-data
+      // decision included; a plain restore would skip it.
+      context.dispatch(completeExternalSignInThunk({ now: context.now() }))
       return
     }
     context.dispatch(restoreSessionThunk({ now: context.now() }))

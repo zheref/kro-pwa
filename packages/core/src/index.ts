@@ -91,3 +91,4 @@ export * from './domain/reconciliation'
 // anti-contention reason the two blocks above give: a parallel child appending
 // after this one never contends for the same line.
 export * from './persistence'
+export * from './utils/oauthReturnQuery'

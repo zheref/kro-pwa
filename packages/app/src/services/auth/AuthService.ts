@@ -254,7 +254,31 @@ export const makeLiveAuthService = (
         .eq('id', sessionUser.id)
       if (read.error !== null) throw read.error
       const row = (read.data as readonly UserRow[] | null)?.[0]
-      return row === undefined ? null : AuthMapper.toDomain(row)
+      if (row !== undefined) {
+        const mapped = AuthMapper.toDomain(row)
+        // The same failure the creation path reports: a corrupt profile is a
+        // typed exception, never a phantom sign-out.
+        if (mapped === null) {
+          throw AuthExceptions.userCreationFailed('profile row is malformed')
+        }
+        return mapped
+      }
+
+      // No profile row yet, but Supabase has a session: this is the first
+      // return from an OAuth redirect (Google, or Apple without an id token).
+      // The email and Apple id-token paths create the row inline because they
+      // get the user back in the same call; the redirect path only ever comes
+      // back through here, so this is where its row is created — from the
+      // provider's own metadata, the way canon reads Google's.
+      const profile = oauthProfileFromMetadata(sessionUser.user_metadata)
+      return ensureProfileRow(client, {
+        userId: sessionUser.id,
+        email: sessionUser.email ?? null,
+        name: profile.name,
+        avatarUrl: profile.avatarUrl,
+        provider: providerFromSessionMetadata(sessionUser.app_metadata),
+        now: now(),
+      })
     },
 
     async signInWithEmail(email, password) {
@@ -368,10 +392,22 @@ export const makeLiveAuthService = (
       if (client === null) return () => {}
       const { data } = client.auth.onAuthStateChange((event, session) => {
         const userId = session?.user.id
-        if (event === 'SIGNED_OUT' || userId === undefined) {
+        if (event === 'SIGNED_OUT') {
           listener({ kind: 'signedOut' })
           return
         }
+        // The boot-time INITIAL_SESSION is not announced at all: the shell's
+        // mount restore already reads the persisted session, and announcing it
+        // here ran a second restore — and a second settings and endeavor sweep
+        // — concurrently on every launch. SIGNED_IN (a PKCE return, another
+        // tab) and the refresh events still flow.
+        if (event === 'INITIAL_SESSION') return
+        // `INITIAL_SESSION` arrives on every boot, with `session: null` when
+        // nobody is signed in on this device. That is the steady state, not a
+        // sign-out: announcing it as one would run the sign-out wipe against
+        // local data the user never attached to an account. Only supabase-js's
+        // own SIGNED_OUT is a sign-out; anything else without a user is noise.
+        if (userId === undefined) return
         if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
           listener({ kind: 'refreshed', userId })
           return
@@ -381,6 +417,22 @@ export const makeLiveAuthService = (
       return () => data.subscription.unsubscribe()
     },
   }
+}
+
+/**
+ * The provider a Supabase session was established with, read off
+ * `app_metadata.provider`. Anything Kro does not model as an OAuth provider
+ * (an email/password session, a provider added later) reads as the email
+ * kind, which is what the row would have carried had the same user signed up
+ * with a password.
+ */
+export const providerFromSessionMetadata = (
+  metadata: Readonly<Record<string, unknown>> | undefined,
+): AuthProvider => {
+  const provider = metadata?.provider
+  if (provider === 'google') return 'google'
+  if (provider === 'apple') return 'apple'
+  return 'email_password'
 }
 
 /** Reads the OAuth display name/avatar the way canon reads Google's metadata. */

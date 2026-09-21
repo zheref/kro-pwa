@@ -1,3 +1,4 @@
+import { oauthReturnQueryString } from '@kro/core'
 import { redirect } from 'next/navigation'
 
 /**
@@ -28,6 +29,19 @@ import { redirect } from 'next/navigation'
  * addresses that hung off it (`/`, `/settings`, `/integrations`) are now three
  * passive redirects into the shell.
  */
-export default function RootRoute() {
-  redirect('/my-day')
+type SearchParams = Readonly<Record<string, string | string[] | undefined>>
+
+/**
+ * The provider's return survives the hop. Supabase Auth returns from a provider
+ * to the address it was given with `?code=…` appended, and the browser's own
+ * `start_url` is `/`; a redirect that dropped it would strand the PKCE exchange
+ * one hop short of the page that performs it. Only the return parameters are
+ * forwarded (`oauthReturnQueryString`), and the code does transit the server
+ * tier on this route — hosting may exclude its query string from access logs.
+ */
+export default async function RootRoute(props: {
+  readonly searchParams?: Promise<SearchParams>
+}) {
+  const suffix = oauthReturnQueryString((await props.searchParams) ?? {})
+  redirect(suffix.length === 0 ? '/my-day' : `/my-day?${suffix}`)
 }

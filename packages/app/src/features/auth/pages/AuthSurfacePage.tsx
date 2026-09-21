@@ -21,7 +21,12 @@
  *
  * ## Where the redirect comes back to
  *
- * `redirectTo` defaults to this document's origin. Reading `location` here is
+ * `redirectTo` defaults to this document's address — origin plus path, with
+ * the query and fragment dropped — so the provider returns the user to the
+ * page they left, which is what the product doc promises ("Kro picks up where
+ * you were"). The bare origin is deliberately not used: `/` is a server
+ * redirect into the landing destination, and a redirect is one more hop for
+ * the `?code=` Supabase appends to get lost on. Reading `location` here is
  * the one platform read this Page makes, for the same reason the shell reads
  * `matchMedia`: it is a property of the browser the surface is rendering in,
  * not data. It is a prop first, so a story and a test never touch `location` at
@@ -59,8 +64,10 @@ export interface AuthSurfacePageProps {
 }
 
 /** This document's origin, or `''` where there is no document (SSR, a test). */
-export const currentOrigin = (): string =>
-  typeof globalThis.location === 'undefined' ? '' : globalThis.location.origin
+export const currentPageAddress = (): string =>
+  typeof globalThis.location === 'undefined'
+    ? ''
+    : `${globalThis.location.origin}${globalThis.location.pathname}`
 
 export function AuthSurfacePage({
   redirectTo,
@@ -75,7 +82,7 @@ export function AuthSurfacePage({
   const authenticatingFlow = useAppSelector(selectAuthenticatingFlow)
   const isSubmitEnabled = useAppSelector(selectIsSubmitEnabled)
 
-  const target = redirectTo ?? currentOrigin()
+  const target = redirectTo ?? currentPageAddress()
 
   const onSubmit = useCallback(() => {
     const now = new Date()

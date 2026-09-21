@@ -131,6 +131,8 @@ desktop.
 - **Capture** — receives *Quick Add*, and the empty state's create prompt.
 - **Google Calendar** — supplies today's events; its connect nudge is the
   Suggestions lane's only card.
+- **Settings / Kro Cloud** — when a cloud sweep lands rows after sign-in or
+  launch, My Day re-reads the day immediately, the same as a manual refresh.
 
 ## Out of scope
 

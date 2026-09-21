@@ -184,6 +184,8 @@ sequenceDiagram
 - **App shell** — the day-scoped quick-add button, its highlight, the toolbar
   slots and the sheet-versus-popover choice all belong to the shell; Plan asks
   for them rather than deciding them.
+- **Kro Cloud** — when a sweep lands rows after sign-in or launch, the matrix
+  and list re-read immediately; the timeline reads what it already holds.
 
 ## Out of scope
 

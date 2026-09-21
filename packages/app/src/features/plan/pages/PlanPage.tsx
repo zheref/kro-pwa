@@ -59,6 +59,7 @@ import type { FABMenuEntry } from '../../../design/chrome'
 import { presentationFor } from '../../main/MainPresentation'
 import { useSurfaceLayout } from '../../main/useSurfaceLayout'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
+import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import {
   PopoverContent,
   Popover,
@@ -384,6 +385,19 @@ export function PlanPage({
     const effect = dispatch(loadSettingsThunk())
     return () => effect.abort()
   }, [dispatch])
+
+  // A cloud sweep that landed rows after the mount read: re-read the matrix,
+  // under the same view-mode gate the mount read uses.
+  const reloadAfterSync = useCallback(() => {
+    if (
+      viewMode !== PlanViewMode.priorityMatrix &&
+      viewMode !== PlanViewMode.list
+    ) {
+      return
+    }
+    void dispatch(loadPlanMatrixThunk())
+  }, [dispatch, viewMode])
+  useEndeavorSyncRefresh(reloadAfterSync)
 
   const onTapRefresh = useCallback(() => {
     // Canon's `guard !state.isRefreshing`, read before dispatching rather than

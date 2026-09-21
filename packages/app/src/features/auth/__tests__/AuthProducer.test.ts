@@ -5,19 +5,20 @@
  * given, and the assertions read that record.
  */
 import {
-  FeatureFlagState,
-  FeatureFlags,
-  type Result,
-  type UserProfileRecord,
   cloudSyncOptions,
+  endeavorRecordFromEndeavor,
   epochMillisFromDate,
+  FeatureFlags,
+  FeatureFlagState,
   makeFeatureFlagAssignment,
   makeHardcodedFeatureFlagService,
   makePreferences,
   preferenceStorageKey,
+  type Result,
+  type UserProfileRecord,
 } from '@kro/core'
 import { endeavorMocks } from '@kro/core/mocks'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   type ThunkExtra,
   makeStore,
@@ -32,6 +33,7 @@ import {
   type InMemoryLocalStoreSeed,
 } from '../../../services/localStore/InMemoryLocalStore'
 import { signOutWipe } from '../../../services/localStore/signOutWipe'
+import type { EndeavorRow } from '../../../services/sync/EndeavorRow'
 import { makeStubbedEndeavorCloudTransport } from '../../../services/sync/EndeavorCloudTransport'
 import {
   makeEndeavorSyncService,
@@ -44,6 +46,7 @@ import {
   beginAppleSignInThunk,
   observeAuthState,
   resolveLocalDataChoiceThunk,
+  completeExternalSignInThunk,
   restoreSessionThunk,
   signInWithAppleThunk,
   signInWithEmailThunk,
@@ -85,6 +88,7 @@ interface HarnessOptions {
   readonly settingsPullFailure?: unknown
   readonly settingsPushFailure?: unknown
   readonly cloudEnabled?: boolean
+  readonly transportRows?: readonly EndeavorRow[]
 }
 
 const harness = (options: HarnessOptions = {}) => {
@@ -95,7 +99,9 @@ const harness = (options: HarnessOptions = {}) => {
     pullFailure: options.settingsPullFailure,
     pushFailure: options.settingsPushFailure,
   })
-  const transport = makeStubbedEndeavorCloudTransport()
+  const transport = makeStubbedEndeavorCloudTransport({
+    rows: options.transportRows,
+  })
   const featureFlags = makeHardcodedFeatureFlagService({
     overrides:
       options.cloudEnabled === true
@@ -913,7 +919,7 @@ describe('synchronizeEndeavorsThunk', () => {
 // ---------------------------------------------------------------------------
 
 describe('observeAuthState', () => {
-  it('restores the session when the client reports a sign-in from elsewhere', async () => {
+  it('completes a sign-in the client reports from elsewhere through the same path as a form sign-in (profile, local-data decision, sweep)', async () => {
     const authService = makeStubbedAuthService()
     const { store } = harness({ authService })
     const stop = observeAuthState({
@@ -923,7 +929,9 @@ describe('observeAuthState', () => {
     })
 
     await authService.signInWithEmail('ada@example.com', 'secret')
-    await Promise.resolve()
+    await vi.waitFor(() =>
+      expect(store.getState().auth.session.kind).toBe('signedIn'),
+    )
 
     stop()
     expect(authService.operations()).toContain('restoreSession')
@@ -956,5 +964,179 @@ describe('observeAuthState', () => {
       stop()
       stop()
     }).not.toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The profile cache — what makes the sync engine know who is signed in
+// ---------------------------------------------------------------------------
+
+describe('remembering the signed-in profile locally', () => {
+  it('writes the profile on a launch restore, so the sync engine has an owner (reload while signed in)', async () => {
+    const { store, localStore } = harness({
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.email,
+      }),
+    })
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    const cached = await localStore.userProfiles.current()
+    expect(cached?.id).toBe(authFixtureUsers.email.id)
+    expect(cached?.loginKind).toBe('email_password')
+  })
+
+  it('writes the profile on an email sign-in before the post-sign-in sweep runs', async () => {
+    const { store, localStore } = harness()
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    expect((await localStore.userProfiles.current())?.id).toBe(
+      authFixtureUsers.email.id,
+    )
+  })
+
+  it('writes nothing when the restore finds nobody (a fresh browser)', async () => {
+    const { store, localStore } = harness()
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    expect(await localStore.userProfiles.current()).toBeNull()
+  })
+
+  it('pulls the account endeavors into the local store on a sign-in with NO seeded profile — the bug that hid every card', async () => {
+    const { store, localStore } = harness({
+      cloudEnabled: true,
+      transportRows: [
+        {
+          id: 'cloud-1',
+          title: 'Pay Mortgage',
+          kind: 'task',
+          status: 'planned',
+          isDraft: false,
+        },
+      ],
+    })
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+    // The sweep is the sign-in's own post-sign-in effect; wait for it to land.
+    await vi.waitFor(() =>
+      expect(store.getState().auth.endeavorSync).toMatchObject({
+        kind: 'completed',
+        pulled: 1,
+      }),
+    )
+    expect((await localStore.endeavors.all()).map((r) => r.id)).toContain(
+      'cloud-1',
+    )
+  })
+
+  it('keeps a sign-in Supabase accepted even when the device refuses the profile-cache write (quota exceeded)', async () => {
+    const { store, localStore } = harness()
+    localStore.userProfiles.put = async () => {
+      throw new Error('QuotaExceededError')
+    }
+
+    const action = await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    expect(signInWithEmailThunk.fulfilled.match(action)).toBe(true)
+    expect(store.getState().auth.session.kind).toBe('signedIn')
+  })
+
+  it('forgets a cached profile when a launch restore finds no session (the device stops stamping the old account)', async () => {
+    const { store, localStore } = harness({
+      seed: { userProfiles: [profileRecord(OWNER)] },
+    })
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    expect(await localStore.userProfiles.current()).toBeNull()
+  })
+
+  it('replaces a different cached account on sign-in, so the sweep can never own new rows under the old one', async () => {
+    const { store, localStore } = harness({
+      seed: { userProfiles: [profileRecord('previous-account')] },
+    })
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    const cached = await localStore.userProfiles.current()
+    expect(cached?.id).toBe(authFixtureUsers.email.id)
+    expect(await localStore.userProfiles.get('previous-account')).toBeNull()
+  })
+
+  it('offers the local-data decision on an external sign-in that finds anonymous rows (a Google return on a device with unsynced work)', async () => {
+    const { store } = harness({
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.google,
+      }),
+      seed: {
+        endeavors: [
+          endeavorRecordFromEndeavor(
+            { ...endeavorMocks.plannedTask, owner: null },
+            { now: NOW },
+          ),
+        ],
+      },
+    })
+
+    await store.dispatch(completeExternalSignInThunk({ now: NOW }))
+
+    expect(store.getState().auth.session).toEqual({
+      kind: 'signedIn',
+      user: authFixtureUsers.google,
+    })
+    expect(store.getState().auth.localData.kind).toBe('shown')
+  })
+
+  it('runs the post-sign-in sweep at once on an external sign-in with no anonymous rows', async () => {
+    const { store } = harness({
+      authService: makeStubbedAuthService({
+        initialUser: authFixtureUsers.google,
+      }),
+      cloudEnabled: true,
+    })
+
+    await store.dispatch(completeExternalSignInThunk({ now: NOW }))
+
+    expect(store.getState().auth.session.kind).toBe('signedIn')
+    await vi.waitFor(() =>
+      expect(store.getState().auth.endeavorSync.kind).toBe('completed'),
+    )
+  })
+
+  it('reports a typed failure when the provider announced a sign-in but no session can be restored', async () => {
+    const { store } = harness()
+
+    const action = await store.dispatch(
+      completeExternalSignInThunk({ now: NOW }),
+    )
+
+    expect(completeExternalSignInThunk.fulfilled.match(action)).toBe(true)
+    expect(store.getState().auth.session.kind).toBe('failed')
   })
 })

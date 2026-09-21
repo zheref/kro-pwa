@@ -28,6 +28,10 @@ import {
   stubbedThunkExtra,
 } from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../../services/sync/EndeavorSyncService'
+import { synchronizeEndeavorsThunk } from '../../../auth/AuthProducer'
+import { userDidSelectViewMode } from '../../PlanFeature'
+import { PlanViewMode } from '../../PlanNavigation'
 import { PLAN_REFERENCE_DAY, planAt } from '../../PlanMocks'
 import { initialPlanState } from '../../PlanState'
 import { PlanPage } from '../PlanPage'
@@ -464,5 +468,91 @@ describe('PlanPage', () => {
     // silently re-date every scene in this suite fails here first.
     expect(planAt(9).getHours()).toBe(9)
     expect(PLAN_REFERENCE_DAY.getDay()).toBe(4)
+  })
+})
+
+describe('re-reading after a Kro Cloud sweep lands', () => {
+  const landedSweep = () =>
+    makeStubbedEndeavorSyncService({
+      report: {
+        status: 'synchronized',
+        pushed: [],
+        deleted: [],
+        deferred: [],
+        pulled: ['cloud-row'],
+        localWins: [],
+        skipped: [],
+      },
+    })
+
+  it('re-reads the matrix when a sweep lands rows while the matrix is shown', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore,
+      endeavorSync: landedSweep(),
+    })
+    store.dispatch(userDidSelectViewMode({ mode: PlanViewMode.priorityMatrix }))
+    mount(store)
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(0))
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(before))
+  })
+
+  it('does not re-read the matrix from the timeline view, where nothing shows it', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore,
+      endeavorSync: landedSweep(),
+    })
+    mount(store)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    expect(reads.mock.calls.length).toBe(before)
+  })
+
+  it('does nothing when the sweep only pushed — nothing on this device changed', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore,
+      endeavorSync: makeStubbedEndeavorSyncService({
+        report: {
+          status: 'synchronized',
+          pushed: ['local-row'],
+          deleted: [],
+          deferred: [],
+          pulled: [],
+          localWins: [],
+          skipped: [],
+        },
+      }),
+    })
+    store.dispatch(userDidSelectViewMode({ mode: PlanViewMode.list }))
+    mount(store)
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(0))
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    expect(reads.mock.calls.length).toBe(before)
   })
 })

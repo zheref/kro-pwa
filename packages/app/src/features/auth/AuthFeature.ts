@@ -21,6 +21,7 @@ import {
   beginAppleSignInThunk,
   resolveLocalDataChoiceThunk,
   restoreSessionThunk,
+  completeExternalSignInThunk,
   signInWithAppleThunk,
   signInWithEmailThunk,
   signOutThunk,
@@ -136,6 +137,22 @@ export const authSlice = createSlice({
         )
       })
       .addCase(restoreSessionThunk.rejected, (state, action) => {
+        Object.assign(
+          state,
+          withAuthFailed(
+            state,
+            AuthExceptions.unknown(action.error.message ?? ''),
+          ),
+        )
+      })
+
+      // --- a sign-in completed elsewhere (PKCE return, another tab) --------
+      // No pending arm: nothing on this surface started a flow, and a spinner
+      // on a header that may already show the account would be a lie.
+      .addCase(completeExternalSignInThunk.fulfilled, (state, action) => {
+        Object.assign(state, withSignInOutcome(state, action.payload))
+      })
+      .addCase(completeExternalSignInThunk.rejected, (state, action) => {
         Object.assign(
           state,
           withAuthFailed(

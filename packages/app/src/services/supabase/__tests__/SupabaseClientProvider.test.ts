@@ -5,7 +5,7 @@ import {
   stubbedSupabaseClientProvider,
 } from '../SupabaseClientProvider'
 import {
-  SUPABASE_ANON_KEY_VARIABLE,
+  SUPABASE_PUBLISHABLE_KEY_VARIABLE,
   SUPABASE_URL_VARIABLE,
   makeRecordEnvironment,
 } from '../SupabaseEnvironment'
@@ -14,7 +14,7 @@ const configuredEnvironment = makeRecordEnvironment({
   [SUPABASE_URL_VARIABLE]: 'https://project.supabase.co',
   // Not a real key: a syntactically plausible placeholder so `createClient`
   // has something to hold. Nothing in this suite makes a request.
-  [SUPABASE_ANON_KEY_VARIABLE]: 'anon-key-for-tests',
+  [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: 'sb_publishable_key-for-tests',
 })
 
 describe('the live provider with no project configured', () => {
@@ -29,7 +29,7 @@ describe('the live provider with no project configured', () => {
   it('reports which variables are missing, so the operator fixes both in one pass', () => {
     expect(provider.availability()).toEqual({
       kind: 'unconfigured',
-      missing: [SUPABASE_URL_VARIABLE, SUPABASE_ANON_KEY_VARIABLE],
+      missing: [SUPABASE_URL_VARIABLE, SUPABASE_PUBLISHABLE_KEY_VARIABLE],
     })
   })
 

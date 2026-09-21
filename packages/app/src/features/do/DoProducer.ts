@@ -37,7 +37,6 @@ import {
   doNowThresholdHoursOption,
   doShowSuggestionsOption,
   endeavorFromRecord,
-  endeavorRecordFromEndeavor,
   err,
   livingChildRecords,
   makeDefer,
@@ -53,6 +52,8 @@ import {
   reconcile,
   resolvedKind,
   withDeferred,
+  type PersistOwnedEndeavorDeps,
+  persistOwnedEndeavor,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
@@ -130,21 +131,20 @@ const readStoredEndeavors = async (
  * had never left the device.
  */
 const persistEndeavor = async (
-  localStore: LocalStore,
+  deps: PersistOwnedEndeavorDeps,
   endeavor: Endeavor,
   now: Date,
   context: ReconciliationContext,
 ): Promise<void> => {
-  const existing: EndeavorRecord | null = await localStore.endeavors.get(
-    endeavor.id,
-  )
-  await localStore.endeavors.put(
-    endeavorRecordFromEndeavor(endeavor, {
-      now,
-      lastSyncedAtEpochMillis: existing?.lastSyncedAtEpochMillis ?? null,
-      resolvedKind: resolvedKind(endeavor, context),
-    }),
-  )
+  // The shared write path (`@kro/core` persistence, `OwnedEndeavorWrite`):
+  // an existing row keeps its owner and is pushed when it has one. The
+  // report is dropped on purpose — a failed push leaves the row dirty for the
+  // sweep, which reports through the auth slice; nothing here has a State
+  // field for it.
+  await persistOwnedEndeavor(deps, endeavor, {
+    now,
+    resolvedKind: resolvedKind(endeavor, context),
+  })
 }
 
 /**
@@ -168,6 +168,7 @@ export const loadDoPreferencesThunk = createAsyncThunk<
     const store = extra.localStore.preferences
     const preferences = makePreferences(store)
     const flags = makeHardcodedFeatureFlagService({
+      base: extra.featureFlags,
       overrides: overridesAsAssignments(
         makeFeatureFlagOverrideStore(store).all(),
       ),
@@ -257,7 +258,7 @@ export const clearExpiredThunk = createAsyncThunk<
       // acknowledgement, not an achievement. A completion date here would put
       // expired work into Completed Today and let it fill a ring.
       await persistEndeavor(
-        extra.localStore,
+        extra,
         { ...target, status: EndeavorStatus.closed },
         now,
         context,
@@ -304,7 +305,7 @@ export const markEndeavorCompleteThunk = createAsyncThunk<
         status: EndeavorStatus.closed,
         completed: completionDate,
       }
-      await persistEndeavor(extra.localStore, completed, now, context)
+      await persistEndeavor(extra, completed, now, context)
       return ok(completed)
     } catch (error) {
       return err(DoExceptions.markCompleteFailed(messageOf(error)))
@@ -393,7 +394,7 @@ const mutateAndRefetch = async (
     if (target === null) return err(input.notFound())
 
     const { endeavor, writeDefer } = transform(target, context)
-    await persistEndeavor(input.extra.localStore, endeavor, input.now, context)
+    await persistEndeavor(input.extra, endeavor, input.now, context)
 
     if (writeDefer !== undefined) {
       // The audit row is a CHILD record and lives in its own store: the

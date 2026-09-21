@@ -46,6 +46,7 @@ import type { ReactNode } from 'react'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import {
   type AppStore,
+  type ThunkExtra,
   makeStore,
   stubbedThunkExtra,
 } from '../../../../library/store'
@@ -68,6 +69,8 @@ export interface HarnessOptions {
   readonly lensSnapshots?: Readonly<Record<string, EndeavorsLensSnapshot>>
   /** Defaults to the shipping baseline, where `endeavorDetail` is OFF. */
   readonly featureFlags?: FeatureFlagService
+  /** Overrides for the thunk extra — a stubbed sync service, a spied store. */
+  readonly extra?: Partial<ThunkExtra>
   /** The instant every record is stamped at, so a scene never reads a clock. */
   readonly now?: Date
 }
@@ -82,6 +85,7 @@ export const makeSeededStore = ({
   lensSnapshots = {},
   featureFlags = stubbedThunkExtra.featureFlags,
   now = new Date(2026, 5, 18, 9, 40),
+  extra = {},
 }: HarnessOptions = {}): AppStore => {
   const nowMillis = epochMillisFromDate(now)
 
@@ -114,6 +118,7 @@ export const makeSeededStore = ({
         ),
       ),
     }),
+    ...extra,
   })
 }
 

@@ -14,7 +14,7 @@ import {
 import { makeStubbedAuthService } from '../../../../services/auth/AuthService'
 import { authUserMocks } from '../../AuthMocks'
 import { AuthExceptions } from '../../AuthException'
-import { AuthSurfacePage, currentOrigin } from '../AuthSurfacePage'
+import { AuthSurfacePage, currentPageAddress } from '../AuthSurfacePage'
 
 afterEach(cleanup)
 
@@ -263,8 +263,28 @@ describe('dismissal and the redirect target', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('falls back to this document origin when no target is supplied', () => {
-    expect(currentOrigin()).toBe(globalThis.location.origin)
+  it('falls back to this document address — origin plus path — when no target is supplied', () => {
+    expect(currentPageAddress()).toBe(
+      `${globalThis.location.origin}${globalThis.location.pathname}`,
+    )
+  })
+
+  it('carries the path, so the provider returns to the page the user left rather than the origin', () => {
+    globalThis.history.replaceState(null, '', '/plan')
+    try {
+      expect(currentPageAddress()).toBe(`${globalThis.location.origin}/plan`)
+    } finally {
+      globalThis.history.replaceState(null, '', '/')
+    }
+  })
+
+  it('drops the query and fragment so a stale code or anchor never rides back to the provider', () => {
+    globalThis.history.replaceState(null, '', '/my-day?code=stale#top')
+    try {
+      expect(currentPageAddress()).toBe(`${globalThis.location.origin}/my-day`)
+    } finally {
+      globalThis.history.replaceState(null, '', '/')
+    }
   })
 
   it('renders for a signed-in user too — the presenter decides when to show it', () => {

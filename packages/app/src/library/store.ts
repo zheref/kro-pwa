@@ -220,8 +220,20 @@ const shippingAppearanceOverride = enabledAssignment(
   FeatureFlags.appearanceThemes,
 )
 
+/**
+ * `supabaseHosting` — Kro Cloud — also ships **enabled** here. `statusQuoSet`
+ * keeps it disabled because Apple's rollout is remote-flagged; the web has no
+ * remote flag service yet and its whole account story (sign in, then see your
+ * endeavors) is the cloud, so a signed-in user on a build with the gate shut
+ * would sign in to nothing. A build with no Kro Cloud project configured is
+ * still local-only: the sync service reports `unavailable` on its own.
+ */
+const shippingSupabaseHostingOverride = enabledAssignment(
+  FeatureFlags.supabaseHosting,
+)
+
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
-  overrides: [shippingAppearanceOverride],
+  overrides: [shippingAppearanceOverride, shippingSupabaseHostingOverride],
 })
 
 /**

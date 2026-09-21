@@ -27,7 +27,6 @@ import {
   type Defer,
   type Endeavor,
   type EndeavorHost,
-  type EndeavorRecord,
   type LocalStore,
   type Perform,
   type ReconciliationContext,
@@ -36,7 +35,6 @@ import {
   deferFromRecord,
   deferRecordFromDefer,
   endeavorFromRecord,
-  endeavorRecordFromEndeavor,
   epochMillisFromDate,
   err,
   livingChildRecords,
@@ -51,6 +49,8 @@ import {
   withRemovedDefer,
   withRemovedPerformance,
   withRemovedShadow,
+  type PersistOwnedEndeavorDeps,
+  persistOwnedEndeavor,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
@@ -87,21 +87,20 @@ const readEndeavor = async (
  * sweep as if it had never left the device.
  */
 const persistEndeavor = async (
-  localStore: LocalStore,
+  deps: PersistOwnedEndeavorDeps,
   endeavor: Endeavor,
   now: Date,
   context: ReconciliationContext,
 ): Promise<void> => {
-  const existing: EndeavorRecord | null = await localStore.endeavors.get(
-    endeavor.id,
-  )
-  await localStore.endeavors.put(
-    endeavorRecordFromEndeavor(endeavor, {
-      now,
-      lastSyncedAtEpochMillis: existing?.lastSyncedAtEpochMillis ?? null,
-      resolvedKind: resolvedKind(endeavor, context),
-    }),
-  )
+  // The shared write path (`@kro/core` persistence, `OwnedEndeavorWrite`):
+  // an existing row keeps its owner and is pushed when it has one. The
+  // report is dropped on purpose — a failed push leaves the row dirty for the
+  // sweep, which reports through the auth slice; nothing here has a State
+  // field for it.
+  await persistOwnedEndeavor(deps, endeavor, {
+    now,
+    resolvedKind: resolvedKind(endeavor, context),
+  })
 }
 
 /**
@@ -118,7 +117,7 @@ export const saveEndeavorThunk = createAsyncThunk<
 >('endeavorDetail/onSaveCompleted', async ({ endeavor, now }, { extra }) => {
   try {
     await persistEndeavor(
-      extra.localStore,
+      extra,
       endeavor,
       now,
       makeReconciliationContext({ now }),
@@ -171,7 +170,7 @@ export const addPerformanceThunk = createAsyncThunk<
         }),
       )
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),
@@ -221,7 +220,7 @@ export const removePerformanceThunk = createAsyncThunk<
         )
       }
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),
@@ -276,7 +275,7 @@ export const addDeferThunk = createAsyncThunk<
         }),
       )
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),
@@ -316,7 +315,7 @@ export const removeDeferThunk = createAsyncThunk<
         await extra.localStore.defers.removeLocal(row, epochMillisFromDate(now))
       }
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),
@@ -362,7 +361,7 @@ export const addShadowThunk = createAsyncThunk<
       }
       const updated = withAddedShadow(target, shadow)
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),
@@ -394,7 +393,7 @@ export const removeShadowThunk = createAsyncThunk<
       const updated = withRemovedShadow(target, index)
       if (updated === target) return ok(target)
       await persistEndeavor(
-        extra.localStore,
+        extra,
         updated,
         now,
         makeReconciliationContext({ now }),

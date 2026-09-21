@@ -20,6 +20,10 @@ idea rather than learning two.
   are not separately flagged; a preference belonging to a feature that is itself
   switched off simply has nothing to affect.
 
+Kro Cloud — the account's endeavors travelling between devices — is its own
+switch, `supabaseHosting`, with its own spec: [Kro Cloud](./KroCloud.md). The
+web build ships it **on**.
+
 Two rows are gated by something other than a flag:
 
 - The **cloud-synced** preferences behave differently when nobody is signed in —
@@ -101,6 +105,9 @@ Two rows are gated by something other than a flag:
 - **Do**, **Earn**, **Session** — each reads its own group the same way.
 - **Sync** — the cloud-synced subset travels with the account; everything else
   stays on the device.
+- **Kro Cloud** — sign-in remembers the account on the device and runs a sweep
+  that brings the account's endeavors down; see [Kro Cloud](./KroCloud.md) for
+  what is remembered, what re-reads, and how writes are hosted.
 
 ## Out of scope
 

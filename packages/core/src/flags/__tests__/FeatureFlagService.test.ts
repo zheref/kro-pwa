@@ -3,6 +3,7 @@ import { featureFlagAssignmentMocks } from '../__mocks__/FeatureFlagAssignment.m
 import { FeatureFlags, allKnownFlags } from '../FeatureFlag'
 import { FeatureFlagState } from '../FeatureFlagAssignment'
 import { FeatureFlagBaseline } from '../FeatureFlagBaseline'
+import { disabledAssignment, enabledAssignment } from '../FeatureFlagAssignment'
 import { makeHardcodedFeatureFlagService } from '../FeatureFlagService'
 
 describe('a service built with no options', () => {
@@ -189,5 +190,38 @@ describe('enabledResolver', () => {
   it('reads an unassigned flag as off', () => {
     const service = makeHardcodedFeatureFlagService()
     expect(service.enabledResolver(FeatureFlags.board)()).toBe(false)
+  })
+})
+
+describe('layering overrides on a base service', () => {
+  it("keeps the base service's own overrides underneath a device override (shipping Kro Cloud on, debug flag untouched)", () => {
+    const shipping = makeHardcodedFeatureFlagService({
+      overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
+    })
+    const layered = makeHardcodedFeatureFlagService({
+      base: shipping,
+      overrides: [enabledAssignment(FeatureFlags.habits)],
+    })
+    expect(layered.isEnabled(FeatureFlags.supabaseHosting)).toBe(true)
+    expect(layered.isEnabled(FeatureFlags.habits)).toBe(true)
+  })
+
+  it('lets a device override win over the base (a developer turns a shipped flag off)', () => {
+    const shipping = makeHardcodedFeatureFlagService({
+      overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
+    })
+    const layered = makeHardcodedFeatureFlagService({
+      base: shipping,
+      overrides: [disabledAssignment(FeatureFlags.supabaseHosting)],
+    })
+    expect(layered.isEnabled(FeatureFlags.supabaseHosting)).toBe(false)
+  })
+
+  it('does not write back into the base when the layered service changes a flag', () => {
+    const shipping = makeHardcodedFeatureFlagService()
+    const layered = makeHardcodedFeatureFlagService({ base: shipping })
+    layered.change(FeatureFlags.supabaseHosting, FeatureFlagState.enabled)
+    expect(layered.isEnabled(FeatureFlags.supabaseHosting)).toBe(true)
+    expect(shipping.isEnabled(FeatureFlags.supabaseHosting)).toBe(false)
   })
 })

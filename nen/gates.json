@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "$comment": "Reviewer identities for zheref/kro-pwa, read by `nen pr ready` (CON-32). Declared as DATA so the readiness verdict is deterministic for every pull request: without this file nen refuses to judge rather than guess a reviewer set. This is a single-maintainer consumer repository: the human merge at G2 is the approval, so no default approver is a machine identity. Copilot reviews automatically once at open; Cursor Bugbot posts a check and reviews only when it has findings.",
+  "reviewers": [
+    {
+      "$comment": "Posts as copilot-pull-request-reviewer[bot]. Reviews once when the PR opens; nothing re-requests it after a push, so under the bounded policy only a PENDING request owes a round.",
+      "name": "copilot",
+      "login_pattern": {
+        "pattern": "copilot",
+        "ignoreCase": true
+      },
+      "bounded_policy_exempt": true
+    },
+    {
+      "$comment": "Cursor Bugbot posts under a login carrying either word and its check name varies with the installation -- an unanchored, case-insensitive substring.",
+      "name": "bugbot",
+      "login_pattern": {
+        "pattern": "cursor|bugbot",
+        "ignoreCase": true
+      },
+      "round_check_pattern": {
+        "pattern": "bugbot",
+        "ignoreCase": true
+      },
+      "enrolment_check_pattern": {
+        "pattern": "bugbot",
+        "ignoreCase": true
+      }
+    },
+    {
+      "$comment": "The maintainer. The human merge at G2 is the real approval; this row exists because an empty approval set is refused, and it names who that human is.",
+      "name": "zheref",
+      "login_pattern": {
+        "pattern": "^zheref$",
+        "ignoreCase": false
+      }
+    }
+  ],
+  "default_approvers": ["zheref"],
+  "base_reviewers": ["copilot"],
+  "round_policy": {
+    "maxRounds": 2
+  },
+  "delivery": {
+    "$comment": "No delivery bot or integration branch exists in this repository yet; the pattern matches nobody so no PR is judged as a delivery PR.",
+    "author_pattern": {
+      "pattern": "(^|/)roy-bankai(\\\\[bot\\\\])?$",
+      "ignoreCase": true
+    },
+    "head_ref_prefixes": ["integration/"],
+    "labels": ["bankai:epic"]
+  }
+}

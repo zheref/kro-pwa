@@ -61,7 +61,10 @@ describe('persistOwnedEndeavor', () => {
   it('stamps the cached profile as owner on a new endeavor and pushes it (a signed-in user captures a task)', async () => {
     const f = fakes({ profile: profile('owner-1') })
 
-    const report = await persistOwnedEndeavor(f.deps, ownerless, { now: NOW })
+    const report = await persistOwnedEndeavor(f.deps, ownerless, {
+      now: NOW,
+      hosting: 'cloud',
+    })
 
     expect(f.rows.get(ownerless.id)?.ownerUserId).toBe('owner-1')
     expect(report).toEqual({ ownerUserId: 'owner-1', push: 'succeeded' })
@@ -119,7 +122,10 @@ describe('persistOwnedEndeavor', () => {
   it('turns a throwing push port into a failed push and still keeps the row', async () => {
     const f = fakes({ profile: profile('owner-1'), pushThrows: true })
 
-    const report = await persistOwnedEndeavor(f.deps, ownerless, { now: NOW })
+    const report = await persistOwnedEndeavor(f.deps, ownerless, {
+      now: NOW,
+      hosting: 'cloud',
+    })
 
     expect(report.push).toBe('failed')
     expect(f.rows.has(ownerless.id)).toBe(true)

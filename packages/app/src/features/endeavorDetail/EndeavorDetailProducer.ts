@@ -92,8 +92,11 @@ const persistEndeavor = async (
   now: Date,
   context: ReconciliationContext,
 ): Promise<void> => {
-  // Owner stamped, watermark carried, pushed cloud-first when signed in — the
-  // shared write path (`services/localStore/persistOwnedEndeavor`).
+  // The shared write path (`@kro/core` persistence, `OwnedEndeavorWrite`):
+  // an existing row keeps its owner and is pushed when it has one. The
+  // report is dropped on purpose — a failed push leaves the row dirty for the
+  // sweep, which reports through the auth slice; nothing here has a State
+  // field for it.
   await persistOwnedEndeavor(deps, endeavor, {
     now,
     resolvedKind: resolvedKind(endeavor, context),

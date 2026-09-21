@@ -44,7 +44,7 @@ describe('persistOwnedEndeavor', () => {
     const report = await persistOwnedEndeavor(
       h.deps,
       { ...endeavorMocks.plannedTask, owner: null },
-      { now: NOW },
+      { now: NOW, hosting: 'cloud' },
     )
 
     const stored = await h.localStore.endeavors.get(

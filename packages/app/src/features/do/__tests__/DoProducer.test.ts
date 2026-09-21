@@ -7,6 +7,7 @@ import {
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../services/sync/EndeavorSyncService'
 import {
   type AppStore,
   makeStore,
@@ -376,5 +377,96 @@ describe('markEndeavorCompleteThunk', () => {
 
     const record = await localStore.endeavors.get(targetId)
     expect(record?.lastSyncedAtEpochMillis).toBe(1_700_000_000_000)
+  })
+})
+
+describe('cloud-first writes on My Day', () => {
+  const profile = {
+    id: 'owner-1',
+    name: 'Ada',
+    username: null,
+    emailsCsv: 'ada@example.com',
+    birthDate: null,
+    nationality: null,
+    loginKind: 'google',
+    connectedServicesCsv: 'google',
+    avatarUrl: null,
+    createdAt: DO_MOCK_NOW,
+    updatedAtEpochMillis: 0,
+  } as const
+  const targetId = doEndeavorFixtures.overdueThisMorning.id
+  const ownedRecords = () =>
+    doFixtureRecords().map((record) =>
+      record.id === targetId ? { ...record, ownerUserId: 'owner-1' } : record,
+    )
+
+  it('pushes a completed cloud endeavor at once while signed in', async () => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: ownedRecords(),
+      userProfiles: [profile],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'succeeded',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    await store.dispatch(
+      markEndeavorCompleteThunk({
+        endeavorId: targetId,
+        completionDate: DO_MOCK_NOW,
+        now: DO_MOCK_NOW,
+      }),
+    )
+
+    expect((await localStore.endeavors.get(targetId))?.ownerUserId).toBe(
+      'owner-1',
+    )
+    expect(endeavorSync.operations()).toEqual(['pushOne'])
+  })
+
+  it('never re-hosts a local endeavor on an edit — anonymous stays anonymous and unpushed, even signed in', async () => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: doFixtureRecords(),
+      userProfiles: [profile],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'succeeded',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    await store.dispatch(
+      markEndeavorCompleteThunk({
+        endeavorId: targetId,
+        completionDate: DO_MOCK_NOW,
+        now: DO_MOCK_NOW,
+      }),
+    )
+
+    expect((await localStore.endeavors.get(targetId))?.ownerUserId).toBeNull()
+    expect(endeavorSync.operations()).toEqual([])
+  })
+
+  it('still completes the endeavor when the push fails — the row stays dirty for the sweep', async () => {
+    const localStore = makeInMemoryLocalStore({
+      endeavors: ownedRecords(),
+      userProfiles: [profile],
+    })
+    const endeavorSync = makeStubbedEndeavorSyncService({
+      pushOneOutcome: 'failed',
+    })
+    const store = makeStore({ ...stubbedThunkExtra, localStore, endeavorSync })
+
+    const action = await store.dispatch(
+      markEndeavorCompleteThunk({
+        endeavorId: targetId,
+        completionDate: DO_MOCK_NOW,
+        now: DO_MOCK_NOW,
+      }),
+    )
+
+    expect(markEndeavorCompleteThunk.fulfilled.match(action)).toBe(true)
+    expect((await localStore.endeavors.get(targetId))?.status).toBe(
+      EndeavorStatus.closed,
+    )
   })
 })

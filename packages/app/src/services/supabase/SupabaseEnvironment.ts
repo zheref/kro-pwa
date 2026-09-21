@@ -138,10 +138,37 @@ const firstPresentValue = (
  * fix is the same — set the variable correctly — and a second case would only
  * widen the surface every caller has to switch over (`RC-9`).
  */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
+
 const isUsableProjectUrl = (candidate: string): boolean => {
   try {
     const parsed = new URL(candidate)
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+    if (parsed.protocol === 'https:') return true
+    // Plain HTTP only to a loopback host (a local Supabase): anywhere else the
+    // session tokens would cross the wire in the clear (`SEC-4`).
+    return parsed.protocol === 'http:' && LOOPBACK_HOSTS.has(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Whether a key is publishable-shaped — an `sb_publishable_…` key, or a legacy
+ * JWT whose payload role is `anon`. A service-role secret pasted into a
+ * `NEXT_PUBLIC_` variable would be inlined into every browser bundle; refusing
+ * it here is the one code-level defence (`SEC-1`). The value is never echoed.
+ */
+export const isPublishableKey = (candidate: string): boolean => {
+  if (candidate.startsWith('sb_publishable_')) return true
+  if (candidate.startsWith('sb_secret_')) return false
+  const parts = candidate.split('.')
+  if (parts.length !== 3) return false
+  try {
+    const payloadPart = parts[1] ?? ''
+    const normalised = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalised + '='.repeat((4 - (normalised.length % 4)) % 4)
+    const payload = JSON.parse(atob(padded)) as { role?: unknown }
+    return payload.role === 'anon'
   } catch {
     return false
   }
@@ -163,7 +190,8 @@ export const supabaseAvailabilityFrom = (
   const missing: string[] = []
   if (url === null || !isUsableProjectUrl(url))
     missing.push(SUPABASE_URL_VARIABLE)
-  if (anonKey === null) missing.push(SUPABASE_PUBLISHABLE_KEY_VARIABLE)
+  if (anonKey === null || !isPublishableKey(anonKey))
+    missing.push(SUPABASE_PUBLISHABLE_KEY_VARIABLE)
 
   if (url === null || anonKey === null || missing.length > 0) {
     return { kind: 'unconfigured', missing }

@@ -130,9 +130,31 @@ const rememberProfile = async (
   user: User,
   now: Date,
 ): Promise<void> => {
-  await extra.localStore.userProfiles.put(
-    userProfileRecordFromUser(user, { now }),
-  )
+  try {
+    await extra.localStore.userProfiles.put(
+      userProfileRecordFromUser(user, { now }),
+    )
+  } catch {
+    // Same policy as `anonymousCount`: a storage failure must not fail a
+    // sign-in Supabase already accepted. The cost is a sweep that answers
+    // `signedOut` until the next restore writes the cache; the session stands.
+  }
+}
+
+/**
+ * Forget the cached profile when a restore finds no session — a device whose
+ * session ended without supabase-js's own SIGNED_OUT (project repointed,
+ * storage unreadable, a revocation never observed) must not keep stamping
+ * the previous account on new endeavors (`SEC-8`). Swallowed for the same
+ * reason as the write above: a cache that will not clear is not a failed
+ * restore.
+ */
+const forgetProfile = async (extra: ThunkExtra): Promise<void> => {
+  try {
+    await extra.localStore.userProfiles.clear()
+  } catch {
+    // see above
+  }
 }
 
 /**
@@ -154,7 +176,7 @@ const dispatchPostSignIn = (
  * Canon's `onSessionRestored` — the silent launch restore.
  *
  * A `null` user is the ordinary signed-out case, not a failure, so it resolves
- * `ok(null)`. Only a transport or profile-row failure produces `err`.
+ * `ok(null)`. Only a transport or profile-row failure produces `err`; the local profile cache write is swallowed (`rememberProfile`).
  */
 export const restoreSessionThunk = createAsyncThunk<
   Result<User | null, AuthException>,
@@ -166,6 +188,8 @@ export const restoreSessionThunk = createAsyncThunk<
     if (user !== null) {
       await rememberProfile(extra, user, now)
       dispatchPostSignIn(dispatch, now, SettingsSyncTrigger.appLaunch)
+    } else {
+      await forgetProfile(extra)
     }
     return ok(user)
   } catch (error) {
@@ -208,7 +232,7 @@ export const signInWithEmailThunk = createAsyncThunk<
     }
     try {
       const user = await extra.authService.signInWithEmail(email, password)
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }
@@ -244,7 +268,7 @@ export const signUpWithEmailThunk = createAsyncThunk<
         password,
         name,
       )
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }
@@ -296,7 +320,7 @@ export const signInWithAppleThunk = createAsyncThunk<
         rawNonce,
         fullName,
       })
-      return completeSignIn(user, { extra, dispatch, now })
+      return await completeSignIn(user, { extra, dispatch, now })
     } catch (error) {
       return err(AuthMapper.toException(error))
     }

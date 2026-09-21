@@ -254,7 +254,15 @@ export const makeLiveAuthService = (
         .eq('id', sessionUser.id)
       if (read.error !== null) throw read.error
       const row = (read.data as readonly UserRow[] | null)?.[0]
-      if (row !== undefined) return AuthMapper.toDomain(row)
+      if (row !== undefined) {
+        const mapped = AuthMapper.toDomain(row)
+        // The same failure the creation path reports: a corrupt profile is a
+        // typed exception, never a phantom sign-out.
+        if (mapped === null) {
+          throw AuthExceptions.userCreationFailed('profile row is malformed')
+        }
+        return mapped
+      }
 
       // No profile row yet, but Supabase has a session: this is the first
       // return from an OAuth redirect (Google, or Apple without an id token).
@@ -388,6 +396,12 @@ export const makeLiveAuthService = (
           listener({ kind: 'signedOut' })
           return
         }
+        // The boot-time INITIAL_SESSION is not announced at all: the shell's
+        // mount restore already reads the persisted session, and announcing it
+        // here ran a second restore — and a second settings and endeavor sweep
+        // — concurrently on every launch. SIGNED_IN (a PKCE return, another
+        // tab) and the refresh events still flow.
+        if (event === 'INITIAL_SESSION') return
         // `INITIAL_SESSION` arrives on every boot, with `session: null` when
         // nobody is signed in on this device. That is the steady state, not a
         // sign-out: announcing it as one would run the sign-out wipe against

@@ -95,4 +95,34 @@ describe('useEndeavorSyncRefresh', () => {
 
     expect(reload).toHaveBeenCalledTimes(1)
   })
+
+  it('reloads zero times when mounted after a sweep already landed — the mount read already saw the rows', async () => {
+    const reload = vi.fn()
+    const store = storeWith(report({ pulled: ['a'] }))
+    await store.dispatch(synchronizeEndeavorsThunk({ now: NOW }))
+
+    renderHook(() => useEndeavorSyncRefresh(reload), {
+      wrapper: wrapperFor(store),
+    })
+
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('does not re-fire when the reload callback changes identity (a view-mode switch re-renders the page)', async () => {
+    const store = storeWith(report({ pulled: ['a'] }))
+    const first = vi.fn()
+    const second = vi.fn()
+    const { rerender } = renderHook(
+      ({ cb }: { cb: (at: Date) => void }) => useEndeavorSyncRefresh(cb),
+      { wrapper: wrapperFor(store), initialProps: { cb: first } },
+    )
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: NOW }))
+    })
+    expect(first).toHaveBeenCalledTimes(1)
+
+    rerender({ cb: second })
+
+    expect(second).not.toHaveBeenCalled()
+  })
 })

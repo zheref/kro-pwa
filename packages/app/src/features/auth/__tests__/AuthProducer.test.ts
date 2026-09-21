@@ -1038,4 +1038,32 @@ describe('remembering the signed-in profile locally', () => {
       'cloud-1',
     )
   })
+
+  it('keeps a sign-in Supabase accepted even when the device refuses the profile-cache write (quota exceeded)', async () => {
+    const { store, localStore } = harness()
+    localStore.userProfiles.put = async () => {
+      throw new Error('QuotaExceededError')
+    }
+
+    const action = await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    expect(signInWithEmailThunk.fulfilled.match(action)).toBe(true)
+    expect(store.getState().auth.session.kind).toBe('signedIn')
+  })
+
+  it('forgets a cached profile when a launch restore finds no session (the device stops stamping the old account)', async () => {
+    const { store, localStore } = harness({
+      seed: { userProfiles: [profileRecord(OWNER)] },
+    })
+
+    await store.dispatch(restoreSessionThunk({ now: NOW }))
+
+    expect(await localStore.userProfiles.current()).toBeNull()
+  })
 })

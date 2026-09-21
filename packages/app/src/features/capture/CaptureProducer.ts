@@ -216,8 +216,12 @@ export const loadCaptureContextThunk = createAsyncThunk<
       lastUsedDestination: lastUsedDestinationFromStored(
         preferences.get(LAST_USED_DESTINATION_KEY),
       ),
+      // Kro Cloud is a host only when the flag is on AND an account is cached
+      // on this device — a picker must not offer a host it cannot reach.
       availableDestinations: availableCaptureDestinations({
-        kroCloudEnabled: flags.isEnabled(FeatureFlags.supabaseHosting),
+        kroCloudEnabled:
+          flags.isEnabled(FeatureFlags.supabaseHosting) &&
+          (await extra.localStore.userProfiles.current()) !== null,
       }),
       now,
     })

@@ -14,7 +14,7 @@ const configuredEnvironment = makeRecordEnvironment({
   [SUPABASE_URL_VARIABLE]: 'https://project.supabase.co',
   // Not a real key: a syntactically plausible placeholder so `createClient`
   // has something to hold. Nothing in this suite makes a request.
-  [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: 'anon-key-for-tests',
+  [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: 'sb_publishable_key-for-tests',
 })
 
 describe('the live provider with no project configured', () => {

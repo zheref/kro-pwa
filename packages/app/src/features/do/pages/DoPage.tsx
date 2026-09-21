@@ -41,7 +41,7 @@ import type {
 } from '../../../design/endeavor'
 import { SuggestionSource } from '../../../design/endeavor'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
-import { useEndeavorSyncRefresh } from '../../../features/auth/useEndeavorSyncRefresh'
+import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'

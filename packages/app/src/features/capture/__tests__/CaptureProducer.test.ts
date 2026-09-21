@@ -50,6 +50,26 @@ const storeWith = (localStore: LocalStore): AppStore =>
 const seeded = () =>
   makeInMemoryLocalStore({ endeavors: captureFixtureRecords() })
 
+const cachedProfile = {
+  id: 'owner-1',
+  name: 'Ada',
+  username: null,
+  emailsCsv: 'ada@example.com',
+  birthDate: null,
+  nationality: null,
+  loginKind: 'google',
+  connectedServicesCsv: 'google',
+  avatarUrl: null,
+  createdAt: CAPTURE_MOCK_NOW,
+  updatedAtEpochMillis: 0,
+} as const
+
+const seededSignedIn = () =>
+  makeInMemoryLocalStore({
+    endeavors: captureFixtureRecords(),
+    userProfiles: [cachedProfile],
+  })
+
 /**
  * Narrows a resolved `Result`, failing the test rather than returning `null`.
  *
@@ -99,8 +119,8 @@ describe('loadCaptureContextThunk', () => {
     expect(context.lastUsedDestination).toBe(CaptureDestination.local)
   })
 
-  it('offers Kro Cloud when a persisted debug override turns hosting on', async () => {
-    const localStore = seeded()
+  it('offers Kro Cloud when a persisted debug override turns hosting on and an account is cached', async () => {
+    const localStore = seededSignedIn()
     localStore.preferences.set(featureFlagOverrideKey('supabaseHosting'), true)
 
     const store = storeWith(localStore)
@@ -690,10 +710,10 @@ describe('cloud-first creation while signed in', () => {
     expect(endeavorSync.operations()).toEqual([])
   })
 
-  it('offers Kro Cloud when the shipping flag service enables hosting, with no debug override at all', async () => {
+  it('offers Kro Cloud when the shipping flag service enables hosting and an account is cached', async () => {
     const store = makeStore({
       ...stubbedThunkExtra,
-      localStore: seeded(),
+      localStore: seededSignedIn(),
       featureFlags: makeHardcodedFeatureFlagService({
         overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
       }),
@@ -708,8 +728,26 @@ describe('cloud-first creation while signed in', () => {
     ).toEqual([CaptureDestination.local, CaptureDestination.kroCloud])
   })
 
+  it('keeps Kro Cloud off the list while signed out, however the flag reads — a picker never offers a host it cannot reach', async () => {
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: seeded(),
+      featureFlags: makeHardcodedFeatureFlagService({
+        overrides: [enabledAssignment(FeatureFlags.supabaseHosting)],
+      }),
+    })
+
+    const action = await store.dispatch(
+      loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }),
+    )
+
+    expect(
+      okValueOf<CaptureContext>(action.payload).availableDestinations,
+    ).toEqual([CaptureDestination.local])
+  })
+
   it('lets a debug override switch hosting off on top of the shipping service', async () => {
-    const localStore = seeded()
+    const localStore = seededSignedIn()
     localStore.preferences.set(featureFlagOverrideKey('supabaseHosting'), false)
     const store = makeStore({
       ...stubbedThunkExtra,

@@ -10,6 +10,17 @@ import {
   supabaseKeyVariables,
 } from '../SupabaseEnvironment'
 
+/** A legacy anon key: a JWT whose payload role is `anon` (signature irrelevant here). */
+const anonJwt = (role = 'anon'): string => {
+  const b64 = (value: string) =>
+    Buffer.from(value)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+  return `${b64('{"alg":"HS256","typ":"JWT"}')}.${b64(JSON.stringify({ role, iss: 'supabase' }))}.sig`
+}
+
 const configured = {
   [SUPABASE_URL_VARIABLE]: 'https://project.supabase.co',
   [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: 'sb_publishable_key-for-tests',
@@ -33,14 +44,14 @@ describe('resolving a project from the environment', () => {
     const availability = supabaseAvailabilityFrom(
       makeRecordEnvironment({
         [SUPABASE_URL_VARIABLE]: configured[SUPABASE_URL_VARIABLE],
-        [SUPABASE_ANON_KEY_VARIABLE]: 'legacy-anon-jwt',
+        [SUPABASE_ANON_KEY_VARIABLE]: anonJwt(),
       }),
     )
     expect(availability).toEqual({
       kind: 'configured',
       configuration: {
         url: 'https://project.supabase.co',
-        anonKey: 'legacy-anon-jwt',
+        anonKey: anonJwt(),
       },
     })
   })
@@ -49,7 +60,7 @@ describe('resolving a project from the environment', () => {
     const availability = supabaseAvailabilityFrom(
       makeRecordEnvironment({
         ...configured,
-        [SUPABASE_ANON_KEY_VARIABLE]: 'legacy-anon-jwt',
+        [SUPABASE_ANON_KEY_VARIABLE]: anonJwt(),
       }),
     )
     expect(availability.kind).toBe('configured')
@@ -65,12 +76,12 @@ describe('resolving a project from the environment', () => {
       makeRecordEnvironment({
         ...configured,
         [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: '',
-        [SUPABASE_ANON_KEY_VARIABLE]: 'legacy-anon-jwt',
+        [SUPABASE_ANON_KEY_VARIABLE]: anonJwt(),
       }),
     )
     expect(availability.kind).toBe('configured')
     if (availability.kind === 'configured') {
-      expect(availability.configuration.anonKey).toBe('legacy-anon-jwt')
+      expect(availability.configuration.anonKey).toBe(anonJwt())
     }
   })
 
@@ -151,6 +162,54 @@ describe('resolving a project from the environment', () => {
       makeRecordEnvironment({ [SUPABASE_URL_VARIABLE]: 'not-a-url' }),
     )
     expect(JSON.stringify(availability)).not.toContain('not-a-url')
+  })
+})
+
+describe('key shape and transport (SEC-1, SEC-4)', () => {
+  it('refuses a service-role JWT pasted into the publishable variable — it would be inlined into every bundle', () => {
+    const availability = supabaseAvailabilityFrom(
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: anonJwt('service_role'),
+      }),
+    )
+    expect(availability).toEqual({
+      kind: 'unconfigured',
+      missing: [SUPABASE_PUBLISHABLE_KEY_VARIABLE],
+    })
+    expect(JSON.stringify(availability)).not.toContain('service_role')
+  })
+
+  it('refuses an sb_secret_ key and any unrecognisable string', () => {
+    for (const bad of ['sb_secret_abc', 'not-a-key', 'a.b']) {
+      const availability = supabaseAvailabilityFrom(
+        makeRecordEnvironment({
+          ...configured,
+          [SUPABASE_PUBLISHABLE_KEY_VARIABLE]: bad,
+        }),
+      )
+      expect(availability.kind).toBe('unconfigured')
+    }
+  })
+
+  it('accepts plain HTTP only for a loopback host (a local Supabase), never for a remote one', () => {
+    const local = supabaseAvailabilityFrom(
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_URL_VARIABLE]: 'http://localhost:54321',
+      }),
+    )
+    expect(local.kind).toBe('configured')
+    const remote = supabaseAvailabilityFrom(
+      makeRecordEnvironment({
+        ...configured,
+        [SUPABASE_URL_VARIABLE]: 'http://project.supabase.co',
+      }),
+    )
+    expect(remote).toEqual({
+      kind: 'unconfigured',
+      missing: [SUPABASE_URL_VARIABLE],
+    })
   })
 })
 

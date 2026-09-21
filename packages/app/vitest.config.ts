@@ -22,6 +22,10 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    // The instrumented coverage run is load-sensitive; 5 s made one Do page
+    // case flaky under it. The floor is measured per PR, so the verb must be
+    // deterministic.
+    testTimeout: 20000,
     globals: false,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {

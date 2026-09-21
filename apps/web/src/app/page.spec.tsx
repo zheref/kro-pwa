@@ -47,19 +47,24 @@ describe('the root route', () => {
     expect(redirect).toHaveBeenCalledWith('/my-day?code=abc-123')
   })
 
-  it('keeps every repeated and encoded parameter intact', async () => {
+  it('forwards only the provider return parameters — an arbitrary query never rides through the server tier', async () => {
     redirect.mockClear()
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({
       searchParams: Promise.resolve({
-        a: ['1', '2'],
-        q: 'x y',
+        code: 'c',
+        state: 's',
+        error: 'access_denied',
+        error_description: 'no thanks',
+        utm_source: 'x',
         skip: undefined,
       }),
     })
 
-    expect(redirect).toHaveBeenCalledWith('/my-day?a=1&a=2&q=x+y')
+    expect(redirect).toHaveBeenCalledWith(
+      '/my-day?code=c&state=s&error=access_denied&error_description=no+thanks',
+    )
   })
 
   it('adds no stray question mark when the visit carries no query', async () => {

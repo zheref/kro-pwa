@@ -269,8 +269,13 @@ describe('dismissal and the redirect target', () => {
     )
   })
 
-  it('keeps the provider off the bare origin, whose server redirect would drop the returned code', () => {
-    expect(currentPageAddress()).not.toBe(globalThis.location.origin)
+  it('carries the path, so the provider returns to the page the user left rather than the origin', () => {
+    globalThis.history.replaceState(null, '', '/plan')
+    try {
+      expect(currentPageAddress()).toBe(`${globalThis.location.origin}/plan`)
+    } finally {
+      globalThis.history.replaceState(null, '', '/')
+    }
   })
 
   it('drops the query and fragment so a stale code or anchor never rides back to the provider', () => {

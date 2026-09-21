@@ -4,15 +4,17 @@
  * second store, never the live services.
  */
 import { EndeavorsVistas, makeEndeavorsLensSnapshot } from '@kro/core'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../services/sync/EndeavorSyncService'
+import { synchronizeEndeavorsThunk } from '../../auth/AuthProducer'
 import {
   type ThunkExtra,
   makeStore,
   stubbedThunkExtra,
 } from '../../../library/store'
-import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import { userDidChangeSearchQuery } from '../../main/MainFeature'
 import { allFindEndeavorMocks, findEndeavorMocks } from '../FindMocks'
 import { selectIsFindLensLoading } from '../FindSelectors'
@@ -284,5 +286,67 @@ describe('the bulk operations act on exactly the visible rows', () => {
         store.getState().find.find.endeavors.map((endeavor) => endeavor.id),
       ).toContain(findEndeavorMocks.teamSync.id)
     })
+  })
+})
+
+const landedSweep = () =>
+  makeStubbedEndeavorSyncService({
+    report: {
+      status: 'synchronized',
+      pushed: [],
+      deleted: [],
+      deferred: [],
+      pulled: ['cloud-row'],
+      localWins: [],
+      skipped: [],
+    },
+  })
+
+describe('re-reading the search lens after a Kro Cloud sweep lands', () => {
+  it('re-reads the endeavors when a sweep lands rows while mounted', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeSeededStore({
+      extra: { localStore, endeavorSync: landedSweep() },
+    })
+    mount(store)
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(0))
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(before))
+  })
+
+  it('stays put when the sweep only pushed local edits up', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeSeededStore({
+      extra: {
+        localStore,
+        endeavorSync: makeStubbedEndeavorSyncService({
+          report: {
+            status: 'synchronized',
+            pushed: ['local-row'],
+            deleted: [],
+            deferred: [],
+            pulled: [],
+            localWins: [],
+            skipped: [],
+          },
+        }),
+      },
+    })
+    mount(store)
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(0))
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    expect(reads.mock.calls.length).toBe(before)
   })
 })

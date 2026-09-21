@@ -100,6 +100,8 @@ to the same rows with the same filters.
   filed.
 - **Do** and **Plan** — they read the same items through their own vistas, so an
   archive here removes it from those surfaces too.
+- **Kro Cloud** — when a sweep lands rows after sign-in or launch, the tasks
+  vista and the search lens re-read immediately.
 
 ## Out of scope
 

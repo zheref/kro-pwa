@@ -131,6 +131,8 @@ and copy. No action affordances are present in that state.
 - **Plan** — non-event endeavors hand off to Plan via *Add for Today* (with
   toast + Undo). **Events bypass the Inbox altogether** and hand off to Plan
   with a scroll target on the event's day + time.
+- **Kro Cloud** — when a sweep lands rows after sign-in or launch, the inbox
+  re-reads immediately; a capture hosted in Kro Cloud is sent as it is saved.
 
 ## Out of scope
 

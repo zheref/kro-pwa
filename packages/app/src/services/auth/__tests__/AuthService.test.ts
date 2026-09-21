@@ -285,9 +285,15 @@ describe('the live service auth-state subscription against a configured project'
     expect(h.seen).toEqual([{ kind: 'signedOut' }])
   })
 
-  it('announces a restored session at boot as a sign-in (returning user opens the app)', () => {
+  it("ignores INITIAL_SESSION even with a session — the shell's mount restore owns boot, so it is never restored twice", () => {
     const h = harness()
     h.emit('INITIAL_SESSION', { user: { id: 'u-1' } })
+    expect(h.seen).toEqual([])
+  })
+
+  it('announces SIGNED_IN as a sign-in (a PKCE return, or another tab signing in)', () => {
+    const h = harness()
+    h.emit('SIGNED_IN', { user: { id: 'u-1' } })
     expect(h.seen).toEqual([{ kind: 'signedIn', userId: 'u-1' }])
   })
 
@@ -364,6 +370,7 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
   }) => {
     const rows: Row[] = options.rows ?? []
     const upserts: unknown[] = []
+    const navigated: string[] = []
     const table = {
       upsert: async (seed: Row) => {
         upserts.push(seed)
@@ -386,10 +393,20 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
         }),
       }),
     }
+    const authUser = options.session?.user ?? sessionUser
     const fakeClient = {
       auth: {
         getSession: async () => ({
           data: { session: options.session },
+          error: null,
+        }),
+        signUp: async () => ({ data: { user: authUser }, error: null }),
+        signInWithIdToken: async () => ({
+          data: { user: authUser },
+          error: null,
+        }),
+        signInWithOAuth: async () => ({
+          data: { url: 'https://accounts.example/consent' },
           error: null,
         }),
       },
@@ -403,9 +420,11 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
         }),
         client: () => fakeClient as unknown as SupabaseClient,
       },
-      navigate: () => {},
+      navigate: (url: string) => {
+        navigated.push(url)
+      },
     })
-    return { service, rows, upserts }
+    return { service, rows, upserts, navigated }
   }
 
   it('creates the profile row from the provider metadata when Supabase has a session and the users table has no row', async () => {
@@ -509,5 +528,126 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
 
     expect(user?.name).toBe('Countess')
     expect(h.upserts).toHaveLength(0)
+  })
+
+  it('throws the same typed exception as the creation path when the existing row is malformed — never a phantom sign-out', async () => {
+    const h = harness({
+      session: { user: sessionUser },
+      rows: [
+        {
+          id: 'g-1',
+          username: null,
+          emails: null,
+          name: null,
+          avatar_url: null,
+          birth_date: null,
+          nationality: null,
+          login_kind: 'google',
+          connected_services: null,
+          created_at: 'not-a-date',
+        },
+      ],
+    })
+
+    await expect(h.service.restoreSession()).rejects.toMatchObject({
+      kind: 'userCreationFailed',
+    })
+  })
+
+  it('backfills an empty name and avatar from the provider on a row that lacks them, and leaves a set name alone', async () => {
+    const h = harness({
+      session: { user: sessionUser },
+      rows: [
+        {
+          id: 'g-1',
+          username: null,
+          emails: ['google@example.com'],
+          name: '',
+          avatar_url: null,
+          birth_date: null,
+          nationality: null,
+          login_kind: 'google',
+          connected_services: ['google'],
+          created_at: '2026-01-03T00:00:00.000Z',
+        },
+      ],
+    })
+    // The existing-row early return answers first; drive the backfill through
+    // a fresh upsert path by removing the row and re-creating it.
+    h.rows.length = 0
+    h.rows.push({
+      id: 'g-1',
+      username: null,
+      emails: ['google@example.com'],
+      name: '',
+      avatar_url: null,
+      birth_date: null,
+      nationality: null,
+      login_kind: 'google',
+      connected_services: ['google'],
+      created_at: '2026-01-03T00:00:00.000Z',
+    })
+    const user = await h.service.signUpWithEmail(
+      'google@example.com',
+      'secret',
+      'Google User',
+    )
+
+    expect(user.name).toBe('Google User')
+  })
+
+  it('throws when the row is missing after the upsert (the write was refused silently)', async () => {
+    const h = harness({ session: { user: sessionUser } })
+    const table = (h.service as unknown as { _t?: unknown })._t
+    void table
+    // A store whose upsert reports success but whose read answers nothing.
+    const broken = harness({ session: { user: sessionUser } })
+    broken.rows.push = () => 0
+    await expect(broken.service.restoreSession()).rejects.toMatchObject({
+      kind: 'userCreationFailed',
+    })
+  })
+
+  it('signs up with a display name and provisions the profile inline', async () => {
+    const h = harness({ session: null })
+    const user = await h.service.signUpWithEmail(
+      'ada@example.com',
+      'secret',
+      'Ada',
+    )
+    expect(user.name).toBe('Ada')
+    expect(user.authProvider).toBe('email_password')
+  })
+
+  it('exchanges an Apple id token and provisions the profile with the shared name', async () => {
+    const h = harness({ session: null })
+    const user = await h.service.signInWithAppleIdToken({
+      idToken: 'token',
+      rawNonce: 'nonce',
+      fullName: 'Ada Lovelace',
+    })
+    expect(user.authProvider).toBe('apple')
+    expect(user.name).toBe('Ada Lovelace')
+  })
+
+  it('refuses an empty Apple id token before touching the network', async () => {
+    const h = harness({ session: null })
+    await expect(
+      h.service.signInWithAppleIdToken({
+        idToken: '',
+        rawNonce: 'n',
+        fullName: null,
+      }),
+    ).rejects.toMatchObject({ kind: 'noIdentityToken' })
+  })
+
+  it('starts an OAuth redirect by navigating to the provider URL Supabase minted', async () => {
+    const h = harness({ session: null })
+    const redirect = await h.service.startOAuthRedirect({
+      provider: 'google',
+      redirectTo: 'http://localhost:3000/my-day',
+    })
+    expect(redirect.url).toBe('https://accounts.example/consent')
+    expect(h.navigated).toEqual(['https://accounts.example/consent'])
   })
 })

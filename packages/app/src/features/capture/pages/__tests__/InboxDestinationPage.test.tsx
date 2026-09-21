@@ -7,13 +7,17 @@
  * overlay is up so the same surface is never on screen twice.
  */
 import {
+  act,
   cleanup,
   render,
   screen,
   waitFor,
   within,
 } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
+import { makeStubbedEndeavorSyncService } from '../../../../services/sync/EndeavorSyncService'
+import { synchronizeEndeavorsThunk } from '../../../auth/AuthProducer'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
 import { DestinationKind } from '../../../main/SidebarDestination'
 import { userDidTapOpenInbox } from '../../CaptureFeature'
@@ -134,5 +138,39 @@ describe('it stands down while the overlay is up', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('inbox-surface')).toBeNull()
     })
+  })
+})
+
+describe('re-reading the inbox after a Kro Cloud sweep lands', () => {
+  it('re-reads the capture context when a sweep lands rows while mounted', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const reads = vi.spyOn(localStore.endeavors, 'all')
+    const store = makeCaptureStore({
+      endeavors: [],
+      destination: { kind: DestinationKind.myDay },
+      extra: {
+        localStore,
+        endeavorSync: makeStubbedEndeavorSyncService({
+          report: {
+            status: 'synchronized',
+            pushed: [],
+            deleted: [],
+            deferred: [],
+            pulled: ['cloud-row'],
+            localWins: [],
+            skipped: [],
+          },
+        }),
+      },
+    })
+    mount(store)
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(0))
+    const before = reads.mock.calls.length
+
+    await act(async () => {
+      await store.dispatch(synchronizeEndeavorsThunk({ now: new Date() }))
+    })
+
+    await waitFor(() => expect(reads.mock.calls.length).toBeGreaterThan(before))
   })
 })

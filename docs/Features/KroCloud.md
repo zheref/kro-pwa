@@ -54,8 +54,10 @@ in to nothing — so the web build ships it on.
    host.
 5. **Return from a provider.** Apple and Google leave the app and come back to
    the page the person left; a first return provisions the account's profile.
-6. **Sign out.** The remembered account and every account-owned endeavor on
-   the device are removed; device-hosted endeavors are untouched.
+6. **Sign out.** The remembered account is forgotten and every endeavor on
+   the device is removed — account-owned and device-hosted alike, the same
+   sweep Settings describes. What was hosted in Kro Cloud returns at the next
+   sign-in; what was only on the device does not.
 7. **Offline or unconfigured.** A build with no Kro Cloud project configured,
    or a device that cannot reach it, runs local-only; sign-in says it is
    unavailable rather than failing.
@@ -98,7 +100,7 @@ flowchart TD
     G -->|sent| H[In Kro Cloud]
     G -->|cannot| I[Marked for next sweep]
     J[Capture On Device] --> K[Stays on the device]
-    L[Sign out] --> M[Account forgotten, owned endeavors removed]
+    L[Sign out] --> M[Account forgotten, every endeavor on the device removed]
 ```
 
 ## Open questions

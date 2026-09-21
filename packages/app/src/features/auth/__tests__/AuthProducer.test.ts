@@ -1066,4 +1066,22 @@ describe('remembering the signed-in profile locally', () => {
 
     expect(await localStore.userProfiles.current()).toBeNull()
   })
+
+  it('replaces a different cached account on sign-in, so the sweep can never own new rows under the old one', async () => {
+    const { store, localStore } = harness({
+      seed: { userProfiles: [profileRecord('previous-account')] },
+    })
+
+    await store.dispatch(
+      signInWithEmailThunk({
+        email: 'ada@example.com',
+        password: 'secret',
+        now: NOW,
+      }),
+    )
+
+    const cached = await localStore.userProfiles.current()
+    expect(cached?.id).toBe(authFixtureUsers.email.id)
+    expect(await localStore.userProfiles.get('previous-account')).toBeNull()
+  })
 })

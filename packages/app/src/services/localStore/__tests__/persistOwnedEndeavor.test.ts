@@ -147,4 +147,24 @@ describe('persistOwnedEndeavor', () => {
       (await h.localStore.endeavors.get(endeavorMocks.plannedTask.id))?.kind,
     ).toBe('reminder')
   })
+
+  it('keeps an existing anonymous row anonymous even when the edited value names an owner', async () => {
+    const h = harness(signedInSeed, 'succeeded')
+    await persistOwnedEndeavor(
+      {
+        localStore: h.localStore,
+        endeavorSync: makeStubbedEndeavorSyncService(),
+      },
+      { ...endeavorMocks.plannedTask, owner: null },
+      { now: NOW, hosting: 'local' },
+    )
+
+    await persistOwnedEndeavor(h.deps, endeavorMocks.plannedTask, { now: NOW })
+
+    expect(
+      (await h.localStore.endeavors.get(endeavorMocks.plannedTask.id))
+        ?.ownerUserId,
+    ).toBeNull()
+    expect(h.endeavorSync.operations()).toEqual([])
+  })
 })

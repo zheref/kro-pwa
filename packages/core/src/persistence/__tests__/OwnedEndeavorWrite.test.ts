@@ -161,4 +161,17 @@ describe('persistOwnedEndeavor', () => {
     expect(report.push).toBe('unavailable')
     expect(f.pushes).toEqual([])
   })
+
+  it('keeps an existing anonymous row anonymous even when the edited value carries an owner (the factory must not re-derive it)', async () => {
+    const seeded = fakes({ profile: null })
+    await persistOwnedEndeavor(seeded.deps, ownerless, { now: NOW })
+    const local = seeded.rows.get(ownerless.id)
+    if (local === undefined) throw new Error('row missing')
+    const f = fakes({ profile: profile('owner-1'), rows: [local] })
+
+    await persistOwnedEndeavor(f.deps, endeavorMocks.plannedTask, { now: NOW })
+
+    expect(f.rows.get(endeavorMocks.plannedTask.id)?.ownerUserId).toBeNull()
+    expect(f.pushes).toEqual([])
+  })
 })

@@ -131,6 +131,12 @@ const rememberProfile = async (
   now: Date,
 ): Promise<void> => {
   try {
+    // The cache is a singleton keyed by id and `current()` answers the first
+    // row, so a second account signing in on the same device must REPLACE the
+    // row, never sit beside it — otherwise the sweep could own the new
+    // session's endeavors under the old account. Clear first; if the clear
+    // fails, write nothing (fail closed) rather than add a second row.
+    await extra.localStore.userProfiles.clear()
     await extra.localStore.userProfiles.put(
       userProfileRecordFromUser(user, { now }),
     )

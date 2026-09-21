@@ -85,15 +85,19 @@ export const persistOwnedEndeavor = async (
           ? ((await localStore.userProfiles.current())?.id ?? null)
           : null))
 
-  await localStore.endeavors.put(
-    endeavorRecordFromEndeavor(endeavor, {
+  // `endeavorRecordFromEndeavor` reads a nullish `ownerUserId` option as
+  // "derive it from the domain value", which would re-host an existing
+  // anonymous row whose edited value happens to carry an owner. The owner
+  // columns decided above are therefore written explicitly, after the factory.
+  await localStore.endeavors.put({
+    ...endeavorRecordFromEndeavor(endeavor, {
       now: options.now,
-      ownerUserId,
-      ownerGroupId: existing?.ownerGroupId ?? null,
       lastSyncedAtEpochMillis: existing?.lastSyncedAtEpochMillis ?? null,
       resolvedKind: options.resolvedKind,
     }),
-  )
+    ownerUserId,
+    ownerGroupId: existing?.ownerGroupId ?? null,
+  })
 
   if (ownerUserId === null) return { ownerUserId, push: 'unavailable' }
 

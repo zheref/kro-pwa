@@ -7,6 +7,7 @@ import {
   DENSITY_ROW,
 } from '../../system/density'
 import { ICON_SIZE } from '../../system/icons/icons'
+import { ROW_HIGHLIGHT } from '../../system/rowHighlight'
 import { cn } from '../../system/utils/cn'
 
 /**
@@ -88,8 +89,8 @@ function rowClass(isSelected: boolean, densityClass: string): string {
     'text-left text-kro-fore outline-none',
     'focus-visible:shadow-[var(--kro-ring)]',
     isSelected
-      ? 'kro-glass kro-glass--pressed font-semibold'
-      : 'hover:bg-kro-back-inner',
+      ? 'border border-transparent kro-glass kro-glass--pressed font-semibold'
+      : ROW_HIGHLIGHT,
   )
 }
 

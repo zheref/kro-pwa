@@ -169,8 +169,8 @@
 
   /* --- Type --- */
   --font-sans:
-    var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    system-ui, sans-serif;
+    var(--font-be-vietnam-pro), -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", system-ui, sans-serif;
   --font-mono:
     var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -230,6 +230,21 @@
     outline: none;
     box-shadow: var(--kro-ring);
     border-radius: var(--kro-radius-small);
+  }
+
+  /*
+    Text fields do not take the focus ring. Chromium draws its own outline on
+    :focus for inputs, and the rule above would add a second one. A field
+    keeps its hairline and does not grow a stroke when it is focused.
+  */
+  input:focus,
+  input:focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  select:focus,
+  select:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 
   /*

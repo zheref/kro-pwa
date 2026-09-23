@@ -3,7 +3,7 @@
  * (`RC-11`) — same states, same fixtures, queried by role and text rather than
  * by markup shape.
  */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { authUserMocks } from '../../../auth/AuthMocks'
@@ -13,7 +13,7 @@ import {
   profileHubSection,
 } from '../../SettingsSelectors'
 import type { SettingsSyncFooter } from '../../SettingsSelectors'
-import { SettingsHubFragment } from '../SettingsHubFragment'
+import { Avatar, SettingsHubFragment } from '../SettingsHubFragment'
 
 afterEach(cleanup)
 
@@ -177,5 +177,40 @@ describe('the Done affordance', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(onTapSection).not.toHaveBeenCalled()
+  })
+})
+
+describe('the account photo', () => {
+  it('tries the next url after one picture fails', () => {
+    const { rerender } = render(
+      <Avatar
+        initials="AL"
+        isSignedIn
+        avatarUrl="https://avatars.example.com/a.png"
+      />,
+    )
+
+    fireEvent.error(screen.getByTestId('avatar-photo'))
+    expect(screen.getByTestId('avatar-initials').textContent).toBe('AL')
+
+    rerender(
+      <Avatar
+        initials="AL"
+        isSignedIn
+        avatarUrl="https://avatars.example.com/a.png"
+      />,
+    )
+    expect(screen.queryByTestId('avatar-photo')).toBeNull()
+
+    rerender(
+      <Avatar
+        initials="AL"
+        isSignedIn
+        avatarUrl="https://avatars.example.com/b.png"
+      />,
+    )
+    expect(screen.getByTestId('avatar-photo').getAttribute('src')).toBe(
+      'https://avatars.example.com/b.png',
+    )
   })
 })

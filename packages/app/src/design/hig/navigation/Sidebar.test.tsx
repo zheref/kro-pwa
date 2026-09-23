@@ -39,6 +39,15 @@ describe('Sidebar', () => {
     expect(
       screen.getByRole('button', { name: 'Plan' }).getAttribute('aria-current'),
     ).toBeNull()
+    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
+      'hover:bg-kro-absolute/25',
+    )
+    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
+      'hover:border-(--kro-glass-rim)',
+    )
+    expect(screen.getByRole('button', { name: 'Plan' }).className).toContain(
+      'border-transparent',
+    )
   })
 
   it('reports the tapped destination id and never navigates', async () => {

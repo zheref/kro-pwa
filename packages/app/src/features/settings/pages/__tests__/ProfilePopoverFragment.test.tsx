@@ -60,7 +60,7 @@ describe('the signed-out header', () => {
   it('offers no Sign Out when there is no session', () => {
     renderPopover()
 
-    expect(screen.queryByRole('button', { name: 'Sign Out' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: 'Sign Out' })).toBeNull()
   })
 })
 
@@ -87,7 +87,7 @@ describe('the signed-in header', () => {
     const onTapSignOut = vi.fn()
     renderPopover({ ...signedIn, onTapSignOut })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Sign Out' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign Out' }))
 
     expect(onTapSignOut).toHaveBeenCalledTimes(1)
   })
@@ -114,11 +114,44 @@ describe('the menu carries only rows with a destination', () => {
     }
   })
 
+  it('keeps the identity block when the menu grows for touch', () => {
+    renderPopover({ ...signedIn, density: 'comfortable' })
+
+    expect(screen.getByRole('menu').getAttribute('data-density')).toBe(
+      'comfortable',
+    )
+    expect(screen.getByText('Ada Lovelace')).toBeTruthy()
+    expect(screen.getByText('ada@example.com')).toBeTruthy()
+    expect(screen.getByTestId('profile-plan-badge').textContent).toBe('Free')
+    expect(
+      screen.getByRole('menuitem', { name: /All Endeavors/ }).className,
+    ).toContain('min-h-10')
+  })
+
+  it('pads the panel and the identity with the same step as a menu row', () => {
+    renderPopover(signedIn)
+
+    const identity = screen.getByTestId('profile-popover-identity')
+    const row = screen.getByRole('menuitem', { name: /All Endeavors/ })
+
+    expect(identity.className).toContain('px-kro-small')
+    expect(identity.className).toContain('py-kro-small')
+    expect(identity.className).toContain('hover:bg-kro-absolute/25')
+    expect(identity.className).toContain('hover:border-(--kro-glass-rim)')
+    expect(row.className).toContain('px-kro-small')
+    expect(row.className).toContain('py-kro-small')
+    for (const rule of screen.getAllByRole('separator', { hidden: true })) {
+      expect(rule.className).toContain('my-kro-small')
+    }
+  })
+
   it('routes All Endeavors to its own handler', async () => {
     const onTapAllEndeavors = vi.fn()
     renderPopover({ ...signedIn, onTapAllEndeavors })
 
-    await userEvent.click(screen.getByRole('button', { name: /All Endeavors/ }))
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: /All Endeavors/ }),
+    )
 
     expect(onTapAllEndeavors).toHaveBeenCalledTimes(1)
   })

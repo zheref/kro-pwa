@@ -365,7 +365,7 @@ export const HIG_CATALOG: readonly HigCatalogEntry[] = [
     category: 'Presentation',
     applePath: 'popovers',
     purpose:
-      'A desktop-idiom panel anchored to a control, for the same content a sheet shows on mobile.',
+      'A desktop-idiom panel anchored to the control that presented it. The pointer is part of the same glass shape, aimed at that control. The same content becomes a sheet on mobile.',
     availability: 'existing',
     kroName: 'Popover',
   },

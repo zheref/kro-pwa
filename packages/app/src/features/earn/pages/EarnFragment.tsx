@@ -155,7 +155,7 @@ export function EarnFragment(props: EarnFragmentProps) {
   return (
     <section
       data-testid="earn-fragment"
-      className="relative flex h-full flex-col"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden"
     >
       {showsMobileEarnPreferencesGear ? (
         <ToolbarSlot placement="trailing">
@@ -188,7 +188,7 @@ export function EarnFragment(props: EarnFragmentProps) {
         </OnGradient>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-kro-medium pt-kro-small pb-24">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-kro-medium pt-kro-small pb-24">
         {showsCatalog ? (
           <>
             {claimableRewards.length === 0 ? null : (

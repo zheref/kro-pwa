@@ -117,4 +117,16 @@ describe('the menu’s theming contract', () => {
       "[&_svg:not([class*='size-'])]:size-3.5",
     )
   })
+
+  it('highlights a row with the shared translucent fill and lighter rim', () => {
+    expect(DROPDOWN_MENU_CLASSES.item).toContain('hover:bg-kro-absolute/25')
+    expect(DROPDOWN_MENU_CLASSES.item).toContain(
+      'hover:border-(--kro-glass-rim)',
+    )
+    expect(DROPDOWN_MENU_CLASSES.item).toContain('focus:bg-kro-absolute/25')
+    expect(DROPDOWN_MENU_CLASSES.checkboxItem).toContain(
+      'hover:bg-kro-absolute/25',
+    )
+    expect(DROPDOWN_MENU_CLASSES.item).not.toContain('bg-kro-back-inner')
+  })
 })

@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 
 /**
  * The root layout — passive, and nothing else (`RC-41`).
@@ -23,9 +24,101 @@ import { Geist, Geist_Mono } from 'next/font/google'
  * wrapped a route.
  */
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+const beVietnamPro = localFont({
+  src: [
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Thin.ttf',
+      weight: '100',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-ThinItalic.ttf',
+      weight: '100',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-ExtraLight.ttf',
+      weight: '200',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-ExtraLightItalic.ttf',
+      weight: '200',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Light.ttf',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-LightItalic.ttf',
+      weight: '300',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Italic.ttf',
+      weight: '400',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-MediumItalic.ttf',
+      weight: '500',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-SemiBoldItalic.ttf',
+      weight: '600',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-BoldItalic.ttf',
+      weight: '700',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-ExtraBold.ttf',
+      weight: '800',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-ExtraBoldItalic.ttf',
+      weight: '800',
+      style: 'italic',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-Black.ttf',
+      weight: '900',
+      style: 'normal',
+    },
+    {
+      path: '../../fonts/be-vietnam-pro/BeVietnamPro-BlackItalic.ttf',
+      weight: '900',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-be-vietnam-pro',
+  display: 'swap',
 })
 
 const geistMono = Geist_Mono({
@@ -44,10 +137,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-      </body>
+    <html
+      lang="en"
+      className={`${beVietnamPro.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body>{children}</body>
     </html>
   )
 }

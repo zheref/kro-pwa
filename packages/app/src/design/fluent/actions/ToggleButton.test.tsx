@@ -109,7 +109,7 @@ describe('ToggleButton', () => {
     const { rerender } = render(<ToggleButton>Bold</ToggleButton>)
     const compact = screen.getByRole('button')
     expect(compact.getAttribute('data-density')).toBe('compact')
-    expect(compact.className).toContain('h-6')
+    expect(compact.className).toContain('h-7')
 
     rerender(<ToggleButton size="large">Bold</ToggleButton>)
     const comfortable = screen.getByRole('button')

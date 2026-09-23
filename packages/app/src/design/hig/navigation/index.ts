@@ -1,3 +1,13 @@
+export {
+  Menu,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  type MenuItemProps,
+  type MenuLabelProps,
+  type MenuProps,
+  type MenuSeparatorProps,
+} from './Menu'
 export { NavigationBar, type NavigationBarProps } from './NavigationBar'
 export {
   PathControl,

@@ -141,6 +141,7 @@ describe('control sizing is denser than the iOS list floor', () => {
     renderSidebar()
 
     expect(screen.getByRole('search').style.minHeight).toBe('36px')
+    expect(screen.getByRole('search').getAttribute('data-kro-field')).toBe('')
   })
 })
 
@@ -160,6 +161,9 @@ describe('the selected row', () => {
     const jot = screen.getByRole('button', { name: 'Jot Down' })
     expect(jot.getAttribute('data-theme')).toBeNull()
     expect(jot.style.backgroundColor).toBe('')
+    expect(jot.className).toContain('hover:bg-kro-absolute/25')
+    expect(jot.className).toContain('hover:border-(--kro-glass-rim)')
+    expect(jot.className).toContain('border-transparent')
   })
 })
 

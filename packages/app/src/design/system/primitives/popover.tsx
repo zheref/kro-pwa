@@ -3,15 +3,16 @@ import type { ComponentPropsWithoutRef } from 'react'
 import { cn } from '../utils/cn'
 
 /**
- * Popover — the desktop idiom.
+ * Popover — a navigation panel anchored to the control that presented it.
  *
  * The epic fixes canonical desktop sizes for the four popover surfaces (Inbox
  * 560x620, Visibility 460x560, Profile w300, Do notifications 380x440 min).
  * They are named here rather than retyped in four feature children, so the
  * sizes stay a design decision instead of four independent guesses.
  *
- * The panel is KroGlass, which is why it carries no background utility of its
- * own — `glass.css` owns the fill, the rim, the sheen and every fallback.
+ * The panel is KroGlass, the same material as the sidebar: blur on ::before,
+ * and the light rim on ::after. The corner is a menu row's radius. A clip
+ * or a stroked path made that rim rasterize, so this panel does not use one.
  */
 export const Popover = PopoverPrimitive.Root
 export const PopoverTrigger = PopoverPrimitive.Trigger
@@ -38,7 +39,7 @@ export type PopoverSizeName = keyof typeof POPOVER_SIZE
  */
 export const POPOVER_CLASSES = {
   content: cn(
-    'kro-glass z-50 w-72 rounded-kro-surface p-kro-medium',
+    'kro-glass kro-popover relative z-50 w-72 p-kro-medium',
     'origin-(--radix-popover-content-transform-origin)',
   ),
 } as const
@@ -47,6 +48,7 @@ export function PopoverContent({
   className,
   align = 'center',
   sideOffset = 8,
+  children,
   ...rest
 }: ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>) {
   return (
@@ -57,7 +59,9 @@ export function PopoverContent({
         sideOffset={sideOffset}
         className={cn(POPOVER_CLASSES.content, className)}
         {...rest}
-      />
+      >
+        {children}
+      </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   )
 }

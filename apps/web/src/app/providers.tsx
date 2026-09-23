@@ -43,6 +43,7 @@ import {
   readStoredAppearance,
   storedAppearanceKey,
 } from '@kro/app'
+import { startGlassLight } from '@kro/app/design'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -85,6 +86,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
     [store, extra],
   )
+
+  useEffect(() => startGlassLight(), [])
 
   return (
     <StoreProvider store={store}>

@@ -25,8 +25,8 @@ import { cn } from '../utils/cn'
  * KroApple has the same note at the token's declaration, and
  * `button.test.tsx` asserts the class appears once.
  *
- * Compact (`sm`) is the default. Comfortable (`md`) is the mobile preview.
- * `lg` is the 44px iOS floor, opt-in.
+ * Compact (`sm`) is the default, at the 28px pointer floor. Comfortable
+ * (`md`) is the mobile preview. `lg` is the 44px iOS floor, opt-in.
  */
 const buttonVariants = cva(
   cn(
@@ -75,16 +75,22 @@ const buttonVariants = cva(
         transparent: 'text-kro-fore hover:text-kro-accent',
       },
       size: {
-        /** Compact — default. Smaller type than Apple's compact control. */
-        sm: 'h-6 rounded-kro-small px-2 text-xs',
-        /** Comfortable — mobile / touch preview. */
-        md: 'h-9 rounded-kro-field px-kro-small text-sm',
+        /**
+         * Compact — default, 28px (`h-7`), the pointer floor. The corner is the menu-row radius
+         * (`--kro-radius-small`), the same one the sidebar and a popover use.
+         * A mobile idiom overrides that to a pill in `styles.css`; `pill` and
+         * `shape="circular"` stay pills, and the FAB disc sets its own radius.
+         */
+        sm: 'h-7 rounded-kro-small px-2.5 text-xs',
+        /** Comfortable — mobile / touch preview. Same corner as `sm`. */
+        md: 'h-9 rounded-kro-small px-kro-small text-sm',
         /** The 44px iOS floor, when a surface truly needs it. */
-        lg: 'h-11 rounded-kro-field px-kro-medium text-sm',
+        lg: 'h-11 rounded-kro-small px-kro-medium text-sm',
         /** Icon-only, comfortable. */
-        icon: 'size-9 rounded-kro-field',
+        icon: 'size-9 rounded-kro-small',
         /** Icon-only, compact. */
         'icon-sm': 'size-6 rounded-kro-small',
+        /** Explicit pill. The idiom rule does not restyle this size. */
         pill: 'h-9 rounded-kro-pill px-kro-medium text-sm',
       },
       shape: {
@@ -142,6 +148,7 @@ export function Button({
     <Component
       data-slot="button"
       data-shape={shape ?? 'rounded'}
+      data-size={size ?? 'sm'}
       // A button inside a form defaults to `submit` in HTML, which is how a
       // "Cancel" control ends up submitting the form it sits in.
       type={asChild ? undefined : (type ?? 'button')}

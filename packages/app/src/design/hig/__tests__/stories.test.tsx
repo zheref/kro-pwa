@@ -27,6 +27,7 @@ import * as outlineStories from '../layout/OutlineView.stories'
 import * as scrollViewStories from '../layout/ScrollView.stories'
 import * as separatorStories from '../layout/Separator.stories'
 import * as splitViewStories from '../layout/SplitView.stories'
+import * as menuListStories from '../navigation/Menu.stories'
 import * as navigationBarStories from '../navigation/NavigationBar.stories'
 import * as pathControlStories from '../navigation/PathControl.stories'
 import * as searchFieldStories from '../navigation/SearchField.stories'
@@ -73,6 +74,7 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['Outline view', outlineStories],
   ['Split view', splitViewStories],
   ['Separator', separatorStories],
+  ['Menu list', menuListStories],
   ['Navigation bar', navigationBarStories],
   ['Path control', pathControlStories],
   ['Search field', searchFieldStories],

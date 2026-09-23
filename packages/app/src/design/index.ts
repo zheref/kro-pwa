@@ -126,6 +126,7 @@ export {
   type GlassPanelKind,
   GlassPanel,
 } from './system/glass/GlassPanel'
+export { startGlassLight } from './system/glass/glassLight'
 export {
   type GradientBackdropProps,
   type GradientContentProps,

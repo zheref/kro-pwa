@@ -83,18 +83,28 @@ describe('Popover', () => {
 describe('the panel’s theming contract', () => {
   it('asks glass.css for the material rather than a background of its own', () => {
     expect(POPOVER_CLASSES.content).toContain('kro-glass')
+    expect(POPOVER_CLASSES.content).toContain('kro-popover')
     expect(POPOVER_CLASSES.content).not.toMatch(/\bbg-(?!kro-)/)
   })
 
-  it('uses token utilities for radius and padding, never raw values', () => {
-    expect(POPOVER_CLASSES.content).toContain('rounded-kro-surface')
+  it('uses a token utility for padding, never a raw length', () => {
     expect(POPOVER_CLASSES.content).toContain('p-kro-medium')
+    expect(POPOVER_CLASSES.content).not.toMatch(/\bp-\[\d/)
+  })
+
+  it('shares the sidebar light rim instead of a clipped stroke', () => {
+    expect(POPOVER_CLASSES.content).not.toContain('kro-popover-plate')
+    expect(POPOVER_CLASSES.content).not.toContain('kro-popover-rim')
   })
 
   it('grows from the side Radix positioned it on', () => {
     expect(POPOVER_CLASSES.content).toContain(
       'origin-(--radix-popover-content-transform-origin)',
     )
+  })
+
+  it('keeps the pointer tip out of the panel — the rim is the glass edge', () => {
+    expect(POPOVER_CLASSES.content).not.toContain('fill-')
   })
 })
 

@@ -125,10 +125,16 @@ export function GradientBackdrop({
     const measure = () => {
       const shell = host.getBoundingClientRect()
       const box = header.getBoundingClientRect()
+      // Width is the window (the shell host), never the header's own box.
+      // A pixel width taken from the title stops short of the trailing edge
+      // the moment a scrollbar or the sidebar insets that box, and it stays
+      // that size when the window moves. Height still follows the title's
+      // bottom edge so the 50px round sits on the header, not on the cards.
       const nextStyle = {
         top: 0,
         left: 0,
-        width: `${Math.max(0, box.right - shell.left)}px`,
+        right: 0,
+        width: '100%',
         height: `${Math.max(0, box.bottom - shell.top)}px`,
       }
       setPortal((current) => {

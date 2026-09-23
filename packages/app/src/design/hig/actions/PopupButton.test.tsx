@@ -75,7 +75,7 @@ describe('PopupButton', () => {
     )
     const trigger = screen.getByRole('button', { name: 'Habit' })
     expect(trigger.getAttribute('data-density')).toBe('compact')
-    expect(trigger.className).toContain('h-6')
+    expect(trigger.className).toContain('h-7')
 
     rerender(
       <PopupButton

@@ -123,7 +123,7 @@ const PRIMITIVE_TITLES: ReadonlySet<string> = new Set([
   'Navigation/Tabs',
   'Surfaces/Dialog',
   'Surfaces/Sheet',
-  'Surfaces/Popover',
+  'Navigation/Popover',
   'Surfaces/Menu',
 ])
 
@@ -133,7 +133,7 @@ const PRIMITIVE_IDS: ReadonlySet<string> = new Set([
   'navigation-tabs',
   'surfaces-dialog',
   'surfaces-sheet',
-  'surfaces-popover',
+  'navigation-popover',
   'surfaces-menu',
 ])
 
@@ -184,7 +184,7 @@ export function storyTitleFromId(path: string): string {
     'navigation-tabs': 'Navigation/Tabs',
     'surfaces-dialog': 'Surfaces/Dialog',
     'surfaces-sheet': 'Surfaces/Sheet',
-    'surfaces-popover': 'Surfaces/Popover',
+    'navigation-popover': 'Navigation/Popover',
     'surfaces-menu': 'Surfaces/Menu',
     'chrome-liquidglassfab': 'Chrome/LiquidGlassFAB',
     'endeavor-endeavorcard': 'Endeavor/EndeavorCard',

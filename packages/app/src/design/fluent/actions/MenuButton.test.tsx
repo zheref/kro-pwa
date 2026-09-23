@@ -61,7 +61,7 @@ describe('MenuButton', () => {
     const { rerender } = render(<MenuButton label="Add" items={ITEMS} />)
     const trigger = screen.getByRole('button', { name: 'Add' })
     expect(trigger.getAttribute('data-density')).toBe('compact')
-    expect(trigger.className).toContain('h-6')
+    expect(trigger.className).toContain('h-7')
 
     rerender(<MenuButton label="Add" items={ITEMS} size="large" />)
     const comfortable = screen.getByRole('button', { name: 'Add' })

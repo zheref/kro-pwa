@@ -126,7 +126,12 @@ describe('acceptance criterion 1 — wide', () => {
 
     const toolbar = screen.getByTestId('shell-content-toolbar')
     expect(toolbar.querySelector('[aria-label="Profile"]')).toBeTruthy()
-    expect(toolbar.querySelector('[aria-label="Inbox"]')).toBeTruthy()
+    const inbox = toolbar.querySelector('[aria-label="Inbox"]')
+    expect(inbox).toBeTruthy()
+    expect(inbox?.className).toContain('hover:bg-kro-absolute/25')
+    expect(inbox?.className).toContain('rounded-kro-small')
+    expect((inbox as HTMLElement).style.width).toBe('32px')
+    expect(inbox?.querySelector('svg')?.getAttribute('width')).toBe('16')
   })
 
   it('keeps that ownership at a narrow width too — a sidebar shell has no tab chrome', () => {
@@ -250,7 +255,7 @@ describe('toolbar slots — the shell hardcodes no feature control', () => {
     expect(outlet?.childElementCount).toBe(0)
   })
 
-  it("puts Inbox before the feature's slot — canon's Inbox, Refresh, Visibility", () => {
+  it('leads with the sidebar toggle, visibility, refresh and inbox, and trails with the bell and profile', () => {
     render(
       <ToolbarSlotsProvider>
         <MainShellFragment
@@ -278,22 +283,43 @@ describe('toolbar slots — the shell hardcodes no feature control', () => {
           onTapInbox={noop}
           onTapSettings={noop}
         >
-          <ToolbarSlot placement="primary">
-            <button type="button">Refresh</button>
+          <ToolbarSlot placement="navigation">
             <button type="button">Visibility</button>
+            <button type="button">Refresh</button>
+          </ToolbarSlot>
+          <ToolbarSlot placement="primary">
+            <button type="button">Notifications</button>
           </ToolbarSlot>
         </MainShellFragment>
       </ToolbarSlotsProvider>,
     )
 
-    // The group's own DOM order IS the reading order, so the assertion is on
-    // the sequence rather than on any one control being present.
     const toolbar = screen.getByTestId('shell-content-toolbar')
-    const labels = Array.from(toolbar.querySelectorAll('button'))
-      .map((button) => button.getAttribute('aria-label') ?? button.textContent)
-      .filter((label): label is string => label !== null)
+    const labels = Array.from(toolbar.querySelectorAll('button')).map(
+      (button) => button.getAttribute('aria-label') ?? button.textContent,
+    )
 
-    expect(labels.slice(-3)).toEqual(['Inbox', 'Refresh', 'Visibility'])
+    expect(toolbar.className).toContain('pl-kro-small')
+    expect(toolbar.className).toContain('z-20')
+    expect(toolbar.className).not.toContain('px-kro-medium')
+    expect(screen.getByRole('main').className).toContain('z-0')
+    expect(
+      screen.getByRole('button', { name: 'Profile' }).parentElement?.className,
+    ).toContain('ml-kro-small')
+    expect(
+      screen.getByTestId('shell-sidebar-shape').getAttribute('data-kro-idiom'),
+    ).toBe('desktop')
+    expect(document.documentElement.getAttribute('data-kro-idiom')).toBe(
+      'desktop',
+    )
+    expect(labels).toEqual([
+      'Toggle Sidebar',
+      'Visibility',
+      'Refresh',
+      'Inbox',
+      'Notifications',
+      'Profile',
+    ])
   })
 })
 
@@ -331,6 +357,10 @@ describe('the bottom inset the shell publishes for the design system', () => {
     renderShell(handheldSurface)
 
     const shell = screen.getByTestId('shell-tab-bar-shape')
+    expect(shell.getAttribute('data-kro-idiom')).toBe('mobile')
+    expect(document.documentElement.getAttribute('data-kro-idiom')).toBe(
+      'mobile',
+    )
     expect(shell.style.getPropertyValue(SHELL_BOTTOM_INSET_VAR)).toBe(
       `${tabBarReservedHeight(doSurfaceLayout(handheldSurface))}px`,
     )

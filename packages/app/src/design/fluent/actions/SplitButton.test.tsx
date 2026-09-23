@@ -96,7 +96,7 @@ describe('SplitButton', () => {
     const cluster = () => document.querySelector('[data-slot="split-button"]')
     expect(cluster()?.getAttribute('data-density')).toBe('compact')
     expect(screen.getByRole('button', { name: 'Save' }).className).toContain(
-      'h-6',
+      'h-7',
     )
 
     rerender(

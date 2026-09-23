@@ -248,13 +248,18 @@ describe('the Suggestions lane', () => {
     expect(card.className).not.toContain('w-full')
   })
 
-  it('keeps a named dismiss next to every suggestion', () => {
+  it('keeps a named dismiss under the action, inside the card', () => {
     render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
-    expect(screen.getByRole('button', { name: /Dismiss/ })).toBeTruthy()
+    const dismiss = screen.getByRole('button', { name: 'Dismiss' })
+    const card = screen
+      .getByTestId('do-lane-suggestions')
+      .querySelector('[data-slot="suggestion-card"]')
+    expect(card?.contains(dismiss)).toBe(true)
+    expect(dismiss.className).not.toContain('rounded-kro-pill')
   })
 
-  it('defaults suggestion controls to the compact pointer target', () => {
+  it('defaults the suggestion action to the compact button', () => {
     render(<DoLanesFragment {...propsFor(doSurfaceMocks.suggestionOffered)} />)
 
     const card = screen
@@ -262,8 +267,8 @@ describe('the Suggestions lane', () => {
       .querySelector('[data-slot="suggestion-card"]') as HTMLElement
     expect(card.dataset.density).toBe('compact')
     expect(
-      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
-    ).toBe('var(--kro-size-min-pointer-target)')
+      screen.getByRole('button', { name: /Connect/ }).getAttribute('data-size'),
+    ).toBe('sm')
   })
 
   it('uses the touch floor when the surface asks for comfortable density', () => {
@@ -280,7 +285,7 @@ describe('the Suggestions lane', () => {
       .querySelector('[data-slot="suggestion-card"]') as HTMLElement
     expect(card.dataset.density).toBe('comfortable')
     expect(
-      screen.getByRole('button', { name: /Dismiss/ }).style.minHeight,
-    ).toBe('var(--kro-size-min-touch-target)')
+      screen.getByRole('button', { name: /Connect/ }).getAttribute('data-size'),
+    ).toBe('lg')
   })
 })

@@ -9,12 +9,16 @@ import {
 } from './popover'
 
 /**
- * The desktop idiom. Each story is sized from `POPOVER_SIZE`, which carries
- * KroApple's canonical macOS dimensions — so the panels here are the panels
- * the shell child will render, not approximations of them.
+ * The navigation popover. Each story is sized from `POPOVER_SIZE`, which
+ * carries KroApple's canonical macOS dimensions — so the panels here are the
+ * panels the shell child will render, not approximations of them.
+ *
+ * The pointer scene is held open so the tip is part of the gallery, aimed
+ * at the trigger that presented it. The sized scenes stay closed: an open
+ * 560×620 panel would cover the rest of the page.
  */
 export default {
-  title: 'Surfaces/Popover',
+  title: 'Navigation/Popover',
   component: PopoverContent,
   parameters: { layout: 'centered' },
 }
@@ -39,6 +43,31 @@ function Rows({ count }: { count: number }) {
       ))}
     </div>
   )
+}
+
+const Pointer = {
+  name: 'Pointer · the tip aims at the trigger',
+  render: () => (
+    <div style={{ minHeight: 180, paddingTop: 8 }}>
+      <Popover open>
+        <PopoverTrigger asChild>
+          <Button variant="secondary">Profile</Button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          avoidCollisions={false}
+          style={{ width: POPOVER_SIZE.profile.width }}
+        >
+          <p
+            style={{ margin: 0, fontSize: 14, color: 'var(--kro-color-fore)' }}
+          >
+            The tip points at Profile
+          </p>
+        </PopoverContent>
+      </Popover>
+    </div>
+  ),
 }
 
 const Inbox = {
@@ -144,6 +173,7 @@ export const Gallery = {
   tags: ['showcase'],
   render: () => (
     <StoryGallery>
+      {Pointer.render()}
       {Inbox.render()}
       {Visibility.render()}
       {Profile.render()}

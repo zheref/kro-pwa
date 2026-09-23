@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -119,10 +122,10 @@ describe('Button', () => {
     expect(className).toContain('kro-glass--danger')
   })
 
-  it('defaults to compact (h-6, text-xs) and uses h-9 for comfortable', () => {
+  it('defaults to compact (h-7, text-xs) and uses h-9 for comfortable', () => {
     const { rerender } = render(<Button>Default</Button>)
     const compact = screen.getByRole('button').className
-    expect(compact).toContain('h-6')
+    expect(compact).toContain('h-7')
     expect(compact).toContain('text-xs')
 
     rerender(<Button size="md">Comfortable</Button>)
@@ -181,6 +184,35 @@ describe('Button', () => {
     expect(className).not.toContain('kro-glass--accent')
   })
 
+  it('uses the menu-row corner by default and names the size the idiom rule reads', () => {
+    render(<Button>Start session</Button>)
+
+    const button = screen.getByRole('button', { name: 'Start session' })
+    expect(button.getAttribute('data-shape')).toBe('rounded')
+    expect(button.getAttribute('data-size')).toBe('sm')
+    expect(button.className).toContain('rounded-kro-small')
+  })
+
+  it('keeps the same corner on the comfortable and icon sizes', () => {
+    const { rerender } = render(<Button size="md">Comfortable</Button>)
+    expect(screen.getByRole('button').className).toContain('rounded-kro-small')
+    expect(screen.getByRole('button').className).not.toContain(
+      'rounded-kro-field',
+    )
+
+    rerender(<Button size="icon" aria-label="Add" />)
+    expect(screen.getByRole('button').className).toContain('rounded-kro-small')
+    expect(screen.getByRole('button').getAttribute('data-size')).toBe('icon')
+  })
+
+  it('leaves an explicit pill size on the pill radius', () => {
+    render(<Button size="pill">Save</Button>)
+
+    const button = screen.getByRole('button', { name: 'Save' })
+    expect(button.getAttribute('data-size')).toBe('pill')
+    expect(button.className).toContain('rounded-kro-pill')
+  })
+
   it('honours Fluent circular and square shapes', () => {
     const { rerender } = render(<Button shape="circular">Go</Button>)
     expect(screen.getByRole('button').getAttribute('data-shape')).toBe(
@@ -191,5 +223,22 @@ describe('Button', () => {
     rerender(<Button shape="square">Go</Button>)
     expect(screen.getByRole('button').getAttribute('data-shape')).toBe('square')
     expect(screen.getByRole('button').className).toContain('rounded-none')
+  })
+})
+
+describe('the mobile idiom restyles a default button and nothing else', () => {
+  const styles = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../styles.css'),
+    'utf8',
+  )
+
+  it('paints a pill only for a mobile idiom on a rounded button', () => {
+    expect(styles).toContain('[data-kro-idiom="mobile"]')
+    expect(styles).toContain('border-radius: var(--kro-radius-pill)')
+    expect(styles).toContain(':not([data-size="pill"])')
+    expect(styles).toContain('[data-kro-fab]')
+    expect(styles).toContain('[data-kro-field]):focus-within')
+    expect(styles).toContain('var(--kro-color-glow-lime)')
+    expect(styles).toContain('[data-slot="input"]')
   })
 })

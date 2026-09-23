@@ -10,7 +10,7 @@
      1. the backdrop, blurred and saturated          ::before, backdrop-filter
      2. a translucent tint over it                   ::before, background
      3. a specular sheen (radial hotspot + falloff)  ::after,  background
-     4. the rim and the inner top highlight          box-shadow insets
+     4. a light rim — bright toward the source, dim opposite   box-shadow insets
      5. the content
 
    THE SAFARI RULE, and why it is unconditional here.
@@ -35,14 +35,37 @@
   background: none;
   border-radius: var(--kro-radius-surface);
   color: var(--kro-color-fore);
+  /*
+    Resting light, from the upper left — the same place as the sheen.
+    A pointer move eases the two offsets toward that pointer, per piece.
+    The bright edge is a soft bloom plus a tighter core, not a 1px stroke:
+    a hard inset line rasterizes, and the hi token is too dim in the dark.
+    Offsets are set in script rather than sin(var(--angle)): an untyped
+    custom property is not an angle, and sin() would drop the rim.
+  */
+  --kro-glass-light-x: 0.47px;
+  --kro-glass-light-y: 0.88px;
+  --kro-glass-light-rim:
+    inset calc(var(--kro-glass-light-x) * 2.5) calc(
+      var(--kro-glass-light-y) *
+      2.5
+    )
+    8px rgb(255 255 255 / 0.26),
+    inset calc(var(--kro-glass-light-x) * 1.5) calc(
+      var(--kro-glass-light-y) *
+      1.5
+    )
+    2px rgb(255 255 255 / 0.42),
+    inset calc(var(--kro-glass-light-x) * -2) calc(
+      var(--kro-glass-light-y) *
+      -2
+    ) 8px
+    rgb(255 255 255 / 0.1);
   box-shadow:
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.15),
     var(--kro-shadow-card);
-  transition:
-    box-shadow var(--kro-duration-standard) var(--kro-ease-standard),
-    background-color var(--kro-duration-standard) var(--kro-ease-standard);
+  transition: background-color var(--kro-duration-standard)
+    var(--kro-ease-standard);
 }
 
 /* Layers 1 + 2 — the material. */
@@ -59,7 +82,10 @@
   transition: background var(--kro-duration-standard) var(--kro-ease-standard);
 }
 
-/* Layer 3 — the specular sheen. */
+/* Layer 3 — the specular sheen, and the light rim above the fill.
+   The rim cannot be the element's own inset shadow: that paints under
+   ::before, so the tint covers it and a sidebar never appears to light.
+   z-index stays behind the content. Nothing else is drawn outside this rim. */
 .kro-glass::after {
   content: "";
   position: absolute;
@@ -67,6 +93,7 @@
   z-index: -1;
   border-radius: inherit;
   background: var(--kro-glass-sheen);
+  box-shadow: var(--kro-glass-light-rim);
   pointer-events: none;
 }
 
@@ -84,8 +111,6 @@
   /* Height belongs to the control (compact vs comfortable). A 44px floor
      here silently beat every `h-6` / `h-7` utility. */
   box-shadow:
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -6px 10px -8px rgb(0 0 0 / 0.3),
     var(--kro-shadow-subtle);
 }
@@ -146,10 +171,8 @@
  */
 .kro-glass--bar {
   border-radius: 0;
-  border-bottom: 1px solid var(--kro-glass-rim);
   box-shadow:
     0 1px 2px rgb(0 0 0 / 0.05),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.1);
 }
 
@@ -170,19 +193,16 @@
   box-shadow:
     0 10px 30px rgb(0 0 0 / 0.12),
     0 1px 2px rgb(0 0 0 / 0.06),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.12);
 }
 
 /**
- * A sidebar column. Trailing hairline instead of a bar's bottom edge, and the
- * 20px continuous corner the rest of the kit uses for floating glass panels.
+ * A sidebar column. The corner matches a menu row (`--kro-radius-small`),
+ * and the light rim is the only edge — it lives on ::after, above the fill.
  */
 .kro-glass--sidebar {
-  border-radius: var(--kro-radius-surface);
+  border-radius: var(--kro-radius-small);
   box-shadow:
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.15),
     var(--kro-shadow-surface);
 }
@@ -194,8 +214,6 @@
 .kro-glass--dock {
   border-radius: var(--kro-radius-pill);
   box-shadow:
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 1px 0 var(--kro-glass-hi),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.18),
     var(--kro-shadow-card);
 }
@@ -256,10 +274,12 @@
 
 .kro-glass--interactive:focus-visible {
   outline: none;
-  box-shadow:
-    var(--kro-ring),
-    inset 0 0 0 1px var(--kro-glass-rim),
-    inset 0 1px 0 var(--kro-glass-hi);
+  box-shadow: var(--kro-ring);
+}
+
+/* The popover uses the same light rim as the sidebar. The corner matches a menu row. */
+.kro-popover.kro-glass {
+  border-radius: var(--kro-radius-small);
 }
 
 /* --------------------------------------------------------------------------
@@ -302,7 +322,7 @@
   }
 
   .kro-glass::after {
-    display: none;
+    background: none;
   }
 
   .kro-glass--interactive:hover::before {

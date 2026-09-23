@@ -47,7 +47,7 @@ describe('LiquidGlassFAB', () => {
 
   it('is a disc, not a rounded square — the icon size`s corners are overridden', () => {
     // Inline rather than a utility on purpose: `twMerge` cannot merge
-    // `rounded-kro-field` away, because `kro-field` is a project theme value it
+    // `rounded-kro-small` away, because `kro-small` is a project theme value it
     // has no config for. An inline radius wins outright.
     render(<LiquidGlassFAB glyph="plus" accessibilityLabel="Quick add" />)
 

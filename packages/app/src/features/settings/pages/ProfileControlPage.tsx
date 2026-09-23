@@ -57,8 +57,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../../../design/system/primitives/sheet'
-import { ICON_SIZE } from '../../../design/system/icons/icons'
-import { colorVar } from '../../../design/system/tokens/roles'
+import { controlDensity } from '../../../design/system/density'
+import { ROW_HIGHLIGHT } from '../../../design/system/rowHighlight'
 import { cn } from '../../../design/system/utils/cn'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import {
@@ -75,6 +75,12 @@ import { selectAuthPresentation } from '../SettingsSelectors'
 import { SUBSCRIPTION_PLAN_NAME } from '../SettingsState'
 import { Avatar } from './SettingsHubFragment'
 import { ProfilePopoverFragment } from './ProfilePopoverFragment'
+
+/** Keeps the profile panel off the screen edge now that it hangs from the trailing side. */
+const PROFILE_POPOVER_SCREEN_GAP_PX = 16
+
+/** A step under the 32px header glyphs, so the account photo sits a little smaller. */
+const PROFILE_TOOLBAR_AVATAR_PX = 28
 
 export function ProfileControlPage() {
   const dispatch = useAppDispatch()
@@ -126,6 +132,7 @@ export function ProfileControlPage() {
       accountName={user?.name ?? null}
       accountEmail={user === null ? null : primaryEmail(user)}
       accountInitials={initials}
+      accountAvatarUrl={user?.avatarUrl ?? null}
       planName={SUBSCRIPTION_PLAN_NAME}
       onTapSignIn={() =>
         dispatch(userDidTapSignIn({ origin: 'profilePopover' }))
@@ -135,6 +142,7 @@ export function ProfileControlPage() {
       onTapSignOut={() => {
         void dispatch(signOutThunk())
       }}
+      density={controlDensity(isSheet)}
     />
   )
 
@@ -144,9 +152,21 @@ export function ProfileControlPage() {
         {isSheet ? (
           <Sheet>
             <SheetTrigger asChild>
-              <ProfileTrigger initials={initials} isSignedIn={user !== null} />
+              <ProfileTrigger
+                initials={initials}
+                isSignedIn={user !== null}
+                avatarUrl={user?.avatarUrl ?? null}
+              />
             </SheetTrigger>
-            <SheetContent side="bottom" className="p-0">
+            <SheetContent
+              side="bottom"
+              /*
+                `p-0` does not win over the sheet's `p-kro-large` — the custom
+                spacing utilities are not a Tailwind padding group — so the
+                gutter is set here, one step larger than the desktop popover.
+              */
+              style={{ padding: 'var(--kro-space-medium)' }}
+            >
               <SheetTitle className="sr-only">Profile</SheetTitle>
               {content}
             </SheetContent>
@@ -154,15 +174,24 @@ export function ProfileControlPage() {
         ) : (
           <Popover>
             <PopoverTrigger asChild>
-              <ProfileTrigger initials={initials} isSignedIn={user !== null} />
+              <ProfileTrigger
+                initials={initials}
+                isSignedIn={user !== null}
+                avatarUrl={user?.avatarUrl ?? null}
+              />
             </PopoverTrigger>
             <PopoverContent
-              align="start"
-              className="p-0"
-              // Canon's `.frame(width: 300)` on `ProfilePopoverView`, read from
-              // the design system's own table so a second surface cannot
-              // disagree about what "the profile popover" is.
-              style={{ width: PRESENTATION_SIZE.profile.width }}
+              align="end"
+              collisionPadding={PROFILE_POPOVER_SCREEN_GAP_PX}
+              /*
+                Same reason as the sheet: the primitive's `p-kro-medium` stays
+                in the class list, so the profile gutter is an inline length,
+                equal to a menu row's own inset.
+              */
+              style={{
+                width: PRESENTATION_SIZE.profile.width,
+                padding: 'var(--kro-space-small)',
+              }}
             >
               {content}
             </PopoverContent>
@@ -247,18 +276,20 @@ function AuthDismissOnSignIn() {
 /**
  * The toolbar button itself.
  *
- * Signed in it is the initials avatar, which is what makes the control read as
- * *your* account at a glance; signed out it is the neutral person glyph the
+ * Signed in it is the account picture when the provider supplied one, and the
+ * initials face otherwise. Signed out it is the neutral person glyph the
  * shell drew before. `forwardRef` is not needed — Radix's `asChild` clones the
  * element and React 19 passes `ref` as an ordinary prop.
  */
 function ProfileTrigger({
   initials,
   isSignedIn,
+  avatarUrl,
   ...rest
 }: {
   readonly initials: string
   readonly isSignedIn: boolean
+  readonly avatarUrl: string | null
 } & ComponentPropsWithoutRef<'button'>) {
   return (
     <button
@@ -266,17 +297,22 @@ function ProfileTrigger({
       aria-label="Profile"
       data-testid="profile-control"
       className={cn(
-        'flex items-center justify-center rounded-kro-pill',
+        'inline-flex shrink-0 items-center justify-center rounded-full text-inherit',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
+        ROW_HIGHLIGHT,
       )}
       style={{
-        minWidth: ICON_SIZE.large,
-        minHeight: ICON_SIZE.large,
-        color: colorVar('fore'),
+        width: PROFILE_TOOLBAR_AVATAR_PX,
+        height: PROFILE_TOOLBAR_AVATAR_PX,
       }}
       {...rest}
     >
-      <Avatar initials={initials} isSignedIn={isSignedIn} size={28} />
+      <Avatar
+        initials={initials}
+        isSignedIn={isSignedIn}
+        avatarUrl={avatarUrl}
+        size={PROFILE_TOOLBAR_AVATAR_PX}
+      />
     </button>
   )
 }

@@ -55,11 +55,55 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-:where(input, textarea, select):focus {
-  outline: none;
-}
-
+:where(input, textarea, select):focus,
 :where(input, textarea, select):focus-visible {
   outline: none;
-  box-shadow: var(--kro-ring);
+  box-shadow: none;
+}
+
+/*
+  The glow belongs on the field we draw, not on the browser's text box.
+
+  A sidebar search is a rounded row with an icon; the `<input>` inside it is
+  only the text. A ring on that input outlines a shorter, square piece of the
+  row. `[data-kro-field]` is that row, and it takes the ring while it contains
+  focus. `Input` (`data-slot="input"`) is itself the field, so the ring stays
+  on it. Unlayered, so this beats the base layer's `:focus-visible` ring.
+*/
+:where([data-slot="input"], [data-slot="textarea"]):focus-visible {
+  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+}
+
+:where([data-kro-field]):focus-within {
+  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+}
+
+:where([data-kro-field] :is(input, textarea, select)):focus,
+:where([data-kro-field] :is(input, textarea, select)):focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* ==========================================================================
+   Button corners follow the idiom.
+
+   Desktop matches the sidebar and a popover (`--kro-radius-small`). A mobile
+   idiom keeps the pill. Unlayered on purpose: it has to beat the size
+   utility (`rounded-kro-small`), which Tailwind emits inside `@layer utilities`.
+
+   Left alone, on purpose:
+     · `data-shape="circular"` and `data-shape="square"` — an explicit shape
+     · `data-size="pill"` — an explicit pill size
+     · `[data-kro-fab]` — the FAB disc sets `border-radius: 50%` inline
+     · the FAB menu rows — they are not `[data-slot="button"]`
+   ========================================================================== */
+
+[data-kro-idiom="mobile"]
+:where(
+  [data-slot="button"][data-shape="rounded"]:not([data-size="pill"]):not(
+    [data-kro-fab]
+  )
+) {
+  border-radius: var(--kro-radius-pill);
 }

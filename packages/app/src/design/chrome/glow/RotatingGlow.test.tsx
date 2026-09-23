@@ -32,7 +32,7 @@ describe('the sweep is two hues, and closes on itself', () => {
   })
 
   it('keeps the band thin and the blur the reach — canon`s spread 3 / blur 5', () => {
-    expect(DEFAULT_GLOW_SPREAD).toBe(3)
+    expect(DEFAULT_GLOW_SPREAD).toBe(2)
     expect(DEFAULT_GLOW_BLUR_RADIUS).toBe(5)
     expect(DEFAULT_GLOW_BLUR_RADIUS).toBeGreaterThan(DEFAULT_GLOW_SPREAD)
   })
@@ -65,7 +65,10 @@ describe('the sweep is two hues, and closes on itself', () => {
     expect(cast).not.toBeNull()
     expect(cast.style.top).toBe('42%')
     expect(cast.style.bottom).toBe('0px')
-    expect(cast.style.background).toMatch(/ring-emerald|glow-lime/)
+    expect(cast.style.filter).toContain('blur')
+    expect(cast.firstElementChild?.getAttribute('style') ?? '').toMatch(
+      /ring-emerald|glow-lime/,
+    )
   })
 
   it('blurs a canvas larger than the ring, so the plume is not clipped into a rim', () => {

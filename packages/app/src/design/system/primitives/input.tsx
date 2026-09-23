@@ -41,7 +41,7 @@ export function Input({
         'border border-kro-hairline',
         'placeholder:text-kro-fore-secondary',
         'kro-motion-quick transition-[border-color,box-shadow]',
-        'outline-none focus-visible:border-kro-accent focus-visible:shadow-[var(--kro-ring)]',
+        'outline-none',
         'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
         'aria-invalid:border-kro-banner-danger',
         'file:inline-flex file:border-0 file:bg-transparent file:text-xs file:font-medium',

@@ -143,7 +143,7 @@ export const DEFAULT_GLOW_HUES = [
  * Canon's defaults. Spread is the *brightness at the edge* (keep it thin —
  * a thick band draws a flat ring). Blur is the *reach* of the falloff.
  */
-export const DEFAULT_GLOW_SPREAD = 3
+export const DEFAULT_GLOW_SPREAD = 2
 export const DEFAULT_GLOW_BLUR_RADIUS = 5
 
 /**
@@ -288,7 +288,8 @@ export function RotatingGlow({
   const secondHue = hues[1] ?? firstHue
   // Extra room under the disc so the under-cast can bloom downward instead of
   // clipping into a hairline at the FAB's bottom edge.
-  const underReach = blurRadius * 2
+  const underReach = blurRadius
+  const castBlur = blurRadius + 2
 
   const canvasStyle: CSSProperties = {
     position: 'absolute',
@@ -365,11 +366,20 @@ export function RotatingGlow({
               right: '8%',
               top: '42%',
               bottom: 0,
-              borderRadius: '50%',
-              background: `radial-gradient(ellipse at 50% 15%, color-mix(in srgb, ${colorVar(secondHue)} 90%, transparent), color-mix(in srgb, ${colorVar(firstHue)} 55%, transparent) 45%, transparent 74%)`,
-              filter: `blur(${Math.max(blurRadius * 2, 10)}px)`,
+              padding: castBlur,
+              boxSizing: 'border-box',
+              filter: `blur(${castBlur}px)`,
             }}
-          />
+          >
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                background: `radial-gradient(ellipse at 50% 15%, color-mix(in srgb, ${colorVar(secondHue)} 90%, transparent), color-mix(in srgb, ${colorVar(firstHue)} 55%, transparent) 45%, transparent 74%)`,
+              }}
+            />
+          </div>
         </div>
       ) : null}
       {isActive

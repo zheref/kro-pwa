@@ -48,19 +48,27 @@ const toolbar = (overrides: Partial<DoToolbarFragmentProps> = {}) => (
 )
 
 describe("canon's desktop toolbar table", () => {
-  it('puts the bell in the navigation group and refresh + visibility in primary', () => {
+  it('puts visibility and refresh on the leading group and the bell on the trailing group', () => {
     render(toolbar())
 
     const navigation = screen.getByTestId('do-toolbar-navigation')
     const primary = screen.getByTestId('do-toolbar-primary')
+    const leading = Array.from(navigation.querySelectorAll('button')).map(
+      (button) => button.getAttribute('aria-label'),
+    )
 
-    expect(
-      navigation.querySelector('[aria-label="Notifications"]'),
-    ).not.toBeNull()
-    expect(primary.querySelector('[aria-label="Refresh"]')).not.toBeNull()
-    expect(
-      primary.querySelector('[aria-label="Visibility Filters"]'),
-    ).not.toBeNull()
+    expect(leading).toEqual(['Visibility Filters', 'Refresh'])
+    expect(primary.querySelector('[aria-label="Notifications"]')).not.toBeNull()
+  })
+
+  it('surrounds the large-screen glyphs with the menu-row glass, a step larger than the pointer target', () => {
+    render(toolbar())
+    const bell = screen.getByLabelText('Notifications')
+    expect(bell.style.width).toBe('32px')
+    expect(bell.style.height).toBe('32px')
+    expect(bell.className).toContain('rounded-kro-small')
+    expect(bell.className).toContain('hover:bg-kro-absolute/25')
+    expect(bell.querySelector('svg')?.getAttribute('width')).toBe('16')
   })
 
   it('replaces the whole trailing group with Done in mark-complete mode', () => {

@@ -1,4 +1,5 @@
 import type { Decorator, Preview } from '@storybook/nextjs'
+import { useEffect } from 'react'
 import '../src/app/globals.css'
 import {
   GalleryAppearanceProvider,
@@ -22,10 +23,11 @@ import { appPaletteNamed } from '../../../packages/app/src/design/system/tokens/
  * The kind banner is the other: HIG titles, primitives, materials and
  * tokens share a sidebar, and a badge is how a reviewer tells them apart.
  *
- * Scheme and Theme live on the Storybook toolbar so every preview on the
- * canvas follows the same pick the in-app `/storybook` page offers.
- * `PinDocumentAppearance` writes them on `<html>` so Radix portals
- * (menus, dialogs) inherit the pick; stages already follow the provider.
+ * Scheme, Theme and Idiom live on the Storybook toolbar so every preview
+ * on the canvas follows the same pick. `PinDocumentAppearance` writes
+ * scheme and palette on `<html>` so Radix portals inherit them.
+ * `PinButtonIdiom` does the same for `data-kro-idiom`: default buttons
+ * use the menu-row corner on Desktop and a pill on Mobile.
  */
 
 function KindBanner({
@@ -61,6 +63,20 @@ function KindBanner({
   )
 }
 
+function PinButtonIdiom({ idiom }: { readonly idiom: 'desktop' | 'mobile' }) {
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.getAttribute('data-kro-idiom')
+    root.setAttribute('data-kro-idiom', idiom)
+    return () => {
+      if (root.getAttribute('data-kro-idiom') !== idiom) return
+      if (previous === null) root.removeAttribute('data-kro-idiom')
+      else root.setAttribute('data-kro-idiom', previous)
+    }
+  }, [idiom])
+  return null
+}
+
 const withAppearance: Decorator = (Story, context) => {
   const kind =
     (context.parameters.kro?.kind as StoryKind | undefined) ??
@@ -71,12 +87,15 @@ const withAppearance: Decorator = (Story, context) => {
       ? context.globals.kroPalette
       : undefined,
   )
+  const idiom = context.globals.kroIdiom === 'mobile' ? 'mobile' : 'desktop'
   return (
     <GalleryAppearanceProvider appearance={{ scheme, palette }}>
       <PinDocumentAppearance appearance={{ scheme, palette }} />
+      <PinButtonIdiom idiom={idiom} />
       <div
         data-theme={scheme}
         data-palette={palette}
+        data-kro-idiom={idiom}
         style={{ minHeight: '100%' }}
       >
         <KindBanner kind={kind} title={context.title} />
@@ -115,10 +134,23 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    kroIdiom: {
+      description: 'Button corner: menu-row on desktop, pill on mobile',
+      toolbar: {
+        title: 'Idiom',
+        icon: 'mobile',
+        items: [
+          { value: 'desktop', title: 'Desktop' },
+          { value: 'mobile', title: 'Mobile' },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     kroScheme: 'light',
     kroPalette: 'purple',
+    kroIdiom: 'desktop',
   },
   parameters: {
     controls: {

@@ -6,7 +6,8 @@
  *
  * Canon's structure, kept: a header that is either the signed-in identity (with
  * avatar, email and the Free badge) or the *"Sign In to Kro"* invitation, a
- * divider, and a menu below it. Width 300 is the shell's, not this Fragment's —
+ * divider, and a `Menu` below it — the navigation list, not a one-off row.
+ * Width 300 is the shell's, not this Fragment's —
  * `POPOVER_SIZE.profile` fixes it once and `ProfileControlPage` applies it, so
  * a story can render this content at any width without disagreeing with the app.
  *
@@ -22,6 +23,16 @@
  * nothing" this port refuses elsewhere. Notifications is flag-gated off in
  * canon too (`showsNotifications`), and the flag registry here agrees.
  */
+import {
+  MENU_CLASSES,
+  Menu,
+  MenuItem,
+  MenuSeparator,
+} from '../../../design/hig/navigation/Menu'
+import {
+  type ControlDensity,
+  DEFAULT_CONTROL_DENSITY,
+} from '../../../design/system/density'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import { Avatar } from './SettingsHubFragment'
@@ -32,30 +43,46 @@ export interface ProfilePopoverFragmentProps {
   readonly accountName: string | null
   readonly accountEmail: string | null
   readonly accountInitials: string
+  /** The provider picture. Absent keeps the initials face. */
+  readonly accountAvatarUrl?: string | null
   /** Canon's `Free` capsule under the email. */
   readonly planName: string
   readonly onTapSignIn: () => void
   readonly onTapAllEndeavors: () => void
   readonly onTapSettings: () => void
   readonly onTapSignOut: () => void
+  /**
+   * Compact on the desktop popover, comfortable when the same content is a
+   * sheet. The identity block is a menu row with a larger face: same
+   * inset, fill, and stroke.
+   */
+  readonly density?: ControlDensity
 }
 
 export function ProfilePopoverFragment({
   accountName,
   accountEmail,
   accountInitials,
+  accountAvatarUrl = null,
   planName,
   onTapSignIn,
   onTapAllEndeavors,
   onTapSettings,
   onTapSignOut,
+  density = DEFAULT_CONTROL_DENSITY,
 }: ProfilePopoverFragmentProps) {
   const isSignedIn = accountEmail !== null
+  const isCompact = density === 'compact'
+  const headerClass = cn(
+    MENU_CLASSES.item,
+    isCompact ? MENU_CLASSES.itemCompact : MENU_CLASSES.itemComfortable,
+  )
 
   return (
     <div
       data-testid="profile-popover"
       data-signed-in={isSignedIn}
+      data-density={density}
       className="flex w-full flex-col"
     >
       {isSignedIn ? (
@@ -63,21 +90,23 @@ export function ProfilePopoverFragment({
           type="button"
           data-testid="profile-popover-identity"
           onClick={onTapSettings}
-          className={cn(
-            'flex w-full items-center gap-3 px-kro-medium py-3.5 text-left',
-            'outline-none focus-visible:shadow-[var(--kro-ring)]',
-          )}
+          className={headerClass}
         >
-          <Avatar initials={accountInitials} isSignedIn size={48} />
+          <Avatar
+            initials={accountInitials}
+            isSignedIn
+            avatarUrl={accountAvatarUrl}
+            size={40}
+          />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span
-              className="truncate text-[15px] font-semibold"
+              className="truncate text-sm font-semibold"
               style={{ color: colorVar('fore') }}
             >
               {accountName ?? 'Kro User'}
             </span>
             <span
-              className="truncate text-[12px]"
+              className="truncate text-xs"
               style={{ color: colorVar('foreSecondary') }}
             >
               {accountEmail}
@@ -100,21 +129,18 @@ export function ProfilePopoverFragment({
           type="button"
           data-testid="profile-popover-sign-in"
           onClick={onTapSignIn}
-          className={cn(
-            'flex w-full items-center gap-3 px-kro-medium py-3.5 text-left',
-            'outline-none focus-visible:shadow-[var(--kro-ring)]',
-          )}
+          className={headerClass}
         >
-          <Avatar initials="" isSignedIn={false} size={44} />
+          <Avatar initials="" isSignedIn={false} size={40} />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span
-              className="text-[15px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: colorVar('fore') }}
             >
               Sign In to Kro
             </span>
             <span
-              className="text-[12px]"
+              className="text-xs"
               style={{ color: colorVar('foreSecondary') }}
             >
               Sync your data across devices
@@ -124,49 +150,50 @@ export function ProfilePopoverFragment({
         </button>
       )}
 
-      <Divider />
+      <hr
+        data-slot="menu-separator"
+        className={cn(
+          MENU_CLASSES.separator,
+          isCompact
+            ? MENU_CLASSES.separatorCompact
+            : MENU_CLASSES.separatorComfortable,
+        )}
+      />
 
-      <div className="flex w-full flex-col py-1.5">
-        <MenuRow
-          glyph="checklist"
-          label="All Endeavors"
-          onClick={onTapAllEndeavors}
-        />
-        <MenuRow
-          glyph="creditcard"
-          label="Subscription"
-          onClick={onTapSettings}
-        />
-        <MenuRow glyph="gearshape" label="Settings" onClick={onTapSettings} />
+      <Menu density={density} label="Profile">
+        <MenuItem data-testid="profile-menu-row" onSelect={onTapAllEndeavors}>
+          <RowIcon glyph="checklist" />
+          All Endeavors
+        </MenuItem>
+        <MenuItem data-testid="profile-menu-row" onSelect={onTapSettings}>
+          <RowIcon glyph="creditcard" />
+          Subscription
+        </MenuItem>
+        <MenuItem data-testid="profile-menu-row" onSelect={onTapSettings}>
+          <RowIcon glyph="gearshape" />
+          Settings
+        </MenuItem>
         {isSignedIn ? (
           <>
-            <Divider inset />
-            <MenuRow
-              glyph="rectangle.portrait.and.arrow.right"
-              label="Sign Out"
-              tone="danger"
-              onClick={onTapSignOut}
-            />
+            <MenuSeparator />
+            <MenuItem
+              destructive
+              data-testid="profile-menu-row"
+              onSelect={onTapSignOut}
+            >
+              <RowIcon glyph="rectangle.portrait.and.arrow.right" />
+              Sign Out
+            </MenuItem>
           </>
         ) : null}
-      </div>
+      </Menu>
     </div>
   )
 }
 
-function Divider({ inset = false }: { readonly inset?: boolean }) {
-  return (
-    <div
-      aria-hidden
-      style={{
-        height: '0.75px',
-        marginLeft: inset ? 44 : 0,
-        marginTop: inset ? 4 : 0,
-        marginBottom: inset ? 4 : 0,
-        backgroundColor: colorVar('hairline'),
-      }}
-    />
-  )
+function RowIcon({ glyph }: { readonly glyph: string }) {
+  const Icon = settingsIcon(glyph)
+  return <Icon strokeWidth={2} aria-hidden />
 }
 
 function Chevron() {
@@ -179,36 +206,5 @@ function Chevron() {
       className="shrink-0"
       style={{ color: colorVar('foreSecondary') }}
     />
-  )
-}
-
-function MenuRow({
-  glyph,
-  label,
-  tone = 'normal',
-  onClick,
-}: {
-  readonly glyph: string
-  readonly label: string
-  readonly tone?: 'normal' | 'danger'
-  readonly onClick: () => void
-}) {
-  const Icon = settingsIcon(glyph)
-  const color = tone === 'danger' ? colorVar('kroRed') : colorVar('fore')
-
-  return (
-    <button
-      type="button"
-      data-testid="profile-menu-row"
-      onClick={onClick}
-      className={cn(
-        'flex w-full items-center gap-3 px-kro-medium py-2.5 text-left text-[15px]',
-        'outline-none focus-visible:shadow-[var(--kro-ring)]',
-      )}
-      style={{ color }}
-    >
-      <Icon size={16} strokeWidth={2} aria-hidden className="w-5 shrink-0" />
-      {label}
-    </button>
   )
 }

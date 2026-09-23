@@ -24,6 +24,7 @@ import { GalleryAppearanceToolbar } from '../../../design/storybook/GalleryAppea
 import { StoryKindBadge } from '../../../design/storybook/StoryKindBadge'
 import { STORY_KINDS } from '../../../design/storybook/storyKind'
 import { GlassPanel } from '../../../design/system/glass/GlassPanel'
+import { ROW_HIGHLIGHT } from '../../../design/system/rowHighlight'
 import { OnGradient } from '../../../design/system/gradient/OnGradient'
 import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
 import type { AppPaletteId } from '../../../design/system/tokens/appPalette'
@@ -170,7 +171,10 @@ function CatalogGroupSection({
           aria-expanded={isExpanded}
           aria-controls={panelId}
           onClick={onToggle}
-          className="flex w-full items-center gap-kro-tiny rounded-kro-small px-kro-small py-kro-tiny text-left font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide hover:bg-kro-absolute/25"
+          className={cn(
+            'flex w-full items-center gap-kro-tiny rounded-kro-small px-kro-small py-kro-tiny text-left font-semibold text-kro-fore-secondary text-xs uppercase tracking-wide',
+            ROW_HIGHLIGHT,
+          )}
         >
           <Chevron size={ICON_SIZE.small} aria-hidden="true" />
           {group.title}
@@ -217,7 +221,9 @@ function CatalogComponentRow({
       data-theme={isSelected ? 'dark' : undefined}
       className={cn(
         'mt-px flex w-full items-center justify-between gap-kro-tiny rounded-kro-small px-kro-small text-left text-[11px] leading-tight',
-        isSelected ? 'font-semibold' : 'text-kro-fore hover:bg-kro-absolute/25',
+        isSelected
+          ? 'border border-transparent font-semibold'
+          : cn('text-kro-fore', ROW_HIGHLIGHT),
       )}
       style={{
         minHeight: `${CATALOG_STORY_ROW_HEIGHT}px`,

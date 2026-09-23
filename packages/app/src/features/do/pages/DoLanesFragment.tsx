@@ -54,10 +54,7 @@ import {
   formatTime,
   formatTimeRange,
 } from '../../../design/endeavor'
-import {
-  type ControlDensity,
-  controlMinSizeVar,
-} from '../../../design/system/primitives/button'
+import type { ControlDensity } from '../../../design/system/primitives/button'
 import {
   colorVar,
   radiusVar,
@@ -211,7 +208,7 @@ export function DoLanesFragment(props: DoLanesFragmentProps) {
     <div
       data-testid="do-lanes"
       className={cn(
-        'flex min-h-0 flex-col',
+        'relative flex min-h-0 flex-col',
         hasNoEndeavors ? 'flex-1' : 'gap-kro-large pt-kro-medium',
         className,
       )}
@@ -396,40 +393,13 @@ function SuggestionsLane({
   readonly density: ControlDensity
 }) {
   const cards = suggestions.map((suggestion) => (
-    <div
+    <SuggestionCard
       key={suggestion.source}
-      className="flex shrink-0 items-center gap-kro-small"
-    >
-      <SuggestionCard
-        model={suggestion}
-        density={density}
-        onAction={() => handlers.onAction(suggestion.source)}
-      />
-      {/*
-        Canon dismisses with a swipe-up gesture and a swipe action. On
-        the web a gesture with no visible control is unreachable by
-        keyboard and invisible to a pointer, so the same intent is a
-        real button — the swipe stays available through the card kit's
-        own action surface where a surface opts into it.
-      */}
-      <button
-        type="button"
-        aria-label={`Dismiss ${suggestion.title}`}
-        onClick={() => handlers.onDismiss(suggestion.source)}
-        className={cn(
-          'inline-flex shrink-0 items-center justify-center rounded-kro-pill',
-          'kro-on-gradient outline-none focus-visible:shadow-[var(--kro-ring)]',
-        )}
-        style={{
-          minWidth: controlMinSizeVar(density),
-          minHeight: controlMinSizeVar(density),
-        }}
-      >
-        <span aria-hidden className="text-lg leading-none">
-          ×
-        </span>
-      </button>
-    </div>
+      model={suggestion}
+      density={density}
+      onAction={() => handlers.onAction(suggestion.source)}
+      onDismiss={() => handlers.onDismiss(suggestion.source)}
+    />
   ))
 
   return (

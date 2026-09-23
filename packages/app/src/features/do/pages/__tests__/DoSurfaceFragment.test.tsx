@@ -49,6 +49,13 @@ describe('the surface composes the header, the lanes and the FAB', () => {
     expect(screen.getByTestId('do-lanes')).toBeTruthy()
   })
 
+  it('keeps the day header fixed above the scroller so the lanes are what scroll', () => {
+    renderSurface(<DoSurfaceFragment {...day} />)
+    const scroller = screen.getByTestId('do-scroller')
+    expect(scroller.contains(screen.getByTestId('do-header'))).toBe(false)
+    expect(scroller.contains(screen.getByTestId('do-lanes'))).toBe(true)
+  })
+
   it("offers canon's four quick actions behind the FAB", async () => {
     const onEnterMarkCompleteMode = vi.fn()
     renderSurface(

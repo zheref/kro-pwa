@@ -261,7 +261,24 @@ export const makeLiveAuthService = (
         if (mapped === null) {
           throw AuthExceptions.userCreationFailed('profile row is malformed')
         }
-        return mapped
+        const profile = oauthProfileFromMetadata(sessionUser.user_metadata)
+        const needsProviderAvatar =
+          (row.avatar_url ?? '').length === 0 &&
+          (profile.avatarUrl ?? '').length > 0
+        const needsProviderName =
+          (row.name ?? '').length === 0 && (profile.name ?? '').length > 0
+        // A name or picture the user already set stays. An empty avatar is
+        // filled from the provider — Google's picture — the way a later
+        // launch on KroApple still shows the account photo.
+        if (!needsProviderAvatar && !needsProviderName) return mapped
+        return ensureProfileRow(client, {
+          userId: sessionUser.id,
+          email: sessionUser.email ?? null,
+          name: profile.name,
+          avatarUrl: profile.avatarUrl,
+          provider: providerFromSessionMetadata(sessionUser.app_metadata),
+          now: now(),
+        })
       }
 
       // No profile row yet, but Supabase has a session: this is the first

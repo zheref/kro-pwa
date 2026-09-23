@@ -79,32 +79,40 @@ describe('the Do-mode badge composition — canon geometry', () => {
     }
   })
 
-  it('floats the warning at (−6, −6), OUTSIDE the card chrome', () => {
+  it('does not hang a warning outside the card', () => {
     render(<EndeavorCard model={endeavorCardMocks.mediumUrgency} now={NOW} />)
 
-    expect((warning() as HTMLElement).style.transform).toBe(
-      'translate(-6px, -6px)',
-    )
+    expect(warning()).toBeNull()
+    expect(shell().style.boxShadow).toBe('inset 0 0 0 1px var(--kro-glass-rim)')
+    expect(shell().style.boxShadow).not.toContain('shadow-card')
   })
 
   it('shows the warning for MEDIUM only — High already shouts through the red pill', () => {
     const { rerender } = render(
-      <EndeavorCard model={endeavorCardMocks.mediumUrgency} now={NOW} />,
+      <EndeavorCard
+        model={endeavorCardMocks.mediumUrgency}
+        layout="horizontal"
+        now={NOW}
+      />,
     )
     expect(warning()).not.toBeNull()
+    expect((warning() as HTMLElement).style.transform).toBe('')
 
-    rerender(<EndeavorCard model={endeavorCardMocks.highUrgency} now={NOW} />)
+    rerender(
+      <EndeavorCard
+        model={endeavorCardMocks.highUrgency}
+        layout="horizontal"
+        now={NOW}
+      />,
+    )
     expect(warning()).toBeNull()
   })
 
-  it('shows the warning EXACTLY ONCE per card, in each layout', () => {
-    // The floating (−6, −6) overlay is the vertical card's; the horizontal row
-    // carries its own on the trailing edge. Rendering the shared overlay for
-    // both put the same signal on one row twice.
+  it('keeps the inside warning on the horizontal row only', () => {
     const { rerender } = render(
       <EndeavorCard model={endeavorCardMocks.mediumUrgency} now={NOW} />,
     )
-    expect(warnings()).toHaveLength(1)
+    expect(warnings()).toHaveLength(0)
 
     rerender(
       <EndeavorCard
@@ -128,7 +136,7 @@ describe('the Do-mode badge composition — canon geometry', () => {
     expect(warning()).toBeNull()
   })
 
-  it('puts the mark-complete glyph at (14, −8) on the vertical card', () => {
+  it('keeps the mark-complete glyph inside the vertical card', () => {
     render(
       <EndeavorCard
         model={endeavorCardMocks.highUrgency}
@@ -138,12 +146,10 @@ describe('the Do-mode badge composition — canon geometry', () => {
     )
 
     const control = screen.getByRole('button', { name: 'Mark complete' })
-    expect((control.parentElement as HTMLElement).style.transform).toBe(
-      'translate(14px, -8px)',
-    )
+    expect((control.parentElement as HTMLElement).style.transform).toBe('')
   })
 
-  it('puts it at (8, −8) on the horizontal card, per canon’s tighter emoji area', () => {
+  it('keeps the mark-complete glyph inside the horizontal card', () => {
     render(
       <EndeavorCard
         model={endeavorCardMocks.highUrgency}
@@ -154,9 +160,7 @@ describe('the Do-mode badge composition — canon geometry', () => {
     )
 
     const control = screen.getByRole('button', { name: 'Mark complete' })
-    expect((control.parentElement as HTMLElement).style.transform).toBe(
-      'translate(8px, -8px)',
-    )
+    expect((control.parentElement as HTMLElement).style.transform).toBe('')
   })
 
   it('offers SKIP, not complete, on an event — an event cannot be completed', () => {

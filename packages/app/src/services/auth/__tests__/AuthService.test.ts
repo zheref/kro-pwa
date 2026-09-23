@@ -441,7 +441,7 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
     })
   })
 
-  it('reads the existing row without touching it on a later launch', async () => {
+  it('keeps a name set in Kro and fills an empty avatar from the provider picture', async () => {
     const h = harness({
       session: { user: sessionUser },
       rows: [
@@ -462,7 +462,33 @@ describe('restoring a session on the first return from an OAuth redirect', () =>
 
     const user = await h.service.restoreSession()
 
+    expect(user?.name).toBe('Renamed Later')
+    expect(user?.avatarUrl).toBe('https://avatars.example.com/google.png')
+  })
+
+  it('leaves a picture the account already has, and does not write', async () => {
+    const h = harness({
+      session: { user: sessionUser },
+      rows: [
+        {
+          id: 'g-1',
+          username: null,
+          emails: ['google@example.com'],
+          name: 'Renamed Later',
+          avatar_url: 'https://avatars.example.com/already.png',
+          birth_date: null,
+          nationality: null,
+          login_kind: 'google',
+          connected_services: ['google'],
+          created_at: '2026-01-03T00:00:00.000Z',
+        },
+      ],
+    })
+
+    const user = await h.service.restoreSession()
+
     expect(h.upserts).toHaveLength(0)
+    expect(user?.avatarUrl).toBe('https://avatars.example.com/already.png')
     expect(user?.name).toBe('Renamed Later')
   })
 

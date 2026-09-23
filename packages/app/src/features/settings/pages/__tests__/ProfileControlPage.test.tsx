@@ -84,6 +84,20 @@ describe('the toolbar control', () => {
     })
   })
 
+  it('draws the provider picture, a little smaller than the other header glyphs', async () => {
+    renderControl({
+      ...stubbedThunkExtra,
+      authService: makeStubbedAuthService({
+        initialUser: authUserMocks.google,
+      }),
+    })
+
+    const photo = await screen.findByTestId('avatar-photo')
+    expect(photo.getAttribute('src')).toBe(authUserMocks.google.avatarUrl)
+    expect(screen.queryByTestId('avatar-initials')).toBeNull()
+    expect(screen.getByTestId('profile-control').style.width).toBe('28px')
+  })
+
   it('fires the launch restore itself, so a reload resolves the session', async () => {
     const { store } = renderControl({
       ...stubbedThunkExtra,

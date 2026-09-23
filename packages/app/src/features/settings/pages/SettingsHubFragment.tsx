@@ -15,6 +15,7 @@
  * `ProfileScreen(store:)` one push in. Signed out it is an invitation, and its
  * callback is the auth entry point rather than a push into an empty pane.
  */
+import { useState } from 'react'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { SurfaceCard } from '../../../design/endeavor/SurfaceCard'
 import {
@@ -265,11 +266,16 @@ export function Avatar({
   initials,
   isSignedIn,
   size = 40,
+  avatarUrl = null,
 }: {
   readonly initials: string
   readonly isSignedIn: boolean
   readonly size?: number
+  /** The provider picture, when the account has one. Initials remain the fallback. */
+  readonly avatarUrl?: string | null
 }) {
+  const [photoFailed, setPhotoFailed] = useState(false)
+
   if (!isSignedIn) {
     const Icon = settingsIcon('person.crop.circle')
     return (
@@ -285,6 +291,20 @@ export function Avatar({
       >
         <Icon size={Math.round(size * 0.55)} strokeWidth={2} aria-hidden />
       </span>
+    )
+  }
+
+  if (avatarUrl !== null && avatarUrl.length > 0 && !photoFailed) {
+    return (
+      <img
+        src={avatarUrl}
+        alt=""
+        data-testid="avatar-photo"
+        referrerPolicy="no-referrer"
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+        onError={() => setPhotoFailed(true)}
+      />
     )
   }
 

@@ -45,6 +45,14 @@ export const FAB_INSETS = {
   legacy: { trailing: 16, bottom: 60 },
 } as const
 
+/**
+ * The content-area FAB inset, both axes.
+ *
+ * A step past canon's 12pt and 16pt trailing paddings. The disc uses one
+ * number for the trailing edge and the bottom edge.
+ */
+export const CONTENT_FAB_INSET_PX = 24
+
 export type FabInsetVariant = keyof typeof FAB_INSETS
 
 /**

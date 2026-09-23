@@ -20,10 +20,10 @@
  * |-----------------------|------------------------------|-----------------------------------|
  * | urgency pill          | top-left, inside 12px padding | HIDDEN on Low; circle form on `small` |
  * | reward pill           | top-right, inside 12px padding | ALWAYS shown                     |
- * | floating warning      | `translate(-6px, -6px)` outside the chrome | Medium urgency, and only when not selected |
- * | check / skip glyph    | `translate(14px, -8px)` from the emoji's top-trailing | mark-complete mode only |
+ * | card edge            | inset glass rim, no drop shadow | same edge as a suggestion card |
+ * | check / skip glyph    | on the emoji's top-trailing, inside the card | mark-complete mode only |
  * | card                  | 160×200 default, radius 20   | `cardSize` overrides              |
- * | horizontal card       | full width, `min-height: 100` | emoji 56×56 leading, corner action at (8, −8) |
+ * | horizontal card       | full width, `min-height: 100` | emoji 56×56 leading, corner action inside the row |
  *
  * The warning is Medium-only. That is not a typo in canon: High already shouts
  * through the red pill, so the extra floating glyph is spent on the level that
@@ -247,38 +247,11 @@ export function EndeavorCard(props: EndeavorCardProps) {
       onClick={prepareOnTap}
     >
       {/*
-        The floating warning sits OUTSIDE the card chrome at (−6, −6), which is
-        why the wrapper is `relative` and the glyph is absolutely positioned
-        rather than living inside the card's padding.
-
-        VERTICAL ONLY. Canon puts this overlay in `verticalBody`; the horizontal
-        row carries its own warning INSIDE, on the trailing edge, because a
-        glyph hanging off the corner of a full-width row would collide with the
-        row above it. Rendering both — which an earlier cut of this file did —
-        shows the same signal twice on one card.
+        No glyph hangs off the card. A warning that translated outside the
+        chrome was clipped by the lane and read as a broken badge. Medium
+        urgency on the vertical card is the badge inside the shell; the
+        horizontal row keeps its warning on the trailing edge, inside the row.
       */}
-      {layout === 'vertical' && model.showWarning && !isSelected ? (
-        <span
-          data-slot="endeavor-card-warning"
-          role="img"
-          aria-label="Due soon"
-          className="absolute top-0 left-0 z-10 inline-flex items-center justify-center rounded-kro-pill"
-          style={{
-            transform: 'translate(-6px, -6px)',
-            backgroundColor: colorVar('snow'),
-            color: colorVar('ringGold'),
-            padding: 2,
-            // WEB ADAPTATION. Canon draws the yellow glyph on a bare white
-            // circle; on a white card that disc measures 1.9:1, under SC
-            // 1.4.11's 3:1 for a graphical object. The amber ring keeps canon's
-            // yellow and gives the shape a boundary that clears the floor.
-            boxShadow: `0 0 0 1px ${colorVar('bannerWarning')}`,
-          }}
-        >
-          <Warning size={20} />
-        </span>
-      ) : null}
-
       {layout === 'vertical' ? (
         <VerticalCard {...props} showsOverlay={showsOverlay} />
       ) : (
@@ -327,7 +300,9 @@ function VerticalCard({
         height: cardSize?.height ?? DEFAULT_CARD_HEIGHT,
         borderRadius: radiusVar('surface'),
         backgroundColor: usesGlass ? undefined : colorVar('absolute'),
-        boxShadow: usesGlass ? undefined : shadowVar('card'),
+        boxShadow: usesGlass
+          ? undefined
+          : 'inset 0 0 0 1px var(--kro-glass-rim)',
       }}
     >
       {/* Layer 1 — the card content. Mobile blurs it; macOS replaces it. */}
@@ -364,10 +339,7 @@ function VerticalCard({
               {model.symbol}
             </span>
             {isInMarkCompleteMode ? (
-              <span
-                className="absolute top-0 right-0"
-                style={{ transform: 'translate(14px, -8px)' }}
-              >
+              <span className="absolute top-0 right-0">
                 <MarkCompleteControl
                   model={model}
                   diameter={28}
@@ -543,7 +515,9 @@ function HorizontalCard({
         minHeight: HORIZONTAL_MIN_HEIGHT,
         borderRadius: radiusVar('surface'),
         backgroundColor: usesGlass ? undefined : colorVar('absolute'),
-        boxShadow: usesGlass ? undefined : shadowVar('card'),
+        boxShadow: usesGlass
+          ? undefined
+          : 'inset 0 0 0 1px var(--kro-glass-rim)',
       }}
     >
       {/*
@@ -571,10 +545,7 @@ function HorizontalCard({
             {model.symbol}
           </span>
           {isInMarkCompleteMode ? (
-            <span
-              className="absolute top-0 right-0"
-              style={{ transform: 'translate(8px, -8px)' }}
-            >
+            <span className="absolute top-0 right-0">
               <MarkCompleteControl
                 model={model}
                 diameter={26}

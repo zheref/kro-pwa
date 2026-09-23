@@ -30,6 +30,12 @@ describe('Nav', () => {
     expect(screen.getByLabelText('Navigation').getAttribute('data-slot')).toBe(
       'nav',
     )
+    expect(screen.getByRole('button', { name: 'Do' }).className).toContain(
+      'hover:bg-kro-absolute/25',
+    )
+    expect(screen.getByRole('button', { name: 'Do' }).className).toContain(
+      'hover:border-(--kro-glass-rim)',
+    )
   })
 
   it('reports the tapped destination id and never navigates', async () => {

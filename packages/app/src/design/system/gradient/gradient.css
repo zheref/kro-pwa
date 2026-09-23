@@ -84,10 +84,10 @@
 }
 
 /**
- * LargeScreenTitle grown to the window origin. Size is inline (the title's
- * bottom-trailing corner, measured against the shell host). `inset: auto`
- * must win over `--large-title`'s `inset: 0` so the slab can start at (0, 0)
- * rather than at the header box.
+ * LargeScreenTitle grown to the window origin. The inline box is the full
+ * shell width and the title's bottom edge — the round tracks the header,
+ * the width tracks the window. `inset: auto` must win over `--large-title`'s
+ * `inset: 0` so the slab can start at (0, 0) rather than at the header box.
  */
 .kro-gradient-backdrop--window-bleed {
   inset: auto;

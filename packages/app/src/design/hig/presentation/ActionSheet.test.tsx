@@ -61,7 +61,7 @@ describe('ActionSheet', () => {
 
     const destroy = screen.getByRole('button', { name: 'Delete endeavor' })
     expect(destroy.className).toContain('text-kro-banner-danger')
-    expect(destroy.className).toContain('h-6')
+    expect(destroy.className).toContain('h-7')
     expect(destroy.className).toContain('w-full')
     expect(destroy.getAttribute('data-tone')).toBe('destructive')
 
@@ -106,7 +106,7 @@ describe('ActionSheet', () => {
     ).toBe('compact')
     expect(
       screen.getByRole('button', { name: 'Complete' }).className,
-    ).toContain('h-6')
+    ).toContain('h-7')
     expect(
       screen
         .getByRole('button', { name: 'Reschedule' })

@@ -13,7 +13,7 @@ export type GlassMaterial =
   | 'control'
   /** Top chrome. Hairline instead of a ring, no corner radius. */
   | 'bar'
-  /** A split-view sidebar column. Trailing hairline, 20px corners. */
+  /** A split-view sidebar column. Menu-row corners, light rim, no second edge. */
   | 'sidebar'
   /** A floating tab dock. Capsule inset from the viewport edge. */
   | 'dock'

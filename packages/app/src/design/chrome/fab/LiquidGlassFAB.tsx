@@ -85,12 +85,12 @@ export function LiquidGlassFAB({
       onClick={onClick}
       data-kro-fab=""
       className={cn(className)}
-      // Inline, not a utility. `size="icon"` brings `size-11 rounded-kro-field`
-      // and the `glass` variant brings `px-kro-medium`; `twMerge` cannot merge
-      // either away, because `kro-field` and `kro-pill` are project theme
-      // values it has no config for (see the note in `cn`). An inline style
-      // beats a stylesheet rule outright, which is also what makes the disc's
-      // 62px assertable as a value rather than as a class name.
+      // Inline, not a utility. `size="icon"` brings `size-9 rounded-kro-small`
+      // and the `glass` variant brings horizontal padding; `twMerge` cannot
+      // merge a project radius away (see the note in `cn`). An inline style
+      // beats a stylesheet rule outright — including the mobile pill override
+      // — which is also what makes the disc's diameter assertable as a value
+      // rather than as a class name. `data-kro-fab` marks the same exception.
       style={{
         width: size,
         height: size,

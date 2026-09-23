@@ -6,9 +6,9 @@
  *
  * | Mode              | Compact (tab-bar shell)          | Desktop (sidebar shell)                  |
  * |-------------------|----------------------------------|------------------------------------------|
- * | ordinary          | leading: bell                    | navigation: bell (after the shell's Profile) |
- * |                   | trailing: refresh, visibility    | primary: refresh, visibility (before the shell's Inbox) |
- * | mark-complete     | trailing: **Done**               | primary: **Done**                         |
+ * | ordinary          | leading: bell                    | navigation: visibility, refresh  |
+ * |                   | trailing: refresh, visibility    | primary: bell                    |
+ * | mark-complete     | trailing: **Done**               | navigation: **Done**             |
  *
  * Both tables agree on the two things that are easy to get wrong: the bell is
  * **absent** in mark-complete mode (canon guards it with
@@ -59,6 +59,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import {
+  type CSSProperties,
   type ReactNode,
   useCallback,
   useEffect,
@@ -78,6 +79,11 @@ import {
   SheetTitle,
 } from '../../../design/system/primitives/sheet'
 import { colorVar, radiusVar } from '../../../design/system/tokens/roles'
+import { ICON_SIZE } from '../../../design/system/icons/icons'
+import {
+  TOOLBAR_GLYPH_BUTTON,
+  TOOLBAR_GLYPH_BUTTON_PX,
+} from '../../../design/system/rowHighlight'
 import { cn } from '../../../design/system/utils/cn'
 import type { DoSurfaceLayout } from '../../main/DoSurfaceLayout'
 import type { ShellShape } from '../../main/DoSurfaceLayout'
@@ -157,13 +163,20 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
     if (!inline) setPanelOpen(false)
   }, [inline])
 
-  const leadingPlacement = shape === 'sidebar' ? 'navigation' : 'leading'
-  const trailingPlacement = shape === 'sidebar' ? 'primary' : 'trailing'
+  const bellPlacement = shape === 'sidebar' ? 'primary' : 'leading'
+  const dayPlacement = shape === 'sidebar' ? 'navigation' : 'trailing'
 
+  const glyph = layout.isTouchPrimary ? ICON_SIZE.medium : ICON_SIZE.small
   const controlStyle = {
     minWidth: `${layout.minimumControlSide}px`,
     minHeight: `${layout.minimumControlSide}px`,
   }
+  const glyphStyle = layout.isTouchPrimary
+    ? controlStyle
+    : {
+        width: `${TOOLBAR_GLYPH_BUTTON_PX}px`,
+        height: `${TOOLBAR_GLYPH_BUTTON_PX}px`,
+      }
 
   const bell = (
     <div className="relative inline-flex" data-do-toolbar-anchor="">
@@ -175,7 +188,7 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
           expiredCount: expired.length,
         })}
         expanded={inline ? isPanelOpen : undefined}
-        style={controlStyle}
+        style={glyphStyle}
         onClick={() => {
           if (!inline) {
             onTapNotifications()
@@ -188,13 +201,13 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
       >
         {hasNotifications ? (
           <BellDot
-            size={20}
+            size={glyph}
             aria-hidden="true"
             data-testid="do-bell-badged"
             style={{ color: colorVar('kroRed') }}
           />
         ) : (
-          <Bell size={20} aria-hidden="true" />
+          <Bell size={glyph} aria-hidden="true" />
         )}
       </ToolbarButton>
 
@@ -215,18 +228,18 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
   const refresh = (
     <ToolbarButton
       label={isLoading ? 'Show sync status' : 'Refresh'}
-      style={controlStyle}
+      style={glyphStyle}
       onClick={onRefresh}
     >
       {isLoading ? (
         <LoaderCircle
-          size={20}
+          size={glyph}
           aria-hidden="true"
           data-testid="do-refresh-spinner"
           className="motion-safe:animate-spin"
         />
       ) : (
-        <RefreshCw size={20} aria-hidden="true" />
+        <RefreshCw size={glyph} aria-hidden="true" />
       )}
     </ToolbarButton>
   )
@@ -237,14 +250,14 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
       <ToolbarButton
         label="Visibility Filters"
         expanded={isVisibilityOpen}
-        style={controlStyle}
+        style={glyphStyle}
         onClick={() => setVisibilityOpen(!isVisibilityOpen)}
       >
         {allVisible ? (
-          <Eye size={20} aria-hidden="true" />
+          <Eye size={glyph} aria-hidden="true" />
         ) : (
           <EyeOff
-            size={20}
+            size={glyph}
             aria-hidden="true"
             data-testid="do-visibility-filtered"
           />
@@ -277,26 +290,31 @@ export function DoToolbarFragment(props: DoToolbarFragmentProps) {
   return (
     <>
       <Placed
-        placement={leadingPlacement}
-        className={className}
-        gap={layout.minimumControlSpacing}
-      >
-        {isInMarkCompleteMode ? null : bell}
-      </Placed>
-
-      <Placed
-        placement={trailingPlacement}
+        placement={dayPlacement}
         className={className}
         gap={layout.minimumControlSpacing}
       >
         {isInMarkCompleteMode ? (
           done
+        ) : shape === 'sidebar' ? (
+          <>
+            {visibilityControl}
+            {refresh}
+          </>
         ) : (
           <>
             {refresh}
             {visibilityControl}
           </>
         )}
+      </Placed>
+
+      <Placed
+        placement={bellPlacement}
+        className={className}
+        gap={layout.minimumControlSpacing}
+      >
+        {isInMarkCompleteMode ? null : bell}
       </Placed>
 
       {/*
@@ -370,7 +388,7 @@ function ToolbarButton({
   readonly label: string
   readonly accessibilityValue?: string
   readonly expanded?: boolean
-  readonly style: { minWidth: string; minHeight: string }
+  readonly style: CSSProperties
   readonly onClick: () => void
   readonly children: ReactNode
 }) {
@@ -387,10 +405,7 @@ function ToolbarButton({
       }
       aria-expanded={expanded}
       onClick={onClick}
-      className={cn(
-        'flex items-center justify-center rounded-kro-small text-white',
-        'outline-none hover:text-kro-accent focus-visible:shadow-[var(--kro-ring)]',
-      )}
+      className={cn(TOOLBAR_GLYPH_BUTTON, 'text-white')}
       style={style}
     >
       {children}

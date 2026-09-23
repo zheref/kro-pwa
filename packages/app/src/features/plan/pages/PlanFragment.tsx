@@ -42,7 +42,7 @@ import { Eye, EyeOff, Loader2, RefreshCw } from 'lucide-react'
 import { type ReactNode, useRef } from 'react'
 import {
   CHROME_LAYOUT,
-  FAB_INSETS,
+  CONTENT_FAB_INSET_PX,
   type FABMenuEntry,
   GLOW_SHAPES,
   LiquidGlassFABMenu,
@@ -50,6 +50,10 @@ import {
   springEasing,
 } from '../../../design/chrome'
 import { ICON_SIZE } from '../../../design/system/icons/icons'
+import {
+  TOOLBAR_GLYPH_BUTTON,
+  TOOLBAR_GLYPH_BUTTON_PX,
+} from '../../../design/system/rowHighlight'
 import { PageFieldEmpty } from '../../../design/system/gradient/OnGradient'
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { cn } from '../../../design/system/utils/cn'
@@ -77,14 +81,12 @@ import {
 import { useReducedMotionPreference } from './timeline/useTimelineGestures'
 
 /**
- * `FAB_INSETS.modern.trailing`, both axes.
+ * Equal inset from the content area's trailing and bottom edges.
  *
- * Canon's **bottom** inset (53pt) is tab-bar clearance: its FAB floats *over*
- * the bar. This shell renders the tab bar as a sibling of the destination, so
- * the destination's own box already ends above it — re-applying canon's number
- * would park the button a bar's height above nothing.
+ * A step past the 12–16pt canon trailing paddings. The disc uses this number
+ * on both axes so it does not sit tighter to the right than to the floor.
  */
-export const PLAN_FAB_INSET = FAB_INSETS.modern.trailing
+export const PLAN_FAB_INSET = CONTENT_FAB_INSET_PX
 
 /**
  * `PlanLayoutMetrics.scrollBottomInset`, recomputed for that same shell.
@@ -94,7 +96,7 @@ export const PLAN_FAB_INSET = FAB_INSETS.modern.trailing
  * disc, its two insets, and canon's own `bottomBreathingRoom`.
  */
 export const PLAN_SCROLL_BOTTOM_INSET =
-  CHROME_LAYOUT.fabDiameter + PLAN_FAB_INSET * 2 + 16
+  CHROME_LAYOUT.fabDiameter + CONTENT_FAB_INSET_PX * 2 + 16
 
 /** `.snappy(duration: 0.28, extraBounce: 0)` — canon's mode-swap spring. */
 const SLIDE_SPRING = { response: 0.28, dampingFraction: 1 - 0.15 } as const
@@ -182,14 +184,17 @@ export function PlanFragment({
     fact, instead of inferring it from an empty DOM.
   */
   const refreshPlacement = useToolbarPlacement('navigation', 'leading')
-  const visibilityPlacement = useToolbarPlacement('primary', 'trailing')
+  const visibilityPlacement = useToolbarPlacement('navigation', 'trailing')
 
   return (
     <section
       data-testid="plan-surface"
       data-view-mode={viewMode}
       aria-label="Plan"
-      className={cn('relative flex h-full min-h-0 flex-col', className)}
+      className={cn(
+        'relative flex h-full min-h-0 flex-col overflow-hidden',
+        className,
+      )}
     >
       {/*
         `kro-gradient-headline` on the whole title block, not `text-kro-fore`.
@@ -262,33 +267,6 @@ export function PlanFragment({
         .topBarLeading)`. It IS the activity signal: while anything is in
         flight it becomes a spinner, and canon's own label swaps with it.
       */}
-        <ToolbarControl placement={refreshPlacement} testId="plan-refresh-slot">
-          <button
-            type="button"
-            data-testid="plan-refresh"
-            data-busy={isActivityIndicated ? 'true' : 'false'}
-            aria-label={isActivityIndicated ? 'Syncing' : 'Refresh'}
-            aria-busy={isActivityIndicated}
-            disabled={isActivityIndicated}
-            onClick={onTapRefresh}
-            className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent disabled:cursor-default"
-          >
-            {isActivityIndicated ? (
-              <Loader2
-                size={ICON_SIZE.medium}
-                aria-hidden="true"
-                // The one spinner on this surface. `animate-spin` is a CSS
-                // animation, so `motion.css`'s blanket reduced-motion rule
-                // already stills it — no second suppression here.
-                className="animate-spin"
-              />
-            ) : (
-              <RefreshCw size={ICON_SIZE.medium} aria-hidden="true" />
-            )}
-          </button>
-        </ToolbarControl>
-
-        {/* The visibility eye — canon's `ToolbarItemGroup(placement: .topBarTrailing)`. */}
         <ToolbarControl
           placement={visibilityPlacement}
           testId="plan-visibility-slot"
@@ -300,12 +278,43 @@ export function PlanFragment({
             aria-expanded={isVisibilityOpen}
             data-filtered={allFiltersEnabled ? 'false' : 'true'}
             onClick={() => onToggleVisibilityPanel(!isVisibilityOpen)}
-            className="flex size-8 items-center justify-center rounded-kro-small border-none bg-transparent text-kro-fore hover:text-kro-accent"
+            className={TOOLBAR_GLYPH_BUTTON}
+            style={{
+              width: TOOLBAR_GLYPH_BUTTON_PX,
+              height: TOOLBAR_GLYPH_BUTTON_PX,
+            }}
           >
             {allFiltersEnabled ? (
-              <Eye size={ICON_SIZE.medium} aria-hidden="true" />
+              <Eye size={ICON_SIZE.small} aria-hidden="true" />
             ) : (
-              <EyeOff size={ICON_SIZE.medium} aria-hidden="true" />
+              <EyeOff size={ICON_SIZE.small} aria-hidden="true" />
+            )}
+          </button>
+        </ToolbarControl>
+
+        <ToolbarControl placement={refreshPlacement} testId="plan-refresh-slot">
+          <button
+            type="button"
+            data-testid="plan-refresh"
+            data-busy={isActivityIndicated ? 'true' : 'false'}
+            aria-label={isActivityIndicated ? 'Syncing' : 'Refresh'}
+            aria-busy={isActivityIndicated}
+            disabled={isActivityIndicated}
+            onClick={onTapRefresh}
+            className={cn(TOOLBAR_GLYPH_BUTTON, 'disabled:cursor-default')}
+            style={{
+              width: TOOLBAR_GLYPH_BUTTON_PX,
+              height: TOOLBAR_GLYPH_BUTTON_PX,
+            }}
+          >
+            {isActivityIndicated ? (
+              <Loader2
+                size={ICON_SIZE.small}
+                aria-hidden="true"
+                className="animate-spin"
+              />
+            ) : (
+              <RefreshCw size={ICON_SIZE.small} aria-hidden="true" />
             )}
           </button>
         </ToolbarControl>
@@ -363,7 +372,7 @@ export function PlanFragment({
         <div
           data-testid="plan-fab"
           className="pointer-events-none absolute right-0 bottom-0 z-30 flex justify-end overflow-visible"
-          style={{ padding: PLAN_FAB_INSET }}
+          style={{ padding: CONTENT_FAB_INSET_PX }}
         >
           <div className="pointer-events-auto">
             <LiquidGlassFABMenu

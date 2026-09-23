@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CHROME_LAYOUT,
+  CONTENT_FAB_INSET_PX,
   FAB_INSETS,
   SHELL_BOTTOM_INSET_FALLBACK,
   SHELL_BOTTOM_INSET_VAR,
@@ -39,6 +40,7 @@ describe('the FAB and pill geometry matches MainScreen', () => {
     // iOS 26 draws a taller tab bar, so MainScreen genuinely uses two pairs.
     expect(FAB_INSETS.modern).toEqual({ trailing: 12, bottom: 53 })
     expect(FAB_INSETS.legacy).toEqual({ trailing: 16, bottom: 60 })
+    expect(CONTENT_FAB_INSET_PX).toBe(24)
   })
 
   it('offsets the pill by the FAB`s own width plus the shared spacing', () => {

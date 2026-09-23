@@ -27,10 +27,14 @@ describe('the Chromium field-outline reset', () => {
     )
   })
 
-  it('pairs that kill with the design-system ring, so keyboard focus stays visible', () => {
+  it('keeps the browser text box unringed, and paints the FAB glow lime on the field', () => {
     expect(STYLES).toMatch(
-      /:where\(input, textarea, select\):focus-visible[\s\S]*?box-shadow:\s*var\(--kro-ring\)/,
+      /:where\(input, textarea, select\):focus-visible[\s\S]*?box-shadow:\s*none/,
     )
+    expect(STYLES).toMatch(
+      /:where\(\[data-slot="input"\], \[data-slot="textarea"\]\):focus-visible[\s\S]*?box-shadow:\s*0 0 0 3px var\(--kro-color-glow-lime\)/,
+    )
+    expect(STYLES).toContain('var(--kro-color-glow-lime)')
   })
 })
 

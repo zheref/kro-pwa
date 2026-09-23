@@ -89,6 +89,7 @@ import * as outlineStories from '../../design/hig/layout/OutlineView.stories'
 import * as splitViewStories from '../../design/hig/layout/SplitView.stories'
 import * as separatorStories from '../../design/hig/layout/Separator.stories'
 import * as scrollViewStories from '../../design/hig/layout/ScrollView.stories'
+import * as menuListStories from '../../design/hig/navigation/Menu.stories'
 import * as navigationBarStories from '../../design/hig/navigation/NavigationBar.stories'
 import * as pathControlStories from '../../design/hig/navigation/PathControl.stories'
 import * as searchFieldStories from '../../design/hig/navigation/SearchField.stories'
@@ -250,7 +251,9 @@ export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
   ]),
   group('Navigation', [
     component('Accordion', accordionStories, 'component'),
+    component('Menu list', menuListStories, 'component'),
     component('Navigation bar', navigationBarStories, 'component'),
+    component('Popover', popoverStories, 'primitive'),
     component('Path control', pathControlStories, 'component'),
     component('Sidebar', sidebarStories, 'component'),
     component('Tab bar', tabBarStories, 'component'),
@@ -265,7 +268,6 @@ export const STORY_CATALOG_GROUPS: readonly CatalogGroup[] = [
     component('Dialog', dialogStories, 'primitive'),
     component('Menu', dropdownMenuStories, 'primitive'),
     component('Panel', panelStories, 'component'),
-    component('Popover', popoverStories, 'primitive'),
     component('Sheet', sheetStories, 'primitive'),
     component('Tooltip', tooltipStories, 'component'),
   ]),

@@ -90,7 +90,7 @@ describe('SuggestionCard', () => {
     const card = container.querySelector(
       '[data-slot="suggestion-card"]',
     ) as HTMLElement
-    expect(card.className).toContain('h-20')
+    expect(card.className).toContain('min-h-20')
     expect(card.className).toContain('p-kro-medium')
     expect(card.className).toContain('gap-kro-small')
   })
@@ -151,18 +151,55 @@ describe('SuggestionCard', () => {
     expect(SUGGESTION_CARD_MAX_WIDTH_PX).toBe(Math.round((340 * 4) / 3))
   })
 
-  it('defaults the CTA to the 28px pointer target so the title does not wrap', () => {
+  it('defaults the CTA to the compact button', () => {
     render(<SuggestionCard model={model} onAction={() => undefined} />)
 
     const action = screen.getByRole('button', { name: /Connect/ })
-    expect(action.style.minHeight).toBe('var(--kro-size-min-pointer-target)')
+    expect(action.getAttribute('data-slot')).toBe('button')
+    expect(action.getAttribute('data-size')).toBe('sm')
+    expect(action.className).toContain('h-7')
+    expect(action.className).toContain('w-full')
+    expect(action.className).not.toContain('kro-glass')
+    expect(action.style.backgroundColor).toBe('var(--kro-color-fore)')
+    expect(action.style.color).toBe('var(--kro-color-absolute)')
+    expect(action.querySelector('svg')).toBeNull()
     expect(
-      (document.querySelector('[data-slot="suggestion-card"]') as HTMLElement)
-        .dataset.density,
-    ).toBe('compact')
+      screen.getByTestId('google-calendar-mark').getAttribute('class'),
+    ).toContain('mr-kro-small')
+    expect(
+      screen.getByTestId('google-calendar-mark').getAttribute('viewBox'),
+    ).toBe('0 0 800 859.0954')
+    const card = document.querySelector(
+      '[data-slot="suggestion-card"]',
+    ) as HTMLElement
+    expect(card.dataset.density).toBe('compact')
+    expect(card.style.boxShadow).toBe('inset 0 0 0 1px var(--kro-glass-rim)')
+    expect(card.style.boxShadow).not.toContain('shadow')
   })
 
-  it('uses the 44px touch floor when the surface asks for comfortable density', () => {
+  it('puts Dismiss under Connect as a word, not a second shaped control', () => {
+    const onDismiss = vi.fn()
+    render(
+      <SuggestionCard
+        model={model}
+        onAction={() => undefined}
+        onDismiss={onDismiss}
+      />,
+    )
+
+    const dismiss = screen.getByRole('button', { name: 'Dismiss' })
+    const connect = screen.getByRole('button', { name: /Connect/ })
+    expect(dismiss.className).not.toContain('kro-glass')
+    expect(dismiss.className).toContain('h-7')
+    expect(dismiss.className).toContain('w-full')
+    expect(dismiss.className).toContain('justify-center')
+    expect(connect.className).toContain('w-full')
+    expect(connect.parentElement).toBe(dismiss.parentElement)
+    const card = document.querySelector('[data-slot="suggestion-card"]')
+    expect(card?.contains(dismiss)).toBe(true)
+  })
+
+  it('uses the 44px floor when the surface asks for comfortable density', () => {
     render(
       <SuggestionCard
         model={model}
@@ -172,7 +209,7 @@ describe('SuggestionCard', () => {
     )
 
     expect(
-      screen.getByRole('button', { name: /Connect/ }).style.minHeight,
-    ).toBe('var(--kro-size-min-touch-target)')
+      screen.getByRole('button', { name: /Connect/ }).getAttribute('data-size'),
+    ).toBe('lg')
   })
 })

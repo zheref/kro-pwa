@@ -24,6 +24,16 @@ describe('the pressed-in glass bezel', () => {
 })
 
 describe('control glass', () => {
+  it('lights the rim from a source instead of a uniform ring', () => {
+    const glass = CSS.match(/\.kro-glass\s*\{[^}]+\}/)?.[0] ?? ''
+    expect(glass).toContain('--kro-glass-light-rim')
+    expect(glass).not.toContain('inset 0 0 0 1px var(--kro-glass-rim)')
+  })
+
+  it('rounds the popover like a menu row', () => {
+    expect(CSS).toMatch(/\.kro-popover\.kro-glass\s*\{[^}]*--kro-radius-small/)
+  })
+
   it('does not force a 44px floor — height belongs to the control', () => {
     const control = CSS.match(/\.kro-glass--control\s*\{[^}]+\}/)?.[0] ?? ''
     expect(control).not.toContain('min-height')

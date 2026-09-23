@@ -31,10 +31,14 @@
  * `ToolbarOutlet`, never hardcoded here.
  */
 import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
-import type { CSSProperties, ReactNode } from 'react'
+import { useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
 import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
+import {
+  TOOLBAR_GLYPH_BUTTON,
+  TOOLBAR_GLYPH_BUTTON_PX,
+} from '../../design/system/rowHighlight'
 import { cn } from '../../design/system/utils/cn'
 import {
   type DoSurfaceLayout,
@@ -99,10 +103,28 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     [SHELL_BOTTOM_INSET_VAR]: `${shellBottomInset(shape, layout)}px`,
   } as CSSProperties
 
+  /*
+    Portaled panels (Inbox, a Radix popover) render on `document.body`, outside
+    this shell, so a `data-kro-idiom` on the shell alone would not reach them.
+    The document element is the one ancestor they still have. Default buttons
+    read it to pick the menu-row corner or a pill.
+  */
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    const idiom = shape === 'sidebar' ? 'desktop' : 'mobile'
+    root.setAttribute('data-kro-idiom', idiom)
+    return () => {
+      if (root.getAttribute('data-kro-idiom') === idiom) {
+        root.removeAttribute('data-kro-idiom')
+      }
+    }
+  }, [shape])
+
   return shape === 'sidebar' ? (
     <div
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
+      data-kro-idiom="desktop"
       className="relative flex h-dvh w-full overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
@@ -133,7 +155,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
             onTapInbox={onTapInbox}
           />
 
-          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+          <main className="relative z-0 min-h-0 flex-1 overflow-x-clip overflow-y-auto">
             {children}
           </main>
         </ContentColumn>
@@ -143,6 +165,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     <div
       data-testid="shell-tab-bar-shape"
       data-shell-shape="tabBar"
+      data-kro-idiom="mobile"
       className="relative flex h-dvh w-full flex-col overflow-hidden overscroll-y-contain"
       style={shellStyle}
     >
@@ -164,7 +187,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
         />
 
         <ContentColumn>
-          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+          <main className="relative z-0 min-h-0 flex-1 overflow-x-clip overflow-y-auto">
             {children}
           </main>
         </ContentColumn>
@@ -212,10 +235,9 @@ function ContentColumn({ children }: { readonly children: ReactNode }) {
  * origin and passes *under* these controls. The destination heading lives on
  * that title (My Day, Plan); every other destination still prints one here.
  *
- * `navigation` group: Profile (shell-owned) then whatever a feature slots
- * beside it, which is canon's Notifications bell.
- * `primary` group: Inbox (shell-owned) then the feature's Refresh and
- * Visibility.
+ * `navigation` group, on the leading side after the sidebar toggle: Visibility,
+ * then Refresh, then the shell's Inbox.
+ * `primary` group, on the trailing side: the Notifications bell, then Profile.
  */
 function ContentToolbar({
   layout,
@@ -233,9 +255,12 @@ function ContentToolbar({
   const paintsLargeTitle = destinationPaintsLargeTitle(selected)
 
   return (
+    // Above the content column's main (`z-0`). An anchored panel (Visibility,
+    // Notifications) hangs out of this bar; if main is a later sibling at the
+    // same level, the title and the page paint over that panel.
     <header
       data-testid="shell-content-toolbar"
-      className="relative z-10 flex shrink-0 items-center justify-between px-kro-medium"
+      className="relative z-20 flex shrink-0 items-center justify-between pr-kro-medium pl-kro-small"
       style={{
         gap: `${layout.minimumControlSpacing}px`,
         minHeight: `${layout.minimumControlSide + 16}px`,
@@ -250,17 +275,19 @@ function ContentToolbar({
           layout={layout}
           onClick={onToggleSidebar}
         >
-          <PanelLeft size={ICON_SIZE.medium} aria-hidden="true" />
+          <PanelLeft size={headerGlyph(layout)} aria-hidden="true" />
         </ToolbarButton>
-
-        {layout.showsProfileControl && (
-          <ProfileControl layout={layout} onTapProfile={onTapProfile} />
-        )}
 
         <ToolbarOutlet
           placement="navigation"
           className="flex items-center gap-kro-small"
         />
+
+        {layout.showsInboxControl && (
+          <ToolbarButton label="Inbox" layout={layout} onClick={onTapInbox}>
+            <Inbox size={headerGlyph(layout)} aria-hidden="true" />
+          </ToolbarButton>
+        )}
 
         {paintsLargeTitle ? null : (
           <h1
@@ -278,25 +305,16 @@ function ContentToolbar({
         className="flex items-center"
         style={{ gap: `${layout.minimumControlSpacing}px` }}
       >
-        {/*
-          Inbox FIRST, then the feature's slot (KC-IS-#71 item 4).
-
-          Canon's `macDoToolbar` builds its primary group as Inbox, Refresh,
-          Visibility — the shell's own control leads and the destination's two
-          follow. The outlet used to be rendered first, which put a Do surface's
-          Refresh and Visibility to the left of Inbox and read as a different
-          toolbar from the one KroApple ships.
-        */}
-        {layout.showsInboxControl && (
-          <ToolbarButton label="Inbox" layout={layout} onClick={onTapInbox}>
-            <Inbox size={ICON_SIZE.medium} aria-hidden="true" />
-          </ToolbarButton>
-        )}
-
         <ToolbarOutlet
           placement="primary"
           className="flex items-center gap-kro-small"
         />
+
+        {layout.showsProfileControl && (
+          <div className="ml-kro-small">
+            <ProfileControl layout={layout} onTapProfile={onTapProfile} />
+          </div>
+        )}
       </div>
     </header>
   )
@@ -348,7 +366,7 @@ function TabBarToolbar({
             layout={layout}
             onClick={onTapSettings}
           >
-            <Settings size={ICON_SIZE.medium} aria-hidden="true" />
+            <Settings size={headerGlyph(layout)} aria-hidden="true" />
           </ToolbarButton>
         )}
 
@@ -374,7 +392,7 @@ function TabBarToolbar({
         />
 
         <ToolbarButton label="Inbox" layout={layout} onClick={onTapInbox}>
-          <Inbox size={ICON_SIZE.medium} aria-hidden="true" />
+          <Inbox size={headerGlyph(layout)} aria-hidden="true" />
         </ToolbarButton>
       </div>
     </header>
@@ -408,11 +426,15 @@ function ProfileControl({
       <ToolbarOutlet placement="profile" className="flex items-center" />
       {isSlotted ? null : (
         <ToolbarButton label="Profile" layout={layout} onClick={onTapProfile}>
-          <User size={ICON_SIZE.medium} aria-hidden="true" />
+          <User size={headerGlyph(layout)} aria-hidden="true" />
         </ToolbarButton>
       )}
     </>
   )
+}
+
+function headerGlyph(layout: DoSurfaceLayout): number {
+  return layout.isTouchPrimary ? ICON_SIZE.medium : ICON_SIZE.small
 }
 
 function ToolbarButton({
@@ -431,11 +453,18 @@ function ToolbarButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex items-center justify-center rounded-kro-small kro-on-gradient hover:opacity-80"
-      style={{
-        minWidth: `${layout.minimumControlSide}px`,
-        minHeight: `${layout.minimumControlSide}px`,
-      }}
+      className={cn(TOOLBAR_GLYPH_BUTTON, 'kro-on-gradient')}
+      style={
+        layout.isTouchPrimary
+          ? {
+              minWidth: layout.minimumControlSide,
+              minHeight: layout.minimumControlSide,
+            }
+          : {
+              width: TOOLBAR_GLYPH_BUTTON_PX,
+              height: TOOLBAR_GLYPH_BUTTON_PX,
+            }
+      }
     >
       {children}
     </button>

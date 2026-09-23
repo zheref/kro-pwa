@@ -595,6 +595,32 @@ export const KRO_CATALOG: readonly KroCatalogEntry[] = [
     purpose: 'Frequent actions for the current view, grouped.',
     alsoKnownAs: [aka('Toolbars', 'HIG'), aka('Toolbar', 'Fluent 2')],
   },
+  {
+    kroName: 'Menu',
+    title: 'Menu list',
+    slug: 'menu-list',
+    category: 'Navigation',
+    purpose:
+      'A command list that lives inside a popover or a sheet. Rows hover with the same translucent fill and lighter glass rim as a sidebar row. Comfortable rows on mobile grow for touch. It does not position itself.',
+    alsoKnownAs: [
+      aka('Menus', 'HIG'),
+      aka('Menu', 'Fluent 2'),
+      aka('Menu', 'Material'),
+    ],
+  },
+  {
+    kroName: 'Popover',
+    title: 'Popover',
+    slug: 'popover',
+    category: 'Navigation',
+    purpose:
+      'A panel anchored to the control that presented it. The pointer is part of the same glass shape, aimed at that control. The same content becomes a sheet on a narrow surface.',
+    alsoKnownAs: [
+      aka('Popovers', 'HIG'),
+      aka('Popover', 'Fluent 2'),
+      aka('AnchoredOverlay', 'Primer'),
+    ],
+  },
 
   // —— Surfaces ——————————————————————————————————————————————
   {
@@ -666,18 +692,6 @@ export const KRO_CATALOG: readonly KroCatalogEntry[] = [
     category: 'Surfaces',
     purpose: 'A persistent inspector beside the main view.',
     alsoKnownAs: [aka('Panels', 'HIG')],
-  },
-  {
-    kroName: 'Popover',
-    title: 'Popover',
-    slug: 'popover',
-    category: 'Surfaces',
-    purpose: 'A small surface anchored to a control for nonessential context.',
-    alsoKnownAs: [
-      aka('Popovers', 'HIG'),
-      aka('Popover', 'Fluent 2'),
-      aka('AnchoredOverlay', 'Primer'),
-    ],
   },
   {
     kroName: 'Sheet',

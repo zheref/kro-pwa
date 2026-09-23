@@ -1,6 +1,7 @@
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { Check } from 'lucide-react'
 import type { ComponentPropsWithoutRef } from 'react'
+import { ROW_HIGHLIGHT } from '../rowHighlight'
 import { cn } from '../utils/cn'
 
 /**
@@ -35,7 +36,9 @@ export const DROPDOWN_MENU_CLASSES = {
   item: cn(
     'relative flex h-6 cursor-default select-none items-center gap-kro-small',
     'rounded-kro-small px-kro-small text-xs outline-none',
-    'text-kro-fore focus:bg-kro-back-inner',
+    'text-kro-fore',
+    ROW_HIGHLIGHT,
+    'focus:border-(--kro-glass-rim) focus:bg-kro-absolute/25',
     'data-[disabled]:pointer-events-none data-[disabled]:opacity-[var(--kro-opacity-disabled)]',
     "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3.5",
   ),
@@ -43,7 +46,9 @@ export const DROPDOWN_MENU_CLASSES = {
   checkboxItem: cn(
     'relative flex h-6 cursor-default select-none items-center gap-kro-small',
     'rounded-kro-small py-kro-tiny pr-kro-small pl-8 text-xs outline-none',
-    'text-kro-fore focus:bg-kro-back-inner',
+    'text-kro-fore',
+    ROW_HIGHLIGHT,
+    'focus:border-(--kro-glass-rim) focus:bg-kro-absolute/25',
     'data-[disabled]:pointer-events-none data-[disabled]:opacity-[var(--kro-opacity-disabled)]',
   ),
   label: cn(

@@ -125,6 +125,9 @@ describe('GradientBackdrop', () => {
     expect(screen.getByTestId('host').contains(slab)).toBe(true)
     expect(screen.getByTestId('header').contains(slab)).toBe(false)
     expect(slab.className).toContain('kro-gradient-backdrop--window-bleed')
+    expect(slab.style.width).toBe('100%')
+    expect(slab.style.left).toBe('0px')
+    expect(slab.style.right).toBe('0px')
   })
 
   it('coalesces scroll measures onto one animation frame', () => {

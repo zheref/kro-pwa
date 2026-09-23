@@ -50,6 +50,7 @@ import {
   EndeavorKind as Kind,
 } from '@kro/core'
 import { ICON_SIZE, iconForSymbol } from '../../../design/system/icons/icons'
+import { ROW_HIGHLIGHT } from '../../../design/system/rowHighlight'
 import { cn } from '../../../design/system/utils/cn'
 import type { PlanVisibility, PlanVisibilityToggle } from '../PlanState'
 
@@ -228,9 +229,9 @@ export function VisibilityFilterSection({
             onClick={() => onToggle(row.toggle)}
             className={cn(
               'flex w-full items-center justify-between gap-kro-small',
-              'rounded-kro-field border-none bg-transparent',
+              'rounded-kro-field bg-transparent',
               'px-kro-small py-kro-small text-left text-kro-fore text-sm',
-              'hover:bg-kro-back-inner',
+              ROW_HIGHLIGHT,
             )}
           >
             <span>{row.label}</span>

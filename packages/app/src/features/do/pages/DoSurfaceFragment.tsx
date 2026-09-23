@@ -29,12 +29,8 @@
  */
 import type { ActivityRing } from '../../../design/chrome'
 import {
-  CHROME_LAYOUT,
-  DEFAULT_GLOW_BLUR_RADIUS,
-  DEFAULT_GLOW_SPREAD,
-  FAB_INSETS,
+  CONTENT_FAB_INSET_PX,
   LiquidGlassFABMenu,
-  glowPlumeMargin,
   useActiveToasts,
 } from '../../../design/chrome'
 import {
@@ -145,7 +141,10 @@ export function DoSurfaceFragment(props: DoSurfaceFragmentProps) {
     <div
       data-testid="do-surface"
       data-shell-shape={props.shape}
-      className={cn('relative flex h-full min-h-0 flex-col', props.className)}
+      className={cn(
+        'relative flex h-full min-h-0 flex-col overflow-hidden',
+        props.className,
+      )}
     >
       <DoSurfaceBody {...props} />
     </div>
@@ -273,13 +272,20 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
 
   return (
     <>
+      <DoHeaderFragment
+        className="relative z-10 shrink-0"
+        content={header}
+        rings={rings}
+        showsRings={showsRings}
+      />
+
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: the scroller's background
           is not a control — every action inside it is a real button, and Escape
           is not a dismissal here (nothing is presented). */}
       <div
         ref={scrollerRef}
         data-testid="do-scroller"
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="relative min-h-0 flex-1 overflow-x-clip overflow-y-auto"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={endPull}
@@ -305,7 +311,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           during render — same picture, impure for no gain.
         */}
         <div
-          className="flex min-h-full flex-col"
+          className="relative flex min-h-full flex-col"
           style={{
             transform: pull > 0 ? `translateY(${pull}px)` : undefined,
             transition: pull === 0 ? 'transform 200ms' : undefined,
@@ -327,13 +333,6 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
                 : 'Pull to refresh'}
             </div>
           ) : null}
-
-          <DoHeaderFragment
-            className="shrink-0"
-            content={header}
-            rings={rings}
-            showsRings={showsRings}
-          />
 
           {exceptionMessage === null ? null : (
             /*
@@ -390,28 +389,13 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
       <div
         className="pointer-events-none absolute right-0 bottom-0 z-20 flex justify-end overflow-visible"
         /*
-          Canon's trailing inset, and NOT canon's bottom one. `FAB_INSETS`
-          carries 16 / 60 because iOS stacks the FAB over the whole screen,
-          tab bar included, so 60pt is what clears the bar. Here the FAB lives
-          inside the shell's `<main>`, which already ends above the tab bar —
-          taking canon's 60 as well would count the bar twice and leave the
-          disc floating in the middle of the last lane. 24 is the same
-          bottom breathing room the Active Toast uses, and the two share this
-          corner.
-
-          Extra plume room: RotatingGlow casts a coloured shadow *from behind
-          the disc*, so the blur has to be able to spill below the button
-          instead of clipping into a rim. The toast padding already lifts the
-          disc; the plume margin is the extra reach canon's `.padding(-margin)`
-          gives the glow layer, plus another blur×2 so the under-cast can
-          bloom toward the floor.
+          The disc sits the same distance from the trailing edge and the
+          bottom edge. The glow is allowed to spill; it does not add a second
+          inset.
         */
         style={{
-          paddingInlineEnd: FAB_INSETS.legacy.trailing,
-          paddingBlockEnd:
-            CHROME_LAYOUT.toastBottomPadding +
-            glowPlumeMargin(DEFAULT_GLOW_SPREAD, DEFAULT_GLOW_BLUR_RADIUS) +
-            DEFAULT_GLOW_BLUR_RADIUS * 2,
+          paddingInlineEnd: CONTENT_FAB_INSET_PX,
+          paddingBlockEnd: CONTENT_FAB_INSET_PX,
         }}
       >
         <div className="pointer-events-auto">

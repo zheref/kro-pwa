@@ -24,6 +24,7 @@
 import { Plus, Search, Trash2, X } from 'lucide-react'
 import { GlassPanel } from '../../design/system/glass/GlassPanel'
 import { ICON_SIZE } from '../../design/system/icons/icons'
+import { ROW_HIGHLIGHT } from '../../design/system/rowHighlight'
 import { colorVar } from '../../design/system/tokens/roles'
 import { cn } from '../../design/system/utils/cn'
 import { TOUCH_CONTROL_SPACING, type DoSurfaceLayout } from './DoSurfaceLayout'
@@ -189,6 +190,7 @@ function SidebarSearchField({
         event.preventDefault()
         onSubmit()
       }}
+      data-kro-field=""
       className={cn(
         'flex items-center gap-kro-small rounded-kro-field',
         'bg-kro-absolute/40 px-kro-small',
@@ -207,7 +209,7 @@ function SidebarSearchField({
         value={query}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          'w-full bg-transparent text-sm text-kro-fore outline-none',
+          'w-full appearance-none bg-transparent text-sm text-kro-fore outline-none',
           'placeholder:text-kro-fore-secondary',
         )}
       />
@@ -314,8 +316,8 @@ function SidebarRow({
           'flex flex-1 items-center gap-kro-small rounded-kro-small px-kro-small',
           'text-left text-sm',
           isSelected
-            ? 'font-semibold'
-            : 'text-kro-fore hover:bg-kro-absolute/25',
+            ? 'border border-transparent font-semibold'
+            : cn('text-kro-fore', ROW_HIGHLIGHT),
         )}
         style={{
           minHeight: `${SIDEBAR_ROW_HEIGHT}px`,

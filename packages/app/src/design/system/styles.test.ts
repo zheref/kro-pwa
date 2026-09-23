@@ -27,9 +27,14 @@ describe('the Chromium field-outline reset', () => {
     )
   })
 
-  it('keeps the browser text box unringed, and paints the FAB glow lime on the field', () => {
+  it('leaves a raw field its own focus ring, and paints the FAB glow lime on the designed field', () => {
+    const globalFocus = STYLES.match(
+      /:where\(input, textarea, select\):focus,[\s\S]*?:where\(input, textarea, select\):focus-visible\s*\{([^}]*)\}/,
+    )
+    expect(globalFocus?.[1]).toMatch(/outline:\s*none/)
+    expect(globalFocus?.[1]).not.toMatch(/box-shadow/)
     expect(STYLES).toMatch(
-      /:where\(input, textarea, select\):focus-visible[\s\S]*?box-shadow:\s*none/,
+      /:where\(\[data-kro-field\] :is\(input, textarea, select\)\):focus-visible[\s\S]*?box-shadow:\s*none/,
     )
     expect(STYLES).toMatch(
       /:where\(\[data-slot="input"\], \[data-slot="textarea"\]\):focus-visible[\s\S]*?box-shadow:\s*0 0 0 3px var\(--kro-color-glow-lime\)/,

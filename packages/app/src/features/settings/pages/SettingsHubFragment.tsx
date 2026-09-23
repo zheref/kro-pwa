@@ -274,7 +274,8 @@ export function Avatar({
   /** The provider picture, when the account has one. Initials remain the fallback. */
   readonly avatarUrl?: string | null
 }) {
-  const [photoFailed, setPhotoFailed] = useState(false)
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const photoFailed = avatarUrl !== null && failedUrl === avatarUrl
 
   if (!isSignedIn) {
     const Icon = settingsIcon('person.crop.circle')
@@ -303,7 +304,10 @@ export function Avatar({
         referrerPolicy="no-referrer"
         className="shrink-0 rounded-full object-cover"
         style={{ width: size, height: size }}
-        onError={() => setPhotoFailed(true)}
+        onError={() => {
+          if (avatarUrl !== null && avatarUrl.length > 0)
+            setFailedUrl(avatarUrl)
+        }}
       />
     )
   }

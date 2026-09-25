@@ -91,7 +91,10 @@ describe('selectEndeavorActivityView', () => {
     const failed = selectEndeavorActivityView(
       rootWith(EndeavorActivityMocks.failed),
     )
-    expect(failed.kind === 'failed' && failed.message).toContain('missing')
+    // User copy comes from the kind, never the storage message (`RC-8`).
+    expect(failed.kind === 'failed' && failed.message).toBe(
+      'This endeavor is no longer on this device.',
+    )
   })
   it('carries the header for a habit and a non-ASCII title', () => {
     const habit = selectEndeavorActivityView(

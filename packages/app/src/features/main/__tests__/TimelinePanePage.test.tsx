@@ -117,4 +117,13 @@ describe('TimelinePanePage', () => {
     })
     expect(screen.queryByTestId('detail-pane-timeline')).toBeNull()
   })
+
+  it('reads no calendars behind another reading: the timeline never loads while hidden', async () => {
+    const store = await mount()
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'performance' }))
+    })
+    expect(store.getState().dayTimeline.load.kind).toBe('idle')
+    expect(store.getState().dayTimeline.now).toBeNull()
+  })
 })

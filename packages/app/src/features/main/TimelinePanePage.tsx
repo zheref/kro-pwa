@@ -31,25 +31,30 @@ export function TimelinePanePage({ locale }: TimelinePanePageProps) {
   const segment = useAppSelector(selectDetailPaneSegment)
   const endeavor = useAppSelector(selectDetailPaneEndeavor)
   const inFlight = useAppSelector(selectInFlightSessionPaneTarget)
+  const isShown = segment === 'plan' && endeavor === null
 
   return (
-    <TimelinePaneFragment isShown={segment === 'plan' && endeavor === null}>
-      <DayTimelinePage
-        locale={locale}
-        // The previewed session is a new, arbitrary task. Start drills into
-        // Session Setup for it, so Back returns to the timeline. No preview
-        // while a session is already in flight: there is nothing to start.
-        onStartSession={
-          inFlight !== null
-            ? undefined
-            : () =>
-                dispatch(
-                  userDidDrillIntoDetailPane({
-                    location: { segment: 'sessionSetup', endeavor: null },
-                  }),
-                )
-        }
-      />
+    <TimelinePaneFragment isShown={isShown}>
+      {/* Mounted only while the timeline shows: it starts a clock and reads
+          the calendars, which must not run behind another reading. */}
+      {isShown ? (
+        <DayTimelinePage
+          locale={locale}
+          // The previewed session is a new, arbitrary task. Start drills into
+          // Session Setup for it, so Back returns to the timeline. No preview
+          // while a session is already in flight: there is nothing to start.
+          onStartSession={
+            inFlight !== null
+              ? undefined
+              : () =>
+                  dispatch(
+                    userDidDrillIntoDetailPane({
+                      location: { segment: 'sessionSetup', endeavor: null },
+                    }),
+                  )
+          }
+        />
+      ) : null}
     </TimelinePaneFragment>
   )
 }

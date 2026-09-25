@@ -3,7 +3,7 @@
  * factory. User copy is derived from `kind` here, in the domain tier, and the
  * Fragment only ever renders `message`.
  */
-import { type Exception, exception } from '@kro/core'
+import { type Exception, assertNever, exception } from '@kro/core'
 
 export type EndeavorActivityException =
   /** The endeavor asked about is not stored on this device. */
@@ -26,4 +26,23 @@ export const EndeavorActivityExceptions = {
 
   unknown: (message: string): EndeavorActivityException =>
     exception('unknown', message, true),
+}
+
+/**
+ * The user-facing line for a failed read — derived from `kind`, never from
+ * `message`, which carries storage internals for logs and tests (`RC-8`).
+ */
+export const endeavorActivityFailureCopy = (
+  exception: EndeavorActivityException,
+): string => {
+  switch (exception.kind) {
+    case 'endeavorNotFound':
+      return 'This endeavor is no longer on this device.'
+    case 'loadFailed':
+      return "Couldn't load this endeavor's activity."
+    case 'unknown':
+      return 'Something went wrong loading this activity.'
+    default:
+      return assertNever(exception)
+  }
 }

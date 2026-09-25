@@ -754,22 +754,23 @@ export const withConclusionRecorded = (
  * `recordedSessionModesFor` reads history with (a positive duration), so the
  * row after finishing matches the row a fresh preparation would draw.
  *
- * A history known only by its count (no modes, count > 0) is left alone: the
- * markers Selector draws that from the count, and appending one mode there
- * would replace N markers with one.
+ * A history known only by its count (no modes, count > 0) is first
+ * materialised as that many countdown markers — what the markers Selector
+ * draws for it — so appending this session's mode keeps every marker.
  */
 const withRecordedMode = (
   state: SessionState,
   performance: Perform,
 ): SessionState['recordedSessionModes'] => {
   if (performance.duration <= 0) return state.recordedSessionModes
-  if (
-    state.recordedSessionModes.length === 0 &&
-    state.completedSessionsCount > 0
-  ) {
-    return state.recordedSessionModes
-  }
-  return [...state.recordedSessionModes, performSessionMode(performance)]
+  const known =
+    state.recordedSessionModes.length === 0 && state.completedSessionsCount > 0
+      ? Array.from(
+          { length: state.completedSessionsCount },
+          () => 'countdown' as const,
+        )
+      : state.recordedSessionModes
+  return [...known, performSessionMode(performance)]
 }
 
 /**

@@ -76,4 +76,16 @@ describe('PerformancePanePage', () => {
     })
     expect(screen.queryByTestId('detail-pane-performance')).toBeNull()
   })
+
+  it('reads nothing behind another reading: Day Progress never loads while hidden', async () => {
+    const store = mount()
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    expect(store.getState().dayProgress.load.kind).toBe('idle')
+    expect(store.getState().endeavorActivity.load.kind).toBe('idle')
+  })
 })

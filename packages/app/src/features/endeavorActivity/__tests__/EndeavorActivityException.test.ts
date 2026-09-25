@@ -1,6 +1,9 @@
 /** The activity screen's closed exception union and its factory. */
 import { describe, expect, it } from 'vitest'
-import { EndeavorActivityExceptions } from '../EndeavorActivityException'
+import {
+  EndeavorActivityExceptions,
+  endeavorActivityFailureCopy,
+} from '../EndeavorActivityException'
 
 describe('EndeavorActivityExceptions', () => {
   it('names a missing endeavor by id, and does not offer a retry', () => {
@@ -28,5 +31,28 @@ describe('EndeavorActivityExceptions', () => {
       message: 'boom',
       recoverable: true,
     })
+  })
+})
+
+describe('endeavorActivityFailureCopy', () => {
+  it('names a deleted endeavor without echoing its id', () => {
+    const copy = endeavorActivityFailureCopy(
+      EndeavorActivityExceptions.endeavorNotFound('e-42'),
+    )
+    expect(copy).toBe('This endeavor is no longer on this device.')
+    expect(copy).not.toContain('e-42')
+  })
+
+  it('keeps storage internals out of a failed read', () => {
+    const copy = endeavorActivityFailureCopy(
+      EndeavorActivityExceptions.loadFailed('SQLITE_BUSY: database is locked'),
+    )
+    expect(copy).toBe("Couldn't load this endeavor's activity.")
+  })
+
+  it('gives the defensive fallback a plain line', () => {
+    expect(
+      endeavorActivityFailureCopy(EndeavorActivityExceptions.unknown('boom')),
+    ).toBe('Something went wrong loading this activity.')
   })
 })

@@ -36,11 +36,13 @@ export function PerformancePanePage({ locale }: PerformancePanePageProps) {
 
   return (
     <PerformancePaneFragment reading={reading}>
-      {endeavor === null ? (
+      {/* Mounted only while its reading shows: each Page starts its own
+          clock and storage read, which must not run behind another reading. */}
+      {reading === 'dayProgress' ? (
         <DayProgressPage locale={locale} />
-      ) : (
+      ) : reading === 'endeavorActivity' && endeavor !== null ? (
         <EndeavorActivityPage endeavorId={endeavor.id} locale={locale} />
-      )}
+      ) : null}
     </PerformancePaneFragment>
   )
 }

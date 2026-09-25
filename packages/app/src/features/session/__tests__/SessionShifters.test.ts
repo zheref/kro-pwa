@@ -894,7 +894,7 @@ describe('the conclusion claim’s remaining moves', () => {
     expect(recorded.completedSessionsCount).toBe(1)
   })
 
-  it('appends nothing for a zero-length record or a count-only history', () => {
+  it('appends nothing for a zero-length record, and keeps a count-only history', () => {
     const recording = withConclusionRecordingStarted(
       sessionStateMocks.concludedWithHistory,
     )
@@ -902,11 +902,13 @@ describe('the conclusion claim’s remaining moves', () => {
       withConclusionRecorded(recording, { ...recordedCountdown, duration: 0 })
         .recordedSessionModes,
     ).toEqual(['countdown', 'stopwatch', null])
-    // `concluded` knows its history only by count (3, no modes).
+    // `concluded` knows its history only by count (3, no modes): those three
+    // become countdown markers, then this recording's mode is appended — here
+    // unknown (`null`), since the fixture's performance carries no setup.
     const countOnly = withConclusionRecordingStarted(pending)
     expect(
       withConclusionRecorded(countOnly, recordedCountdown).recordedSessionModes,
-    ).toEqual([])
+    ).toEqual(['countdown', 'countdown', 'countdown', null])
   })
 
   it('never grows the tomato row for an aborted attempt', () => {

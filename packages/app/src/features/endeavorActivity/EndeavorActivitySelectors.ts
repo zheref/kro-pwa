@@ -3,6 +3,7 @@
  * view model is one Selector, so the Page forwards it and derives nothing.
  */
 import { assertNever } from '@kro/core'
+import { endeavorActivityFailureCopy } from './EndeavorActivityException'
 import { computedSymbol, displayTitle } from '../../design/endeavor'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
@@ -75,7 +76,10 @@ export const selectEndeavorActivityView = createSelector(
       case 'loading':
         return { kind: 'loading' }
       case 'failed':
-        return { kind: 'failed', message: s.load.exception.message }
+        return {
+          kind: 'failed',
+          message: endeavorActivityFailureCopy(s.load.exception),
+        }
       case 'loaded': {
         const { endeavor } = s.load
         // The same symbol resolution every card and Day Progress use: the

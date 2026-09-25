@@ -168,8 +168,9 @@ export const formatActivityDate = (
       .trim()
   const start = clock(row.startedAt)
   if (row.duration <= 0) return `${day} · ${start}`
-  const end = new Date(row.startedAt.getTime() + row.duration * 1000)
-  return `${day} · ${start}–${clock(end)}`
+  // The wall-clock end — the last fragment's — not start + active time, so a
+  // paused or split session reads the range it actually spanned.
+  return `${day} · ${start}–${clock(row.completedAt)}`
 }
 
 export const recordCountLabel = (count: number): string =>

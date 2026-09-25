@@ -45,7 +45,9 @@ describe('EndeavorActivityPage — mirrors its stories', () => {
         <EndeavorActivityPage endeavorId="missing" />
       </ActivityHarness>,
     )
-    expect((await screen.findByRole('alert')).textContent).toContain('missing')
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'no longer on this device',
+    )
   })
 
   it('aborts the in-flight load on unmount without painting an exception', async () => {

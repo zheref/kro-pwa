@@ -23,7 +23,8 @@ describe('EndeavorActivityFragment — mirrors its stories', () => {
     expect(screen.getByText('40 pts')).toBeTruthy()
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
     expect(screen.getByText('Session finished')).toBeTruthy()
-    expect(screen.getByText('Jan 13 · 2:00–3:05')).toBeTruthy()
+    // Paused and split: 14:00–14:40 then 15:00–15:25 spans to 15:25.
+    expect(screen.getByText('Jan 13 · 2:00–3:25')).toBeTruthy()
     expect(screen.getByText('Jan 14 · 6:00')).toBeTruthy()
   })
 
@@ -80,7 +81,7 @@ describe('EndeavorActivityFragment — mirrors its stories', () => {
       />,
     )
     expect(screen.getByRole('alert').textContent).toContain(
-      "No endeavor with id 'missing'",
+      'This endeavor is no longer on this device.',
     )
   })
 

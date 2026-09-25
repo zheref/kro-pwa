@@ -32,7 +32,11 @@ import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialTriageState } from '../../triage/TriageFeature'
 import type { RootState } from '../../../library/store'
-import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  planDayKey,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import { PlanViewMode } from '../PlanNavigation'
 import {
   PLAN_REFERENCE_DAY,
@@ -70,7 +74,7 @@ import {
   selectPlanViewMode,
   selectPlanVista,
 } from '../PlanSelectors'
-import type { TimelineEditSession } from '../PlanEditSession'
+import type { TimelineEditSession } from '../../../library/plan/PlanEditSession'
 import type { PlanState } from '../PlanState'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { PLAN_REFERENCE_DAY, planDayFixtures } from '../../plan/PlanMocks'
-import { addingPlanDays } from '../../plan/PlanCalendar'
+import { addingPlanDays } from '../../../library/plan/PlanCalendar'
 import { loadDayTimelineThunk } from '../DayTimelineProducer'
 import {
   makeDayTimelineStore,

@@ -15,9 +15,9 @@ import {
   planDayKey,
   startOfNextPlanDay,
   startOfPlanDay,
-} from '../plan/PlanCalendar'
-import { fetchPlanHostRange } from '../plan/PlanHosts'
-import { planHostsFor } from '../plan/PlanProducer'
+} from '../../library/plan/PlanCalendar'
+import { fetchPlanHostRange } from '../../library/plan/PlanHosts'
+import { planHostsFor } from '../../library/plan/PlanHostSources'
 import {
   type DayTimelineException,
   DayTimelineExceptions,

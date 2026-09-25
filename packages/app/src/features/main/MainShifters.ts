@@ -11,7 +11,7 @@ import type {
   DetailPaneLocation,
   DetailPaneSegment,
 } from './DetailPane'
-import type { DoSurface } from './DoSurfaceLayout'
+import { type DoSurface, shellShapeFor } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import type { MainState, ShellRouteContext } from './MainFeature'
 import type { DestinationGates } from './NavigationSections'
@@ -265,3 +265,48 @@ export const withDetailPaneWentBack = (state: MainState): MainState => {
     detailPaneBackStack: state.detailPaneBackStack.slice(0, -1),
   }
 }
+
+/**
+ * Whether this shell hosts the trailing pane at all — the flag is on and the
+ * surface resolves to the sidebar shell. The reducer-tier twin of
+ * `selectIsDetailPaneAvailable`, so a cross-slice arm can gate on it without a
+ * Selector (a reducer never reads `RootState`).
+ */
+export const isDetailPaneHost = (state: MainState): boolean =>
+  state.isDetailPaneEnabled && shellShapeFor(state.surface) === 'sidebar'
+
+/**
+ * Endeavor Detail opened on `endeavor` — canon's `paneEndeavorDetail` mount:
+ * on a pane host the pane's Plan points at it. Elsewhere Detail is a dialog or
+ * a sheet, and the pane is left exactly as it was.
+ */
+export const withDetailPaneFollowingDetail = (
+  state: MainState,
+  endeavor: DetailPaneEndeavor,
+): MainState =>
+  isDetailPaneHost(state)
+    ? withDetailPaneEndeavorSelected(state, endeavor, 'plan')
+    : state
+
+/**
+ * Endeavor Detail closed from inside (its own dismiss, a delete). Where the
+ * pane was showing it on Plan, the pane hides with it — canon's *"exactly one
+ * content is mounted at a time"*: an empty Plan has nothing to show.
+ */
+export const withDetailPaneReleasedByDetail = (state: MainState): MainState =>
+  isDetailPaneHost(state) && state.detailPane.segment === 'plan'
+    ? withDetailPaneDismissed(state)
+    : state
+
+/**
+ * A countdown ended and the pane should raise Session for it — canon's
+ * `applySessionSetupPresentation`, system-originated. A no-op off a pane host,
+ * where the session raises its own surface instead.
+ */
+export const withDetailPaneSessionRaised = (
+  state: MainState,
+  endeavor: DetailPaneEndeavor | null,
+): MainState =>
+  isDetailPaneHost(state)
+    ? withDetailPaneEndeavorSelected(state, endeavor, 'sessionSetup')
+    : state

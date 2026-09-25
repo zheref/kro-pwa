@@ -10,9 +10,9 @@ import { useEffect, useRef } from 'react'
  * Canon keeps the grid even when the day is empty, so there is no empty
  * state: an empty day is the bare grid with the now line.
  */
-import type { PlacedEvent } from '../../plan/TimelineLayout'
-import type { TimelineHourBand } from '../../plan/TimelineSlots'
-import { TimelineFragment } from '../../plan/pages/timeline/TimelineFragment'
+import type { PlacedEvent } from '../../../library/plan/TimelineLayout'
+import type { TimelineHourBand } from '../../../library/plan/TimelineSlots'
+import { TimelineFragment } from '../../../library/timeline/TimelineFragment'
 
 export interface DayTimelineFragmentProps {
   /** Start of today; `null` before the pane stamped a clock. */

@@ -164,19 +164,21 @@ describe('a conclusion never takes the pane from an open Detail editor', () => {
 describe('leaving a conclusion unanswered', () => {
   const concluded = onSession({ isReady: false, isPresentingConclusion: true })
 
-  it('leaves it to the pill when the pane is dismissed', () => {
+  // Reducer-tier now (the session slice follows the shell's events), so the
+  // effect's decision stays silent — see `SessionPaneRelease.test`.
+  it('asks for nothing when the pane is dismissed', () => {
     expect(
       sessionPaneHostingAction(concluded, { ...concluded, paneSegment: null }),
-    ).toEqual({ kind: 'dismissConclusion' })
+    ).toBeNull()
   })
 
-  it('leaves it to the pill when the pane moves to Plan', () => {
+  it('asks for nothing when the pane moves to Plan', () => {
     expect(
       sessionPaneHostingAction(concluded, {
         ...concluded,
         paneSegment: 'plan',
       }),
-    ).toEqual({ kind: 'dismissConclusion' })
+    ).toBeNull()
   })
 
   it('does nothing when there was no conclusion to leave', () => {

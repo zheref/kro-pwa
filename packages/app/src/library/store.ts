@@ -45,7 +45,7 @@ import {
   makeLiveAuthService,
   stubbedAuthService,
 } from '../services/auth/AuthService'
-import type { PlanHost } from '../features/plan/PlanHosts'
+import type { PlanHost } from './plan/PlanHosts'
 import {
   type GoogleCalendarService,
   makeGoogleCalendarPlanHost,

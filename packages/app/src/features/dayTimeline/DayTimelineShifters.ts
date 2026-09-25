@@ -4,7 +4,7 @@
  * an event payload.
  */
 import type { Endeavor } from '@kro/core'
-import type { PlanDayKey } from '../plan/PlanCalendar'
+import type { PlanDayKey } from '../../library/plan/PlanCalendar'
 import type { DayTimelineException } from './DayTimelineException'
 import type { DayTimelineState } from './DayTimelineFeature'
 

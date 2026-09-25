@@ -27,7 +27,7 @@ import { DO_MOCK_NOW, doStateMocks } from '../DoMocks'
 import type { DoState } from '../DoFeature'
 import { doLensFor, laneCards, DoLane } from '../DoRules'
 import { centredFeaturedWindow } from '../DoFeaturedNow'
-import { habitsRing, tasksRing } from '../DoRings'
+import { habitsRing, tasksRing } from '../../../library/rings/DoRings'
 import { groupDoEvents } from './doEventLanes'
 import {
   DO_TASK_SECTIONS,

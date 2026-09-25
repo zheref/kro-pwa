@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAN_REFERENCE_DAY, planAt } from '../PlanMocks'
+import { PLAN_REFERENCE_DAY, planAt } from '../../../features/plan/PlanMocks'
 import {
   TIMELINE_SLOT_SECONDS,
   isOnTheHourSlot,

@@ -10,7 +10,7 @@
  */
 import type { Endeavor } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
-import type { PlanDayKey } from '../plan/PlanCalendar'
+import type { PlanDayKey } from '../../library/plan/PlanCalendar'
 import {
   type DayTimelineException,
   DayTimelineExceptions,

@@ -1,12 +1,12 @@
 import { type Endeavor, EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { DO_MOCK_NOW, doEndeavorFixtures } from '../DoMocks'
+import { DO_MOCK_NOW, doEndeavorFixtures } from '../../../features/do/DoMocks'
 import { areDoRingsVisible, habitsRing, tasksRing } from '../DoRings'
 import {
   doLensFor,
   initialDoVisibility,
   partitionDoTaskLanes,
-} from '../DoRules'
+} from '../../../features/do/DoRules'
 
 const {
   anytimeTask,

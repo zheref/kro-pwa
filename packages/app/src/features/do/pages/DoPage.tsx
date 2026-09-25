@@ -49,9 +49,9 @@ import { userDidRequestDayProgress } from '../../main/MainFeature'
 import {
   navigateToDestinationThunk,
   openSessionSurfaceThunk,
+  startSessionFromCardThunk,
 } from '../../main/MainProducer'
 import { selectIsDetailPaneAvailable } from '../../main/MainSelectors'
-import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import { selectLayout, selectShellShape } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
@@ -327,27 +327,20 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
           Canon's `.onUserWantsToStartEvent(endeavor, nil)` — the card's own
           endeavor is carried into the session's launch preparation, so Execute
           opens already showing its title, glyph and recommended duration
-          (KC-IS-#71 item 21). The navigation waits for the preparation:
+          (KC-IS-#71 item 21). The surface waits for the preparation (one Producer sequences both):
           arriving first would paint one frame of the anonymous `Focus Session`
           before the identity landed. A preparation that fails still navigates,
           because a control that goes to the right screen is honest and one
           that appears to do nothing is not.
         */
         void dispatch(
-          prepareSessionLaunchThunk({
+          startSessionFromCardThunk({
             endeavorId: card.id,
             // Identity is the composition site's to supply, never a Producer's.
             sessionId: crypto.randomUUID(),
+            fallbackTitle: card.title,
           }),
-        ).finally(() => {
-          // The pane's Session segment on the desktop sidebar (canon #517),
-          // the Execute destination everywhere else.
-          void dispatch(
-            openSessionSurfaceThunk({
-              endeavor: { id: card.id, title: card.title },
-            }),
-          )
-        })
+        )
       },
       onMarkComplete: (card, completedAt) => {
         dispatch(

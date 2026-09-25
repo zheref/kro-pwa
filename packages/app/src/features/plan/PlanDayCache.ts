@@ -31,14 +31,14 @@
  * forced structural divergence in this area and it is called out in the PR.
  */
 import type { Endeavor } from '@kro/core'
-import { TIMELINE_PRELOAD_RADIUS_DAYS } from './PlanConstants'
+import { TIMELINE_PRELOAD_RADIUS_DAYS } from '../../library/plan/PlanConstants'
 import {
   type PlanDayKey,
   addingPlanDays,
   isSamePlanDay,
   planDayKey,
   startOfPlanDay,
-} from './PlanCalendar'
+} from '../../library/plan/PlanCalendar'
 
 /** Endeavors indexed by the local day their `start` falls on. */
 export type PlanDayCache = Readonly<Record<PlanDayKey, readonly Endeavor[]>>

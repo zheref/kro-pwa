@@ -32,6 +32,21 @@ describe('loadEndeavorActivityThunk', () => {
     if (!result.ok) throw new Error('expected ok')
     expect(result.value.rows.some((row) => row.duration === 65 * 60)).toBe(true)
   })
+  it('reads only the one endeavor it was asked for, never the whole table', async () => {
+    const base = makeInMemoryLocalStore()
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: {
+        ...base,
+        endeavors: {
+          ...base.endeavors,
+          all: () => Promise.reject(new Error('whole-table read')),
+        },
+      },
+    })
+    const result = await resultOf(store, 'missing')
+    expect(!result.ok && result.error.kind).toBe('endeavorNotFound')
+  })
   it('resolves err(endeavorNotFound), never throwing, for a missing id', async () => {
     const result = await resultOf(activityStore(), 'missing')
     expect(!result.ok && result.error.kind).toBe('endeavorNotFound')
@@ -42,9 +57,9 @@ describe('loadEndeavorActivityThunk', () => {
       ...stubbedThunkExtra,
       localStore: {
         ...base,
-        performances: {
-          ...base.performances,
-          all: () => Promise.reject(new Error('io')),
+        endeavors: {
+          ...base.endeavors,
+          get: () => Promise.reject(new Error('io')),
         },
       },
     })

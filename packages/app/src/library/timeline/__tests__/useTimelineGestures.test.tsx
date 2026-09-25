@@ -20,7 +20,7 @@ import {
   useSlotPress,
   useVerticalDrag,
 } from '../useTimelineGestures'
-import { installPointerEvents, pointer } from '../../__tests__/pointerEvents'
+import { installPointerEvents, pointer } from './pointerEvents'
 
 installPointerEvents()
 

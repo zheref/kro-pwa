@@ -114,7 +114,7 @@ describe('onActivityLoadCompleted lifecycle', () => {
         ...base,
         endeavors: {
           ...base.endeavors,
-          all: () => Promise.reject(new Error('disk')),
+          get: () => Promise.reject(new Error('disk')),
         },
       },
     })

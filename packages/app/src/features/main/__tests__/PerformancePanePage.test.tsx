@@ -15,7 +15,7 @@ import {
   userDidRequestDayProgress,
   userDidSelectDetailPaneSegment,
 } from '../MainFeature'
-import { PerformancePaneHost } from '../PerformancePaneHost'
+import { PerformancePanePage } from '../PerformancePanePage'
 
 beforeEach(() => {
   installRadixEnvironment()
@@ -27,14 +27,14 @@ const mount = () => {
   render(
     <Harness store={store}>
       <PaneFrame>
-        <PerformancePaneHost locale="en-US" />
+        <PerformancePanePage locale="en-US" />
       </PaneFrame>
     </Harness>,
   )
   return store
 }
 
-describe('PerformancePaneHost', () => {
+describe('PerformancePanePage', () => {
   it('shows Day Progress when the rings open the whole-day reading', async () => {
     const store = mount()
     await waitFor(() =>

@@ -17,21 +17,21 @@ import {
   planAt,
   planDayFixtures,
   planEditSessionFixture,
-} from '../../../PlanMocks'
-import { startOfPlanDay } from '../../../PlanCalendar'
+} from '../../../features/plan/PlanMocks'
+import { startOfPlanDay } from '../../plan/PlanCalendar'
 import {
   TIMELINE_HOUR_HEIGHT_PX,
   TIMELINE_MINIMUM_CARD_HEIGHT_PX,
-} from '../../../PlanConstants'
-import { TimelineDragHandle } from '../../../PlanEditSession'
-import { timelinePlacements } from '../../../TimelineLayout'
-import { timelineSlotCount } from '../../../TimelineSlots'
+} from '../../plan/PlanConstants'
+import { TimelineDragHandle } from '../../plan/PlanEditSession'
+import { timelinePlacements } from '../../plan/TimelineLayout'
+import { timelineSlotCount } from '../../plan/TimelineSlots'
 import {
   HANDLE_KEYBOARD_STEP_PX,
   SESSION_PREVIEW_MINIMUM_HEIGHT_PX,
   TimelineFragment,
 } from '../TimelineFragment'
-import { installPointerEvents, pointer } from '../../__tests__/pointerEvents'
+import { installPointerEvents, pointer } from './pointerEvents'
 
 installPointerEvents()
 

@@ -8,19 +8,19 @@
  * what quick-create leaves behind while the prompt is open.
  */
 import type { ReactNode } from 'react'
-import { BothSchemes, Stage } from '../../../../design/endeavor/storyStage'
-import { startOfPlanDay } from '../../PlanCalendar'
+import { BothSchemes, Stage } from '../../design/endeavor/storyStage'
+import { startOfPlanDay } from '../plan/PlanCalendar'
 import {
   PLAN_REFERENCE_DAY,
   PLAN_REFERENCE_NOW,
   planAt,
   planDayFixtures,
   planEditSessionFixture,
-} from '../../PlanMocks'
-import { timelinePlacements } from '../../TimelineLayout'
-import { timelineSlotCount } from '../../TimelineSlots'
-import { PlanDayPickerFragment } from '../PlanDayPickerFragment'
-import { planDayPickerDates } from '../../PlanNavigation'
+} from '../../features/plan/PlanMocks'
+import { timelinePlacements } from '../plan/TimelineLayout'
+import { timelineSlotCount } from '../plan/TimelineSlots'
+import { PlanDayPickerFragment } from '../../features/plan/pages/PlanDayPickerFragment'
+import { planDayPickerDates } from '../../features/plan/PlanNavigation'
 import { TimelineFragment } from './TimelineFragment'
 
 export default {

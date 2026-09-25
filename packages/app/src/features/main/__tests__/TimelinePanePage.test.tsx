@@ -16,7 +16,7 @@ import {
   userDidSelectDetailPaneSegment,
   userDidTapDetailPaneBack,
 } from '../MainFeature'
-import { TimelinePaneHost } from '../TimelinePaneHost'
+import { TimelinePanePage } from '../TimelinePanePage'
 
 beforeEach(() => {
   installRadixEnvironment()
@@ -28,7 +28,7 @@ const mount = async () => {
   render(
     <Harness store={store}>
       <PaneFrame>
-        <TimelinePaneHost locale="en-US" />
+        <TimelinePanePage locale="en-US" />
       </PaneFrame>
     </Harness>,
   )
@@ -38,7 +38,7 @@ const mount = async () => {
   return store
 }
 
-describe('TimelinePaneHost', () => {
+describe('TimelinePanePage', () => {
   it('shows the read-only timeline when Plan is picked with nothing selected', async () => {
     const store = await mount()
     act(() => {

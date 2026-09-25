@@ -30,7 +30,6 @@ import {
   onShellMounted,
   userDidDrillIntoDetailPane,
   userDidTapDetailPaneBack,
-  userDidRequestEndeavorDetail,
   userDidRequestSessionSetup,
   userDidSelectDetailPaneSegment,
 } from '../MainFeature'
@@ -259,32 +258,6 @@ describe('userDidDismissDetailPane', () => {
     const before = MainMocks.desktopDetailPanePlan
     const next = reduce(before, userDidDismissDetailPane())
     expect({ ...next, detailPane: before.detailPane }).toEqual(before)
-  })
-})
-
-describe('userDidRequestEndeavorDetail', () => {
-  it('opens Plan on the endeavor a card was double-clicked on', () => {
-    const next = reduce(
-      MainMocks.desktopDetailPaneReady,
-      userDidRequestEndeavorDetail({ endeavor: walk }),
-    )
-    expect(next.detailPane).toEqual({ segment: 'plan', endeavor: walk })
-  })
-
-  it('switches an open Performance pane over to that endeavor’s details', () => {
-    const next = reduce(
-      MainMocks.desktopDetailPaneDayProgress,
-      userDidRequestEndeavorDetail({ endeavor: review }),
-    )
-    expect(next.detailPane).toEqual({ segment: 'plan', endeavor: review })
-  })
-
-  it('keeps Plan open when the same endeavor is requested again', () => {
-    const next = reduce(
-      MainMocks.desktopDetailPanePlan,
-      userDidRequestEndeavorDetail({ endeavor: review }),
-    )
-    expect(next.detailPane.segment).toBe('plan')
   })
 })
 

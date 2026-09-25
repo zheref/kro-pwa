@@ -27,7 +27,7 @@ import { initialSessionState } from '../../session/SessionState'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
 import { initialTriageState } from '../../triage/TriageFeature'
-import { planDayKey, startOfPlanDay } from '../PlanCalendar'
+import { planDayKey, startOfPlanDay } from '../../../library/plan/PlanCalendar'
 import {
   PLAN_REFERENCE_DAY,
   PLAN_REFERENCE_NOW,

@@ -15,7 +15,7 @@ import {
   makeLocalStorePlanHost,
   overlapsPlanHostRange,
 } from '../PlanHosts'
-import { PLAN_REFERENCE_DAY, planAt } from '../PlanMocks'
+import { PLAN_REFERENCE_DAY, planAt } from '../../../features/plan/PlanMocks'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const dayRange = { start: today, end: addingPlanDays(today, 1) }

@@ -66,7 +66,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { ToolbarSlot } from '../../main/ToolbarSlots'
 import { assertNever } from '@kro/core'
-import { userDidRequestSessionSetup } from '../../main/MainFeature'
+import {
+  onSessionConclusionRaised,
+  userDidRequestSessionSetup,
+} from '../../main/MainFeature'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
@@ -181,8 +184,12 @@ export function SessionOverlays() {
 
   // -- 5. The trailing detail pane (canon #517) ---------------------------
   // Where the shell hosts the pane, the session lives in its Session segment
-  // instead of a raised modal. The decision is `sessionPaneHostingAction`'s;
-  // this effect carries it out, reaching both slices as this Page may.
+  // instead of a raised modal. Leaving Session is reducer-tier (the session
+  // slice drops the pending conclusion on the shell's own events); this effect
+  // remains only for the two edges that need one, each justified in
+  // `sessionPaneHosting`: a launch preparation is I/O (a Producer, aborted when
+  // the pane re-points), and raising a tick-driven conclusion depends on
+  // Detail's editor, a reading only this Page may combine with the others.
   const previousHosting = useRef<SessionPaneHostingSnapshot | null>(null)
   // The one in-flight pane preparation. A newer one aborts it, so an old
   // endeavor's preparation can never land after the one the pane now asks
@@ -227,12 +234,10 @@ export function SessionOverlays() {
         )
         return
       case 'raiseSession':
+        // System-originated (`RC-2`): nobody tapped anything.
         dispatch(
-          userDidRequestSessionSetup({ endeavor: paneEndeavorFor(identity) }),
+          onSessionConclusionRaised({ endeavor: paneEndeavorFor(identity) }),
         )
-        return
-      case 'dismissConclusion':
-        dispatch(userDidDismissConclusion())
         return
       default:
         assertNever(action)

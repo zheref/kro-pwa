@@ -83,8 +83,8 @@ import {
 } from './MainSelectors'
 import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
-import { PerformancePaneHost } from './PerformancePaneHost'
-import { TimelinePaneHost } from './TimelinePaneHost'
+import { PerformancePanePage } from './PerformancePanePage'
+import { TimelinePanePage } from './TimelinePanePage'
 import { searchDestination } from './NavigationSections'
 import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
@@ -334,9 +334,9 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
           */}
           <ProfileControlPage />
           {/* The pane's Performance segment: Endeavor Activity or Day Progress. */}
-          <PerformancePaneHost />
+          <PerformancePanePage />
           {/* The pane's Plan segment with no endeavor: today's read-only timeline. */}
-          <TimelinePaneHost />
+          <TimelinePanePage />
           {children}
         </MainShellFragment>
       </ToolbarSlotsProvider>

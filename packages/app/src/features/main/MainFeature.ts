@@ -31,6 +31,12 @@ import {
   type DetailPaneState,
   closedDetailPane,
 } from './DetailPane'
+import {
+  onDetailRequested,
+  onEditRequested,
+  userDidTapDismiss,
+} from '../endeavorDetail/EndeavorDetailFeature'
+import { openDetailByIdThunk } from '../endeavorDetail/EndeavorDetailProducer'
 import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
@@ -52,6 +58,9 @@ import {
   withDetailPaneDismissed,
   withDetailPaneDrilledIn,
   withDetailPaneEndeavorSelected,
+  withDetailPaneFollowingDetail,
+  withDetailPaneReleasedByDetail,
+  withDetailPaneSessionRaised,
   withDetailPaneWentBack,
   withDetailPaneSegmentSelected,
   withDraftProjectCancelled,
@@ -303,21 +312,6 @@ export const mainSlice = createSlice({
     },
 
     /**
-     * User intent: an endeavor's details — double-click, long-press or the
-     * Details menu item. Canon's `userDidRequestEndeavorDetail`: opens Plan
-     * pointed at that endeavor.
-     */
-    userDidRequestEndeavorDetail(
-      state,
-      action: PayloadAction<{ endeavor: DetailPaneEndeavor }>,
-    ) {
-      Object.assign(
-        state,
-        withDetailPaneEndeavorSelected(state, action.payload.endeavor, 'plan'),
-      )
-    },
-
-    /**
      * User intent: the Do header's activity rings. Canon's
      * `userDidRequestDayProgress` — always the endeavor-free Performance mode.
      */
@@ -348,6 +342,23 @@ export const mainSlice = createSlice({
     },
 
     /**
+     * System signal: a countdown ended and its conclusion wants to be seen
+     * while the pane is not showing Session. Canon's
+     * `applySessionSetupPresentation`, raised on the session's behalf — never
+     * a `userDid…` (`RC-2`): nobody tapped anything. Only the session's
+     * overlay raises it, and only when no Detail editor would be discarded.
+     */
+    onSessionConclusionRaised(
+      state,
+      action: PayloadAction<{ endeavor: DetailPaneEndeavor | null }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneSessionRaised(state, action.payload.endeavor),
+      )
+    },
+
+    /**
      * User intent: open something from inside the pane — a drill-in. The
      * pane moves to `location` and its header offers Back. Session Setup's
      * "Show sessions" (canon's bolt, bf0c2a71) drills into Performance.
@@ -374,6 +385,47 @@ export const mainSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ------------------------------------ Endeavor Detail, in the pane
+      //
+      // Canon holds Detail inside `MainFeature` when the pane shows it; here
+      // Detail is its own slice, so the pane follows Detail's own events —
+      // action creators, never Detail's state shape (`RC-20`). Detail's slice
+      // answers the other half (the pane leaving Plan releases it).
+      .addCase(onDetailRequested, (state, action) => {
+        const { id, title } = action.payload.endeavor
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, { id, title }),
+        )
+      })
+      .addCase(onEditRequested, (state, action) => {
+        const endeavor = action.payload.endeavor
+        // No endeavor: the editor opens over the Detail already presented,
+        // which the pane already follows.
+        if (endeavor === undefined) return
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, {
+            id: endeavor.id,
+            title: endeavor.title,
+          }),
+        )
+      })
+      .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) return
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, {
+            id: result.value.id,
+            title: result.value.title,
+          }),
+        )
+      })
+      .addCase(userDidTapDismiss, (state) => {
+        Object.assign(state, withDetailPaneReleasedByDetail(state))
+      })
+
       .addCase(loadShellThunk.pending, (state) => {
         Object.assign(state, withLoadingStarted(state))
       })
@@ -462,6 +514,7 @@ export const mainSlice = createSlice({
 
 export const {
   onDestinationRouteMounted,
+  onSessionConclusionRaised,
   onShellMounted,
   onShellRouteContextConsumed,
   onSurfaceChanged,
@@ -470,7 +523,6 @@ export const {
   userDidDismissDetailPane,
   userDidDrillIntoDetailPane,
   userDidRequestDayProgress,
-  userDidRequestEndeavorDetail,
   userDidRequestSessionSetup,
   userDidSelectDetailPaneSegment,
   userDidTapDetailPaneBack,

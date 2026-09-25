@@ -27,9 +27,9 @@ import {
   makeEndeavor,
   makeShadow,
 } from '@kro/core'
-import { planDayKey, startOfPlanDay } from './PlanCalendar'
+import { planDayKey, startOfPlanDay } from '../../library/plan/PlanCalendar'
 import type { PlanDayCache } from './PlanDayCache'
-import type { TimelineEditSession } from './PlanEditSession'
+import type { TimelineEditSession } from '../../library/plan/PlanEditSession'
 import { PlanExceptions } from './PlanException'
 import { PlanViewMode } from './PlanNavigation'
 import type { PlanState } from './PlanState'

@@ -13,9 +13,12 @@
 import type { Endeavor } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
-import { planDayKey, startOfPlanDay } from '../plan/PlanCalendar'
+import { planDayKey, startOfPlanDay } from '../../library/plan/PlanCalendar'
 import { selectPlanHourBand } from '../plan/PlanSelectors'
-import { type PlacedEvent, timelinePlacements } from '../plan/TimelineLayout'
+import {
+  type PlacedEvent,
+  timelinePlacements,
+} from '../../library/plan/TimelineLayout'
 import { dayTimelineExceptionCopy } from './DayTimelineException'
 import type { DayTimelineState } from './DayTimelineFeature'
 

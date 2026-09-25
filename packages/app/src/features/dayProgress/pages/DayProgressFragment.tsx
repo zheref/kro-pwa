@@ -31,7 +31,7 @@ import {
 import { type ActivityRing, ActivityRings } from '../../../design/chrome'
 import { computedSymbol, displayTitle } from '../../../design/endeavor'
 import { type ColorRole, colorVar } from '../../../design/system/tokens/roles'
-import type { DoRing } from '../../do/DoRings'
+import type { DoRing } from '../../../library/rings/DoRings'
 import {
   type DayProgressException,
   dayProgressExceptionCopy,

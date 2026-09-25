@@ -1,6 +1,6 @@
 import { EndeavorHost } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import type { PlanHost } from '../../../features/plan/PlanHosts'
+import type { PlanHost } from '../../../library/plan/PlanHosts'
 import { GoogleCalendarConnections } from '../GoogleCalendarConnection'
 import { GoogleCalendarExceptions } from '../GoogleCalendarException'
 import { makeGoogleCalendarPlanHost } from '../GoogleCalendarPlanHost'

@@ -39,7 +39,10 @@ import { PlanViewMode } from '../../PlanNavigation'
 import { PLAN_REFERENCE_DAY, planAt } from '../../PlanMocks'
 import { initialPlanState } from '../../PlanState'
 import { PlanPage } from '../PlanPage'
-import { installPointerEvents, pointer } from './pointerEvents'
+import {
+  installPointerEvents,
+  pointer,
+} from '../../../../library/timeline/__tests__/pointerEvents'
 
 installPointerEvents()
 

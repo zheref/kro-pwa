@@ -30,7 +30,7 @@
  */
 import type { Endeavor, PlanListGrouping } from '@kro/core'
 import { PlanListGrouping as Grouping, assertNever } from '@kro/core'
-import { isSamePlanDay } from '../../PlanCalendar'
+import { isSamePlanDay } from '../../../../library/plan/PlanCalendar'
 import { isEligibleMatrixKind } from '../../PlanMatrix'
 
 /** `PickEndeavorFeature.State.selectionLimit` — canon's seven. */

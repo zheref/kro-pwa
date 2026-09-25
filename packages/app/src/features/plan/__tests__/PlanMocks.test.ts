@@ -6,8 +6,8 @@
  */
 import { type Endeavor, EndeavorKind } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { planDayKey, startOfPlanDay } from '../PlanCalendar'
-import { isPastTimelineEvent } from '../PlanEditSession'
+import { planDayKey, startOfPlanDay } from '../../../library/plan/PlanCalendar'
+import { isPastTimelineEvent } from '../../../library/plan/PlanEditSession'
 import {
   PLAN_REFERENCE_DAY,
   PLAN_REFERENCE_NOW,

@@ -1,13 +1,18 @@
 /**
- * How the session surface and the shell's trailing detail pane stay in step
- * while the pane hosts it — canon's Session Setup segment (#517), reached
- * across two slices.
+ * The two pane edges the session answers with an EFFECT — canon's Session
+ * Setup segment (#517).
  *
- * Canon keeps `sessionSetup` inside `MainFeature` and raises it with one
- * Shifter (`applySessionSetupPresentation`). Here the session is its own slice
- * and the pane is the shell's (`RC-20`), so `SessionOverlays` — the Page that
- * may see both — reconciles them. This is the decision half: a pure function of
- * the previous and current readings, one action at most.
+ * Pure state coordination between the pane and the session lives in the
+ * reducers (the session's slice drops a pending conclusion when the pane
+ * leaves Session). What is left here is what a reducer cannot do:
+ *
+ * - **prepare** — preparing a launch reads storage, so it is a Producer, and
+ *   the pane re-pointing is what asks for it;
+ * - **raiseSession** — the conclusion arrives from the tick task, and whether
+ *   to raise it depends on Endeavor Detail's editor, a third slice's reading
+ *   that only the overlay Page may combine (`RC-37`).
+ *
+ * A pure function of the previous and current readings, one action at most.
  */
 
 /** One render's reading of the two slices. */
@@ -39,8 +44,6 @@ export type SessionPaneHostingAction =
   | { readonly kind: 'prepare'; readonly endeavorId: string | null }
   /** A conclusion arrived while the pane showed something else — raise it. */
   | { readonly kind: 'raiseSession' }
-  /** The pane left a conclusion unanswered — flow 7: the pill keeps it. */
-  | { readonly kind: 'dismissConclusion' }
 
 /** Whether the prepared identity is the one the pane is asking for. */
 const isPreparedFor = (snapshot: SessionPaneHostingSnapshot): boolean => {
@@ -67,10 +70,6 @@ export function sessionPaneHostingAction(
     !current.isDetailEditorOpen
   ) {
     return { kind: 'raiseSession' }
-  }
-
-  if (showedSession && !showsSession && current.isPresentingConclusion) {
-    return { kind: 'dismissConclusion' }
   }
 
   if (!showsSession || !current.isReady || current.isLoading) return null

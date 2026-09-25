@@ -4,7 +4,7 @@
  * Stories and tests consume these — never an inline `State`. No new domain
  * model is introduced, so `RC-13`'s model mocks are Plan's.
  */
-import { planDayKey } from '../plan/PlanCalendar'
+import { planDayKey } from '../../library/plan/PlanCalendar'
 import { PLAN_REFERENCE_NOW, planDayFixtures } from '../plan/PlanMocks'
 import { DayTimelineExceptions } from './DayTimelineException'
 import {

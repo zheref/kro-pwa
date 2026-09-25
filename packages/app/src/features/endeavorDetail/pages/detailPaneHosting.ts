@@ -1,76 +1,39 @@
 /**
- * How Endeavor Detail and the shell's trailing detail pane stay in step while
- * the pane hosts Detail — canon's `paneEndeavorDetail` mount, reached across
- * two slices.
+ * The one pane edge Endeavor Detail answers with an EFFECT — canon's
+ * `paneEndeavorDetail` mount (#517).
  *
- * Canon holds Detail's state INSIDE `MainFeature` when the pane shows it, so
- * mounting and releasing are one Shifter. Here Detail is its own slice and the
- * pane is the shell's (`RC-20` keeps them apart), so the overlay Page — the
- * artifact allowed to see both — reconciles them. This is the decision half of
- * that reconciliation: a pure function of the previous and current readings,
- * so every edge is a unit test instead of an effect to reason about.
+ * Everything else between Detail and the shell's trailing pane is reducer-tier
+ * now: Detail opening points the pane's Plan at it (the shell's slice follows
+ * Detail's events), the pane leaving Plan releases Detail (Detail's slice
+ * follows the shell's), and Detail closing from inside hides a pane that was
+ * showing it. What is left is *reopening*: Plan showing an endeavor with no
+ * Detail mounted — the user reselected Plan, went Back to it, or a drill-in
+ * pointed it — must load that endeavor from the store, which only a Producer
+ * may read (`openDetailByIdThunk`). The segment control lives in the shell's
+ * Page, so the overlay dispatches that Producer when this reading holds.
  *
- * The rule, in canon's words: *"exactly one content is mounted at a time"*.
+ * Level-triggered on purpose: the reading only holds on the render after one
+ * of those pane moves, and a miss (the endeavor was deleted) leaves it holding
+ * without changing it, so the effect keyed on it cannot loop.
  */
 
 /** One render's reading of the two slices. */
 export interface DetailPaneHostingSnapshot {
   /** The shell hosts a pane at all (flag on, sidebar shell). */
   readonly isHost: boolean
-  /** Detail's presented endeavor, or `null` when Detail is closed. */
-  readonly detail: { readonly id: string; readonly title: string } | null
+  /** Whether Endeavor Detail is presenting something. */
+  readonly isDetailOpen: boolean
   /** The pane's segment, or `null` when it is hidden. */
   readonly paneSegment: 'sessionSetup' | 'performance' | 'plan' | null
   /** The endeavor the pane is pointed at, if any. */
   readonly paneEndeavorId: string | null
 }
 
-export type DetailPaneHostingAction =
-  /** Detail opened on a new endeavor — point the pane's Plan at it. */
-  | {
-      readonly kind: 'pointPane'
-      readonly endeavor: { readonly id: string; readonly title: string }
-    }
-  /** The pane left Plan (or closed) — release Detail with it. */
-  | { readonly kind: 'dismissDetail' }
-  /** Detail closed from inside (a delete, say) — hide the pane showing it. */
-  | { readonly kind: 'dismissPane' }
-  /** Plan was selected on the pane's endeavor — open its Detail by id. */
-  | { readonly kind: 'reopenDetail'; readonly endeavorId: string }
-
-export function detailPaneHostingAction(
-  previous: DetailPaneHostingSnapshot,
-  current: DetailPaneHostingSnapshot,
-): DetailPaneHostingAction | null {
-  if (!current.isHost) return null
-
-  const { detail, paneSegment, paneEndeavorId } = current
-
-  if (detail !== null) {
-    if (previous.detail?.id !== detail.id) {
-      return { kind: 'pointPane', endeavor: detail }
-    }
-    if (previous.paneSegment === 'plan' && paneSegment !== 'plan') {
-      return { kind: 'dismissDetail' }
-    }
-    return null
-  }
-
-  if (
-    previous.detail !== null &&
-    paneSegment === 'plan' &&
-    paneEndeavorId === previous.detail.id
-  ) {
-    return { kind: 'dismissPane' }
-  }
-
-  if (
-    paneSegment === 'plan' &&
-    previous.paneSegment !== 'plan' &&
-    paneEndeavorId !== null
-  ) {
-    return { kind: 'reopenDetail', endeavorId: paneEndeavorId }
-  }
-
-  return null
+/** The endeavor Detail should reopen on for the pane, or `null` for none. */
+export function detailPaneReopenRequest(
+  snapshot: DetailPaneHostingSnapshot,
+): string | null {
+  const { isHost, isDetailOpen, paneSegment, paneEndeavorId } = snapshot
+  if (!isHost || isDetailOpen || paneSegment !== 'plan') return null
+  return paneEndeavorId
 }

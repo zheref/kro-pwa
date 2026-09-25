@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { FABMenuEntry } from '../../../../design/chrome'
 import { ToolbarOutlet, ToolbarSlotsProvider } from '../../../main/ToolbarSlots'
 import { PLAN_REFERENCE_DAY } from '../../PlanMocks'
-import { startOfPlanDay } from '../../PlanCalendar'
+import { startOfPlanDay } from '../../../../library/plan/PlanCalendar'
 import { PlanViewMode } from '../../PlanNavigation'
 import { initialPlanVisibility } from '../../PlanState'
 import { PlanFragment } from '../PlanFragment'
@@ -30,29 +30,27 @@ const mount = (
   wrap: (node: React.ReactNode) => React.ReactNode = (node) => node,
 ) =>
   render(
-    <>
-      {wrap(
-        <PlanFragment
-          selectedDate={selectedDate}
-          eventCount={3}
-          viewMode={PlanViewMode.timeline}
-          onSelectViewMode={() => {}}
-          destinations={{ timeline: <p data-testid="timeline-slot">canvas</p> }}
-          staleSyncLabel={null}
-          needsReconnect={false}
-          onTapReconnect={() => {}}
-          isActivityIndicated={false}
-          onTapRefresh={() => {}}
-          visibility={initialPlanVisibility}
-          isVisibilityOpen={false}
-          onToggleVisibilityPanel={() => {}}
-          isFabAvailable
-          isFabGlowActive
-          fabItems={fabItems}
-          {...overrides}
-        />,
-      )}
-    </>,
+    wrap(
+      <PlanFragment
+        selectedDate={selectedDate}
+        eventCount={3}
+        viewMode={PlanViewMode.timeline}
+        onSelectViewMode={() => {}}
+        destinations={{ timeline: <p data-testid="timeline-slot">canvas</p> }}
+        staleSyncLabel={null}
+        needsReconnect={false}
+        onTapReconnect={() => {}}
+        isActivityIndicated={false}
+        onTapRefresh={() => {}}
+        visibility={initialPlanVisibility}
+        isVisibilityOpen={false}
+        onToggleVisibilityPanel={() => {}}
+        isFabAvailable
+        isFabGlowActive
+        fabItems={fabItems}
+        {...overrides}
+      />,
+    ),
   )
 
 describe('PlanFragment', () => {

@@ -1,7 +1,7 @@
 /**
  * The shell's Producers (`RC-3`, `RC-6`, `RC-7`, `RC-17`, `RC-25`).
  *
- * Five thunks, one shape: reach a Service only through `extra`, never throw,
+ * Seven thunks, one shape: reach a Service only through `extra`, never throw,
  * always resolve a `Result`. None reads a clock and none mints an id — `now`
  * and `id` are arguments, the same rule `CaptureProducer` states for exactly
  * the same reason (identity is the composition root's to supply, and a
@@ -24,6 +24,7 @@ import {
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { RootState, ThunkExtra } from '../../library/store'
+import { prepareSessionLaunchThunk } from '../session/SessionProducer'
 import type { DetailPaneEndeavor } from './DetailPane'
 import type { PendingShellRoute } from './MainFeature'
 import { type MainException, MainExceptions } from './MainException'
@@ -215,6 +216,54 @@ export const openSessionSurfaceThunk = createAsyncThunk<
     try {
       extra.navigation.navigate(path)
       return ok({ kind: 'route', path })
+    } catch (error) {
+      return err(MainExceptions.unknown(reasonOf(error)))
+    }
+  },
+)
+
+/**
+ * Execute on a card — a Plan row's Start Session, a Do card's Execute.
+ *
+ * One Producer for the two effects the view used to sequence itself (`RC-3`,
+ * `RC-7`): prepare the session's launch for the card's endeavor, then raise the
+ * session surface named after what the preparation read. The surface opens
+ * only once the preparation settled, so the pane or Execute never paints a
+ * frame of the anonymous session first.
+ *
+ * A failed preparation still opens the surface — a control that goes to the
+ * right screen is honest, one that appears to do nothing is not — carrying
+ * `fallbackTitle` (empty when the caller has none). The final step dispatches
+ * `openSessionSurfaceThunk`, so the slice's existing arm points the pane and an
+ * in-flight session still wins it.
+ */
+export const startSessionFromCardThunk = createAsyncThunk<
+  Result<SessionSurfaceHost, MainException>,
+  {
+    readonly endeavorId: string
+    /** The new session's id. Callers mint ids, never this tier. */
+    readonly sessionId: string
+    readonly fallbackTitle?: string
+  },
+  { extra: ThunkExtra; state: RootState }
+>(
+  'main/onSessionFromCardStartCompleted',
+  async ({ endeavorId, sessionId, fallbackTitle = '' }, { dispatch }) => {
+    try {
+      const prepared = await dispatch(
+        prepareSessionLaunchThunk({ endeavorId, sessionId }),
+      )
+      const title =
+        prepareSessionLaunchThunk.fulfilled.match(prepared) &&
+        prepared.payload.ok
+          ? prepared.payload.value.identity.title
+          : fallbackTitle
+      const opened = await dispatch(
+        openSessionSurfaceThunk({ endeavor: { id: endeavorId, title } }),
+      )
+      return openSessionSurfaceThunk.fulfilled.match(opened)
+        ? opened.payload
+        : err(MainExceptions.unknown('The session surface did not open'))
     } catch (error) {
       return err(MainExceptions.unknown(reasonOf(error)))
     }

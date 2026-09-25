@@ -1,157 +1,47 @@
 /**
- * The Detail ↔ pane reconciliation decision — pure (`RC-56`): a previous and
- * a current reading go in, at most one action comes out.
+ * The pane's reopen-by-id reading — pure (`RC-56`): one snapshot in, the
+ * endeavor Detail should reopen on (or `null`) out.
  */
 import { describe, expect, it } from 'vitest'
 import {
   type DetailPaneHostingSnapshot,
-  detailPaneHostingAction,
+  detailPaneReopenRequest,
 } from '../detailPaneHosting'
 
-const review = { id: 'e-1', title: 'Write the quarterly review' }
-const walk = { id: 'e-9', title: 'Evening walk' }
-
-const hidden: DetailPaneHostingSnapshot = {
+const reselected: DetailPaneHostingSnapshot = {
   isHost: true,
-  detail: null,
-  paneSegment: null,
-  paneEndeavorId: null,
-}
-const onPlan: DetailPaneHostingSnapshot = {
-  isHost: true,
-  detail: review,
+  isDetailOpen: false,
   paneSegment: 'plan',
-  paneEndeavorId: review.id,
+  paneEndeavorId: 'e-1',
 }
 
-describe('opening Detail points the pane', () => {
-  it('points a hidden pane at the endeavor a card asked Detail for', () => {
-    expect(
-      detailPaneHostingAction(hidden, { ...hidden, detail: review }),
-    ).toEqual({ kind: 'pointPane', endeavor: review })
+describe('detailPaneReopenRequest', () => {
+  it('asks for the kept endeavor when the user reselects Plan with Detail closed', () => {
+    expect(detailPaneReopenRequest(reselected)).toBe('e-1')
   })
 
-  it('repoints an open pane when Detail moves to another endeavor', () => {
+  it('asks for nothing while Detail already shows on Plan', () => {
     expect(
-      detailPaneHostingAction(onPlan, { ...onPlan, detail: walk }),
-    ).toEqual({ kind: 'pointPane', endeavor: walk })
-  })
-
-  it('does nothing once the pane already shows that endeavor', () => {
-    expect(detailPaneHostingAction(onPlan, onPlan)).toBeNull()
-  })
-})
-
-describe('leaving Plan releases Detail', () => {
-  it('releases Detail when the user switches to Performance', () => {
-    expect(
-      detailPaneHostingAction(onPlan, {
-        ...onPlan,
-        paneSegment: 'performance',
-      }),
-    ).toEqual({ kind: 'dismissDetail' })
-  })
-
-  it('releases Detail when the pane is dismissed', () => {
-    expect(
-      detailPaneHostingAction(onPlan, { ...onPlan, paneSegment: null }),
-    ).toEqual({ kind: 'dismissDetail' })
-  })
-
-  it('does not release Detail that just opened before the pane caught up', () => {
-    const opening = {
-      ...hidden,
-      detail: review,
-      paneSegment: 'performance' as const,
-    }
-    expect(
-      detailPaneHostingAction({ ...opening, detail: review }, opening),
-    ).toBeNull()
-  })
-})
-
-describe('closing Detail from inside hides the pane', () => {
-  it('hides the pane when Detail closes on its own (a delete)', () => {
-    expect(
-      detailPaneHostingAction(onPlan, { ...onPlan, detail: null }),
-    ).toEqual({
-      kind: 'dismissPane',
-    })
-  })
-
-  it('leaves the pane alone when it had already moved to another segment', () => {
-    const moved = { ...onPlan, paneSegment: 'performance' as const }
-    expect(
-      detailPaneHostingAction(moved, { ...moved, detail: null }),
+      detailPaneReopenRequest({ ...reselected, isDetailOpen: true }),
     ).toBeNull()
   })
 
-  it('leaves the pane alone when it was pointed at a different endeavor', () => {
+  it('asks for nothing on the endeavor-free Plan — that is the day timeline', () => {
     expect(
-      detailPaneHostingAction(onPlan, {
-        ...onPlan,
-        detail: null,
-        paneEndeavorId: walk.id,
-      }),
-    ).toBeNull()
-  })
-})
-
-describe('reselecting Plan reopens the remembered Detail', () => {
-  const dismissed = { ...onPlan, detail: null, paneSegment: null }
-
-  it('reopens Detail when Plan is clicked on a remembered endeavor', () => {
-    expect(
-      detailPaneHostingAction(dismissed, { ...dismissed, paneSegment: 'plan' }),
-    ).toEqual({ kind: 'reopenDetail', endeavorId: review.id })
-  })
-
-  it('reopens Detail by id for an endeavor only Session ever pointed the pane at', () => {
-    const onSession = {
-      ...hidden,
-      paneSegment: 'sessionSetup' as const,
-      paneEndeavorId: walk.id,
-    }
-    expect(
-      detailPaneHostingAction(onSession, { ...onSession, paneSegment: 'plan' }),
-    ).toEqual({ kind: 'reopenDetail', endeavorId: walk.id })
-  })
-
-  it('does not reopen anything for the endeavor-free Timeline', () => {
-    const dayOnly = { ...hidden }
-    expect(
-      detailPaneHostingAction(dayOnly, { ...dayOnly, paneSegment: 'plan' }),
+      detailPaneReopenRequest({ ...reselected, paneEndeavorId: null }),
     ).toBeNull()
   })
 
-  it('does not reopen while Plan was already showing', () => {
-    const planNoDetail = { ...dismissed, paneSegment: 'plan' as const }
+  it('asks for nothing while the pane shows another segment or is hidden', () => {
     expect(
-      detailPaneHostingAction(
-        { ...planNoDetail, paneEndeavorId: walk.id },
-        planNoDetail,
-      ),
+      detailPaneReopenRequest({ ...reselected, paneSegment: 'performance' }),
     ).toBeNull()
-  })
-})
-
-describe('outside the pane host', () => {
-  it('does nothing on the tab-bar shell', () => {
     expect(
-      detailPaneHostingAction(hidden, {
-        ...hidden,
-        isHost: false,
-        detail: review,
-      }),
+      detailPaneReopenRequest({ ...reselected, paneSegment: null }),
     ).toBeNull()
   })
 
-  it('does nothing with the flag off, even as Detail closes', () => {
-    const off = { ...onPlan, isHost: false }
-    expect(detailPaneHostingAction(off, { ...off, detail: null })).toBeNull()
-  })
-
-  it('does nothing when neither side moved', () => {
-    expect(detailPaneHostingAction(hidden, hidden)).toBeNull()
+  it('asks for nothing on the tab-bar shell, which has no pane', () => {
+    expect(detailPaneReopenRequest({ ...reselected, isHost: false })).toBeNull()
   })
 })

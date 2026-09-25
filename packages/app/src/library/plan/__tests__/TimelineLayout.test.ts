@@ -8,7 +8,11 @@
  */
 import { EndeavorKind, EndeavorStatus, makeEndeavor } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { PLAN_REFERENCE_DAY, planAt, planDayFixtures } from '../PlanMocks'
+import {
+  PLAN_REFERENCE_DAY,
+  planAt,
+  planDayFixtures,
+} from '../../../features/plan/PlanMocks'
 import type { PlacedEvent } from '../TimelineLayout'
 import {
   placedEventWidthFraction,

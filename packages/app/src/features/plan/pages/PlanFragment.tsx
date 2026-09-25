@@ -78,8 +78,8 @@ import {
   planEventCountLabel,
   planTitleDate,
   planTitleWeekday,
-} from './timeline/timelineFormat'
-import { useReducedMotionPreference } from './timeline/useTimelineGestures'
+} from '../../../library/timeline/timelineFormat'
+import { useReducedMotionPreference } from '../../../library/timeline/useTimelineGestures'
 
 /**
  * Equal inset from the content area's trailing and bottom edges.

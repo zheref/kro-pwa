@@ -1,7 +1,11 @@
 import type { Endeavor } from '@kro/core'
 import { EndeavorKind, EndeavorStatus, makeEndeavor } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { PLAN_REFERENCE_NOW, planAt, planDayFixtures } from '../PlanMocks'
+import {
+  PLAN_REFERENCE_NOW,
+  planAt,
+  planDayFixtures,
+} from '../../../features/plan/PlanMocks'
 import {
   type TimelineEditSession,
   applyTimelineDrag,

@@ -23,12 +23,49 @@
 import {
   type Endeavor,
   EndeavorKind as Kind,
+  EndeavorStatus as Status,
+  PerformResolution,
   type ReconciliationContext,
   defaultReconciliationContext,
   isSameCalendarDay,
   resolvedKind,
 } from '@kro/core'
-import { isCompletedToday } from './DoRules'
+
+/**
+ * `EndeavorComputedState.completedToday`, re-stated against `resolvedKind`.
+ *
+ * Normally closed with a host completion timestamp dated today; canon falls
+ * back to the latest `complete` performance when the host never returned one,
+ * which is how a recurring occurrence that the provider already advanced still
+ * reads as done. Deliberately **not** `hasBeenCompleted`, which also counts
+ * skipped / reviewing / qa and would overstate a ring.
+ */
+export const isCompletedToday = (
+  endeavor: Endeavor,
+  now: Date,
+  context: ReconciliationContext,
+): boolean => {
+  const kind = resolvedKind(endeavor, context)
+  if (kind !== Kind.task && kind !== Kind.habit && kind !== Kind.reminder) {
+    return false
+  }
+  if (endeavor.status !== Status.closed) return false
+  const completed = endeavor.completed ?? latestCompletionPerformance(endeavor)
+  if (completed === null) return false
+  return isSameCalendarDay(completed, now)
+}
+
+/** The latest `completedAt` across this endeavor's completed performances. */
+const latestCompletionPerformance = (endeavor: Endeavor): Date | null => {
+  let latest: Date | null = null
+  for (const performance of endeavor.performances) {
+    if (performance.resolution !== PerformResolution.complete) continue
+    const at = performance.completedAt
+    if (at === null) continue
+    if (latest === null || at.getTime() > latest.getTime()) latest = at
+  }
+  return latest
+}
 
 /** One ring's standing: what is expected today and how much of it is done. */
 export interface DoRing {

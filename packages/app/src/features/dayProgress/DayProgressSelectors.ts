@@ -12,7 +12,7 @@
  */
 import { type Endeavor, isSameCalendarDay } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
-import { type DoRing, habitsRing, tasksRing } from '../do/DoRings'
+import { type DoRing, habitsRing, tasksRing } from '../../library/rings/DoRings'
 import type { DayProgressException } from './DayProgressException'
 import type { DayProgressState } from './DayProgressFeature'
 import {

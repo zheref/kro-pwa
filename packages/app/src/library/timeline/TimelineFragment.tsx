@@ -50,11 +50,11 @@ import {
 import {
   computedSymbol,
   displayTitle,
-} from '../../../../design/endeavor/endeavorCardModel'
-import { formatTimeRange } from '../../../../design/endeavor/formatting'
-import { colorVar } from '../../../../design/system/tokens/roles'
-import { cn } from '../../../../design/system/utils/cn'
-import { startOfNextPlanDay, startOfPlanDay } from '../../PlanCalendar'
+} from '../../design/endeavor/endeavorCardModel'
+import { formatTimeRange } from '../../design/endeavor/formatting'
+import { colorVar } from '../../design/system/tokens/roles'
+import { cn } from '../../design/system/utils/cn'
+import { startOfNextPlanDay, startOfPlanDay } from '../plan/PlanCalendar'
 import {
   BLOCK_PRESS_MAX_DISTANCE_PX,
   BLOCK_RIPPLE_TIMING_MS,
@@ -66,20 +66,23 @@ import {
   TIMELINE_HOUR_LABEL_WIDTH_PX,
   TIMELINE_MINIMUM_CARD_HEIGHT_PX,
   TIMELINE_SLOTS_PER_HOUR,
-} from '../../PlanConstants'
-import { TimelineDragHandle, isPastTimelineEvent } from '../../PlanEditSession'
-import type { PlacedEvent } from '../../TimelineLayout'
+} from '../plan/PlanConstants'
+import {
+  TimelineDragHandle,
+  isPastTimelineEvent,
+} from '../plan/PlanEditSession'
+import type { PlacedEvent } from '../plan/TimelineLayout'
 import {
   placedEventWidthFraction,
   placedEventXFraction,
   timelinePointOffset,
-} from '../../TimelineLayout'
-import type { QuickCreateDraft, TimelineHourBand } from '../../TimelineSlots'
+} from '../plan/TimelineLayout'
+import type { QuickCreateDraft, TimelineHourBand } from '../plan/TimelineSlots'
 import {
   isOnTheHourSlot,
   timelineSlotHeightMultiples,
   timelineSlotStart,
-} from '../../TimelineSlots'
+} from '../plan/TimelineSlots'
 import {
   CardTier,
   RIPPLE_SETTLED_OPACITY,

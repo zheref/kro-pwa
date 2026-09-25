@@ -23,8 +23,8 @@
  * module owns the number.
  */
 import type { Endeavor } from '@kro/core'
-import type { ColorRole } from '../../../../design/system/tokens/roles'
-import { colorVar } from '../../../../design/system/tokens/roles'
+import type { ColorRole } from '../../design/system/tokens/roles'
+import { colorVar } from '../../design/system/tokens/roles'
 
 /** `TimelineEventCardStyle.fillOpacity(in:isPressed:)`. */
 export const cardFillOpacity = (

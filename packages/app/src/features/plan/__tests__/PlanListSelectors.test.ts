@@ -7,6 +7,9 @@
  * provider), and the untimed half of the day comes from the endeavor POOL that
  * the day's own start-driven fetch cannot return.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import type { SettingValue } from '@kro/core'
 import { PlanListGrouping, PlanListSort } from '@kro/core'
 import { describe, expect, it } from 'vitest'
@@ -71,6 +74,9 @@ const rootWith = (
   plan,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

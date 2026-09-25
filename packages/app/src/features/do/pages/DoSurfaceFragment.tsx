@@ -30,6 +30,7 @@
 import type { ActivityRing } from '../../../design/chrome'
 import {
   CONTENT_FAB_INSET_PX,
+  DETAIL_PANEL_ACCESSORY_INSET,
   LiquidGlassFABMenu,
   useActiveToasts,
 } from '../../../design/chrome'
@@ -116,6 +117,8 @@ export interface DoSurfaceFragmentProps
   /** The FAB's four rows, each already bound to its intent. */
   readonly onEnterMarkCompleteMode: () => void
   readonly onClearExpired: () => void
+  /** The rings open Day Progress — present only where the pane can show it. */
+  readonly onTapRings?: () => void
   readonly onQuickAdd: () => void
   readonly onStartSession: () => void
   readonly className?: string
@@ -277,6 +280,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
         content={header}
         rings={rings}
         showsRings={showsRings}
+        onTapRings={props.onTapRings}
       />
 
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: the scroller's background
@@ -394,8 +398,12 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           inset.
         */
         style={{
-          paddingInlineEnd: CONTENT_FAB_INSET_PX,
+          // Steps aside for the trailing detail pane (canon #517).
+          paddingInlineEnd: `calc(${CONTENT_FAB_INSET_PX}px + ${DETAIL_PANEL_ACCESSORY_INSET})`,
           paddingBlockEnd: CONTENT_FAB_INSET_PX,
+          transitionProperty: 'padding',
+          transitionDuration: 'var(--kro-duration-standard-spring)',
+          transitionTimingFunction: 'var(--kro-ease-standard-spring)',
         }}
       >
         <div className="pointer-events-auto">

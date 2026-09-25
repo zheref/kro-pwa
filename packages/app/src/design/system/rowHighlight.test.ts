@@ -24,10 +24,20 @@ describe('ROW_HIGHLIGHT', () => {
 })
 
 describe('TOOLBAR_GLYPH_BUTTON', () => {
-  it('uses the menu-row corner and the same glass wash', () => {
+  it('uses the menu-row corner and the FAB menu hover fill', () => {
     expect(TOOLBAR_GLYPH_BUTTON).toContain('rounded-kro-small')
-    expect(TOOLBAR_GLYPH_BUTTON).toContain('hover:bg-kro-absolute/25')
+    expect(TOOLBAR_GLYPH_BUTTON).toContain(
+      'hover:bg-(--kro-glass-surface-hover)',
+    )
     expect(TOOLBAR_GLYPH_BUTTON).toContain('hover:border-(--kro-glass-rim)')
+  })
+
+  it('keeps the glyph legible on the hover fill', () => {
+    expect(TOOLBAR_GLYPH_BUTTON).toContain('hover:text-kro-fore')
+  })
+
+  it('no longer uses the faint 25% menu-row wash', () => {
+    expect(TOOLBAR_GLYPH_BUTTON).not.toContain('hover:bg-kro-absolute/25')
   })
 
   it('is a step larger than the pointer target', () => {

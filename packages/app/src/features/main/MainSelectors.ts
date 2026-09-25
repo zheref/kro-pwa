@@ -16,6 +16,11 @@
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import {
+  type DetailPaneEndeavor,
+  type DetailPaneSegment,
+  detailPaneTitle,
+} from './DetailPane'
+import {
   type DoSurfaceLayout,
   type ShellShape,
   doSurfaceLayout,
@@ -237,4 +242,82 @@ export const selectPendingShellRoute = createSelector(
 export const selectShellRouteContext = createSelector(
   [selectMainSlice],
   (slice): ShellRouteContext | null => slice.routeContext,
+)
+
+// ---------------------------------------------------------------------------
+// The trailing detail pane (canon's `MainSelectors` #517 block)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether this window hosts the pane at all: the `macDetailPane` flag, on the
+ * sidebar shell. Canon's pane is macOS-only; the tab-bar shell keeps its
+ * sheets, which is the web's reading of the same idiom rule.
+ */
+export const selectIsDetailPaneAvailable = createSelector(
+  [selectMainSlice, selectShellShape],
+  (slice, shape) => slice.isDetailPaneEnabled && shape === 'sidebar',
+)
+
+/** Canon's `detailPaneSegment`, or `null` where the pane is unavailable. */
+export const selectDetailPaneSegment = createSelector(
+  [selectMainSlice, selectIsDetailPaneAvailable],
+  (slice, isAvailable): DetailPaneSegment | null =>
+    isAvailable ? slice.detailPane.segment : null,
+)
+
+/**
+ * Canon's `isDetailPanePresentedSelector` — the one answer the FAB and the
+ * pane's own presentation read.
+ */
+export const selectIsDetailPanePresented = createSelector(
+  [selectDetailPaneSegment],
+  (segment) => segment !== null,
+)
+
+/** Canon's `detailPaneEndeavorSelector`: the endeavor the pane reads. */
+export const selectDetailPaneEndeavor = createSelector(
+  [selectMainSlice],
+  (slice): DetailPaneEndeavor | null => slice.detailPane.endeavor,
+)
+
+/** Canon's `detailPaneTitleSelector`. */
+export const selectDetailPaneTitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : detailPaneTitle(segment, endeavor?.title ?? null),
+)
+
+/**
+ * Canon's `detailPaneSubtitleSelector`: the endeavor's name in an
+ * endeavor-specific mode, nothing in an endeavor-free one.
+ */
+export const selectDetailPaneSubtitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : (endeavor?.title ?? null),
+)
+
+/**
+ * Whether the pane is drilled in — its header offers Back, not Close.
+ * Only where the pane is actually showing.
+ */
+export const selectCanDetailPaneGoBack = createSelector(
+  [selectMainSlice, selectIsDetailPanePresented],
+  (slice, isPresented) => isPresented && slice.detailPaneBackStack.length > 0,
+)
+
+/**
+ * A key for the reading the pane shows — what its drill-in transition keys
+ * on, so pushing and popping replay the slide.
+ */
+export const selectDetailPaneLocationKey = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneEndeavor, selectMainSlice],
+  (segment, endeavor, slice): string =>
+    `${slice.detailPaneBackStack.length}:${segment ?? 'none'}:${endeavor?.id ?? 'day'}`,
+)
+
+/** How many drill-ins deep the pane is — 0 at a top-level reading. */
+export const selectDetailPaneDepth = createSelector(
+  [selectMainSlice],
+  (slice) => slice.detailPaneBackStack.length,
 )

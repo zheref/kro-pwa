@@ -12,3 +12,13 @@ export {
 export { Slider, type SliderProps } from './Slider'
 export { Stepper, type StepperProps } from './Stepper'
 export { Toggle, type ToggleProps } from './Toggle'
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedOption,
+} from './SegmentedControl'
+export {
+  CapsuleSegmentGroup,
+  type CapsuleSegment,
+  type CapsuleSegmentGroupProps,
+} from './CapsuleSegmentGroup'

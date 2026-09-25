@@ -159,3 +159,39 @@ export const EmptyDay = {
 export const BothSchemesBusyDay = {
   render: () => <BothSchemes>{canvas()}</BothSchemes>,
 }
+
+/** Canon's `macReadOnlyTimeline`: no slots, inert cards, natural height. */
+export const ReadOnly = {
+  render: () => (
+    <Stage width={390}>
+      {canvas({
+        isReadOnly: true,
+        isQuickCreateAvailable: false,
+        topInsetPx: 0,
+        bottomInsetPx: 0,
+        overlay: undefined,
+      })}
+    </Stage>
+  ),
+}
+
+/** The pane's would-be session: dashed, reward-tinted, with Start. */
+export const SessionPreview = {
+  render: () => (
+    <Stage width={390}>
+      {canvas({
+        isReadOnly: true,
+        isQuickCreateAvailable: false,
+        topInsetPx: 0,
+        bottomInsetPx: 0,
+        overlay: undefined,
+        sessionPreview: {
+          start: PLAN_REFERENCE_NOW,
+          durationSeconds: 20 * 60,
+          title: 'New Session',
+          onStart: () => {},
+        },
+      })}
+    </Stage>
+  ),
+}

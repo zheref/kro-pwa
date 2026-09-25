@@ -57,6 +57,21 @@ export type ToolbarPlacement =
   | 'leading'
   | 'trailing'
   | 'profile'
+  /**
+   * The trailing detail pane's body — not a toolbar, but the same portal
+   * seam: the pane lives in the shell, and what fills it (Endeavor Detail
+   * today, Session and Performance next) is a sibling feature's Page mounted in
+   * the overlay area. One seam for both keeps a second portal system out.
+   */
+  | 'detailPane'
+  /** The pane header's centred title content (replaces the title text). */
+  | 'detailPaneTitle'
+  /** The pane header's trailing toolbar item. */
+  | 'detailPaneTrailing'
+  /** The pane header's leading control, for a reading's own sub-screen Back. */
+  | 'detailPaneLeading'
+  /** A reading's decorative layer, painted from the pane's top edge. */
+  | 'detailPaneBackdrop'
 
 export const TOOLBAR_PLACEMENTS: readonly ToolbarPlacement[] = [
   'navigation',
@@ -64,6 +79,11 @@ export const TOOLBAR_PLACEMENTS: readonly ToolbarPlacement[] = [
   'leading',
   'trailing',
   'profile',
+  'detailPane',
+  'detailPaneTitle',
+  'detailPaneTrailing',
+  'detailPaneLeading',
+  'detailPaneBackdrop',
 ]
 
 type Containers = Partial<Record<ToolbarPlacement, HTMLElement | null>>

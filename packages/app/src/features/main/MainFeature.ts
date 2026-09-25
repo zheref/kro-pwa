@@ -24,6 +24,13 @@
  */
 import type { Project } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
+import {
+  type DetailPaneEndeavor,
+  type DetailPaneLocation,
+  type DetailPaneSegment,
+  type DetailPaneState,
+  closedDetailPane,
+} from './DetailPane'
 import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
@@ -32,6 +39,7 @@ import {
   deleteProjectThunk,
   deliverCaptureRouteThunk,
   loadShellThunk,
+  openSessionSurfaceThunk,
 } from './MainProducer'
 import {
   type DestinationGates,
@@ -41,6 +49,11 @@ import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import {
   withCaptureRouteConsumed,
   withDestinationSelected,
+  withDetailPaneDismissed,
+  withDetailPaneDrilledIn,
+  withDetailPaneEndeavorSelected,
+  withDetailPaneWentBack,
+  withDetailPaneSegmentSelected,
   withDraftProjectCancelled,
   withDraftProjectStarted,
   withDraftProjectTitleEdited,
@@ -138,6 +151,15 @@ export interface MainState {
   readonly isSidebarVisible: boolean
   /** The one-shot a capture handed the shell, or `null`. */
   readonly routeContext: ShellRouteContext | null
+  /** Canon's `detailPaneSegment` + `detailPaneEndeavor` (see `DetailPane`). */
+  readonly detailPane: DetailPaneState
+  /**
+   * The drill-in trail: where each drill-in left from, oldest first. Non-empty
+   * means the pane's header shows Back rather than Close.
+   */
+  readonly detailPaneBackStack: readonly DetailPaneLocation[]
+  /** Canon's `isMacDetailPaneEnabled` — resolved from `macDetailPane`. */
+  readonly isDetailPaneEnabled: boolean
 }
 
 export const initialMainState: MainState = {
@@ -155,6 +177,9 @@ export const initialMainState: MainState = {
   searchQuery: '',
   isSidebarVisible: true,
   routeContext: null,
+  detailPane: closedDetailPane,
+  detailPaneBackStack: [],
+  isDetailPaneEnabled: false,
 }
 
 export const mainSlice = createSlice({
@@ -254,6 +279,94 @@ export const mainSlice = createSlice({
       Object.assign(state, withDraftProjectCancelled(state))
     },
 
+    /**
+     * User intent: a segment of the toolbar's detail-pane group. Canon's
+     * `userDidSelectDetailPaneSegment` — selecting the one showing hides it.
+     */
+    userDidSelectDetailPaneSegment(
+      state,
+      action: PayloadAction<{ segment: DetailPaneSegment }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneSegmentSelected(state, action.payload.segment),
+      )
+    },
+
+    /**
+     * User intent: the pane's dismiss control, or Escape while it is showing.
+     * Canon's `userDidDismissDetailPane` (canon has no Escape binding; the web
+     * adds it as the platform's own dismiss key — see `MacDetailPane.md`).
+     */
+    userDidDismissDetailPane(state) {
+      Object.assign(state, withDetailPaneDismissed(state))
+    },
+
+    /**
+     * User intent: an endeavor's details — double-click, long-press or the
+     * Details menu item. Canon's `userDidRequestEndeavorDetail`: opens Plan
+     * pointed at that endeavor.
+     */
+    userDidRequestEndeavorDetail(
+      state,
+      action: PayloadAction<{ endeavor: DetailPaneEndeavor }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneEndeavorSelected(state, action.payload.endeavor, 'plan'),
+      )
+    },
+
+    /**
+     * User intent: the Do header's activity rings. Canon's
+     * `userDidRequestDayProgress` — always the endeavor-free Performance mode.
+     */
+    userDidRequestDayProgress(state) {
+      Object.assign(
+        state,
+        withDetailPaneEndeavorSelected(state, null, 'performance'),
+      )
+    },
+
+    /**
+     * User intent: the session pill, or a session wanting to be seen — canon's
+     * `applySessionSetupPresentation`. Opens Session pointed at the session's
+     * endeavor (`null` for a new, arbitrary task).
+     */
+    userDidRequestSessionSetup(
+      state,
+      action: PayloadAction<{ endeavor: DetailPaneEndeavor | null }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneEndeavorSelected(
+          state,
+          action.payload.endeavor,
+          'sessionSetup',
+        ),
+      )
+    },
+
+    /**
+     * User intent: open something from inside the pane — a drill-in. The
+     * pane moves to `location` and its header offers Back. Session Setup's
+     * "Show sessions" (canon's bolt, bf0c2a71) drills into Performance.
+     */
+    userDidDrillIntoDetailPane(
+      state,
+      action: PayloadAction<{ location: DetailPaneLocation }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneDrilledIn(state, action.payload.location),
+      )
+    },
+
+    /** User intent: the pane header's Back (or Escape while drilled in). */
+    userDidTapDetailPaneBack(state) {
+      Object.assign(state, withDetailPaneWentBack(state))
+    },
+
     /** Lifecycle: the destination read the shell's one-shot, so it is spent. */
     onShellRouteContextConsumed(state) {
       state.routeContext = null
@@ -322,6 +435,21 @@ export const mainSlice = createSlice({
         )
       })
 
+      .addCase(openSessionSurfaceThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        // `route` changed the URL; the destination's mount records it.
+        if (result.ok && result.value.kind === 'pane') {
+          Object.assign(
+            state,
+            withDetailPaneEndeavorSelected(
+              state,
+              result.value.endeavor,
+              'sessionSetup',
+            ),
+          )
+        }
+      })
+
       .addCase(deliverCaptureRouteThunk.fulfilled, (state, action) => {
         const result = action.payload
         // `null` means "nothing was due" — the common case on every tick.
@@ -339,6 +467,13 @@ export const {
   onSurfaceChanged,
   userDidCancelAddProject,
   userDidChangeSearchQuery,
+  userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestDayProgress,
+  userDidRequestEndeavorDetail,
+  userDidRequestSessionSetup,
+  userDidSelectDetailPaneSegment,
+  userDidTapDetailPaneBack,
   userDidEditDraftProjectTitle,
   userDidTapAddProject,
   userDidTapDestination,

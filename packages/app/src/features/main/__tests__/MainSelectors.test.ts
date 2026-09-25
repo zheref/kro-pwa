@@ -5,6 +5,9 @@
  * through the store rather than through a browser: the surface goes in, the
  * shell shape and the control ownership come out.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
@@ -46,6 +49,9 @@ const rootWith = (main: MainState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   auth: initialAuthState,
   platform: initialPlatformState,

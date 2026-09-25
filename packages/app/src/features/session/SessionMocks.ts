@@ -158,6 +158,27 @@ export const sessionStateMocks = {
   /** Ready on a blank focus session — nothing stored behind it yet. */
   readyAnonymous: prepared(sessionIdentityMocks.anonymous),
 
+  /**
+   * Ready on an endeavor with recorded history: a pomodoro, a stopwatch, and
+   * one recorded before the mode was written — 🍅 ⚡️ ⏱️.
+   */
+  readyWithHistory: withLaunchPrepared(
+    withPreferencesApplied(initialSessionState, {
+      preferences: sessionPreferenceMocks.shipped,
+      availability: sessionAvailabilityMocks.statusQuo,
+    }),
+    {
+      identity: sessionIdentityMocks.slides,
+      recommendation: {
+        mode: FocusTimerMode.countdown,
+        targetDuration: SESSION_MOCK_TARGET,
+        source: { kind: 'preferred' },
+      },
+      completedSessionsCount: 3,
+      recordedSessionModes: ['countdown', 'stopwatch', null],
+    },
+  ),
+
   /** Running, ten minutes in. */
   running: withDisplayAdvanced(started, sessionMockInstant(600)),
 

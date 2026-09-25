@@ -3,6 +3,9 @@
  * The other registered slices are filled from their own initial states only
  * because `RootState` names every one of them.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { EndeavorField, EndeavorHost, EndeavorRelation } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
@@ -63,6 +66,9 @@ const rootWith = (endeavorDetail: EndeavorDetailState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

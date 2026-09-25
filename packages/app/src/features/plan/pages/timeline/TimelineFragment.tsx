@@ -39,6 +39,7 @@
  * reason. #18's `timelinePlacements` carries the note in full.
  */
 import type { Endeavor } from '@kro/core'
+import { Timer } from 'lucide-react'
 import { endOf } from '@kro/core'
 import {
   type CSSProperties,
@@ -145,7 +146,30 @@ export interface TimelineFragmentProps {
   readonly onReleaseHandle: () => void
   readonly onTapOutsideEditing: () => void
   readonly onPressSlot: (index: number, isHold: boolean) => void
+  /**
+   * Canon's `macReadOnlyTimeline` — the same canvas with an empty interaction
+   * set. No slot layer, no commit surface, and the block layer is `inert`
+   * (cards neither focus nor receive a pointer). The canvas also renders at
+   * its full natural height instead of owning a nested scroller, so a host
+   * that already scrolls (the detail pane) scrolls it.
+   */
+  readonly isReadOnly?: boolean
+  /**
+   * A session that has not started: where it would sit if started now. Drawn
+   * as a recorded session is (the reward tint, a dashed outline, the timer
+   * glyph) plus a Start control. Stays pressable on a read-only canvas.
+   */
+  readonly sessionPreview?: TimelineSessionPreview | null
   readonly className?: string
+}
+
+/** The would-be session `TimelineFragment` previews. */
+export interface TimelineSessionPreview {
+  readonly start: Date
+  readonly durationSeconds: number
+  readonly title: string
+  readonly onStart: () => void
+  readonly locale?: string
 }
 
 export function TimelineFragment({
@@ -168,9 +192,11 @@ export function TimelineFragment({
   onReleaseHandle,
   onTapOutsideEditing,
   onPressSlot,
+  isReadOnly = false,
+  sessionPreview = null,
   className,
 }: TimelineFragmentProps) {
-  const isEditing = editingEndeavorId !== null
+  const isEditing = !isReadOnly && editingEndeavorId !== null
   const hourCount = Math.max(band.endExclusive - band.start, 0)
   const canvasHeight = hourCount * TIMELINE_HOUR_HEIGHT_PX
 
@@ -194,6 +220,7 @@ export function TimelineFragment({
     <div
       data-testid="plan-timeline"
       data-editing={isEditing ? 'true' : 'false'}
+      data-read-only={isReadOnly ? 'true' : 'false'}
       className={cn('relative min-h-0 flex-1', className)}
     >
       {overlay !== undefined && (
@@ -212,7 +239,7 @@ export function TimelineFragment({
           // Canon's `.scrollDisabled(editingEventID != nil)` — the scroll view
           // steals a vertical drag, so a handle drag would never reach the
           // card while it is scrollable.
-          overflowY: isEditing ? 'hidden' : 'auto',
+          overflowY: isReadOnly ? 'visible' : isEditing ? 'hidden' : 'auto',
           overflowX: 'hidden',
           // Canon expresses the chrome as CONTENT insets rather than as layout
           // that shrinks the canvas, so every hour can still be scrolled into
@@ -234,14 +261,17 @@ export function TimelineFragment({
         >
           <HourGrid band={band} />
 
-          {isQuickCreateAvailable && slotCount > 0 && !isEditing && (
-            <SlotLayer
-              slotCount={slotCount}
-              selectedDate={selectedDate}
-              band={band}
-              onPressSlot={onPressSlot}
-            />
-          )}
+          {!isReadOnly &&
+            isQuickCreateAvailable &&
+            slotCount > 0 &&
+            !isEditing && (
+              <SlotLayer
+                slotCount={slotCount}
+                selectedDate={selectedDate}
+                band={band}
+                onPressSlot={onPressSlot}
+              />
+            )}
 
           {/*
             Canon commits an edit with `.onTapGesture` on the whole canvas.
@@ -267,20 +297,38 @@ export function TimelineFragment({
             band={band}
           />
 
-          {placements.map((placement, index) => (
-            <TimelineBlock
-              key={placement.endeavor.id}
-              placement={placement}
-              index={index}
-              now={now}
-              isEditing={editingEndeavorId === placement.endeavor.id}
-              onTap={handleBlockTap}
-              onHold={onHoldBlock}
-              onGrabHandle={onGrabHandle}
-              onDragHandle={onDragHandle}
-              onReleaseHandle={onReleaseHandle}
+          {/* `display: contents` — no box, so the cards keep the canvas as
+              their containing block and the slot layer stays pressable. */}
+          <div
+            data-testid="plan-timeline-blocks"
+            inert={isReadOnly}
+            className={cn('contents', isReadOnly && 'pointer-events-none')}
+          >
+            {placements.map((placement, index) => (
+              <TimelineBlock
+                key={placement.endeavor.id}
+                placement={placement}
+                index={index}
+                now={now}
+                isEditing={
+                  !isReadOnly && editingEndeavorId === placement.endeavor.id
+                }
+                onTap={handleBlockTap}
+                onHold={onHoldBlock}
+                onGrabHandle={onGrabHandle}
+                onDragHandle={onDragHandle}
+                onReleaseHandle={onReleaseHandle}
+              />
+            ))}
+          </div>
+
+          {sessionPreview !== null && (
+            <SessionPreviewBlock
+              preview={sessionPreview}
+              selectedDate={selectedDate}
+              band={band}
             />
-          ))}
+          )}
 
           {isShowingToday && (
             <NowIndicator selectedDate={selectedDate} now={now} band={band} />
@@ -822,6 +870,87 @@ function EditHandle({
 // -------------------------------------------------------------- the now line
 
 /** `nowIndicator` — the red line with a dot on the leading edge. */
+/**
+ * The session that would run if started now — canon's recorded-session card
+ * (`eventCard`, `isRecordedSession`): `recordedSession`'s reward-yellow fill,
+ * a 1px dashed outline at 70% in place of the leading bar, and the timer
+ * glyph at the top trailing corner. Being a proposal rather than a record, it
+ * adds one thing canon's card has no need for: a Start control.
+ */
+function SessionPreviewBlock({
+  preview,
+  selectedDate,
+  band,
+}: {
+  readonly preview: TimelineSessionPreview
+  readonly selectedDate: Date
+  readonly band: TimelineHourBand
+}) {
+  const dayStart = startOfPlanDay(selectedDate)
+  if (
+    preview.start.getTime() < dayStart.getTime() ||
+    preview.start.getTime() >= startOfNextPlanDay(selectedDate).getTime()
+  ) {
+    return null
+  }
+  const end = new Date(preview.start.getTime() + preview.durationSeconds * 1000)
+  const top =
+    timelinePointOffset(dayStart, preview.start) -
+    band.start * TIMELINE_HOUR_HEIGHT_PX
+  const height = Math.max(
+    (preview.durationSeconds / 3600) * TIMELINE_HOUR_HEIGHT_PX,
+    TIMELINE_MINIMUM_CARD_HEIGHT_PX,
+  )
+  const accent = colorVar('rewardYellow')
+  const range = formatTimeRange(preview.start, end, preview.locale)
+
+  return (
+    <div
+      data-testid="plan-timeline-session-preview"
+      role="group"
+      aria-label={`${preview.title}, ${range}, not started`}
+      className="absolute flex items-start gap-2 overflow-hidden"
+      style={{
+        left: CONTENT_LEFT_PX,
+        width: CONTENT_WIDTH,
+        top,
+        height,
+        borderRadius: 6,
+        background: `color-mix(in srgb, ${accent} 22%, transparent)`,
+        border: `1px dashed color-mix(in srgb, ${accent} 70%, transparent)`,
+        padding: '6px 6px 6px 12px',
+        zIndex: 3,
+      }}
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span
+          className="truncate font-semibold text-[13px]"
+          style={{ color: colorVar('fore') }}
+        >
+          {preview.title}
+        </span>
+        <span className="truncate text-[11px] text-kro-fore-secondary">
+          {range}
+        </span>
+      </div>
+      <button
+        type="button"
+        data-testid="plan-timeline-session-preview-start"
+        onClick={preview.onStart}
+        className="shrink-0 cursor-pointer rounded-full px-3 py-1 font-semibold text-[12px] outline-none focus-visible:shadow-[var(--kro-ring)]"
+        style={{ background: accent, color: 'rgb(0 0 0 / 0.85)' }}
+      >
+        Start
+      </button>
+      <Timer
+        size={10}
+        aria-hidden="true"
+        className="shrink-0 text-kro-fore-secondary"
+      />
+    </div>
+  )
+}
+
 function NowIndicator({
   selectedDate,
   now,

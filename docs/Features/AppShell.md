@@ -124,6 +124,11 @@ The shell also arrives at a destination on its own when a capture routes there
   falls back to My Day if the destination being shown disappears.
 - **Settings and profile.** The frame's Profile control opens Adjust for now;
   the profile panel itself belongs to the settings work.
+- **The trailing detail pane** ([MacDetailPane.md](./MacDetailPane.md)). On the
+  wide frame, behind its flag, the frame carries one glass panel along its
+  trailing edge and a three-button group in its bar that chooses what the panel
+  shows. The frame owns the panel and the group; whichever feature the panel is
+  showing fills its body.
 
 ## Out of scope
 

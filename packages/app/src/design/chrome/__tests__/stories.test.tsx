@@ -31,6 +31,7 @@ import * as emojiStories from '../emoji/EmojiPicker.stories'
 import * as fabStories from '../fab/LiquidGlassFAB.stories'
 import * as fabMenuStories from '../fab/LiquidGlassFABMenu.stories'
 import * as glowStories from '../glow/RotatingGlow.stories'
+import * as panelStories from '../panel/TrailingDetailPanel.stories'
 import { resetActiveToastSequence } from '../toast/activeToast'
 
 interface Story {
@@ -48,6 +49,7 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['DurationDial', dialStories],
   ['ActivityRings', ringsStories],
   ['EmojiPicker', emojiStories],
+  ['TrailingDetailPanel', panelStories],
 ]
 
 /**

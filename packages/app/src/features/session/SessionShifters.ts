@@ -122,6 +122,11 @@ export const withLaunchPrepared = (
     readonly identity: SessionIdentity
     readonly recommendation: SessionLaunchRecommendation
     readonly completedSessionsCount: number
+    readonly recordedSessionModes?: readonly (
+      | 'countdown'
+      | 'stopwatch'
+      | null
+    )[]
   },
 ): SessionState => {
   if (state.phase !== SessionPhase.ready) return state
@@ -133,6 +138,7 @@ export const withLaunchPrepared = (
     targetDuration: prepared.recommendation.targetDuration,
     launchSource: prepared.recommendation.source,
     completedSessionsCount: prepared.completedSessionsCount,
+    recordedSessionModes: prepared.recordedSessionModes ?? [],
     conclusion: { kind: 'none' },
     isPresentingConclusion: false,
     isEditingTitle: false,

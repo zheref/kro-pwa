@@ -3,6 +3,9 @@
  * (`RC-55`). The `greeting` slice is filled from its own initial state — this
  * suite has no opinion about any slice but Plan's.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import type { Endeavor, SettingValue } from '@kro/core'
 import {
   DayViewRange,
@@ -98,6 +101,9 @@ const rootWith = (
   plan,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

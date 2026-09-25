@@ -75,7 +75,7 @@ import { CaptureKind, captureKindLabel } from '../../capture/CaptureRules'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
-import { navigateToDestinationThunk } from '../../main/MainProducer'
+import { openSessionSurfaceThunk } from '../../main/MainProducer'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
   loadSettingsThunk,
@@ -502,10 +502,18 @@ export function PlanPage({
             // site's to supply, never a Producer's.
             sessionId: crypto.randomUUID(),
           }),
-        ).finally(() => {
+        ).then((action) => {
+          // The pane needs the endeavor's name for its subtitle; the
+          // preparation just read it. A failed preparation still opens the
+          // surface, reading the endeavor by id alone.
+          const prepared =
+            prepareSessionLaunchThunk.fulfilled.match(action) &&
+            action.payload.ok
+              ? action.payload.value.identity.title
+              : ''
           void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
+            openSessionSurfaceThunk({
+              endeavor: { id: endeavorId, title: prepared },
             }),
           )
         })

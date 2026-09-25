@@ -25,8 +25,11 @@ import {
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { authSlice } from '../features/auth/AuthFeature'
 import { captureSlice } from '../features/capture/CaptureFeature'
+import { dayProgressSlice } from '../features/dayProgress/DayProgressFeature'
+import { dayTimelineSlice } from '../features/dayTimeline/DayTimelineFeature'
 import { doSlice } from '../features/do/DoFeature'
 import { earnSlice } from '../features/earn/EarnFeature'
+import { endeavorActivitySlice } from '../features/endeavorActivity/EndeavorActivityFeature'
 import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFeature'
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
@@ -330,11 +333,14 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
     reducer: {
       greeting: greetingSlice.reducer,
       do: doSlice.reducer,
+      dayProgress: dayProgressSlice.reducer,
+      dayTimeline: dayTimelineSlice.reducer,
       capture: captureSlice.reducer,
       triage: triageSlice.reducer,
       plan: planSlice.reducer,
       find: findSlice.reducer,
       endeavorDetail: endeavorDetailSlice.reducer,
+      endeavorActivity: endeavorActivitySlice.reducer,
       earn: earnSlice.reducer,
       platform: platformSlice.reducer,
       session: sessionSlice.reducer,

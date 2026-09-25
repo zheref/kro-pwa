@@ -45,7 +45,12 @@ import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
-import { navigateToDestinationThunk } from '../../main/MainProducer'
+import { userDidRequestDayProgress } from '../../main/MainFeature'
+import {
+  navigateToDestinationThunk,
+  openSessionSurfaceThunk,
+} from '../../main/MainProducer'
+import { selectIsDetailPaneAvailable } from '../../main/MainSelectors'
 import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import { selectLayout, selectShellShape } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
@@ -112,6 +117,7 @@ export interface DoPageProps {
 }
 
 export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
+  const isDetailPaneAvailable = useAppSelector(selectIsDetailPaneAvailable)
   const dispatch = useAppDispatch()
 
   // Read once. `useState`'s lazy initialiser is the standard idiom for "a value
@@ -334,9 +340,11 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
             sessionId: crypto.randomUUID(),
           }),
         ).finally(() => {
+          // The pane's Session segment on the desktop sidebar (canon #517),
+          // the Execute destination everywhere else.
           void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
+            openSessionSurfaceThunk({
+              endeavor: { id: card.id, title: card.title },
             }),
           )
         })
@@ -452,6 +460,13 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
       />
 
       <DoSurfaceFragment
+        // Canon (#517): the rings open Day Progress in the detail pane, where
+        // this window hosts one; elsewhere they stay a passive indicator.
+        onTapRings={
+          isDetailPaneAvailable
+            ? () => dispatch(userDidRequestDayProgress())
+            : undefined
+        }
         shape={shape}
         layout={layout}
         header={header}
@@ -505,11 +520,8 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
           )
         }
         onStartSession={() => {
-          void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
-            }),
-          )
+          // A new, arbitrary task — the Session segment's endeavor-free mode.
+          void dispatch(openSessionSurfaceThunk({ endeavor: null }))
         }}
       />
     </>

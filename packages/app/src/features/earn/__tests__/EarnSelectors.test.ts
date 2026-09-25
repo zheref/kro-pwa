@@ -9,6 +9,9 @@
  * — it replays the exact same operation sequence against a plain reference
  * implementation and checks the two never disagree, after *every* step.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { PerformResolution, makePerform } from '@kro/core'
 import { rewardMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
@@ -56,6 +59,9 @@ const rootWith = (earn: EarnState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn,
   platform: initialPlatformState,
   session: initialSessionState,

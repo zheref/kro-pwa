@@ -23,12 +23,18 @@ import {
   projectRecordFromProject,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import type { ThunkExtra } from '../../library/store'
+import type { RootState, ThunkExtra } from '../../library/store'
+import type { DetailPaneEndeavor } from './DetailPane'
 import type { PendingShellRoute } from './MainFeature'
 import { type MainException, MainExceptions } from './MainException'
 import type { ShellConfiguration } from './MainShifters'
 import type { DestinationGates } from './NavigationSections'
-import { type SidebarDestination, destinationPath } from './SidebarDestination'
+import { selectIsDetailPaneAvailable } from './MainSelectors'
+import {
+  DestinationKind,
+  type SidebarDestination,
+  destinationPath,
+} from './SidebarDestination'
 
 const reasonOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
@@ -78,15 +84,22 @@ export const loadShellThunk = createAsyncThunk<
   { extra: ThunkExtra }
 >('main/onShellLoadCompleted', async (_argument, { extra }) => {
   const gates = gatesFrom(extra)
+  const isDetailPaneEnabled = extra.featureFlags.isEnabled(
+    FeatureFlags.macDetailPane,
+  )
 
   if (!gates.lists) {
     // The Lists section is off, so the store is never touched — canon does not
     // read `store.lists` when the flag is down either.
-    return ok({ gates, projects: [] })
+    return ok({ gates, projects: [], isDetailPaneEnabled })
   }
 
   try {
-    return ok({ gates, projects: await readProjects(extra) })
+    return ok({
+      gates,
+      projects: await readProjects(extra),
+      isDetailPaneEnabled,
+    })
   } catch (error) {
     // The gates already resolved, so they still apply: a Lists read failure
     // must never leave the sidebar and tab bar with no destinations at all.
@@ -94,6 +107,7 @@ export const loadShellThunk = createAsyncThunk<
       gates,
       projects: [],
       listsFailure: MainExceptions.listsLoadFailed(reasonOf(error)),
+      isDetailPaneEnabled,
     })
   }
 })
@@ -159,6 +173,42 @@ export const navigateToDestinationThunk = createAsyncThunk<
     try {
       extra.navigation.navigate(path)
       return ok(path)
+    } catch (error) {
+      return err(MainExceptions.unknown(reasonOf(error)))
+    }
+  },
+)
+
+/** Where `openSessionSurfaceThunk` put the session surface. */
+export type SessionSurfaceHost =
+  | { readonly kind: 'pane'; readonly endeavor: DetailPaneEndeavor | null }
+  | { readonly kind: 'route'; readonly path: string }
+
+/**
+ * "Show me the session" — Execute on a card, a Plan block's Start Session, the
+ * FAB's Start Session, the pill.
+ *
+ * Canon (#517): on the Mac, starting or resuming a session raises Session Setup
+ * in the window's trailing pane (`applySessionSetupPresentation`). Where this
+ * window hosts the pane, this resolves `pane` and the slice points the pane's
+ * Session segment at `endeavor` (`null` = a new, arbitrary task). Everywhere
+ * else it navigates to the Execute destination exactly as before — the router
+ * stays a Service, called here and nowhere in a component (`RC-17`).
+ */
+export const openSessionSurfaceThunk = createAsyncThunk<
+  Result<SessionSurfaceHost, MainException>,
+  { endeavor: DetailPaneEndeavor | null },
+  { extra: ThunkExtra; state: RootState }
+>(
+  'main/onSessionSurfaceOpenCompleted',
+  async ({ endeavor }, { extra, getState }) => {
+    if (selectIsDetailPaneAvailable(getState())) {
+      return ok({ kind: 'pane', endeavor })
+    }
+    const path = destinationPath({ kind: DestinationKind.session })
+    try {
+      extra.navigation.navigate(path)
+      return ok({ kind: 'route', path })
     } catch (error) {
       return err(MainExceptions.unknown(reasonOf(error)))
     }

@@ -85,9 +85,16 @@ describe('evaluating a gate', () => {
     return makePreferences(makeInMemoryKeyValueStore(seed))
   }
 
-  it('holds the stopwatch back on a ship build, even though the user wants it', () => {
+  it('offers the stopwatch on a ship build — flag and preference both default on', () => {
     const service = makeHardcodedFeatureFlagService()
-    // The preference defaults to on; the flag is what is holding it.
+    expect(
+      isGateAvailable(sessionStopwatchGate, service, preferencesWith()),
+    ).toBe(true)
+  })
+
+  it('holds the stopwatch back once the flag is turned off', () => {
+    const service = makeHardcodedFeatureFlagService()
+    service.change(FeatureFlags.sessionStopwatch, FeatureFlagState.disabled)
     expect(
       isGateAvailable(sessionStopwatchGate, service, preferencesWith()),
     ).toBe(false)

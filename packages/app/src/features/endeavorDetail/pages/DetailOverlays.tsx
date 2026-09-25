@@ -37,6 +37,7 @@
  */
 import {
   type Defer,
+  type Endeavor,
   type EndeavorField,
   type EndeavorHost,
   type EndeavorRelation,
@@ -44,7 +45,7 @@ import {
   type Shadow,
   assertNever,
 } from '@kro/core'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { CompactPresentationHeader } from '../../../design/endeavor/CompactPresentationHeader'
 import {
   Dialog,
@@ -59,8 +60,25 @@ import {
 import { colorVar } from '../../../design/system/tokens/roles'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { childIntentDelegatedConsumed } from '../../find/FindFeature'
-import { selectShellShape } from '../../main/MainSelectors'
-import { selectProjects } from '../../main/MainSelectors'
+import {
+  userDidDismissDetailPane,
+  userDidRequestEndeavorDetail,
+} from '../../main/MainFeature'
+import {
+  selectDetailPaneEndeavor,
+  selectDetailPaneSegment,
+  selectIsDetailPaneAvailable,
+  selectProjects,
+  selectShellShape,
+} from '../../main/MainSelectors'
+import { ToolbarSlot } from '../../main/ToolbarSlots'
+import { DrillTransition } from '../../../design/chrome/panel/DrillTransition'
+import {
+  PANEL_TOOLBAR_BUTTON_SIZE,
+  PANEL_TOOLBAR_GLYPH,
+  PanelToolbarButton,
+} from '../../../design/chrome/panel/TrailingDetailPanel'
+import { endeavorIcon } from '../../../design/endeavor/endeavorIcons'
 import {
   onDetailRequested,
   onEditRequested,
@@ -119,6 +137,10 @@ import {
   relationEntryFromDraft,
 } from './EndeavorRelationFragment'
 import { selectDetailIntentRequest } from './DetailOverlaySelectors'
+import {
+  type DetailPaneHostingSnapshot,
+  detailPaneHostingAction,
+} from './detailPaneHosting'
 import { relationLabel } from './endeavorDetailDisplay'
 
 export interface DetailOverlaysProps {
@@ -158,6 +180,58 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
   const badges = useAppSelector(selectDetailBadges)
   const projects = useAppSelector(selectProjects)
   const shape = useAppSelector(selectShellShape)
+  const isPaneHost = useAppSelector(selectIsDetailPaneAvailable)
+  const paneSegment = useAppSelector(selectDetailPaneSegment)
+  const paneEndeavor = useAppSelector(selectDetailPaneEndeavor)
+
+  /**
+   * Keep Detail and the shell's trailing pane in step (canon #517: on the
+   * sidebar shell, Detail opens in the pane's Plan segment instead of a
+   * dialog). The decision is `detailPaneHostingAction`'s; this effect only
+   * carries it out, reaching both slices as the overlay Page may (`RC-37`).
+   *
+   * The last presented endeavor is remembered so reselecting Plan from the
+   * toolbar reopens the same Detail, as canon's kept `detailPaneEndeavor` does.
+   */
+  const previousHosting = useRef<DetailPaneHostingSnapshot | null>(null)
+  const lastPresented = useRef<Endeavor | null>(null)
+  useEffect(() => {
+    if (endeavor !== null) lastPresented.current = endeavor
+    const current: DetailPaneHostingSnapshot = {
+      isHost: isPaneHost,
+      detail:
+        endeavor === null ? null : { id: endeavor.id, title: endeavor.title },
+      paneSegment,
+      paneEndeavorId: paneEndeavor?.id ?? null,
+    }
+    const previous = previousHosting.current ?? {
+      ...current,
+      detail: null,
+      paneSegment: null,
+    }
+    previousHosting.current = current
+
+    const action = detailPaneHostingAction(previous, current)
+    if (action === null) return
+    switch (action.kind) {
+      case 'pointPane':
+        dispatch(userDidRequestEndeavorDetail({ endeavor: action.endeavor }))
+        return
+      case 'dismissDetail':
+        dispatch(userDidTapDismiss())
+        return
+      case 'dismissPane':
+        dispatch(userDidDismissDetailPane())
+        return
+      case 'reopenDetail':
+        if (lastPresented.current?.id === action.endeavorId) {
+          dispatch(onDetailRequested({ endeavor: lastPresented.current }))
+        }
+        return
+      default:
+        assertNever(action)
+    }
+  }, [dispatch, endeavor, isPaneHost, paneSegment, paneEndeavor])
 
   /**
    * Drain the intents this overlay owns.
@@ -265,6 +339,26 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
     [dispatch, endeavor],
   )
 
+  // In the pane, an editor is a drill-in, so Escape means its Back — never the
+  // pane's Close. On `document`, whose bubble phase runs after a menu or picker
+  // inside the editor has had its say and before the pane's own `window`
+  // listener, which skips an event already handled.
+  const isPaneEditorOpen =
+    isPaneHost &&
+    paneSegment === 'plan' &&
+    endeavor !== null &&
+    destination !== null
+  useEffect(() => {
+    if (!isPaneEditorOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      event.preventDefault()
+      dispatch(userDidDismissDestination())
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [dispatch, isPaneEditorOpen])
+
   if (endeavor === null) return null
 
   const isEditor = destination !== null
@@ -348,6 +442,22 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
       />
     ) : null
 
+  const saveButton = (
+    <button
+      type="button"
+      disabled={!isSaveEnabled}
+      onClick={onSave}
+      className="shrink-0 rounded-kro-pill px-4 text-sm font-semibold outline-none focus-visible:shadow-[var(--kro-ring)] disabled:opacity-[var(--kro-opacity-disabled)]"
+      style={{
+        minHeight: 'var(--kro-size-min-touch-target)',
+        backgroundColor: colorVar('accent'),
+        color: colorVar('onAccent'),
+      }}
+    >
+      {isSaving ? 'Saving…' : 'Save'}
+    </button>
+  )
+
   const chrome = (
     <>
       <div className="flex items-center gap-kro-small">
@@ -368,25 +478,74 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
             }
           />
         </div>
-        {showsSave ? (
-          <button
-            type="button"
-            disabled={!isSaveEnabled}
-            onClick={onSave}
-            className="shrink-0 rounded-kro-pill px-4 text-sm font-semibold outline-none focus-visible:shadow-[var(--kro-ring)] disabled:opacity-[var(--kro-opacity-disabled)]"
-            style={{
-              minHeight: 'var(--kro-size-min-touch-target)',
-              backgroundColor: colorVar('accent'),
-              color: colorVar('onAccent'),
-            }}
-          >
-            {isSaving ? 'Saving…' : 'Save'}
-          </button>
-        ) : null}
+        {showsSave ? saveButton : null}
       </div>
       {body}
     </>
   )
+
+  if (isPaneHost) {
+    // Hosted by the shell's pane. The read surface uses the pane's own header
+    // (title + close). An editor is a drill-in: its Back takes the header's
+    // leading seat, its title the centre, its Save the trailing seat, and the
+    // body slides in and out with the shared drill-in motion.
+    if (paneSegment !== 'plan') return null
+    return (
+      <>
+        {isEditor ? (
+          <>
+            <ToolbarSlot placement="detailPaneLeading">
+              <PanelToolbarButton
+                label="Back"
+                onPress={() => dispatch(userDidDismissDestination())}
+              >
+                <BackGlyph {...PANEL_TOOLBAR_GLYPH} />
+              </PanelToolbarButton>
+            </ToolbarSlot>
+            <ToolbarSlot placement="detailPaneTitle">
+              <p
+                data-testid="detail-pane-editor-title"
+                className="m-0 truncate text-base font-semibold"
+                style={{ color: colorVar('fore') }}
+              >
+                {headerTitle}
+              </p>
+            </ToolbarSlot>
+            {showsSave ? (
+              <ToolbarSlot placement="detailPaneTrailing">
+                {/* The toolbar-sized Save: the pane's header keeps its height,
+                    so nothing in it may be taller than the 36px toolbar
+                    buttons. */}
+                <button
+                  type="button"
+                  disabled={!isSaveEnabled}
+                  onClick={onSave}
+                  className="shrink-0 rounded-kro-pill px-3 text-sm font-semibold outline-none focus-visible:shadow-[var(--kro-ring)] disabled:opacity-[var(--kro-opacity-disabled)]"
+                  style={{
+                    height: PANEL_TOOLBAR_BUTTON_SIZE,
+                    backgroundColor: colorVar('accent'),
+                    color: colorVar('onAccent'),
+                  }}
+                >
+                  {isSaving ? 'Saving…' : 'Save'}
+                </button>
+              </ToolbarSlot>
+            ) : null}
+          </>
+        ) : null}
+        <ToolbarSlot placement="detailPane">
+          <DrillTransition
+            depth={isEditor ? 1 : 0}
+            screenKey={destinationKey(destination)}
+            testId="detail-pane-plan"
+            className="flex flex-col gap-kro-small px-kro-small pb-kro-medium"
+          >
+            {body}
+          </DrillTransition>
+        </ToolbarSlot>
+      </>
+    )
+  }
 
   const onOpenChange = (open: boolean) => {
     if (!open) dispatch(userDidTapDismiss())
@@ -432,3 +591,15 @@ const badgeLabel = (badge: EndeavorDetailBadge): string => {
       return assertNever(badge)
   }
 }
+
+const BackGlyph = endeavorIcon('chevron.left')
+
+/** A key per Detail screen, so each drill-in remounts and slides. */
+const destinationKey = (
+  destination: ReturnType<typeof selectDetailDestination>,
+): string =>
+  destination === null
+    ? 'detail'
+    : destination.kind === 'relation'
+      ? `relation:${destination.relation}`
+      : destination.kind

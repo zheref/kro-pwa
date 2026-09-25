@@ -28,13 +28,18 @@ import {
   FocusTimerMode as TimerMode,
   runningSessionElapsedDuration,
   runningSessionRemainingDuration,
+  sessionLaunchRecommendation,
   sessionRecordingThreshold,
 } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import { type SessionCueMark, sessionCueSchedule } from './SessionCues'
 import type { SessionException } from './SessionException'
-import type { SessionIdentity } from './SessionIdentity'
+import {
+  type SessionIdentity,
+  anonymousSessionIdentity,
+  promotedEndeavorForIdentity,
+} from './SessionIdentity'
 import type { SessionCalendarLog, SessionOutcome } from './SessionOutcome'
 import { sessionCalendarLogFor } from './SessionOutcome'
 import type { SessionState } from './SessionState'
@@ -387,6 +392,28 @@ export const selectSessionAvailability = createSelector(
   (slice) => slice.availability,
 )
 
+/**
+ * How long a new, blank session would run if set up right now — the duration
+ * Session Setup opens at for "a new task". The same recommendation
+ * `prepareSessionLaunchThunk` hands a blank session, so a preview of it (the
+ * read-only timeline's draft block) cannot disagree with the setup it opens.
+ */
+export const selectBlankSessionTargetDuration = createSelector(
+  [selectSessionPreferences, selectSessionAvailability],
+  (preferences, availability): TimeIntervalSeconds =>
+    sessionLaunchRecommendation(
+      promotedEndeavorForIdentity(
+        anonymousSessionIdentity('blank-session-preview'),
+        new Date(0),
+      ),
+      {
+        isStopwatchAvailable: availability.isStopwatchAvailable,
+        isDurationLearningEnabled: availability.isDurationLearningEnabled,
+        fallbackDuration: preferences.defaultDuration,
+      },
+    ).targetDuration,
+)
+
 /** Whether the mode toggle should be offered at all. */
 export const selectIsStopwatchAvailable = createSelector(
   [selectSessionAvailability],
@@ -427,6 +454,26 @@ export const selectTomatoRow = createSelector(
     glyphs: Math.min(count, SESSION_TOMATO_DISPLAY_CAP),
     overflowLabel: count > SESSION_TOMATO_DISPLAY_CAP ? `× ${count}` : null,
   }),
+)
+
+/** Canon's marker per mode: 🍅 countdown, ⚡️ stopwatch, ⏱️ unknown. */
+export const sessionModeMarker = (
+  mode: 'countdown' | 'stopwatch' | null,
+): string => (mode === null ? '⏱️' : mode === 'countdown' ? '🍅' : '⚡️')
+
+/**
+ * Canon's tomato row (`SessionSetupView`): one marker per recorded session,
+ * oldest first, in the mode it was recorded in. With no recorded modes it
+ * falls back to the completed count in the currently selected mode.
+ */
+export const selectSessionMarkers = createSelector(
+  [selectSessionSlice],
+  (slice): readonly string[] =>
+    slice.recordedSessionModes.length > 0
+      ? slice.recordedSessionModes.map(sessionModeMarker)
+      : Array.from({ length: slice.completedSessionsCount }, () =>
+          sessionModeMarker(slice.mode),
+        ),
 )
 
 // ---------------------------------------------------------------------------

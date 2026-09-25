@@ -18,6 +18,8 @@ import {
 } from '../EndeavorDetailFeature'
 import { DetailOverlays } from './DetailOverlays'
 import type { AppStore } from '../../../library/store'
+import { userDidSelectDetailPaneSegment } from '../../main/MainFeature'
+import { PaneFrame, makePaneHostStore } from './__tests__/paneHarness'
 
 type Mock = (typeof detailEndeavorMocks)[keyof typeof detailEndeavorMocks]
 
@@ -98,6 +100,63 @@ export const Closed = {
     <Stage width={900}>
       <Harness store={makeSeededStore()}>
         <DetailOverlays locale="en-US" />
+      </Harness>
+    </Stage>
+  ),
+}
+
+/** Seeded on the desktop sidebar with `macDetailPane` on. */
+const inPane = (endeavor: Mock, then?: (store: AppStore) => void) => {
+  const store = makePaneHostStore({ endeavors: [endeavor] })
+  store.dispatch(onDetailRequested({ endeavor }))
+  then?.(store)
+  return store
+}
+
+/** Canon #517: Detail opens in the trailing pane's Plan segment, not a dialog. */
+export const InPaneDetails = {
+  render: () => (
+    <Stage width={1100}>
+      <Harness store={inPane(detailEndeavorMocks.task)}>
+        <PaneFrame>
+          <DetailOverlays locale="en-US" />
+        </PaneFrame>
+      </Harness>
+    </Stage>
+  ),
+}
+
+/** An editor pushed inside the pane: Back and Save in the pane's body. */
+export const InPaneEditor = {
+  render: () => (
+    <Stage width={1100}>
+      <Harness
+        store={inPane(detailEndeavorMocks.taskWithSessions, (store) => {
+          store.dispatch(userDidTapField({ field: 'duration' }))
+        })}
+      >
+        <PaneFrame>
+          <DetailOverlays locale="en-US" />
+        </PaneFrame>
+      </Harness>
+    </Stage>
+  ),
+}
+
+/** The pane moved to Performance: Detail is released with it. */
+export const InPaneReleased = {
+  render: () => (
+    <Stage width={1100}>
+      <Harness
+        store={inPane(detailEndeavorMocks.event, (store) => {
+          store.dispatch(
+            userDidSelectDetailPaneSegment({ segment: 'performance' }),
+          )
+        })}
+      >
+        <PaneFrame>
+          <DetailOverlays locale="en-US" />
+        </PaneFrame>
       </Harness>
     </Stage>
   ),

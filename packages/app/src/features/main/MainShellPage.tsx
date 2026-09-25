@@ -46,6 +46,9 @@ import {
   onSurfaceChanged,
   userDidCancelAddProject,
   userDidChangeSearchQuery,
+  userDidDismissDetailPane,
+  userDidSelectDetailPaneSegment,
+  userDidTapDetailPaneBack,
   userDidEditDraftProjectTitle,
   userDidTapAddProject,
   userDidTapDestination,
@@ -59,7 +62,14 @@ import {
   navigateToDestinationThunk,
 } from './MainProducer'
 import {
+  selectCanDetailPaneGoBack,
   selectCanManageProjects,
+  selectDetailPaneDepth,
+  selectDetailPaneLocationKey,
+  selectDetailPaneSegment,
+  selectDetailPaneSubtitle,
+  selectDetailPaneTitle,
+  selectIsDetailPaneAvailable,
   selectDraftProjectTitle,
   selectIsAddingProject,
   selectIsSidebarVisible,
@@ -73,6 +83,8 @@ import {
 } from './MainSelectors'
 import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
+import { PerformancePaneHost } from './PerformancePaneHost'
+import { TimelinePaneHost } from './TimelinePaneHost'
 import { searchDestination } from './NavigationSections'
 import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
@@ -108,6 +120,18 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
   const canManageProjects = useAppSelector(selectCanManageProjects)
   const pendingRoute = useAppSelector(selectPendingShellRoute)
   const isSessionPillVisible = useAppSelector(selectIsSessionPillVisible)
+  const isDetailPaneAvailable = useAppSelector(selectIsDetailPaneAvailable)
+  const detailPaneSegment = useAppSelector(selectDetailPaneSegment)
+  const detailPaneTitle = useAppSelector(selectDetailPaneTitle)
+  const detailPaneSubtitle = useAppSelector(selectDetailPaneSubtitle)
+  const canDetailPaneGoBack = useAppSelector(selectCanDetailPaneGoBack)
+  const detailPaneKey = useAppSelector(selectDetailPaneLocationKey)
+  const detailPaneDepth = useAppSelector(selectDetailPaneDepth)
+
+  const onDismissDetailPane = useCallback(
+    () => dispatch(userDidDismissDetailPane()),
+    [dispatch],
+  )
 
   // Mount: stamp the first measurement and resolve the gates + the Lists rows.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by design — `surface` is re-applied by the effect below, not by re-mounting
@@ -259,6 +283,23 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
           onCancelDraftProject={() => dispatch(userDidCancelAddProject())}
           onDeleteProject={onDeleteProject}
           onToggleSidebar={() => dispatch(userDidToggleSidebar())}
+          detailPane={
+            isDetailPaneAvailable
+              ? {
+                  segment: detailPaneSegment,
+                  title: detailPaneTitle,
+                  subtitle: detailPaneSubtitle,
+                  onSelectSegment: (segment) =>
+                    dispatch(userDidSelectDetailPaneSegment({ segment })),
+                  onDismiss: onDismissDetailPane,
+                  onBack: canDetailPaneGoBack
+                    ? () => dispatch(userDidTapDetailPaneBack())
+                    : null,
+                  navigationDepth: detailPaneDepth,
+                  navigationKey: detailPaneKey,
+                }
+              : null
+          }
           /*
             Profile opens Adjust for now. Canon's `ProfilePopoverView` is a
             popover whose primary action is `userDidTapOpenSettings(.profile)`
@@ -292,6 +333,10 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
             same way this one already dispatches into the capture slice above.
           */}
           <ProfileControlPage />
+          {/* The pane's Performance segment: Endeavor Activity or Day Progress. */}
+          <PerformancePaneHost />
+          {/* The pane's Plan segment with no endeavor: today's read-only timeline. */}
+          <TimelinePaneHost />
           {children}
         </MainShellFragment>
       </ToolbarSlotsProvider>

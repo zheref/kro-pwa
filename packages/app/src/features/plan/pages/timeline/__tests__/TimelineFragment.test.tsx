@@ -604,3 +604,92 @@ describe('the now line', () => {
     expect(screen.getByTestId('plan-timeline-now').style.top).toBe('100px')
   })
 })
+
+// ------------------------------------------------------------- read-only
+
+describe('the read-only canvas (the detail pane timeline)', () => {
+  it('draws the cards and the now line but no slot layer', () => {
+    mount({ isReadOnly: true })
+
+    expect(screen.getAllByTestId('plan-timeline-block')).toHaveLength(3)
+    expect(screen.getByTestId('plan-timeline-now')).toBeTruthy()
+    expect(screen.queryByTestId('plan-timeline-slots')).toBeNull()
+    expect(screen.getByTestId('plan-timeline').dataset.readOnly).toBe('true')
+  })
+
+  it('makes the block layer inert, so a tap never opens a detail', () => {
+    mount({ isReadOnly: true })
+
+    const layer = screen.getByTestId('plan-timeline-blocks')
+    expect(layer.hasAttribute('inert')).toBe(true)
+    expect(layer.className).toContain('pointer-events-none')
+  })
+
+  it('ignores an armed card: no commit surface, no handles, natural height', () => {
+    mount({
+      isReadOnly: true,
+      editingEndeavorId: planEditSessionFixture.endeavorId,
+    })
+
+    expect(screen.queryByTestId('plan-timeline-commit-surface')).toBeNull()
+    expect(screen.getByTestId('plan-timeline').dataset.editing).toBe('false')
+    expect(screen.getByTestId('plan-timeline-scroll').style.overflowY).toBe(
+      'visible',
+    )
+  })
+
+  it('leaves the interactive canvas without the inert flag', () => {
+    mount()
+
+    expect(
+      screen.getByTestId('plan-timeline-blocks').hasAttribute('inert'),
+    ).toBe(false)
+  })
+})
+
+// ------------------------------------------------------- session preview
+
+describe('the session preview (a session that has not started)', () => {
+  const preview = (onStart = () => {}) => ({
+    start: PLAN_REFERENCE_NOW,
+    durationSeconds: 20 * 60,
+    title: 'New Session',
+    onStart,
+    locale: 'en-US',
+  })
+
+  it('draws a dashed would-be session starting at now', () => {
+    mount({ isReadOnly: true, sessionPreview: preview() })
+
+    const block = screen.getByTestId('plan-timeline-session-preview')
+    expect(block.getAttribute('aria-label')).toContain('New Session')
+    expect(block.getAttribute('aria-label')).toContain('not started')
+    expect(block.style.border).toContain('dashed')
+  })
+
+  it('keeps Start pressable on a read-only canvas', async () => {
+    const onStart = vi.fn()
+    mount({ isReadOnly: true, sessionPreview: preview(onStart) })
+
+    await userEvent.click(
+      screen.getByTestId('plan-timeline-session-preview-start'),
+    )
+    expect(onStart).toHaveBeenCalledOnce()
+  })
+
+  it('draws nothing for a preview on another day', () => {
+    mount({
+      isReadOnly: true,
+      sessionPreview: {
+        ...preview(),
+        start: new Date(selectedDate.getTime() + 2 * 86_400_000),
+      },
+    })
+    expect(screen.queryByTestId('plan-timeline-session-preview')).toBeNull()
+  })
+
+  it('draws no preview when none is given', () => {
+    mount({ isReadOnly: true })
+    expect(screen.queryByTestId('plan-timeline-session-preview')).toBeNull()
+  })
+})

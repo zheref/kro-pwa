@@ -41,6 +41,7 @@ import {
   closeSessionAt,
   concludeSessionAt,
   isRunningSessionCountdownFinished,
+  performSessionMode,
   makePersistedRunningSession,
   makePersistedSessionEndeavor,
   pauseSessionAt,
@@ -738,7 +739,31 @@ export const withConclusionRecorded = (
       performance.resolution === Resolution.aborted
         ? state.completedSessionsCount
         : state.completedSessionsCount + 1,
+    recordedSessionModes: withRecordedMode(state, performance),
   }
+}
+
+/**
+ * The markers row grows with the session just written, under the same filter
+ * `recordedSessionModesFor` reads history with (a positive duration), so the
+ * row after finishing matches the row a fresh preparation would draw.
+ *
+ * A history known only by its count (no modes, count > 0) is left alone: the
+ * markers Selector draws that from the count, and appending one mode there
+ * would replace N markers with one.
+ */
+const withRecordedMode = (
+  state: SessionState,
+  performance: Perform,
+): SessionState['recordedSessionModes'] => {
+  if (performance.duration <= 0) return state.recordedSessionModes
+  if (
+    state.recordedSessionModes.length === 0 &&
+    state.completedSessionsCount > 0
+  ) {
+    return state.recordedSessionModes
+  }
+  return [...state.recordedSessionModes, performSessionMode(performance)]
 }
 
 /**

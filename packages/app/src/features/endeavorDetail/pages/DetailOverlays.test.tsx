@@ -37,6 +37,8 @@ import { detailEndeavorMocks } from '../EndeavorDetailMocks'
 import { DetailOverlays } from './DetailOverlays'
 import {
   userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestSessionSetup,
   userDidSelectDetailPaneSegment,
 } from '../../main/MainFeature'
 import { PaneFrame, makePaneHostStore } from './__tests__/paneHarness'
@@ -514,6 +516,61 @@ describe('on the desktop sidebar with macDetailPane — mirrors the InPane stori
       expect(store.getState().endeavorDetail.endeavor?.id).toBe(
         detailEndeavorMocks.event.id,
       )
+    })
+  })
+
+  it('opens Detail by id when Plan is picked on a Session pointed at an endeavor Detail never showed', async () => {
+    const endeavor = detailEndeavorMocks.task
+    const store = mountInPane(endeavor)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        userDidRequestSessionSetup({
+          endeavor: { id: endeavor.id, title: endeavor.title },
+        }),
+      )
+    })
+    expect(store.getState().endeavorDetail.endeavor).toBeNull()
+
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await waitFor(() => {
+      expect(store.getState().endeavorDetail.endeavor?.id).toBe(endeavor.id)
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('detail-pane-plan')).toBeTruthy()
+    })
+  })
+
+  it('opens Detail by id when Plan is picked after a Show sessions drill into Performance', async () => {
+    const endeavor = detailEndeavorMocks.event
+    const store = mountInPane(endeavor)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        userDidRequestSessionSetup({
+          endeavor: { id: endeavor.id, title: endeavor.title },
+        }),
+      )
+      store.dispatch(
+        userDidDrillIntoDetailPane({
+          location: {
+            segment: 'performance',
+            endeavor: { id: endeavor.id, title: endeavor.title },
+          },
+        }),
+      )
+    })
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await waitFor(() => {
+      expect(store.getState().endeavorDetail.endeavor?.id).toBe(endeavor.id)
     })
   })
 

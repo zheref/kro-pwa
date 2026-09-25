@@ -41,6 +41,12 @@ import {
   statusQuoGates,
 } from '../MainMocks'
 import { loadShellThunk, openSessionSurfaceThunk } from '../MainProducer'
+import { hydrateRunningSessionThunk } from '../../session/SessionProducer'
+import {
+  SCENE_START,
+  sessionPaneScenes,
+  slidesEndeavor,
+} from '../../session/pages/__tests__/sessionPaneScenes'
 import { makeRecordingNavigationService } from '../../../services/navigation/NavigationService'
 import {
   selectCanDetailPaneGoBack,
@@ -474,6 +480,35 @@ describe('openSessionSurfaceThunk', () => {
       endeavor: walk,
     })
     expect(navigation.calls).toEqual([])
+  })
+
+  it('points the pane at the RUNNING session, not the card that asked', async () => {
+    const store = sessionPaneScenes.running()
+    await store.dispatch(loadShellThunk())
+    await store.dispatch(hydrateRunningSessionThunk({ now: SCENE_START }))
+    expect(store.getState().session.phase).toBe('running')
+    await store.dispatch(openSessionSurfaceThunk({ endeavor: walk }))
+    expect(store.getState().main.detailPane).toEqual({
+      segment: 'sessionSetup',
+      endeavor: { id: slidesEndeavor.id, title: slidesEndeavor.title },
+    })
+  })
+
+  it('points the pane at the requested endeavor when no session is in flight', async () => {
+    const store = sessionPaneScenes.newTask()
+    await store.dispatch(loadShellThunk())
+    await store.dispatch(openSessionSurfaceThunk({ endeavor: review }))
+    expect(store.getState().main.detailPane.endeavor).toEqual(review)
+  })
+
+  it('points at the running session even when asked for a new task', async () => {
+    const store = sessionPaneScenes.running()
+    await store.dispatch(loadShellThunk())
+    await store.dispatch(hydrateRunningSessionThunk({ now: SCENE_START }))
+    await store.dispatch(openSessionSurfaceThunk({ endeavor: null }))
+    expect(store.getState().main.detailPane.endeavor?.id).toBe(
+      slidesEndeavor.id,
+    )
   })
 
   it('navigates to Execute on the phone layout, leaving the pane alone', async () => {

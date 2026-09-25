@@ -6,8 +6,10 @@ import {
 } from '../DayProgressMocks'
 import { MINIMUM_WEEK_OFFSET, addDays } from '../DayProgressRules'
 import {
+  withDayProgressClockTicked,
   withDayProgressFailed,
   withDayProgressLoaded,
+  withDayProgressLoading,
   withDayProgressRequested,
   withDaySelected,
   withWeekPaged,
@@ -93,5 +95,45 @@ describe('withDayProgressLoaded / withDayProgressFailed', () => {
       kind: 'failed',
       exception: failure,
     })
+  })
+})
+
+describe('withDayProgressLoading', () => {
+  it('a reload over a loaded day goes to loading', () => {
+    expect(withDayProgressLoading(mocks.busyDay).load.kind).toBe('loading')
+  })
+
+  it('a retry after a failure drops the exception', () => {
+    expect(withDayProgressLoading(mocks.failed).load).toEqual({
+      kind: 'loading',
+    })
+  })
+
+  it('a load already in flight is left as it is', () => {
+    expect(withDayProgressLoading(mocks.loading)).toBe(mocks.loading)
+  })
+})
+
+describe('withDayProgressClockTicked', () => {
+  it('a tick later the same day changes nothing', () => {
+    const later = new Date(today.getTime() + 5 * 3_600_000)
+    expect(withDayProgressClockTicked(mocks.earlierWeek, later)).toBe(
+      mocks.earlierWeek,
+    )
+  })
+
+  it('a tick past midnight rolls the open pane to the new day, week 0', () => {
+    const tomorrow = addDays(today, 1)
+    const next = withDayProgressClockTicked(
+      mocks.earlierWeek,
+      new Date(tomorrow.getTime() + 60_000),
+    )
+    expect(next.today).toEqual(tomorrow)
+    expect(next.selectedDay).toEqual(tomorrow)
+    expect(next.weekOffset).toBe(0)
+  })
+
+  it('a tick before the screen was opened is ignored', () => {
+    expect(withDayProgressClockTicked(mocks.idle, today)).toBe(mocks.idle)
   })
 })

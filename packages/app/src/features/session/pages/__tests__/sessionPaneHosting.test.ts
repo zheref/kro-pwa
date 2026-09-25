@@ -16,6 +16,7 @@ const hidden: SessionPaneHostingSnapshot = {
   isLoading: false,
   identity: null,
   isPresentingConclusion: false,
+  isDetailEditorOpen: false,
 }
 const slides = { endeavorId: 'e-slides', isAnonymous: false }
 const anonymous = { endeavorId: 'anon-1', isAnonymous: true }
@@ -118,6 +119,43 @@ describe('a conclusion raises the pane', () => {
       sessionPaneHostingAction(showing, {
         ...showing,
         isPresentingConclusion: true,
+      }),
+    ).toBeNull()
+  })
+})
+
+describe('a conclusion never takes the pane from an open Detail editor', () => {
+  const onPlanEditing = {
+    ...hidden,
+    paneSegment: 'plan' as const,
+    isDetailEditorOpen: true,
+  }
+
+  it('leaves the conclusion to the pill while Detail has an editor open', () => {
+    expect(
+      sessionPaneHostingAction(onPlanEditing, {
+        ...onPlanEditing,
+        isPresentingConclusion: true,
+      }),
+    ).toBeNull()
+  })
+
+  it('still raises Session over Detail when no editor is open', () => {
+    const reading = { ...onPlanEditing, isDetailEditorOpen: false }
+    expect(
+      sessionPaneHostingAction(reading, {
+        ...reading,
+        isPresentingConclusion: true,
+      }),
+    ).toEqual({ kind: 'raiseSession' })
+  })
+
+  it('does not raise late when the editor closes after the conclusion arrived', () => {
+    const concluded = { ...onPlanEditing, isPresentingConclusion: true }
+    expect(
+      sessionPaneHostingAction(concluded, {
+        ...concluded,
+        isDetailEditorOpen: false,
       }),
     ).toBeNull()
   })

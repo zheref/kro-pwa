@@ -25,6 +25,7 @@ import {
   selectDetailBadges,
   selectDetailDefers,
   selectDetailDestination,
+  selectIsDetailEditorOpen,
   selectDetailEndeavor,
   selectDetailException,
   selectDetailFieldsBySection,
@@ -99,6 +100,29 @@ describe('presentation', () => {
     expect(
       selectDetailDestination(rootWith(detailStateMocks.presentedTask)),
     ).toBeNull()
+  })
+})
+
+describe('whether an editor holds unsaved work open', () => {
+  it('is open while the full editor is presented', () => {
+    expect(
+      selectIsDetailEditorOpen(rootWith(detailStateMocks.editingDirty)),
+    ).toBe(true)
+  })
+
+  it('is open on a relation screen too', () => {
+    expect(selectIsDetailEditorOpen(rootWith(detailStateMocks.hostsOpen))).toBe(
+      true,
+    )
+  })
+
+  it('is closed on the read surface and when Detail is closed', () => {
+    expect(
+      selectIsDetailEditorOpen(rootWith(detailStateMocks.presentedTask)),
+    ).toBe(false)
+    expect(selectIsDetailEditorOpen(rootWith(detailStateMocks.closed))).toBe(
+      false,
+    )
   })
 })
 

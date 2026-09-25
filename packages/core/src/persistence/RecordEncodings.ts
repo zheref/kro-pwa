@@ -259,12 +259,6 @@ export const decodeRepeatConfigJson = (
 }
 
 /**
- * The encoded form of one `PerformFragment` — canon's `Perform.SessionFragment`
- * under a **bare** `JSONEncoder()`, i.e. `.deferredToDate`, i.e. seconds since
- * Apple's reference date as a `Double`. `endedAt` is optional and is omitted
- * when `nil` (synthesized `encodeIfPresent`).
- */
-/**
  * Canon's `SessionConfig`, as Swift's synthesized `Codable` writes it: the
  * `SessionTimerMode` enum is a keyed container — `{"countdown":{}}` — and an
  * absent `rest` is omitted rather than `null`.
@@ -276,6 +270,12 @@ export type EncodedSessionConfig = {
   readonly mode: { readonly countdown: object } | { readonly stopwatch: object }
 }
 
+/**
+ * The encoded form of one `PerformFragment` — canon's `Perform.SessionFragment`
+ * under a **bare** `JSONEncoder()`, i.e. `.deferredToDate`, i.e. seconds since
+ * Apple's reference date as a `Double`. `endedAt` is optional and is omitted
+ * when `nil` (synthesized `encodeIfPresent`).
+ */
 export type EncodedPerformFragment = {
   readonly startedAt: number
   readonly endedAt?: number

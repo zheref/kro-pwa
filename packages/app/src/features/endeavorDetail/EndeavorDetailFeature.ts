@@ -39,6 +39,7 @@ import {
   addShadowThunk,
   attachHostThunk,
   detachHostThunk,
+  openDetailByIdThunk,
   removeDeferThunk,
   removePerformanceThunk,
   removeShadowThunk,
@@ -206,6 +207,22 @@ export const endeavorDetailSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      // ------------------------------------------- reopen by id (the pane)
+      //
+      // Only a found endeavor presents; a miss (deleted since the pane was
+      // pointed) leaves Detail closed rather than painting an error nobody
+      // asked for. Cancellation and the defensive `.rejected` are silent too:
+      // there is no Detail yet to attach a failure to.
+      .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) return
+        Object.assign(
+          state,
+          withDetailPresented(state as EndeavorDetailState, {
+            endeavor: result.value,
+          }),
+        )
+      })
       // ------------------------------------------------------- the save
       .addCase(saveEndeavorThunk.pending, (state) => {
         Object.assign(state, withSaveStarted(state as EndeavorDetailState))

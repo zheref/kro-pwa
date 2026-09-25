@@ -27,6 +27,11 @@ export interface SessionPaneHostingSnapshot {
   } | null
   /** A countdown just ended and wants to be seen. */
   readonly isPresentingConclusion: boolean
+  /**
+   * Endeavor Detail has an editor open. Raising Session would take the pane
+   * from it and discard the unsaved draft, so the pill carries the conclusion.
+   */
+  readonly isDetailEditorOpen: boolean
 }
 
 export type SessionPaneHostingAction =
@@ -58,7 +63,8 @@ export function sessionPaneHostingAction(
   if (
     current.isPresentingConclusion &&
     !previous.isPresentingConclusion &&
-    !showsSession
+    !showsSession &&
+    !current.isDetailEditorOpen
   ) {
     return { kind: 'raiseSession' }
   }

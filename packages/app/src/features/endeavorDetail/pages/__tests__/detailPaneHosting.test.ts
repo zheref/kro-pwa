@@ -106,6 +106,17 @@ describe('reselecting Plan reopens the remembered Detail', () => {
     ).toEqual({ kind: 'reopenDetail', endeavorId: review.id })
   })
 
+  it('reopens Detail by id for an endeavor only Session ever pointed the pane at', () => {
+    const onSession = {
+      ...hidden,
+      paneSegment: 'sessionSetup' as const,
+      paneEndeavorId: walk.id,
+    }
+    expect(
+      detailPaneHostingAction(onSession, { ...onSession, paneSegment: 'plan' }),
+    ).toEqual({ kind: 'reopenDetail', endeavorId: walk.id })
+  })
+
   it('does not reopen anything for the endeavor-free Timeline', () => {
     const dayOnly = { ...hidden }
     expect(

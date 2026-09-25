@@ -464,7 +464,8 @@ export const sessionModeMarker = (
 /**
  * Canon's tomato row (`SessionSetupView`): one marker per recorded session,
  * oldest first, in the mode it was recorded in. With no recorded modes it
- * falls back to the completed count in the currently selected mode.
+ * falls back to the completed count drawn as 🍅 — a fixed marker, never the
+ * live mode toggle, so history does not change when the toggle flips.
  */
 export const selectSessionMarkers = createSelector(
   [selectSessionSlice],
@@ -472,7 +473,7 @@ export const selectSessionMarkers = createSelector(
     slice.recordedSessionModes.length > 0
       ? slice.recordedSessionModes.map(sessionModeMarker)
       : Array.from({ length: slice.completedSessionsCount }, () =>
-          sessionModeMarker(slice.mode),
+          sessionModeMarker('countdown'),
         ),
 )
 

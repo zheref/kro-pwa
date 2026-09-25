@@ -109,7 +109,7 @@ describe('selectSessionMarkers', () => {
     ).toEqual(['🍅', '⚡️', '⏱️'])
   })
 
-  it('falls back to the completed count in the current mode', () => {
+  it('falls back to the completed count as 🍅 when modes are unknown', () => {
     // `ready` has three completed sessions and no recorded modes.
     expect(selectSessionMarkers(rootWith(sessionStateMocks.ready))).toEqual([
       '🍅',
@@ -118,15 +118,22 @@ describe('selectSessionMarkers', () => {
     ])
   })
 
-  it('draws nothing for a session with no history', () => {
+  it('keeps the count fallback as 🍅 when the toggle is flipped to stopwatch', () => {
+    const flipped = sessionStateMocks.readyStopwatchSelected
+    expect(flipped.mode).toBe('stopwatch')
+    expect(selectSessionMarkers(rootWith(flipped))).toEqual(['🍅', '🍅', '🍅'])
+  })
+
+  it('draws the recorded modes regardless of the toggle', () => {
     expect(
-      selectSessionMarkers(rootWith(sessionStateMocks.readyAnonymous)),
-    ).toEqual(
-      Array.from(
-        { length: sessionStateMocks.readyAnonymous.completedSessionsCount },
-        () => '🍅',
-      ),
-    )
+      selectSessionMarkers(rootWith(sessionStateMocks.readyWithHistory)),
+    ).toEqual(['🍅', '⚡️', '⏱️'])
     expect(sessionModeMarker(null)).toBe('⏱️')
+  })
+
+  it('draws nothing for an endeavor that has never been worked', () => {
+    expect(
+      selectSessionMarkers(rootWith(sessionStateMocks.readyFresh)),
+    ).toEqual([])
   })
 })

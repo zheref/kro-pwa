@@ -13,6 +13,12 @@ import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
+import {
+  SESSION_MOCK_NOW,
+  sessionIdentityMocks,
+  sessionStateMocks,
+} from '../../session/SessionMocks'
+import { withSessionStarted } from '../../session/SessionShifters'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -35,6 +41,7 @@ import {
   selectShellShape,
   selectSidebarSections,
   selectTabBarElements,
+  selectInFlightSessionPaneTarget,
 } from '../MainSelectors'
 import { DestinationKind } from '../SidebarDestination'
 import { initialSettingsState } from '../../settings/SettingsState'
@@ -273,5 +280,52 @@ describe('selectPendingShellRoute — the one cross-slice read (RC-20)', () => {
     expect(pending).not.toBeNull()
     expect(pending?.context.autoNavigates).toBe(false)
     expect(pending?.context.endeavorId).toBe('e-2')
+  })
+})
+
+describe('selectInFlightSessionPaneTarget', () => {
+  const withSession = (
+    session: typeof sessionStateMocks.running,
+  ): RootState => ({
+    ...rootWith(MainMocks.desktopLoaded),
+    session,
+  })
+  const slides = {
+    id: sessionIdentityMocks.slides.endeavorId,
+    title: sessionIdentityMocks.slides.title,
+  }
+
+  it('points at the running session’s endeavor', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.running)),
+    ).toEqual({ endeavor: slides })
+  })
+
+  it('still owns the pane while paused or concluded and unanswered', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.paused)),
+    ).toEqual({ endeavor: slides })
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.concluded)),
+    ).toEqual({ endeavor: slides })
+  })
+
+  it('names no endeavor for an anonymous task in flight', () => {
+    const anonymous = withSessionStarted(
+      sessionStateMocks.readyAnonymous,
+      SESSION_MOCK_NOW,
+    )
+    expect(selectInFlightSessionPaneTarget(withSession(anonymous))).toEqual({
+      endeavor: null,
+    })
+  })
+
+  it('is null when nothing is in flight (ready or idle)', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.ready)),
+    ).toBeNull()
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.idle)),
+    ).toBeNull()
   })
 })

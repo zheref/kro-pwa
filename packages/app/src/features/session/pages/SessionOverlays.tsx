@@ -76,6 +76,7 @@ import {
   selectSelectedDestination,
 } from '../../main/MainSelectors'
 import { setScreenAwakeThunk } from '../../platform/PlatformProducer'
+import { selectIsDetailEditorOpen } from '../../endeavorDetail/EndeavorDetailSelectors'
 import { userDidDismissConclusion } from '../SessionFeature'
 import {
   hydrateRunningSessionThunk,
@@ -118,6 +119,7 @@ export function SessionOverlays() {
   const isPaneHost = useAppSelector(selectIsDetailPaneAvailable)
   const paneSegment = useAppSelector(selectDetailPaneSegment)
   const paneEndeavor = useAppSelector(selectDetailPaneEndeavor)
+  const isDetailEditorOpen = useAppSelector(selectIsDetailEditorOpen)
   const isPaneShowingSession = isPaneHost && paneSegment === 'sessionSetup'
 
   const [isReopenedFromPill, setReopenedFromPill] = useState(false)
@@ -182,6 +184,11 @@ export function SessionOverlays() {
   // instead of a raised modal. The decision is `sessionPaneHostingAction`'s;
   // this effect carries it out, reaching both slices as this Page may.
   const previousHosting = useRef<SessionPaneHostingSnapshot | null>(null)
+  // The one in-flight pane preparation. A newer one aborts it, so an old
+  // endeavor's preparation can never land after the one the pane now asks
+  // for; the slice's `.rejected` arm ignores `meta.aborted` (`UZF-14`).
+  const pendingPrepare = useRef<{ abort: () => void } | null>(null)
+  useEffect(() => () => pendingPrepare.current?.abort(), [])
   useEffect(() => {
     const current: SessionPaneHostingSnapshot = {
       isHost: isPaneHost,
@@ -197,6 +204,7 @@ export function SessionOverlays() {
               isAnonymous: identity.isAnonymous,
             },
       isPresentingConclusion,
+      isDetailEditorOpen,
     }
     const previous = previousHosting.current ?? {
       ...current,
@@ -209,7 +217,8 @@ export function SessionOverlays() {
     if (action === null) return
     switch (action.kind) {
       case 'prepare':
-        void dispatch(
+        pendingPrepare.current?.abort()
+        pendingPrepare.current = dispatch(
           prepareSessionLaunchThunk({
             endeavorId: action.endeavorId,
             // Identity is the composition site's to supply.
@@ -231,6 +240,7 @@ export function SessionOverlays() {
   }, [
     dispatch,
     identity,
+    isDetailEditorOpen,
     isLoading,
     isPaneHost,
     isPresentingConclusion,

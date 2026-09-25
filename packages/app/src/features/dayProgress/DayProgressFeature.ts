@@ -14,8 +14,10 @@ import {
 } from './DayProgressException'
 import { loadDayProgressThunk } from './DayProgressProducer'
 import {
+  withDayProgressClockTicked,
   withDayProgressFailed,
   withDayProgressLoaded,
+  withDayProgressLoading,
   withDayProgressRequested,
   withDaySelected,
   withWeekPaged,
@@ -54,6 +56,13 @@ export const dayProgressSlice = createSlice({
         withDayProgressRequested(state, action.payload.today),
       )
     },
+    /** The Page's one-minute tick; rolls an open pane over at midnight. */
+    onDayProgressClockTicked(state, action: PayloadAction<{ now: Date }>) {
+      Object.assign(
+        state,
+        withDayProgressClockTicked(state, action.payload.now),
+      )
+    },
     userDidSelectDay(state, action: PayloadAction<{ day: Date }>) {
       Object.assign(state, withDaySelected(state, action.payload.day))
     },
@@ -67,7 +76,7 @@ export const dayProgressSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loadDayProgressThunk.pending, (state) => {
-        state.load = { kind: 'loading' }
+        Object.assign(state, withDayProgressLoading(state))
       })
       .addCase(loadDayProgressThunk.fulfilled, (state, action) => {
         const result = action.payload
@@ -94,6 +103,7 @@ export const dayProgressSlice = createSlice({
 })
 
 export const {
+  onDayProgressClockTicked,
   onDayProgressRequested,
   userDidSelectDay,
   userDidTapPreviousWeek,

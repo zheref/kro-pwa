@@ -1,6 +1,7 @@
 /** DrillTransition — the shared drill-in motion. */
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { DRILL_SCENES, DrillScene } from './DrillTransition.stories'
 import { DrillTransition, drillAnimation } from './DrillTransition'
 
 afterEach(cleanup)
@@ -78,5 +79,30 @@ describe('DrillTransition', () => {
     expect(drillAnimation('push')?.animation).toBe(
       'kro-drill-push 380ms cubic-bezier(0.32, 0.72, 0, 1) both',
     )
+  })
+})
+
+/** Mirrors the three scenes of `DrillTransition.stories` (`RC-11`). */
+describe('DrillTransition — the stories', () => {
+  const body = () => screen.getByTestId('trailing-detail-panel-body')
+
+  it('rest: the top reading shows Close and does not slide', () => {
+    render(<DrillScene {...DRILL_SCENES.rest} />)
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy()
+    expect(body().getAttribute('data-kro-drill')).toBe('none')
+  })
+
+  it('push: drilling into Endeavor Activity shows Back and slides from the trailing edge', () => {
+    render(<DrillScene {...DRILL_SCENES.push} />)
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.getByText('This week')).toBeTruthy()
+    expect(body().getAttribute('data-kro-drill')).toBe('push')
+  })
+
+  it('pop: going back to Details shows Close and slides from the leading edge', () => {
+    render(<DrillScene {...DRILL_SCENES.pop} />)
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy()
+    expect(screen.getByText('Kind')).toBeTruthy()
+    expect(body().getAttribute('data-kro-drill')).toBe('pop')
   })
 })

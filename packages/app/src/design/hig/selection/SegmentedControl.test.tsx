@@ -64,6 +64,7 @@ describe('SegmentedControl', () => {
       'compact',
     )
     expect(button().style.padding).toBe('4px 10px')
+    expect(button().style.minHeight).toBe('var(--kro-size-min-pointer-target)')
     rerender(
       <SegmentedControl
         label="Mode"
@@ -74,6 +75,8 @@ describe('SegmentedControl', () => {
       />,
     )
     expect(button().style.padding).toBe('8px 16px')
+    // Touch density clears the 44px touch target, not the pointer one.
+    expect(button().style.minHeight).toBe('var(--kro-size-min-touch-target)')
   })
 
   it('fills the selection with the foreground colour, or tinted glass when a tint is given', () => {
@@ -131,6 +134,20 @@ describe('SegmentedControl', () => {
     ).toBe('var(--kro-radius-pill)')
   })
 
+  it('stays at full opacity while enabled', () => {
+    render(
+      <SegmentedControl
+        label="Mode"
+        options={MODES}
+        value="countdown"
+        onChange={() => {}}
+      />,
+    )
+    expect(screen.getByRole('group', { name: 'Mode' }).className).not.toContain(
+      'opacity-',
+    )
+  })
+
   it('dims and disables every segment while disabled', () => {
     render(
       <SegmentedControl
@@ -141,9 +158,13 @@ describe('SegmentedControl', () => {
         disabled
       />,
     )
-    expect(screen.getByRole('group', { name: 'Mode' }).style.opacity).toBe(
-      '0.5',
+    expect(screen.getByRole('group', { name: 'Mode' }).className).toContain(
+      'opacity-[var(--kro-opacity-disabled)]',
     )
+    // Dimmed once, on the group — never again per segment.
+    for (const button of screen.getAllByRole('button')) {
+      expect(button.style.opacity).toBe('')
+    }
     for (const button of screen.getAllByRole('button')) {
       expect((button as HTMLButtonElement).disabled).toBe(true)
     }

@@ -869,7 +869,6 @@ function EditHandle({
 
 // -------------------------------------------------------------- the now line
 
-/** `nowIndicator` — the red line with a dot on the leading edge. */
 /**
  * The session that would run if started now — canon's recorded-session card
  * (`eventCard`, `isRecordedSession`): `recordedSession`'s reward-yellow fill,
@@ -877,6 +876,17 @@ function EditHandle({
  * glyph at the top trailing corner. Being a proposal rather than a record, it
  * adds one thing canon's card has no need for: a Start control.
  */
+/** Vertical padding inside the preview block, above and below its Start. */
+const SESSION_PREVIEW_VERTICAL_PADDING_PX = 4
+
+/**
+ * The preview never draws shorter than its Start control (the 28px pointer
+ * target) plus its padding and dashed border, so a short 20-minute session
+ * still fits a full-size button.
+ */
+export const SESSION_PREVIEW_MINIMUM_HEIGHT_PX =
+  28 + 2 * SESSION_PREVIEW_VERTICAL_PADDING_PX + 2
+
 function SessionPreviewBlock({
   preview,
   selectedDate,
@@ -900,6 +910,7 @@ function SessionPreviewBlock({
   const height = Math.max(
     (preview.durationSeconds / 3600) * TIMELINE_HOUR_HEIGHT_PX,
     TIMELINE_MINIMUM_CARD_HEIGHT_PX,
+    SESSION_PREVIEW_MINIMUM_HEIGHT_PX,
   )
   const accent = colorVar('rewardYellow')
   const range = formatTimeRange(preview.start, end, preview.locale)
@@ -909,7 +920,7 @@ function SessionPreviewBlock({
       data-testid="plan-timeline-session-preview"
       role="group"
       aria-label={`${preview.title}, ${range}, not started`}
-      className="absolute flex items-start gap-2 overflow-hidden"
+      className="absolute flex items-center gap-2 overflow-hidden"
       style={{
         left: CONTENT_LEFT_PX,
         width: CONTENT_WIDTH,
@@ -918,7 +929,7 @@ function SessionPreviewBlock({
         borderRadius: 6,
         background: `color-mix(in srgb, ${accent} 22%, transparent)`,
         border: `1px dashed color-mix(in srgb, ${accent} 70%, transparent)`,
-        padding: '6px 6px 6px 12px',
+        padding: `${SESSION_PREVIEW_VERTICAL_PADDING_PX}px 6px ${SESSION_PREVIEW_VERTICAL_PADDING_PX}px 12px`,
         zIndex: 3,
       }}
     >
@@ -937,8 +948,13 @@ function SessionPreviewBlock({
         type="button"
         data-testid="plan-timeline-session-preview-start"
         onClick={preview.onStart}
-        className="shrink-0 cursor-pointer rounded-full px-3 py-1 font-semibold text-[12px] outline-none focus-visible:shadow-[var(--kro-ring)]"
-        style={{ background: accent, color: 'rgb(0 0 0 / 0.85)' }}
+        className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full px-3 font-semibold text-[12px] outline-none focus-visible:shadow-[var(--kro-ring)]"
+        style={{
+          background: accent,
+          color: 'rgb(0 0 0 / 0.85)',
+          // WCAG 2.5.8 / UX-3: the pane is pointer-only, so the pointer floor.
+          minHeight: 'var(--kro-size-min-pointer-target)',
+        }}
       >
         Start
       </button>
@@ -951,6 +967,7 @@ function SessionPreviewBlock({
   )
 }
 
+/** `nowIndicator` — the red line with a dot on the leading edge. */
 function NowIndicator({
   selectedDate,
   now,

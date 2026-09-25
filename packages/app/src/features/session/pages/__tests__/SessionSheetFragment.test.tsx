@@ -556,7 +556,7 @@ describe('the mode toggle', () => {
       '[data-kro-segmented]',
     ) as HTMLElement
     expect(toggle.style.pointerEvents).toBe('none')
-    expect(toggle.style.opacity).toBe('0.5')
+    expect(toggle.className).toContain('opacity-[var(--kro-opacity-disabled)]')
   })
 })
 

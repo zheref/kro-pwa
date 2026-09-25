@@ -22,7 +22,7 @@ import {
   selectDayTimelineDay,
   selectDayTimelineFailureCopy,
   selectDayTimelineNow,
-  selectDayTimelinePlacements,
+  selectTodayTimelinePlacements,
 } from '../DayTimelineSelectors'
 import { DayTimelineFragment } from './DayTimelineFragment'
 
@@ -47,9 +47,7 @@ export function DayTimelinePage({
   const band = useAppSelector(selectPlanHourBand)
   const now = useAppSelector(selectDayTimelineNow)
   const day = useAppSelector(selectDayTimelineDay)
-  const placements = useAppSelector((state) =>
-    selectDayTimelinePlacements(state, band),
-  )
+  const placements = useAppSelector(selectTodayTimelinePlacements)
   const failureCopy = useAppSelector(selectDayTimelineFailureCopy)
   const sessionPreviewSeconds = useAppSelector(selectBlankSessionTargetDuration)
 

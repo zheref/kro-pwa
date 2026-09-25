@@ -29,7 +29,11 @@ import {
 } from '../../../../library/store'
 import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { makeStubbedEndeavorSyncService } from '../../../../services/sync/EndeavorSyncService'
+import { makeRecordingNavigationService } from '../../../../services/navigation/NavigationService'
 import { synchronizeEndeavorsThunk } from '../../../auth/AuthProducer'
+import { onSurfaceChanged } from '../../../main/MainFeature'
+import { desktopSurface } from '../../../main/MainMocks'
+import { loadShellThunk } from '../../../main/MainProducer'
 import { userDidSelectViewMode } from '../../PlanFeature'
 import { PlanViewMode } from '../../PlanNavigation'
 import { PLAN_REFERENCE_DAY, planAt } from '../../PlanMocks'
@@ -554,5 +558,93 @@ describe('re-reading after a Kro Cloud sweep lands', () => {
     })
 
     expect(reads.mock.calls.length).toBe(before)
+  })
+})
+
+describe('starting a session from a Plan row', () => {
+  const startFromTheList = async (store: ReturnType<typeof storeWith>) => {
+    // A mouse: the row's Start Session control is the pointer-input one.
+    Object.defineProperty(window, 'innerWidth', {
+      value: 1440,
+      configurable: true,
+    })
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes('fine'),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => true,
+        onchange: null,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia
+    store.dispatch(userDidSelectViewMode({ mode: PlanViewMode.list }))
+    mount(store)
+    const [start] = await screen.findAllByRole('button', {
+      name: 'Start Session',
+    })
+    await userEvent.click(start as HTMLElement)
+  }
+
+  it('points the Mac pane at the row, titled from the prepared launch', async () => {
+    const navigation = makeRecordingNavigationService()
+    const store = storeWith([recordOf('standup', 9)], { navigation })
+    await store.dispatch(loadShellThunk())
+    store.dispatch(onSurfaceChanged({ surface: desktopSurface }))
+
+    await startFromTheList(store)
+
+    await waitFor(() =>
+      expect(store.getState().main.detailPane).toEqual({
+        segment: 'sessionSetup',
+        endeavor: { id: 'standup', title: 'standup' },
+      }),
+    )
+    expect(navigation.calls).toEqual([])
+  })
+
+  it('navigates to Execute where no pane is hosted (a phone-width window)', async () => {
+    const navigation = makeRecordingNavigationService()
+    const store = storeWith([recordOf('standup', 9)], { navigation })
+
+    await startFromTheList(store)
+
+    await waitFor(() =>
+      expect(navigation.calls).toEqual([
+        { kind: 'navigate', path: expect.any(String) },
+      ]),
+    )
+    expect(store.getState().main.detailPane.segment).not.toBe('sessionSetup')
+  })
+
+  it('still opens the pane, untitled, when the launch cannot be prepared', async () => {
+    const navigation = makeRecordingNavigationService()
+    const localStore = makeInMemoryLocalStore({
+      endeavors: [recordOf('standup', 9)],
+    })
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      navigation,
+      localStore: {
+        ...localStore,
+        // The row is gone from disk between the paint and the tap.
+        endeavors: {
+          ...localStore.endeavors,
+          get: () => Promise.resolve(null),
+        },
+      },
+    })
+    await store.dispatch(loadShellThunk())
+    store.dispatch(onSurfaceChanged({ surface: desktopSurface }))
+
+    await startFromTheList(store)
+
+    await waitFor(() =>
+      expect(store.getState().main.detailPane).toEqual({
+        segment: 'sessionSetup',
+        endeavor: { id: 'standup', title: '' },
+      }),
+    )
   })
 })

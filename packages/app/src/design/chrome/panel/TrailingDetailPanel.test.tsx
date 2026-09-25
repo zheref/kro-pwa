@@ -413,3 +413,54 @@ describe('PanelToolbarButton', () => {
     expect(button.className).toContain('kro-glass--interactive')
   })
 })
+
+describe('TrailingDetailPanel — keyboard continuity across a drill (UX-2)', () => {
+  const drilled = (key: string, depth: number, onBack: (() => void) | null) => (
+    <TrailingDetailPanel
+      isPresented
+      title="Details"
+      onDismiss={() => {}}
+      onBack={onBack}
+      navigationDepth={depth}
+      navigationKey={key}
+    >
+      <button type="button">Row {key}</button>
+    </TrailingDetailPanel>
+  )
+
+  it('moves focus to Back when a row inside the pane drills in', () => {
+    const { rerender } = render(drilled('root', 0, null))
+    screen.getByRole('button', { name: 'Row root' }).focus()
+    rerender(drilled('activity', 1, () => {}))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Back' }),
+    )
+  })
+
+  it('moves focus to Close when Back pops to the top reading', () => {
+    const { rerender } = render(drilled('activity', 1, () => {}))
+    screen.getByRole('button', { name: 'Row activity' }).focus()
+    rerender(drilled('root', 0, null))
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Close' }),
+    )
+  })
+
+  it('leaves focus alone when it sits outside the pane', () => {
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+    const { rerender } = render(drilled('root', 0, null))
+    outside.focus()
+    rerender(drilled('activity', 1, () => {}))
+    expect(document.activeElement).toBe(outside)
+    outside.remove()
+  })
+
+  it('does not move focus on a re-render of the same reading', () => {
+    const { rerender } = render(drilled('root', 0, null))
+    const row = screen.getByRole('button', { name: 'Row root' })
+    row.focus()
+    rerender(drilled('root', 0, null))
+    expect(document.activeElement).toBe(row)
+  })
+})

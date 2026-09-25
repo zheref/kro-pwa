@@ -29,7 +29,10 @@ import type { PendingShellRoute } from './MainFeature'
 import { type MainException, MainExceptions } from './MainException'
 import type { ShellConfiguration } from './MainShifters'
 import type { DestinationGates } from './NavigationSections'
-import { selectIsDetailPaneAvailable } from './MainSelectors'
+import {
+  selectInFlightSessionPaneTarget,
+  selectIsDetailPaneAvailable,
+} from './MainSelectors'
 import {
   DestinationKind,
   type SidebarDestination,
@@ -203,7 +206,10 @@ export const openSessionSurfaceThunk = createAsyncThunk<
   'main/onSessionSurfaceOpenCompleted',
   async ({ endeavor }, { extra, getState }) => {
     if (selectIsDetailPaneAvailable(getState())) {
-      return ok({ kind: 'pane', endeavor })
+      // A session already in flight owns the pane: point it at that session,
+      // not at the card that asked, so the header never mislabels it.
+      const inFlight = selectInFlightSessionPaneTarget(getState())
+      return ok({ kind: 'pane', endeavor: inFlight?.endeavor ?? endeavor })
     }
     const path = destinationPath({ kind: DestinationKind.session })
     try {

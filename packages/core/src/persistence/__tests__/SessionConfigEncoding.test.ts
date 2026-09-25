@@ -12,6 +12,10 @@ import {
   performSessionMode,
 } from '../../domain/endeavor/Perform'
 import {
+  allPerformSessionConfigMocks,
+  performSessionConfigMocks,
+} from '../../domain/endeavor/__mocks__/PerformSessionConfig.mocks'
+import {
   decodePerformFragment,
   decodeSessionConfig,
   decodeSessionFragmentsJson,
@@ -22,18 +26,7 @@ import {
 
 const START = new Date('2026-09-24T14:00:00Z')
 const END = new Date('2026-09-24T14:25:00Z')
-const pomodoro = {
-  title: 'Prepare slides',
-  duration: 1500,
-  rest: null,
-  mode: 'countdown' as const,
-}
-const stopwatch = {
-  title: 'Walk',
-  duration: 0,
-  rest: 300,
-  mode: 'stopwatch' as const,
-}
+const { countdown: pomodoro, stopwatch } = performSessionConfigMocks
 
 describe('encodeSessionConfig', () => {
   it("writes a countdown as Swift's keyed enum and omits an absent rest", () => {
@@ -53,11 +46,38 @@ describe('encodeSessionConfig', () => {
     })
   })
 
-  it('round-trips through decode unchanged', () => {
-    expect(decodeSessionConfig(encodeSessionConfig(stopwatch))).toEqual(
-      stopwatch,
-    )
-    expect(decodeSessionConfig(encodeSessionConfig(pomodoro))).toEqual(pomodoro)
+  it('round-trips every fixture through decode unchanged', () => {
+    expect(allPerformSessionConfigMocks.length).toBeGreaterThanOrEqual(7)
+    for (const config of allPerformSessionConfigMocks) {
+      expect(decodeSessionConfig(encodeSessionConfig(config))).toEqual(config)
+    }
+  })
+
+  it('keeps an empty or non-ASCII title byte-for-byte through the JSON column', () => {
+    for (const config of [
+      performSessionConfigMocks.emptyTitle,
+      performSessionConfigMocks.nonAsciiTitle,
+      performSessionConfigMocks.longTitle,
+    ]) {
+      const fragment = makePerformFragment({
+        startedAt: START,
+        endedAt: END,
+        configuration: config,
+      })
+      const [decoded] = decodeSessionFragmentsJson(
+        encodeSessionFragmentsJson([fragment]),
+      )
+      expect(decoded?.configuration?.title).toBe(config.title)
+    }
+  })
+
+  it('writes a zero duration and a fractional huge one as numbers, not omitted', () => {
+    expect(
+      encodeSessionConfig(performSessionConfigMocks.zeroDuration).duration,
+    ).toBe(0)
+    expect(
+      encodeSessionConfig(performSessionConfigMocks.hugeDuration).duration,
+    ).toBe(86_400.5)
   })
 })
 

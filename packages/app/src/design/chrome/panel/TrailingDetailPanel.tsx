@@ -38,6 +38,8 @@ import {
   type ComponentPropsWithoutRef,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
+  useRef,
 } from 'react'
 import { drillAnimation, useDrillDirection } from './DrillTransition'
 import { endeavorIcon } from '../../endeavor/endeavorIcons'
@@ -145,6 +147,13 @@ export interface TrailingDetailPanelProps {
   readonly className?: string
 }
 
+const PANEL_SELECTOR = '[data-testid="trailing-detail-panel"]'
+
+/** The panel an element in its header sits in. */
+function panelOf(element: Element | null): HTMLElement | null {
+  return element?.closest<HTMLElement>(PANEL_SELECTOR) ?? null
+}
+
 /** The large title's bottom edge becomes the panel's top, plus this. */
 export const LARGE_TITLE_SELECTOR = '[data-kro-large-title]'
 
@@ -178,6 +187,38 @@ export function TrailingDetailPanel({
 
   // Which way the last navigation went, for the body's slide.
   const direction = useDrillDirection(navigationDepth)
+
+  // Keyboard continuity across a drill (UX-2): the body is re-keyed on every
+  // push/pop, which unmounts whatever held focus and drops it to <body>. When
+  // focus was inside the pane, hand it to the header's leading control (Back or
+  // Close). Focus outside the pane is never stolen.
+  const leadingRef = useRef<HTMLDivElement | null>(null)
+  const focusWasInside = useRef(false)
+  useEffect(() => {
+    const panel = panelOf(leadingRef.current)
+    if (!panel) return
+    const track = () => {
+      focusWasInside.current = panel.contains(document.activeElement)
+    }
+    panel.addEventListener('focusin', track)
+    panel.addEventListener('focusout', track)
+    return () => {
+      panel.removeEventListener('focusin', track)
+      panel.removeEventListener('focusout', track)
+    }
+  }, [])
+  const lastKey = useRef(navigationKey)
+  useLayoutEffect(() => {
+    if (lastKey.current === navigationKey) return
+    lastKey.current = navigationKey
+    const panel = panelOf(leadingRef.current)
+    const active = document.activeElement
+    const inside = panel !== null && active !== null && panel.contains(active)
+    const dropped =
+      focusWasInside.current && (active === null || active === document.body)
+    if (!inside && !dropped) return
+    leadingRef.current?.querySelector<HTMLElement>('button')?.focus()
+  }, [navigationKey])
 
   const leading = leadingAccessory ? (
     leadingAccessory
@@ -246,7 +287,9 @@ export function TrailingDetailPanel({
           data-testid="trailing-detail-panel-navigation"
           className="relative z-10 flex shrink-0 items-center gap-2.5 p-3"
         >
-          {leading}
+          <div ref={leadingRef} className="contents">
+            {leading}
+          </div>
           <div className="flex min-w-0 flex-1 flex-col gap-px">
             <p
               className="m-0 truncate text-base font-semibold"
@@ -273,7 +316,9 @@ export function TrailingDetailPanel({
           className="relative z-10 grid shrink-0 items-center p-3"
           style={{ gridTemplateColumns: '1fr auto 1fr' }}
         >
-          <div className="justify-self-start">{leading}</div>
+          <div ref={leadingRef} className="justify-self-start">
+            {leading}
+          </div>
           <div className="min-w-0 justify-self-center">{titleContent}</div>
           <div className="justify-self-end">{trailingAccessory}</div>
         </div>

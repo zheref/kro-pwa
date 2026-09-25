@@ -6,21 +6,20 @@
  * Plan's lens, visibility or edit preview: the pane has none of those. Plan
  * shows completed items by default, so nothing is filtered out here either.
  *
- * The hour band is not this slice's: the Page reads Plan's
- * `selectPlanHourBand` and hands it to `selectDayTimelinePlacements`, so the
- * user's day-range preference is identical to the Plan tab's.
+ * The hour band is not this slice's: `selectTodayTimelinePlacements` composes
+ * Plan's `selectPlanHourBand` at the root, so the user's day-range preference
+ * is identical to the Plan tab's.
  */
 import type { Endeavor } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
+import type { RootState } from '../../library/store'
 import { planDayKey, startOfPlanDay } from '../plan/PlanCalendar'
+import { selectPlanHourBand } from '../plan/PlanSelectors'
 import { type PlacedEvent, timelinePlacements } from '../plan/TimelineLayout'
-import type { TimelineHourBand } from '../plan/TimelineSlots'
 import { dayTimelineExceptionCopy } from './DayTimelineException'
 import type { DayTimelineState } from './DayTimelineFeature'
 
-export interface DayTimelineRoot {
-  readonly dayTimeline: DayTimelineState
-}
+export type DayTimelineRoot = Pick<RootState, 'dayTimeline'>
 
 const selectSlice = (state: DayTimelineRoot): DayTimelineState =>
   state.dayTimeline
@@ -73,13 +72,14 @@ export const selectDayTimelineEvents = createSelector(
 
 const NO_PLACEMENTS: readonly PlacedEvent[] = []
 
-/** The placed rectangles for `band` — Plan's own pure layout pass. */
-export const selectDayTimelinePlacements = createSelector(
-  [
-    selectDayTimelineEvents,
-    selectDayTimelineDay,
-    (_state: DayTimelineRoot, band: TimelineHourBand) => band,
-  ],
+/**
+ * Today's placed rectangles, anchored to Plan's hour band — a root Selector
+ * (`RC-20`): the band is Plan's `selectPlanHourBand`, composed here rather
+ * than threaded through the Page, so the pane honours the same day-range
+ * preference as the Plan tab.
+ */
+export const selectTodayTimelinePlacements = createSelector(
+  [selectDayTimelineEvents, selectDayTimelineDay, selectPlanHourBand],
   (events, day, band): readonly PlacedEvent[] =>
     day === null
       ? NO_PLACEMENTS

@@ -57,8 +57,10 @@ const SEGMENT_PADDING: Record<ControlDensity, string> = {
 }
 
 const SEGMENT_MIN_HEIGHT: Record<ControlDensity, string> = {
-  compact: '26px',
-  comfortable: 'var(--kro-size-min-pointer-target)',
+  // Compact is the pointer density; comfortable is touch, so it takes the
+  // 44px touch target (WCAG 2.5.8 / HIG), not the 28px pointer one.
+  compact: 'var(--kro-size-min-pointer-target)',
+  comfortable: 'var(--kro-size-min-touch-target)',
 }
 
 export function SegmentedControl<T extends string>({
@@ -78,11 +80,15 @@ export function SegmentedControl<T extends string>({
       aria-disabled={disabled || undefined}
       data-kro-segmented=""
       data-kro-density={density}
-      className={cn('inline-flex max-w-full', className)}
+      className={cn(
+        'inline-flex max-w-full',
+        // The design system's one disabled dim, applied once on the group.
+        disabled && 'opacity-[var(--kro-opacity-disabled)]',
+        className,
+      )}
       style={{
         borderRadius: CONTROL_RADIUS[density],
         background: `color-mix(in srgb, ${colorVar('fore')} 10%, transparent)`,
-        opacity: disabled ? 0.5 : 1,
         pointerEvents: disabled ? 'none' : 'auto',
       }}
     >

@@ -16,7 +16,10 @@ import { installRadixEnvironment } from '../../../../design/system/primitives/__
 import type { AppStore } from '../../../../library/store'
 import { PaneFrame } from '../../../endeavorDetail/pages/__tests__/paneHarness'
 import { Harness } from '../../../find/pages/__tests__/pagesHarness'
-import { userDidDismissDetailPane } from '../../../main/MainFeature'
+import {
+  userDidDismissDetailPane,
+  userDidRequestSessionSetup,
+} from '../../../main/MainFeature'
 import { SessionOverlays } from '../SessionOverlays'
 import { sessionPaneScenes, slidesEndeavor } from './sessionPaneScenes'
 
@@ -62,6 +65,31 @@ describe('Session in the detail pane — mirrors SessionPane.stories', () => {
     expect(
       within(panel).getByRole('region', { name: 'Focus session' }),
     ).toBeTruthy()
+  })
+
+  it('abandons an in-flight preparation when the pane host unmounts', async () => {
+    const store = sessionPaneScenes.forEndeavor()
+    const { unmount } = mount(store)
+    unmount()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(store.getState().session.identity).toBeNull()
+  })
+
+  it('lands the newest preparation when the pane is re-pointed mid-flight', async () => {
+    const store = sessionPaneScenes.forEndeavor()
+    mount(store)
+    act(() => {
+      store.dispatch(userDidRequestSessionSetup({ endeavor: null }))
+    })
+    await waitFor(() => {
+      expect(store.getState().session.identity?.isAnonymous).toBe(true)
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(store.getState().session.identity?.isAnonymous).toBe(true)
   })
 
   it('sets up a new, arbitrary task when opened with nothing selected', async () => {

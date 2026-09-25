@@ -26,7 +26,11 @@ import {
 import { TimelineDragHandle } from '../../../PlanEditSession'
 import { timelinePlacements } from '../../../TimelineLayout'
 import { timelineSlotCount } from '../../../TimelineSlots'
-import { HANDLE_KEYBOARD_STEP_PX, TimelineFragment } from '../TimelineFragment'
+import {
+  HANDLE_KEYBOARD_STEP_PX,
+  SESSION_PREVIEW_MINIMUM_HEIGHT_PX,
+  TimelineFragment,
+} from '../TimelineFragment'
 import { installPointerEvents, pointer } from '../../__tests__/pointerEvents'
 
 installPointerEvents()
@@ -675,6 +679,19 @@ describe('the session preview (a session that has not started)', () => {
       screen.getByTestId('plan-timeline-session-preview-start'),
     )
     expect(onStart).toHaveBeenCalledOnce()
+  })
+
+  it('gives Start the pointer-target floor and a block tall enough to hold it', () => {
+    mount({ isReadOnly: true, sessionPreview: preview() })
+
+    const start = screen.getByTestId('plan-timeline-session-preview-start')
+    expect(start.style.minHeight).toBe('var(--kro-size-min-pointer-target)')
+    expect(start.className).toContain('inline-flex')
+    const block = screen.getByTestId('plan-timeline-session-preview')
+    // A 20-minute session is 20px of hour grid; the block grows to fit Start.
+    expect(Number.parseFloat(block.style.height)).toBe(
+      SESSION_PREVIEW_MINIMUM_HEIGHT_PX,
+    )
   })
 
   it('draws nothing for a preview on another day', () => {

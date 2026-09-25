@@ -4,6 +4,7 @@ import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLoc
 import { dayProgressSeed } from '../pages/__tests__/dayProgressFixtures'
 import {
   dayProgressSlice,
+  onDayProgressClockTicked,
   onDayProgressRequested,
   userDidSelectDay,
   userDidTapNextWeek,
@@ -149,5 +150,30 @@ describe('the load lifecycle, through the real thunk', () => {
     expect(next.load.kind).toBe('failed')
     if (next.load.kind === 'failed')
       expect(next.load.exception.kind).toBe('unknown')
+  })
+})
+
+describe('onDayProgressClockTicked', () => {
+  it('an ordinary tick leaves the open pane untouched', () => {
+    const next = reduce(
+      mocks.busyDay,
+      onDayProgressClockTicked({ now: new Date(today.getTime() + 60_000) }),
+    )
+    expect(next).toBe(mocks.busyDay)
+  })
+
+  it('the tick after midnight moves today and the selection forward', () => {
+    const tomorrow = addDays(today, 1)
+    const next = reduce(
+      mocks.yesterday,
+      onDayProgressClockTicked({ now: tomorrow }),
+    )
+    expect(next.today).toEqual(tomorrow)
+    expect(next.selectedDay).toEqual(tomorrow)
+  })
+
+  it('a tick on a closed pane stamps nothing', () => {
+    const next = reduce(mocks.idle, onDayProgressClockTicked({ now: today }))
+    expect(next.today).toBeNull()
   })
 })

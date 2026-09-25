@@ -37,7 +37,6 @@
  */
 import {
   type Defer,
-  type Endeavor,
   type EndeavorField,
   type EndeavorHost,
   type EndeavorRelation,
@@ -97,6 +96,7 @@ import {
   addShadowThunk,
   attachHostThunk,
   detachHostThunk,
+  openDetailByIdThunk,
   removeDeferThunk,
   removePerformanceThunk,
   removeShadowThunk,
@@ -190,13 +190,13 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
    * dialog). The decision is `detailPaneHostingAction`'s; this effect only
    * carries it out, reaching both slices as the overlay Page may (`RC-37`).
    *
-   * The last presented endeavor is remembered so reselecting Plan from the
-   * toolbar reopens the same Detail, as canon's kept `detailPaneEndeavor` does.
+   * Reselecting Plan on the pane's kept endeavor reopens Detail by id through
+   * a Producer that reads it from the store — whether or not Detail ever showed
+   * it (a Session or Performance drill points the pane too), and without this
+   * Page holding a domain copy (`RC-1`).
    */
   const previousHosting = useRef<DetailPaneHostingSnapshot | null>(null)
-  const lastPresented = useRef<Endeavor | null>(null)
   useEffect(() => {
-    if (endeavor !== null) lastPresented.current = endeavor
     const current: DetailPaneHostingSnapshot = {
       isHost: isPaneHost,
       detail:
@@ -224,9 +224,7 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
         dispatch(userDidDismissDetailPane())
         return
       case 'reopenDetail':
-        if (lastPresented.current?.id === action.endeavorId) {
-          dispatch(onDetailRequested({ endeavor: lastPresented.current }))
-        }
+        void dispatch(openDetailByIdThunk({ endeavorId: action.endeavorId }))
         return
       default:
         assertNever(action)

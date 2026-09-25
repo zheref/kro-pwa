@@ -27,6 +27,11 @@ import {
   shellShapeFor,
 } from './DoSurfaceLayout'
 import { selectCaptureNavigationIntent } from '../capture/CaptureSelectors'
+import {
+  selectSessionIdentity,
+  selectSessionPhase,
+} from '../session/SessionSelectors'
+import { SessionPhase } from '../session/SessionVocabulary'
 import type { MainException } from './MainException'
 import type {
   MainState,
@@ -320,4 +325,36 @@ export const selectDetailPaneLocationKey = createSelector(
 export const selectDetailPaneDepth = createSelector(
   [selectMainSlice],
   (slice) => slice.detailPaneBackStack.length,
+)
+
+/**
+ * The session already in flight (running, paused, on a break, or concluded
+ * and unanswered), as the pane would point at it — `null` when nothing is in
+ * flight. `endeavor` is `null` for an anonymous (new, arbitrary) task.
+ *
+ * `openSessionSurfaceThunk` points the pane here instead of at whatever card
+ * asked, so the pane's header names the session actually running (`RC-20`:
+ * composed at the root, never a slice reading another's shape).
+ */
+export const selectInFlightSessionPaneTarget = createSelector(
+  [selectSessionPhase, selectSessionIdentity],
+  (
+    phase,
+    identity,
+  ): { readonly endeavor: DetailPaneEndeavor | null } | null => {
+    if (
+      phase !== SessionPhase.running &&
+      phase !== SessionPhase.paused &&
+      phase !== SessionPhase.break &&
+      phase !== SessionPhase.concluded
+    ) {
+      return null
+    }
+    return {
+      endeavor:
+        identity === null || identity.isAnonymous
+          ? null
+          : { id: identity.endeavorId, title: identity.title },
+    }
+  },
 )

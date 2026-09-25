@@ -1,15 +1,17 @@
 'use client'
 
 /**
- * The Day Progress stateful container (`RC-37`). Stamps "today" and starts
- * the load on mount (aborting on unmount — cancellation is the one silent
- * exit), reads everything through named Selectors, and renders the one
+ * The Day Progress stateful container (`RC-37`). Stamps "today" on mount and
+ * ticks the clock every minute after, loads today (again whenever the clock
+ * crosses midnight), aborts the read on unmount — cancellation is the one
+ * silent exit — reads everything through named Selectors, and renders the one
  * Fragment. Not mounted by any route: the shell portals it into the detail
  * pane.
  */
 import { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import {
+  onDayProgressClockTicked,
   onDayProgressRequested,
   userDidSelectDay,
   userDidTapNextWeek,
@@ -29,6 +31,9 @@ import {
 } from '../DayProgressSelectors'
 import { DayProgressFragment } from './DayProgressFragment'
 
+/** How often an open pane checks whether the day rolled over. */
+export const DAY_PROGRESS_TICK_MS = 60_000
+
 export interface DayProgressPageProps {
   /** BCP 47 locale for dates and times; defaults to `en-US`. */
   readonly locale?: string
@@ -46,12 +51,24 @@ export function DayProgressPage({ locale }: DayProgressPageProps) {
   const isLoading = useAppSelector(selectIsDayProgressLoading)
   const exception = useAppSelector(selectDayProgressException)
 
+  // An O(1) field read; the Shifters keep the same Date until midnight.
+  const today = useAppSelector((state) => state.dayProgress.today)
+
   useEffect(() => {
-    const now = new Date()
-    dispatch(onDayProgressRequested({ today: now }))
-    const effect = dispatch(loadDayProgressThunk({ now }))
-    return () => effect.abort()
+    dispatch(onDayProgressRequested({ today: new Date() }))
+    const timer = setInterval(() => {
+      dispatch(onDayProgressClockTicked({ now: new Date() }))
+    }, DAY_PROGRESS_TICK_MS)
+    return () => clearInterval(timer)
   }, [dispatch])
+
+  // Keyed on `today`, so this runs on open and again only when an open pane
+  // rolls over at midnight — never on an ordinary tick.
+  useEffect(() => {
+    if (today === null) return
+    const effect = dispatch(loadDayProgressThunk({ now: new Date() }))
+    return () => effect.abort()
+  }, [dispatch, today])
 
   const onSelectDay = useCallback(
     (day: Date) => dispatch(userDidSelectDay({ day })),

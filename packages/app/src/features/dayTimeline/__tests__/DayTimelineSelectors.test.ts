@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import type { DayTimelineState } from '../DayTimelineFeature'
 import {
   DAY_TIMELINE_MOCK_NOW,
@@ -10,12 +11,10 @@ import {
   selectDayTimelineEvents,
   selectDayTimelineFailureCopy,
   selectDayTimelineNow,
-  selectDayTimelinePlacements,
+  selectTodayTimelinePlacements,
 } from '../DayTimelineSelectors'
 
 const root = (dayTimeline: DayTimelineState) => ({ dayTimeline })
-const FULL = { start: 0, endExclusive: 24 }
-const BUSINESS = { start: 8, endExclusive: 20 }
 
 describe('selectDayTimelineNow / Day / DayKey', () => {
   it('today starts at midnight of the stamped clock', () => {
@@ -68,27 +67,32 @@ describe('selectDayTimelineEvents', () => {
   })
 })
 
-describe('selectDayTimelinePlacements', () => {
-  it('places every event of a busy day in its own column', () => {
-    const placements = selectDayTimelinePlacements(
-      root(dayTimelineStateMocks.busyDay),
-      FULL,
+describe('selectTodayTimelinePlacements', () => {
+  // A whole root, so Plan's hour band resolves from its real default (the
+  // full day) — the pane reads the same preference the Plan tab does.
+  const fullRoot = (dayTimeline: DayTimelineState) => ({
+    ...makeStore(stubbedThunkExtra).getState(),
+    dayTimeline,
+  })
+
+  it('places every event of a busy day in its own column, on the full band', () => {
+    const placements = selectTodayTimelinePlacements(
+      fullRoot(dayTimelineStateMocks.busyDay),
     )
     expect(placements).toHaveLength(3)
     expect(placements[0]?.yOffset).toBe(9 * 60)
   })
 
-  it('anchors offsets to the band, like the Plan tab', () => {
-    const placements = selectDayTimelinePlacements(
-      root(dayTimelineStateMocks.busyDay),
-      BUSINESS,
+  it('returns the same array while nothing it reads has changed', () => {
+    const state = fullRoot(dayTimelineStateMocks.busyDay)
+    expect(selectTodayTimelinePlacements(state)).toBe(
+      selectTodayTimelinePlacements(state),
     )
-    expect(placements[0]?.yOffset).toBe(60)
   })
 
   it('is empty before the pane has a day', () => {
     expect(
-      selectDayTimelinePlacements(root(dayTimelineStateMocks.idle), FULL),
+      selectTodayTimelinePlacements(fullRoot(dayTimelineStateMocks.idle)),
     ).toEqual([])
   })
 })

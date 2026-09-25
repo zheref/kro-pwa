@@ -97,8 +97,9 @@ timeline.
 4. **Opening an endeavor's details.** The user double-clicks a card, or picks Details
    from its menu. The panel opens on Plan with that endeavor selected. Doing it for
    another endeavor switches the panel to the new one. Editing a detail (a field, the
-   duration, a relation) happens inside the panel, with Back and Save at the top of its
-   body.
+   duration, a relation) is a drill-in inside the panel: Back takes the header's leading
+   seat, the editor's title its centre, and Save its trailing seat. Escape goes back to
+   the details rather than closing the panel.
 5. **Setting up a session.** The user presses Execute on a card. The panel
    opens on Session with that endeavor's title, glyph and recommended duration,
    ready to start. Once started, the session runs in the panel, and the pill
@@ -190,13 +191,18 @@ flowchart TD
   inside the panel (a menu, a dialog) handled Escape first. Inside a drill-in (an
   editor in the details, or any reading showing Back) Escape goes back one level
   rather than closing the panel.
+- **The Stopwatch mode ships on.** Session Setup in the panel offers the Pomodoro /
+  Stopwatch toggle by default (the `sessionStopwatch` flag now defaults to enabled, as
+  canon ships it); the `session.enableStopwatch` preference still turns it off. There
+  is no separate Session spec on the web yet, so the default is recorded here.
 - The session preview is web-only: canon's read-only timeline has no preview block.
 - The read-only timeline reads today's calendar on its own rather than sharing the Plan
   tab's loaded day, because the Plan tab may be showing another day. It asks the same
   calendars, so the two agree whenever both show today. Filters set in the Plan tab do
   not narrow it.
 - The panel floats over the page, which keeps its full width and scrolls underneath it.
-  Its measurements follow canon's: 96 from the top, 16 from the trailing and bottom
+  Its top edge sits just under the destination's large title (canon's 96 when a
+  destination has none); otherwise its measurements follow canon's: 16 from the trailing and bottom
   edges, rounded corners of 28, and a width of 36% of the window, never below 320 or
   above 520.
 

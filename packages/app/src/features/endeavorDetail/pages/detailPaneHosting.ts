@@ -35,7 +35,7 @@ export type DetailPaneHostingAction =
   | { readonly kind: 'dismissDetail' }
   /** Detail closed from inside (a delete, say) — hide the pane showing it. */
   | { readonly kind: 'dismissPane' }
-  /** Plan was reselected on a remembered endeavor — reopen its Detail. */
+  /** Plan was selected on the pane's endeavor — open its Detail by id. */
   | { readonly kind: 'reopenDetail'; readonly endeavorId: string }
 
 export function detailPaneHostingAction(

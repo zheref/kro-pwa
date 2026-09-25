@@ -77,3 +77,27 @@ export const withDayProgressFailed = (
   state: DayProgressState,
   exception: DayProgressException,
 ): DayProgressState => ({ ...state, load: { kind: 'failed', exception } })
+
+/** A load in flight: the one lifecycle field goes to `loading`, nothing else. */
+export const withDayProgressLoading = (
+  state: DayProgressState,
+): DayProgressState =>
+  state.load.kind === 'loading'
+    ? state
+    : { ...state, load: { kind: 'loading' } }
+
+/**
+ * The clock ticked. Within the same calendar day — or before the screen was
+ * opened — nothing changes (the same state is returned, so no re-render and
+ * no reload). Across midnight the pane rolls to the new day exactly as a
+ * fresh open would: today and the selection move forward, back to week 0.
+ */
+export const withDayProgressClockTicked = (
+  state: DayProgressState,
+  now: Date,
+): DayProgressState => {
+  if (state.today === null) return state
+  const day = startOfDay(now)
+  if (day.getTime() === state.today.getTime()) return state
+  return { ...state, today: day, selectedDay: day, weekOffset: 0 }
+}

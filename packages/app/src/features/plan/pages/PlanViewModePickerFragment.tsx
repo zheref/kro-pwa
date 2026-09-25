@@ -57,13 +57,12 @@ import {
   type PlanViewMode,
   advancePlanViewMode,
   planViewModeLabel,
-  planViewModes,
 } from '../PlanNavigation'
 import {
   capturePointer,
   releasePointer,
   useReducedMotionPreference,
-} from './timeline/useTimelineGestures'
+} from '../../../library/timeline/useTimelineGestures'
 
 /** Canon's `itemSpacing`. */
 export const MODE_ITEM_SPACING = 35

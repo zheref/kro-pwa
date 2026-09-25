@@ -32,7 +32,7 @@
  */
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import type { EisenhowerQuadrant } from '@kro/core'
-import { addingPlanDays, planDayKey } from './PlanCalendar'
+import { addingPlanDays, planDayKey } from '../../library/plan/PlanCalendar'
 import {
   type TimelineDragHandle,
   applyTimelineDrag,
@@ -40,7 +40,7 @@ import {
   beginTimelineEdit,
   commitTimelineEdit,
   endTimelineDrag,
-} from './PlanEditSession'
+} from '../../library/plan/PlanEditSession'
 import { PlanExceptions } from './PlanException'
 import { resolveIntoQuadrant } from './PlanMatrix'
 import type { PlanViewMode } from './PlanNavigation'
@@ -73,7 +73,10 @@ import type {
   PlanVisibilityToggle,
 } from './PlanState'
 import { PlanLoadReason, initialPlanState } from './PlanState'
-import { quickCreateDraftAt, quickCreateDraftForSlot } from './TimelineSlots'
+import {
+  quickCreateDraftAt,
+  quickCreateDraftForSlot,
+} from '../../library/plan/TimelineSlots'
 
 export type { PlanState } from './PlanState'
 export { initialPlanState } from './PlanState'

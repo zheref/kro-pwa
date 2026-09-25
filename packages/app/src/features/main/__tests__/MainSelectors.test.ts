@@ -5,11 +5,20 @@
  * through the store rather than through a browser: the surface goes in, the
  * shell shape and the control ownership come out.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
+import {
+  SESSION_MOCK_NOW,
+  sessionIdentityMocks,
+  sessionStateMocks,
+} from '../../session/SessionMocks'
+import { withSessionStarted } from '../../session/SessionShifters'
 import { initialCaptureState } from '../../capture/CaptureFeature'
 import { initialDoState } from '../../do/DoFeature'
 import { initialEarnState } from '../../earn/EarnFeature'
@@ -19,7 +28,11 @@ import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { initialThirstState } from '../../thirst/ThirstFeature'
-import type { MainState } from '../MainFeature'
+import {
+  type MainState,
+  mainSlice,
+  userDidSelectDetailPaneSegment,
+} from '../MainFeature'
 import { MainMocks, handheldSurface, projectMocks } from '../MainMocks'
 import {
   selectCanManageProjects,
@@ -32,6 +45,9 @@ import {
   selectShellShape,
   selectSidebarSections,
   selectTabBarElements,
+  selectDetailPaneSubtitle,
+  selectDetailPaneTitle,
+  selectInFlightSessionPaneTarget,
 } from '../MainSelectors'
 import { DestinationKind } from '../SidebarDestination'
 import { initialSettingsState } from '../../settings/SettingsState'
@@ -46,6 +62,9 @@ const rootWith = (main: MainState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   auth: initialAuthState,
   platform: initialPlatformState,
@@ -267,5 +286,87 @@ describe('selectPendingShellRoute — the one cross-slice read (RC-20)', () => {
     expect(pending).not.toBeNull()
     expect(pending?.context.autoNavigates).toBe(false)
     expect(pending?.context.endeavorId).toBe('e-2')
+  })
+})
+
+describe('selectInFlightSessionPaneTarget', () => {
+  const withSession = (
+    session: typeof sessionStateMocks.running,
+  ): RootState => ({
+    ...rootWith(MainMocks.desktopLoaded),
+    session,
+  })
+  const slides = {
+    id: sessionIdentityMocks.slides.endeavorId,
+    title: sessionIdentityMocks.slides.title,
+  }
+
+  it('points at the running session’s endeavor', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.running)),
+    ).toEqual({ endeavor: slides })
+  })
+
+  it('still owns the pane while paused or concluded and unanswered', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.paused)),
+    ).toEqual({ endeavor: slides })
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.concluded)),
+    ).toEqual({ endeavor: slides })
+  })
+
+  it('names no endeavor for an anonymous task in flight', () => {
+    const anonymous = withSessionStarted(
+      sessionStateMocks.readyAnonymous,
+      SESSION_MOCK_NOW,
+    )
+    expect(selectInFlightSessionPaneTarget(withSession(anonymous))).toEqual({
+      endeavor: null,
+    })
+  })
+
+  it('is null when nothing is in flight (ready or idle)', () => {
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.ready)),
+    ).toBeNull()
+    expect(
+      selectInFlightSessionPaneTarget(withSession(sessionStateMocks.idle)),
+    ).toBeNull()
+  })
+})
+
+describe('the pane header while a session is in flight', () => {
+  const onSession = mainSlice.reducer(
+    MainMocks.desktopDetailPaneReady,
+    userDidSelectDetailPaneSegment({ segment: 'sessionSetup' }),
+  )
+  const withSession = (
+    main: MainState,
+    session: typeof sessionStateMocks.running,
+  ): RootState => ({ ...rootWith(main), session })
+
+  it('names the running session on Session, whatever the pane was pointed at', () => {
+    const state = withSession(onSession, sessionStateMocks.running)
+    expect(selectDetailPaneSubtitle(state)).toBe(
+      sessionIdentityMocks.slides.title,
+    )
+    expect(selectDetailPaneTitle(state)).toBe('Session Setup')
+  })
+
+  it('keeps the stored target when nothing is in flight', () => {
+    const state = withSession(onSession, sessionStateMocks.ready)
+    expect(selectDetailPaneSubtitle(state)).toBeNull()
+    expect(selectDetailPaneTitle(state)).toBe('New Session')
+  })
+
+  it('leaves other readings alone while a session runs', () => {
+    const onPerformance = mainSlice.reducer(
+      MainMocks.desktopDetailPaneReady,
+      userDidSelectDetailPaneSegment({ segment: 'performance' }),
+    )
+    const state = withSession(onPerformance, sessionStateMocks.running)
+    expect(selectDetailPaneSubtitle(state)).toBeNull()
+    expect(selectDetailPaneTitle(state)).toBe('Day Progress')
   })
 })

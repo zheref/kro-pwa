@@ -62,6 +62,22 @@ export interface DurationDialProps {
   readonly stepSeconds?: number
   /** Canon's `scale` — the tick ring's outer diameter. */
   readonly diameter?: number
+  /**
+   * Canon's `Style.fontDesign` / `fontScale`. The session sheet's dial is
+   * `.monospaced` at `0.88` of `.largeTitle` (`SessionSetupView.darkDialStyle`).
+   */
+  readonly readoutDesign?: 'default' | 'monospaced'
+  readonly readoutScale?: number
+  /**
+   * `accent` — the kit's default palette. `session` — canon's `darkDialStyle`:
+   * every layer is the foreground at an opacity (ticks 15%, covered ticks 60%,
+   * disc 4%, covered wedge 8%). The foreground is white on the dark session
+   * sheet, which is canon's `.white.opacity(x)` exactly, and black on a light
+   * surface, where white would vanish.
+   */
+  readonly tone?: 'accent' | 'session'
+  /** The tick ring's width. Canon's `indicatorLength` (18). */
+  readonly ringWidth?: number
   /** Read-only, like canon's `init(staticDuration:)`. */
   readonly readOnly?: boolean
   readonly label?: string
@@ -94,10 +110,6 @@ const TICK_DEGREES = 360 / TICK_COUNT
  * per render — and because a mask string assembled inline is the kind of thing
  * that quietly loses its `closest-side` in a refactor.
  */
-const TICK_MASK = [
-  `radial-gradient(circle closest-side at 50% 50%, transparent 0 calc(100% - ${TICK_RING_WIDTH}px), #000 calc(100% - ${TICK_RING_WIDTH}px))`,
-  `repeating-conic-gradient(from 0deg, #000 0 ${TICK_DEGREES / 2}deg, transparent ${TICK_DEGREES / 2}deg ${TICK_DEGREES}deg)`,
-].join(', ')
 
 /** Canon's `formatDigital` — `MM:SS`, never negative. */
 export function formatDigital(seconds: number): string {
@@ -141,6 +153,10 @@ export function DurationDial({
   maxSeconds = DEFAULT_MAX_SECONDS,
   stepSeconds = DEFAULT_STEP_SECONDS,
   diameter = DEFAULT_DIAMETER,
+  readoutDesign = 'default',
+  readoutScale = 1,
+  tone = 'accent',
+  ringWidth = TICK_RING_WIDTH,
   readOnly = false,
   label = 'Session duration',
   className,
@@ -226,7 +242,8 @@ export function DurationDial({
     [commit, maxSeconds, seconds, stepSeconds, readOnly],
   )
 
-  const innerDiameter = diameter - TICK_RING_WIDTH * 2
+  const innerDiameter = diameter - ringWidth * 2
+  const palette = DIAL_PALETTE[tone]
 
   return (
     <div
@@ -281,19 +298,12 @@ export function DurationDial({
 
           One node rather than 60, whatever the step count.
         */}
-        <div
-          aria-hidden="true"
-          data-kro-dial-ticks=""
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            background: `conic-gradient(var(--kro-color-accent) 0deg ${ratio * 360}deg, var(--kro-color-hairline) ${ratio * 360}deg 360deg)`,
-            WebkitMaskImage: TICK_MASK,
-            WebkitMaskComposite: 'source-in',
-            maskImage: TICK_MASK,
-            maskComposite: 'intersect',
-          }}
+        <DialTicks
+          diameter={diameter}
+          ringWidth={ringWidth}
+          ratio={ratio}
+          ticks={palette.ticks}
+          coveredTicks={palette.coveredTicks}
         />
         {/*
           The disc, in canon's two layers — a base fill with the covered wedge
@@ -319,7 +329,7 @@ export function DurationDial({
             width: innerDiameter,
             height: innerDiameter,
             borderRadius: '50%',
-            background: 'var(--kro-color-back-inner)',
+            background: palette.disc,
           }}
         />
         <div
@@ -330,16 +340,21 @@ export function DurationDial({
             width: innerDiameter,
             height: innerDiameter,
             borderRadius: '50%',
-            background: `conic-gradient(color-mix(in srgb, var(--kro-color-accent) 30%, transparent) 0deg ${ratio * 360}deg, transparent ${ratio * 360}deg 360deg)`,
+            background: `conic-gradient(${palette.coveredDisc} 0deg ${ratio * 360}deg, transparent ${ratio * 360}deg 360deg)`,
           }}
         />
         <span
           data-kro-dial-readout=""
           style={{
             position: 'relative',
-            fontSize: 34,
+            // Canon's `.largeTitle` (34pt), scaled by `fontScale`.
+            fontSize: Math.round(34 * readoutScale),
             fontWeight: 600,
             fontVariantNumeric: 'tabular-nums',
+            fontFamily:
+              readoutDesign === 'monospaced'
+                ? 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace'
+                : undefined,
             color: 'var(--kro-color-fore)',
             pointerEvents: 'none',
           }}
@@ -398,4 +413,121 @@ export function DurationDial({
       ) : null}
     </div>
   )
+}
+
+const foreAt = (percent: number) =>
+  `color-mix(in srgb, var(--kro-color-fore) ${percent}%, transparent)`
+
+/** Each tone's four layers. */
+export const DIAL_PALETTE = {
+  accent: {
+    ticks: 'var(--kro-color-hairline)',
+    coveredTicks: 'var(--kro-color-accent)',
+    disc: 'var(--kro-color-back-inner)',
+    coveredDisc: 'color-mix(in srgb, var(--kro-color-accent) 30%, transparent)',
+  },
+  session: {
+    ticks: foreAt(15),
+    coveredTicks: foreAt(60),
+    disc: foreAt(4),
+    coveredDisc: foreAt(8),
+  },
+} as const
+
+/** The dash along the circumference each tick takes, in px. */
+export const TICK_DASH = 2.5
+
+/**
+ * The tick ring, as SVG strokes rather than a masked conic gradient.
+ *
+ * Canon strokes a dashed circle `indicatorLength` wide and overlays a trimmed
+ * copy in the covered colour. The web used to cut a conic gradient with a
+ * repeating-conic mask, and a hard-stopped conic rasterises with a stair-step
+ * at every tick edge — the spiky look. An SVG stroke is antialiased along its
+ * whole outline (`geometricPrecision`), so every tick edge is smoothed and the
+ * ring reads soft at any size. Butt caps on purpose: a round cap would add
+ * half the ring's width to each dash along the circumference and merge them.
+ * The covered arc is the same dashes in the accent, clipped to the covered
+ * wedge.
+ */
+function DialTicks({
+  diameter,
+  ringWidth,
+  ratio,
+  ticks,
+  coveredTicks,
+}: {
+  readonly diameter: number
+  readonly ringWidth: number
+  readonly ratio: number
+  readonly ticks: string
+  readonly coveredTicks: string
+}) {
+  const clipId = useId()
+  const radius = (diameter - ringWidth) / 2
+  const centre = diameter / 2
+  const circumference = 2 * Math.PI * radius
+  const period = circumference / TICK_COUNT
+  const dasharray = `${TICK_DASH} ${period - TICK_DASH}`
+  const wedge = coveredWedgePath(centre, diameter, ratio)
+  // The clip goes on a wrapping group, never on the circle: the circle is
+  // rotated -90deg to start its dashes at twelve o'clock, and a clip-path on a
+  // transformed element is read in that element's rotated space — the wedge
+  // would start at nine o'clock and miss the disc's covered angle by a quarter.
+  const ring = (stroke: string) => (
+    <circle
+      cx={centre}
+      cy={centre}
+      r={radius}
+      fill="none"
+      stroke={stroke}
+      strokeWidth={ringWidth}
+      strokeDasharray={dasharray}
+      // Start the first tick centred on twelve o'clock.
+      strokeDashoffset={TICK_DASH / 2}
+      transform={`rotate(-90 ${centre} ${centre})`}
+    />
+  )
+  return (
+    <svg
+      aria-hidden="true"
+      data-kro-dial-ticks=""
+      width={diameter}
+      height={diameter}
+      viewBox={`0 0 ${diameter} ${diameter}`}
+      shapeRendering="geometricPrecision"
+      style={{ position: 'absolute', inset: 0 }}
+    >
+      <defs>
+        <clipPath id={clipId}>
+          <path d={wedge} />
+        </clipPath>
+      </defs>
+      {ring(ticks)}
+      {ratio > 0 ? (
+        <g data-kro-dial-covered="" clipPath={`url(#${clipId})`}>
+          {ring(coveredTicks)}
+        </g>
+      ) : null}
+    </svg>
+  )
+}
+
+/** The covered wedge, clockwise from twelve o'clock, as an SVG path. */
+export function coveredWedgePath(
+  centre: number,
+  diameter: number,
+  ratio: number,
+): string {
+  const clamped = Math.min(1, Math.max(0, ratio))
+  if (clamped >= 1) {
+    return `M 0 0 H ${diameter} V ${diameter} H 0 Z`
+  }
+  // Well outside the ring, so the wedge covers the full ring width.
+  const reach = diameter
+  const angle = clamped * 2 * Math.PI
+  const x = centre + reach * Math.sin(angle)
+  const y = centre - reach * Math.cos(angle)
+  const largeArc = clamped > 0.5 ? 1 : 0
+  return `M ${centre} ${centre} L ${centre} ${centre - reach} A ${reach} ${reach} 0 ${largeArc} 1 ${x.toFixed(3)} ${y.toFixed(3)} Z`
 }

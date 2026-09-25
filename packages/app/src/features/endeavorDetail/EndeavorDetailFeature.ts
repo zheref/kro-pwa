@@ -31,6 +31,16 @@
 import type { Endeavor, EndeavorField, EndeavorRelation } from '@kro/core'
 import { isRelationEditable } from '@kro/core'
 import { type PayloadAction, createSlice, isAnyOf } from '@reduxjs/toolkit'
+import {
+  onSessionConclusionRaised,
+  userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestDayProgress,
+  userDidRequestSessionSetup,
+  userDidSelectDetailPaneSegment,
+  userDidTapDetailPaneBack,
+} from '../main/MainFeature'
+import { openSessionSurfaceThunk } from '../main/MainProducer'
 import type { EndeavorFieldChange } from './EndeavorDetailEditing'
 import { EndeavorDetailExceptions } from './EndeavorDetailException'
 import {
@@ -39,6 +49,7 @@ import {
   addShadowThunk,
   attachHostThunk,
   detachHostThunk,
+  openDetailByIdThunk,
   removeDeferThunk,
   removePerformanceThunk,
   removeShadowThunk,
@@ -206,6 +217,36 @@ export const endeavorDetailSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      // ------------------------------------------- released by the pane
+      //
+      // On a pane host Detail lives in the pane's Plan segment, so every
+      // pane move that leaves Plan — another segment, Plan's own deselect,
+      // the dismiss, a drill-in, a raised Session — releases Detail with it
+      // (canon: *"exactly one content is mounted at a time"*). These are the
+      // shell's action creators, never its state (`RC-20`); they are only
+      // dispatched where the pane exists, so the tab-bar shell's sheet never
+      // sees one. Releasing a closed Detail is the identity.
+      .addCase(openSessionSurfaceThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok || result.value.kind !== 'pane') return
+        Object.assign(state, withDetailDismissed(state as EndeavorDetailState))
+      })
+      // ------------------------------------------- reopen by id (the pane)
+      //
+      // Only a found endeavor presents; a miss (deleted since the pane was
+      // pointed) leaves Detail closed rather than painting an error nobody
+      // asked for. Cancellation and the defensive `.rejected` are silent too:
+      // there is no Detail yet to attach a failure to.
+      .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) return
+        Object.assign(
+          state,
+          withDetailPresented(state as EndeavorDetailState, {
+            endeavor: result.value,
+          }),
+        )
+      })
       // ------------------------------------------------------- the save
       .addCase(saveEndeavorThunk.pending, (state) => {
         Object.assign(state, withSaveStarted(state as EndeavorDetailState))
@@ -275,6 +316,23 @@ export const endeavorDetailSlice = createSlice({
                 action.error.message ?? 'Unknown error',
               ),
             }),
+          )
+        },
+      )
+      .addMatcher(
+        isAnyOf(
+          userDidSelectDetailPaneSegment,
+          userDidDismissDetailPane,
+          userDidRequestDayProgress,
+          userDidRequestSessionSetup,
+          userDidDrillIntoDetailPane,
+          userDidTapDetailPaneBack,
+          onSessionConclusionRaised,
+        ),
+        (state) => {
+          Object.assign(
+            state,
+            withDetailDismissed(state as EndeavorDetailState),
           )
         },
       )

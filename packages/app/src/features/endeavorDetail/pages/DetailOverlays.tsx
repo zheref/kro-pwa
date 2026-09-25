@@ -56,11 +56,15 @@ import {
   SheetContent,
   SheetTitle,
 } from '../../../design/system/primitives/sheet'
-import { colorVar } from '../../../design/system/tokens/roles'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { childIntentDelegatedConsumed } from '../../find/FindFeature'
-import { selectShellShape } from '../../main/MainSelectors'
-import { selectProjects } from '../../main/MainSelectors'
+import {
+  selectDetailPaneEndeavor,
+  selectDetailPaneSegment,
+  selectIsDetailPaneAvailable,
+  selectProjects,
+  selectShellShape,
+} from '../../main/MainSelectors'
 import {
   onDetailRequested,
   onEditRequested,
@@ -79,6 +83,7 @@ import {
   addShadowThunk,
   attachHostThunk,
   detachHostThunk,
+  openDetailByIdThunk,
   removeDeferThunk,
   removePerformanceThunk,
   removeShadowThunk,
@@ -119,6 +124,11 @@ import {
   relationEntryFromDraft,
 } from './EndeavorRelationFragment'
 import { selectDetailIntentRequest } from './DetailOverlaySelectors'
+import {
+  DetailPaneChromeFragment,
+  DetailSaveButton,
+} from './DetailPaneChromeFragment'
+import { detailPaneReopenRequest } from './detailPaneHosting'
 import { relationLabel } from './endeavorDetailDisplay'
 
 export interface DetailOverlaysProps {
@@ -158,6 +168,29 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
   const badges = useAppSelector(selectDetailBadges)
   const projects = useAppSelector(selectProjects)
   const shape = useAppSelector(selectShellShape)
+  const isPaneHost = useAppSelector(selectIsDetailPaneAvailable)
+  const paneSegment = useAppSelector(selectDetailPaneSegment)
+  const paneEndeavor = useAppSelector(selectDetailPaneEndeavor)
+
+  /**
+   * Reopen Detail by id when the pane's Plan shows an endeavor with no Detail
+   * mounted (canon #517). Every other Detail ↔ pane edge is reducer-tier —
+   * each slice follows the other's action creators. This one remains an
+   * effect because reopening reads the endeavor from the store, which only a
+   * Producer may do, and the gesture that asks for it (Plan reselected, Back
+   * to Plan, a drill-in to Plan) is the shell Page's, not this one's. The
+   * reading is level-triggered and stable after a miss, so it cannot loop.
+   */
+  const reopenEndeavorId = detailPaneReopenRequest({
+    isHost: isPaneHost,
+    isDetailOpen: endeavor !== null,
+    paneSegment,
+    paneEndeavorId: paneEndeavor?.id ?? null,
+  })
+  useEffect(() => {
+    if (reopenEndeavorId === null) return
+    void dispatch(openDetailByIdThunk({ endeavorId: reopenEndeavorId }))
+  }, [dispatch, reopenEndeavorId])
 
   /**
    * Drain the intents this overlay owns.
@@ -265,6 +298,26 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
     [dispatch, endeavor],
   )
 
+  // In the pane, an editor is a drill-in, so Escape means its Back — never the
+  // pane's Close. On `document`, whose bubble phase runs after a menu or picker
+  // inside the editor has had its say and before the pane's own `window`
+  // listener, which skips an event already handled.
+  const isPaneEditorOpen =
+    isPaneHost &&
+    paneSegment === 'plan' &&
+    endeavor !== null &&
+    destination !== null
+  useEffect(() => {
+    if (!isPaneEditorOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      event.preventDefault()
+      dispatch(userDidDismissDestination())
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [dispatch, isPaneEditorOpen])
+
   if (endeavor === null) return null
 
   const isEditor = destination !== null
@@ -348,6 +401,15 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
       />
     ) : null
 
+  const saveButton = (
+    <DetailSaveButton
+      size="touch"
+      isEnabled={isSaveEnabled}
+      isSaving={isSaving}
+      onPress={onSave}
+    />
+  )
+
   const chrome = (
     <>
       <div className="flex items-center gap-kro-small">
@@ -368,25 +430,30 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
             }
           />
         </div>
-        {showsSave ? (
-          <button
-            type="button"
-            disabled={!isSaveEnabled}
-            onClick={onSave}
-            className="shrink-0 rounded-kro-pill px-4 text-sm font-semibold outline-none focus-visible:shadow-[var(--kro-ring)] disabled:opacity-[var(--kro-opacity-disabled)]"
-            style={{
-              minHeight: 'var(--kro-size-min-touch-target)',
-              backgroundColor: colorVar('accent'),
-              color: colorVar('onAccent'),
-            }}
-          >
-            {isSaving ? 'Saving…' : 'Save'}
-          </button>
-        ) : null}
+        {showsSave ? saveButton : null}
       </div>
       {body}
     </>
   )
+
+  if (isPaneHost) {
+    // Hosted by the shell's pane, and only while it shows Plan.
+    if (paneSegment !== 'plan') return null
+    return (
+      <DetailPaneChromeFragment
+        isEditor={isEditor}
+        title={headerTitle}
+        showsSave={showsSave}
+        isSaveEnabled={isSaveEnabled}
+        isSaving={isSaving}
+        screenKey={destinationKey(destination)}
+        onBack={() => dispatch(userDidDismissDestination())}
+        onSave={onSave}
+      >
+        {body}
+      </DetailPaneChromeFragment>
+    )
+  }
 
   const onOpenChange = (open: boolean) => {
     if (!open) dispatch(userDidTapDismiss())
@@ -432,3 +499,13 @@ const badgeLabel = (badge: EndeavorDetailBadge): string => {
       return assertNever(badge)
   }
 }
+
+/** A key per Detail screen, so each drill-in remounts and slides. */
+const destinationKey = (
+  destination: ReturnType<typeof selectDetailDestination>,
+): string =>
+  destination === null
+    ? 'detail'
+    : destination.kind === 'relation'
+      ? `relation:${destination.relation}`
+      : destination.kind

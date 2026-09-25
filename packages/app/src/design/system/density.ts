@@ -69,3 +69,25 @@ export const DENSITY_TYPE: Record<ControlDensity, string> = {
 export function isComfortable(density: ControlDensity): boolean {
   return density === 'comfortable'
 }
+
+/**
+ * The corner of a selectable control at each density — the standard for
+ * segmented controls, filter and preset pills. Compact (desktop) controls take
+ * the menu-row radius every compact Button already uses (`--kro-radius-small`,
+ * 8px); comfortable (touch) controls stay capsules.
+ */
+export const CONTROL_RADIUS: Record<ControlDensity, string> = {
+  compact: 'var(--kro-radius-small)',
+  comfortable: 'var(--kro-radius-pill)',
+}
+
+/**
+ * The fill of a SELECTED segment or pill: the foreground colour itself, with
+ * the background colour for its label — so it is white on dark and black on
+ * light, inverting with the scheme rather than washing the same pale glass in
+ * both. The standard for segmented controls and filter/preset pills.
+ */
+export const SELECTED_CONTROL_STYLE = {
+  background: 'var(--kro-color-fore)',
+  color: 'var(--kro-color-back)',
+} as const

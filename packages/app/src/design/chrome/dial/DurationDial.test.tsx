@@ -2,10 +2,13 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  DEFAULT_DIAMETER,
   DEFAULT_DURATION_PRESETS,
   DEFAULT_MAX_SECONDS,
   DurationDial,
+  TICK_RING_WIDTH,
   angleFromCentre,
+  coveredWedgePath,
   durationForAngle,
   formatDigital,
 } from './DurationDial'
@@ -206,8 +209,13 @@ describe('the 90-minute preset does not fit the 60-minute dial — canon`s own t
     expect(dial().getAttribute('aria-valuenow')).toBe(String(90 * 60))
     expect(screen.getByText('90:00')).toBeDefined()
     // …and the ring is closed rather than wrapped round a second time.
-    const ticks = document.querySelector('[data-kro-dial-ticks]') as HTMLElement
-    expect(ticks.style.background).toContain('360deg')
+    const wedge = document.querySelector(
+      '[data-kro-dial-ticks] clipPath path',
+    ) as SVGPathElement
+    // A full ratio clips to the whole box, not a wedge that wraps twice.
+    expect(wedge.getAttribute('d')).toBe(
+      `M 0 0 H ${DEFAULT_DIAMETER} V ${DEFAULT_DIAMETER} H 0 Z`,
+    )
   })
 
   it('lets a caller widen the sweep when it wants the arc to track a long session', () => {
@@ -236,5 +244,83 @@ describe('read-only, canon`s init(staticDuration:)', () => {
     render(<DurationDial seconds={15 * 60} readOnly />)
 
     expect(screen.getByText('15:00')).toBeDefined()
+  })
+})
+
+describe('the tick ring and the readout', () => {
+  it('draws the ticks as antialiased SVG strokes, 60 round the dial', () => {
+    render(<DurationDial seconds={25 * 60} />)
+    const svg = document.querySelector('[data-kro-dial-ticks]') as SVGElement
+    expect(svg.tagName.toLowerCase()).toBe('svg')
+    expect(svg.getAttribute('shape-rendering')).toBe('geometricPrecision')
+    const [base] = Array.from(svg.querySelectorAll('circle'))
+    const [dash, gap] = (base?.getAttribute('stroke-dasharray') ?? '')
+      .split(' ')
+      .map(Number)
+    const radius = (DEFAULT_DIAMETER - TICK_RING_WIDTH) / 2
+    expect((dash ?? 0) + (gap ?? 0)).toBeCloseTo((2 * Math.PI * radius) / 60)
+  })
+
+  it('clips the covered ticks to the covered wedge, and draws none at zero', () => {
+    const { rerender } = render(<DurationDial seconds={15 * 60} />)
+    expect(
+      document.querySelectorAll('[data-kro-dial-ticks] circle'),
+    ).toHaveLength(2)
+    expect(coveredWedgePath(90, 180, 0.25)).toContain(
+      'A 180 180 0 0 1 270.000 90.000',
+    )
+    rerender(<DurationDial seconds={0} />)
+    expect(
+      document.querySelectorAll('[data-kro-dial-ticks] circle'),
+    ).toHaveLength(1)
+  })
+
+  it('sets a monospaced readout at a scale, as the session dial does', () => {
+    render(
+      <DurationDial
+        seconds={25 * 60}
+        readoutDesign="monospaced"
+        readoutScale={0.88}
+        diameter={164}
+      />,
+    )
+    const readout = document.querySelector(
+      '[data-kro-dial-readout]',
+    ) as HTMLElement
+    expect(readout.style.fontFamily).toContain('monospace')
+    expect(readout.style.fontSize).toBe('30px')
+    expect(dial().style.width).toBe('164px')
+  })
+})
+
+describe('the covered ticks meet the covered disc', () => {
+  it('clips a group, not the rotated circle, so the wedge starts at twelve', () => {
+    render(<DurationDial seconds={15 * 60} />)
+    const covered = document.querySelector(
+      '[data-kro-dial-covered]',
+    ) as SVGGElement
+    expect(covered.tagName.toLowerCase()).toBe('g')
+    expect(covered.getAttribute('clip-path')).toMatch(/^url\(#/)
+    const circle = covered.querySelector('circle') as SVGCircleElement
+    // The rotation stays on the circle; the clip is outside it.
+    expect(circle.getAttribute('clip-path')).toBeNull()
+    expect(circle.getAttribute('transform')).toContain('rotate(-90')
+  })
+
+  it('sweeps the disc and the ticks through the same angle', () => {
+    render(<DurationDial seconds={15 * 60} />)
+    const fill = document.querySelector('[data-kro-dial-fill]') as HTMLElement
+    // A quarter of the hour: the disc's covered stop is 90deg…
+    expect(fill.style.background).toContain('90deg')
+    // …and the ticks' wedge ends at three o'clock (a quarter turn from twelve).
+    const wedge = document.querySelector('[data-kro-dial-ticks] clipPath path')
+    expect(wedge?.getAttribute('d')).toContain(
+      `${90 + DEFAULT_DIAMETER}.000 90.000`,
+    )
+  })
+
+  it('draws no covered ticks at zero', () => {
+    render(<DurationDial seconds={0} />)
+    expect(document.querySelector('[data-kro-dial-covered]')).toBeNull()
   })
 })

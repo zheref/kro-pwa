@@ -64,16 +64,29 @@
  * not forbid — the rule is about a slice importing another slice's shape.
  */
 import { useEffect, useRef, useState } from 'react'
+import { ToolbarSlot } from '../../main/ToolbarSlots'
+import { assertNever } from '@kro/core'
+import {
+  onSessionConclusionRaised,
+  userDidRequestSessionSetup,
+} from '../../main/MainFeature'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { DestinationKind } from '../../main/SidebarDestination'
-import { selectSelectedDestination } from '../../main/MainSelectors'
+import {
+  selectDetailPaneEndeavor,
+  selectDetailPaneSegment,
+  selectIsDetailPaneAvailable,
+  selectSelectedDestination,
+} from '../../main/MainSelectors'
 import { setScreenAwakeThunk } from '../../platform/PlatformProducer'
+import { selectIsDetailEditorOpen } from '../../endeavorDetail/EndeavorDetailSelectors'
 import { userDidDismissConclusion } from '../SessionFeature'
 import {
   hydrateRunningSessionThunk,
   loadSessionPreferencesThunk,
   markEndeavorCompleteFromSessionThunk,
   pauseSessionThunk,
+  prepareSessionLaunchThunk,
   resumeSessionThunk,
   startSessionTickTask,
   syncSessionDocumentTitleThunk,
@@ -81,6 +94,8 @@ import {
 import {
   selectIsPresentingConclusion,
   selectIsSessionActive,
+  selectIsSessionLoading,
+  selectSessionIdentity,
   selectSessionDocumentTitle,
   selectSessionPhase,
   selectSessionPillState,
@@ -88,6 +103,10 @@ import {
 import { SessionPhase } from '../SessionVocabulary'
 import { SessionPillFragment } from './SessionPillFragment'
 import { SessionSheetPage } from './SessionSheetPage'
+import {
+  type SessionPaneHostingSnapshot,
+  sessionPaneHostingAction,
+} from './sessionPaneHosting'
 
 export function SessionOverlays() {
   const dispatch = useAppDispatch()
@@ -98,6 +117,13 @@ export function SessionOverlays() {
   const isPresentingConclusion = useAppSelector(selectIsPresentingConclusion)
   const documentTitle = useAppSelector(selectSessionDocumentTitle)
   const selectedDestination = useAppSelector(selectSelectedDestination)
+  const identity = useAppSelector(selectSessionIdentity)
+  const isLoading = useAppSelector(selectIsSessionLoading)
+  const isPaneHost = useAppSelector(selectIsDetailPaneAvailable)
+  const paneSegment = useAppSelector(selectDetailPaneSegment)
+  const paneEndeavor = useAppSelector(selectDetailPaneEndeavor)
+  const isDetailEditorOpen = useAppSelector(selectIsDetailEditorOpen)
+  const isPaneShowingSession = isPaneHost && paneSegment === 'sessionSetup'
 
   const [isReopenedFromPill, setReopenedFromPill] = useState(false)
   const hasBooted = useRef(false)
@@ -156,7 +182,80 @@ export function SessionOverlays() {
     if (phase === SessionPhase.ready) setReopenedFromPill(false)
   }, [phase])
 
+  // -- 5. The trailing detail pane (canon #517) ---------------------------
+  // Where the shell hosts the pane, the session lives in its Session segment
+  // instead of a raised modal. Leaving Session is reducer-tier (the session
+  // slice drops the pending conclusion on the shell's own events); this effect
+  // remains only for the two edges that need one, each justified in
+  // `sessionPaneHosting`: a launch preparation is I/O (a Producer, aborted when
+  // the pane re-points), and raising a tick-driven conclusion depends on
+  // Detail's editor, a reading only this Page may combine with the others.
+  const previousHosting = useRef<SessionPaneHostingSnapshot | null>(null)
+  // The one in-flight pane preparation. A newer one aborts it, so an old
+  // endeavor's preparation can never land after the one the pane now asks
+  // for; the slice's `.rejected` arm ignores `meta.aborted` (`UZF-14`).
+  const pendingPrepare = useRef<{ abort: () => void } | null>(null)
+  useEffect(() => () => pendingPrepare.current?.abort(), [])
+  useEffect(() => {
+    const current: SessionPaneHostingSnapshot = {
+      isHost: isPaneHost,
+      paneSegment,
+      paneEndeavorId: paneEndeavor?.id ?? null,
+      isReady: phase === SessionPhase.ready,
+      isLoading,
+      identity:
+        identity === null
+          ? null
+          : {
+              endeavorId: identity.endeavorId,
+              isAnonymous: identity.isAnonymous,
+            },
+      isPresentingConclusion,
+      isDetailEditorOpen,
+    }
+    const previous = previousHosting.current ?? {
+      ...current,
+      paneSegment: null,
+      isPresentingConclusion: false,
+    }
+    previousHosting.current = current
+
+    const action = sessionPaneHostingAction(previous, current)
+    if (action === null) return
+    switch (action.kind) {
+      case 'prepare':
+        pendingPrepare.current?.abort()
+        pendingPrepare.current = dispatch(
+          prepareSessionLaunchThunk({
+            endeavorId: action.endeavorId,
+            // Identity is the composition site's to supply.
+            sessionId: crypto.randomUUID(),
+          }),
+        )
+        return
+      case 'raiseSession':
+        // System-originated (`RC-2`): nobody tapped anything.
+        dispatch(
+          onSessionConclusionRaised({ endeavor: paneEndeavorFor(identity) }),
+        )
+        return
+      default:
+        assertNever(action)
+    }
+  }, [
+    dispatch,
+    identity,
+    isDetailEditorOpen,
+    isLoading,
+    isPaneHost,
+    isPresentingConclusion,
+    paneEndeavor,
+    paneSegment,
+    phase,
+  ])
+
   const isSurfaceOpen =
+    !isPaneHost &&
     !isDestinationHostingSurface &&
     (isReopenedFromPill || isPresentingConclusion)
 
@@ -168,9 +267,22 @@ export function SessionOverlays() {
         // surface is not presented — whether that surface is the raised one or
         // the `/execute` column.
         isVisible={
-          pill.isVisible && !isSurfaceOpen && !isDestinationHostingSurface
+          pill.isVisible &&
+          !isSurfaceOpen &&
+          !isDestinationHostingSurface &&
+          !isPaneShowingSession
         }
-        onTapBody={() => setReopenedFromPill(true)}
+        onTapBody={() => {
+          if (isPaneHost) {
+            dispatch(
+              userDidRequestSessionSetup({
+                endeavor: paneEndeavorFor(identity),
+              }),
+            )
+          } else {
+            setReopenedFromPill(true)
+          }
+        }}
         onTapPause={() => {
           void dispatch(pauseSessionThunk({ now: new Date() }))
         }}
@@ -190,6 +302,15 @@ export function SessionOverlays() {
         a scroll lock, and keeping one of those permanently mounted would hold
         both while nothing is on screen.
       */}
+      {isPaneShowingSession ? (
+        <ToolbarSlot placement="detailPane">
+          {/* Centred vertically in the pane whenever it is shorter than it. */}
+          <div data-testid="detail-pane-session" className="my-auto">
+            <SessionSheetPage host="pane" />
+          </div>
+        </ToolbarSlot>
+      ) : null}
+
       {isSurfaceOpen ? (
         <SessionSheetPage
           host="raised"
@@ -205,3 +326,18 @@ export function SessionOverlays() {
     </>
   )
 }
+
+/**
+ * The pane endeavor a session reads as: its own endeavor, or `null` for an
+ * anonymous session — the Session segment's endeavor-free mode.
+ */
+const paneEndeavorFor = (
+  identity: {
+    readonly endeavorId: string
+    readonly title: string
+    readonly isAnonymous: boolean
+  } | null,
+): { readonly id: string; readonly title: string } | null =>
+  identity === null || identity.isAnonymous
+    ? null
+    : { id: identity.endeavorId, title: identity.title }

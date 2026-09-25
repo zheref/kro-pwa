@@ -16,12 +16,22 @@
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import {
+  type DetailPaneEndeavor,
+  type DetailPaneSegment,
+  detailPaneTitle,
+} from './DetailPane'
+import {
   type DoSurfaceLayout,
   type ShellShape,
   doSurfaceLayout,
   shellShapeFor,
 } from './DoSurfaceLayout'
 import { selectCaptureNavigationIntent } from '../capture/CaptureSelectors'
+import {
+  selectSessionIdentity,
+  selectSessionPhase,
+} from '../session/SessionSelectors'
+import { SessionPhase } from '../session/SessionVocabulary'
 import type { MainException } from './MainException'
 import type {
   MainState,
@@ -237,4 +247,132 @@ export const selectPendingShellRoute = createSelector(
 export const selectShellRouteContext = createSelector(
   [selectMainSlice],
   (slice): ShellRouteContext | null => slice.routeContext,
+)
+
+// ---------------------------------------------------------------------------
+// The trailing detail pane (canon's `MainSelectors` #517 block)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether this window hosts the pane at all: the `macDetailPane` flag, on the
+ * sidebar shell. Canon's pane is macOS-only; the tab-bar shell keeps its
+ * sheets, which is the web's reading of the same idiom rule.
+ */
+export const selectIsDetailPaneAvailable = createSelector(
+  [selectMainSlice, selectShellShape],
+  (slice, shape) => slice.isDetailPaneEnabled && shape === 'sidebar',
+)
+
+/** Canon's `detailPaneSegment`, or `null` where the pane is unavailable. */
+export const selectDetailPaneSegment = createSelector(
+  [selectMainSlice, selectIsDetailPaneAvailable],
+  (slice, isAvailable): DetailPaneSegment | null =>
+    isAvailable ? slice.detailPane.segment : null,
+)
+
+/**
+ * Canon's `isDetailPanePresentedSelector` — the one answer the FAB and the
+ * pane's own presentation read.
+ */
+export const selectIsDetailPanePresented = createSelector(
+  [selectDetailPaneSegment],
+  (segment) => segment !== null,
+)
+
+/** Canon's `detailPaneEndeavorSelector`: the endeavor the pane reads. */
+export const selectDetailPaneEndeavor = createSelector(
+  [selectMainSlice],
+  (slice): DetailPaneEndeavor | null => slice.detailPane.endeavor,
+)
+
+/**
+ * Whether the pane is drilled in — its header offers Back, not Close.
+ * Only where the pane is actually showing.
+ */
+export const selectCanDetailPaneGoBack = createSelector(
+  [selectMainSlice, selectIsDetailPanePresented],
+  (slice, isPresented) => isPresented && slice.detailPaneBackStack.length > 0,
+)
+
+/**
+ * A key for the reading the pane shows — what its drill-in transition keys
+ * on, so pushing and popping replay the slide.
+ */
+export const selectDetailPaneLocationKey = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneEndeavor, selectMainSlice],
+  (segment, endeavor, slice): string =>
+    `${slice.detailPaneBackStack.length}:${segment ?? 'none'}:${endeavor?.id ?? 'day'}`,
+)
+
+/** How many drill-ins deep the pane is — 0 at a top-level reading. */
+export const selectDetailPaneDepth = createSelector(
+  [selectMainSlice],
+  (slice) => slice.detailPaneBackStack.length,
+)
+
+/**
+ * The session already in flight (running, paused, on a break, or concluded
+ * and unanswered), as the pane would point at it — `null` when nothing is in
+ * flight. `endeavor` is `null` for an anonymous (new, arbitrary) task.
+ *
+ * `openSessionSurfaceThunk` points the pane here instead of at whatever card
+ * asked, so the pane's header names the session actually running (`RC-20`:
+ * composed at the root, never a slice reading another's shape).
+ */
+export const selectInFlightSessionPaneTarget = createSelector(
+  [selectSessionPhase, selectSessionIdentity],
+  (
+    phase,
+    identity,
+  ): { readonly endeavor: DetailPaneEndeavor | null } | null => {
+    if (
+      phase !== SessionPhase.running &&
+      phase !== SessionPhase.paused &&
+      phase !== SessionPhase.break &&
+      phase !== SessionPhase.concluded
+    ) {
+      return null
+    }
+    return {
+      endeavor:
+        identity === null || identity.isAnonymous
+          ? null
+          : { id: identity.endeavorId, title: identity.title },
+    }
+  },
+)
+
+/**
+ * The endeavor the pane's header names. On Session with a session in flight,
+ * that is the running session — whatever the pane was last pointed at (a
+ * toolbar pick keeps the stored target, the timeline's Start points at a new
+ * task) — so the header and the body never disagree.
+ */
+const selectDetailPaneHeaderEndeavor = createSelector(
+  [
+    selectDetailPaneSegment,
+    selectDetailPaneEndeavor,
+    selectInFlightSessionPaneTarget,
+  ],
+  (segment, endeavor, inFlight): DetailPaneEndeavor | null =>
+    segment === 'sessionSetup' && inFlight !== null
+      ? inFlight.endeavor
+      : endeavor,
+)
+
+/** Canon's `detailPaneTitleSelector`. */
+export const selectDetailPaneTitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneHeaderEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : detailPaneTitle(segment, endeavor?.title ?? null),
+)
+
+/**
+ * Canon's `detailPaneSubtitleSelector`: the endeavor's name in an
+ * endeavor-specific mode, nothing in an endeavor-free one.
+ */
+export const selectDetailPaneSubtitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneHeaderEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : (endeavor?.title ?? null),
 )

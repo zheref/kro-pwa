@@ -29,6 +29,7 @@ import {
   addShadowThunk,
   attachHostThunk,
   detachHostThunk,
+  openDetailByIdThunk,
   removeDeferThunk,
   removePerformanceThunk,
   removeShadowThunk,
@@ -516,5 +517,66 @@ describe('editing keeps the row on the cloud path', () => {
 
     expect(result.ok).toBe(true)
     expect((await localStore.endeavors.get(edited.id))?.title).toBe('Renamed')
+  })
+})
+
+describe('openDetailByIdThunk reads one endeavor for the pane', () => {
+  it('resolves the stored endeavor and presents it in Detail', async () => {
+    const { store } = storeWith()
+    const task = detailEndeavorMocks.task
+    const payload = await store
+      .dispatch(openDetailByIdThunk({ endeavorId: task.id }))
+      .unwrap()
+    expect(payload.ok).toBe(true)
+    expect(store.getState().endeavorDetail.endeavor?.id).toBe(task.id)
+  })
+
+  it('resolves endeavorNotFound and leaves Detail closed for a deleted id', async () => {
+    const { store } = storeWith()
+    const payload = await store
+      .dispatch(openDetailByIdThunk({ endeavorId: 'gone' }))
+      .unwrap()
+    expect(payload.ok === false && payload.error.kind).toBe('endeavorNotFound')
+    expect(store.getState().endeavorDetail.endeavor).toBeNull()
+  })
+
+  it('resolves a typed failure rather than throwing when the read fails', async () => {
+    const base = makeInMemoryLocalStore({ endeavors: recordsOf() })
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      localStore: {
+        ...base,
+        endeavors: {
+          ...base.endeavors,
+          get: async () => {
+            throw new Error('disk gone')
+          },
+        },
+      },
+    })
+    const payload = await store
+      .dispatch(
+        openDetailByIdThunk({ endeavorId: detailEndeavorMocks.task.id }),
+      )
+      .unwrap()
+    expect(payload.ok === false && payload.error.kind).toBe('unknown')
+    expect(store.getState().endeavorDetail.endeavor).toBeNull()
+  })
+
+  it('replaces a Detail already open on another endeavor', async () => {
+    const { store } = storeWith()
+    await store
+      .dispatch(
+        openDetailByIdThunk({ endeavorId: detailEndeavorMocks.task.id }),
+      )
+      .unwrap()
+    await store
+      .dispatch(
+        openDetailByIdThunk({ endeavorId: detailEndeavorMocks.event.id }),
+      )
+      .unwrap()
+    expect(store.getState().endeavorDetail.endeavor?.id).toBe(
+      detailEndeavorMocks.event.id,
+    )
   })
 })

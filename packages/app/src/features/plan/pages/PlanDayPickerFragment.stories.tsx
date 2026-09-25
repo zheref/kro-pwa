@@ -6,7 +6,10 @@
  * the only way to see all three at once is three chips in one batch.
  */
 import { BothSchemes, Stage } from '../../../design/endeavor/storyStage'
-import { addingPlanDays, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import { PLAN_REFERENCE_DAY, PLAN_REFERENCE_NOW } from '../PlanMocks'
 import { planDayPickerDates } from '../PlanNavigation'
 import { PlanDayPickerFragment } from './PlanDayPickerFragment'

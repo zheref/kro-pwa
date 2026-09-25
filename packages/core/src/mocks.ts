@@ -8,6 +8,7 @@
 
 export * from './domain/endeavor/__mocks__/Endeavor.mocks'
 export * from './domain/endeavor/__mocks__/EndeavorRelations.mocks'
+export * from './domain/endeavor/__mocks__/PerformSessionConfig.mocks'
 export * from './domain/session/__mocks__/FocusSessionConfig.mocks'
 export * from './domain/session/__mocks__/FocusSessionFragment.mocks'
 export * from './domain/session/__mocks__/PersistedRunningSession.mocks'

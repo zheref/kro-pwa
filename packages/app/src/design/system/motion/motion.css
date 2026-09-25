@@ -143,6 +143,30 @@
    and code that waits for it would hang forever.
    ========================================================================== */
 
+/*
+  Drill-in navigation — the platform push. A pushed screen travels the whole
+  width in from the trailing edge; Back brings the previous one in from the
+  leading edge. Full travel on purpose: a short nudge with a fade reads as no
+  transition at all. Under Reduce Motion the block below makes it instant.
+*/
+@keyframes kro-drill-push {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes kro-drill-pop {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --kro-duration-quick: 0.01ms;

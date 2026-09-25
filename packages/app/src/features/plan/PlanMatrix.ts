@@ -73,7 +73,7 @@ import {
   withDue,
   withValue,
 } from '@kro/core'
-import { addingPlanDays, startOfPlanDay } from './PlanCalendar'
+import { addingPlanDays, startOfPlanDay } from '../../library/plan/PlanCalendar'
 
 /** The value at or above which an endeavor counts as important. */
 export const MATRIX_IMPORTANT_VALUE_FLOOR = 4

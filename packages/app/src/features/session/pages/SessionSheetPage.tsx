@@ -35,6 +35,15 @@ import {
   PresentationSurface,
   presentationFor,
 } from '../../main/MainPresentation'
+import { Zap } from 'lucide-react'
+import {
+  PANEL_TOOLBAR_GLYPH,
+  PanelToolbarButton,
+} from '../../../design/chrome/panel/TrailingDetailPanel'
+import { controlDensity } from '../../../design/system/density'
+import { doSurfaceLayout } from '../../main/DoSurfaceLayout'
+import { userDidDrillIntoDetailPane } from '../../main/MainFeature'
+import { ToolbarSlot } from '../../main/ToolbarSlots'
 import { useSurfaceLayout } from '../../main/useSurfaceLayout'
 import {
   userDidCancelTitleEdit,
@@ -73,14 +82,19 @@ import {
   selectSessionStatusLabel,
   selectSessionTargetDuration,
   selectTomatoCount,
+  selectSessionMarkers,
   selectTomatoRow,
 } from '../SessionSelectors'
 import { DEFAULT_DURATION_PRESETS } from '../../../design/chrome/dial/DurationDial'
-import { SessionSheetFragment } from './SessionSheetFragment'
+import {
+  SessionModeControl,
+  SessionSheetFragment,
+} from './SessionSheetFragment'
 import { SessionSurfaceFragment } from './SessionSurfaceFragment'
 import {
   type SessionSuggestion,
   SessionSurfacePresentation,
+  sessionPanelTint,
 } from './sessionSheetModel'
 
 interface SessionSheetPageCommonProps {
@@ -110,6 +124,14 @@ export type SessionSheetPageProps =
   | (SessionSheetPageCommonProps & {
       /** The surface IS the page, at `/execute`. Never closed. */
       readonly host: 'destination'
+    })
+  | (SessionSheetPageCommonProps & {
+      /**
+       * Inside the shell's trailing detail pane (canon #517's Session Setup
+       * segment). Like `destination` it has no close of its own — the pane's
+       * header owns dismissal, and Escape with it.
+       */
+      readonly host: 'pane'
     })
   | (SessionSheetPageCommonProps & {
       /** Layered over the route: the pill was tapped, or a countdown ended. */
@@ -143,12 +165,13 @@ export function SessionSheetPage(props: SessionSheetPageProps) {
   const editedTitle = useAppSelector(selectEditedSessionTitle)
   const isEditingSymbol = useAppSelector(selectIsEditingSessionSymbol)
   const tomatoRow = useAppSelector(selectTomatoRow)
+  const sessionMarkers = useAppSelector(selectSessionMarkers)
   const completedSessionsCount = useAppSelector(selectTomatoCount)
   const isStopwatchAvailable = useAppSelector(selectIsStopwatchAvailable)
   const areBreaksAvailable = useAppSelector(selectAreBreaksAvailable)
 
   const presentation =
-    host === 'destination'
+    host === 'destination' || host === 'pane'
       ? SessionSurfacePresentation.inline
       : presentationFor(PresentationSurface.session, surface).kind === 'sheet'
         ? SessionSurfacePresentation.sheet
@@ -176,6 +199,149 @@ export function SessionSheetPage(props: SessionSheetPageProps) {
     void dispatch(startNewSessionThunk({ now }))
   }, [dispatch])
 
+  // Desktop (pointer-driven) surfaces get the compact controls; touch keeps
+  // the regular layout, unchanged.
+  const density = controlDensity(doSurfaceLayout(surface).isTouchPrimary)
+
+  const content = (
+    <SessionSheetFragment
+      phase={phase}
+      density={density}
+      hidesHeader={host === 'pane'}
+      presentation={presentation}
+      symbol={identity?.symbol ?? ''}
+      title={identity?.title ?? ''}
+      statusLabel={statusLabel}
+      mode={mode}
+      targetDuration={targetDuration}
+      elapsedDuration={elapsedDuration}
+      remainingDuration={remainingDuration}
+      presets={DEFAULT_DURATION_PRESETS}
+      suggestions={suggestions}
+      isSessionInFlight={isSessionInFlight}
+      isEditingTitle={isEditingTitle}
+      editedTitle={editedTitle}
+      isEditingSymbol={isEditingSymbol}
+      tomatoGlyphs={tomatoRow.glyphs}
+      sessionMarkers={sessionMarkers}
+      tomatoOverflowLabel={tomatoRow.overflowLabel}
+      completedSessionsCount={completedSessionsCount}
+      isStopwatchAvailable={isStopwatchAvailable}
+      areBreaksAvailable={areBreaksAvailable}
+      // `/execute` is a page: there is nothing to close, and canon's own
+      // `dismissalHint` says so ("Close to dismiss" only where a close
+      // exists). The header keeps the 36px slot reserved either way.
+      onTapClose={host === 'raised' ? onRequestClose : undefined}
+      onTapEditTitle={() => dispatch(userDidTapEditTitle())}
+      onChangeTitle={(title) => dispatch(userDidChangeTitle(title))}
+      onConfirmTitleEdit={onConfirmTitleEdit}
+      onCancelTitleEdit={() => dispatch(userDidCancelTitleEdit())}
+      onTapSymbol={() => dispatch(userDidTapSymbol())}
+      onPickSymbol={onPickSymbol}
+      onDismissSymbolPicker={() => dispatch(userDidDismissSymbolPicker())}
+      onSelectMode={(next) => dispatch(userDidSelectMode(next))}
+      onAdjustDuration={(seconds) =>
+        dispatch(userDidSelectTargetDuration(seconds))
+      }
+      // No-op until a suggestion source exists — reported as a cross-lane
+      // need rather than wired to a guess about which surface owns it.
+      onSelectSuggestion={() => {}}
+      onTapPlay={() => {
+        void dispatch(startSessionThunk({ now: new Date() }))
+      }}
+      onTapPause={() => {
+        void dispatch(pauseSessionThunk({ now: new Date() }))
+      }}
+      onTapResume={() => {
+        void dispatch(resumeSessionThunk({ now: new Date() }))
+      }}
+      onTapFinishEarly={() => {
+        void dispatch(finishSessionEarlyThunk({ now: new Date() }))
+      }}
+      onTapAbort={() => {
+        void dispatch(abortSessionThunk({ now: new Date() }))
+      }}
+      onTapComplete={() => {
+        void dispatch(markEndeavorCompleteFromSessionThunk({ now: new Date() }))
+      }}
+      onTapStartNew={onTapStartNew}
+      onTapBreak={() => {
+        void dispatch(startBreakThunk({ now: new Date() }))
+      }}
+      onTapEndBreak={() => {
+        void dispatch(endBreakThunk({ now: new Date() }))
+      }}
+    />
+  )
+
+  // In the trailing pane the pane's glass IS the container: the content sits
+  // directly on it, with no second surface in between.
+  if (host === 'pane') {
+    return (
+      <section
+        aria-label="Focus session"
+        data-kro-session-surface="pane"
+        className="relative"
+      >
+        {/* Canon's side-panel wash: the phase's hue, top-down into nothing —
+            painted from the pane's own top edge, behind its header. */}
+        <ToolbarSlot placement="detailPaneBackdrop">
+          <div
+            data-kro-session-panel-tint=""
+            className="h-72"
+            style={{
+              background: `linear-gradient(${sessionPanelTint(phase)}, transparent)`,
+            }}
+          />
+        </ToolbarSlot>
+        <div className="relative">{content}</div>
+
+        {/* The pane's header: the mode toggle as its navigation title… */}
+        <ToolbarSlot placement="detailPaneTitle">
+          <SessionModeControl
+            mode={mode}
+            density={density}
+            isSessionInFlight={isSessionInFlight}
+            isStopwatchAvailable={isStopwatchAvailable}
+            onSelectMode={(next) => dispatch(userDidSelectMode(next))}
+          />
+        </ToolbarSlot>
+
+        {/* …and canon's bolt "Show sessions" toolbar item, trailing. Shown
+            only for a session with an endeavor to read the history of. */}
+        {identity === null || identity.isAnonymous ? null : (
+          <ToolbarSlot placement="detailPaneTrailing">
+            <PanelToolbarButton
+              label="Show sessions"
+              data-kro-session-show-sessions=""
+              onPress={() =>
+                dispatch(
+                  // A drill-in: the pane pushes Performance for this endeavor
+                  // and its header offers Back to Session.
+                  userDidDrillIntoDetailPane({
+                    location: {
+                      segment: 'performance',
+                      endeavor: {
+                        id: identity.endeavorId,
+                        title: identity.title,
+                      },
+                    },
+                  }),
+                )
+              }
+            >
+              <Zap
+                aria-hidden="true"
+                {...PANEL_TOOLBAR_GLYPH}
+                fill="currentColor"
+              />
+            </PanelToolbarButton>
+          </ToolbarSlot>
+        )}
+      </section>
+    )
+  }
+
   return (
     <SessionSurfaceFragment
       presentation={presentation}
@@ -186,73 +352,7 @@ export function SessionSheetPage(props: SessionSheetPageProps) {
       onRequestClose={onRequestClose ?? noClose}
       phase={phase}
     >
-      <SessionSheetFragment
-        phase={phase}
-        presentation={presentation}
-        symbol={identity?.symbol ?? ''}
-        title={identity?.title ?? ''}
-        statusLabel={statusLabel}
-        mode={mode}
-        targetDuration={targetDuration}
-        elapsedDuration={elapsedDuration}
-        remainingDuration={remainingDuration}
-        presets={DEFAULT_DURATION_PRESETS}
-        suggestions={suggestions}
-        isSessionInFlight={isSessionInFlight}
-        isEditingTitle={isEditingTitle}
-        editedTitle={editedTitle}
-        isEditingSymbol={isEditingSymbol}
-        tomatoGlyphs={tomatoRow.glyphs}
-        tomatoOverflowLabel={tomatoRow.overflowLabel}
-        completedSessionsCount={completedSessionsCount}
-        isStopwatchAvailable={isStopwatchAvailable}
-        areBreaksAvailable={areBreaksAvailable}
-        // `/execute` is a page: there is nothing to close, and canon's own
-        // `dismissalHint` says so ("Close to dismiss" only where a close
-        // exists). The header keeps the 36px slot reserved either way.
-        onTapClose={host === 'destination' ? undefined : onRequestClose}
-        onTapEditTitle={() => dispatch(userDidTapEditTitle())}
-        onChangeTitle={(title) => dispatch(userDidChangeTitle(title))}
-        onConfirmTitleEdit={onConfirmTitleEdit}
-        onCancelTitleEdit={() => dispatch(userDidCancelTitleEdit())}
-        onTapSymbol={() => dispatch(userDidTapSymbol())}
-        onPickSymbol={onPickSymbol}
-        onDismissSymbolPicker={() => dispatch(userDidDismissSymbolPicker())}
-        onSelectMode={(next) => dispatch(userDidSelectMode(next))}
-        onAdjustDuration={(seconds) =>
-          dispatch(userDidSelectTargetDuration(seconds))
-        }
-        // No-op until a suggestion source exists — reported as a cross-lane
-        // need rather than wired to a guess about which surface owns it.
-        onSelectSuggestion={() => {}}
-        onTapPlay={() => {
-          void dispatch(startSessionThunk({ now: new Date() }))
-        }}
-        onTapPause={() => {
-          void dispatch(pauseSessionThunk({ now: new Date() }))
-        }}
-        onTapResume={() => {
-          void dispatch(resumeSessionThunk({ now: new Date() }))
-        }}
-        onTapFinishEarly={() => {
-          void dispatch(finishSessionEarlyThunk({ now: new Date() }))
-        }}
-        onTapAbort={() => {
-          void dispatch(abortSessionThunk({ now: new Date() }))
-        }}
-        onTapComplete={() => {
-          void dispatch(
-            markEndeavorCompleteFromSessionThunk({ now: new Date() }),
-          )
-        }}
-        onTapStartNew={onTapStartNew}
-        onTapBreak={() => {
-          void dispatch(startBreakThunk({ now: new Date() }))
-        }}
-        onTapEndBreak={() => {
-          void dispatch(endBreakThunk({ now: new Date() }))
-        }}
-      />
+      {content}
     </SessionSurfaceFragment>
   )
 }

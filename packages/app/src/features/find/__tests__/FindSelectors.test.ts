@@ -8,6 +8,9 @@
  * archived and filter rules, the four distinguishable empty states, and the
  * seven-per-group limit with its expand.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { EndeavorKind, EndeavorStatus } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
@@ -73,6 +76,9 @@ const rootWith = (find: FindState): RootState => ({
   plan: initialPlanState,
   find,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

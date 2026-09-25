@@ -30,9 +30,30 @@
  * Notifications, Refresh, Visibility, a per-tab preferences gear — is a
  * `ToolbarOutlet`, never hardcoded here.
  */
-import { Inbox, PanelLeft, Settings, User } from 'lucide-react'
-import { useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
+import {
+  CalendarClock,
+  ChartNoAxesColumn,
+  Inbox,
+  PanelLeft,
+  Settings,
+  Timer,
+  User,
+} from 'lucide-react'
+import {
+  type CSSProperties,
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { SHELL_BOTTOM_INSET_VAR } from '../../design/chrome/layout/chromeLayout'
+import {
+  DETAIL_PANEL_ACCESSORY_INSET_VAR,
+  DETAIL_PANEL_GEOMETRY,
+  LARGE_TITLE_SELECTOR,
+  TrailingDetailPanel,
+  detailPanelAccessoryInset,
+} from '../../design/chrome/panel/TrailingDetailPanel'
 import { DetailBackdrop } from '../../design/system/gradient/DetailBackdrop'
 import { ICON_SIZE } from '../../design/system/icons/icons'
 import {
@@ -45,6 +66,11 @@ import {
   type ShellShape,
   shellBottomInset,
 } from './DoSurfaceLayout'
+import {
+  DETAIL_PANE_SEGMENTS,
+  type DetailPaneSegment,
+  detailPaneSegmentLabel,
+} from './DetailPane'
 import type { NavigationElement, NavigationSection } from './NavigationSections'
 import {
   DestinationKind,
@@ -53,6 +79,7 @@ import {
 } from './SidebarDestination'
 import { SidebarFragment, type SidebarFragmentProps } from './SidebarFragment'
 import { TabBarFragment } from './TabBarFragment'
+import { CapsuleSegmentGroup } from '../../design/hig/selection/CapsuleSegmentGroup'
 import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
 
 export interface MainShellFragmentProps
@@ -68,7 +95,27 @@ export interface MainShellFragmentProps
   readonly onTapProfile: () => void
   readonly onTapInbox: () => void
   readonly onTapSettings: () => void
+  /** The trailing detail pane — `null` where this window does not host one. */
+  readonly detailPane?: DetailPaneChrome | null
   readonly children?: ReactNode
+}
+
+/**
+ * What the shell draws for the trailing detail pane: the toolbar's segment
+ * group and the glass surface. The body is not here — it portals into the
+ * surface through the `detailPane` outlet, from whichever feature fills it.
+ */
+export interface DetailPaneChrome {
+  readonly segment: DetailPaneSegment | null
+  readonly title: string | null
+  readonly subtitle: string | null
+  readonly onSelectSegment: (segment: DetailPaneSegment) => void
+  readonly onDismiss: () => void
+  /** Present while drilled in: the header's leading control is Back. */
+  readonly onBack?: (() => void) | null
+  /** The drill-in depth, and a key for the reading shown. */
+  readonly navigationDepth?: number
+  readonly navigationKey?: string
 }
 
 export function MainShellFragment(props: MainShellFragmentProps) {
@@ -84,6 +131,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     onTapProfile,
     onTapInbox,
     onTapSettings,
+    detailPane = null,
     children,
     ...sidebar
   } = props
@@ -99,8 +147,16 @@ export function MainShellFragment(props: MainShellFragmentProps) {
    * forget. The kit names the property and falls back to `0px`, so it never
    * learns that a shell exists.
    */
+  const isDetailPanePresented =
+    shape === 'sidebar' && detailPane !== null && detailPane.segment !== null
+
   const shellStyle = {
     [SHELL_BOTTOM_INSET_VAR]: `${shellBottomInset(shape, layout)}px`,
+    // Canon moves the bottom-trailing accessory (the FAB) aside by the
+    // pane's width plus 12 while the pane shows; every FAB reads this.
+    [DETAIL_PANEL_ACCESSORY_INSET_VAR]: detailPanelAccessoryInset(
+      isDetailPanePresented,
+    ),
   } as CSSProperties
 
   /*
@@ -120,8 +176,20 @@ export function MainShellFragment(props: MainShellFragmentProps) {
     }
   }, [shape])
 
+  const shellRef = useRef<HTMLDivElement>(null)
+  // A feature slotting a title control (the session's mode toggle) replaces
+  // the pane's title text with it, centred.
+  const isPaneTitleSlotted = useToolbarSlotFilled('detailPaneTitle')
+  // A reading's own sub-screen Back takes the header's leading seat.
+  const isPaneLeadingSlotted = useToolbarSlotFilled('detailPaneLeading')
+  const panelTop = useLargeTitleBottom(
+    shellRef,
+    shape === 'sidebar' && detailPane !== null,
+  )
+
   return shape === 'sidebar' ? (
     <div
+      ref={shellRef}
       data-testid="shell-sidebar-shape"
       data-shell-shape="sidebar"
       data-kro-idiom="desktop"
@@ -153,6 +221,7 @@ export function MainShellFragment(props: MainShellFragmentProps) {
             onToggleSidebar={onToggleSidebar}
             onTapProfile={onTapProfile}
             onTapInbox={onTapInbox}
+            detailPane={detailPane}
           />
 
           <main className="relative z-0 min-h-0 flex-1 overflow-x-clip overflow-y-auto">
@@ -160,6 +229,47 @@ export function MainShellFragment(props: MainShellFragmentProps) {
           </main>
         </ContentColumn>
       </div>
+
+      {detailPane === null ? null : (
+        <TrailingDetailPanel
+          isPresented={isDetailPanePresented}
+          title={detailPane.title ?? ''}
+          subtitle={detailPane.subtitle}
+          onDismiss={detailPane.onDismiss}
+          onBack={detailPane.onBack ?? null}
+          navigationDepth={detailPane.navigationDepth ?? 0}
+          navigationKey={detailPane.navigationKey}
+          topInset={panelTop ?? undefined}
+          titleContent={
+            isPaneTitleSlotted ? (
+              <ToolbarOutlet
+                placement="detailPaneTitle"
+                className="flex items-center"
+              />
+            ) : null
+          }
+          backdrop={<ToolbarOutlet placement="detailPaneBackdrop" />}
+          leadingAccessory={
+            isPaneLeadingSlotted ? (
+              <ToolbarOutlet
+                placement="detailPaneLeading"
+                className="flex items-center"
+              />
+            ) : undefined
+          }
+          trailingAccessory={
+            <ToolbarOutlet
+              placement="detailPaneTrailing"
+              className="flex items-center"
+            />
+          }
+        >
+          <ToolbarOutlet
+            placement="detailPane"
+            className="flex flex-1 flex-col"
+          />
+        </TrailingDetailPanel>
+      )}
     </div>
   ) : (
     <div
@@ -237,7 +347,8 @@ function ContentColumn({ children }: { readonly children: ReactNode }) {
  *
  * `navigation` group, on the leading side after the sidebar toggle: Visibility,
  * then Refresh, then the shell's Inbox.
- * `primary` group, on the trailing side: the Notifications bell, then Profile.
+ * Trailing side: the detail pane's reading group, then the `primary` group
+ * (the Notifications bell), then Profile.
  */
 function ContentToolbar({
   layout,
@@ -245,12 +356,14 @@ function ContentToolbar({
   onToggleSidebar,
   onTapProfile,
   onTapInbox,
+  detailPane,
 }: {
   readonly layout: DoSurfaceLayout
   readonly selected: SidebarDestination
   readonly onToggleSidebar: () => void
   readonly onTapProfile: () => void
   readonly onTapInbox: () => void
+  readonly detailPane: DetailPaneChrome | null
 }) {
   const paintsLargeTitle = destinationPaintsLargeTitle(selected)
 
@@ -305,6 +418,10 @@ function ContentToolbar({
         className="flex items-center"
         style={{ gap: `${layout.minimumControlSpacing}px` }}
       >
+        {detailPane === null ? null : (
+          <DetailPaneSegmentGroup layout={layout} detailPane={detailPane} />
+        )}
+
         <ToolbarOutlet
           placement="primary"
           className="flex items-center gap-kro-small"
@@ -432,6 +549,105 @@ function ProfileControl({
     </>
   )
 }
+
+/**
+ * Where the trailing pane starts: the bottom of the page's large title (My
+ * Day's and Plan's header), plus the pane's own bottom margin as breathing
+ * room — so the glass never covers the title. `null` where the page has no
+ * large title; the panel then keeps canon's 96.
+ *
+ * Measured, not a constant: the title's height moves with its content (the
+ * expanded day title, a wrapped subtitle, the rings). It is read at the
+ * page's scroll origin, so scrolling the page does not move the pane.
+ */
+function useLargeTitleBottom(
+  shellRef: { readonly current: HTMLElement | null },
+  isActive: boolean,
+): number | null {
+  const [bottom, setBottom] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current
+    if (!isActive || shell === null) return
+
+    let frame = 0
+    const measure = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const title = shell.querySelector(LARGE_TITLE_SELECTOR)
+        if (title === null) {
+          setBottom(null)
+          return
+        }
+        const scroller = title.closest('main')
+        const offset =
+          title.getBoundingClientRect().bottom -
+          shell.getBoundingClientRect().top +
+          (scroller?.scrollTop ?? 0)
+        setBottom(Math.round(offset) + DETAIL_PANEL_GEOMETRY.bottomMargin)
+      })
+    }
+
+    measure()
+    // `ResizeObserver` where the platform has one; a window resize otherwise.
+    const resize =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    resize?.observe(shell)
+    if (resize === null) window.addEventListener('resize', measure)
+    const mutation = new MutationObserver(measure)
+    mutation.observe(shell, { childList: true, subtree: true })
+    return () => {
+      cancelAnimationFrame(frame)
+      resize?.disconnect()
+      window.removeEventListener('resize', measure)
+      mutation.disconnect()
+    }
+  }, [shellRef, isActive])
+
+  return bottom
+}
+
+/**
+ * Canon's `macDetailPaneToolbarGroup`: one icon-only button per segment, the
+ * selected one filled. Selecting the segment already showing hides the pane.
+ */
+function DetailPaneSegmentGroup({
+  layout,
+  detailPane,
+}: {
+  readonly layout: DoSurfaceLayout
+  readonly detailPane: DetailPaneChrome
+}) {
+  return (
+    <CapsuleSegmentGroup
+      label="Detail pane"
+      testId="detail-pane-segments"
+      options={DETAIL_PANE_SEGMENTS.map((segment) => {
+        const Glyph = DETAIL_PANE_GLYPH[segment]
+        return {
+          value: segment,
+          label: detailPaneSegmentLabel(segment),
+          icon: (isSelected: boolean) => (
+            <Glyph
+              size={headerGlyph(layout)}
+              strokeWidth={isSelected ? 2.5 : 2}
+              aria-hidden="true"
+            />
+          ),
+        }
+      })}
+      value={detailPane.segment}
+      onSelect={detailPane.onSelectSegment}
+    />
+  )
+}
+
+/** Canon's `systemImage`s: timer, chart.bar.fill, calendar.day.timeline.left. */
+const DETAIL_PANE_GLYPH = {
+  sessionSetup: Timer,
+  performance: ChartNoAxesColumn,
+  plan: CalendarClock,
+} as const satisfies Record<DetailPaneSegment, unknown>
 
 function headerGlyph(layout: DoSurfaceLayout): number {
   return layout.isTouchPrimary ? ICON_SIZE.medium : ICON_SIZE.small

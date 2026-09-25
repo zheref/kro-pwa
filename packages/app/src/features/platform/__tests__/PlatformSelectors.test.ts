@@ -2,6 +2,9 @@
  * The platform Selectors, against a hand-built root state — never a live store
  * (`RC-55`).
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialMainState } from '../../main/MainFeature'
 import { describe, expect, it } from 'vitest'
@@ -44,6 +47,9 @@ const rootWith = (platform: PlatformState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   auth: initialAuthState,
   main: initialMainState,

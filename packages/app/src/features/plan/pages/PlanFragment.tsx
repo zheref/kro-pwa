@@ -43,6 +43,7 @@ import { type ReactNode, useRef } from 'react'
 import {
   CHROME_LAYOUT,
   CONTENT_FAB_INSET_PX,
+  DETAIL_PANEL_ACCESSORY_INSET,
   type FABMenuEntry,
   GLOW_SHAPES,
   LiquidGlassFABMenu,
@@ -77,8 +78,8 @@ import {
   planEventCountLabel,
   planTitleDate,
   planTitleWeekday,
-} from './timeline/timelineFormat'
-import { useReducedMotionPreference } from './timeline/useTimelineGestures'
+} from '../../../library/timeline/timelineFormat'
+import { useReducedMotionPreference } from '../../../library/timeline/useTimelineGestures'
 
 /**
  * Equal inset from the content area's trailing and bottom edges.
@@ -208,6 +209,7 @@ export function PlanFragment({
       */}
       <header
         data-testid="plan-header"
+        data-kro-large-title=""
         className="relative flex shrink-0 items-start justify-between gap-kro-medium px-kro-medium pt-kro-small pb-kro-small"
       >
         <GradientBackdrop
@@ -372,7 +374,14 @@ export function PlanFragment({
         <div
           data-testid="plan-fab"
           className="pointer-events-none absolute right-0 bottom-0 z-30 flex justify-end overflow-visible"
-          style={{ padding: CONTENT_FAB_INSET_PX }}
+          style={{
+            padding: CONTENT_FAB_INSET_PX,
+            // Steps aside for the trailing detail pane (canon #517).
+            paddingInlineEnd: `calc(${CONTENT_FAB_INSET_PX}px + ${DETAIL_PANEL_ACCESSORY_INSET})`,
+            transitionProperty: 'padding',
+            transitionDuration: 'var(--kro-duration-standard-spring)',
+            transitionTimingFunction: 'var(--kro-ease-standard-spring)',
+          }}
         >
           <div className="pointer-events-auto">
             <LiquidGlassFABMenu

@@ -41,6 +41,7 @@ import {
   closeSessionAt,
   concludeSessionAt,
   isRunningSessionCountdownFinished,
+  performSessionMode,
   makePersistedRunningSession,
   makePersistedSessionEndeavor,
   pauseSessionAt,
@@ -122,9 +123,20 @@ export const withLaunchPrepared = (
     readonly identity: SessionIdentity
     readonly recommendation: SessionLaunchRecommendation
     readonly completedSessionsCount: number
+    readonly recordedSessionModes?: readonly (
+      | 'countdown'
+      | 'stopwatch'
+      | null
+    )[]
   },
 ): SessionState => {
-  if (state.phase !== SessionPhase.ready) return state
+  // Refused while live — but the preparation still settled, so the lifecycle
+  // leaves `loading`; otherwise every later surface would wait on it forever.
+  if (state.phase !== SessionPhase.ready) {
+    return state.load.kind === 'loading'
+      ? { ...state, load: { kind: 'loaded' } }
+      : state
+  }
   return {
     ...state,
     load: { kind: 'loaded' },
@@ -133,6 +145,7 @@ export const withLaunchPrepared = (
     targetDuration: prepared.recommendation.targetDuration,
     launchSource: prepared.recommendation.source,
     completedSessionsCount: prepared.completedSessionsCount,
+    recordedSessionModes: prepared.recordedSessionModes ?? [],
     conclusion: { kind: 'none' },
     isPresentingConclusion: false,
     isEditingTitle: false,
@@ -732,7 +745,32 @@ export const withConclusionRecorded = (
       performance.resolution === Resolution.aborted
         ? state.completedSessionsCount
         : state.completedSessionsCount + 1,
+    recordedSessionModes: withRecordedMode(state, performance),
   }
+}
+
+/**
+ * The markers row grows with the session just written, under the same filter
+ * `recordedSessionModesFor` reads history with (a positive duration), so the
+ * row after finishing matches the row a fresh preparation would draw.
+ *
+ * A history known only by its count (no modes, count > 0) is first
+ * materialised as that many countdown markers — what the markers Selector
+ * draws for it — so appending this session's mode keeps every marker.
+ */
+const withRecordedMode = (
+  state: SessionState,
+  performance: Perform,
+): SessionState['recordedSessionModes'] => {
+  if (performance.duration <= 0) return state.recordedSessionModes
+  const known =
+    state.recordedSessionModes.length === 0 && state.completedSessionsCount > 0
+      ? Array.from(
+          { length: state.completedSessionsCount },
+          () => 'countdown' as const,
+        )
+      : state.recordedSessionModes
+  return [...known, performSessionMode(performance)]
 }
 
 /**

@@ -11,6 +11,8 @@ import {
   controlMinSizeVar,
   iconButtonSizeForDensity,
   isComfortable,
+  CONTROL_RADIUS,
+  SELECTED_CONTROL_STYLE,
 } from './density'
 
 describe('density', () => {
@@ -49,5 +51,22 @@ describe('density', () => {
     expect(DENSITY_TYPE.comfortable).toBe('text-sm')
     expect(isComfortable('compact')).toBe(false)
     expect(isComfortable('comfortable')).toBe(true)
+  })
+})
+
+describe('the selectable-control standards', () => {
+  it('rounds compact controls with the menu-row radius', () => {
+    expect(CONTROL_RADIUS.compact).toBe('var(--kro-radius-small)')
+  })
+
+  it('keeps comfortable (touch) controls as capsules', () => {
+    expect(CONTROL_RADIUS.comfortable).toBe('var(--kro-radius-pill)')
+  })
+
+  it('fills a selection with the foreground, labelled in the background colour', () => {
+    expect(SELECTED_CONTROL_STYLE).toEqual({
+      background: 'var(--kro-color-fore)',
+      color: 'var(--kro-color-back)',
+    })
   })
 })

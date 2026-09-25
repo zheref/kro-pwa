@@ -19,7 +19,11 @@ import type { RootState } from '../../library/store'
 import type { DoException } from './DoException'
 import type { DoState } from './DoFeature'
 import { centredFeaturedWindow } from './DoFeaturedNow'
-import { areDoRingsVisible, habitsRing, tasksRing } from './DoRings'
+import {
+  areDoRingsVisible,
+  habitsRing,
+  tasksRing,
+} from '../../library/rings/DoRings'
 import {
   type DoLanes,
   doClearExpiredTargets,

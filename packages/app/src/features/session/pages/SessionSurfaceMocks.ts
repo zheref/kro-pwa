@@ -13,6 +13,9 @@
  * Stories and render tests consume the same entries, so a story and its
  * mirroring test cannot drift (`RC-11`).
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
 import { initialCaptureState } from '../../capture/CaptureFeature'
@@ -64,6 +67,9 @@ export const rootStateWithSession = (session: SessionState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session,

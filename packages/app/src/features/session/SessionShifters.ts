@@ -130,7 +130,13 @@ export const withLaunchPrepared = (
     )[]
   },
 ): SessionState => {
-  if (state.phase !== SessionPhase.ready) return state
+  // Refused while live — but the preparation still settled, so the lifecycle
+  // leaves `loading`; otherwise every later surface would wait on it forever.
+  if (state.phase !== SessionPhase.ready) {
+    return state.load.kind === 'loading'
+      ? { ...state, load: { kind: 'loaded' } }
+      : state
+  }
   return {
     ...state,
     load: { kind: 'loaded' },

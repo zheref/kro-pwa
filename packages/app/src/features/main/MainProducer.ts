@@ -248,8 +248,25 @@ export const startSessionFromCardThunk = createAsyncThunk<
   { extra: ThunkExtra; state: RootState }
 >(
   'main/onSessionFromCardStartCompleted',
-  async ({ endeavorId, sessionId, fallbackTitle = '' }, { dispatch }) => {
+  async (
+    { endeavorId, sessionId, fallbackTitle = '' },
+    { dispatch, getState },
+  ) => {
     try {
+      // A session already in flight owns the surface: preparing another
+      // launch now would leave the session slice loading forever (the
+      // preparation is refused while a session is live), so skip straight to
+      // raising the surface, which points at the running session.
+      if (selectInFlightSessionPaneTarget(getState()) !== null) {
+        const opened = await dispatch(
+          openSessionSurfaceThunk({
+            endeavor: { id: endeavorId, title: fallbackTitle },
+          }),
+        )
+        return openSessionSurfaceThunk.fulfilled.match(opened)
+          ? opened.payload
+          : err(MainExceptions.unknown('The session surface did not open'))
+      }
       const prepared = await dispatch(
         prepareSessionLaunchThunk({ endeavorId, sessionId }),
       )

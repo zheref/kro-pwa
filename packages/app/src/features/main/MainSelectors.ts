@@ -285,23 +285,6 @@ export const selectDetailPaneEndeavor = createSelector(
   (slice): DetailPaneEndeavor | null => slice.detailPane.endeavor,
 )
 
-/** Canon's `detailPaneTitleSelector`. */
-export const selectDetailPaneTitle = createSelector(
-  [selectDetailPaneSegment, selectDetailPaneEndeavor],
-  (segment, endeavor): string | null =>
-    segment === null ? null : detailPaneTitle(segment, endeavor?.title ?? null),
-)
-
-/**
- * Canon's `detailPaneSubtitleSelector`: the endeavor's name in an
- * endeavor-specific mode, nothing in an endeavor-free one.
- */
-export const selectDetailPaneSubtitle = createSelector(
-  [selectDetailPaneSegment, selectDetailPaneEndeavor],
-  (segment, endeavor): string | null =>
-    segment === null ? null : (endeavor?.title ?? null),
-)
-
 /**
  * Whether the pane is drilled in — its header offers Back, not Close.
  * Only where the pane is actually showing.
@@ -357,4 +340,39 @@ export const selectInFlightSessionPaneTarget = createSelector(
           : { id: identity.endeavorId, title: identity.title },
     }
   },
+)
+
+/**
+ * The endeavor the pane's header names. On Session with a session in flight,
+ * that is the running session — whatever the pane was last pointed at (a
+ * toolbar pick keeps the stored target, the timeline's Start points at a new
+ * task) — so the header and the body never disagree.
+ */
+const selectDetailPaneHeaderEndeavor = createSelector(
+  [
+    selectDetailPaneSegment,
+    selectDetailPaneEndeavor,
+    selectInFlightSessionPaneTarget,
+  ],
+  (segment, endeavor, inFlight): DetailPaneEndeavor | null =>
+    segment === 'sessionSetup' && inFlight !== null
+      ? inFlight.endeavor
+      : endeavor,
+)
+
+/** Canon's `detailPaneTitleSelector`. */
+export const selectDetailPaneTitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneHeaderEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : detailPaneTitle(segment, endeavor?.title ?? null),
+)
+
+/**
+ * Canon's `detailPaneSubtitleSelector`: the endeavor's name in an
+ * endeavor-specific mode, nothing in an endeavor-free one.
+ */
+export const selectDetailPaneSubtitle = createSelector(
+  [selectDetailPaneSegment, selectDetailPaneHeaderEndeavor],
+  (segment, endeavor): string | null =>
+    segment === null ? null : (endeavor?.title ?? null),
 )

@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { makeRecordingNavigationService } from '../../../services/navigation/NavigationService'
 import { makePaneHostStore } from '../../endeavorDetail/pages/__tests__/paneHarness'
 import { makeSeededStore } from '../../find/pages/__tests__/pagesHarness'
+import { startSessionThunk } from '../../session/SessionProducer'
 import { startSessionFromCardThunk } from '../MainProducer'
 
 const task = endeavorMocks.plannedTask
@@ -71,5 +72,22 @@ describe('startSessionFromCardThunk', () => {
       id: 'missing',
       title: 'Card title',
     })
+  })
+
+  it('skips the preparation while a session is already running, so setup never sticks loading', async () => {
+    const store = await paneStore()
+    await store.dispatch(
+      startSessionFromCardThunk({ endeavorId: task.id, sessionId: 's-1' }),
+    )
+    await store.dispatch(startSessionThunk({ now: new Date() }))
+    expect(store.getState().session.phase).toBe('running')
+
+    await store.dispatch(
+      startSessionFromCardThunk({ endeavorId: 'other', sessionId: 's-2' }),
+    )
+
+    expect(store.getState().session.load.kind).not.toBe('loading')
+    expect(store.getState().main.detailPane.segment).toBe('sessionSetup')
+    expect(store.getState().main.detailPane.endeavor?.id).toBe(task.id)
   })
 })

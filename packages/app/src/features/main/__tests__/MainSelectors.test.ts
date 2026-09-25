@@ -28,7 +28,11 @@ import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { initialThirstState } from '../../thirst/ThirstFeature'
-import type { MainState } from '../MainFeature'
+import {
+  type MainState,
+  mainSlice,
+  userDidSelectDetailPaneSegment,
+} from '../MainFeature'
 import { MainMocks, handheldSurface, projectMocks } from '../MainMocks'
 import {
   selectCanManageProjects,
@@ -41,6 +45,8 @@ import {
   selectShellShape,
   selectSidebarSections,
   selectTabBarElements,
+  selectDetailPaneSubtitle,
+  selectDetailPaneTitle,
   selectInFlightSessionPaneTarget,
 } from '../MainSelectors'
 import { DestinationKind } from '../SidebarDestination'
@@ -327,5 +333,40 @@ describe('selectInFlightSessionPaneTarget', () => {
     expect(
       selectInFlightSessionPaneTarget(withSession(sessionStateMocks.idle)),
     ).toBeNull()
+  })
+})
+
+describe('the pane header while a session is in flight', () => {
+  const onSession = mainSlice.reducer(
+    MainMocks.desktopDetailPaneReady,
+    userDidSelectDetailPaneSegment({ segment: 'sessionSetup' }),
+  )
+  const withSession = (
+    main: MainState,
+    session: typeof sessionStateMocks.running,
+  ): RootState => ({ ...rootWith(main), session })
+
+  it('names the running session on Session, whatever the pane was pointed at', () => {
+    const state = withSession(onSession, sessionStateMocks.running)
+    expect(selectDetailPaneSubtitle(state)).toBe(
+      sessionIdentityMocks.slides.title,
+    )
+    expect(selectDetailPaneTitle(state)).toBe('Session Setup')
+  })
+
+  it('keeps the stored target when nothing is in flight', () => {
+    const state = withSession(onSession, sessionStateMocks.ready)
+    expect(selectDetailPaneSubtitle(state)).toBeNull()
+    expect(selectDetailPaneTitle(state)).toBe('New Session')
+  })
+
+  it('leaves other readings alone while a session runs', () => {
+    const onPerformance = mainSlice.reducer(
+      MainMocks.desktopDetailPaneReady,
+      userDidSelectDetailPaneSegment({ segment: 'performance' }),
+    )
+    const state = withSession(onPerformance, sessionStateMocks.running)
+    expect(selectDetailPaneSubtitle(state)).toBeNull()
+    expect(selectDetailPaneTitle(state)).toBe('Day Progress')
   })
 })

@@ -16,6 +16,10 @@ import {
   userDidSelectDetailPaneSegment,
   userDidTapDetailPaneBack,
 } from '../MainFeature'
+import {
+  prepareSessionLaunchThunk,
+  startSessionThunk,
+} from '../../session/SessionProducer'
 import { TimelinePanePage } from '../TimelinePanePage'
 
 beforeEach(() => {
@@ -74,6 +78,21 @@ describe('TimelinePanePage', () => {
     })
     expect(store.getState().main.detailPane.segment).toBe('plan')
     expect(await screen.findByTestId('detail-pane-timeline')).toBeTruthy()
+  })
+
+  it('offers no session preview while a session is already running', async () => {
+    const store = await mount()
+    await store.dispatch(
+      prepareSessionLaunchThunk({ endeavorId: null, sessionId: 's-running' }),
+    )
+    await store.dispatch(startSessionThunk({ now: new Date() }))
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await screen.findByTestId('detail-pane-timeline')
+    expect(
+      screen.queryByTestId('plan-timeline-session-preview-start'),
+    ).toBeNull()
   })
 
   it('steps aside when Plan is pointed at an endeavor', async () => {

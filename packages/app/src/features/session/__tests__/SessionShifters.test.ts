@@ -193,6 +193,13 @@ describe('withLaunchPrepared', () => {
       sessionStateMocks.running,
     )
   })
+
+  it('still settles the lifecycle when refused mid-session (Execute on a card while one runs)', () => {
+    const loading = withSessionLoadStarted(sessionStateMocks.running)
+    const next = withLaunchPrepared(loading, prepared)
+    expect(next.load.kind).toBe('loaded')
+    expect(next.identity).toBe(sessionStateMocks.running.identity)
+  })
 })
 
 describe('withAnchorHydrated', () => {

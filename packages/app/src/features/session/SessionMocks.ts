@@ -27,6 +27,7 @@ import {
   withDisplayAdvanced,
   withException,
   withLaunchPrepared,
+  withModeSelected,
   withPreferencesApplied,
   withSessionAborted,
   withSessionAwaitingResolution,
@@ -111,6 +112,24 @@ const prepared = (
   )
 
 const running = prepared(sessionIdentityMocks.slides)
+
+/** An endeavor with recorded history (🍅 ⚡️ ⏱️), ready to start. */
+const readyWithHistory = withLaunchPrepared(
+  withPreferencesApplied(initialSessionState, {
+    preferences: sessionPreferenceMocks.shipped,
+    availability: sessionAvailabilityMocks.statusQuo,
+  }),
+  {
+    identity: sessionIdentityMocks.slides,
+    recommendation: {
+      mode: FocusTimerMode.countdown,
+      targetDuration: SESSION_MOCK_TARGET,
+      source: { kind: 'preferred' },
+    },
+    completedSessionsCount: 3,
+    recordedSessionModes: ['countdown', 'stopwatch', null],
+  },
+)
 const started = withSessionStarted(running, SESSION_MOCK_NOW)
 
 /** A break running, two minutes in — breaks need their flag turned on. */
@@ -157,6 +176,47 @@ export const sessionStateMocks = {
 
   /** Ready on a blank focus session — nothing stored behind it yet. */
   readyAnonymous: prepared(sessionIdentityMocks.anonymous),
+
+  /**
+   * Ready on an endeavor with recorded history: a pomodoro, a stopwatch, and
+   * one recorded before the mode was written — 🍅 ⚡️ ⏱️.
+   */
+  readyWithHistory,
+
+  /** Ready on an endeavor that has never been worked: no markers at all. */
+  readyFresh: withLaunchPrepared(
+    withPreferencesApplied(initialSessionState, {
+      preferences: sessionPreferenceMocks.shipped,
+      availability: sessionAvailabilityMocks.statusQuo,
+    }),
+    {
+      identity: sessionIdentityMocks.plain,
+      recommendation: {
+        mode: FocusTimerMode.countdown,
+        targetDuration: SESSION_MOCK_TARGET,
+        source: { kind: 'preferred' },
+      },
+      completedSessionsCount: 0,
+    },
+  ),
+
+  /**
+   * `ready` (three completions, modes unknown) with the toggle flipped to
+   * stopwatch — the history must still draw as it was recorded.
+   */
+  readyStopwatchSelected: withModeSelected(
+    prepared(
+      sessionIdentityMocks.slides,
+      sessionAvailabilityMocks.everythingOn,
+    ),
+    FocusTimerMode.stopwatch,
+  ),
+
+  /** A countdown on an endeavor with recorded history, just concluded. */
+  concludedWithHistory: withDisplayAdvanced(
+    withSessionStarted(readyWithHistory, SESSION_MOCK_NOW),
+    sessionMockInstant(SESSION_MOCK_TARGET),
+  ),
 
   /** Running, ten minutes in. */
   running: withDisplayAdvanced(started, sessionMockInstant(600)),

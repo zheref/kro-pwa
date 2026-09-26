@@ -23,6 +23,9 @@
  * story and its mirroring render test consume one source (`RC-11`).
  */
 
+import { initialEndeavorActivityState } from '../../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../../dayTimeline/DayTimelineFeature'
 import { type ReactNode, useEffect } from 'react'
 import type { EndeavorRecord } from '@kro/core'
 import { StoreProvider } from '../../../../library/StoreProvider'
@@ -308,6 +311,9 @@ export const triageRootWith = (slice: TriageState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

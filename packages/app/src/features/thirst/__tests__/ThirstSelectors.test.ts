@@ -1,4 +1,7 @@
 /** Selectors run against a hand-built root state, never a live store (`RC-55`). */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { describe, expect, it } from 'vitest'
 import { initialAuthState } from '../../auth/AuthState'
@@ -44,6 +47,9 @@ const rootWith = (thirst: ThirstState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

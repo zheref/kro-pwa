@@ -45,8 +45,13 @@ import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
-import { navigateToDestinationThunk } from '../../main/MainProducer'
-import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
+import { userDidRequestDayProgress } from '../../main/MainFeature'
+import {
+  navigateToDestinationThunk,
+  openSessionSurfaceThunk,
+  startSessionFromCardThunk,
+} from '../../main/MainProducer'
+import { selectIsDetailPaneAvailable } from '../../main/MainSelectors'
 import { selectLayout, selectShellShape } from '../../main/MainSelectors'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
@@ -112,6 +117,7 @@ export interface DoPageProps {
 }
 
 export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
+  const isDetailPaneAvailable = useAppSelector(selectIsDetailPaneAvailable)
   const dispatch = useAppDispatch()
 
   // Read once. `useState`'s lazy initialiser is the standard idiom for "a value
@@ -321,25 +327,20 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
           Canon's `.onUserWantsToStartEvent(endeavor, nil)` — the card's own
           endeavor is carried into the session's launch preparation, so Execute
           opens already showing its title, glyph and recommended duration
-          (KC-IS-#71 item 21). The navigation waits for the preparation:
+          (KC-IS-#71 item 21). The surface waits for the preparation (one Producer sequences both):
           arriving first would paint one frame of the anonymous `Focus Session`
           before the identity landed. A preparation that fails still navigates,
           because a control that goes to the right screen is honest and one
           that appears to do nothing is not.
         */
         void dispatch(
-          prepareSessionLaunchThunk({
+          startSessionFromCardThunk({
             endeavorId: card.id,
             // Identity is the composition site's to supply, never a Producer's.
             sessionId: crypto.randomUUID(),
+            fallbackTitle: card.title,
           }),
-        ).finally(() => {
-          void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
-            }),
-          )
-        })
+        )
       },
       onMarkComplete: (card, completedAt) => {
         dispatch(
@@ -452,6 +453,13 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
       />
 
       <DoSurfaceFragment
+        // Canon (#517): the rings open Day Progress in the detail pane, where
+        // this window hosts one; elsewhere they stay a passive indicator.
+        onTapRings={
+          isDetailPaneAvailable
+            ? () => dispatch(userDidRequestDayProgress())
+            : undefined
+        }
         shape={shape}
         layout={layout}
         header={header}
@@ -505,11 +513,8 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
           )
         }
         onStartSession={() => {
-          void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
-            }),
-          )
+          // A new, arbitrary task — the Session segment's endeavor-free mode.
+          void dispatch(openSessionSurfaceThunk({ endeavor: null }))
         }}
       />
     </>

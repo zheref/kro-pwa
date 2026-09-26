@@ -7,6 +7,7 @@
  * editor's **dirty tracking** decides whether Save is offered at all.
  */
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -34,6 +35,13 @@ import {
 } from '../EndeavorDetailFeature'
 import { detailEndeavorMocks } from '../EndeavorDetailMocks'
 import { DetailOverlays } from './DetailOverlays'
+import {
+  userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestSessionSetup,
+  userDidSelectDetailPaneSegment,
+} from '../../main/MainFeature'
+import { PaneFrame, makePaneHostStore } from './__tests__/paneHarness'
 
 let teardown: () => void
 
@@ -422,5 +430,290 @@ describe('a relation write commits on its own, through the real Producer', () =>
     expect(
       screen.getByText('Google Calendar mirroring is not connected yet.'),
     ).toBeTruthy()
+  })
+})
+
+describe('on the desktop sidebar with macDetailPane — mirrors the InPane stories', () => {
+  const mountInPane = (endeavor: Mock): AppStore => {
+    teardown = installRadixEnvironment()
+    const store = makePaneHostStore({ endeavors: [endeavor] })
+    render(
+      <Harness store={store}>
+        <PaneFrame>
+          <DetailOverlays locale="en-US" />
+        </PaneFrame>
+      </Harness>,
+    )
+    return store
+  }
+
+  it("opens Detail in the pane's Plan segment instead of a dialog", async () => {
+    const store = mountInPane(detailEndeavorMocks.task)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(onDetailRequested({ endeavor: detailEndeavorMocks.task }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('detail-pane-plan')).toBeTruthy()
+    })
+    expect(screen.queryByTestId('detail-overlay')).toBeNull()
+    expect(store.getState().main.detailPane).toEqual({
+      segment: 'plan',
+      endeavor: {
+        id: detailEndeavorMocks.task.id,
+        title: detailEndeavorMocks.task.title,
+      },
+    })
+    const panel = screen.getByTestId('trailing-detail-panel')
+    expect(within(panel).getByText('Details')).toBeTruthy()
+  })
+
+  it('shows an editor with Back and Save inside the pane', async () => {
+    const store = mountInPane(detailEndeavorMocks.taskWithSessions)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        onDetailRequested({ endeavor: detailEndeavorMocks.taskWithSessions }),
+      )
+      store.dispatch(userDidTapField({ field: 'duration' }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    })
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy()
+  })
+
+  it('releases Detail when the pane moves to Performance, and reopens it on Plan', async () => {
+    const store = mountInPane(detailEndeavorMocks.event)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(onDetailRequested({ endeavor: detailEndeavorMocks.event }))
+    })
+    await waitFor(() =>
+      expect(store.getState().main.detailPane.segment).toBe('plan'),
+    )
+
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'performance' }))
+    })
+    await waitFor(() =>
+      expect(store.getState().endeavorDetail.endeavor).toBeNull(),
+    )
+    expect(screen.queryByTestId('detail-pane-plan')).toBeNull()
+
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await waitFor(() => {
+      expect(store.getState().endeavorDetail.endeavor?.id).toBe(
+        detailEndeavorMocks.event.id,
+      )
+    })
+  })
+
+  it('opens Detail by id when Plan is picked on a Session pointed at an endeavor Detail never showed', async () => {
+    const endeavor = detailEndeavorMocks.task
+    const store = mountInPane(endeavor)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        userDidRequestSessionSetup({
+          endeavor: { id: endeavor.id, title: endeavor.title },
+        }),
+      )
+    })
+    expect(store.getState().endeavorDetail.endeavor).toBeNull()
+
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await waitFor(() => {
+      expect(store.getState().endeavorDetail.endeavor?.id).toBe(endeavor.id)
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('detail-pane-plan')).toBeTruthy()
+    })
+  })
+
+  it('opens Detail by id when Plan is picked after a Show sessions drill into Performance', async () => {
+    const endeavor = detailEndeavorMocks.event
+    const store = mountInPane(endeavor)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        userDidRequestSessionSetup({
+          endeavor: { id: endeavor.id, title: endeavor.title },
+        }),
+      )
+      store.dispatch(
+        userDidDrillIntoDetailPane({
+          location: {
+            segment: 'performance',
+            endeavor: { id: endeavor.id, title: endeavor.title },
+          },
+        }),
+      )
+    })
+    act(() => {
+      store.dispatch(userDidSelectDetailPaneSegment({ segment: 'plan' }))
+    })
+    await waitFor(() => {
+      expect(store.getState().endeavorDetail.endeavor?.id).toBe(endeavor.id)
+    })
+  })
+
+  it('releases Detail when the pane is dismissed (Escape or Close)', async () => {
+    const store = mountInPane(detailEndeavorMocks.task)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(onDetailRequested({ endeavor: detailEndeavorMocks.task }))
+    })
+    await waitFor(() =>
+      expect(store.getState().main.detailPane.segment).toBe('plan'),
+    )
+
+    act(() => {
+      store.dispatch(userDidDismissDetailPane())
+    })
+    await waitFor(() =>
+      expect(store.getState().endeavorDetail.endeavor).toBeNull(),
+    )
+  })
+
+  it('drills an editor in: Back in the header, the editor title centred, Save trailing', async () => {
+    const store = mountInPane(detailEndeavorMocks.taskWithSessions)
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        onDetailRequested({ endeavor: detailEndeavorMocks.taskWithSessions }),
+      )
+    })
+    await screen.findByTestId('detail-pane-plan')
+    act(() => {
+      store.dispatch(userDidTapField({ field: 'duration' }))
+    })
+
+    const navigation = await screen.findByTestId(
+      'trailing-detail-panel-navigation',
+    )
+    await waitFor(() => {
+      expect(
+        within(navigation).getByRole('button', { name: 'Back' }),
+      ).toBeTruthy()
+    })
+    expect(
+      within(navigation).queryByRole('button', { name: 'Close' }),
+    ).toBeNull()
+    expect(within(navigation).getByText('Duration')).toBeTruthy()
+    expect(
+      within(navigation).getByRole('button', { name: 'Save' }),
+    ).toBeTruthy()
+    expect(
+      screen.getByTestId('detail-pane-plan').getAttribute('data-kro-drill'),
+    ).toBe('push')
+
+    await userEvent.click(
+      within(navigation).getByRole('button', { name: 'Back' }),
+    )
+    await waitFor(() => {
+      expect(
+        within(navigation).getByRole('button', { name: 'Close' }),
+      ).toBeTruthy()
+    })
+    expect(
+      screen.getByTestId('detail-pane-plan').getAttribute('data-kro-drill'),
+    ).toBe('pop')
+  })
+
+  const openDurationEditor = async (store: AppStore) => {
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneEnabled).toBe(true),
+    )
+    act(() => {
+      store.dispatch(
+        onDetailRequested({ endeavor: detailEndeavorMocks.taskWithSessions }),
+      )
+    })
+    await screen.findByTestId('detail-pane-plan')
+    act(() => {
+      store.dispatch(userDidTapField({ field: 'duration' }))
+    })
+    const navigation = await screen.findByTestId(
+      'trailing-detail-panel-navigation',
+    )
+    await waitFor(() =>
+      expect(
+        within(navigation).getByRole('button', { name: 'Back' }),
+      ).toBeTruthy(),
+    )
+    return navigation
+  }
+
+  it('Escape inside an editor closes only the editor, not the pane', async () => {
+    const store = mountInPane(detailEndeavorMocks.taskWithSessions)
+    const navigation = await openDurationEditor(store)
+
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() =>
+      expect(
+        within(navigation).getByRole('button', { name: 'Close' }),
+      ).toBeTruthy(),
+    )
+    expect(store.getState().main.detailPane.segment).toBe('plan')
+    expect(screen.getByTestId('detail-pane-plan')).toBeTruthy()
+  })
+
+  it('a second Escape, back on the details, closes the pane', async () => {
+    const store = mountInPane(detailEndeavorMocks.taskWithSessions)
+    const navigation = await openDurationEditor(store)
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(
+        within(navigation).getByRole('button', { name: 'Close' }),
+      ).toBeTruthy(),
+    )
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() =>
+      expect(store.getState().main.detailPane.segment).toBeNull(),
+    )
+  })
+
+  it('leaves an Escape a menu inside the editor already handled alone', async () => {
+    const store = mountInPane(detailEndeavorMocks.taskWithSessions)
+    const navigation = await openDurationEditor(store)
+
+    const claimed = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    })
+    claimed.preventDefault()
+    act(() => {
+      document.body.dispatchEvent(claimed)
+    })
+
+    expect(
+      within(navigation).getByRole('button', { name: 'Back' }),
+    ).toBeTruthy()
+    expect(store.getState().main.detailPane.segment).toBe('plan')
   })
 })

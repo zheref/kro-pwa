@@ -24,6 +24,19 @@
  */
 import type { Project } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
+import {
+  type DetailPaneEndeavor,
+  type DetailPaneLocation,
+  type DetailPaneSegment,
+  type DetailPaneState,
+  closedDetailPane,
+} from './DetailPane'
+import {
+  onDetailRequested,
+  onEditRequested,
+  userDidTapDismiss,
+} from '../endeavorDetail/EndeavorDetailFeature'
+import { openDetailByIdThunk } from '../endeavorDetail/EndeavorDetailProducer'
 import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
@@ -32,6 +45,7 @@ import {
   deleteProjectThunk,
   deliverCaptureRouteThunk,
   loadShellThunk,
+  openSessionSurfaceThunk,
 } from './MainProducer'
 import {
   type DestinationGates,
@@ -41,6 +55,14 @@ import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import {
   withCaptureRouteConsumed,
   withDestinationSelected,
+  withDetailPaneDismissed,
+  withDetailPaneDrilledIn,
+  withDetailPaneEndeavorSelected,
+  withDetailPaneFollowingDetail,
+  withDetailPaneReleasedByDetail,
+  withDetailPaneSessionRaised,
+  withDetailPaneWentBack,
+  withDetailPaneSegmentSelected,
   withDraftProjectCancelled,
   withDraftProjectStarted,
   withDraftProjectTitleEdited,
@@ -138,6 +160,15 @@ export interface MainState {
   readonly isSidebarVisible: boolean
   /** The one-shot a capture handed the shell, or `null`. */
   readonly routeContext: ShellRouteContext | null
+  /** Canon's `detailPaneSegment` + `detailPaneEndeavor` (see `DetailPane`). */
+  readonly detailPane: DetailPaneState
+  /**
+   * The drill-in trail: where each drill-in left from, oldest first. Non-empty
+   * means the pane's header shows Back rather than Close.
+   */
+  readonly detailPaneBackStack: readonly DetailPaneLocation[]
+  /** Canon's `isMacDetailPaneEnabled` — resolved from `macDetailPane`. */
+  readonly isDetailPaneEnabled: boolean
 }
 
 export const initialMainState: MainState = {
@@ -155,6 +186,9 @@ export const initialMainState: MainState = {
   searchQuery: '',
   isSidebarVisible: true,
   routeContext: null,
+  detailPane: closedDetailPane,
+  detailPaneBackStack: [],
+  isDetailPaneEnabled: false,
 }
 
 export const mainSlice = createSlice({
@@ -254,6 +288,96 @@ export const mainSlice = createSlice({
       Object.assign(state, withDraftProjectCancelled(state))
     },
 
+    /**
+     * User intent: a segment of the toolbar's detail-pane group. Canon's
+     * `userDidSelectDetailPaneSegment` — selecting the one showing hides it.
+     */
+    userDidSelectDetailPaneSegment(
+      state,
+      action: PayloadAction<{ segment: DetailPaneSegment }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneSegmentSelected(state, action.payload.segment),
+      )
+    },
+
+    /**
+     * User intent: the pane's dismiss control, or Escape while it is showing.
+     * Canon's `userDidDismissDetailPane` (canon has no Escape binding; the web
+     * adds it as the platform's own dismiss key — see `MacDetailPane.md`).
+     */
+    userDidDismissDetailPane(state) {
+      Object.assign(state, withDetailPaneDismissed(state))
+    },
+
+    /**
+     * User intent: the Do header's activity rings. Canon's
+     * `userDidRequestDayProgress` — always the endeavor-free Performance mode.
+     */
+    userDidRequestDayProgress(state) {
+      Object.assign(
+        state,
+        withDetailPaneEndeavorSelected(state, null, 'performance'),
+      )
+    },
+
+    /**
+     * User intent: the session pill, or a session wanting to be seen — canon's
+     * `applySessionSetupPresentation`. Opens Session pointed at the session's
+     * endeavor (`null` for a new, arbitrary task).
+     */
+    userDidRequestSessionSetup(
+      state,
+      action: PayloadAction<{ endeavor: DetailPaneEndeavor | null }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneEndeavorSelected(
+          state,
+          action.payload.endeavor,
+          'sessionSetup',
+        ),
+      )
+    },
+
+    /**
+     * System signal: a countdown ended and its conclusion wants to be seen
+     * while the pane is not showing Session. Canon's
+     * `applySessionSetupPresentation`, raised on the session's behalf — never
+     * a `userDid…` (`RC-2`): nobody tapped anything. Only the session's
+     * overlay raises it, and only when no Detail editor would be discarded.
+     */
+    onSessionConclusionRaised(
+      state,
+      action: PayloadAction<{ endeavor: DetailPaneEndeavor | null }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneSessionRaised(state, action.payload.endeavor),
+      )
+    },
+
+    /**
+     * User intent: open something from inside the pane — a drill-in. The
+     * pane moves to `location` and its header offers Back. Session Setup's
+     * "Show sessions" (canon's bolt, bf0c2a71) drills into Performance.
+     */
+    userDidDrillIntoDetailPane(
+      state,
+      action: PayloadAction<{ location: DetailPaneLocation }>,
+    ) {
+      Object.assign(
+        state,
+        withDetailPaneDrilledIn(state, action.payload.location),
+      )
+    },
+
+    /** User intent: the pane header's Back (or Escape while drilled in). */
+    userDidTapDetailPaneBack(state) {
+      Object.assign(state, withDetailPaneWentBack(state))
+    },
+
     /** Lifecycle: the destination read the shell's one-shot, so it is spent. */
     onShellRouteContextConsumed(state) {
       state.routeContext = null
@@ -261,6 +385,47 @@ export const mainSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ------------------------------------ Endeavor Detail, in the pane
+      //
+      // Canon holds Detail inside `MainFeature` when the pane shows it; here
+      // Detail is its own slice, so the pane follows Detail's own events —
+      // action creators, never Detail's state shape (`RC-20`). Detail's slice
+      // answers the other half (the pane leaving Plan releases it).
+      .addCase(onDetailRequested, (state, action) => {
+        const { id, title } = action.payload.endeavor
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, { id, title }),
+        )
+      })
+      .addCase(onEditRequested, (state, action) => {
+        const endeavor = action.payload.endeavor
+        // No endeavor: the editor opens over the Detail already presented,
+        // which the pane already follows.
+        if (endeavor === undefined) return
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, {
+            id: endeavor.id,
+            title: endeavor.title,
+          }),
+        )
+      })
+      .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) return
+        Object.assign(
+          state,
+          withDetailPaneFollowingDetail(state, {
+            id: result.value.id,
+            title: result.value.title,
+          }),
+        )
+      })
+      .addCase(userDidTapDismiss, (state) => {
+        Object.assign(state, withDetailPaneReleasedByDetail(state))
+      })
+
       .addCase(loadShellThunk.pending, (state) => {
         Object.assign(state, withLoadingStarted(state))
       })
@@ -322,6 +487,21 @@ export const mainSlice = createSlice({
         )
       })
 
+      .addCase(openSessionSurfaceThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        // `route` changed the URL; the destination's mount records it.
+        if (result.ok && result.value.kind === 'pane') {
+          Object.assign(
+            state,
+            withDetailPaneEndeavorSelected(
+              state,
+              result.value.endeavor,
+              'sessionSetup',
+            ),
+          )
+        }
+      })
+
       .addCase(deliverCaptureRouteThunk.fulfilled, (state, action) => {
         const result = action.payload
         // `null` means "nothing was due" — the common case on every tick.
@@ -334,11 +514,18 @@ export const mainSlice = createSlice({
 
 export const {
   onDestinationRouteMounted,
+  onSessionConclusionRaised,
   onShellMounted,
   onShellRouteContextConsumed,
   onSurfaceChanged,
   userDidCancelAddProject,
   userDidChangeSearchQuery,
+  userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestDayProgress,
+  userDidRequestSessionSetup,
+  userDidSelectDetailPaneSegment,
+  userDidTapDetailPaneBack,
   userDidEditDraftProjectTitle,
   userDidTapAddProject,
   userDidTapDestination,

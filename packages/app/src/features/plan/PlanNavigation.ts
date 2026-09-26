@@ -27,8 +27,12 @@
  * makes repeated "next day" taps read as a strip sliding under the selection.
  */
 import { assertNever } from '@kro/core'
-import { TIMELINE_DAY_PICKER_SPAN } from './PlanConstants'
-import { addingPlanDays, planDayDistance, startOfPlanDay } from './PlanCalendar'
+import { TIMELINE_DAY_PICKER_SPAN } from '../../library/plan/PlanConstants'
+import {
+  addingPlanDays,
+  planDayDistance,
+  startOfPlanDay,
+} from '../../library/plan/PlanCalendar'
 
 /** `PlanViewMode` — the destinations the Plan header's selector exposes. */
 export const PlanViewMode = {

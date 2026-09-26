@@ -20,7 +20,10 @@ import {
   makeShadow,
 } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { addingPlanDays, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import {
   PlanPresentationKind,
   followingWeekend,

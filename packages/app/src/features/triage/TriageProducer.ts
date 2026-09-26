@@ -33,21 +33,21 @@ import {
   type ReconciliationContext,
   type Result,
   defaultTriageDurationOptionsMinutes,
-  deferFromRecord,
   deferRecordFromDefer,
-  endeavorFromRecord,
   endeavorRecordFromEndeavor,
   epochMillisFromDate,
   err,
-  livingChildRecords,
   makeReconciliationContext,
   ok,
-  performFromRecord,
   reconcile,
   resolvedKind,
   ShareOutcome,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import {
+  readStoredEndeavor,
+  readStoredEndeavors,
+} from '../../library/persistence/storedEndeavors'
 import type { ThunkExtra } from '../../library/store'
 import {
   defersAddedByTriage,
@@ -61,79 +61,6 @@ import { TRIAGE_DEFAULT_SYMBOL, type TriageSessionSeed } from './TriageState'
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
-
-/**
- * Every stored endeavor, hydrated with its relations.
- *
- * The two child stores are read **once each** and grouped in memory rather than
- * queried per endeavor. Duplicated from the capture lane rather than imported:
- * a feature reaching into a sibling feature's Producer is what `UZF-6` forbids
- * outright, and promoting the helper into `services/` is a change outside this
- * issue's lane.
- */
-const readStoredEndeavors = async (
-  localStore: LocalStore,
-): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
-    [
-      localStore.endeavors.all(),
-      localStore.defers.all(),
-      localStore.performances.all(),
-    ],
-  )
-
-  const defersByEndeavor = new Map<
-    string,
-    ReturnType<typeof deferFromRecord>[]
-  >()
-  for (const record of livingChildRecords(deferRecords)) {
-    const bucket = defersByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(deferFromRecord(record))
-    defersByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const performancesByEndeavor = new Map<
-    string,
-    ReturnType<typeof performFromRecord>[]
-  >()
-  for (const record of livingChildRecords(performanceRecords)) {
-    const bucket = performancesByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(performFromRecord(record))
-    performancesByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const endeavors: Endeavor[] = []
-  for (const record of endeavorRecords) {
-    const hydrated = endeavorFromRecord(record, {
-      defers: defersByEndeavor.get(record.id) ?? [],
-      performances: performancesByEndeavor.get(record.id) ?? [],
-    })
-    if (hydrated.ok) endeavors.push(hydrated.value)
-  }
-  return endeavors
-}
-
-/**
- * One stored endeavor by id, hydrated with only its own relations — the
- * single-row read the save needs, so persisting one decision is not O(N)
- * IndexedDB work. (The pattern KC-IS-#23's Copilot round established.)
- */
-const readStoredEndeavor = async (
-  localStore: LocalStore,
-  endeavorId: string,
-): Promise<Endeavor | undefined> => {
-  const record = await localStore.endeavors.get(endeavorId)
-  if (record === null) return undefined
-  const [deferRecords, performanceRecords] = await Promise.all([
-    localStore.defers.forEndeavor(endeavorId),
-    localStore.performances.forEndeavor(endeavorId),
-  ])
-  const hydrated = endeavorFromRecord(record, {
-    defers: deferRecords.map(deferFromRecord),
-    performances: performanceRecords.map(performFromRecord),
-  })
-  return hydrated.ok ? hydrated.value : undefined
-}
 
 /**
  * The single-row reconcile the save runs before deciding anything about hosts.
@@ -284,7 +211,9 @@ export const saveTriageDecisionThunk = createAsyncThunk<
 >('triage/onTriageSaveCompleted', async ({ decision, now }, { extra }) => {
   let target: Endeavor | undefined
   try {
-    target = await readStoredEndeavor(extra.localStore, decision.endeavorId)
+    target =
+      (await readStoredEndeavor(extra.localStore, decision.endeavorId)) ??
+      undefined
   } catch (error) {
     return err(TriageExceptions.localSaveFailed(messageOf(error)))
   }

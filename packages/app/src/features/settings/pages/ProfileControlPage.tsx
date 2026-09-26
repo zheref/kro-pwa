@@ -58,7 +58,7 @@ import {
   SheetTrigger,
 } from '../../../design/system/primitives/sheet'
 import { controlDensity } from '../../../design/system/density'
-import { ROW_HIGHLIGHT } from '../../../design/system/rowHighlight'
+import { TOOLBAR_HOVER } from '../../../design/system/rowHighlight'
 import { cn } from '../../../design/system/utils/cn'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import {
@@ -299,7 +299,7 @@ function ProfileTrigger({
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full text-inherit',
         'outline-none focus-visible:shadow-[var(--kro-ring)]',
-        ROW_HIGHLIGHT,
+        TOOLBAR_HOVER,
       )}
       style={{
         width: PROFILE_TOOLBAR_AVATAR_PX,

@@ -57,15 +57,44 @@ export const performResolutionFromRawValue = (
 export interface PerformFragment {
   readonly startedAt: Date
   readonly endedAt: Date | null
+  /**
+   * Canon's `SessionFragment.configuration: SessionConfig?` — how the session
+   * that produced this fragment was set up. Absent on fragments recorded
+   * before the web wrote it (and on hand-logged performances), exactly as
+   * canon's is `nil` there.
+   */
+  readonly configuration?: PerformSessionConfig
+}
+
+/** Canon's `SessionTimerMode`. */
+export type PerformSessionMode = 'countdown' | 'stopwatch'
+
+/** Canon's `SessionConfig`: `title`, `duration`, `rest?`, `mode`. */
+export interface PerformSessionConfig {
+  readonly title: string
+  readonly duration: TimeIntervalSeconds
+  readonly rest: TimeIntervalSeconds | null
+  readonly mode: PerformSessionMode
 }
 
 export const makePerformFragment = (params: {
   readonly startedAt: Date
   readonly endedAt?: Date | null
+  readonly configuration?: PerformSessionConfig | null
 }): PerformFragment => ({
   startedAt: params.startedAt,
   endedAt: params.endedAt ?? null,
+  ...(params.configuration ? { configuration: params.configuration } : {}),
 })
+
+/**
+ * The mode a performance was recorded in — canon's
+ * `sessionFragments.first?.configuration?.mode`. `null` when unknown.
+ */
+export const performSessionMode = (
+  performance: Perform,
+): PerformSessionMode | null =>
+  performance.sessionFragments[0]?.configuration?.mode ?? null
 
 /**
  * `SessionFragment.duration` — seconds, or `null` while still running.

@@ -36,7 +36,10 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   enabledAssignment(FeatureFlags.calendarIntegration),
   enabledAssignment(FeatureFlags.googleCalendarIntegration),
   enabledAssignment(FeatureFlags.googleCalendar),
-  disabledAssignment(FeatureFlags.sessionStopwatch),
+  // Ships enabled on the web (maintainer's call, 2026-09-24): the Stopwatch
+  // segment of the session mode toggle is on by default. The user can still
+  // turn it off with `session.enableStopwatch`.
+  enabledAssignment(FeatureFlags.sessionStopwatch),
   disabledAssignment(FeatureFlags.sessionDurationLearning),
   disabledAssignment(FeatureFlags.sessionBreak),
   disabledAssignment(FeatureFlags.supabaseHosting),
@@ -71,6 +74,11 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   // kro-pwa turns it on in `liveThunkExtra` / `stubbedThunkExtra` so Adjust
   // offers the section the maintainer asked for.
   disabledAssignment(FeatureFlags.appearanceThemes),
+  // The window's trailing glass detail pane on the sidebar shell — canon's
+  // `macDetailPane`. Ships enabled, as canon does: a kill switch for the
+  // toolbar group and the moved detail entry points, not a dark launch. With
+  // it off, detail stays a dialog and a session stays a route.
+  enabledAssignment(FeatureFlags.macDetailPane),
 ]
 
 /**

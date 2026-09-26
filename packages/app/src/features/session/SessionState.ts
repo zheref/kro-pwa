@@ -159,6 +159,11 @@ export interface SessionState {
   readonly availability: SessionAvailability
   /** Canon's tomato counter: completed/finished performances for this endeavor. */
   readonly completedSessionsCount: number
+  /**
+   * The recorded sessions' modes, oldest first — one tomato-row marker each
+   * (canon: 🍅 countdown, ⚡️ stopwatch, ⏱️ unknown).
+   */
+  readonly recordedSessionModes: readonly ('countdown' | 'stopwatch' | null)[]
   readonly conclusion: SessionConclusion
   /** Whether the sheet is auto-presented at the conclusion screen. */
   readonly isPresentingConclusion: boolean
@@ -214,6 +219,7 @@ export const initialSessionState: SessionState = {
   preferences: defaultSessionPreferences,
   availability: defaultSessionAvailability,
   completedSessionsCount: 0,
+  recordedSessionModes: [],
   conclusion: { kind: 'none' },
   isPresentingConclusion: false,
   isEditingTitle: false,

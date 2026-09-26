@@ -56,6 +56,7 @@ import {
   persistOwnedEndeavor,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import { readStoredEndeavors } from '../../library/persistence/storedEndeavors'
 import type { ThunkExtra } from '../../library/store'
 import { type DoException, DoExceptions } from './DoException'
 import type { DoPreferences } from './DoFeature'
@@ -73,55 +74,6 @@ export interface DoDaySnapshot {
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
-
-/**
- * Every stored endeavor, hydrated with its relations.
- *
- * The two child stores are read **once each** and grouped in memory rather
- * than queried per endeavor: a day with a hundred rows would otherwise cost
- * two hundred extra round-trips through IndexedDB.
- */
-const readStoredEndeavors = async (
-  localStore: LocalStore,
-): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
-    [
-      localStore.endeavors.all(),
-      localStore.defers.all(),
-      localStore.performances.all(),
-    ],
-  )
-
-  const defersByEndeavor = new Map<
-    string,
-    ReturnType<typeof deferFromRecord>[]
-  >()
-  for (const record of livingChildRecords(deferRecords)) {
-    const bucket = defersByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(deferFromRecord(record))
-    defersByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const performancesByEndeavor = new Map<
-    string,
-    ReturnType<typeof performFromRecord>[]
-  >()
-  for (const record of livingChildRecords(performanceRecords)) {
-    const bucket = performancesByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(performFromRecord(record))
-    performancesByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const endeavors: Endeavor[] = []
-  for (const record of endeavorRecords) {
-    const hydrated = endeavorFromRecord(record, {
-      defers: defersByEndeavor.get(record.id) ?? [],
-      performances: performancesByEndeavor.get(record.id) ?? [],
-    })
-    if (hydrated.ok) endeavors.push(hydrated.value)
-  }
-  return endeavors
-}
 
 /**
  * Rewrites one stored endeavor, preserving its sync watermark.

@@ -17,6 +17,7 @@
  * component" has somewhere to go that is not a Selector — these are
  * presentation constants, not reads of `RootState`.
  */
+import { assertNever } from '@kro/core'
 import type { TimeIntervalSeconds } from '@kro/core'
 import { CHROME_LAYOUT } from '../../../design/chrome/layout/chromeLayout'
 import { colorVar } from '../../../design/system/tokens/roles'
@@ -56,10 +57,13 @@ export type SessionSurfacePresentation =
  */
 export const sessionDismissalHint = (
   presentation: SessionSurfacePresentation,
-): string =>
+): string | null =>
+  // Only the bottom sheet's gesture is worth telling: "Close to dismiss"
+  // under the start button restated the close control above it, so the web
+  // drops it (maintainer's call, 2026-09-24).
   presentation === SessionSurfacePresentation.sheet
     ? 'Swipe down to dismiss'
-    : 'Close to dismiss'
+    : null
 
 /**
  * Which dial canon renders for a phase — `SessionSetupView.dialArea`, branch for
@@ -183,6 +187,37 @@ export const sessionSurfaceTint = (phase: SessionPhase): string | null => {
 }
 
 /**
+ * Canon's side-panel `presentationBackground` (`SessionSetupView.swift`): a
+ * top-down wash from the phase's hue into nothing, over the host's glass.
+ * Unlike the sheet's tint, EVERY phase has one here — ready and concluded
+ * wash indigo — because the panel's glass is the host's, not a dark material.
+ *
+ * | Phase | Canon | Here |
+ * | --- | --- | --- |
+ * | ready, concluded | `Color.indigo.opacity(0.12)` | badge indigo, 12% |
+ * | running | `Color.green.opacity(0.22)` | focus green, 22% |
+ * | paused | `Color.white.opacity(0.14)` | snow, 14% |
+ * | break | `rgb(0.78, 0.69, 0.53).opacity(0.22)` | break beige, 22% |
+ */
+export const sessionPanelTint = (phase: SessionPhase): string => {
+  const wash = (role: Parameters<typeof colorVar>[0], percent: number) =>
+    `color-mix(in srgb, ${colorVar(role)} ${percent}%, transparent)`
+  switch (phase) {
+    case SessionPhase.running:
+      return wash('focusGreen', 22)
+    case SessionPhase.paused:
+      return wash('snow', 14)
+    case SessionPhase.break:
+      return wash('breakBeige', 22)
+    case SessionPhase.ready:
+    case SessionPhase.concluded:
+      return wash('badgeIndigo', 12)
+    default:
+      return assertNever(phase)
+  }
+}
+
+/**
  * The KroGlass material the session surface substitutes for the default one.
  *
  * **Why the surface cannot just take the plain glass.** Canon presents this
@@ -250,7 +285,7 @@ export const SESSION_SLOT_HEIGHT = {
   /** `playButtonArea` and the focused controls row — `.frame(height: 80)`. */
   primaryAction: 80,
   /** The close button's disc — `.frame(width: 36, height: 36)`. */
-  headerControl: 36,
+  headerControl: 44,
 } as const
 
 /**

@@ -29,27 +29,26 @@ import {
   EndeavorOperation,
   EndeavorStatus,
   FeatureFlags,
-  type LocalStore,
   type ReconciliationContext,
   type Result,
-  deferFromRecord,
   deferRecordFromDefer,
-  endeavorFromRecord,
   epochMillisFromDate,
   err,
-  livingChildRecords,
   makeFeatureFlagOverrideStore,
   makeHardcodedFeatureFlagService,
   makeReconciliationContext,
   ok,
   overridesAsAssignments,
-  performFromRecord,
   resolvedKind,
   type OwnedEndeavorHosting,
   type PersistOwnedEndeavorDeps,
   persistOwnedEndeavor,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import {
+  readStoredEndeavor,
+  readStoredEndeavors,
+} from '../../library/persistence/storedEndeavors'
 import type { ThunkExtra } from '../../library/store'
 import { type CaptureException, CaptureExceptions } from './CaptureException'
 import {
@@ -79,80 +78,6 @@ export interface CaptureContext {
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
-
-/**
- * Every stored endeavor, hydrated with its relations.
- *
- * The two child stores are read **once each** and grouped in memory rather than
- * queried per endeavor: an Inbox with a hundred rows would otherwise cost two
- * hundred extra round-trips through IndexedDB. (The same read `DoProducer`
- * performs; it is duplicated rather than shared because a cross-feature import
- * of another feature's Producer is exactly what `UZF-6` forbids, and promoting
- * it is a `services/` change outside this issue's lane.)
- */
-const readStoredEndeavors = async (
-  localStore: LocalStore,
-): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords] = await Promise.all(
-    [
-      localStore.endeavors.all(),
-      localStore.defers.all(),
-      localStore.performances.all(),
-    ],
-  )
-
-  const defersByEndeavor = new Map<
-    string,
-    ReturnType<typeof deferFromRecord>[]
-  >()
-  for (const record of livingChildRecords(deferRecords)) {
-    const bucket = defersByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(deferFromRecord(record))
-    defersByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const performancesByEndeavor = new Map<
-    string,
-    ReturnType<typeof performFromRecord>[]
-  >()
-  for (const record of livingChildRecords(performanceRecords)) {
-    const bucket = performancesByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(performFromRecord(record))
-    performancesByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const endeavors: Endeavor[] = []
-  for (const record of endeavorRecords) {
-    const hydrated = endeavorFromRecord(record, {
-      defers: defersByEndeavor.get(record.id) ?? [],
-      performances: performancesByEndeavor.get(record.id) ?? [],
-    })
-    if (hydrated.ok) endeavors.push(hydrated.value)
-  }
-  return endeavors
-}
-
-/**
- * One stored endeavor by id, hydrated with only its own relations — the
- * O(1)-ish read for a single-row mutation (Add-for-Today, its undo), where
- * hydrating the whole store would make every tap O(N) IndexedDB work.
- */
-const readStoredEndeavor = async (
-  localStore: LocalStore,
-  endeavorId: string,
-): Promise<Endeavor | undefined> => {
-  const record = await localStore.endeavors.get(endeavorId)
-  if (record === null) return undefined
-  const [deferRecords, performanceRecords] = await Promise.all([
-    localStore.defers.forEndeavor(endeavorId),
-    localStore.performances.forEndeavor(endeavorId),
-  ])
-  const hydrated = endeavorFromRecord(record, {
-    defers: deferRecords.map(deferFromRecord),
-    performances: performanceRecords.map(performFromRecord),
-  })
-  return hydrated.ok ? hydrated.value : undefined
-}
 
 /**
  * Rewrites one stored endeavor, preserving its sync watermark.
@@ -324,7 +249,8 @@ export const scheduleForTodayThunk = createAsyncThunk<
   async ({ endeavorId, scheduledAt, now }, { extra }) => {
     let target: Endeavor | undefined
     try {
-      target = await readStoredEndeavor(extra.localStore, endeavorId)
+      target =
+        (await readStoredEndeavor(extra.localStore, endeavorId)) ?? undefined
     } catch (error) {
       return err(CaptureExceptions.schedulingFailed(messageOf(error)))
     }
@@ -376,7 +302,9 @@ export const undoScheduleForTodayThunk = createAsyncThunk<
   async ({ snapshot, now }, { extra }) => {
     let target: Endeavor | undefined
     try {
-      target = await readStoredEndeavor(extra.localStore, snapshot.endeavorId)
+      target =
+        (await readStoredEndeavor(extra.localStore, snapshot.endeavorId)) ??
+        undefined
     } catch (error) {
       return err(CaptureExceptions.undoFailed(messageOf(error)))
     }

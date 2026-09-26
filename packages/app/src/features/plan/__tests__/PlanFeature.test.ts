@@ -16,7 +16,11 @@ import {
 import { describe, expect, it } from 'vitest'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
-import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  planDayKey,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import {
   childCreationPromptDelegatedClose,
   onClockTicked,

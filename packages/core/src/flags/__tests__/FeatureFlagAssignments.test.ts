@@ -29,11 +29,12 @@ const CANON_ENABLED: readonly string[] = [
   'triage',
   'doActivityRings',
   'timelineQuickEventCreation',
+  'macDetailPane',
+  'sessionStopwatch',
 ]
 
 const CANON_DISABLED: readonly string[] = [
   'authenticationEnforced',
-  'sessionStopwatch',
   'sessionDurationLearning',
   'sessionBreak',
   'supabaseHosting',
@@ -50,18 +51,18 @@ const namesWithState = (state: 'enabled' | 'disabled') =>
     .map((assignment) => assignment.flag.name)
 
 describe('statusQuoSet', () => {
-  it('turns on exactly the fifteen features KroApple ships today', () => {
+  it('turns on exactly the seventeen features the web ships today', () => {
     expect(new Set(namesWithState('enabled'))).toEqual(new Set(CANON_ENABLED))
-    expect(namesWithState('enabled')).toHaveLength(15)
+    expect(namesWithState('enabled')).toHaveLength(17)
   })
 
-  it('holds off exactly the ten features KroApple has staged but not shipped', () => {
+  it('holds off exactly the nine features staged but not shipped', () => {
     expect(new Set(namesWithState('disabled'))).toEqual(new Set(CANON_DISABLED))
-    expect(namesWithState('disabled')).toHaveLength(10)
+    expect(namesWithState('disabled')).toHaveLength(9)
   })
 
-  it('assigns 25 of the 29 declared flags', () => {
-    expect(statusQuoSet).toHaveLength(25)
+  it('assigns 26 of the 30 declared flags', () => {
+    expect(statusQuoSet).toHaveLength(26)
   })
 
   it('leaves matrix, board, blueprints and developmentActions unassigned — declared, never staged', () => {
@@ -85,7 +86,7 @@ describe('statusQuoSet', () => {
 
 describe('the allEnabled baseline', () => {
   it('turns on every declared flag, including the four statusQuo never assigns', () => {
-    expect(allEnabledSet).toHaveLength(29)
+    expect(allEnabledSet).toHaveLength(30)
     for (const assignment of allEnabledSet) {
       expect(assignment.state).toBe('enabled')
     }

@@ -11,7 +11,10 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { planDayPickerDates } from '../../PlanNavigation'
 import { PLAN_REFERENCE_DAY, PLAN_REFERENCE_NOW, planAt } from '../../PlanMocks'
-import { addingPlanDays, startOfPlanDay } from '../../PlanCalendar'
+import {
+  addingPlanDays,
+  startOfPlanDay,
+} from '../../../../library/plan/PlanCalendar'
 import {
   PlanDayPickerFragment,
   pickerWeekdayColor,

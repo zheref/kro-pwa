@@ -17,6 +17,8 @@ import { DestinationKind } from '../SidebarDestination'
 import {
   withCaptureRouteConsumed,
   withDestinationSelected,
+  withDetailPaneDrilledIn,
+  withDetailPaneWentBack,
   withDraftProjectCancelled,
   withDraftProjectStarted,
   withDraftProjectTitleEdited,
@@ -234,5 +236,77 @@ describe('a Lists read failure never hides the shell', () => {
     })
     expect(failed.load.kind).toBe('failed')
     expect(failed.gates).toEqual(statusQuoGates)
+  })
+})
+
+describe('withDetailPaneDrilledIn', () => {
+  const review = { id: 'e-1', title: 'Write the quarterly review' }
+  const activity = { segment: 'performance' as const, endeavor: review }
+
+  it('moves an open pane and remembers where it left from', () => {
+    const next = withDetailPaneDrilledIn(
+      MainMocks.desktopDetailPanePlan,
+      activity,
+    )
+    expect(next.detailPane).toEqual(activity)
+    expect(next.detailPaneBackStack).toEqual([
+      { segment: 'plan', endeavor: review },
+    ])
+  })
+
+  it('opens a hidden pane with nothing to go back to', () => {
+    const next = withDetailPaneDrilledIn(
+      MainMocks.desktopDetailPaneReady,
+      activity,
+    )
+    expect(next.detailPane).toEqual(activity)
+    expect(next.detailPaneBackStack).toEqual([])
+  })
+
+  it('stacks a second drill-in on top of the first', () => {
+    const once = withDetailPaneDrilledIn(
+      MainMocks.desktopDetailPanePlan,
+      activity,
+    )
+    const twice = withDetailPaneDrilledIn(once, {
+      segment: 'sessionSetup',
+      endeavor: review,
+    })
+    expect(twice.detailPaneBackStack).toEqual([
+      { segment: 'plan', endeavor: review },
+      activity,
+    ])
+  })
+})
+
+describe('withDetailPaneWentBack', () => {
+  const review = { id: 'e-1', title: 'Write the quarterly review' }
+  const activity = { segment: 'performance' as const, endeavor: review }
+
+  it('returns to where a single drill-in left from, emptying the stack', () => {
+    const drilled = withDetailPaneDrilledIn(
+      MainMocks.desktopDetailPanePlan,
+      activity,
+    )
+    const back = withDetailPaneWentBack(drilled)
+    expect(back.detailPane).toEqual({ segment: 'plan', endeavor: review })
+    expect(back.detailPaneBackStack).toEqual([])
+  })
+
+  it('pops only the top entry of a two-deep stack', () => {
+    const twice = withDetailPaneDrilledIn(
+      withDetailPaneDrilledIn(MainMocks.desktopDetailPanePlan, activity),
+      { segment: 'sessionSetup', endeavor: review },
+    )
+    const back = withDetailPaneWentBack(twice)
+    expect(back.detailPane).toEqual(activity)
+    expect(back.detailPaneBackStack).toEqual([
+      { segment: 'plan', endeavor: review },
+    ])
+  })
+
+  it('returns the same state when there is nowhere to go back to', () => {
+    const state = MainMocks.desktopDetailPanePlan
+    expect(withDetailPaneWentBack(state)).toBe(state)
   })
 })

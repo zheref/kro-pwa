@@ -258,12 +258,12 @@ describe('loadSessionPreferencesThunk', () => {
     expect(preferences.defaultBreakDuration).toBe(minutesInSeconds(7))
   })
 
-  it('resolves every gate to off at statusQuo — the shipped default', async () => {
+  it('resolves the shipped defaults — stopwatch on, breaks and learning off', async () => {
     const { store } = harness()
     await store.dispatch(loadSessionPreferencesThunk())
 
     expect(store.getState().session.availability).toEqual({
-      isStopwatchAvailable: false,
+      isStopwatchAvailable: true,
       areBreaksAvailable: false,
       isDurationLearningEnabled: false,
     })
@@ -345,10 +345,15 @@ describe('prepareSessionLaunchThunk', () => {
       title: 'Write notes',
       host: EndeavorHost.local,
     })
-    const { store } = harness({
+    const { store, localStore } = harness({
       endeavors: [plain],
       defaultDurationMinutes: 20,
     })
+    // The flag ships on; this case is about it being thrown off.
+    makeFeatureFlagOverrideStore(localStore.preferences).set(
+      FeatureFlags.sessionStopwatch.name,
+      false,
+    )
     await store.dispatch(loadSessionPreferencesThunk())
     await store.dispatch(
       prepareSessionLaunchThunk({ endeavorId: plain.id, sessionId: plain.id }),

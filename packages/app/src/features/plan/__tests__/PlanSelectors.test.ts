@@ -3,6 +3,9 @@
  * (`RC-55`). The `greeting` slice is filled from its own initial state — this
  * suite has no opinion about any slice but Plan's.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import type { Endeavor, SettingValue } from '@kro/core'
 import {
   DayViewRange,
@@ -29,7 +32,11 @@ import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialTriageState } from '../../triage/TriageFeature'
 import type { RootState } from '../../../library/store'
-import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  planDayKey,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import { PlanViewMode } from '../PlanNavigation'
 import {
   PLAN_REFERENCE_DAY,
@@ -67,7 +74,7 @@ import {
   selectPlanViewMode,
   selectPlanVista,
 } from '../PlanSelectors'
-import type { TimelineEditSession } from '../PlanEditSession'
+import type { TimelineEditSession } from '../../../library/plan/PlanEditSession'
 import type { PlanState } from '../PlanState'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
@@ -98,6 +105,9 @@ const rootWith = (
   plan,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

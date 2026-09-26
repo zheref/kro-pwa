@@ -35,7 +35,19 @@
  * a duration before the session starts, opening and cancelling the two identity
  * editors, and dismissing the conclusion sheet. Each is one Shifter call.
  */
-import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { type PayloadAction, createSlice, isAnyOf } from '@reduxjs/toolkit'
+import {
+  onDetailRequested,
+  onEditRequested,
+} from '../endeavorDetail/EndeavorDetailFeature'
+import { openDetailByIdThunk } from '../endeavorDetail/EndeavorDetailProducer'
+import {
+  userDidDismissDetailPane,
+  userDidDrillIntoDetailPane,
+  userDidRequestDayProgress,
+  userDidSelectDetailPaneSegment,
+  userDidTapDetailPaneBack,
+} from '../main/MainFeature'
 import {
   type FocusTimerMode,
   type TimeIntervalSeconds,
@@ -545,6 +557,35 @@ export const sessionSlice = createSlice({
           ),
         )
       })
+
+      // -- The trailing detail pane (canon #517) ---------------------------
+      //
+      // A pane move away from Session leaves an auto-presented conclusion
+      // unanswered — flow 7: the pill keeps it, carrying Mark complete. The
+      // shell's and Detail's action creators, never their state (`RC-20`).
+      // Dropping the flag is safe even where the pane was elsewhere: it is
+      // only the auto-open's debt, and the conclusion itself is untouched.
+      .addCase(userDidDrillIntoDetailPane, (state, action) => {
+        if (action.payload.location.segment === 'sessionSetup') return
+        Object.assign(state, withConclusionDismissed(state))
+      })
+      .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
+        if (!action.payload.ok) return
+        Object.assign(state, withConclusionDismissed(state))
+      })
+      .addMatcher(
+        isAnyOf(
+          userDidSelectDetailPaneSegment,
+          userDidDismissDetailPane,
+          userDidRequestDayProgress,
+          userDidTapDetailPaneBack,
+          onDetailRequested,
+          onEditRequested,
+        ),
+        (state) => {
+          Object.assign(state, withConclusionDismissed(state))
+        },
+      )
   },
 })
 

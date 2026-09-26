@@ -29,6 +29,28 @@
  */
 import { Sun } from 'lucide-react'
 import { ActivityRings, type ActivityRing } from '../../../design/chrome'
+
+/**
+ * Tall enough to span both rows of the large title (title + subtitle), so the
+ * rings read as the header's trailing counterpart rather than an ornament.
+ */
+const HEADER_RING_DIAMETER = 62
+
+/** Both of a day's tracks, unfilled — what an empty day shows. */
+const EMPTY_DAY_RINGS: readonly ActivityRing[] = [
+  {
+    id: 'habits',
+    progress: 0,
+    role: 'ringGold',
+    accessibilityLabel: 'Habits, none today',
+  },
+  {
+    id: 'tasks',
+    progress: 0,
+    role: 'ringEmerald',
+    accessibilityLabel: 'Tasks, none due today',
+  },
+]
 import { GradientBackdrop } from '../../../design/system/gradient/GradientBackdrop'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
@@ -52,6 +74,12 @@ export interface DoHeaderFragmentProps {
    * the header must not conflate them.
    */
   readonly showsRings: boolean
+  /**
+   * Canon's `userDidRequestDayProgress`: tapping the rings opens Day Progress
+   * in the detail pane. Absent where there is no pane — the rings stay a
+   * passive indicator.
+   */
+  readonly onTapRings?: () => void
   readonly className?: string
 }
 
@@ -59,13 +87,18 @@ export function DoHeaderFragment({
   content,
   rings,
   showsRings,
+  onTapRings,
   className,
 }: DoHeaderFragmentProps) {
-  const drawsRings = showsRings && rings.length > 0
+  // The readout is always on screen (it is the way into Day Progress): a day
+  // with nothing to count draws both tracks empty instead of vanishing.
+  const drawsRings = showsRings
+  const drawnRings = rings.length > 0 ? rings : EMPTY_DAY_RINGS
 
   return (
     <header
       data-testid="do-header"
+      data-kro-large-title=""
       data-expanded={content.showsSunGlyph}
       className={cn(
         'relative flex items-center gap-kro-medium px-kro-medium py-[13px]',
@@ -141,7 +174,30 @@ export function DoHeaderFragment({
           className="relative z-10 ml-auto shrink-0"
           data-testid="do-header-rings"
         >
-          <ActivityRings rings={rings} />
+          {onTapRings ? (
+            <button
+              type="button"
+              aria-label="Show Day Progress"
+              title="Day Progress"
+              data-testid="do-header-rings-button"
+              onClick={onTapRings}
+              className="rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
+            >
+              <ActivityRings
+                rings={drawnRings}
+                diameter={HEADER_RING_DIAMETER}
+                lineWidth={8}
+                spacing={4}
+              />
+            </button>
+          ) : (
+            <ActivityRings
+              rings={drawnRings}
+              diameter={HEADER_RING_DIAMETER}
+              lineWidth={8}
+              spacing={4}
+            />
+          )}
         </div>
       ) : null}
     </header>

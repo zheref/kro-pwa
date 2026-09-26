@@ -13,7 +13,9 @@ import {
   statusQuoGates,
   tabletSurface,
 } from './MainMocks'
-import { MainShellFragment } from './MainShellFragment'
+import type { MainState } from './MainFeature'
+import { type DetailPaneChrome, MainShellFragment } from './MainShellFragment'
+import { detailPaneTitle } from './DetailPane'
 import {
   searchDestination,
   sidebarSections,
@@ -66,8 +68,10 @@ function Stage({
 const shell = (
   surface: DoSurface,
   overrides: Partial<Parameters<typeof MainShellFragment>[0]> = {},
+  slotted: ReactNode = null,
 ) => (
   <ToolbarSlotsProvider>
+    {slotted}
     <MainShellFragment
       shape={shellShapeFor(surface)}
       layout={doSurfaceLayout(surface)}
@@ -239,6 +243,58 @@ export const WithFeatureToolbarControls = {
           />
         </MainShellFragment>
       </ToolbarSlotsProvider>
+    </Stage>
+  ),
+}
+
+/** The pane's chrome as the Page would build it from a `MainMocks` state. */
+const paneFrom = (state: MainState): DetailPaneChrome => {
+  const { segment, endeavor } = state.detailPane
+  return {
+    segment,
+    title:
+      segment === null
+        ? null
+        : detailPaneTitle(segment, endeavor?.title ?? null),
+    subtitle: segment === null ? null : (endeavor?.title ?? null),
+    onSelectSegment: noop,
+    onDismiss: noop,
+  }
+}
+
+/** `macDetailPane` on, pane hidden: the Session/Performance/Plan group shows. */
+export const DetailPaneReady = {
+  render: () => (
+    <Stage width={1100}>
+      {shell(desktopSurface, {
+        detailPane: paneFrom(MainMocks.desktopDetailPaneReady),
+      })}
+    </Stage>
+  ),
+}
+
+/** The pane on Plan, reading one endeavor, with a feature's body slotted in. */
+export const DetailPanePlan = {
+  render: () => (
+    <Stage width={1100}>
+      {shell(
+        desktopSurface,
+        { detailPane: paneFrom(MainMocks.desktopDetailPanePlan) },
+        <ToolbarSlot placement="detailPane">
+          <p style={{ padding: 16 }}>The endeavor's details render here.</p>
+        </ToolbarSlot>,
+      )}
+    </Stage>
+  ),
+}
+
+/** The rings' Day Progress: Performance, whole-day mode, dark. */
+export const DetailPaneDayProgress = {
+  render: () => (
+    <Stage width={1100} theme="dark">
+      {shell(desktopSurface, {
+        detailPane: paneFrom(MainMocks.desktopDetailPaneDayProgress),
+      })}
     </Stage>
   ),
 }

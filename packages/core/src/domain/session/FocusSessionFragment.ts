@@ -19,7 +19,7 @@
  * `Perform` stores — so `toPerformFragment` below is the one sanctioned
  * conversion between them.
  */
-import type { PerformFragment } from '../endeavor/Perform'
+import type { PerformFragment, PerformSessionConfig } from '../endeavor/Perform'
 import { makePerformFragment } from '../endeavor/Perform'
 import {
   type TimeIntervalSeconds,
@@ -79,5 +79,10 @@ export const closeFocusSessionFragment = (
  */
 export const toPerformFragment = (
   fragment: FocusSessionFragment,
+  configuration: PerformSessionConfig | null = null,
 ): PerformFragment =>
-  makePerformFragment({ startedAt: fragment.start, endedAt: fragment.end })
+  makePerformFragment({
+    startedAt: fragment.start,
+    endedAt: fragment.end,
+    configuration,
+  })

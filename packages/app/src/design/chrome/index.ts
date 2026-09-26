@@ -138,3 +138,23 @@ export {
   type EmojiPickerPopoverProps,
   EmojiPickerPopover,
 } from './emoji/EmojiPickerPopover'
+export {
+  DETAIL_PANEL_ACCESSORY_INSET,
+  DETAIL_PANEL_ACCESSORY_INSET_VAR,
+  DETAIL_PANEL_GEOMETRY,
+  DETAIL_PANEL_WIDTH_CSS,
+  PANEL_TOOLBAR_BUTTON_SIZE,
+  PANEL_TOOLBAR_GLYPH,
+  PanelToolbarButton,
+  TrailingDetailPanel,
+  type TrailingDetailPanelProps,
+  detailPanelAccessoryInset,
+  detailPanelWidth,
+} from './panel/TrailingDetailPanel'
+export {
+  DrillTransition,
+  type DrillDirection,
+  type DrillTransitionProps,
+  drillAnimation,
+  useDrillDirection,
+} from './panel/DrillTransition'

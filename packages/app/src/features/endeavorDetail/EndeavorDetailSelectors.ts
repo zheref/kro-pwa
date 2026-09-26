@@ -88,6 +88,15 @@ export const selectDetailDestination = createSelector(
   (slice): EndeavorDetailDestination | null => slice.destination,
 )
 
+/**
+ * Detail has an editor (edit, duration or a relation screen) open over an
+ * endeavor — unsaved work another surface must not dismiss by taking the pane.
+ */
+export const selectIsDetailEditorOpen = createSelector(
+  [selectDetailSlice],
+  (slice): boolean => slice.endeavor !== null && slice.destination !== null,
+)
+
 /** Canon's `displayTitle` — the trimmed title, or "Untitled" when blank. */
 export const selectDetailTitle = createSelector(
   [selectDetailEndeavor],

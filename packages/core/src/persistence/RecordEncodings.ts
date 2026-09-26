@@ -34,7 +34,11 @@
  */
 import type { EndeavorTag } from '../domain/endeavor/EndeavorTag'
 import { endeavorTagFromRawValue } from '../domain/endeavor/EndeavorTag'
-import type { PerformFragment } from '../domain/endeavor/Perform'
+import type {
+  PerformFragment,
+  PerformSessionConfig,
+  PerformSessionMode,
+} from '../domain/endeavor/Perform'
 import { makePerformFragment } from '../domain/endeavor/Perform'
 import type { RepeatConfig } from '../domain/endeavor/RepeatConfig'
 import {
@@ -255,6 +259,18 @@ export const decodeRepeatConfigJson = (
 }
 
 /**
+ * Canon's `SessionConfig`, as Swift's synthesized `Codable` writes it: the
+ * `SessionTimerMode` enum is a keyed container — `{"countdown":{}}` — and an
+ * absent `rest` is omitted rather than `null`.
+ */
+export type EncodedSessionConfig = {
+  readonly title: string
+  readonly duration: number
+  readonly rest?: number
+  readonly mode: { readonly countdown: object } | { readonly stopwatch: object }
+}
+
+/**
  * The encoded form of one `PerformFragment` — canon's `Perform.SessionFragment`
  * under a **bare** `JSONEncoder()`, i.e. `.deferredToDate`, i.e. seconds since
  * Apple's reference date as a `Double`. `endedAt` is optional and is omitted
@@ -263,17 +279,55 @@ export const decodeRepeatConfigJson = (
 export type EncodedPerformFragment = {
   readonly startedAt: number
   readonly endedAt?: number
+  readonly configuration?: EncodedSessionConfig
+}
+
+export const encodeSessionConfig = (
+  config: PerformSessionConfig,
+): EncodedSessionConfig => ({
+  title: config.title,
+  duration: config.duration,
+  ...(config.rest === null ? {} : { rest: config.rest }),
+  mode: config.mode === 'stopwatch' ? { stopwatch: {} } : { countdown: {} },
+})
+
+/** Reads canon's `SessionConfig`; `null` for anything that is not one. */
+export const decodeSessionConfig = (
+  raw: unknown,
+): PerformSessionConfig | null => {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
+  const entry = raw as Record<string, unknown>
+  if (typeof entry.title !== 'string' || typeof entry.duration !== 'number') {
+    return null
+  }
+  const modeRaw = entry.mode
+  // Canon's default is `.countdown`; an absent mode decodes to it.
+  let mode: PerformSessionMode = 'countdown'
+  if (typeof modeRaw === 'object' && modeRaw !== null) {
+    if ('stopwatch' in modeRaw) mode = 'stopwatch'
+    else if (!('countdown' in modeRaw)) return null
+  } else if (modeRaw !== undefined) {
+    return null
+  }
+  return {
+    title: entry.title,
+    duration: entry.duration,
+    rest: typeof entry.rest === 'number' ? entry.rest : null,
+    mode,
+  }
 }
 
 export const encodePerformFragment = (
   fragment: PerformFragment,
-): EncodedPerformFragment =>
-  fragment.endedAt === null
-    ? { startedAt: appleTimeIntervalFromDate(fragment.startedAt) }
-    : {
-        startedAt: appleTimeIntervalFromDate(fragment.startedAt),
-        endedAt: appleTimeIntervalFromDate(fragment.endedAt),
-      }
+): EncodedPerformFragment => ({
+  startedAt: appleTimeIntervalFromDate(fragment.startedAt),
+  ...(fragment.endedAt === null
+    ? {}
+    : { endedAt: appleTimeIntervalFromDate(fragment.endedAt) }),
+  ...(fragment.configuration
+    ? { configuration: encodeSessionConfig(fragment.configuration) }
+    : {}),
+})
 
 export const decodePerformFragment = (raw: unknown): PerformFragment | null => {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
@@ -285,6 +339,7 @@ export const decodePerformFragment = (raw: unknown): PerformFragment | null => {
       typeof entry.endedAt === 'number'
         ? dateFromAppleTimeInterval(entry.endedAt)
         : null,
+    configuration: decodeSessionConfig(entry.configuration),
   })
 }
 

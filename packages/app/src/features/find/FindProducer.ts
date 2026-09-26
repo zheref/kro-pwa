@@ -31,25 +31,20 @@ import {
   type LocalStore,
   type ReconciliationContext,
   type Result,
-  deferFromRecord,
   deferRecordFromDefer,
-  endeavorFromRecord,
   endeavorRecordFromEndeavor,
   epochMillisFromDate,
   err,
-  liveRecords,
-  livingChildRecords,
   makeDefer,
   makeEndeavorsLensSnapshot,
   makeReconciliationContext,
   ok,
-  performFromRecord,
-  projectFromRecord,
   resolvedKind,
   type ShareOutcome,
   endeavorShareText,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import { readStoredEndeavors } from '../../library/persistence/storedEndeavors'
 import type { ThunkExtra } from '../../library/store'
 import type { FindException } from './FindException'
 import { FindExceptions, findExceptionMessage } from './FindException'
@@ -105,84 +100,6 @@ export type FindOperationOutcome =
     }
 
 /**
- * Every stored endeavor, hydrated with its relations.
- *
- * The two child stores are read **once each** and grouped in memory rather than
- * queried per endeavor: a list of a hundred rows would otherwise cost two
- * hundred extra round-trips. A row that fails to decode is skipped, never
- * fatal — canon's caller *"treats the failure as skip this row"*, and one
- * corrupt row must not blank the whole surface.
- */
-const readStoredEndeavors = async (
-  localStore: LocalStore,
-): Promise<readonly Endeavor[]> => {
-  const [endeavorRecords, deferRecords, performanceRecords, projectRecords] =
-    await Promise.all([
-      localStore.endeavors.all(),
-      localStore.defers.all(),
-      localStore.performances.all(),
-      localStore.projects.all(),
-    ])
-
-  /*
-    The list, looked up (KC-IS-#71 item 11).
-
-    `EndeavorRecord` has no list column — its own header says the row keeps
-    `projectId` and *"the list itself is looked up from `ProjectStore`"* — and
-    nothing looked it up, so every hydrated endeavor came back with
-    `list: null`. `tasksForList(id)` filters on `endeavor.list?.id`, which meant
-    every Lists destination in the app honestly showed **Nothing Here** while
-    holding rows.
-
-    One read of the whole project table rather than one per endeavor, for the
-    same reason the defers and performances above are read whole: a list of a
-    hundred rows would otherwise cost a hundred extra round-trips.
-  */
-  const projectsById = new Map(
-    // `liveRecords`, not `livingChildRecords`: a project is a top-level row
-    // with a tombstone, not a child row awaiting a remote DELETE.
-    liveRecords(projectRecords).map((record) => [
-      record.id,
-      projectFromRecord(record),
-    ]),
-  )
-
-  const defersByEndeavor = new Map<string, Defer[]>()
-  for (const record of livingChildRecords(deferRecords)) {
-    const bucket = defersByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(deferFromRecord(record))
-    defersByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const performancesByEndeavor = new Map<
-    string,
-    ReturnType<typeof performFromRecord>[]
-  >()
-  for (const record of livingChildRecords(performanceRecords)) {
-    const bucket = performancesByEndeavor.get(record.endeavorId) ?? []
-    bucket.push(performFromRecord(record))
-    performancesByEndeavor.set(record.endeavorId, bucket)
-  }
-
-  const endeavors: Endeavor[] = []
-  for (const record of endeavorRecords) {
-    const hydrated = endeavorFromRecord(record, {
-      defers: defersByEndeavor.get(record.id) ?? [],
-      performances: performancesByEndeavor.get(record.id) ?? [],
-      // A `projectId` naming a project that is gone — deleted while the row
-      // kept pointing at it — leaves `list: null`, which is what an unfiled row
-      // is, never a dangling half-list.
-      list:
-        record.projectId === null
-          ? null
-          : (projectsById.get(record.projectId) ?? null),
-    })
-    if (hydrated.ok) endeavors.push(hydrated.value)
-  }
-  return endeavors
-}
-
-/**
  * Rewrites one stored endeavor, preserving its sync watermark.
  *
  * Dropping `lastSyncedAtEpochMillis` would present an already-synced row to the
@@ -210,7 +127,7 @@ const findEndeavor = async (
   localStore: LocalStore,
   endeavorId: string,
 ): Promise<Endeavor | null> => {
-  const stored = await readStoredEndeavors(localStore)
+  const stored = await readStoredEndeavors(localStore, { resolveLists: true })
   return stored.find((endeavor) => endeavor.id === endeavorId) ?? null
 }
 
@@ -229,7 +146,9 @@ export const fetchFindEndeavorsThunk = createAsyncThunk<
   { extra: ThunkExtra }
 >('find/onEndeavorsFetchCompleted', async ({ surface, now }, { extra }) => {
   try {
-    const stored = await readStoredEndeavors(extra.localStore)
+    const stored = await readStoredEndeavors(extra.localStore, {
+      resolveLists: true,
+    })
     // Raw pass-through: the install shifter owns the single reconcile pass.
     return ok({ surface, endeavors: stored, now })
   } catch (error) {
@@ -426,7 +345,9 @@ export const performBulkOperationThunk = createAsyncThunk<
   try {
     const context = makeReconciliationContext({ now: request.now })
     const nowMillis = epochMillisFromDate(request.now)
-    const stored = await readStoredEndeavors(extra.localStore)
+    const stored = await readStoredEndeavors(extra.localStore, {
+      resolveLists: true,
+    })
     const byId = new Map(stored.map((endeavor) => [endeavor.id, endeavor]))
 
     for (const endeavorId of request.endeavorIds) {

@@ -28,16 +28,12 @@ describe('sessionDismissalHint', () => {
     )
   })
 
-  it('tells a desktop user to close the modal instead', () => {
-    expect(sessionDismissalHint(SessionSurfacePresentation.modal)).toBe(
-      'Close to dismiss',
-    )
+  it('says nothing on the desktop modal — the close control speaks for itself', () => {
+    expect(sessionDismissalHint(SessionSurfacePresentation.modal)).toBeNull()
   })
 
-  it('says the same on the /execute column, which cannot be swiped either', () => {
-    expect(sessionDismissalHint(SessionSurfacePresentation.inline)).toBe(
-      'Close to dismiss',
-    )
+  it('says nothing on the /execute column or in the pane either', () => {
+    expect(sessionDismissalHint(SessionSurfacePresentation.inline)).toBeNull()
   })
 })
 

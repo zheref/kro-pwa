@@ -19,7 +19,10 @@ desktop.
   capability, so nothing about how it adapts is staged behind a switch.
 - The day-progress rings follow their own kill switch, `doActivityRings`,
   which ships **on**. It exists so the readout can be turned off, not so it can
-  be rolled out.
+  be rolled out. While it is on the rings are always shown, spanning both rows
+  of the large title; a day with nothing to count draws both tracks empty. On
+  the desktop layout, with the detail panel available, tapping them opens Day
+  Progress in the panel ([MacDetailPane.md](./MacDetailPane.md)).
 - The Suggestions lane follows the `do.showSuggestions` preference, and the
   Google Calendar nudge inside it additionally follows the `googleCalendar`
   flag.

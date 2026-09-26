@@ -61,13 +61,13 @@ describe("canon's desktop toolbar table", () => {
     expect(primary.querySelector('[aria-label="Notifications"]')).not.toBeNull()
   })
 
-  it('surrounds the large-screen glyphs with the menu-row glass, a step larger than the pointer target', () => {
+  it('surrounds the large-screen glyphs with the FAB menu hover fill, a step larger than the pointer target', () => {
     render(toolbar())
     const bell = screen.getByLabelText('Notifications')
     expect(bell.style.width).toBe('32px')
     expect(bell.style.height).toBe('32px')
     expect(bell.className).toContain('rounded-kro-small')
-    expect(bell.className).toContain('hover:bg-kro-absolute/25')
+    expect(bell.className).toContain('hover:bg-(--kro-glass-surface-hover)')
     expect(bell.querySelector('svg')?.getAttribute('width')).toBe('16')
   })
 

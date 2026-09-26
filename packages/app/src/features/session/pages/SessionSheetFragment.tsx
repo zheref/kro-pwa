@@ -101,6 +101,13 @@ import {
 import { DurationDial } from '../../../design/chrome/dial/DurationDial'
 import { EmojiPickerPopover } from '../../../design/chrome/emoji/EmojiPickerPopover'
 import { colorVar, radiusVar } from '../../../design/system/tokens/roles'
+import { CHROME_LAYOUT } from '../../../design/chrome/layout/chromeLayout'
+import { SegmentedControl } from '../../../design/hig/selection/SegmentedControl'
+import {
+  CONTROL_RADIUS,
+  type ControlDensity,
+  SELECTED_CONTROL_STYLE,
+} from '../../../design/system/density'
 import { cn } from '../../../design/system/utils/cn'
 import { FocusTimerMode, type TimeIntervalSeconds } from '@kro/core'
 import { formatSessionClock } from '../SessionSelectors'
@@ -141,6 +148,59 @@ const foreAt = (percent: number): string =>
  */
 const ON_SATURATED_FILL = colorVar('absolute')
 
+/** The equal space above and below the dial + status group. */
+const DIAL_GROUP_MARGIN = 20
+
+/** The space between the dial and its state label. */
+const DIAL_STATUS_GAP = 10
+
+/** The tomato row's line: a 16px glyph plus its 4px top padding. */
+const TOMATO_ROW_HEIGHT = 20
+
+/**
+ * The deck's lead row, sized to what it holds — the preset pills at this
+ * density — rather than canon's fixed 38. The running deck keeps the same
+ * height empty, so the deck does not move between phases.
+ */
+const deckLeadHeight = (density: SessionControlDensity): number =>
+  density === 'compact' ? 28 : SESSION_SLOT_HEIGHT.deckLead
+
+/** The session dial's diameter — slightly under canon's 180. */
+export const SESSION_DIAL_DIAMETER = 164
+
+/** The design system's density: `comfortable` (touch) or `compact` (desktop). */
+export type SessionControlDensity = ControlDensity
+
+/** The two control sizes: touch (`comfortable`) and desktop (`compact`). */
+const CONTROL_METRICS = {
+  comfortable: {
+    padding: '8px 16px',
+    text: 'text-sm',
+    gap: 10,
+    minHeight: 'var(--kro-size-min-pointer-target)',
+  },
+  compact: { padding: '4px 10px', text: 'text-xs', gap: 6, minHeight: '26px' },
+} as const
+
+/**
+ * A control on the KroGlass material, optionally tinted with a palette role.
+ *
+ * The tint goes into the glass's own fill layer (`kro-glass--tinted`), so a
+ * tinted control still refracts and catches the rim light rather than
+ * reading as a flat fill. `radius` restates the control's own corner, which
+ * the material would otherwise override.
+ */
+const glassControl = (
+  tint: string | null,
+  radius: string,
+): { readonly className: string; readonly style: CSSProperties } => ({
+  className: tint === null ? 'kro-glass' : 'kro-glass kro-glass--tinted',
+  style: {
+    borderRadius: radius,
+    ...(tint === null ? {} : { ['--kro-glass-tint' as string]: tint }),
+  },
+})
+
 export interface SessionSheetFragmentProps {
   readonly phase: SessionPhase
   readonly presentation: SessionSurfacePresentation
@@ -165,10 +225,26 @@ export interface SessionSheetFragmentProps {
   /** `selectTomatoRow` — the capped glyph count and the `× N` overflow. */
   readonly tomatoGlyphs: number
   readonly tomatoOverflowLabel: string | null
+  /**
+   * Canon's per-session markers (🍅 / ⚡️ / ⏱️), oldest first — when given,
+   * the row draws these instead of the capped tomato count.
+   */
+  readonly sessionMarkers?: readonly string[]
   /** The uncapped count, for the row's accessibility label. Canon's own. */
   readonly completedSessionsCount: number
   readonly isStopwatchAvailable: boolean
   readonly areBreaksAvailable: boolean
+  /**
+   * `compact` on a desktop (pointer-driven) surface: the mode toggle and the
+   * preset pills take desktop-sized controls. `comfortable` — the default — is
+   * the touch layout, unchanged.
+   */
+  readonly density?: SessionControlDensity
+  /**
+   * Drop the header row (close + mode toggle). The trailing detail pane
+   * hosts the mode toggle as its own navigation title instead.
+   */
+  readonly hidesHeader?: boolean
 
   /** Omit to render the reserved 36px space instead — the `/execute` column. */
   readonly onTapClose?: () => void
@@ -227,39 +303,62 @@ export function SessionSheetFragment(props: SessionSheetFragmentProps) {
       className={cn('flex w-full flex-col text-kro-fore', className)}
       style={style}
     >
-      <SessionHeader {...props} />
+      {props.hidesHeader ? null : <SessionHeader {...props} />}
       <SessionIdentityArea {...props} />
 
+      {/*
+        The dial and its status label are one group with the same space above
+        and below it, so it sits balanced between the identity and the deck.
+      */}
       <div
-        data-kro-session-slot="dial"
-        className="flex items-center justify-center"
-        style={{ height: SESSION_SLOT_HEIGHT.dial }}
-      >
-        <DurationDial
-          seconds={dial.seconds}
-          readOnly={!dial.isEditable}
-          onChange={props.onAdjustDuration}
-          // Canon keeps the preset pills OUT of `dialArea` — they live in the
-          // ready deck, below the status label. The kit's dial bundles them, so
-          // they are switched off here and rendered where canon puts them.
-          presets={[]}
-          label={
-            dial.isEditable ? 'Session duration' : 'Session time remaining'
-          }
-        />
-      </div>
-
-      <p
-        data-kro-session-slot="status"
-        className="m-0 flex items-center justify-center font-semibold text-xs"
+        data-kro-session-dial-group=""
+        className="flex flex-col items-center"
         style={{
-          height: SESSION_SLOT_HEIGHT.status,
-          letterSpacing: 2,
-          color: foreAt(50),
+          marginTop: DIAL_GROUP_MARGIN,
+          marginBottom: DIAL_GROUP_MARGIN,
+          gap: DIAL_STATUS_GAP,
         }}
       >
-        {statusLabel}
-      </p>
+        <div
+          data-kro-session-slot="dial"
+          className="flex items-center justify-center"
+          // Exactly the dial: canon's 212pt frame left ~50px of air around it.
+          style={{ height: SESSION_DIAL_DIAMETER }}
+        >
+          <DurationDial
+            seconds={dial.seconds}
+            readOnly={!dial.isEditable}
+            onChange={props.onAdjustDuration}
+            // Canon keeps the preset pills OUT of `dialArea` — they live in the
+            // ready deck, below the status label. The kit's dial bundles them, so
+            // they are switched off here and rendered where canon puts them.
+            presets={[]}
+            // Canon's session dial (`darkDialStyle`): a monospaced readout at
+            // 0.88 of `.largeTitle`. A touch smaller than canon's 180pt frame on
+            // the web, with the ring slimmed to match.
+            readoutDesign="monospaced"
+            readoutScale={0.76}
+            tone="session"
+            diameter={SESSION_DIAL_DIAMETER}
+            ringWidth={16}
+            label={
+              dial.isEditable ? 'Session duration' : 'Session time remaining'
+            }
+          />
+        </div>
+
+        <p
+          data-kro-session-slot="status"
+          className="m-0 flex items-center justify-center font-semibold text-xs"
+          style={{
+            height: SESSION_SLOT_HEIGHT.status,
+            letterSpacing: 2,
+            color: foreAt(50),
+          }}
+        >
+          {statusLabel}
+        </p>
+      </div>
 
       <SessionControlsDeck {...props} />
     </div>
@@ -271,6 +370,7 @@ export function SessionSheetFragment(props: SessionSheetFragmentProps) {
 // ---------------------------------------------------------------------------
 
 function SessionHeader({
+  density = 'comfortable',
   isSessionInFlight,
   isStopwatchAvailable,
   mode,
@@ -294,55 +394,27 @@ function SessionHeader({
               ? 'Close session sheet (session keeps running)'
               : 'Close'
           }
-          className="inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
+          // Canon's `LiquidGlassCircleButton(size: 44)` — glass, not a fill.
+          className="kro-glass inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
           style={{
             width: SESSION_SLOT_HEIGHT.headerControl,
             height: SESSION_SLOT_HEIGHT.headerControl,
-            background: foreAt(15),
+            borderRadius: '9999px',
           }}
         >
-          <X aria-hidden="true" className="size-4" />
+          <X aria-hidden="true" className="size-4" strokeWidth={2.5} />
         </button>
       ) : (
         <SessionHeaderSpacer />
       )}
 
-      <div
-        data-kro-session-mode-toggle=""
-        role="group"
-        aria-label="Session mode"
-        className="inline-flex rounded-kro-pill"
-        style={{
-          maxWidth: 260,
-          background: foreAt(10),
-          // Canon: dimmed and non-interactive once the session is live —
-          // changing the mode mid-session would move the finish line.
-          opacity: isSessionInFlight ? 0.5 : 1,
-          pointerEvents: isSessionInFlight ? 'none' : 'auto',
-        }}
-      >
-        <SessionModeButton
-          label="Pomodoro"
-          icon={<Timer aria-hidden="true" className="size-3" />}
-          isSelected={mode === FocusTimerMode.countdown}
-          onSelect={() => onSelectMode(FocusTimerMode.countdown)}
-        />
-        {/*
-          Canon gates the Stopwatch button on the `sessionStopwatch` flag AND
-          the `session.enableStopwatch` preference. Both are resolved upstream
-          into `isStopwatchAvailable`; at `statusQuo` the flag is off, so the
-          shipped toggle offers Pomodoro alone — the honest absence, not a
-          disabled control that implies it could be turned on here.
-        */}
-        {isStopwatchAvailable ? (
-          <SessionModeButton
-            label="Stopwatch"
-            icon={<Watch aria-hidden="true" className="size-3" />}
-            isSelected={mode === FocusTimerMode.stopwatch}
-            onSelect={() => onSelectMode(FocusTimerMode.stopwatch)}
-          />
-        ) : null}
-      </div>
+      <SessionModeControl
+        mode={mode}
+        density={density}
+        isSessionInFlight={isSessionInFlight}
+        isStopwatchAvailable={isStopwatchAvailable}
+        onSelectMode={onSelectMode}
+      />
 
       {/* Canon's trailing `Color.clear.frame(width: 36, height: 36)` — what
           keeps the mode toggle optically centred against the close button. */}
@@ -364,34 +436,57 @@ function SessionHeaderSpacer() {
   )
 }
 
-function SessionModeButton({
-  label,
-  icon,
-  isSelected,
-  onSelect,
+/**
+ * The Pomodoro / Stopwatch toggle — the design system's `SegmentedControl`
+ * (canon's `TabSegmentedControl` selection row), exported so a host can seat it
+ * elsewhere: the trailing detail pane puts it in its header as the navigation
+ * title.
+ *
+ * Canon gates Stopwatch on the `sessionStopwatch` flag AND the
+ * `session.enableStopwatch` preference, resolved upstream into
+ * `isStopwatchAvailable`; off, the toggle offers Pomodoro alone — the honest
+ * absence, not a disabled control. Dimmed and inert once the session is live:
+ * changing the mode mid-session would move the finish line.
+ */
+export function SessionModeControl({
+  mode,
+  density,
+  isSessionInFlight,
+  isStopwatchAvailable,
+  onSelectMode,
 }: {
-  readonly label: string
-  readonly icon: ReactNode
-  readonly isSelected: boolean
-  readonly onSelect: () => void
+  readonly mode: FocusTimerMode
+  readonly density: SessionControlDensity
+  readonly isSessionInFlight: boolean
+  readonly isStopwatchAvailable: boolean
+  readonly onSelectMode: (mode: FocusTimerMode) => void
 }) {
+  const options = [
+    {
+      value: FocusTimerMode.countdown,
+      label: 'Pomodoro',
+      icon: <Timer aria-hidden="true" className="size-3" />,
+    },
+    ...(isStopwatchAvailable
+      ? [
+          {
+            value: FocusTimerMode.stopwatch,
+            label: 'Stopwatch',
+            icon: <Watch aria-hidden="true" className="size-3" />,
+          },
+        ]
+      : []),
+  ]
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={isSelected}
-      data-kro-session-mode={isSelected ? 'selected' : 'available'}
-      className="inline-flex items-center gap-1 rounded-kro-pill font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
-      style={{
-        padding: '8px 16px',
-        minHeight: 'var(--kro-size-min-pointer-target)',
-        color: colorVar('fore'),
-        background: isSelected ? foreAt(20) : 'transparent',
-      }}
-    >
-      {icon}
-      {label}
-    </button>
+    <SegmentedControl
+      label="Session mode"
+      options={options}
+      value={mode}
+      onChange={onSelectMode}
+      density={density}
+      disabled={isSessionInFlight}
+      className="max-w-[260px]"
+    />
   )
 }
 
@@ -420,38 +515,106 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
   } = props
 
   const isBreak = phase === SessionPhase.break
+  // Desktop: the resolved emoji and the title sit on one line, the glyph at
+  // the title's scale. Touch keeps canon's stacked layout.
+  const isInline = props.density === 'compact'
 
   return (
     <div
       data-kro-session-slot="identity"
       className="flex flex-col items-start gap-kro-small px-8 pt-kro-medium"
-      style={{ height: SESSION_SLOT_HEIGHT.identity, alignItems: 'center' }}
+      // Sized by its content; only the tomato row keeps a reserve (below),
+      // and only its own height.
+      style={{ alignItems: 'center' }}
     >
       {/*
         The glyph is the emoji picker's trigger — canon's `symbolView`, whose
         popover is anchored to it. Disabled on a break: the title is replaced by
         the "On a break?" copy and there is no endeavor symbol to re-glyph.
       */}
-      <EmojiPickerPopover
-        selection={symbol}
-        open={isEditingSymbol}
-        onOpenChange={(open) =>
-          open ? onTapSymbol() : onDismissSymbolPicker()
+      <div
+        data-kro-session-identity-line={isInline ? 'inline' : 'stacked'}
+        className={
+          isInline
+            ? 'flex max-w-full items-center justify-center gap-2'
+            : 'flex flex-col items-center gap-kro-small'
         }
-        onPick={onPickSymbol}
       >
-        <button
-          type="button"
-          disabled={isBreak}
-          data-kro-session-symbol=""
-          aria-label="Change session symbol"
-          title="Opens an emoji picker"
-          className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)] disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]"
-          style={{ minWidth: 56, minHeight: 56, fontSize: 48, lineHeight: 1 }}
+        <EmojiPickerPopover
+          selection={symbol}
+          open={isEditingSymbol}
+          onOpenChange={(open) =>
+            open ? onTapSymbol() : onDismissSymbolPicker()
+          }
+          onPick={onPickSymbol}
         >
-          {symbol}
-        </button>
-      </EmojiPickerPopover>
+          <button
+            type="button"
+            disabled={isBreak}
+            data-kro-session-symbol=""
+            aria-label="Change session symbol"
+            title="Opens an emoji picker"
+            className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)] disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]"
+            style={
+              isInline
+                ? { minWidth: 36, minHeight: 36, fontSize: 28, lineHeight: 1 }
+                : { minWidth: 56, minHeight: 56, fontSize: 48, lineHeight: 1 }
+            }
+          >
+            {symbol}
+          </button>
+        </EmojiPickerPopover>
+        {isBreak ? null : (
+          <>
+            {isEditingTitle ? (
+              <input
+                // Canon's `TextField("Session Title", …)` — return commits,
+                // tapping outside commits, Escape reverts.
+                // biome-ignore lint/a11y/noAutofocus: the field REPLACES the title the user just tapped; landing focus anywhere else loses the edit they explicitly started
+                autoFocus
+                data-kro-session-title-field=""
+                aria-label="Session title"
+                placeholder="Session Title"
+                value={editedTitle}
+                onChange={(event) => onChangeTitle(event.target.value)}
+                onBlur={onConfirmTitleEdit}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    onConfirmTitleEdit()
+                  }
+                  if (event.key === 'Escape') {
+                    event.preventDefault()
+                    onCancelTitleEdit()
+                  }
+                }}
+                className="text-center font-bold text-2xl outline-none focus-visible:shadow-[var(--kro-ring)]"
+                style={{
+                  maxWidth: 280,
+                  width: '100%',
+                  padding: '8px 12px',
+                  color: colorVar('fore'),
+                  background: foreAt(15),
+                  borderRadius: radiusVar('small'),
+                  border: 'none',
+                }}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={onTapEditTitle}
+                data-kro-session-title=""
+                aria-label={title}
+                title="Edit session title"
+                className="line-clamp-2 text-center font-bold text-2xl outline-none focus-visible:shadow-[var(--kro-ring)]"
+                style={{ maxWidth: 280, color: colorVar('fore') }}
+              >
+                {title}
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       {isBreak ? (
         <p
@@ -462,59 +625,35 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
         </p>
       ) : (
         <>
-          {isEditingTitle ? (
-            <input
-              // Canon's `TextField("Session Title", …)` — return commits,
-              // tapping outside commits, Escape reverts.
-              // biome-ignore lint/a11y/noAutofocus: the field REPLACES the title the user just tapped; landing focus anywhere else loses the edit they explicitly started
-              autoFocus
-              data-kro-session-title-field=""
-              aria-label="Session title"
-              placeholder="Session Title"
-              value={editedTitle}
-              onChange={(event) => onChangeTitle(event.target.value)}
-              onBlur={onConfirmTitleEdit}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  onConfirmTitleEdit()
-                }
-                if (event.key === 'Escape') {
-                  event.preventDefault()
-                  onCancelTitleEdit()
-                }
-              }}
-              className="text-center font-bold text-2xl outline-none focus-visible:shadow-[var(--kro-ring)]"
-              style={{
-                maxWidth: 280,
-                width: '100%',
-                padding: '8px 12px',
-                color: colorVar('fore'),
-                background: foreAt(15),
-                borderRadius: radiusVar('small'),
-                border: 'none',
-              }}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={onTapEditTitle}
-              data-kro-session-title=""
-              aria-label={title}
-              title="Edit session title"
-              className="line-clamp-2 text-center font-bold text-2xl outline-none focus-visible:shadow-[var(--kro-ring)]"
-              style={{ maxWidth: 280, color: colorVar('fore') }}
-            >
-              {title}
-            </button>
-          )}
-
           {/*
             The tomato row. Hidden at zero, capped at ten glyphs with a numeric
             `× N` beyond that — `selectTomatoRow` already decided both numbers,
             so the markup only draws them.
           */}
-          {tomatoGlyphs > 0 ? (
+          {props.sessionMarkers !== undefined &&
+          props.sessionMarkers.length > 0 ? (
+            // Canon's row: one marker per recorded session, scrolling
+            // sideways inside a 280px lane rather than capping with "× N".
+            <p
+              data-kro-session-markers=""
+              className="m-0 flex items-center overflow-x-auto pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{ gap: 2, maxWidth: 280, height: TOMATO_ROW_HEIGHT }}
+              role="img"
+              aria-label={`${props.sessionMarkers.length} recorded sessions`}
+            >
+              {props.sessionMarkers.map((marker, index) => (
+                <span
+                  // biome-ignore lint/suspicious/noArrayIndexKey: markers are positional, oldest first; there is no id to key on
+                  key={index}
+                  aria-hidden="true"
+                  className="shrink-0"
+                  style={{ fontSize: 16, lineHeight: 1 }}
+                >
+                  {marker}
+                </span>
+              ))}
+            </p>
+          ) : tomatoGlyphs > 0 ? (
             <p
               data-kro-session-tomatoes=""
               className="m-0 flex items-center pt-1"
@@ -547,7 +686,15 @@ function SessionIdentityArea(props: SessionSheetFragmentProps) {
                 </span>
               ) : null}
             </p>
-          ) : null}
+          ) : (
+            // Hidden at zero, but its line is reserved — and no more than
+            // that — so the first recorded session does not shift the deck.
+            <span
+              aria-hidden="true"
+              data-kro-session-tomatoes-reserve=""
+              style={{ display: 'block', height: TOMATO_ROW_HEIGHT }}
+            />
+          )}
         </>
       )}
     </div>
@@ -563,7 +710,9 @@ function SessionControlsDeck(props: SessionSheetFragmentProps) {
   return (
     <div
       data-kro-session-slot="deck"
-      className="grid w-full pt-kro-medium"
+      // No top padding: the dial group's bottom margin is the gap here, so
+      // the space above and below the dial and its status matches.
+      className="grid w-full"
       // `minmax(0, 1fr)`, never a bare `1fr`. A bare `1fr` is
       // `minmax(auto, 1fr)`, so the column's MINIMUM is the widest child's
       // max-content — and every deck shares this one cell, including the one
@@ -622,6 +771,13 @@ function StableControlSlot({
         minWidth: 0,
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? 'auto' : 'none',
+        // Only the visible deck sizes the region. The others stay in the same
+        // cell for the crossfade, but out of flow — reserving the tallest
+        // deck's height left ~100px of air under the ready deck and pushed
+        // the surface off centre.
+        ...(isVisible
+          ? {}
+          : { position: 'absolute' as const, top: 0, left: 0, right: 0 }),
       }}
     >
       {children}
@@ -636,6 +792,8 @@ function StableControlSlot({
 function ReadyControls(props: SessionSheetFragmentProps) {
   const { mode, presentation, presets, targetDuration, onAdjustDuration } =
     props
+  const density = props.density ?? 'comfortable'
+  const metrics = CONTROL_METRICS[density]
   const isCountdown = mode === FocusTimerMode.countdown
 
   return (
@@ -652,28 +810,35 @@ function ReadyControls(props: SessionSheetFragmentProps) {
         aria-hidden={isCountdown ? undefined : true}
         className="flex w-full min-w-0 items-center justify-center overflow-x-auto px-kro-medium"
         style={{
-          height: SESSION_SLOT_HEIGHT.deckLead,
-          gap: 10,
+          height: deckLeadHeight(density),
+          gap: metrics.gap,
           opacity: isCountdown ? 1 : 0,
           pointerEvents: isCountdown ? 'auto' : 'none',
         }}
       >
         {presets.map((minutes) => {
           const isSelected = Math.round(targetDuration / 60) === minutes
+          // The selected preset takes the design system's selected fill
+          // (white on dark, black on light); corners follow the density.
           return (
             <button
               key={minutes}
               type="button"
               aria-pressed={isSelected}
               data-kro-session-preset={isSelected ? 'selected' : 'available'}
+              data-kro-density={density}
               onClick={() => onAdjustDuration(minutes * 60)}
-              className="shrink-0 rounded-kro-pill text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
+              className={cn(
+                'shrink-0 outline-none focus-visible:shadow-[var(--kro-ring)]',
+                metrics.text,
+              )}
               style={{
-                padding: '8px 16px',
+                padding: metrics.padding,
                 fontWeight: isSelected ? 700 : 500,
+                borderRadius: CONTROL_RADIUS[density],
                 color: colorVar('fore'),
-                background: isSelected ? foreAt(25) : foreAt(10),
-                border: `1px solid ${isSelected ? foreAt(50) : 'transparent'}`,
+                background: foreAt(10),
+                ...(isSelected ? SELECTED_CONTROL_STYLE : {}),
               }}
             >
               {`${minutes}m`}
@@ -687,17 +852,17 @@ function ReadyControls(props: SessionSheetFragmentProps) {
       <div
         data-kro-session-slot="primary-action"
         className="flex items-end"
-        style={{ height: SESSION_SLOT_HEIGHT.primaryAction }}
+        style={{ height: CHROME_LAYOUT.fabDiameter }}
       >
         <CircleActionButton
           label="Start session"
           testAttribute="play"
-          diameter={72}
-          background={colorVar('focusGreen')}
+          diameter={CHROME_LAYOUT.fabDiameter}
+          tint={colorVar('focusGreen')}
           foreground={ON_SATURATED_FILL}
           onClick={props.onTapPlay}
         >
-          <Play aria-hidden="true" className="size-7" fill="currentColor" />
+          <Play aria-hidden="true" className="size-6" fill="currentColor" />
         </CircleActionButton>
       </div>
 
@@ -705,9 +870,11 @@ function ReadyControls(props: SessionSheetFragmentProps) {
         <p className="m-0 text-sm" style={{ color: foreAt(60) }}>
           Tap to start
         </p>
-        <p className="m-0 text-xs" style={{ color: foreAt(35) }}>
-          {sessionDismissalHint(presentation)}
-        </p>
+        {sessionDismissalHint(presentation) === null ? null : (
+          <p className="m-0 text-xs" style={{ color: foreAt(35) }}>
+            {sessionDismissalHint(presentation)}
+          </p>
+        )}
       </div>
     </div>
   )
@@ -718,61 +885,54 @@ function ReadyControls(props: SessionSheetFragmentProps) {
 // ---------------------------------------------------------------------------
 
 function FocusedControls(props: SessionSheetFragmentProps) {
-  const {
-    phase,
-    mode,
-    elapsedDuration,
-    remainingDuration,
-    onTapPause,
-    onTapResume,
-  } = props
+  const { phase, onTapPause, onTapResume } = props
   const isRunning = phase === SessionPhase.running
-  const clock = formatSessionClock(
-    mode === FocusTimerMode.countdown ? remainingDuration : elapsedDuration,
-  )
 
   return (
     <div
       className="flex w-full min-w-0 flex-col items-center"
       style={{ gap: 20 }}
     >
-      <p
+      {/*
+        Canon's `Color.clear.frame(height: 38)` (49888a36, "stabilize active
+        control deck"): the slot is kept so the deck does not move between
+        phases, but it is empty — the dial already shows the time, and a second
+        clock here said it twice.
+      */}
+      <div
         data-kro-session-slot="deck-lead"
-        data-kro-session-focused-clock=""
-        className="m-0 flex items-center justify-center font-medium font-mono text-lg tabular-nums"
-        style={{ height: SESSION_SLOT_HEIGHT.deckLead, color: foreAt(60) }}
-      >
-        {clock}
-      </p>
+        aria-hidden="true"
+        style={{ height: deckLeadHeight(props.density ?? 'comfortable') }}
+      />
 
       <SessionSuggestionsArea {...props} />
 
       <div
         data-kro-session-slot="primary-action"
         className="flex items-end justify-center"
-        style={{ height: SESSION_SLOT_HEIGHT.primaryAction, gap: 24 }}
+        style={{ height: CHROME_LAYOUT.fabDiameter, gap: 24 }}
       >
         {isRunning ? (
           <CircleActionButton
             label="Pause session"
             testAttribute="pause"
-            diameter={72}
-            background={foreAt(15)}
+            diameter={CHROME_LAYOUT.fabDiameter}
+            tint={null}
             foreground={colorVar('fore')}
             onClick={onTapPause}
           >
-            <Pause aria-hidden="true" className="size-7" fill="currentColor" />
+            <Pause aria-hidden="true" className="size-6" fill="currentColor" />
           </CircleActionButton>
         ) : (
           <CircleActionButton
             label="Resume session"
             testAttribute="resume"
-            diameter={72}
-            background={colorVar('focusGreen')}
+            diameter={CHROME_LAYOUT.fabDiameter}
+            tint={colorVar('focusGreen')}
             foreground={ON_SATURATED_FILL}
             onClick={onTapResume}
           >
-            <Play aria-hidden="true" className="size-7" fill="currentColor" />
+            <Play aria-hidden="true" className="size-6" fill="currentColor" />
           </CircleActionButton>
         )}
 
@@ -800,6 +960,7 @@ function FocusedControls(props: SessionSheetFragmentProps) {
  * the thing `opacity: 0` alone does not do.
  */
 function SessionStopMenu({
+  mode,
   onTapFinishEarly,
   onTapAbort,
 }: SessionSheetFragmentProps) {
@@ -831,8 +992,8 @@ function SessionStopMenu({
         aria-controls={menuId}
         data-kro-session-stop=""
         onClick={() => setOpen(!isOpen)}
-        className="inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
-        style={{ width: 56, height: 56, background: foreAt(15) }}
+        className="kro-glass inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
+        style={{ width: 56, height: 56, borderRadius: '9999px' }}
       >
         <Square aria-hidden="true" className="size-5" fill="currentColor" />
       </button>
@@ -851,7 +1012,9 @@ function SessionStopMenu({
         }}
       >
         <StopMenuItem
-          label="Finish Early"
+          // Canon: "Finish" for a stopwatch (there is no early), "Finish
+          // Early" for a countdown.
+          label={mode === FocusTimerMode.stopwatch ? 'Finish' : 'Finish Early'}
           onSelect={() => {
             close()
             onTapFinishEarly()
@@ -934,12 +1097,14 @@ function ConcludedControls({
           type="button"
           onClick={onTapComplete}
           data-kro-session-action="complete"
-          className="flex w-full items-center justify-center gap-2 rounded-kro-surface font-semibold outline-none focus-visible:shadow-[var(--kro-ring)]"
+          className="kro-glass kro-glass--tinted flex w-full items-center justify-center gap-2 rounded-kro-surface font-semibold outline-none focus-visible:shadow-[var(--kro-ring)]"
           style={{
             height: 56,
             color: ON_SATURATED_FILL,
-            background: colorVar('completeBlue'),
-            boxShadow: `0 4px 10px color-mix(in srgb, ${colorVar('completeBlue')} 40%, transparent)`,
+            ...glassControl(
+              colorVar('completeBlue'),
+              'var(--kro-radius-surface)',
+            ).style,
           }}
         >
           <CircleCheckBig aria-hidden="true" className="size-5" />
@@ -952,12 +1117,12 @@ function ConcludedControls({
             type="button"
             onClick={onTapStartNew}
             data-kro-session-action="start-new"
-            className="flex flex-1 items-center justify-center gap-2 rounded-kro-card font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
+            className="kro-glass kro-glass--tinted flex flex-1 items-center justify-center gap-2 rounded-kro-card font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
             style={{
               height: 48,
               color: ON_SATURATED_FILL,
-              background: colorVar('focusGreen'),
-              boxShadow: `0 3px 8px color-mix(in srgb, ${colorVar('focusGreen')} 35%, transparent)`,
+              ...glassControl(colorVar('focusGreen'), 'var(--kro-radius-card)')
+                .style,
             }}
           >
             <RotateCw aria-hidden="true" className="size-4" />
@@ -975,11 +1140,11 @@ function ConcludedControls({
               type="button"
               onClick={onTapBreak}
               data-kro-session-action="break"
-              className="flex flex-1 items-center justify-center gap-2 rounded-kro-card font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
+              className="kro-glass flex flex-1 items-center justify-center gap-2 rounded-kro-card font-medium text-sm outline-none focus-visible:shadow-[var(--kro-ring)]"
               style={{
                 height: 48,
                 color: colorVar('fore'),
-                background: foreAt(15),
+                borderRadius: 'var(--kro-radius-card)',
               }}
             >
               <Coffee aria-hidden="true" className="size-4" />
@@ -1024,14 +1189,16 @@ function BreakControls({
           type="button"
           onClick={onTapEndBreak}
           data-kro-session-action="end-break"
-          className="flex w-full items-center justify-center gap-2 rounded-kro-surface font-semibold outline-none focus-visible:shadow-[var(--kro-ring)]"
+          className="kro-glass kro-glass--tinted flex w-full items-center justify-center gap-2 rounded-kro-surface font-semibold outline-none focus-visible:shadow-[var(--kro-ring)]"
           style={{
             height: 56,
             // Pastry green — canon's `Color("PastryGreen")`, a real palette
-            // role here rather than an asset-catalogue name.
+            // role here rather than an asset-catalogue name — tinting glass.
             color: ON_SATURATED_FILL,
-            background: colorVar('pastryGreen'),
-            boxShadow: `0 4px 10px color-mix(in srgb, ${colorVar('pastryGreen')} 40%, transparent)`,
+            ...glassControl(
+              colorVar('pastryGreen'),
+              'var(--kro-radius-surface)',
+            ).style,
           }}
         >
           <RotateCw aria-hidden="true" className="size-5" />
@@ -1082,7 +1249,9 @@ function SessionSuggestionsArea({
       aria-hidden={isEmpty ? true : undefined}
       className="flex w-full min-w-0 flex-col justify-start gap-3 overflow-hidden"
       style={{
-        height: SESSION_SLOT_HEIGHT.suggestions,
+        // Nothing to show, nothing reserved: the region only takes its height
+        // when there is a suggestion in it.
+        height: isEmpty ? 0 : SESSION_SLOT_HEIGHT.suggestions,
         opacity: isEmpty ? 0 : 1,
         pointerEvents: isEmpty ? 'none' : 'auto',
       }}
@@ -1196,7 +1365,7 @@ function CircleActionButton({
   label,
   testAttribute,
   diameter,
-  background,
+  tint,
   foreground,
   onClick,
   children,
@@ -1204,24 +1373,29 @@ function CircleActionButton({
   readonly label: string
   readonly testAttribute: string
   readonly diameter: number
-  readonly background: string
+  /** The glass's tint — a palette role — or `null` for untinted glass. */
+  readonly tint: string | null
   readonly foreground: string
   readonly onClick: () => void
   readonly children: ReactNode
 }) {
+  const glass = glassControl(tint, '9999px')
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       data-kro-session-action={testAttribute}
-      className="inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]"
+      data-kro-glass-tint={tint === null ? 'none' : 'tinted'}
+      className={cn(
+        'inline-flex items-center justify-center rounded-full outline-none focus-visible:shadow-[var(--kro-ring)]',
+        glass.className,
+      )}
       style={{
         width: diameter,
         height: diameter,
-        background,
         color: foreground,
-        boxShadow: `0 4px 10px color-mix(in srgb, ${background} 40%, transparent)`,
+        ...glass.style,
       }}
     >
       {children}

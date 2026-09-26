@@ -157,4 +157,49 @@ export const MainMocks = {
     gates: statusQuoGates,
     isSidebarVisible: false,
   } satisfies MainState as MainState,
+
+  /** The `macDetailPane` flag on, the pane hidden — the toolbar group shows. */
+  desktopDetailPaneReady: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: desktopSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+  } satisfies MainState as MainState,
+
+  /** The pane on Plan, reading one endeavor — Details. */
+  desktopDetailPanePlan: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: desktopSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+    detailPane: {
+      segment: 'plan',
+      endeavor: { id: 'e-1', title: 'Write the quarterly review' },
+    },
+  } satisfies MainState as MainState,
+
+  /** The pane on Performance with no endeavor — the rings' Day Progress. */
+  desktopDetailPaneDayProgress: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: desktopSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+    detailPane: { segment: 'performance', endeavor: null },
+  } satisfies MainState as MainState,
+
+  /** A pane left open on a long, non-ASCII endeavor, then the window narrowed. */
+  handheldDetailPaneOpen: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: handheldSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+    detailPane: {
+      segment: 'plan',
+      endeavor: { id: 'e-2', title: '四半期のレビューを書く 🌸' },
+    },
+  } satisfies MainState as MainState,
 }

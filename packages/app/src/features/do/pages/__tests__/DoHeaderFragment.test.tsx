@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DoHeaderFragment } from '../DoHeaderFragment'
 import {
   DO_SURFACE_MOCK_LOCALE,
@@ -102,16 +103,22 @@ describe('the rings', () => {
     expect(screen.queryByTestId('do-header-rings')).toBeNull()
   })
 
-  it('draws nothing for a day that expects nothing, rather than an empty track', () => {
+  it('keeps both tracks, empty, on a day that expects nothing', async () => {
+    const onTapRings = vi.fn()
     render(
       <DoHeaderFragment
         content={headerFor(doSurfaceMocks.emptyDay, true)}
         rings={ringsOf(doSurfaceMocks.emptyDay)}
         showsRings
+        onTapRings={onTapRings}
       />,
     )
 
-    expect(screen.queryByTestId('do-header-rings')).toBeNull()
+    expect(
+      screen.getByLabelText('Habits, none today, Tasks, none due today'),
+    ).toBeTruthy()
+    await userEvent.click(screen.getByTestId('do-header-rings-button'))
+    expect(onTapRings).toHaveBeenCalledOnce()
   })
 })
 
@@ -180,5 +187,51 @@ describe('the LargeScreenTitle slab', () => {
         .getByTestId('do-header-title-slab')
         .parentElement?.getAttribute('data-testid'),
     ).toBe('do-header')
+  })
+})
+
+describe('the rings open Day Progress where the pane can show it', () => {
+  const content = headerFor(doSurfaceMocks.ringsEnabled, true)
+
+  it('makes the rings a button that reports the tap', async () => {
+    const onTapRings = vi.fn()
+    render(
+      <DoHeaderFragment
+        content={content}
+        rings={ringsOf(doSurfaceMocks.ringsEnabled)}
+        showsRings
+        onTapRings={onTapRings}
+      />,
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Show Day Progress' }),
+    )
+    expect(onTapRings).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the rings a passive indicator with no handler', () => {
+    render(
+      <DoHeaderFragment
+        content={content}
+        rings={ringsOf(doSurfaceMocks.ringsEnabled)}
+        showsRings
+      />,
+    )
+    expect(
+      screen.queryByRole('button', { name: 'Show Day Progress' }),
+    ).toBeNull()
+    expect(screen.getByTestId('do-header-rings')).toBeTruthy()
+  })
+
+  it('draws no button when the rings are hidden', () => {
+    render(
+      <DoHeaderFragment
+        content={content}
+        rings={[]}
+        showsRings={false}
+        onTapRings={() => {}}
+      />,
+    )
+    expect(screen.queryByTestId('do-header-rings-button')).toBeNull()
   })
 })

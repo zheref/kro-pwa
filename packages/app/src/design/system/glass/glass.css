@@ -149,6 +149,20 @@
   );
 }
 
+/**
+ * Glass tinted with any palette role, named by the caller through
+ * `--kro-glass-tint` (a session's focus green, a completion blue). Same mix as
+ * the accent variant: the hue goes into layer 2, so the control is still glass
+ * — it refracts, it catches the rim light — rather than a flat fill.
+ */
+.kro-glass.kro-glass--tinted::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-glass-tint, var(--kro-color-accent)) 58%,
+    var(--kro-glass-surface)
+  );
+}
+
 .kro-glass--accent.kro-glass--interactive:hover::before {
   background: color-mix(
     in srgb,

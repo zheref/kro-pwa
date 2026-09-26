@@ -1,7 +1,11 @@
 import type { Endeavor } from '@kro/core'
 import { EndeavorKind, makeEndeavor } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  planDayKey,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import {
   emptyPlanDayCache,
   partitionPlanDayBuffer,

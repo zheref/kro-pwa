@@ -50,12 +50,12 @@ import {
   settingValueIn,
 } from '../settings/SettingsSelectors'
 import type { RootState } from '../../library/store'
-import { isSamePlanDay, planDayKey } from './PlanCalendar'
+import { isSamePlanDay, planDayKey } from '../../library/plan/PlanCalendar'
 import { planEventsForDay } from './PlanDayCache'
 import {
   timelineEditPreview,
   timelineEventsWithEditPreview,
-} from './PlanEditSession'
+} from '../../library/plan/PlanEditSession'
 import { planMatrixItems, planMatrixPickerCandidates } from './PlanMatrix'
 import {
   type PlanListSection,
@@ -69,8 +69,8 @@ import {
   planViewModeSupportsQuickCreate,
 } from './PlanNavigation'
 import { PlanViewMode } from './PlanNavigation'
-import { timelinePlacements } from './TimelineLayout'
-import { timelineSlotCount } from './TimelineSlots'
+import { timelinePlacements } from '../../library/plan/TimelineLayout'
+import { timelineSlotCount } from '../../library/plan/TimelineSlots'
 
 const selectPlanSlice = (state: RootState) => state.plan
 

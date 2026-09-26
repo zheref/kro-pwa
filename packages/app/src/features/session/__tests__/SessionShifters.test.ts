@@ -193,6 +193,13 @@ describe('withLaunchPrepared', () => {
       sessionStateMocks.running,
     )
   })
+
+  it('still settles the lifecycle when refused mid-session (Execute on a card while one runs)', () => {
+    const loading = withSessionLoadStarted(sessionStateMocks.running)
+    const next = withLaunchPrepared(loading, prepared)
+    expect(next.load.kind).toBe('loaded')
+    expect(next.identity).toBe(sessionStateMocks.running.identity)
+  })
 })
 
 describe('withAnchorHydrated', () => {
@@ -847,6 +854,61 @@ describe('the conclusion claim’s remaining moves', () => {
     expect(recorded.completedSessionsCount).toBe(
       pending.completedSessionsCount + 1,
     )
+  })
+
+  const recordedCountdown = {
+    date: SESSION_MOCK_NOW,
+    duration: 1_500,
+    notes: null,
+    resolution: PerformResolution.complete,
+    sessionFragments: [],
+    rewardPoints: 9,
+    followUpNotes: null,
+    completedAt: null,
+    wasCompletedInSession: true,
+  }
+
+  it('appends the recorded session to a known markers history', () => {
+    const recording = withConclusionRecordingStarted(
+      sessionStateMocks.concludedWithHistory,
+    )
+    const recorded = withConclusionRecorded(recording, recordedCountdown)
+    expect(recorded.recordedSessionModes).toEqual([
+      'countdown',
+      'stopwatch',
+      null,
+      null,
+    ])
+    expect(recorded.completedSessionsCount).toBe(4)
+  })
+
+  it('starts the markers history on a first-ever recorded session', () => {
+    const fresh = withConclusionRecordingStarted(
+      withDisplayAdvanced(
+        withSessionStarted(sessionStateMocks.readyFresh, SESSION_MOCK_NOW),
+        sessionMockInstant(SESSION_MOCK_TARGET),
+      ),
+    )
+    const recorded = withConclusionRecorded(fresh, recordedCountdown)
+    expect(recorded.recordedSessionModes).toEqual([null])
+    expect(recorded.completedSessionsCount).toBe(1)
+  })
+
+  it('appends nothing for a zero-length record, and keeps a count-only history', () => {
+    const recording = withConclusionRecordingStarted(
+      sessionStateMocks.concludedWithHistory,
+    )
+    expect(
+      withConclusionRecorded(recording, { ...recordedCountdown, duration: 0 })
+        .recordedSessionModes,
+    ).toEqual(['countdown', 'stopwatch', null])
+    // `concluded` knows its history only by count (3, no modes): those three
+    // become countdown markers, then this recording's mode is appended — here
+    // unknown (`null`), since the fixture's performance carries no setup.
+    const countOnly = withConclusionRecordingStarted(pending)
+    expect(
+      withConclusionRecorded(countOnly, recordedCountdown).recordedSessionModes,
+    ).toEqual(['countdown', 'countdown', 'countdown', null])
   })
 
   it('never grows the tomato row for an aborted attempt', () => {

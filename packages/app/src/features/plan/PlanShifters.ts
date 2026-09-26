@@ -16,8 +16,8 @@
  */
 import type { Endeavor } from '@kro/core'
 import { withRescheduled } from '@kro/core'
-import type { PlanDayKey } from './PlanCalendar'
-import { planDayKey, startOfPlanDay } from './PlanCalendar'
+import type { PlanDayKey } from '../../library/plan/PlanCalendar'
+import { planDayKey, startOfPlanDay } from '../../library/plan/PlanCalendar'
 import {
   emptyPlanDayCache,
   partitionPlanDayBuffer,
@@ -25,7 +25,10 @@ import {
   planCacheReplacing,
   planCacheWithRescheduled,
 } from './PlanDayCache'
-import type { TimelineEditCommit, TimelineEditSession } from './PlanEditSession'
+import type {
+  TimelineEditCommit,
+  TimelineEditSession,
+} from '../../library/plan/PlanEditSession'
 import type { PlanException } from './PlanException'
 import { planDayPickerCenter } from './PlanNavigation'
 import type {
@@ -36,7 +39,7 @@ import type {
   PlanVisibilityToggle,
 } from './PlanState'
 import { PlanLoadReason as Reason } from './PlanState'
-import type { QuickCreateDraft } from './TimelineSlots'
+import type { QuickCreateDraft } from '../../library/plan/TimelineSlots'
 
 /** The events the authoritative day currently holds, or `[]`. */
 const authoritativeEventsOf = (state: PlanState): readonly Endeavor[] =>

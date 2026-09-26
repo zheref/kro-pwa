@@ -9,7 +9,7 @@
 import type { ReactNode } from 'react'
 import type { FABMenuEntry } from '../../../design/chrome'
 import { BothSchemes, Stage } from '../../../design/endeavor/storyStage'
-import { startOfPlanDay } from '../PlanCalendar'
+import { startOfPlanDay } from '../../../library/plan/PlanCalendar'
 import { PLAN_REFERENCE_DAY } from '../PlanMocks'
 import { PlanViewMode } from '../PlanNavigation'
 import { initialPlanVisibility } from '../PlanState'

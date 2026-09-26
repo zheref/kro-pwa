@@ -8,6 +8,9 @@
  * not be testing the anchoring at all, so each one moves `now` rather than a
  * count.
  */
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { FocusTimerMode, minutesInSeconds } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
@@ -38,6 +41,7 @@ import {
   selectIsSessionInFlight,
   selectIsSessionLoading,
   selectIsSessionPillVisible,
+  selectBlankSessionTargetDuration,
   selectIsStopwatchAvailable,
   selectLastAwardedPoints,
   selectPendingSessionOutcome,
@@ -84,6 +88,9 @@ const rootWith = (session: SessionState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session,
@@ -396,6 +403,32 @@ describe('availability selectors', () => {
     const enabled = rootWith(sessionStateMocks.readyEverythingOn)
     expect(selectIsStopwatchAvailable(enabled)).toBe(true)
     expect(selectAreBreaksAvailable(enabled)).toBe(true)
+  })
+})
+
+describe('selectBlankSessionTargetDuration', () => {
+  it('opens a new task at the configured default length (20 minutes at statusQuo)', () => {
+    expect(selectBlankSessionTargetDuration(running)).toBe(
+      running.session.preferences.defaultDuration,
+    )
+    expect(selectBlankSessionTargetDuration(running)).toBe(minutesInSeconds(20))
+  })
+
+  it('still offers a positive length with every flag on, for the timeline preview', () => {
+    const enabled = rootWith(sessionStateMocks.readyEverythingOn)
+    expect(selectBlankSessionTargetDuration(enabled)).toBeGreaterThan(0)
+  })
+
+  it('does not depend on the running session, only on the defaults', () => {
+    const idle = rootWith(sessionStateMocks.readyEverythingOn)
+    expect(selectBlankSessionTargetDuration(idle)).toBe(
+      selectBlankSessionTargetDuration(
+        rootWith({
+          ...sessionStateMocks.readyEverythingOn,
+          anchor: running.session.anchor,
+        }),
+      ),
+    )
   })
 })
 

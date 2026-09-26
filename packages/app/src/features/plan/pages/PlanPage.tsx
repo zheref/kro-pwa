@@ -75,14 +75,13 @@ import { CaptureKind, captureKindLabel } from '../../capture/CaptureRules'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
-import { navigateToDestinationThunk } from '../../main/MainProducer'
+import { startSessionFromCardThunk } from '../../main/MainProducer'
 import { DestinationKind } from '../../main/SidebarDestination'
 import {
   loadSettingsThunk,
   updateSettingThunk,
 } from '../../settings/SettingsProducer'
 import { vibrateForTimelineHoldThunk } from '../../platform/PlatformProducer'
-import { prepareSessionLaunchThunk } from '../../session/SessionProducer'
 import {
   onViewLoaded,
   onClockTicked,
@@ -101,7 +100,7 @@ import {
 import {
   type TimelineDragHandle,
   timelineEditableEnd,
-} from '../PlanEditSession'
+} from '../../../library/plan/PlanEditSession'
 import { PlanViewMode } from '../PlanNavigation'
 import {
   deletePlanEndeavorThunk,
@@ -141,7 +140,7 @@ import {
   selectPlanViewMode,
 } from '../PlanSelectors'
 import { PlanLoadReason } from '../PlanState'
-import { timelineSlotStart } from '../TimelineSlots'
+import { timelineSlotStart } from '../../../library/plan/TimelineSlots'
 import { PlanListFragment } from './list/PlanListFragment'
 import { PlanMatrixFragment } from './matrix/PlanMatrixFragment'
 import {
@@ -155,7 +154,7 @@ import {
   PlanDayPickerFragment,
 } from './PlanDayPickerFragment'
 import { PLAN_SCROLL_BOTTOM_INSET, PlanFragment } from './PlanFragment'
-import { TimelineFragment } from './timeline/TimelineFragment'
+import { TimelineFragment } from '../../../library/timeline/TimelineFragment'
 
 /** `PlanLayoutMetrics.dayPickerTopGap` + `topBreathingRoom`, canon's two gaps. */
 const DAY_PICKER_TOP_GAP = 8
@@ -496,19 +495,13 @@ export function PlanPage({
 
       if (operation === 'startSession') {
         void dispatch(
-          prepareSessionLaunchThunk({
+          startSessionFromCardThunk({
             endeavorId,
             // The session's own id, minted here: identity is the composition
             // site's to supply, never a Producer's.
             sessionId: crypto.randomUUID(),
           }),
-        ).finally(() => {
-          void dispatch(
-            navigateToDestinationThunk({
-              destination: { kind: DestinationKind.session },
-            }),
-          )
-        })
+        )
       }
     },
     [dispatch, openDetailFor, selectedDate],

@@ -82,6 +82,27 @@ const readEndeavor = async (
 }
 
 /**
+ * Reopen Detail on an endeavor known only by id — the pane's Plan segment
+ * reselected while it points at an endeavor Detail never showed (a Session or
+ * Performance drill for it). The endeavor is read fresh from the local store,
+ * so no surface has to keep a domain copy around to reopen it.
+ */
+export const openDetailByIdThunk = createAsyncThunk<
+  DetailResult,
+  { readonly endeavorId: string },
+  { extra: ThunkExtra }
+>('endeavorDetail/onDetailByIdCompleted', async ({ endeavorId }, { extra }) => {
+  try {
+    const endeavor = await readEndeavor(extra.localStore, endeavorId)
+    return endeavor === null
+      ? err(EndeavorDetailExceptions.endeavorNotFound(endeavorId))
+      : ok(endeavor)
+  } catch (error) {
+    return err(EndeavorDetailExceptions.unknown(detailExceptionMessage(error)))
+  }
+})
+
+/**
  * Rewrites one stored endeavor, preserving its sync watermark — dropping
  * `lastSyncedAtEpochMillis` would present an already-synced row to the next push
  * sweep as if it had never left the device.

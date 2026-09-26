@@ -21,6 +21,9 @@
  *    DOM" rule the issue states for the screenshot pass, applied identically
  *    to the automated suite.
  */
+import { initialEndeavorActivityState } from '../../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../../dayTimeline/DayTimelineFeature'
 import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
 import { type PerformanceRecord, performanceRecordFromPerform } from '@kro/core'
@@ -73,6 +76,9 @@ export const rootWith = (earn: EarnState): RootState => ({
   plan: initialPlanState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn,
   platform: initialPlatformState,
   session: initialSessionState,

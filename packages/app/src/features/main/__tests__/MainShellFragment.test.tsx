@@ -6,7 +6,7 @@
  * bar and no sidebar; at a wide one the sidebar, with Profile and Inbox in the
  * content toolbar. That is canon's ownership rule as a rendered fact.
  */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SHELL_BOTTOM_INSET_VAR } from '../../../design/chrome/layout/chromeLayout'
@@ -24,7 +24,9 @@ import {
   statusQuoGates,
   tabletSurface,
 } from '../MainMocks'
-import { MainShellFragment } from '../MainShellFragment'
+import type { MainState } from '../MainFeature'
+import { type DetailPaneChrome, MainShellFragment } from '../MainShellFragment'
+import { detailPaneTitle } from '../DetailPane'
 import {
   searchDestination,
   sidebarSections,
@@ -128,7 +130,7 @@ describe('acceptance criterion 1 — wide', () => {
     expect(toolbar.querySelector('[aria-label="Profile"]')).toBeTruthy()
     const inbox = toolbar.querySelector('[aria-label="Inbox"]')
     expect(inbox).toBeTruthy()
-    expect(inbox?.className).toContain('hover:bg-kro-absolute/25')
+    expect(inbox?.className).toContain('hover:bg-(--kro-glass-surface-hover)')
     expect(inbox?.className).toContain('rounded-kro-small')
     expect((inbox as HTMLElement).style.width).toBe('32px')
     expect(inbox?.querySelector('svg')?.getAttribute('width')).toBe('16')
@@ -437,5 +439,203 @@ describe('the content column reaches the window edge', () => {
     const toolbar = screen.getByTestId('shell-content-toolbar')
     expect(toolbar.className).not.toContain('kro-glass')
     expect(toolbar.tagName).toBe('HEADER')
+  })
+})
+
+/** The pane's chrome as the Page builds it — mirrors the stories' `paneFrom`. */
+const paneFrom = (
+  state: MainState,
+  callbacks: Partial<DetailPaneChrome> = {},
+): DetailPaneChrome => {
+  const { segment, endeavor } = state.detailPane
+  return {
+    segment,
+    title:
+      segment === null
+        ? null
+        : detailPaneTitle(segment, endeavor?.title ?? null),
+    subtitle: segment === null ? null : (endeavor?.title ?? null),
+    onSelectSegment: noop,
+    onDismiss: noop,
+    ...callbacks,
+  }
+}
+
+describe('the trailing detail pane — mirrors the DetailPane* stories', () => {
+  it('shows the Session, Performance and Plan group with nothing pressed while hidden', () => {
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneReady),
+    })
+    const group = screen.getByTestId('detail-pane-segments')
+    const buttons = Array.from(group.querySelectorAll('button'))
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Session',
+      'Performance',
+      'Plan',
+    ])
+    expect(
+      buttons.every((b) => b.getAttribute('aria-pressed') === 'false'),
+    ).toBe(true)
+    expect(
+      screen
+        .getByTestId('trailing-detail-panel')
+        .getAttribute('data-presented'),
+    ).toBe('false')
+  })
+
+  it("presents Plan's Details with the endeavor's name and the slotted body", () => {
+    render(
+      <ToolbarSlotsProvider>
+        <ToolbarSlot placement="detailPane">
+          <p>detail body</p>
+        </ToolbarSlot>
+        <MainShellFragment
+          shape="sidebar"
+          layout={doSurfaceLayout(desktopSurface)}
+          selected={MainMocks.desktopLoaded.selected}
+          sections={[]}
+          tabs={[]}
+          searchDestination={searchDestination}
+          searchQuery=""
+          isAddingProject={false}
+          draftProjectTitle=""
+          canManageProjects
+          isSidebarVisible
+          onSelectDestination={noop}
+          onChangeSearchQuery={noop}
+          onSubmitSearch={noop}
+          onTapAddProject={noop}
+          onEditDraftProjectTitle={noop}
+          onCommitDraftProject={noop}
+          onCancelDraftProject={noop}
+          onDeleteProject={noop}
+          onToggleSidebar={noop}
+          onTapProfile={noop}
+          onTapInbox={noop}
+          onTapSettings={noop}
+          detailPane={paneFrom(MainMocks.desktopDetailPanePlan)}
+        />
+      </ToolbarSlotsProvider>,
+    )
+    const panel = screen.getByTestId('trailing-detail-panel')
+    expect(panel.getAttribute('data-presented')).toBe('true')
+    expect(screen.getByText('Details')).toBeTruthy()
+    expect(screen.getByText('Write the quarterly review')).toBeTruthy()
+    expect(panel.textContent).toContain('detail body')
+    expect(
+      screen.getByRole('button', { name: 'Plan' }).getAttribute('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('titles the whole-day Performance "Day Progress" with no subtitle', () => {
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneDayProgress),
+    })
+    expect(screen.getByText('Day Progress')).toBeTruthy()
+    expect(
+      screen
+        .getByRole('button', { name: 'Performance' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('reports a segment click and a dismiss', async () => {
+    const onSelectSegment = vi.fn()
+    const onDismiss = vi.fn()
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPanePlan, {
+        onSelectSegment,
+        onDismiss,
+      }),
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Session' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onSelectSegment).toHaveBeenCalledWith('sessionSetup')
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  it('publishes the FAB offset only while the pane is showing', () => {
+    const { container, unmount } = renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPanePlan),
+    })
+    const root = container.querySelector(
+      '[data-shell-shape="sidebar"]',
+    ) as HTMLElement
+    expect(root.style.getPropertyValue('--kro-detail-panel-inset')).toContain(
+      '12px',
+    )
+    unmount()
+    const hidden = renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneReady),
+    })
+    const hiddenRoot = hidden.container.querySelector(
+      '[data-shell-shape="sidebar"]',
+    ) as HTMLElement
+    expect(hiddenRoot.style.getPropertyValue('--kro-detail-panel-inset')).toBe(
+      '0px',
+    )
+  })
+
+  it('draws neither the group nor the pane without a pane, or on the tab-bar shell', () => {
+    renderShell(desktopSurface)
+    expect(screen.queryByTestId('detail-pane-segments')).toBeNull()
+    expect(screen.queryByTestId('trailing-detail-panel')).toBeNull()
+    cleanup()
+    renderShell(handheldSurface, {
+      detailPane: paneFrom(MainMocks.handheldDetailPaneOpen),
+    })
+    expect(screen.queryByTestId('detail-pane-segments')).toBeNull()
+    expect(screen.queryByTestId('trailing-detail-panel')).toBeNull()
+  })
+})
+
+describe('the pane starts below the large title', () => {
+  const rect = (top: number, bottom: number) =>
+    ({
+      top,
+      bottom,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: bottom - top,
+      x: 0,
+      y: top,
+      toJSON: () => ({}),
+    }) as DOMRect
+
+  it('places the pane the bottom margin below a page’s large title', async () => {
+    const title = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.hasAttribute('data-kro-large-title')
+          ? rect(52, 172)
+          : rect(0, 900)
+      })
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPanePlan),
+    })
+    // A destination mounting its large title — the shell notices and re-measures.
+    const header = document.createElement('header')
+    header.setAttribute('data-kro-large-title', '')
+    screen.getByRole('main').prepend(header)
+    await waitFor(() => {
+      expect(screen.getByTestId('trailing-detail-panel').style.top).toBe(
+        '188px',
+      )
+    })
+    title.mockRestore()
+  })
+
+  it("keeps canon's 96 on a page with no large title", async () => {
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPanePlan),
+    })
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    expect(screen.getByTestId('trailing-detail-panel').style.top).toBe('96px')
+  })
+
+  it('measures nothing when the window hosts no pane', () => {
+    renderShell(desktopSurface)
+    expect(screen.queryByTestId('trailing-detail-panel')).toBeNull()
   })
 })

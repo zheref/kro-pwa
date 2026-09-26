@@ -449,8 +449,8 @@ export const HIG_CATALOG: readonly HigCatalogEntry[] = [
     applePath: 'segmented-controls',
     purpose:
       'Two to five mutually exclusive options in one compact control. Same primitive as Tab views.',
-    availability: 'existing',
-    kroName: 'Tabs',
+    availability: 'implemented',
+    kroName: 'SegmentedControl',
   },
   {
     title: 'Sliders',

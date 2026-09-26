@@ -61,6 +61,8 @@ import {
   type EndeavorRecord,
   type LocalStore,
   type Perform,
+  type PerformSessionMode,
+  performSessionMode,
   type PersistedRunningSession,
   type Result,
   type SessionLaunchRecommendation,
@@ -202,6 +204,23 @@ export const tomatoCountFor = (endeavor: Endeavor | null): number =>
       ).length
 
 /**
+ * The recorded sessions' modes, oldest first — canon's tomato-row source
+ * (`MainSelectors`: performances with a positive duration, each read through
+ * `sessionFragments.first?.configuration?.mode`). `null` is a session recorded
+ * without a configuration (before the web wrote one, or hand-logged).
+ */
+export const recordedSessionModesFor = (
+  endeavor: Endeavor | null,
+): readonly (PerformSessionMode | null)[] =>
+  endeavor === null
+    ? []
+    : endeavor.performances
+        .filter((performance) => performance.duration > 0)
+        .slice()
+        .sort((left, right) => left.date.getTime() - right.date.getTime())
+        .map(performSessionMode)
+
+/**
  * Writes the anchor as the runtime now holds it, or clears it when the session
  * has ended. Call from a phase transition; never from a tick that produced none.
  */
@@ -309,6 +328,8 @@ export interface SessionLaunchPreparation {
   readonly identity: SessionIdentity
   readonly recommendation: SessionLaunchRecommendation
   readonly completedSessionsCount: number
+  /** `recordedSessionModesFor` — the tomato row's markers. */
+  readonly recordedSessionModes?: readonly (PerformSessionMode | null)[]
 }
 
 /**
@@ -376,6 +397,7 @@ export const prepareSessionLaunchThunk = createAsyncThunk<
           fallbackDuration: fallback,
         }),
         completedSessionsCount: tomatoCountFor(endeavor),
+        recordedSessionModes: recordedSessionModesFor(endeavor),
       })
     } catch (error) {
       return err(
@@ -899,7 +921,17 @@ export const recordSessionPerformanceThunk = createAsyncThunk<
         date: outcome.fragments[0]?.start ?? outcome.endedAt,
         duration: outcome.elapsedDuration,
         resolution: outcome.resolution,
-        sessionFragments: outcome.fragments.map(toPerformFragment),
+        // Canon's `SessionFragment.configuration`: every fragment carries how
+        // the session was set up, which is what the tomato row and the
+        // activity history read the mode back from.
+        sessionFragments: outcome.fragments.map((fragment) =>
+          toPerformFragment(fragment, {
+            title: outcome.intention,
+            duration: outcome.targetDuration,
+            rest: null,
+            mode: sessionOf(getState).mode,
+          }),
+        ),
         rewardPoints,
         completedAt:
           outcome.resolution === PerformResolution.finished ? now : null,

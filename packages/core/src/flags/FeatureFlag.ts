@@ -62,6 +62,7 @@ export const FeatureFlags = {
   doActivityRings: { name: 'doActivityRings' },
   timelineQuickEventCreation: { name: 'timelineQuickEventCreation' },
   appearanceThemes: { name: 'appearanceThemes' },
+  macDetailPane: { name: 'macDetailPane' },
 } as const satisfies Record<string, FeatureFlag>
 
 /** The key set of `FeatureFlags` — every declared flag's name, as a type. */

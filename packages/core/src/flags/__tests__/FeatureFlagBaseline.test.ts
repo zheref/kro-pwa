@@ -51,10 +51,10 @@ describe('the allEnabled baseline', () => {
     expect(
       namesIn(assignments).filter((name) => name === 'developmentActions'),
     ).toHaveLength(1)
-    expect(assignments).toHaveLength(29)
+    expect(assignments).toHaveLength(30)
   })
 
   it('leaves nothing unassigned, which is what makes it the development baseline', () => {
-    expect(baselineAssignments(FeatureFlagBaseline.allEnabled)).toHaveLength(29)
+    expect(baselineAssignments(FeatureFlagBaseline.allEnabled)).toHaveLength(30)
   })
 })

@@ -53,13 +53,13 @@ import type {
   EndeavorStatus,
 } from '@kro/core'
 import { EndeavorsVistas } from '@kro/core'
-import type { PlanDayKey } from './PlanCalendar'
+import type { PlanDayKey } from '../../library/plan/PlanCalendar'
 import type { PlanDayCache } from './PlanDayCache'
 import { emptyPlanDayCache } from './PlanDayCache'
-import type { TimelineEditSession } from './PlanEditSession'
+import type { TimelineEditSession } from '../../library/plan/PlanEditSession'
 import type { PlanException } from './PlanException'
 import { PlanViewMode } from './PlanNavigation'
-import type { QuickCreateDraft } from './TimelineSlots'
+import type { QuickCreateDraft } from '../../library/plan/TimelineSlots'
 
 /**
  * The authoritative selected day's lifecycle.

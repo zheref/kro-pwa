@@ -21,7 +21,10 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SessionPhase, sessionPhases } from '../../SessionVocabulary'
-import { SessionSheetFragment } from '../SessionSheetFragment'
+import {
+  SESSION_DIAL_DIAMETER,
+  SessionSheetFragment,
+} from '../SessionSheetFragment'
 import { sessionSheetMocks, sheetPropsFor } from '../SessionSurfaceMocks'
 import { sessionStateMocks } from '../../SessionMocks'
 import { SESSION_SLOT_HEIGHT } from '../sessionSheetModel'
@@ -45,7 +48,7 @@ describe('phases', () => {
     expect(screen.getByText('READY')).toBeTruthy()
   })
 
-  it('shows pause and stop while a session runs, and the live remaining time', () => {
+  it('shows pause and stop while a session runs, with the time on the dial alone', () => {
     const { container } = render(
       <SessionSheetFragment {...sessionSheetMocks.running} />,
     )
@@ -53,14 +56,163 @@ describe('phases', () => {
     expect(screen.getByRole('button', { name: 'Pause session' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Stop session' })).toBeTruthy()
     expect(screen.getByText('Session in progress')).toBeTruthy()
-    // 25-minute target, ten minutes in.
+    // 25-minute target, ten minutes in: the dial says 15:00, and nothing else
+    // on the deck repeats it (canon 49888a36 emptied that slot).
     expect(
-      (
-        container.querySelector(
-          '[data-kro-session-focused-clock]',
-        ) as HTMLElement
-      ).textContent,
-    ).toBe('15:00')
+      container.querySelector('[data-kro-session-focused-clock]'),
+    ).toBeNull()
+    expect(screen.getAllByText('15:00')).toHaveLength(1)
+  })
+
+  it('offers compact controls on desktop and regular ones on touch', () => {
+    const { container, rerender } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} density="compact" />,
+    )
+    const compact = container.querySelectorAll('[data-kro-density="compact"]')
+    expect(compact.length).toBeGreaterThan(1)
+    rerender(<SessionSheetFragment {...sessionSheetMocks.ready} />)
+    expect(
+      container.querySelectorAll('[data-kro-density="compact"]'),
+    ).toHaveLength(0)
+    expect(
+      container.querySelectorAll('[data-kro-density="comfortable"]').length,
+    ).toBeGreaterThan(1)
+  })
+
+  it('puts the start button on focus-green-tinted glass', () => {
+    render(<SessionSheetFragment {...sessionSheetMocks.ready} />)
+    const play = screen.getByRole('button', { name: 'Start session' })
+    expect(play.className).toContain('kro-glass')
+    expect(play.className).toContain('kro-glass--tinted')
+    expect(play.style.getPropertyValue('--kro-glass-tint')).toContain(
+      'focus-green',
+    )
+  })
+
+  it('fills the selected preset and mode with the foreground colour (white on dark, black on light)', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} density="compact" />,
+    )
+    const selected = container.querySelector(
+      '[data-kro-session-preset="selected"]',
+    ) as HTMLElement
+    const idle = container.querySelector(
+      '[data-kro-session-preset="available"]',
+    ) as HTMLElement
+    const mode = container.querySelector(
+      '[data-kro-segment="selected"]',
+    ) as HTMLElement
+    for (const element of [selected, mode]) {
+      expect(element.style.background).toBe('var(--kro-color-fore)')
+      expect(element.style.color).toBe('var(--kro-color-back)')
+      expect(element.className).not.toContain('kro-glass')
+      // The compact (desktop) corner, shared by both.
+      expect(element.style.borderRadius).toBe('var(--kro-radius-small)')
+    }
+    expect(idle.style.background).not.toBe('var(--kro-color-fore)')
+  })
+
+  it('draws one marker per recorded session when given them', () => {
+    const { container } = render(
+      <SessionSheetFragment
+        {...sessionSheetMocks.ready}
+        sessionMarkers={['🍅', '⚡️', '⏱️']}
+      />,
+    )
+    const row = container.querySelector(
+      '[data-kro-session-markers]',
+    ) as HTMLElement
+    expect(row.textContent).toBe('🍅⚡️⏱️')
+    expect(row.getAttribute('aria-label')).toBe('3 recorded sessions')
+    expect(row.style.maxWidth).toBe('280px')
+    // The old capped count is not drawn beside it.
+    expect(container.querySelector('[data-kro-session-tomatoes]')).toBeNull()
+  })
+
+  it('keeps the capped tomato count when no markers are given', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} />,
+    )
+    expect(container.querySelector('[data-kro-session-markers]')).toBeNull()
+  })
+
+  it('reserves the row’s line when the markers are empty', () => {
+    const { container } = render(
+      <SessionSheetFragment
+        {...sessionSheetMocks.ready}
+        sessionMarkers={[]}
+        tomatoGlyphs={0}
+      />,
+    )
+    expect(
+      container.querySelector('[data-kro-session-tomatoes-reserve]'),
+    ).toBeTruthy()
+  })
+
+  it('keeps the emoji and the title on one line on desktop', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} density="compact" />,
+    )
+    const line = container.querySelector(
+      '[data-kro-session-identity-line]',
+    ) as HTMLElement
+    expect(line.getAttribute('data-kro-session-identity-line')).toBe('inline')
+    expect(line.className).toContain('flex')
+    expect(line.className).not.toContain('flex-col')
+    expect(line.querySelector('[data-kro-session-symbol]')).toBeTruthy()
+    expect(line.querySelector('[data-kro-session-title]')).toBeTruthy()
+  })
+
+  it('stacks the emoji above the title on touch, as canon does', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} />,
+    )
+    const line = container.querySelector(
+      '[data-kro-session-identity-line]',
+    ) as HTMLElement
+    expect(line.getAttribute('data-kro-session-identity-line')).toBe('stacked')
+    expect(line.className).toContain('flex-col')
+  })
+
+  it('shows the break copy, not the title, on the line during a break', () => {
+    const { container } = render(
+      <SessionSheetFragment
+        {...sessionSheetMocks.breakNearlyOver}
+        density="compact"
+      />,
+    )
+    expect(container.querySelector('[data-kro-session-title]')).toBeNull()
+    expect(
+      container.querySelector('[data-kro-session-break-copy]'),
+    ).toBeTruthy()
+  })
+
+  it('sizes the start button exactly like the Do FAB', () => {
+    render(<SessionSheetFragment {...sessionSheetMocks.ready} />)
+    const play = screen.getByRole('button', { name: 'Start session' })
+    expect(play.style.width).toBe('62px')
+    expect(play.style.height).toBe('62px')
+  })
+
+  it('drops its own header row when a host seats the mode toggle elsewhere', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} hidesHeader />,
+    )
+    expect(
+      container.querySelector('[data-kro-session-slot="header"]'),
+    ).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Session mode' })).toBeNull()
+  })
+
+  it('says Finish for a stopwatch and Finish Early for a countdown', () => {
+    const { rerender } = render(
+      <SessionSheetFragment {...sessionSheetMocks.running} />,
+    )
+    expect(screen.getByText('Finish Early')).toBeTruthy()
+    rerender(
+      <SessionSheetFragment {...sessionSheetMocks.running} mode="stopwatch" />,
+    )
+    expect(screen.getByText('Finish')).toBeTruthy()
   })
 
   it('swaps pause for a resume affordance while paused', () => {
@@ -104,16 +256,30 @@ describe('phases', () => {
     ).toBeTruthy()
   })
 
-  it('reads the dismissal hint from the host, not from the platform', () => {
-    render(<SessionSheetFragment {...sessionSheetMocks.pausedInline} />)
-    expect(screen.getByText('Close to dismiss')).toBeTruthy()
-    expect(screen.queryByText('Swipe down to dismiss')).toBeNull()
+  it('drops the dismissal hint where there is no gesture to teach', () => {
+    render(<SessionSheetFragment {...sessionSheetMocks.ready} />)
+    expect(screen.queryByText('Close to dismiss')).toBeNull()
+    expect(screen.getByText('Tap to start')).toBeTruthy()
+  })
+
+  it('balances the space above and below the dial and its status', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} />,
+    )
+    const group = container.querySelector(
+      '[data-kro-session-dial-group]',
+    ) as HTMLElement
+    expect(group.style.marginTop).toBe(group.style.marginBottom)
+    // And a little air between the dial and its state label.
+    expect(group.style.gap).toBe('10px')
+    expect(group.querySelector('[data-kro-session-slot="dial"]')).toBeTruthy()
+    expect(group.querySelector('[data-kro-session-slot="status"]')).toBeTruthy()
   })
 })
 
 describe('the fixed-slot contract', () => {
   it.each(sessionPhases)(
-    'keeps every reserved region at its canon height in the %s phase',
+    'sizes every region to its content, not a fixed frame, in the %s phase',
     (phase) => {
       const props = sheetPropsFor(
         sessionStateMocks.running,
@@ -122,12 +288,10 @@ describe('the fixed-slot contract', () => {
         <SessionSheetFragment {...props} phase={phase} />,
       )
 
-      expect(slotHeight(container, 'identity')).toBe(
-        `${SESSION_SLOT_HEIGHT.identity}px`,
-      )
-      expect(slotHeight(container, 'dial')).toBe(
-        `${SESSION_SLOT_HEIGHT.dial}px`,
-      )
+      // The identity takes its content's height — no fixed 148 frame.
+      expect(slotHeight(container, 'identity')).toBe('')
+      // The dial slot is exactly the dial.
+      expect(slotHeight(container, 'dial')).toBe(`${SESSION_DIAL_DIAMETER}px`)
       expect(slotHeight(container, 'status')).toBe(
         `${SESSION_SLOT_HEIGHT.status}px`,
       )
@@ -210,7 +374,7 @@ describe('the fixed-slot contract', () => {
     expect(screen.queryByRole('button', { name: /Complete Task/ })).toBeNull()
   })
 
-  it('reserves the suggestion region even with nothing to suggest', () => {
+  it('reserves nothing for the suggestion region while there is nothing to suggest', () => {
     const { container } = render(
       <SessionSheetFragment {...sessionSheetMocks.running} />,
     )
@@ -218,9 +382,31 @@ describe('the fixed-slot contract', () => {
       '[data-kro-session-suggestions="empty"]',
     ) as HTMLElement
 
-    expect(region.style.height).toBe(`${SESSION_SLOT_HEIGHT.suggestions}px`)
+    expect(region.style.height).toBe('0px')
     expect(region.style.opacity).toBe('0')
     expect(region.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('reserves the tomato row, and only its own height, before the first session', () => {
+    const { container } = render(
+      <SessionSheetFragment
+        {...sessionSheetMocks.ready}
+        tomatoGlyphs={0}
+        tomatoOverflowLabel={null}
+      />,
+    )
+    const reserve = container.querySelector(
+      '[data-kro-session-tomatoes-reserve]',
+    ) as HTMLElement
+    expect(reserve.style.height).toBe('20px')
+    expect(container.querySelector('[data-kro-session-tomatoes]')).toBeNull()
+  })
+
+  it('sizes the primary action row to the FAB-sized button', () => {
+    const { container } = render(
+      <SessionSheetFragment {...sessionSheetMocks.ready} />,
+    )
+    expect(slotHeight(container, 'primary-action')).toBe('62px')
   })
 
   it('fills the same region without resizing it once suggestions arrive', () => {
@@ -367,10 +553,10 @@ describe('the mode toggle', () => {
       <SessionSheetFragment {...sessionSheetMocks.running} />,
     )
     const toggle = container.querySelector(
-      '[data-kro-session-mode-toggle]',
+      '[data-kro-segmented]',
     ) as HTMLElement
     expect(toggle.style.pointerEvents).toBe('none')
-    expect(toggle.style.opacity).toBe('0.5')
+    expect(toggle.className).toContain('opacity-[var(--kro-opacity-disabled)]')
   })
 })
 

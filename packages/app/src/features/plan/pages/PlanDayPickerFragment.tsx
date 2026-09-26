@@ -32,12 +32,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ICON_SIZE } from '../../../design/system/icons/icons'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
-import { isSamePlanDay } from '../PlanCalendar'
+import { isSamePlanDay } from '../../../library/plan/PlanCalendar'
 import {
   dayPickerAccessibleDate,
   dayPickerDayNumber,
   dayPickerWeekdayLetter,
-} from './timeline/timelineFormat'
+} from '../../../library/timeline/timelineFormat'
 
 /** `PlanLayoutMetrics.dayPickerHeight`. */
 export const DAY_PICKER_HEIGHT = 52

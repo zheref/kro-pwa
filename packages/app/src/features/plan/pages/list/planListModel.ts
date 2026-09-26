@@ -40,7 +40,7 @@ import { assertNever } from '@kro/core'
 import type { PlanListGrouping, PlanListSort } from '@kro/core'
 import { PlanListGrouping as Grouping, PlanListSort as Sort } from '@kro/core'
 import { EndeavorKind } from '@kro/core'
-import { isSamePlanDay } from '../../PlanCalendar'
+import { isSamePlanDay } from '../../../../library/plan/PlanCalendar'
 
 /** Canon's implied window for an item that carries no duration. */
 export const PLAN_LIST_IMPLIED_DURATION_SECONDS = 3600

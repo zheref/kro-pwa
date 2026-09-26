@@ -42,6 +42,7 @@ import * as colorWellStories from '../selection/ColorWell.stories'
 import * as comboBoxStories from '../selection/ComboBox.stories'
 import * as digitEntryStories from '../selection/DigitEntry.stories'
 import * as pickerStories from '../selection/Picker.stories'
+import * as segmentedStories from '../selection/SegmentedControl.stories'
 import * as radioStories from '../selection/RadioGroup.stories'
 import * as sliderStories from '../selection/Slider.stories'
 import * as stepperStories from '../selection/Stepper.stories'
@@ -91,6 +92,7 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['Digit entry', digitEntryStories],
   ['Picker', pickerStories],
   ['Radio group', radioStories],
+  ['Segmented control', segmentedStories],
   ['Slider', sliderStories],
   ['Stepper', stepperStories],
   ['Toggle', toggleStories],

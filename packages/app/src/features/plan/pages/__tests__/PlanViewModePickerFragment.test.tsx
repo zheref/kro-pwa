@@ -20,7 +20,10 @@ import {
   lensProminence,
   modeGlyphScale,
 } from '../PlanViewModePickerFragment'
-import { installPointerEvents, pointer } from './pointerEvents'
+import {
+  installPointerEvents,
+  pointer,
+} from '../../../../library/timeline/__tests__/pointerEvents'
 
 installPointerEvents()
 

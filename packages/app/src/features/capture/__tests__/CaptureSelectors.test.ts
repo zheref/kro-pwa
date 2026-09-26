@@ -1,4 +1,7 @@
 import { EndeavorOperation, EndeavorsVistas } from '@kro/core'
+import { initialEndeavorActivityState } from '../../endeavorActivity/EndeavorActivityFeature'
+import { initialDayProgressState } from '../../dayProgress/DayProgressFeature'
+import { initialDayTimelineState } from '../../dayTimeline/DayTimelineFeature'
 import { describe, expect, it } from 'vitest'
 import type { RootState } from '../../../library/store'
 import { initialAuthState } from '../../auth/AuthState'
@@ -71,6 +74,9 @@ const rootWith = (slice: CaptureState): RootState => ({
   triage: initialTriageState,
   find: initialFindState,
   endeavorDetail: initialEndeavorDetailState,
+  endeavorActivity: initialEndeavorActivityState,
+  dayProgress: initialDayProgressState,
+  dayTimeline: initialDayTimelineState,
   earn: initialEarnState,
   platform: initialPlatformState,
   session: initialSessionState,

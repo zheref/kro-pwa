@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { addingPlanDays, planDayKey, startOfPlanDay } from '../PlanCalendar'
+import {
+  addingPlanDays,
+  planDayKey,
+  startOfPlanDay,
+} from '../../../library/plan/PlanCalendar'
 import { PLAN_REFERENCE_DAY, PLAN_REFERENCE_NOW } from '../PlanMocks'
 import {
   PlanViewMode,

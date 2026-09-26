@@ -22,7 +22,7 @@
  */
 import type { Exception } from '@kro/core'
 import { assertNever, exception } from '@kro/core'
-import type { PlanDayKey } from './PlanCalendar'
+import type { PlanDayKey } from '../../library/plan/PlanCalendar'
 
 export type PlanException =
   /** The authoritative day's read failed. Retryable. */

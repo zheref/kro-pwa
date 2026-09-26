@@ -67,7 +67,7 @@ export {
   SLOT_DOUBLE_TAP_MS,
   type TimelineFragmentProps,
   TimelineFragment,
-} from './timeline/TimelineFragment'
+} from '../../../library/timeline/TimelineFragment'
 export {
   CARD_ACCENT_PALETTE,
   CardTier,
@@ -80,7 +80,7 @@ export {
   normalizedHexColor,
   paletteAccentFor,
   rippleDiameterCss,
-} from './timeline/timelineCardStyle'
+} from '../../../library/timeline/timelineCardStyle'
 export {
   dayPickerAccessibleDate,
   dayPickerDayNumber,
@@ -90,7 +90,7 @@ export {
   planTitleWeekday,
   slotAccessibilityLabel,
   timelineHourLabel,
-} from './timeline/timelineFormat'
+} from '../../../library/timeline/timelineFormat'
 export {
   SLOT_INDEX_ATTRIBUTE,
   type BlockPress,
@@ -105,7 +105,7 @@ export {
   useReducedMotionPreference,
   useSlotPress,
   useVerticalDrag,
-} from './timeline/useTimelineGestures'
+} from '../../../library/timeline/useTimelineGestures'
 
 export {
   PLAN_LIST_IMPLIED_DURATION_SECONDS,

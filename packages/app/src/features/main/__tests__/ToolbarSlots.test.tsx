@@ -183,6 +183,14 @@ describe('the placement set', () => {
       // *control* whose content a feature supplies (KC-IS-#32). See the union's
       // own comment for why it lives in the same set.
       'profile',
+      // The sixth is the trailing detail pane's body (canon #517) — the same
+      // portal seam, filled by the feature the pane is showing.
+      'detailPane',
+      // The pane header's own two seats: its title content and a trailing item.
+      'detailPaneTitle',
+      'detailPaneTrailing',
+      'detailPaneLeading',
+      'detailPaneBackdrop',
     ])
   })
 })

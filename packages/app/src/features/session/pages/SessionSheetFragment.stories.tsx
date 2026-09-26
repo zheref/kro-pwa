@@ -90,6 +90,29 @@ export const ReadyCountdown = {
   ),
 }
 
+/** Recorded history: one marker per session, by mode — 🍅 ⚡️ ⏱️. */
+export const ReadyWithRecordedSessions = {
+  name: 'Ready — recorded sessions by mode',
+  render: () => (
+    <Stage label="Ready · 🍅 ⚡️ ⏱️">
+      <SessionSheetFragment
+        {...sessionSheetMocks.ready}
+        sessionMarkers={['🍅', '⚡️', '⏱️', '🍅']}
+      />
+    </Stage>
+  ),
+}
+
+/** Desktop: the compact mode toggle and preset pills (a pointer surface). */
+export const ReadyCompactDesktop = {
+  name: 'Ready — compact controls (desktop)',
+  render: () => (
+    <Stage label="Ready · compact · desktop">
+      <SessionSheetFragment {...sessionSheetMocks.ready} density="compact" />
+    </Stage>
+  ),
+}
+
 export const ReadyWithSuggestions = {
   name: 'Ready — parallel-task suggestions',
   render: () => (

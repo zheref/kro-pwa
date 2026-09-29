@@ -6,6 +6,7 @@ import {
   DENSITY_TYPE,
   SELECTED_CONTROL_STYLE,
 } from '../../system/density'
+import { ShortcutHint } from '../../system/primitives/button'
 import { colorVar } from '../../system/tokens/roles'
 import { cn } from '../../system/utils/cn'
 
@@ -36,6 +37,10 @@ export interface SegmentedOption<T extends string> {
   readonly value: T
   readonly label: string
   readonly icon?: ReactNode
+  /** A chord keycap (`⌥1`) floated over the segment; takes no space. */
+  readonly shortcutHint?: string
+  /** `aria-keyshortcuts` for the segment (`Alt+1`). */
+  readonly keyShortcuts?: string
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -49,6 +54,15 @@ export interface SegmentedControlProps<T extends string> {
   readonly selectionTint?: string | null
   readonly disabled?: boolean
   readonly className?: string
+  /** Whether segments' `shortcutHint`s are visible (e.g. while Option is held). */
+  readonly revealShortcutHints?: boolean
+  /**
+   * Fill the available width, segments sharing it equally. Below 24rem the
+   * labels are visually hidden — icon-only segments whose names stay in the
+   * accessibility tree — so a four-way control fits a 320px phone (UX-7).
+   * Only an option with an `icon` drops its label.
+   */
+  readonly fill?: boolean
 }
 
 const SEGMENT_PADDING: Record<ControlDensity, string> = {
@@ -72,6 +86,8 @@ export function SegmentedControl<T extends string>({
   selectionTint = null,
   disabled = false,
   className,
+  revealShortcutHints = true,
+  fill = false,
 }: SegmentedControlProps<T>) {
   return (
     <div
@@ -80,8 +96,9 @@ export function SegmentedControl<T extends string>({
       aria-disabled={disabled || undefined}
       data-kro-segmented=""
       data-kro-density={density}
+      data-kro-fill={fill ? '' : undefined}
       className={cn(
-        'inline-flex max-w-full',
+        fill ? '@container flex w-full' : 'inline-flex max-w-full',
         // The design system's one disabled dim, applied once on the group.
         disabled && 'opacity-[var(--kro-opacity-disabled)]',
         className,
@@ -100,18 +117,22 @@ export function SegmentedControl<T extends string>({
             key={option.value}
             type="button"
             aria-pressed={isSelected}
+            aria-keyshortcuts={option.keyShortcuts}
             disabled={disabled}
             data-kro-segment={isSelected ? 'selected' : 'available'}
             onClick={() => {
               if (!isSelected) onChange(option.value)
             }}
             className={cn(
-              'inline-flex items-center justify-center gap-1 font-medium outline-none focus-visible:shadow-[var(--kro-ring)]',
+              'relative inline-flex items-center justify-center gap-1 font-medium outline-none focus-visible:shadow-[var(--kro-ring)]',
               DENSITY_TYPE[density],
+              fill && 'min-w-0 flex-1',
               isTinted && 'kro-glass kro-glass--tinted',
             )}
             style={{
-              padding: SEGMENT_PADDING[density],
+              // Filling, the segments trade side padding for room to name
+              // themselves: 8px a side still leaves a 44px touch target.
+              padding: fill ? '8px 8px' : SEGMENT_PADDING[density],
               minHeight: SEGMENT_MIN_HEIGHT[density],
               borderRadius: CONTROL_RADIUS[density],
               color: colorVar('fore'),
@@ -124,8 +145,25 @@ export function SegmentedControl<T extends string>({
                 : {}),
             }}
           >
+            {option.shortcutHint === undefined ? null : (
+              <ShortcutHint placement="keycap" reveal={revealShortcutHints}>
+                {option.shortcutHint}
+              </ShortcutHint>
+            )}
             {option.icon}
-            {option.label}
+            {fill ? (
+              <span
+                data-slot="segment-label"
+                className={cn(
+                  'min-w-0 truncate',
+                  option.icon !== undefined && '@max-[24rem]:sr-only',
+                )}
+              >
+                {option.label}
+              </span>
+            ) : (
+              option.label
+            )}
           </button>
         )
       })}

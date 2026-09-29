@@ -22,3 +22,8 @@ export {
   type CapsuleSegment,
   type CapsuleSegmentGroupProps,
 } from './CapsuleSegmentGroup'
+export {
+  PROPERTY_PILL_PADDING,
+  PropertyPill,
+  type PropertyPillProps,
+} from './PropertyPill'

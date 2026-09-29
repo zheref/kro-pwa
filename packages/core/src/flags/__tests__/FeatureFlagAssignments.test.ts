@@ -43,6 +43,9 @@ const CANON_DISABLED: readonly string[] = [
   'endeavorDetail',
   'outlookCalendarIntegration',
   'appearanceThemes',
+  'detailPaneInbox',
+  'captureSuggestions',
+  'keyboardAccelerators',
 ]
 
 const namesWithState = (state: 'enabled' | 'disabled') =>
@@ -56,13 +59,13 @@ describe('statusQuoSet', () => {
     expect(namesWithState('enabled')).toHaveLength(17)
   })
 
-  it('holds off exactly the nine features staged but not shipped', () => {
+  it('holds off exactly the twelve features staged but not shipped', () => {
     expect(new Set(namesWithState('disabled'))).toEqual(new Set(CANON_DISABLED))
-    expect(namesWithState('disabled')).toHaveLength(9)
+    expect(namesWithState('disabled')).toHaveLength(12)
   })
 
-  it('assigns 26 of the 30 declared flags', () => {
-    expect(statusQuoSet).toHaveLength(26)
+  it('assigns 29 of the 33 declared flags', () => {
+    expect(statusQuoSet).toHaveLength(29)
   })
 
   it('leaves matrix, board, blueprints and developmentActions unassigned — declared, never staged', () => {
@@ -86,7 +89,7 @@ describe('statusQuoSet', () => {
 
 describe('the allEnabled baseline', () => {
   it('turns on every declared flag, including the four statusQuo never assigns', () => {
-    expect(allEnabledSet).toHaveLength(30)
+    expect(allEnabledSet).toHaveLength(33)
     for (const assignment of allEnabledSet) {
       expect(assignment.state).toBe('enabled')
     }

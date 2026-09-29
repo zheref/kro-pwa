@@ -79,7 +79,14 @@ const TriageGlyph = captureIconFor('rectangle.split.2x2.fill')
 const AddForTodayGlyph = captureIconFor('calendar.badge.plus')
 
 /** How the Inbox is hosted. `inline` is the `/inbox` destination page. */
-export type InboxPresentation = 'sheet' | 'popover' | 'inline'
+/**
+ * `pane` is web-only: the Inbox hosted by the shell's trailing detail pane
+ * (canon's pane has no Inbox segment). It draws inline like the destination,
+ * but leaves its header to the pane — which already titles it "Inbox" and owns
+ * the close control — and grows to its natural height inside the pane's own
+ * scroller.
+ */
+export type InboxPresentation = 'sheet' | 'popover' | 'inline' | 'pane'
 
 /**
  * The width the row's own pointer chrome occupies at its trailing edge.
@@ -105,8 +112,15 @@ export interface InboxFragmentProps {
   readonly presentation: InboxPresentation
   /** Canon's `justCreatedCardSelector` — one row, or none. */
   readonly justCreated: EndeavorCardModel | null
+  /** A multi-add's further Just Created rows, beneath the first. */
+  readonly alsoJustCreated?: readonly EndeavorCardModel[]
   /** Canon's `pendingTriageSelector`, newest first. */
   readonly pendingTriage: readonly EndeavorCardModel[]
+  /**
+   * Rows whose Triage would refuse to open (a multi-added habit in Just
+   * Created): their Triage button is not offered at all.
+   */
+  readonly untriageableIds?: readonly string[]
   readonly totalCount: number
   readonly isEmpty: boolean
   /** The Inbox vista's declared row operations — swipe on touch, hover on pointer. */
@@ -131,6 +145,11 @@ export interface InboxFragmentProps {
    * no knowledge of the triage lane beyond the two Pages that pass the slot in.
    */
   readonly overlay?: ReactNode
+  /**
+   * `pane` only: the overlay is showing, so the list underneath is not drawn
+   * and the overlay fills the pane body on its own.
+   */
+  readonly isOverlayCovering?: boolean
 
   readonly onDismiss: () => void
   readonly onTapTriage: (endeavorId: string) => void
@@ -144,8 +163,28 @@ export interface InboxFragmentProps {
   ) => void
 }
 
+const NO_CARDS: readonly EndeavorCardModel[] = []
+
 export function InboxFragment(props: InboxFragmentProps) {
   const { isOpen, presentation, onDismiss } = props
+
+  if (presentation === 'pane') {
+    return (
+      <section
+        data-testid="inbox-surface"
+        data-kro-presentation="pane"
+        aria-label="Inbox"
+        // Deliberately NOT `relative`: the overlay (Triage) must size against
+        // the pane's scroller — the visible pane body — not against this list,
+        // whose height is only as tall as its rows. While it covers, the list
+        // is not drawn, so the scroller has nothing to scroll behind it.
+        className="flex w-full flex-col"
+      >
+        {props.isOverlayCovering ? null : <InboxBody {...props} />}
+        {props.overlay}
+      </section>
+    )
+  }
 
   if (presentation === 'inline') {
     return (
@@ -206,6 +245,9 @@ export function InboxFragment(props: InboxFragmentProps) {
             height: `${PRESENTATION_SIZE.inbox.height}px`,
             maxWidth: 'calc(100vw - 3rem)',
             maxHeight: 'calc(100dvh - 3rem)',
+            // A toolbar menu: the panel corner (`--kro-radius-panel`, 12px),
+            // inline so it beats `.kro-glass`'s surface default.
+            borderRadius: radiusVar('panel'),
           }}
         >
           {heading}
@@ -221,10 +263,14 @@ export function InboxFragment(props: InboxFragmentProps) {
 /* Body                                                                      */
 /* ------------------------------------------------------------------------ */
 
+const NO_IDS: readonly string[] = []
+
 function InboxBody({
   presentation,
   justCreated,
+  alsoJustCreated = NO_CARDS,
   pendingTriage,
+  untriageableIds = NO_IDS,
   totalCount,
   isEmpty,
   capabilities,
@@ -242,6 +288,8 @@ function InboxBody({
   onOperation,
 }: InboxFragmentProps) {
   const rowProps = {
+    presentation,
+    untriageableIds,
     capabilities,
     rowLayout,
     addForToday,
@@ -258,12 +306,14 @@ function InboxBody({
 
   return (
     <>
-      <InboxHeader
-        presentation={presentation}
-        rowLayout={rowLayout}
-        totalCount={totalCount}
-        onDismiss={onDismiss}
-      />
+      {presentation === 'pane' ? null : (
+        <InboxHeader
+          presentation={presentation}
+          rowLayout={rowLayout}
+          totalCount={totalCount}
+          onDismiss={onDismiss}
+        />
+      )}
 
       {isEmpty ? (
         <div className="flex min-h-0 flex-1 flex-col">
@@ -275,7 +325,7 @@ function InboxBody({
             <InboxSection
               title="Just Created"
               glyph={<Sparkles size={14} aria-hidden />}
-              cards={[justCreated]}
+              cards={[justCreated, ...alsoJustCreated]}
               {...rowProps}
             />
           )}
@@ -363,6 +413,8 @@ type SectionProps = {
   readonly cards: readonly EndeavorCardModel[]
 } & Pick<
   InboxFragmentProps,
+  | 'presentation'
+  | 'untriageableIds'
   | 'capabilities'
   | 'rowLayout'
   | 'addForToday'
@@ -427,6 +479,8 @@ function InboxSection({ title, glyph, cards, ...row }: SectionProps) {
 
 function InboxRow({
   card,
+  presentation,
+  untriageableIds = NO_IDS,
   capabilities,
   rowLayout,
   addForToday,
@@ -445,8 +499,77 @@ function InboxRow({
 >) {
   const detected = useInputCapability()
   const resolvedInput = input ?? detected
-  const compact = rowLayout === 'compactDesktop'
+  // In the narrow detail pane (web-only) the title gets the row's width: the
+  // two actions move onto their own line inside the card, beneath the title
+  // and reward, instead of squeezing the title down to an ellipsis beside them. Every other presentation keeps
+  // canon's in-row actions.
+  const stacksActions = presentation === 'pane'
+  const compact = stacksActions || rowLayout === 'compactDesktop'
   const isScheduling = addForToday?.endeavorId === card.id
+  const canTriage = !untriageableIds.includes(card.id)
+
+  const actions = (
+    <div
+      data-testid={`inbox-row-actions-${card.id}`}
+      data-stacked={stacksActions ? 'true' : 'false'}
+      className={cn(
+        'relative z-2 flex shrink-0',
+        compact ? 'items-center gap-2' : 'w-[130px] flex-col gap-2',
+        stacksActions && 'justify-start',
+      )}
+      style={{
+        marginRight:
+          !stacksActions && resolvedInput === 'pointer'
+            ? POINTER_ACTION_GUTTER_PX
+            : 0,
+      }}
+      // A swipe never starts on an action button. Without this the row's
+      // own `onPointerDown` calls `setPointerCapture`, and a captured
+      // pointer retargets the subsequent `click` to the capturing element
+      // — so in a real browser the tap lands on the row and canon's two
+      // in-row buttons never fire at all. jsdom implements no pointer
+      // capture, which is why only a browser could find this. Reported
+      // against KC-IS-#14's lane with this PR.
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      {canTriage ? (
+        <button
+          type="button"
+          aria-label={`Triage ${card.title}`}
+          onClick={() => onTapTriage(card.id)}
+          className={cn(
+            'inline-flex items-center justify-center gap-1 rounded-kro-pill px-2.5',
+            'font-semibold text-white text-xs',
+            'outline-none focus-visible:shadow-[var(--kro-ring)]',
+            compact ? 'h-7' : 'w-full py-1.5',
+          )}
+          style={{ backgroundColor: colorVar('badgeBlue') }}
+        >
+          <TriageGlyph size={11} aria-hidden />
+          Triage
+        </button>
+      ) : null}
+
+      <button
+        type="button"
+        aria-label={`Add ${card.title} for today`}
+        aria-expanded={isScheduling}
+        onClick={() => onRequestAddForToday(card.id)}
+        className={cn(
+          'inline-flex items-center justify-center gap-1 rounded-kro-pill',
+          'font-semibold text-xs',
+          'outline-none focus-visible:shadow-[var(--kro-ring)]',
+          compact ? 'size-7' : 'w-full px-2.5 py-1.5',
+        )}
+        style={{
+          color: colorVar('badgeGreen'),
+          backgroundColor: `color-mix(in srgb, ${colorVar('badgeGreen')} 15%, transparent)`,
+        }}
+      >
+        {compact ? <AddForTodayGlyph size={13} aria-hidden /> : 'Add for Today'}
+      </button>
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-2">
@@ -470,65 +593,8 @@ function InboxRow({
         capabilities={capabilities}
         onOperation={onOperation}
         input={input}
-        trailing={
-          <div
-            className={cn(
-              'relative z-2 flex shrink-0',
-              compact ? 'items-center gap-1.5' : 'w-[130px] flex-col gap-1.5',
-            )}
-            style={{
-              marginRight:
-                resolvedInput === 'pointer' ? POINTER_ACTION_GUTTER_PX : 0,
-            }}
-            // A swipe never starts on an action button. Without this the row's
-            // own `onPointerDown` calls `setPointerCapture`, and a captured
-            // pointer retargets the subsequent `click` to the capturing element
-            // — so in a real browser the tap lands on the row and canon's two
-            // in-row buttons never fire at all. jsdom implements no pointer
-            // capture, which is why only a browser could find this. Reported
-            // against KC-IS-#14's lane with this PR.
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              aria-label={`Triage ${card.title}`}
-              onClick={() => onTapTriage(card.id)}
-              className={cn(
-                'inline-flex items-center justify-center gap-1 rounded-kro-pill px-2.5',
-                'font-semibold text-white text-xs',
-                'outline-none focus-visible:shadow-[var(--kro-ring)]',
-                compact ? 'h-7' : 'w-full py-1.5',
-              )}
-              style={{ backgroundColor: colorVar('badgeBlue') }}
-            >
-              <TriageGlyph size={11} aria-hidden />
-              Triage
-            </button>
-
-            <button
-              type="button"
-              aria-label={`Add ${card.title} for today`}
-              aria-expanded={isScheduling}
-              onClick={() => onRequestAddForToday(card.id)}
-              className={cn(
-                'inline-flex items-center justify-center gap-1 rounded-kro-pill',
-                'font-semibold text-xs',
-                'outline-none focus-visible:shadow-[var(--kro-ring)]',
-                compact ? 'size-7' : 'w-full px-2.5 py-1.5',
-              )}
-              style={{
-                color: colorVar('badgeGreen'),
-                backgroundColor: `color-mix(in srgb, ${colorVar('badgeGreen')} 15%, transparent)`,
-              }}
-            >
-              {compact ? (
-                <AddForTodayGlyph size={13} aria-hidden />
-              ) : (
-                'Add for Today'
-              )}
-            </button>
-          </div>
-        }
+        trailing={stacksActions ? undefined : actions}
+        footer={stacksActions ? actions : undefined}
       />
 
       {isScheduling && addForToday !== null ? (

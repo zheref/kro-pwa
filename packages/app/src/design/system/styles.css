@@ -70,11 +70,11 @@
   on it. Unlayered, so this beats the base layer's `:focus-visible` ring.
 */
 :where([data-slot="input"], [data-slot="textarea"]):focus-visible {
-  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+  box-shadow: var(--kro-ring-field);
 }
 
 :where([data-kro-field]):focus-within {
-  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+  box-shadow: var(--kro-ring-field);
 }
 
 :where([data-kro-field] :is(input, textarea, select)):focus,
@@ -87,7 +87,7 @@
 /* ==========================================================================
    Button corners follow the idiom.
 
-   Desktop matches the sidebar and a popover (`--kro-radius-small`). A mobile
+   Desktop matches a menu row (`--kro-radius-small`). A mobile
    idiom keeps the pill. Unlayered on purpose: it has to beat the size
    utility (`rounded-kro-small`), which Tailwind emits inside `@layer utilities`.
 

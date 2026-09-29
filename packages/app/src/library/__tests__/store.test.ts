@@ -93,6 +93,32 @@ describe('the shipping feature-flag overrides', () => {
     ).toBe(true)
   })
 
+  it('turns the pane’s web-only Inbox segment on for the shipping build', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.detailPaneInbox),
+    ).toBe(true)
+  })
+
+  it('turns the capture suggestions pane on for the shipping build only', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.captureSuggestions),
+    ).toBe(true)
+    expect(
+      stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.captureSuggestions),
+    ).toBe(false)
+  })
+
+  it('turns the keyboard accelerators on for the shipping build only', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.keyboardAccelerators),
+    ).toBe(true)
+    expect(
+      stubbedThunkExtra.featureFlags.isEnabled(
+        FeatureFlags.keyboardAccelerators,
+      ),
+    ).toBe(false)
+  })
+
   it('leaves the stubbed extra on the status-quo set, so tests never sync by accident', () => {
     expect(
       stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.supabaseHosting),

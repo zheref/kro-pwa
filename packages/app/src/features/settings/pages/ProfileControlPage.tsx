@@ -191,6 +191,8 @@ export function ProfileControlPage() {
               style={{
                 width: PRESENTATION_SIZE.profile.width,
                 padding: 'var(--kro-space-small)',
+                // A toolbar menu: the panel corner, inline over the glass.
+                borderRadius: 'var(--kro-radius-panel)',
               }}
             >
               {content}

@@ -269,3 +269,94 @@ describe('what the layer shows when nothing is presented', () => {
     expect(strip.textContent).toContain('clipboard')
   })
 })
+
+describe('the pane presentation — the Pane stories', () => {
+  it('PanePresented: draws the form inline, with no swipe layer or edge strip', () => {
+    render(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting
+        onDismiss={vi.fn()}
+      >
+        <p>form</p>
+      </TriageCarouselFragment>,
+    )
+    expect(screen.getByTestId('triage-pane').textContent).toContain('form')
+    expect(screen.queryByTestId('triage-carousel')).toBeNull()
+    expect(screen.queryByTestId('triage-edge-strip')).toBeNull()
+  })
+
+  it('fills the pane body as a flex column, so the form beneath gets a height (regression: collapsed to the list’s ~85px)', () => {
+    render(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting
+        onDismiss={vi.fn()}
+      >
+        <p>form</p>
+      </TriageCarouselFragment>,
+    )
+    const layer = screen.getByTestId('triage-pane').className.split(/\s+/)
+    for (const token of [
+      'absolute',
+      'inset-0',
+      'flex',
+      'flex-col',
+      'min-h-0',
+    ]) {
+      expect(layer).toContain(token)
+    }
+  })
+
+  it('PaneNotTriageable: says why Triage did not open', () => {
+    render(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting={false}
+        onDismiss={vi.fn()}
+        loadExceptionMessage="A habit isn't triaged."
+      >
+        {null}
+      </TriageCarouselFragment>,
+    )
+    expect(screen.getByTestId('triage-pane-unavailable').textContent).toBe(
+      "A habit isn't triaged.",
+    )
+  })
+
+  it('PaneSavingDark: keeps the save status visible after the form is gone', () => {
+    render(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting={false}
+        onDismiss={vi.fn()}
+        isSaving
+      >
+        {null}
+      </TriageCarouselFragment>,
+    )
+    expect(screen.getByTestId('triage-status-strip').textContent).toBe(
+      'Saving…',
+    )
+    expect(screen.queryByTestId('triage-pane-unavailable')).toBeNull()
+  })
+})
+
+describe('a failed open, in the Inbox carousel', () => {
+  it('announces why Triage did not open on the status line', () => {
+    render(
+      <TriageCarouselFragment
+        isPresenting={false}
+        onDismiss={vi.fn()}
+        loadExceptionMessage="This item is no longer available to triage."
+      >
+        {null}
+      </TriageCarouselFragment>,
+    )
+    const strip = screen.getByTestId('triage-status-strip')
+    expect(strip.getAttribute('role')).toBe('alert')
+    expect(strip.textContent).toBe(
+      'This item is no longer available to triage.',
+    )
+  })
+})

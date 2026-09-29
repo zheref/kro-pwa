@@ -78,6 +78,7 @@
 import { type ReactNode, useCallback, useRef, useState } from 'react'
 import { colorVar } from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
+import type { TriagePresentation } from '../TriageState'
 import {
   TRIAGE_DRAG_MINIMUM_DISTANCE,
   TRIAGE_EDGE_STRIP_WIDTH,
@@ -120,6 +121,21 @@ export interface TriageCarouselFragmentProps {
    * behaviour and a useless test).
    */
   readonly carouselWidth?: number
+  /**
+   * Where the layer is drawn. `carousel` (the default) is canon's: an opaque
+   * panel over the Inbox list with the leading-edge back-swipe. `pane` is the
+   * web-only Inbox inside the desktop detail pane: the same opaque layer,
+   * filling the pane body (its host hides the list underneath), without the
+   * swipe — the pane sits beside the window's content, where a leading-edge
+   * drag would fight the page.
+   */
+  readonly presentation?: TriagePresentation
+  /**
+   * Why the session could not open, as user copy (never the raw message) —
+   * e.g. the endeavor is a habit, which Triage never applies to. Both hosts
+   * show it: the pane in its body, the carousel on its status line.
+   */
+  readonly loadExceptionMessage?: string | null
 }
 
 export function TriageCarouselFragment({
@@ -130,6 +146,8 @@ export function TriageCarouselFragment({
   saveExceptionMessage = null,
   notice = null,
   carouselWidth,
+  presentation = 'carousel',
+  loadExceptionMessage = null,
 }: TriageCarouselFragmentProps) {
   const panelRef = useRef<HTMLDivElement | null>(null)
 
@@ -239,11 +257,54 @@ export function TriageCarouselFragment({
     [measuredWidth, onDismiss, resetGesture],
   )
 
+  if (presentation === 'pane') {
+    return (
+      <div
+        data-testid="triage-pane"
+        role="group"
+        aria-label="Triage"
+        // The layer's height contract. It fills the pane body's visible box —
+        // `absolute inset-0` against the pane's scroller, the nearest
+        // positioned ancestor, because nothing between them is positioned —
+        // and is a flex column, so the form inside gets a definite height:
+        // header on top, its own `flex-1 min-h-0` scrolling body, the action
+        // row pinned to the bottom. Resolving against the Inbox's own section
+        // instead sized the layer to the Inbox list (one row, ~85px).
+        className={cn(
+          'w-full',
+          isPresenting
+            ? 'absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden'
+            : 'contents',
+        )}
+        // No fill of its own: the form sits on the pane's glass, as every
+        // other pane reading does (the list beneath is not drawn meanwhile).
+      >
+        {isPresenting ? (
+          children
+        ) : loadExceptionMessage !== null ? (
+          <p
+            data-testid="triage-pane-unavailable"
+            role="status"
+            className="m-auto max-w-72 px-4 text-center text-sm"
+            style={{ color: colorVar('foreSecondary') }}
+          >
+            {loadExceptionMessage}
+          </p>
+        ) : null}
+        <TriageStatusStrip
+          isSaving={isSaving}
+          saveExceptionMessage={saveExceptionMessage}
+          notice={isPresenting ? null : notice}
+        />
+      </div>
+    )
+  }
+
   if (!isPresenting) {
     return (
       <TriageStatusStrip
         isSaving={isSaving}
-        saveExceptionMessage={saveExceptionMessage}
+        saveExceptionMessage={saveExceptionMessage ?? loadExceptionMessage}
         notice={notice}
       />
     )

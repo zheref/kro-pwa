@@ -163,3 +163,40 @@ export const DestinationPageInline = {
     </ThemeScope>
   ),
 }
+
+/**
+ * Web-only: the Inbox hosted by the desktop detail pane's Inbox segment. The
+ * pane titles it and owns the close control, so the Inbox draws no header.
+ */
+const paneInbox = (
+  overrides: Partial<InboxFragmentProps> = {},
+  theme: 'light' | 'dark' = 'light',
+) => (
+  <ThemeScope theme={theme}>
+    <div style={{ width: 380, height: 640, overflowY: 'auto' }}>
+      {inbox({
+        presentation: 'pane',
+        rowLayout: 'compactDesktop',
+        input: 'pointer',
+        ...overrides,
+      })}
+    </div>
+  </ThemeScope>
+)
+
+/** A capture just routed into the pane: Just Created on top of Pending Triage. */
+export const PaneWithJustCreated = { render: () => paneInbox() }
+
+/** The pane's Inbox opened from the toolbar: Pending Triage only. */
+export const PanePendingOnly = {
+  render: () => paneInbox({ justCreated: null, totalCount: pending.length }),
+}
+
+/** The pane's Inbox with nothing to triage, dark. */
+export const PaneEmptyDark = {
+  render: () =>
+    paneInbox(
+      { justCreated: null, pendingTriage: [], totalCount: 0, isEmpty: true },
+      'dark',
+    ),
+}

@@ -3,9 +3,10 @@
  *
  * `apps/web` reaches **none** of these: Triage has no route, by canon's own
  * decision (*"presented via the Inbox sheet's custom carousel transition, not a
- * NavigationStack push"*). The only production consumer is the Inbox surface,
- * which mounts `TriageCarouselPage` into its `overlay` slot; everything else is
- * exported for stories, tests, and a sibling that composes one of the pieces.
+ * NavigationStack push"*). Production consumers are the Inbox surface, which
+ * mounts `TriageCarouselPage` into its `overlay` slot, and — web-only — the
+ * shell's detail pane, whose Inbox segment hosts the same Page with the `pane`
+ * presentation.
  */
 
 export {

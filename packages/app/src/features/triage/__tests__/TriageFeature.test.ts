@@ -36,6 +36,12 @@ import {
   triageStateMocks,
 } from '../TriageMocks'
 import { openTriageThunk, saveTriageDecisionThunk } from '../TriageProducer'
+import { deleteEndeavorThunk } from '../../do/DoProducer'
+import { FindSurface } from '../../find/FindOperations'
+import {
+  performBulkOperationThunk,
+  performEndeavorOperationThunk,
+} from '../../find/FindProducer'
 
 const reduce = triageSlice.reducer
 const opened = triageStateMocks.pristine
@@ -48,8 +54,120 @@ const seeded = () =>
   makeInMemoryLocalStore({ endeavors: triageFixtureRecords() })
 
 // ---------------------------------------------------------------------------
+// The open's `.pending` arm records its host
+// ---------------------------------------------------------------------------
+
+describe('openTriageThunk.pending — the host', () => {
+  it('records the pane when the pane’s Triage segment opens a session', async () => {
+    const store = storeWith(seeded())
+    const pending = store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.unscheduledTask.id,
+        now: TRIAGE_MOCK_NOW,
+        presentation: 'pane',
+      }),
+    )
+    expect(store.getState().triage.presentation).toBe('pane')
+    await pending
+  })
+
+  it('records the carousel for the Inbox’s own hand-off', async () => {
+    const store = storeWith(seeded())
+    await store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.unscheduledTask.id,
+        now: TRIAGE_MOCK_NOW,
+      }),
+    )
+    expect(store.getState().triage.presentation).toBe('carousel')
+  })
+
+  it('keeps the host on a failed open, so the pane can say why', async () => {
+    const store = storeWith(seeded())
+    await store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.habit.id,
+        now: TRIAGE_MOCK_NOW,
+        presentation: 'pane',
+      }),
+    )
+    const { presentation, load } = store.getState().triage
+    expect(presentation).toBe('pane')
+    expect(load.kind === 'failed' && load.exception.kind).toBe('notTriageable')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Sync reducer arms
 // ---------------------------------------------------------------------------
+
+describe('the triaged endeavor deleted elsewhere', () => {
+  const endeavorId = opened.session?.endeavorId ?? ''
+  const removed = (id: string) =>
+    performEndeavorOperationThunk.fulfilled(
+      {
+        ok: true,
+        value: { kind: 'removed', surface: FindSurface.find, endeavorId: id },
+      },
+      'r',
+      {
+        surface: FindSurface.find,
+        operation: 'delete',
+        endeavorId: id,
+        now: TRIAGE_MOCK_NOW,
+      },
+    )
+
+  it('closes the session when a row deletes it — the pane returns to its Inbox', () => {
+    expect(reduce(opened, removed(endeavorId)).session).toBeNull()
+  })
+
+  it('closes the session when the Do surface deletes it — any delete path', () => {
+    expect(
+      reduce(
+        opened,
+        deleteEndeavorThunk.fulfilled({ ok: true, value: endeavorId }, 'r', {
+          endeavorId,
+          now: TRIAGE_MOCK_NOW,
+        }),
+      ).session,
+    ).toBeNull()
+  })
+
+  it('keeps the session when another row is deleted', () => {
+    expect(reduce(opened, removed('someone-else')).session).not.toBeNull()
+  })
+
+  it('closes it on a bulk delete that includes it, but not a bulk archive', () => {
+    const request = {
+      surface: FindSurface.find,
+      operation: 'delete' as const,
+      endeavorIds: [endeavorId],
+      now: TRIAGE_MOCK_NOW,
+    }
+    expect(
+      reduce(
+        opened,
+        performBulkOperationThunk.fulfilled(
+          { ok: true, value: request },
+          'r',
+          request,
+        ),
+      ).session,
+    ).toBeNull()
+    const archive = { ...request, operation: 'archive' as const }
+    expect(
+      reduce(
+        opened,
+        performBulkOperationThunk.fulfilled(
+          { ok: true, value: archive },
+          'r',
+          archive,
+        ),
+      ).session,
+    ).not.toBeNull()
+  })
+})
 
 describe('userDidSelectQuadrant', () => {
   it('seeds a date and an expiry when Schedule is picked first', () => {

@@ -24,6 +24,7 @@
 
 import type { ColorRole, SemanticRole } from './roles'
 import { COLOR_ROLE_VARS, SEMANTIC_ROLE_VARS } from './roles'
+import { parseColor } from './contrast'
 import { type Theme, directAlias, resolveToken } from './tokenSource'
 
 export const THEMES: readonly Theme[] = ['light', 'dark'] as const
@@ -161,6 +162,42 @@ export const UNMEASURED_ROLES: Readonly<Record<string, string>> = {
     'a translucent row divider, not a boundary of an interactive element',
 }
 
+/**
+ * The worst-case glass (`kro-glass`): the `absolute` fill at the scheme's glass
+ * strength, over each backdrop the app paints behind glass — the page itself
+ * and both stops of the full-window indigo→grape wash. Measured over every one
+ * of them, so a role that passes here passes wherever the glass sits.
+ */
+export const GLASS_BACKDROPS: readonly ColorRole[] = [
+  'back',
+  'headerGradientIndigo',
+  'headerGradientGrape',
+]
+
+/** Text roles painted directly on glass, at AA text. */
+export const TEXT_ON_GLASS: readonly ColorRole[] = [
+  'fore',
+  'foreSecondaryOnGlass',
+]
+
+/** Graphics and boundaries on glass, at SC 1.4.11's 3:1. */
+export const NON_TEXT_ON_GLASS: ReadonlyArray<{
+  readonly role: ColorRole
+  readonly why: string
+}> = [
+  {
+    role: 'ringField',
+    why: 'the field focus ring on the prompt’s glass, its pills and cards',
+  },
+  { role: 'rewardOnGlass', why: 'a filled value star on the prompt’s glass' },
+]
+
+/** Text on the prompt's dark status band — dark in both schemes. */
+export const TEXT_ON_BAND: readonly ColorRole[] = [
+  'foreOnBand',
+  'foreSecondaryOnBand',
+]
+
 /** One measurement the suite performs. */
 export interface MeasuredPair {
   readonly contract: string
@@ -173,6 +210,47 @@ export interface MeasuredPair {
 
 const AA_TEXT_FLOOR = 4.5
 const AA_NON_TEXT_FLOOR = 3
+
+const percentIn = (value: string, fallback: number): number => {
+  const match = /(\d+(?:\.\d+)?)%/.exec(value)
+  return match === null ? fallback : Number(match[1]) / 100
+}
+
+const hexOf = (value: string): string => {
+  const { r, g, b } = parseColor(value)
+  const channel = (c: number) =>
+    Math.round(c * 255)
+      .toString(16)
+      .padStart(2, '0')
+  return `#${channel(r)}${channel(g)}${channel(b)}`
+}
+
+const mixed = (top: string, under: string, amount: number): string => {
+  const a = parseColor(top)
+  const b = parseColor(under)
+  return hexOf(
+    `rgb(${(a.r * amount + b.r * (1 - amount)) * 255} ${(a.g * amount + b.g * (1 - amount)) * 255} ${(a.b * amount + b.b * (1 - amount)) * 255})`,
+  )
+}
+
+/** The glass fill, composited over `backdrop`, in `theme`. */
+export function glassOver(backdrop: ColorRole, theme: Theme): string {
+  const strength = percentIn(resolveToken('--kro-glass-surface', theme), 0.62)
+  return mixed(
+    colorValue('absolute', theme),
+    colorValue(backdrop, theme),
+    strength,
+  )
+}
+
+/** The status band — glass tinted black at the band's strength — over `backdrop`. */
+export function statusBandOver(backdrop: ColorRole, theme: Theme): string {
+  const strength = percentIn(
+    resolveToken('--kro-status-band-strength', theme),
+    0.66,
+  )
+  return mixed('#000000', glassOver(backdrop, theme), strength)
+}
 
 function colorValue(role: ColorRole, theme: Theme): string {
   return resolveToken(COLOR_ROLE_VARS[role], theme)
@@ -308,6 +386,51 @@ export function measuredPairs(): MeasuredPair[] {
         floor: AA_TEXT_FLOOR,
       })
     }
+
+    for (const backdrop of GLASS_BACKDROPS) {
+      for (const fg of TEXT_ON_GLASS) {
+        pairs.push({
+          contract: 'text on glass, over the worst-case backdrop',
+          label: `${fg} on glass over ${backdrop}`,
+          theme,
+          foreground: colorValue(fg, theme),
+          background: glassOver(backdrop, theme),
+          floor: AA_TEXT_FLOOR,
+        })
+      }
+      for (const { role } of NON_TEXT_ON_GLASS) {
+        pairs.push({
+          contract:
+            'graphic on glass, over the worst-case backdrop (SC 1.4.11)',
+          label: `${role} on glass over ${backdrop}`,
+          theme,
+          foreground: colorValue(role, theme),
+          background: glassOver(backdrop, theme),
+          floor: AA_NON_TEXT_FLOOR,
+        })
+      }
+      for (const fg of TEXT_ON_BAND) {
+        pairs.push({
+          contract: 'text on the prompt’s dark status band',
+          label: `${fg} on the band over ${backdrop}`,
+          theme,
+          foreground: colorValue(fg, theme),
+          background: statusBandOver(backdrop, theme),
+          floor: AA_TEXT_FLOOR,
+        })
+      }
+    }
+
+    for (const fill of ['absolute', 'back'] as const) {
+      pairs.push({
+        contract: 'field focus ring on an opaque fill (SC 1.4.11)',
+        label: `ringField on ${fill}`,
+        theme,
+        foreground: colorValue('ringField', theme),
+        background: colorValue(fill, theme),
+        floor: AA_NON_TEXT_FLOOR,
+      })
+    }
   }
 
   return pairs
@@ -356,6 +479,14 @@ export function rolesUnderContract(): Set<ColorRole> {
     for (const surface of on) note(COLOR_ROLE_VARS[surface])
   }
   for (const { role } of LABEL_ON_FILL_ROLES) note(COLOR_ROLE_VARS[role])
+  for (const role of [
+    ...GLASS_BACKDROPS,
+    ...TEXT_ON_GLASS,
+    ...NON_TEXT_ON_GLASS.map(({ role }) => role),
+    ...TEXT_ON_BAND,
+  ]) {
+    note(COLOR_ROLE_VARS[role])
+  }
 
   return covered
 }

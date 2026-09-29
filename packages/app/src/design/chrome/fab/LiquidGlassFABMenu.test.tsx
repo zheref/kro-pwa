@@ -2,7 +2,11 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GLOW_SHAPES } from '../glow/RotatingGlow'
-import { type FABMenuEntry, LiquidGlassFABMenu } from './LiquidGlassFABMenu'
+import {
+  type FABMenuEntry,
+  LiquidGlassFABMenu,
+  fabKeysAreOwnedElsewhere,
+} from './LiquidGlassFABMenu'
 
 afterEach(cleanup)
 
@@ -38,12 +42,17 @@ function captureEntries(
   ]
 }
 
-function renderMenu(items = captureEntries()) {
+function renderMenu(
+  items = captureEntries(),
+  options: { readonly keys?: boolean; readonly hints?: boolean } = {},
+) {
   return render(
     <LiquidGlassFABMenu
       items={items}
       mainGlyph="plus"
       mainAccessibilityLabel="Quick input"
+      returnKeyToggles={options.keys ?? false}
+      showShortcutHints={options.hints ?? true}
     />,
   )
 }
@@ -306,5 +315,196 @@ describe('the glow decorates the button, never the menu', () => {
     renderMenu()
 
     expect(document.querySelector('[data-kro-glow]')).toBeNull()
+  })
+})
+
+describe('the page-level keyboard is opt-in (status quo: none)', () => {
+  it('ignores a plain Return when the caller has not opted in', async () => {
+    renderMenu()
+    await userEvent.keyboard('{Enter}')
+    expect(
+      document
+        .querySelector('[data-kro-fab-menu]')
+        ?.getAttribute('data-kro-fab-menu'),
+    ).toBe('collapsed')
+  })
+
+  it('names no key on the disc or its entries', () => {
+    renderMenu(captureEntries().map((entry) => ({ ...entry, shortcut: 'e' })))
+    expect(document.querySelector('[aria-keyshortcuts]')).toBeNull()
+  })
+
+  it('draws no letter hints even with hints allowed', () => {
+    renderMenu(
+      captureEntries().map((entry) => ({ ...entry, shortcut: 'e' })),
+      { hints: true },
+    )
+    expect(document.querySelector('[data-slot="button-shortcut"]')).toBeNull()
+  })
+})
+
+describe('the page-level keyboard (web addition)', () => {
+  const lettered = () =>
+    captureEntries().map((entry, index) => ({
+      ...entry,
+      shortcut: ['e', 't', 'r', 'h'][index],
+    }))
+
+  const isOpen = () =>
+    document
+      .querySelector('[data-kro-fab-menu]')
+      ?.getAttribute('data-kro-fab-menu') === 'expanded'
+
+  it('toggles open and shut on a plain Return with nothing focused', async () => {
+    renderMenu(undefined, { keys: true })
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(true)
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('names Enter on the disc and each entry’s key, with a trailing hint', async () => {
+    renderMenu(lettered(), { keys: true })
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-keyshortcuts'),
+    ).toBe('Enter')
+    const task = rowNamed('Task')
+    expect(task.getAttribute('aria-keyshortcuts')).toBe('T')
+    expect(
+      task.querySelector('[data-slot="button-shortcut"]')?.textContent,
+    ).toBe('T')
+  })
+
+  it('fires an entry by its key while open, and collapses on Escape', async () => {
+    const task = vi.fn()
+    const items = captureEntries({ task }).map((entry, index) => ({
+      ...entry,
+      shortcut: ['e', 't', 'r', 'h'][index],
+    }))
+    renderMenu(items, { keys: true })
+    await userEvent.keyboard('t')
+    expect(task).not.toHaveBeenCalled() // closed: letters do nothing
+
+    await userEvent.keyboard('{Enter}t')
+    expect(task).toHaveBeenCalledTimes(1)
+    expect(isOpen()).toBe(false)
+
+    await userEvent.keyboard('{Enter}{Escape}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('leaves Return to a focused text field, button or link', async () => {
+    render(
+      <>
+        <input aria-label="Field" />
+        <button type="button">Other</button>
+        <LiquidGlassFABMenu
+          items={captureEntries()}
+          mainGlyph="plus"
+          mainAccessibilityLabel="Quick input"
+        />
+      </>,
+    )
+    screen.getByRole('textbox', { name: 'Field' }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+    screen.getByRole('button', { name: 'Other' }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('leaves Return to an open dialog, an IME, and modified keys', async () => {
+    const { rerender } = render(
+      <>
+        <div role="dialog" aria-label="Prompt" />
+        <LiquidGlassFABMenu
+          items={captureEntries()}
+          mainGlyph="plus"
+          mainAccessibilityLabel="Quick input"
+        />
+      </>,
+    )
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+
+    rerender(
+      <LiquidGlassFABMenu
+        items={captureEntries()}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+      />,
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', isComposing: true }),
+    )
+    await userEvent.keyboard('{Shift>}{Enter}{/Shift}{Meta>}{Enter}{/Meta}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('hides the hints on touch layouts but keeps the keys', async () => {
+    const task = vi.fn()
+    render(
+      <LiquidGlassFABMenu
+        items={captureEntries({ task }).map((entry, index) => ({
+          ...entry,
+          shortcut: ['e', 't', 'r', 'h'][index],
+        }))}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+        showShortcutHints={false}
+        returnKeyToggles
+      />,
+    )
+    expect(document.querySelector('[data-slot="button-shortcut"]')).toBeNull()
+    await userEvent.keyboard('{Enter}t')
+    expect(task).toHaveBeenCalledTimes(1)
+  })
+
+  it('can be switched off', async () => {
+    render(
+      <LiquidGlassFABMenu
+        items={captureEntries()}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+        returnKeyToggles={false}
+      />,
+    )
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+})
+
+describe('a stale overlay never takes the keyboard from the FAB', () => {
+  const setup = (overlayHtml: string) => {
+    document.body.innerHTML = `<div id="fab"></div>${overlayHtml}`
+    const root = document.getElementById('fab') as HTMLElement
+    return root
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('still yields to a dialog that is actually open', () => {
+    const root = setup('<div role="dialog" data-state="open"></div>')
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(true)
+  })
+
+  it('ignores a dialog playing its exit (data-state="closed")', () => {
+    const root = setup(
+      '<div data-state="closed"><div role="dialog"></div></div>',
+    )
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(false)
+  })
+
+  it('ignores a menu kept mounted but hidden, inert or display:none', () => {
+    const root = setup(
+      '<div role="menu" hidden></div>' +
+        '<div inert><div role="listbox"></div></div>' +
+        '<div role="dialog" style="display:none"></div>',
+    )
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(false)
   })
 })

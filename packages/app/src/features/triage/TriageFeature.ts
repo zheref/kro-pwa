@@ -33,6 +33,10 @@
 import type { EisenhowerQuadrant } from '@kro/core'
 import { ShareOutcome } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
+import {
+  isEndeavorRemoval,
+  removedEndeavorIds,
+} from '../../library/removals/endeavorRemovals'
 import type { TriageException } from './TriageException'
 import { TriageExceptions } from './TriageException'
 import type { TriageExpiryPreset } from './TriageExpiry'
@@ -59,12 +63,14 @@ import {
   withSaveStarted,
   withSaved,
   withSessionOpened,
+  withTriagedEndeavorRemoved,
   withShareOutcome,
   withShareSheetDismissed,
   withValueRatingTapped,
 } from './TriageShifters'
 import type {
   TriageOutcome,
+  TriagePresentation,
   TriageRewardStepDirection,
   TriageSession,
 } from './TriageState'
@@ -114,6 +120,12 @@ export interface TriageState {
   readonly shareOutcome: ShareOutcome | null
   /** The instant the slice last classified against — never a clock read. */
   readonly clockAnchor: Date | null
+  /**
+   * Which host draws the session and performs its outcome — set when a
+   * session starts opening, kept after it ends so its outcome is drained by
+   * the host that raised it.
+   */
+  readonly presentation: TriagePresentation
 }
 
 export const initialTriageState: TriageState = {
@@ -123,6 +135,7 @@ export const initialTriageState: TriageState = {
   outcome: null,
   shareOutcome: null,
   clockAnchor: null,
+  presentation: 'carousel',
 }
 
 export const triageSlice = createSlice({
@@ -276,8 +289,11 @@ export const triageSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // --- opening the session -------------------------------------------
-      .addCase(openTriageThunk.pending, (state) => {
-        Object.assign(state, withFetchStarted(state))
+      .addCase(openTriageThunk.pending, (state, action) => {
+        Object.assign(
+          state,
+          withFetchStarted(state, action.meta.arg.presentation ?? 'carousel'),
+        )
       })
       // --- the share hand-off --------------------------------------------
       .addCase(shareTriageBlurbThunk.fulfilled, (state, action) => {
@@ -336,6 +352,13 @@ export const triageSlice = createSlice({
             state,
             TriageExceptions.unknown(action.error.message ?? 'Unknown error'),
           ),
+        )
+      })
+      // --- the endeavor deleted elsewhere (any delete Producer) ----------
+      .addMatcher(isEndeavorRemoval, (state, action) => {
+        Object.assign(
+          state,
+          withTriagedEndeavorRemoved(state, removedEndeavorIds(action)),
         )
       })
   },

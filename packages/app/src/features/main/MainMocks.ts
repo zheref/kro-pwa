@@ -190,6 +190,30 @@ export const MainMocks = {
     detailPane: { segment: 'performance', endeavor: null },
   } satisfies MainState as MainState,
 
+  /** Web-only: the Inbox segment's flag on, the pane hidden — four segments. */
+  desktopDetailPaneInboxReady: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: desktopSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+    isDetailPaneInboxEnabled: true,
+  } satisfies MainState as MainState,
+
+  /** Web-only: the pane on the Inbox segment, still pointed at the endeavor Plan read. */
+  desktopDetailPaneInbox: {
+    ...base,
+    load: { kind: 'loaded' },
+    surface: desktopSurface,
+    gates: statusQuoGates,
+    isDetailPaneEnabled: true,
+    isDetailPaneInboxEnabled: true,
+    detailPane: {
+      segment: 'inbox',
+      endeavor: { id: 'e-1', title: 'Write the quarterly review' },
+    },
+  } satisfies MainState as MainState,
+
   /** A pane left open on a long, non-ASCII endeavor, then the window narrowed. */
   handheldDetailPaneOpen: {
     ...base,

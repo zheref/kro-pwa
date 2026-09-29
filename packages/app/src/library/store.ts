@@ -235,8 +235,42 @@ const shippingSupabaseHostingOverride = enabledAssignment(
   FeatureFlags.supabaseHosting,
 )
 
+/**
+ * `detailPaneInbox` — the web-only Inbox segment of the trailing pane — ships
+ * **enabled** here while `statusQuoSet` keeps it off as greenfield. The
+ * maintainer asked for captures to land in the pane Inbox; the flag stays the kill switch.
+ */
+const shippingDetailPaneInboxOverride = enabledAssignment(
+  FeatureFlags.detailPaneInbox,
+)
+
+/**
+ * `captureSuggestions` — the web-only suggestions pane above the desktop
+ * capture prompt — ships **enabled** here while `statusQuoSet` keeps it off
+ * as greenfield. The flag stays the kill switch.
+ */
+const shippingCaptureSuggestionsOverride = enabledAssignment(
+  FeatureFlags.captureSuggestions,
+)
+
+/**
+ * `keyboardAccelerators` — the prompt's ⌥ chords, keycaps, key hints and
+ * Return-walk, and the quick-action button's Return and letters — ships
+ * **enabled** here while `statusQuoSet` keeps it off as greenfield. The flag
+ * stays the kill switch.
+ */
+const shippingKeyboardAcceleratorsOverride = enabledAssignment(
+  FeatureFlags.keyboardAccelerators,
+)
+
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
-  overrides: [shippingAppearanceOverride, shippingSupabaseHostingOverride],
+  overrides: [
+    shippingAppearanceOverride,
+    shippingSupabaseHostingOverride,
+    shippingDetailPaneInboxOverride,
+    shippingCaptureSuggestionsOverride,
+    shippingKeyboardAcceleratorsOverride,
+  ],
 })
 
 /**

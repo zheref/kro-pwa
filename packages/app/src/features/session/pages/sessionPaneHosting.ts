@@ -15,11 +15,13 @@
  * A pure function of the previous and current readings, one action at most.
  */
 
+import type { DetailPaneSegment } from '../../main/DetailPane'
+
 /** One render's reading of the two slices. */
 export interface SessionPaneHostingSnapshot {
   /** The shell hosts a pane at all (flag on, sidebar shell). */
   readonly isHost: boolean
-  readonly paneSegment: 'sessionSetup' | 'performance' | 'plan' | null
+  readonly paneSegment: DetailPaneSegment | null
   /** The endeavor the pane is pointed at; `null` is a new, arbitrary task. */
   readonly paneEndeavorId: string | null
   /** The session is at `ready` — configuring, nothing running yet. */

@@ -9,13 +9,22 @@
  * this set one for one (`RC-11`).
  */
 
-import { ThemeScope } from './__tests__/captureHarness'
-import { captureDraftFixtures, CAPTURE_MOCK_NOW } from '../CaptureMocks'
+import { PanelledPrompt, ThemeScope } from './__tests__/captureHarness'
+import {
+  captureDraftFixtures,
+  captureSuggestionMocks,
+  CAPTURE_MOCK_NOW,
+} from '../CaptureMocks'
+import { CAPTURE_SUGGESTIONS } from '../CaptureSuggestions'
 import {
   CaptureDestination,
   type CaptureDraft,
   canSubmitCapture,
   captureBlockedReason,
+  captureBlocker,
+  captureResolvedSymbol,
+  captureKindCapabilities,
+  isCaptureValueRequired,
 } from '../CaptureRules'
 import {
   CapturePromptFragment,
@@ -36,17 +45,22 @@ const prompt = (
   presentation: CapturePresentationKind,
   overrides: Partial<CapturePromptFragmentProps> = {},
 ) => (
-  <CapturePromptFragment
+  <PanelledPrompt
     isOpen
     draft={draft}
+    capabilities={captureKindCapabilities(draft.kind)}
+    keyboardAccelerators
     isEditingStartTime={false}
     isEditingEndTime={false}
     availableDestinations={[
       CaptureDestination.local,
       CaptureDestination.kroCloud,
     ]}
+    resolvedSymbol={captureResolvedSymbol(draft)}
+    isValueRequired={isCaptureValueRequired(draft)}
     canSubmit={canSubmitCapture(draft)}
     blockedReason={captureBlockedReason(draft)}
+    blocker={captureBlocker(draft)}
     presentation={presentation}
     now={CAPTURE_MOCK_NOW}
     locale="en-US"
@@ -58,6 +72,9 @@ const prompt = (
     onPickTime={noop}
     onEndTimeEdit={noop}
     onPickRewards={noop}
+    onPickValue={noop}
+    onPickDuration={noop}
+    onPickEmoji={noop}
     onPickRecurrence={noop}
     onSelectDestination={noop}
     onDiscard={noop}
@@ -71,6 +88,23 @@ export const SheetEmptyTask = {
   render: () => (
     <ThemeScope theme="light">
       {prompt(captureDraftFixtures.emptyTask, 'sheet')}
+    </ThemeScope>
+  ),
+}
+
+/**
+ * The phone sheet at 320px, the narrowest supported width: the Kind picker
+ * fills the sheet and drops to icon-only segments (names kept for assistive
+ * tech) so Reminder is never clipped. Mirrored by the H5 render test.
+ */
+export const SheetAt320 = {
+  // Storybook's built-in `mobile1` viewport is 320×568.
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  render: () => (
+    <ThemeScope theme="light">
+      <div style={{ width: 320 }}>
+        {prompt(captureDraftFixtures.emptyTask, 'sheet')}
+      </div>
     </ThemeScope>
   ),
 }
@@ -158,6 +192,77 @@ export const SheetTaskDateCleared = {
   render: () => (
     <ThemeScope theme="light">
       {prompt(captureDraftFixtures.titledTaskNoDate, 'sheet')}
+    </ThemeScope>
+  ),
+}
+
+/**
+ * A titled Task on local storage with no value rating — Add names the
+ * rating, and the value chip reads as required.
+ */
+export const TaskMissingValue = {
+  render: () => (
+    <ThemeScope theme="light">
+      {prompt(captureDraftFixtures.unratedTask, 'sheet')}
+    </ThemeScope>
+  ),
+}
+
+/**
+ * Every optional property set: rated, estimated, a picked symbol in the badge,
+ * and each set property's pill carrying its joined clear button.
+ */
+export const TaskFullyDescribed = {
+  render: () => (
+    <ThemeScope theme="light">
+      {prompt(captureDraftFixtures.fullyDescribedTask, 'popover')}
+    </ThemeScope>
+  ),
+}
+
+/** A Habit whose time is required — its time pill offers no clear. */
+export const HabitTimeRequired = {
+  render: () => (
+    <ThemeScope theme="dark">
+      {prompt(captureDraftFixtures.titledHabit, 'sheet')}
+    </ThemeScope>
+  ),
+}
+
+/** The desktop popover with the suggestions pane floated above it. */
+export const PopoverWithSuggestions = {
+  render: () => (
+    <ThemeScope theme="light">
+      {prompt(captureDraftFixtures.emptyTask, 'popover', {
+        suggestions: CAPTURE_SUGGESTIONS,
+      })}
+    </ThemeScope>
+  ),
+}
+
+/** Two suggestions ticked for a multi-add — "Add 2" armed. */
+export const PopoverWithTwoSuggestionsSelected = {
+  render: () => (
+    <ThemeScope theme="dark">
+      {prompt(captureDraftFixtures.emptyTask, 'popover', {
+        suggestions: CAPTURE_SUGGESTIONS,
+        selectedSuggestionIds: [
+          captureSuggestionMocks.task.id,
+          captureSuggestionMocks.reminder.id,
+        ],
+        suggestionAddCount: 2,
+      })}
+    </ThemeScope>
+  ),
+}
+
+/** The phone sheet never shows the pane, even with suggestions on. */
+export const SheetHidesSuggestions = {
+  render: () => (
+    <ThemeScope theme="light">
+      {prompt(captureDraftFixtures.emptyTask, 'sheet', {
+        suggestions: CAPTURE_SUGGESTIONS,
+      })}
     </ThemeScope>
   ),
 }

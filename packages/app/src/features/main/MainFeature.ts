@@ -37,6 +37,10 @@ import {
   userDidTapDismiss,
 } from '../endeavorDetail/EndeavorDetailFeature'
 import { openDetailByIdThunk } from '../endeavorDetail/EndeavorDetailProducer'
+import {
+  isEndeavorRemoval,
+  removedEndeavorIds,
+} from '../../library/removals/endeavorRemovals'
 import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
@@ -60,9 +64,11 @@ import {
   withDetailPaneEndeavorSelected,
   withDetailPaneFollowingDetail,
   withDetailPaneReleasedByDetail,
+  withDetailPaneSelectionReleased,
   withDetailPaneSessionRaised,
   withDetailPaneWentBack,
   withDetailPaneSegmentSelected,
+  withDetailPaneInboxRevealed,
   withDraftProjectCancelled,
   withDraftProjectStarted,
   withDraftProjectTitleEdited,
@@ -169,6 +175,11 @@ export interface MainState {
   readonly detailPaneBackStack: readonly DetailPaneLocation[]
   /** Canon's `isMacDetailPaneEnabled` — resolved from `macDetailPane`. */
   readonly isDetailPaneEnabled: boolean
+  /**
+   * Web-only: the pane's Inbox segment — the `detailPaneInbox` flag's
+   * answer. Canon has no such segment.
+   */
+  readonly isDetailPaneInboxEnabled: boolean
 }
 
 export const initialMainState: MainState = {
@@ -189,6 +200,7 @@ export const initialMainState: MainState = {
   detailPane: closedDetailPane,
   detailPaneBackStack: [],
   isDetailPaneEnabled: false,
+  isDetailPaneInboxEnabled: false,
 }
 
 export const mainSlice = createSlice({
@@ -373,6 +385,14 @@ export const mainSlice = createSlice({
       )
     },
 
+    /**
+     * User intent: the selection the pane reads was dismissed (a Do card
+     * deselected). The pane falls back to its endeavor-free readings.
+     */
+    userDidReleaseDetailPaneSelection(state) {
+      Object.assign(state, withDetailPaneSelectionReleased(state))
+    },
+
     /** User intent: the pane header's Back (or Escape while drilled in). */
     userDidTapDetailPaneBack(state) {
       Object.assign(state, withDetailPaneWentBack(state))
@@ -413,7 +433,20 @@ export const mainSlice = createSlice({
       })
       .addCase(openDetailByIdThunk.fulfilled, (state, action) => {
         const result = action.payload
-        if (!result.ok) return
+        if (!result.ok) {
+          // Reopening the pane's selection found it gone (deleted since):
+          // release it, so the pane falls back rather than naming a ghost.
+          if (result.error.kind === 'endeavorNotFound') {
+            Object.assign(
+              state,
+              withDetailPaneSelectionReleased(
+                state,
+                action.meta.arg.endeavorId,
+              ),
+            )
+          }
+          return
+        }
         Object.assign(
           state,
           withDetailPaneFollowingDetail(state, {
@@ -425,7 +458,6 @@ export const mainSlice = createSlice({
       .addCase(userDidTapDismiss, (state) => {
         Object.assign(state, withDetailPaneReleasedByDetail(state))
       })
-
       .addCase(loadShellThunk.pending, (state) => {
         Object.assign(state, withLoadingStarted(state))
       })
@@ -507,6 +539,20 @@ export const mainSlice = createSlice({
         // `null` means "nothing was due" — the common case on every tick.
         if (result.ok && result.value !== null) {
           Object.assign(state, withCaptureRouteConsumed(state, result.value))
+          // Web-only: on a pane host with the Inbox segment on, a capture
+          // routed to the Inbox lands in the pane instead of the overlay.
+          if (result.value.destination.kind === DestinationKind.inbox) {
+            Object.assign(state, withDetailPaneInboxRevealed(state))
+          }
+        }
+      })
+      // ------------------------------------ the selection deleted
+      //
+      // Any delete Producer that removed the pane's selection falls the pane
+      // back to its endeavor-free readings (see `library/removals`).
+      .addMatcher(isEndeavorRemoval, (state, action) => {
+        for (const id of removedEndeavorIds(action)) {
+          Object.assign(state, withDetailPaneSelectionReleased(state, id))
         }
       })
   },
@@ -526,6 +572,7 @@ export const {
   userDidRequestSessionSetup,
   userDidSelectDetailPaneSegment,
   userDidTapDetailPaneBack,
+  userDidReleaseDetailPaneSelection,
   userDidEditDraftProjectTitle,
   userDidTapAddProject,
   userDidTapDestination,

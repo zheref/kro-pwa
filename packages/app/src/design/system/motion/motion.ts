@@ -14,6 +14,10 @@ export const MOTION_MS = {
   /** How long the quick spring takes to settle — see the note in motion.css. */
   quickSpring: 198,
   standardSpring: 270,
+  /** A floating panel or sheet arriving — travel, capped at UX-9's 300ms. */
+  panel: 300,
+  /** …and leaving: quicker than it came. */
+  panelExit: 240,
 } as const
 
 export type MotionDuration = keyof typeof MOTION_MS
@@ -23,6 +27,8 @@ export const MOTION_VARS = {
   standard: '--kro-duration-standard',
   quickSpring: '--kro-duration-quick-spring',
   standardSpring: '--kro-duration-standard-spring',
+  panel: '--kro-duration-panel',
+  panelExit: '--kro-duration-panel-exit',
 } as const
 
 export const EASING_VARS = {
@@ -30,6 +36,10 @@ export const EASING_VARS = {
   out: '--kro-ease-out',
   quickSpring: '--kro-ease-quick-spring',
   standardSpring: '--kro-ease-standard-spring',
+  /** A panel settling in: a strong deceleration, spring-like with no overshoot. */
+  panel: '--kro-ease-panel',
+  /** Accelerating away — for exits. */
+  in: '--kro-ease-in',
 } as const
 
 export type Easing = keyof typeof EASING_VARS

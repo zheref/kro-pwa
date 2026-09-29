@@ -64,9 +64,14 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react'
+import {
+  anchoredPanelOffset,
+  useCollisionInsets,
+} from '../../../design/system/primitives/collision'
 import {
   type EndeavorCardModel,
   KroChip,
@@ -432,6 +437,37 @@ function AnchoredPanel({
 }) {
   const id = useId()
   const panelRef = useRef<HTMLDivElement | null>(null)
+  const insets = useCollisionInsets()
+  /**
+   * Flip or shift to fit: measured after layout, so a panel anchored near the
+   * sidebar opens toward the content and one near the right edge grows
+   * inward, instead of running off-screen or under the sidebar.
+   */
+  const [offsetX, setOffsetX] = useState(0)
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    const anchor = panel?.closest(`[${ANCHOR_ATTRIBUTE}]`)
+    if (
+      panel === null ||
+      panel === undefined ||
+      anchor === null ||
+      anchor === undefined
+    )
+      return
+    const anchorRect = anchor.getBoundingClientRect()
+    const width = panel.getBoundingClientRect().width
+    if (width === 0) return
+    setOffsetX(
+      anchoredPanelOffset({
+        anchorLeft: anchorRect.left,
+        anchorRight: anchorRect.right,
+        panelWidth: width,
+        viewportWidth: window.innerWidth,
+        align,
+        insets,
+      }),
+    )
+  }, [align, insets])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -491,10 +527,14 @@ function AnchoredPanel({
         'absolute top-full z-50 mt-2',
         align === 'start' ? 'left-0' : 'right-0',
       )}
+      style={
+        offsetX === 0 ? undefined : { transform: `translateX(${offsetX}px)` }
+      }
     >
       <div
         className="kro-glass overflow-hidden"
-        style={{ borderRadius: radiusVar('surface') }}
+        // A toolbar menu: the panel corner (`--kro-radius-panel`).
+        style={{ borderRadius: radiusVar('panel') }}
       >
         {children}
       </div>

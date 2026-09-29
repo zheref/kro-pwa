@@ -88,3 +88,56 @@ describe('navigation and reach', () => {
     expect(onPick).toHaveBeenCalledWith(FOOD.emojis[0])
   })
 })
+
+describe('scrolling', () => {
+  it('scrolls vertically only — never sideways', () => {
+    const { container } = render(<EmojiPicker categories={[FOOD]} />)
+    const scroller = container.querySelector<HTMLElement>(
+      '[data-kro-emoji-picker]',
+    )
+    expect(scroller?.className).toContain('overflow-y-auto')
+    expect(scroller?.className).toContain('overflow-x-hidden')
+    expect(scroller?.style.touchAction).toBe('pan-y')
+  })
+
+  it('fits the grid to the pane’s width instead of a fixed column count', () => {
+    render(<EmojiPicker categories={[FOOD]} />)
+    const grid = screen.getByRole('group', { name: FOOD.name })
+    expect(grid.style.gridTemplateColumns).toContain('auto-fill')
+    expect(grid.style.gridTemplateColumns).toContain('1fr')
+  })
+
+  it('pins each full-width section header to the top while rows scroll under it', () => {
+    const { container } = render(<EmojiPicker categories={[FOOD]} />)
+    const heading = container.querySelector<HTMLElement>(
+      '[data-kro-emoji-heading]',
+    )
+    expect(heading?.style.position).toBe('sticky')
+    expect(heading?.style.top).toBe('0px')
+    expect(heading?.style.width).toBe('100%')
+    expect(heading?.className).toContain('kro-glass')
+  })
+
+  it('keeps wheel events from reaching a dialog’s document-level scroll lock', () => {
+    const onDocumentWheel = vi.fn()
+    document.addEventListener('wheel', onDocumentWheel)
+    const { container } = render(<EmojiPicker categories={[FOOD]} />)
+    const scroller = container.querySelector('[data-kro-emoji-picker]')
+    scroller?.dispatchEvent(
+      new WheelEvent('wheel', { deltaX: 40, deltaY: 40, bubbles: true }),
+    )
+    document.removeEventListener('wheel', onDocumentWheel)
+    expect(onDocumentWheel).not.toHaveBeenCalled()
+  })
+
+  it('leaves the wheel event uncancelled, so the browser still scrolls it', () => {
+    const { container } = render(<EmojiPicker categories={[FOOD]} />)
+    const event = new WheelEvent('wheel', {
+      deltaX: 30,
+      bubbles: true,
+      cancelable: true,
+    })
+    container.querySelector('[data-kro-emoji-picker]')?.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+  })
+})

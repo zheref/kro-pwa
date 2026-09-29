@@ -128,7 +128,10 @@ import {
   DetailPaneChromeFragment,
   DetailSaveButton,
 } from './DetailPaneChromeFragment'
-import { detailPaneReopenRequest } from './detailPaneHosting'
+import {
+  detailPaneReopenRequest,
+  detailPaneShowsDetail,
+} from './detailPaneHosting'
 import { relationLabel } from './endeavorDetailDisplay'
 
 export interface DetailOverlaysProps {
@@ -437,8 +440,15 @@ export function DetailOverlays({ locale }: DetailOverlaysProps) {
   )
 
   if (isPaneHost) {
-    // Hosted by the shell's pane, and only while it shows Plan.
-    if (paneSegment !== 'plan') return null
+    // Hosted by the shell's pane, and only while it shows Plan for a selection.
+    if (
+      !detailPaneShowsDetail({
+        paneSegment,
+        paneEndeavorId: paneEndeavor?.id ?? null,
+      })
+    ) {
+      return null
+    }
     return (
       <DetailPaneChromeFragment
         isEditor={isEditor}

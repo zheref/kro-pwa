@@ -17,6 +17,10 @@
  * suite dispatch `undoScheduleForTodayThunk` with a snapshot the store never
  * held, to prove the reducer's own guard rather than the caller's.
  *
+ * The one narrow read is `addSuggestionsThunk`'s `condition`: it asks whether a
+ * multi-add is already being written, through a structural type rather than
+ * `RootState`, so a second press refuses itself before any write begins.
+ *
  * ## A malformed row is skipped, never fatal
  *
  * `endeavorFromRecord` fails only on an unknown `kind` or `status`, and canon's
@@ -24,6 +28,12 @@
  * empty a user's Inbox, so the pool is built from what decodes — the same rule
  * `DoProducer` applies to the day.
  */
+import {
+  type CaptureSuggestion,
+  SUGGESTIONS_SHOWN_KEY,
+  captureResultFromSuggestion,
+  suggestionsShownFromStored,
+} from './CaptureSuggestions'
 import {
   type Endeavor,
   EndeavorOperation,
@@ -74,6 +84,9 @@ export interface CaptureContext {
   readonly lastUsedDestination: CaptureDestination
   readonly availableDestinations: readonly CaptureDestination[]
   readonly now: Date
+  readonly isSuggestionsEnabled: boolean
+  readonly isSuggestionsShown: boolean
+  readonly isKeyboardAcceleratorsEnabled: boolean
 }
 
 const messageOf = (error: unknown): string =>
@@ -149,6 +162,13 @@ export const loadCaptureContextThunk = createAsyncThunk<
           (await extra.localStore.userProfiles.current()) !== null,
       }),
       now,
+      isSuggestionsEnabled: flags.isEnabled(FeatureFlags.captureSuggestions),
+      isKeyboardAcceleratorsEnabled: flags.isEnabled(
+        FeatureFlags.keyboardAccelerators,
+      ),
+      isSuggestionsShown: suggestionsShownFromStored(
+        preferences.get(SUGGESTIONS_SHOWN_KEY),
+      ),
     })
   } catch (error) {
     return err(CaptureExceptions.contextLoadFailed(messageOf(error)))
@@ -413,5 +433,108 @@ export const applyInboxOperationThunk = createAsyncThunk<
     } catch (error) {
       return err(CaptureExceptions.operationFailed(messageOf(error)))
     }
+  },
+)
+
+/** One item of a multi-add: the suggestion, its new id and its host. */
+export interface CaptureSuggestionInboxItem {
+  readonly suggestion: CaptureSuggestion
+  readonly id: string
+  readonly destination: CaptureDestination
+}
+
+/** One Result per item — a partial failure is data, not an exception. */
+export interface CaptureSuggestionInboxOutcome {
+  readonly items: readonly {
+    readonly suggestionId: string
+    readonly result: Result<Endeavor, CaptureException>
+  }[]
+  readonly now: Date
+}
+
+/**
+ * **Add N to Inbox** — the suggestions pane's multi-add (web-only).
+ *
+ * Each selected suggestion is written through the same Mapper and persistence
+ * path a confirmed capture uses (`endeavorFromCaptureResult` →
+ * `persistEndeavor`). Where each lands is its kind's (`captureResultFromSuggestion`):
+ * an event at its seeded window, in the Plan; a task or reminder unscheduled,
+ * in Pending Triage; a habit with its time and every-day rule, which never
+ * queues for triage. Items are written one after another and each gets its own
+ * `Result`: one failure never throws, never stops the rest, and never rolls
+ * back what already landed.
+ */
+export const addSuggestionsThunk = createAsyncThunk<
+  Result<CaptureSuggestionInboxOutcome, CaptureException>,
+  { items: readonly CaptureSuggestionInboxItem[]; now: Date },
+  { extra: ThunkExtra }
+>(
+  'capture/onSuggestionsInboxAddCompleted',
+  async ({ items, now }, { extra }) => {
+    const outcomes: CaptureSuggestionInboxOutcome['items'][number][] = []
+    for (const item of items) {
+      const result = captureResultFromSuggestion(
+        item.suggestion,
+        item.destination,
+        now,
+      )
+      const endeavor = endeavorFromCaptureResult(result, { id: item.id, now })
+      try {
+        await persistEndeavor(
+          extra,
+          endeavor,
+          now,
+          makeReconciliationContext({ now }),
+          item.destination === CaptureDestination.kroCloud ? 'cloud' : 'local',
+        )
+        outcomes.push({
+          suggestionId: item.suggestion.id,
+          result: ok(endeavor),
+        })
+      } catch (error) {
+        outcomes.push({
+          suggestionId: item.suggestion.id,
+          result: err(CaptureExceptions.captureFailed(messageOf(error))),
+        })
+      }
+    }
+    return ok({ items: outcomes, now })
+  },
+  {
+    // One multi-add at a time (`RC-24`): the slice's in-flight flag, read
+    // synchronously, so a double press cannot mint a second batch.
+    condition: (_arg, { getState }) =>
+      !(getState() as SuggestionsAddInFlightRead).capture.prompt
+        ?.isAddingSuggestions,
+  },
+)
+
+/** The one field `addSuggestionsThunk`'s `condition` reads — never `RootState`. */
+interface SuggestionsAddInFlightRead {
+  readonly capture: {
+    readonly prompt: { readonly isAddingSuggestions: boolean } | null
+  }
+}
+
+/**
+ * Show or hide the suggestions pane, and remember the choice on this device.
+ *
+ * The choice always applies: failing to remember it is a convenience lost,
+ * not a failed toggle, so a storage error still resolves `ok(shown)` — the
+ * same stance as remembering the last-used host.
+ */
+export const setSuggestionsShownThunk = createAsyncThunk<
+  Result<boolean, CaptureException>,
+  { shown: boolean },
+  { extra: ThunkExtra }
+>(
+  'capture/onSuggestionsVisibilityChangeCompleted',
+  async ({ shown }, { extra }) => {
+    try {
+      extra.localStore.preferences.set(SUGGESTIONS_SHOWN_KEY, shown)
+    } catch {
+      // See above: the pane still toggles.
+    }
+    return ok(shown)
   },
 )

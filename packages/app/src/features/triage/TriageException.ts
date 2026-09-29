@@ -24,13 +24,19 @@
  * `EndeavorEditException.localPersistenceFailed`, and *"the only case where the
  * triage decision truly wasn't captured"*.
  */
-import { type Exception, exception } from '@kro/core'
+import { type Exception, assertNever, exception } from '@kro/core'
 
 export type TriageException =
   /** Reading the endeavor (or the day's pool) to open Triage failed. */
   | Exception<'sessionLoadFailed'>
   /** The endeavor being triaged is not on disk — a stale row id. */
   | Exception<'endeavorNotFound'>
+  /**
+   * The endeavor is not a kind Triage applies to (a habit, a calendar event…)
+   * or is already completed — canon's `awaitsTriage` kind gate. Only the web's
+   * pane segment can ask for one; canon's Inbox never lists them.
+   */
+  | Exception<'notTriageable'>
   /** Confirm fired while the gate still blocked it. Carries the reason. */
   | Exception<'incompleteDecision'>
   /** The local upsert failed — the decision was **not** captured. */
@@ -49,6 +55,13 @@ export const TriageExceptions = {
       false,
     ),
 
+  notTriageable: (kindName: string): TriageException =>
+    exception(
+      'notTriageable',
+      `A ${kindName.toLowerCase()} isn't triaged — it is already a commitment to a moment, or it is done.`,
+      false,
+    ),
+
   incompleteDecision: (blockedReason: string): TriageException =>
     exception('incompleteDecision', blockedReason, true),
 
@@ -62,3 +75,29 @@ export const TriageExceptions = {
   unknown: (message: string): TriageException =>
     exception('unknown', message, true),
 } as const
+
+/**
+ * What the user reads when Triage could not open — derived from the `kind`,
+ * never from `message`, which carries row ids and raw platform errors (`RC-8`).
+ * `null` for the kinds that belong to the save, not the open: they surface on
+ * the save's own status line.
+ */
+export const triageOpenFailureCopy = (
+  failure: TriageException,
+): string | null => {
+  switch (failure.kind) {
+    case 'sessionLoadFailed':
+      return "Couldn't open Triage. Try again in a moment."
+    case 'endeavorNotFound':
+      return 'This item is no longer available to triage.'
+    case 'notTriageable':
+      return 'This item isn’t triaged — habits, events and finished work are already decided.'
+    case 'unknown':
+      return 'Something went wrong opening Triage.'
+    case 'incompleteDecision':
+    case 'localSaveFailed':
+      return null
+    default:
+      return assertNever(failure)
+  }
+}

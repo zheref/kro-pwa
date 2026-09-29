@@ -18,6 +18,11 @@ import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLoc
 import { makeRecordingNavigationService } from '../../../services/navigation/NavigationService'
 import {
   EndeavorHost,
+  EndeavorKind,
+  FeatureFlags,
+  enabledAssignment,
+  makeEndeavor,
+  makeHardcodedFeatureFlagService,
   endeavorRecordFromEndeavor,
   minutesInSeconds,
   taskEndeavor,
@@ -27,6 +32,8 @@ import {
   prepareSessionLaunchThunk,
   startSessionThunk,
 } from '../../session/SessionProducer'
+import { CaptureDestination } from '../../capture/CaptureRules'
+import { submitCaptureThunk } from '../../capture/CaptureProducer'
 import { MainShellPage } from '../MainShellPage'
 import {
   CHROME_LAYOUT,
@@ -120,6 +127,83 @@ describe('mount', () => {
   it('renders the destination its route handed it', () => {
     renderShell()
     expect(screen.getByText('destination content')).toBeTruthy()
+  })
+})
+
+describe('a capture routed to the Inbox (web-only pane Inbox)', () => {
+  const inboxOn = makeHardcodedFeatureFlagService({
+    overrides: [enabledAssignment(FeatureFlags.detailPaneInbox)],
+  })
+
+  /** A task just added through the prompt: its Inbox route is now pending. */
+  const captureATask = (store: ReturnType<typeof makeStore>) => {
+    const now = new Date()
+    store.dispatch(
+      submitCaptureThunk.fulfilled(
+        {
+          ok: true,
+          value: {
+            endeavor: makeEndeavor({
+              id: 'just-added',
+              title: 'Book the flights',
+              kind: EndeavorKind.task,
+              createdAt: now,
+              hostedBy: [EndeavorHost.local],
+            }),
+            destination: CaptureDestination.local,
+            now,
+          },
+        },
+        'capture',
+        {} as Parameters<typeof submitCaptureThunk>[0],
+      ),
+    )
+  }
+
+  it('reveals the pane on the Inbox, with the new row, where the pane hosts it', async () => {
+    const { store } = renderShell({
+      ...stubbedThunkExtra,
+      featureFlags: inboxOn,
+    })
+    await waitFor(() =>
+      expect(store.getState().main.isDetailPaneInboxEnabled).toBe(true),
+    )
+    captureATask(store)
+
+    await waitFor(() =>
+      expect(store.getState().main.detailPane.segment).toBe('inbox'),
+    )
+    expect(store.getState().capture.inbox).toEqual({
+      isOpen: false,
+      justCreatedEndeavorId: 'just-added',
+      alsoJustCreatedIds: [],
+    })
+  })
+
+  it('keeps the Inbox overlay with the flag off', async () => {
+    const { store } = renderShell()
+    await waitFor(() => expect(store.getState().main.load.kind).toBe('loaded'))
+    captureATask(store)
+
+    await waitFor(() =>
+      expect(store.getState().capture.inbox.isOpen).toBe(true),
+    )
+    expect(store.getState().main.detailPane.segment).toBeNull()
+  })
+
+  it('keeps the Inbox overlay on the phone, where there is no pane', async () => {
+    installMatchMedia(true, 390)
+    const { store } = renderShell({
+      ...stubbedThunkExtra,
+      featureFlags: inboxOn,
+    })
+    await waitFor(() => expect(store.getState().main.load.kind).toBe('loaded'))
+    captureATask(store)
+
+    await waitFor(() =>
+      expect(store.getState().capture.inbox.isOpen).toBe(true),
+    )
+    expect(store.getState().main.detailPane.segment).toBeNull()
   })
 })
 

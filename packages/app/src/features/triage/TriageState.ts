@@ -30,6 +30,17 @@ import {
 } from './TriageRules'
 import type { TriageBusyInterval } from './TriageScheduling'
 
+/**
+ * Where the open (or opening) session is drawn.
+ *
+ * - `carousel` — canon's only presentation: the carousel over the Inbox list.
+ * - `pane` — web-only: the trailing detail pane's Triage segment.
+ *
+ * Both hosts render the one `triage` slice, so exactly one of them may draw the
+ * session and perform its outcome; this says which.
+ */
+export type TriagePresentation = 'carousel' | 'pane'
+
 /** Which stepper control was pressed. */
 export type TriageRewardStepDirection = 'increment' | 'decrement'
 

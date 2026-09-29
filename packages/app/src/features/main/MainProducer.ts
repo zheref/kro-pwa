@@ -91,11 +91,19 @@ export const loadShellThunk = createAsyncThunk<
   const isDetailPaneEnabled = extra.featureFlags.isEnabled(
     FeatureFlags.macDetailPane,
   )
+  const isDetailPaneInboxEnabled = extra.featureFlags.isEnabled(
+    FeatureFlags.detailPaneInbox,
+  )
 
   if (!gates.lists) {
     // The Lists section is off, so the store is never touched — canon does not
     // read `store.lists` when the flag is down either.
-    return ok({ gates, projects: [], isDetailPaneEnabled })
+    return ok({
+      gates,
+      projects: [],
+      isDetailPaneEnabled,
+      isDetailPaneInboxEnabled,
+    })
   }
 
   try {
@@ -103,6 +111,7 @@ export const loadShellThunk = createAsyncThunk<
       gates,
       projects: await readProjects(extra),
       isDetailPaneEnabled,
+      isDetailPaneInboxEnabled,
     })
   } catch (error) {
     // The gates already resolved, so they still apply: a Lists read failure
@@ -112,6 +121,7 @@ export const loadShellThunk = createAsyncThunk<
       projects: [],
       listsFailure: MainExceptions.listsLoadFailed(reasonOf(error)),
       isDetailPaneEnabled,
+      isDetailPaneInboxEnabled,
     })
   }
 })

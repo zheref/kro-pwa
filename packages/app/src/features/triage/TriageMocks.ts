@@ -335,6 +335,23 @@ export const triageStateMocks = {
     withSaveStarted(scheduled),
     TriageExceptions.localSaveFailed('QuotaExceededError'),
   ),
+
+  /** Web-only: the detail pane's Triage segment opening its own session. */
+  loadingInPane: withFetchStarted(initialTriageState, 'pane'),
+
+  /** Web-only: the pane asked for a habit, which Triage never applies to. */
+  notTriageableInPane: withException(
+    withFetchStarted(initialTriageState, 'pane'),
+    TriageExceptions.notTriageable('Habit'),
+  ),
+
+  /** Web-only: a session open in the pane's Inbox, nothing picked. */
+  openInPane: withFetchStarted(pristine, 'pane'),
+
+  /** Web-only: a decision confirmed in the pane, mid-save. */
+  savingInPane: withSaveStarted(
+    withOutcomeRaised(withFetchStarted(scheduled, 'pane'), 'completed'),
+  ),
 } as const
 
 /** One decision per branch of `applyTriageDecision`'s (due, duration) switch. */

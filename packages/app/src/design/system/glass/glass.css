@@ -158,7 +158,8 @@
 .kro-glass.kro-glass--tinted::before {
   background: color-mix(
     in srgb,
-    var(--kro-glass-tint, var(--kro-color-accent)) 58%,
+    var(--kro-glass-tint, var(--kro-color-accent))
+      var(--kro-glass-tint-strength, 58%),
     var(--kro-glass-surface)
   );
 }

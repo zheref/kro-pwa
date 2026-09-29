@@ -89,6 +89,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { iconForSymbol } from '../../../design/system/icons/icons'
 import {
   type CSSProperties,
   type KeyboardEvent,
@@ -124,6 +125,9 @@ import {
 } from './sessionSheetModel'
 
 /** Canon's `.white.opacity(x)` under the forced dark scheme. */
+/** Reward points — canon's `medal.star` (`SessionSetupView`), shared map. */
+const RewardGlyph = iconForSymbol('medal.star')
+
 const foreAt = (percent: number): string =>
   `color-mix(in srgb, ${colorVar('fore')} ${percent}%, transparent)`
 
@@ -1320,7 +1324,7 @@ function SuggestionItem({
             ) : null}
             {suggestion.rewardPoints > 0 ? (
               <span className="flex items-center gap-0.5">
-                <Zap aria-hidden="true" className="size-3" />
+                <RewardGlyph aria-hidden="true" className="size-3" />
                 {suggestion.rewardPoints}
               </span>
             ) : null}

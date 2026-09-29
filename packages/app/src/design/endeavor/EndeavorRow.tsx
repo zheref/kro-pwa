@@ -58,6 +58,7 @@ import type { OnEndeavorOperation } from './rowActions'
 import type { InputCapability } from './useInputCapability'
 
 const Clock = endeavorIcon('clock')
+const Check = endeavorIcon('checkmark')
 const TimerGlyph = endeavorIcon('timer')
 
 /* ------------------------------------------------------------------------ */
@@ -132,6 +133,14 @@ export interface EndeavorRowConfiguration {
   readonly verticalPadding: number
   readonly rowSpacing: number
   readonly cornerRadius: string
+  /** A fixed height, for grid cells that must line up. Omit to size by content. */
+  readonly height?: number
+  /**
+   * Whether the row casts the card shadow. Off for a row that already sits on
+   * a glass pane: packed into a grid, the soft shadows merge into one dark
+   * layer the pane's scroller then clips at its edges.
+   */
+  readonly elevated?: boolean
 }
 
 const BASE: EndeavorRowConfiguration = {
@@ -163,6 +172,28 @@ export const ENDEAVOR_ROW_CONFIGS = {
     rowSpacing: 8,
     cornerRadius: radiusVar('field'),
   },
+  /**
+   * Canon's horizontal `EndeavorCard` (`layout: .horizontal`) as a grid cell:
+   * a 46pt emoji tile, a one-line title, the metadata beneath. Padding and
+   * spacing on the design system's scale — `--kro-space-medium` (16) across,
+   * `--kro-space-small` (8) down and between.
+   */
+  horizontalCard: {
+    ...BASE,
+    iconSize: 46,
+    titleClassName: 'text-sm font-bold',
+    // One line, as canon's horizontal card: the chips row beneath must stay
+    // inside a fixed-height cell. The full title is the pick control's name
+    // and tooltip.
+    titleLineClamp: 1,
+    minHeight: 64,
+    height: 64,
+    horizontalPadding: 16,
+    verticalPadding: 8,
+    rowSpacing: 8,
+    cornerRadius: radiusVar('card'),
+    elevated: false,
+  },
   find: {
     ...BASE,
     iconSize: 52,
@@ -173,6 +204,22 @@ export const ENDEAVOR_ROW_CONFIGS = {
 } as const satisfies Record<string, EndeavorRowConfiguration>
 
 export type EndeavorRowConfigName = keyof typeof ENDEAVOR_ROW_CONFIGS
+
+/**
+ * The soft outline a flat (non-elevated) card draws instead of a lift — the
+ * same 1px inset glass rim the Today/Do `EndeavorCard` uses.
+ */
+export const FLAT_CARD_OUTLINE = 'inset 0 0 0 1px var(--kro-glass-rim)'
+
+/**
+ * The row's shadow: the card lift when elevated, the soft outline when flat,
+ * and the ticked ring listed first so it paints above either.
+ */
+export function rowShadow(elevated: boolean, checked: boolean): string {
+  const ring = `inset 0 0 0 2px ${colorVar('accent')}`
+  const base = elevated ? shadowVar('card') : FLAT_CARD_OUTLINE
+  return checked ? `${ring}, ${base}` : base
+}
 
 /* ------------------------------------------------------------------------ */
 /* The row                                                                   */
@@ -192,6 +239,12 @@ export interface EndeavorRowProps {
   readonly config?: EndeavorRowConfigName
   /** Trailing controls — the Inbox's Triage / Add for Today buttons. */
   readonly trailing?: ReactNode
+  /**
+   * Controls on their own line inside the card, beneath the title and its
+   * badges — for a row too narrow to give them the trailing edge (the Inbox
+   * in the web-only detail pane).
+   */
+  readonly footer?: ReactNode
   /** `now` is explicit; see `formatting.ts`. */
   readonly now: Date
   readonly locale?: string
@@ -201,6 +254,31 @@ export interface EndeavorRowProps {
   readonly endeavorId?: string
   readonly input?: InputCapability
   readonly className?: string
+  /**
+   * Pick mode: the whole row becomes one button (a stretched, transparent
+   * control over the card), for a list the user chooses FROM — a suggestion
+   * picker, say. `pickLabel` is its accessible name and `pickId` lands on it
+   * as `data-kro-row-pick`, so a list can move focus row to row.
+   */
+  readonly onPick?: (event: { readonly altKey: boolean }) => void
+  /**
+   * Canon's `EmojiBox`: the emoji inside a rounded tile washed in this colour
+   * (canon's `tileColor` — the kind's badge colour at 18%). Pass the colour
+   * itself; the row applies the wash. Omit for a bare emoji.
+   */
+  readonly symbolWash?: string
+  readonly pickLabel?: string
+  readonly pickId?: string
+  /**
+   * Selection mode: a trailing checkbox, a sibling of the pick control (never
+   * nested inside it), drawn above it. `disabled` rows explain why in `label`.
+   */
+  readonly selection?: {
+    readonly checked: boolean
+    readonly label: string
+    readonly disabled?: boolean
+    readonly onToggle: () => void
+  }
 }
 
 export function EndeavorRow({
@@ -211,6 +289,7 @@ export function EndeavorRow({
   badges = [],
   config = 'default',
   trailing,
+  footer,
   now,
   locale,
   capabilities,
@@ -218,6 +297,11 @@ export function EndeavorRow({
   endeavorId,
   input,
   className,
+  onPick,
+  pickLabel,
+  pickId,
+  selection,
+  symbolWash,
 }: EndeavorRowProps) {
   const preset = ENDEAVOR_ROW_CONFIGS[config]
   const leftBadges = preset.badgesPosition === 'belowTitle' ? badges : []
@@ -241,10 +325,18 @@ export function EndeavorRow({
     <div
       data-slot="endeavor-row"
       data-config={config}
-      className={cn('flex w-full items-center', className)}
+      data-checked={
+        selection === undefined ? undefined : String(selection.checked)
+      }
+      className={cn(
+        'flex w-full items-center',
+        (onPick !== undefined || selection !== undefined) && 'relative',
+        className,
+      )}
       style={{
         gap: preset.rowSpacing,
         minHeight: preset.minHeight,
+        ...(preset.height === undefined ? {} : { height: preset.height }),
         padding: `${preset.verticalPadding}px ${preset.horizontalPadding}px`,
         ...(hasTrailingContent
           ? {
@@ -253,16 +345,37 @@ export function EndeavorRow({
           : {}),
         borderRadius: preset.cornerRadius,
         backgroundColor: colorVar('absolute'),
-        boxShadow: shadowVar('card'),
+        boxShadow: rowShadow(
+          preset.elevated ?? true,
+          selection?.checked === true,
+        ),
       }}
     >
+      {onPick === undefined ? null : (
+        <button
+          type="button"
+          aria-label={pickLabel ?? title}
+          title={title}
+          data-kro-row-pick={pickId}
+          onClick={(event) => onPick({ altKey: event.altKey })}
+          className="kro-motion-quick absolute inset-0 outline-none hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_5%,transparent)] focus-visible:shadow-[var(--kro-ring-field)]"
+          style={{ borderRadius: preset.cornerRadius, cursor: 'default' }}
+        />
+      )}
       <RowSymbol
         symbol={symbol}
         isGenericSymbol={isGenericSymbol}
         size={preset.iconSize}
+        wash={symbolWash}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 flex-col gap-1.5',
+          // A fixed-height cell keeps its title and chips inside its bounds.
+          preset.height !== undefined && 'max-h-full overflow-hidden',
+        )}
+      >
         <p
           className={cn('m-0', preset.titleClassName)}
           style={{
@@ -287,6 +400,12 @@ export function EndeavorRow({
             ))}
           </div>
         )}
+
+        {footer === undefined || footer === null ? null : (
+          <div data-slot="endeavor-row-footer" className="pt-0.5">
+            {footer}
+          </div>
+        )}
       </div>
 
       {rightBadges.length > 0 ? (
@@ -297,6 +416,38 @@ export function EndeavorRow({
         </div>
       ) : (
         trailing
+      )}
+      {selection === undefined ? null : (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={selection.checked}
+          aria-label={selection.label}
+          disabled={selection.disabled}
+          tabIndex={-1}
+          onClick={selection.onToggle}
+          data-slot="endeavor-row-check"
+          // A 24×24 hit area (WCAG 2.5.8) around the 20px box.
+          className="relative inline-flex size-6 shrink-0 items-center justify-center rounded-kro-small outline-none disabled:opacity-40"
+        >
+          <span
+            aria-hidden
+            data-slot="endeavor-row-check-box"
+            className="inline-flex size-5 items-center justify-center rounded-kro-small"
+            style={{
+              // Unchecked, the box's edge is a UI boundary on glass: the
+              // on-glass secondary clears SC 1.4.11's 3:1 where the hairline
+              // (1.2:1) did not.
+              border: `1.5px solid ${selection.checked ? colorVar('accent') : colorVar('foreSecondaryOnGlass')}`,
+              background: selection.checked
+                ? colorVar('accent')
+                : 'transparent',
+              color: colorVar('back'),
+            }}
+          >
+            {selection.checked ? <Check size={12} aria-hidden /> : null}
+          </span>
+        </button>
       )}
     </div>
   )
@@ -339,11 +490,34 @@ function RowSymbol({
   symbol,
   isGenericSymbol,
   size,
+  wash,
 }: {
   readonly symbol: string
   readonly isGenericSymbol: boolean
   readonly size: number
+  readonly wash?: string
 }) {
+  if (!isGenericSymbol && wash !== undefined) {
+    // Canon's `EmojiBox`: a continuous-corner tile (radius = side × 0.26),
+    // the kind's colour at 18%, the emoji at 62% of the side.
+    return (
+      <span
+        aria-hidden
+        data-slot="endeavor-row-emoji-box"
+        className="inline-flex shrink-0 items-center justify-center"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: Math.round(size * 0.26),
+          backgroundColor: `color-mix(in srgb, ${wash} 18%, transparent)`,
+          fontSize: Math.round(size * 0.62),
+          lineHeight: 1,
+        }}
+      >
+        {symbol}
+      </span>
+    )
+  }
   if (!isGenericSymbol) {
     return (
       <span

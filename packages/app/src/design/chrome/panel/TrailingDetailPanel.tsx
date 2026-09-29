@@ -240,12 +240,14 @@ export function TrailingDetailPanel({
     width: DETAIL_PANEL_WIDTH_CSS,
     borderRadius: g.cornerRadius,
     opacity: isPresented ? 1 : 0,
+    // The shared trailing-panel motion (motion.css): the capture prompt and
+    // its suggestions pane read the very same three values.
     transform: isPresented
       ? 'translateX(0)'
-      : `translateX(calc(100% + ${g.trailingMargin}px))`,
+      : 'translateX(var(--kro-trailing-panel-offset))',
     transitionProperty: 'transform, opacity',
-    transitionDuration: 'var(--kro-duration-standard-spring)',
-    transitionTimingFunction: 'var(--kro-ease-standard-spring)',
+    transitionDuration: 'var(--kro-trailing-panel-duration)',
+    transitionTimingFunction: 'var(--kro-trailing-panel-ease)',
     // Canon's `.shadow(color: .black.opacity(0.24), radius: 18, x: -6)`.
     boxShadow: '-6px 0 36px rgb(0 0 0 / 0.24)',
   }

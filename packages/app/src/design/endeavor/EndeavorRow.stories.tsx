@@ -235,6 +235,79 @@ const BothThemes = {
   ),
 }
 
+/** The footer slot — the pane Inbox's actions, inside the card under the title. */
+const WithFooter = {
+  render: () => (
+    <div style={{ width: 285, padding: 16 }}>
+      <EndeavorRow
+        symbol="📊"
+        title="Review quarterly plan"
+        badges={[{ kind: 'reward', amount: 30 }]}
+        config="compactDesktopInbox"
+        now={new Date(2026, 8, 28, 9, 0)}
+        footer={
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button">Triage</button>
+            <button type="button">Add for Today</button>
+          </div>
+        }
+      />
+    </div>
+  ),
+}
+
+/**
+ * Pick + selection mode on canon's horizontal card — the emoji in its
+ * kind-washed tile, one row ticked, one that cannot be ticked.
+ */
+const PickAndSelect = {
+  render: () => (
+    <div
+      style={{
+        width: 680,
+        padding: 16,
+        display: 'grid',
+        gap: 8,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+      }}
+    >
+      <EndeavorRow
+        symbol="📊"
+        title="Prepare presentation slides"
+        badges={[{ kind: 'reward', amount: 30 }]}
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-task)"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{ checked: true, label: 'Select', onToggle: () => {} }}
+      />
+      <EndeavorRow
+        symbol="🤝"
+        title="Team sync meeting"
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-event)"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{ checked: false, label: 'Select', onToggle: () => {} }}
+      />
+      <EndeavorRow
+        symbol="🧘"
+        title="Meditate for 10 minutes"
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-habit)"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{
+          checked: false,
+          disabled: true,
+          label: 'Unavailable',
+          onToggle: () => {},
+        }}
+      />
+    </div>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
@@ -242,6 +315,8 @@ export const Gallery = {
       {Presets.render()}
       {FindPills.render()}
       {InboxWithTrailingActions.render()}
+      {WithFooter.render()}
+      {PickAndSelect.render()}
       {InputDuality.render()}
       {BothThemes.render()}
     </StoryGallery>

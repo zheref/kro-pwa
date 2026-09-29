@@ -12,11 +12,24 @@
  * land one tick after a dismiss and the slice must not invent a prompt to hold
  * it.
  */
-import { type Endeavor, makeReconciliationContext, reconcile } from '@kro/core'
+import {
+  type Endeavor,
+  type Result,
+  makeReconciliationContext,
+  reconcile,
+} from '@kro/core'
 import type { CaptureException } from './CaptureException'
+import {
+  type CaptureSuggestion,
+  applyCaptureSuggestion,
+  captureSuggestionById,
+} from './CaptureSuggestions'
 import type {
   CaptureAddForTodayState,
+  CapturePickerSnapshot,
+  CapturePromptPanel,
   CapturePromptState,
+  CaptureInboxHost,
   CaptureState,
   CaptureTimeEditOutcome,
   CaptureTimeField,
@@ -28,13 +41,23 @@ import {
   CaptureKind,
   type CaptureRecurrence,
   type CaptureSchedulingSnapshot,
+  MAXIMUM_CAPTURE_VALUE,
+  MINIMUM_CAPTURE_VALUE,
+  applyCaptureKindDefaults,
   captureIntentFor,
+  multiAddIntentFor,
+  captureRouteFor,
+  captureKindRequiresTime,
+  captureKindSupportsDuration,
+  captureKindSupportsValue,
   clampCaptureRewards,
   isCaptureIntentDue,
   makeCaptureDraft,
   nextFreeSlotToday,
   nextQuarterHourSlot,
+  resolvedCaptureDestination,
   schedulingIntentFor,
+  supportedCaptureDestinations,
 } from './CaptureRules'
 
 /**
@@ -47,11 +70,21 @@ const withDraft = (
 ): CaptureState => {
   const prompt = state.prompt
   if (prompt === null) return state
-  return { ...state, prompt: { ...prompt, draft: edit(prompt.draft) } }
+  // Any edit retires the last multi-add's notice from the status line.
+  return {
+    ...state,
+    prompt: { ...prompt, draft: edit(prompt.draft), suggestionNotice: null },
+  }
 }
 
-const snapshotFieldOf = (field: CaptureTimeField) =>
-  field === 'start' ? ('startEdit' as const) : ('endEdit' as const)
+/** The open time editor's snapshot for `field`, or `null` when it is not open. */
+const timeSnapshotOf = (
+  prompt: CapturePromptState,
+  field: CaptureTimeField,
+): CapturePickerSnapshot | null =>
+  prompt.editor?.kind === 'time' && prompt.editor.field === field
+    ? prompt.editor.snapshot
+    : null
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -97,6 +130,12 @@ export function withContextLoaded(
     readonly lastUsedDestination: CaptureDestination
     readonly availableDestinations: readonly CaptureDestination[]
     readonly now: Date
+    /** The web-only `captureSuggestions` flag; absent reads as off. */
+    readonly isSuggestionsEnabled?: boolean
+    /** The remembered pane choice; absent reads as hidden. */
+    readonly isSuggestionsShown?: boolean
+    /** The web-only `keyboardAccelerators` flag; absent reads as off. */
+    readonly isKeyboardAcceleratorsEnabled?: boolean
   },
 ): CaptureState {
   return {
@@ -109,6 +148,10 @@ export function withContextLoaded(
     lastUsedDestination: loaded.lastUsedDestination,
     availableDestinations: loaded.availableDestinations,
     clockAnchor: loaded.now,
+    isSuggestionsEnabled: loaded.isSuggestionsEnabled ?? false,
+    isSuggestionsShown: loaded.isSuggestionsShown ?? false,
+    isKeyboardAcceleratorsEnabled:
+      loaded.isKeyboardAcceleratorsEnabled ?? false,
   }
 }
 
@@ -131,10 +174,13 @@ export function withPromptOpened(
     readonly initialStart: Date | null
   },
 ): CaptureState {
-  const available = state.availableDestinations
-  const preferred = available.includes(state.lastUsedDestination)
-    ? state.lastUsedDestination
-    : (available[0] ?? state.lastUsedDestination)
+  // `preferredDestination`, narrowed to what this kind supports: the
+  // remembered host while it is still offered, else the kind's first choice.
+  const preferred = resolvedCaptureDestination(
+    params.kind,
+    state.lastUsedDestination,
+    state.availableDestinations,
+  )
 
   const prompt: CapturePromptState = {
     draft: makeCaptureDraft({
@@ -143,8 +189,10 @@ export function withPromptOpened(
       initialStart: params.initialStart,
       destination: preferred,
     }),
-    startEdit: null,
-    endEdit: null,
+    editor: null,
+    selectedSuggestionIds: [],
+    suggestionNotice: null,
+    isAddingSuggestions: false,
   }
   return { ...state, prompt, clockAnchor: params.now }
 }
@@ -166,15 +214,12 @@ export function withTitleEdited(
 /**
  * One concern: a different kind chip.
  *
- * Both picker snapshots are dropped, which is this tier's half of canon's
- * *"close any open editors when switching kinds"* — the draft's committed
- * values are kept, so a user who typed a time and then switched from Task to
- * Event still has it.
- *
- * **`hasDate` is forced back to `true` when the new kind is an Event**
- * (`KC-IS-#75`) — an event has no way to represent a missing start, and the
- * Clear-date affordance is only ever offered on Task/Reminder, so this is the
- * one seam a dateless draft could otherwise carry into an Event.
+ * Canon's `applyKindChanged`: rewards re-seed unless the user moved the
+ * stepper, value/duration drop for a kind without them, a habit opens with a
+ * time and an every-day rule, and an Event pins `hasDate` (`KC-IS-#75`). The
+ * destination falls back to the kind's first supported host when the current
+ * one is not offered for the new kind. Both picker snapshots are dropped —
+ * this tier's half of *"close any open editors when switching kinds"*.
  */
 export function withKindSelected(
   state: CaptureState,
@@ -182,16 +227,20 @@ export function withKindSelected(
 ): CaptureState {
   const prompt = state.prompt
   if (prompt === null) return state
+  const draft = applyCaptureKindDefaults(prompt.draft, kind)
   return {
     ...state,
     prompt: {
+      ...prompt,
       draft: {
-        ...prompt.draft,
-        kind,
-        hasDate: kind === CaptureKind.event ? true : prompt.draft.hasDate,
+        ...draft,
+        destination: resolvedCaptureDestination(
+          kind,
+          draft.destination,
+          state.availableDestinations,
+        ),
       },
-      startEdit: null,
-      endEdit: null,
+      editor: null,
     },
   }
 }
@@ -235,9 +284,10 @@ export function withTimeEditBegun(
 ): CaptureState {
   const prompt = state.prompt
   if (prompt === null) return state
-  const key = snapshotFieldOf(field)
-  if (prompt[key] !== null) return state
+  if (timeSnapshotOf(prompt, field) !== null) return state
 
+  // Opening this picker closes whatever else was open — another picker keeps
+  // what it was turned to (its "done"), a panel simply shuts.
   const draft = prompt.draft
   const snapshot =
     field === 'start'
@@ -248,7 +298,14 @@ export function withTimeEditBegun(
       ? { ...draft, hasTime: true }
       : { ...draft, hasEndTime: true }
 
-  return { ...state, prompt: { ...prompt, draft: edited, [key]: snapshot } }
+  return {
+    ...state,
+    prompt: {
+      ...prompt,
+      draft: edited,
+      editor: { kind: 'time', field, snapshot },
+    },
+  }
 }
 
 /** One concern: the wheel moved. The field stays set while it is being turned. */
@@ -283,21 +340,26 @@ export function withTimeEditEnded(
 ): CaptureState {
   const prompt = state.prompt
   if (prompt === null) return state
-  const key = snapshotFieldOf(field)
-  const snapshot = prompt[key]
+  const snapshot = timeSnapshotOf(prompt, field)
+  // Only this field's own editor closes; a panel open meanwhile stays open.
+  const editor = snapshot === null ? prompt.editor : null
 
   if (outcome === 'clear') {
+    // A habit's time is required and never clearable (`requiresTime`).
+    if (field === 'start' && captureKindRequiresTime(prompt.draft.kind)) {
+      return state
+    }
     const cleared: CaptureDraft =
       field === 'start'
         ? { ...prompt.draft, hasTime: false }
         : { ...prompt.draft, hasEndTime: false }
-    return { ...state, prompt: { ...prompt, draft: cleared, [key]: null } }
+    return { ...state, prompt: { ...prompt, draft: cleared, editor } }
   }
 
   if (snapshot === null) return state
 
   if (outcome === 'done') {
-    return { ...state, prompt: { ...prompt, [key]: null } }
+    return { ...state, prompt: { ...prompt, editor: null } }
   }
 
   const restored: CaptureDraft =
@@ -308,10 +370,36 @@ export function withTimeEditEnded(
           endTime: snapshot.time,
           hasEndTime: snapshot.wasSet,
         }
-  return { ...state, prompt: { ...prompt, draft: restored, [key]: null } }
+  return { ...state, prompt: { ...prompt, draft: restored, editor: null } }
 }
 
-/** One concern: the rewards stepper moved, clamped to canon's 1…999. */
+/**
+ * One concern: an inline panel opened, or closed with `null`.
+ *
+ * Opening a panel closes an open time picker the way its **Done** would —
+ * the value it was turned to stays — because the two are one exclusive
+ * editor. Closing a panel leaves a time picker alone.
+ */
+export function withPanelSet(
+  state: CaptureState,
+  panel: CapturePromptPanel | null,
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  if (panel === null) {
+    if (prompt.editor?.kind !== 'panel') return state
+    return { ...state, prompt: { ...prompt, editor: null } }
+  }
+  if (prompt.editor?.kind === 'panel' && prompt.editor.panel === panel) {
+    return state
+  }
+  return { ...state, prompt: { ...prompt, editor: { kind: 'panel', panel } } }
+}
+
+/**
+ * One concern: the rewards stepper moved, clamped to canon's 1…999. It also
+ * marks the value as the user's own, so a later kind switch keeps it.
+ */
 export function withRewardsPicked(
   state: CaptureState,
   points: number,
@@ -319,7 +407,57 @@ export function withRewardsPicked(
   return withDraft(state, (draft) => ({
     ...draft,
     rewards: clampCaptureRewards(points),
+    hasCustomRewards: true,
   }))
+}
+
+/**
+ * One concern: the value rating. `null` clears it (tapping the selected
+ * star). A no-op for a kind without a rating, or a rating outside 1…5.
+ */
+export function withValuePicked(
+  state: CaptureState,
+  value: number | null,
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  if (!captureKindSupportsValue(prompt.draft.kind)) return state
+  if (
+    value !== null &&
+    (!Number.isInteger(value) ||
+      value < MINIMUM_CAPTURE_VALUE ||
+      value > MAXIMUM_CAPTURE_VALUE)
+  ) {
+    return state
+  }
+  return withDraft(state, (draft) => ({ ...draft, value }))
+}
+
+/**
+ * One concern: the duration estimate, in seconds. `null` clears it. A no-op
+ * for a kind without one, or a non-positive length.
+ */
+export function withDurationPicked(
+  state: CaptureState,
+  seconds: number | null,
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  if (!captureKindSupportsDuration(prompt.draft.kind)) return state
+  if (seconds !== null && !(seconds > 0)) return state
+  return withDraft(state, (draft) => ({ ...draft, duration: seconds }))
+}
+
+/**
+ * One concern: the emoji badge's picker chose a symbol. The title is left
+ * alone — the pick is folded in only at save (`captureTitleForPersistence`).
+ */
+export function withEmojiPicked(
+  state: CaptureState,
+  emoji: string,
+): CaptureState {
+  if (emoji.trim().length === 0) return state
+  return withDraft(state, (draft) => ({ ...draft, pickedEmoji: emoji }))
 }
 
 /** One concern: the repeat chip chose a rule. */
@@ -341,6 +479,12 @@ export function withDestinationSelected(
   state: CaptureState,
   destination: CaptureDestination,
 ): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  // A host the current kind does not support is never selectable.
+  if (!supportedCaptureDestinations(prompt.draft.kind).includes(destination)) {
+    return state
+  }
   return withDraft(state, (draft) => ({ ...draft, destination }))
 }
 
@@ -383,10 +527,16 @@ export function withCaptureCommitted(
  * implementation detail of how canon happened to express it. On an `inbox`
  * route the sheet opens here with its Just Created row; on a `plan` route the
  * shell has already navigated and only the one-shot needs clearing.
+ *
+ * `presentsInPane` (web-only) is the shell's answer to "does the detail pane
+ * host the Inbox here?". When it does, the shell reveals the pane's Inbox
+ * segment instead, so the overlay stays closed — but the Just Created row is
+ * still stamped, because the pane's Inbox draws it the same way.
  */
 export function withRouteDelivered(
   state: CaptureState,
   now: Date,
+  presentsInPane = false,
 ): CaptureState {
   const intent = state.navigation
   if (intent === null) return state
@@ -396,7 +546,11 @@ export function withRouteDelivered(
     return {
       ...state,
       navigation: null,
-      inbox: { isOpen: true, justCreatedEndeavorId: intent.route.endeavorId },
+      inbox: {
+        isOpen: !presentsInPane,
+        justCreatedEndeavorId: intent.route.endeavorId,
+        alsoJustCreatedIds: intent.route.additionalEndeavorIds ?? [],
+      },
       clockAnchor: now,
     }
   }
@@ -415,14 +569,25 @@ export function withRouteDelivered(
  * *"on any subsequent open, that endeavor moves into Pending Triage"*.
  */
 export function withInboxOpened(state: CaptureState): CaptureState {
-  return { ...state, inbox: { isOpen: true, justCreatedEndeavorId: null } }
+  return {
+    ...state,
+    inbox: {
+      isOpen: true,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
+  }
 }
 
 /** One concern: the Inbox dismissed. The slot drains with it. */
 export function withInboxDismissed(state: CaptureState): CaptureState {
   return {
     ...state,
-    inbox: { isOpen: false, justCreatedEndeavorId: null },
+    inbox: {
+      isOpen: false,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
     addForToday: null,
   }
 }
@@ -436,6 +601,7 @@ export function withTriageRequested(
   state: CaptureState,
   endeavorId: string,
   now: Date,
+  host: CaptureInboxHost = 'overlay',
 ): CaptureState {
   const known = state.endeavors.some((endeavor) => endeavor.id === endeavorId)
   if (!known) return state
@@ -444,6 +610,7 @@ export function withTriageRequested(
     triageRequest: {
       endeavorId,
       nextFreeSlotToday: nextFreeSlotToday(state.endeavors, now),
+      host,
     },
     clockAnchor: now,
   }
@@ -539,7 +706,11 @@ export function withSchedulingApplied(
     endeavors: state.endeavors.map((endeavor) =>
       endeavor.id === applied.endeavor.id ? applied.endeavor : endeavor,
     ),
-    inbox: { isOpen: false, justCreatedEndeavorId: null },
+    inbox: {
+      isOpen: false,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
     addForToday: null,
     navigation: schedulingIntentFor({
       endeavorId: applied.endeavor.id,
@@ -593,4 +764,206 @@ export function withSchedulingUndone(
     ),
     undo: { kind: 'undone' },
   }
+}
+
+// ---------------------------------------------------------------------------
+// Suggestions
+// ---------------------------------------------------------------------------
+
+/**
+ * One concern: a suggestion card was picked — canon's `applySuggestion`,
+ * through the same kind rules a kind switch runs, then the destination
+ * re-resolved for the suggestion's kind. Open time edits are dropped: the
+ * suggestion replaces what they were editing.
+ */
+export function withSuggestionApplied(
+  state: CaptureState,
+  params: { readonly suggestion: CaptureSuggestion; readonly now: Date },
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  const draft = applyCaptureSuggestion(
+    prompt.draft,
+    params.suggestion,
+    params.now,
+  )
+  return {
+    ...state,
+    prompt: {
+      ...prompt,
+      draft: {
+        ...draft,
+        destination: resolvedCaptureDestination(
+          draft.kind,
+          draft.destination,
+          state.availableDestinations,
+        ),
+      },
+      editor: null,
+      suggestionNotice: null,
+    },
+    clockAnchor: params.now,
+  }
+}
+
+/**
+ * One concern: a suggestion card was picked by id — the catalogue lookup
+ * `withSuggestionApplied` needs. An id the catalogue does not know is a no-op.
+ */
+export function withSuggestionPicked(
+  state: CaptureState,
+  params: { readonly suggestionId: string; readonly now: Date },
+): CaptureState {
+  const suggestion = captureSuggestionById(params.suggestionId)
+  if (suggestion === null) return state
+  return withSuggestionApplied(state, { suggestion, now: params.now })
+}
+
+/** One concern: a suggestion ticked into (or out of) the multi-add selection. */
+export function withSuggestionSelectionToggled(
+  state: CaptureState,
+  suggestionId: string,
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  const selected = prompt.selectedSuggestionIds
+  const next = selected.includes(suggestionId)
+    ? selected.filter((id) => id !== suggestionId)
+    : [...selected, suggestionId]
+  return {
+    ...state,
+    prompt: { ...prompt, selectedSuggestionIds: next, suggestionNotice: null },
+  }
+}
+
+/**
+ * One concern: a multi-add started writing, so Add is spent until it settles
+ * (`RC-24` — the in-flight write is state, not a view ref).
+ */
+export function withSuggestionsAddStarted(state: CaptureState): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null || prompt.isAddingSuggestions) return state
+  return { ...state, prompt: { ...prompt, isAddingSuggestions: true } }
+}
+
+/**
+ * One concern: a multi-add could not run at all — the exception is reported
+ * and Add is live again for a retry.
+ */
+export function withSuggestionsAddFailed(
+  state: CaptureState,
+  exception: CaptureException,
+): CaptureState {
+  const failed = withException(state, exception)
+  const prompt = failed.prompt
+  if (prompt === null || !prompt.isAddingSuggestions) return failed
+  return { ...failed, prompt: { ...prompt, isAddingSuggestions: false } }
+}
+
+/**
+ * One concern: a multi-add's per-item outcomes, split into what landed and
+ * what failed, then settled through `withSuggestionsAddedToInbox`.
+ */
+export function withSuggestionBatchSettled(
+  state: CaptureState,
+  params: {
+    readonly items: readonly {
+      readonly suggestionId: string
+      readonly result: Result<Endeavor, CaptureException>
+    }[]
+    readonly now: Date
+  },
+): CaptureState {
+  const added = params.items.flatMap((item) =>
+    item.result.ok
+      ? [{ suggestionId: item.suggestionId, endeavor: item.result.value }]
+      : [],
+  )
+  const failedSuggestionIds = params.items.flatMap((item) =>
+    item.result.ok ? [] : [item.suggestionId],
+  )
+  const settled = withSuggestionsAddedToInbox(state, {
+    added,
+    failedSuggestionIds,
+    now: params.now,
+  })
+  const prompt = settled.prompt
+  if (prompt === null || !prompt.isAddingSuggestions) return settled
+  return { ...settled, prompt: { ...prompt, isAddingSuggestions: false } }
+}
+
+/**
+ * One concern: a multi-add settled, item by item.
+ *
+ * Every stored endeavor joins the pool. When everything landed the prompt
+ * closes and the user is taken to what they added. When any item failed the
+ * prompt stays up instead: those suggestions stay ticked so a retry is one key
+ * away, and the tally goes to the status line. An empty batch changes nothing.
+ */
+export function withSuggestionsAddedToInbox(
+  state: CaptureState,
+  params: {
+    readonly added: readonly {
+      readonly suggestionId: string
+      readonly endeavor: Endeavor
+    }[]
+    readonly failedSuggestionIds: readonly string[]
+    readonly now: Date
+  },
+): CaptureState {
+  if (params.added.length === 0 && params.failedSuggestionIds.length === 0) {
+    return state
+  }
+  const addedIds = params.added.map((item) => item.suggestionId)
+  const prompt = state.prompt
+  // Everything landed: close the prompt and take the user to what they added
+  // — the Inbox with each row Just Created (or the Plan, for all-events) —
+  // through the same route-delivery path a single capture uses.
+  if (params.failedSuggestionIds.length === 0) {
+    const endeavors = params.added.map((item) => item.endeavor)
+    return {
+      ...state,
+      load: { kind: 'loaded' },
+      endeavors: [...state.endeavors, ...endeavors],
+      prompt: null,
+      navigation: multiAddIntentFor(endeavors, params.now),
+      clockAnchor: params.now,
+    }
+  }
+  return {
+    ...state,
+    load: { kind: 'loaded' },
+    endeavors: [
+      ...state.endeavors,
+      ...params.added.map((item) => item.endeavor),
+    ],
+    prompt:
+      prompt === null
+        ? null
+        : {
+            ...prompt,
+            selectedSuggestionIds: prompt.selectedSuggestionIds.filter(
+              (id) => !addedIds.includes(id),
+            ),
+            suggestionNotice: {
+              toInbox: params.added.filter(
+                (item) => captureRouteFor(item.endeavor).kind === 'inbox',
+              ).length,
+              toPlan: params.added.filter(
+                (item) => captureRouteFor(item.endeavor).kind === 'plan',
+              ).length,
+              failed: params.failedSuggestionIds.length,
+            },
+          },
+    clockAnchor: params.now,
+  }
+}
+
+/** One concern: the suggestions pane shown or hidden. */
+export function withSuggestionsShown(
+  state: CaptureState,
+  shown: boolean,
+): CaptureState {
+  if (state.isSuggestionsShown === shown) return state
+  return { ...state, isSuggestionsShown: shown }
 }

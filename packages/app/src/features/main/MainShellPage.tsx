@@ -67,9 +67,11 @@ import {
   selectDetailPaneDepth,
   selectDetailPaneLocationKey,
   selectDetailPaneSegment,
+  selectDetailPaneSegments,
   selectDetailPaneSubtitle,
   selectDetailPaneTitle,
   selectIsDetailPaneAvailable,
+  selectIsInboxHostedByPane,
   selectDraftProjectTitle,
   selectIsAddingProject,
   selectIsSidebarVisible,
@@ -85,6 +87,7 @@ import { onCaptureRouteDelivered } from '../capture/CaptureFeature'
 import { ProfileControlPage } from '../settings/pages/ProfileControlPage'
 import { PerformancePanePage } from './PerformancePanePage'
 import { TimelinePanePage } from './TimelinePanePage'
+import { InboxPanePage } from './InboxPanePage'
 import { searchDestination } from './NavigationSections'
 import { DestinationKind, type SidebarDestination } from './SidebarDestination'
 import { shellBottomInset } from './DoSurfaceLayout'
@@ -119,9 +122,11 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
   const isSidebarVisible = useAppSelector(selectIsSidebarVisible)
   const canManageProjects = useAppSelector(selectCanManageProjects)
   const pendingRoute = useAppSelector(selectPendingShellRoute)
+  const presentsInPane = useAppSelector(selectIsInboxHostedByPane)
   const isSessionPillVisible = useAppSelector(selectIsSessionPillVisible)
   const isDetailPaneAvailable = useAppSelector(selectIsDetailPaneAvailable)
   const detailPaneSegment = useAppSelector(selectDetailPaneSegment)
+  const detailPaneSegments = useAppSelector(selectDetailPaneSegments)
   const detailPaneTitle = useAppSelector(selectDetailPaneTitle)
   const detailPaneSubtitle = useAppSelector(selectDetailPaneSubtitle)
   const canDetailPaneGoBack = useAppSelector(selectCanDetailPaneGoBack)
@@ -174,13 +179,15 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
           ? action.payload
           : null
         if (result?.ok && result.value !== null) {
-          dispatch(onCaptureRouteDelivered({ now: new Date() }))
+          // Web-only: where the pane hosts the Inbox, the shell's slice has
+          // just revealed the pane's Inbox segment, so the overlay stays shut.
+          dispatch(onCaptureRouteDelivered({ now: new Date(), presentsInPane }))
         }
       })
     }, wait)
 
     return () => clearTimeout(timer)
-  }, [dispatch, pendingRoute])
+  }, [dispatch, pendingRoute, presentsInPane])
 
   const onSelectDestination = useCallback(
     (destination: SidebarDestination) => {
@@ -287,6 +294,7 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
             isDetailPaneAvailable
               ? {
                   segment: detailPaneSegment,
+                  segments: detailPaneSegments,
                   title: detailPaneTitle,
                   subtitle: detailPaneSubtitle,
                   onSelectSegment: (segment) =>
@@ -337,6 +345,8 @@ export function MainShellPage({ isDevelopment, children }: MainShellPageProps) {
           <PerformancePanePage />
           {/* The pane's Plan segment with no endeavor: today's read-only timeline. */}
           <TimelinePanePage />
+          {/* The pane's web-only Inbox segment: the Inbox, with its Triage. */}
+          <InboxPanePage />
           {children}
         </MainShellFragment>
       </ToolbarSlotsProvider>

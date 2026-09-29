@@ -59,6 +59,8 @@ export interface LiquidGlassFABProps {
   readonly 'aria-expanded'?: boolean
   readonly 'aria-haspopup'?: 'menu'
   readonly 'aria-controls'?: string
+  /** The key that toggles it, when a menu wires one (`Enter`). */
+  readonly 'aria-keyshortcuts'?: string
 }
 
 /** Canon: `.font(.system(size: 24, weight: .semibold))`. */

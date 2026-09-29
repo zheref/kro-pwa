@@ -41,15 +41,21 @@ import {
   selectInboxVista,
   selectIsInboxEmpty,
   selectIsInboxOpen,
+  selectAlsoJustCreatedEndeavors,
   selectJustCreatedEndeavor,
   selectPendingTriageEndeavors,
+  selectUntriageableInboxRowIds,
 } from '../CaptureSelectors'
 import { type InboxRowLayout, inboxRowLayoutFor } from './capturePresentation'
 
 export interface InboxSurfaceViewModel {
   readonly isOpen: boolean
   readonly justCreated: EndeavorCardModel | null
+  /** A multi-add's further Just Created rows. */
+  readonly alsoJustCreated: readonly EndeavorCardModel[]
   readonly pendingTriage: readonly EndeavorCardModel[]
+  /** Rows whose Triage would refuse to open — their button is hidden. */
+  readonly untriageableIds: readonly string[]
   readonly totalCount: number
   readonly isEmpty: boolean
   readonly capabilities: ReturnType<typeof selectInboxVista>['capabilities']
@@ -74,7 +80,11 @@ export function useInboxSurface(): InboxSurfaceViewModel {
 
   const isOpen = useAppSelector(selectIsInboxOpen)
   const justCreatedEndeavor = useAppSelector(selectJustCreatedEndeavor)
+  const alsoJustCreatedEndeavors = useAppSelector(
+    selectAlsoJustCreatedEndeavors,
+  )
   const pendingTriageEndeavors = useAppSelector(selectPendingTriageEndeavors)
+  const untriageableIds = useAppSelector(selectUntriageableInboxRowIds)
   const totalCount = useAppSelector(selectInboxTotalCount)
   const isEmpty = useAppSelector(selectIsInboxEmpty)
   const vista = useAppSelector(selectInboxVista)
@@ -107,6 +117,14 @@ export function useInboxSurface(): InboxSurfaceViewModel {
         ? null
         : endeavorCardModelFrom(justCreatedEndeavor, new Date(nowMs)),
     [justCreatedEndeavor, nowMs],
+  )
+
+  const alsoJustCreated = useMemo(
+    () =>
+      alsoJustCreatedEndeavors.map((endeavor) =>
+        endeavorCardModelFrom(endeavor, new Date(nowMs)),
+      ),
+    [alsoJustCreatedEndeavors, nowMs],
   )
 
   const pendingTriage = useMemo(
@@ -172,7 +190,9 @@ export function useInboxSurface(): InboxSurfaceViewModel {
   return {
     isOpen,
     justCreated,
+    alsoJustCreated,
     pendingTriage,
+    untriageableIds,
     totalCount,
     isEmpty,
     capabilities: vista.capabilities,

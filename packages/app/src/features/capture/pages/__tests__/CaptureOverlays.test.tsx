@@ -70,6 +70,15 @@ const captureTitled = async (title: string, kind = 'Task') => {
     await userEvent.click(screen.getByRole('button', { name: kind }))
   }
   await userEvent.type(screen.getByTestId('capture-title'), title)
+  if (kind === 'Task') {
+    // A task bound for local storage needs a value rating before Add.
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
+    )
+  }
   await userEvent.click(screen.getByTestId('capture-add'))
 }
 

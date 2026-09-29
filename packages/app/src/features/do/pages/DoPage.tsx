@@ -45,7 +45,10 @@ import { useEndeavorSyncRefresh } from '../../auth/useEndeavorSyncRefresh'
 import { userDidRequestCapture } from '../../capture/CaptureFeature'
 import { onDetailRequested } from '../../endeavorDetail/EndeavorDetailFeature'
 import { onDestinationRouteMounted } from '../../main/MainFeature'
-import { userDidRequestDayProgress } from '../../main/MainFeature'
+import {
+  userDidReleaseDetailPaneSelection,
+  userDidRequestDayProgress,
+} from '../../main/MainFeature'
 import {
   navigateToDestinationThunk,
   openSessionSurfaceThunk,
@@ -73,6 +76,7 @@ import {
 } from '../DoProducer'
 import { DoLane, type DoVisibility, doLensFor, laneCards } from '../DoRules'
 import {
+  selectAreDoKeyboardAcceleratorsEnabled,
   selectAreDoRingsVisible,
   selectAreDoSuggestionsVisible,
   selectDoException,
@@ -137,6 +141,9 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const tasksRing = useAppSelector(selectDoTasksRing)
   const habitsRing = useAppSelector(selectDoHabitsRing)
   const showsRings = useAppSelector(selectAreDoRingsVisible)
+  const keyboardAccelerators = useAppSelector(
+    selectAreDoKeyboardAcceleratorsEnabled,
+  )
   const suggestions = useAppSelector(selectDoSuggestions)
   const showsSuggestions = useAppSelector(selectAreDoSuggestionsVisible)
 
@@ -321,7 +328,11 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
         // tags that are not lanes need no cast (KC-IS-#71 item 2).
         dispatch(userDidTapCard({ section, endeavorId }))
       },
-      onDeselect: () => dispatch(userDidDeselectCard()),
+      onDeselect: () => {
+        dispatch(userDidDeselectCard())
+        // The pane reads the same selection; it falls back with it.
+        dispatch(userDidReleaseDetailPaneSelection())
+      },
       onExecute: (card) => {
         /*
           Canon's `.onUserWantsToStartEvent(endeavor, nil)` — the card's own
@@ -462,6 +473,7 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
         }
         shape={shape}
         layout={layout}
+        keyboardAccelerators={keyboardAccelerators}
         header={header}
         rings={rings}
         showsRings={showsRings}

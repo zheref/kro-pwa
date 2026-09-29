@@ -74,19 +74,21 @@ const review = { id: 'e-1', title: 'Write the quarterly review' }
 const walk = { id: 'e-9', title: 'Evening walk' }
 
 describe('the segment vocabulary', () => {
-  it('lists the three segments in the toolbar order canon uses', () => {
+  it('lists canon’s three segments in canon’s toolbar order, then the web-only Inbox', () => {
     expect(DETAIL_PANE_SEGMENTS).toEqual([
       'sessionSetup',
       'performance',
       'plan',
+      'inbox',
     ])
   })
 
-  it("labels the toolbar controls with canon's exact names", () => {
+  it("labels the toolbar controls with canon's exact names, and Inbox as its toolbar button reads", () => {
     expect(DETAIL_PANE_SEGMENTS.map(detailPaneSegmentLabel)).toEqual([
       'Session',
       'Performance',
       'Plan',
+      'Inbox',
     ])
   })
 

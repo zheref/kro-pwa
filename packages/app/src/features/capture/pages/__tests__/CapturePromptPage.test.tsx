@@ -5,15 +5,23 @@
  * A Page's job is selection and dispatch, so these read the store rather than
  * the markup wherever the markup is the Fragment's business.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
 import { userDidRequestCapture } from '../../CaptureFeature'
 import { CAPTURE_MOCK_NOW } from '../../CaptureMocks'
 import { CaptureKind } from '../../CaptureRules'
 import { CAPTURE_PROMPT_POPOVER_WIDTH } from '../capturePresentation'
-import { CapturePromptPage } from '../CapturePromptPage'
+import type { CapturePromptFragmentProps } from '../CapturePromptFragment'
+import { CapturePromptPage, inertPromptProps } from '../CapturePromptPage'
 import {
   type CaptureStore,
   CaptureStoreStage,
@@ -77,6 +85,160 @@ describe('the Page renders nothing until a draft exists', () => {
   })
 })
 
+describe('it leaves the way it arrived', () => {
+  /**
+   * jsdom runs no CSS, so Radix's Presence would see `animation-name: none` and
+   * unmount on the spot. This gives the trailing panel the names `motion.css`
+   * gives it, so the test observes the real exit contract.
+   */
+  const withTrailingKeyframes = () => {
+    const real = globalThis.getComputedStyle.bind(globalThis)
+    return vi
+      .spyOn(globalThis, 'getComputedStyle')
+      .mockImplementation((node) => {
+        const style = real(node)
+        if (!(node instanceof HTMLElement)) return style
+        if (!node.classList.contains('kro-trailing-panel')) return style
+        // Read live, as a real computed style is: Presence holds on to it.
+        const name = () =>
+          node.getAttribute('data-state') === 'closed'
+            ? 'kro-trailing-out'
+            : 'kro-trailing-in'
+        return new Proxy(style, {
+          get: (target, key) =>
+            key === 'animationName' ? name() : Reflect.get(target, key),
+        })
+      })
+  }
+
+  it.each([
+    ['Discard', () => screen.getByRole('button', { name: 'Discard new task' })],
+  ])(
+    'keeps the closed content mounted through kro-trailing-out after %s, then removes it',
+    async (_path, control) => {
+      const spy = withTrailingKeyframes()
+      // Presence matches the ended animation with `CSS.escape`, absent in jsdom.
+      vi.stubGlobal('CSS', { escape: (value: string) => value })
+      const store = makeCaptureStore({ endeavors: [] })
+      mount(store)
+      open(store)
+      const prompt = await screen.findByTestId('capture-prompt')
+      const panel = prompt.closest('.kro-trailing-panel') ?? prompt
+
+      await userEvent.click(control())
+
+      expect(store.getState().capture.prompt).toBeNull()
+      const closing = screen.getByTestId('capture-prompt')
+      expect(closing.closest('[data-state="closed"]')).toBeTruthy()
+      expect(closing.closest('.kro-trailing-panel')).toBeTruthy()
+
+      // jsdom's AnimationEvent drops `animationName` from its init dict.
+      const ended = new Event('animationend', { bubbles: true })
+      Object.defineProperty(ended, 'animationName', {
+        value: 'kro-trailing-out',
+      })
+      act(() => {
+        fireEvent(panel, ended)
+      })
+      await waitFor(() =>
+        expect(screen.queryByTestId('capture-prompt')).toBeNull(),
+      )
+      spy.mockRestore()
+      vi.unstubAllGlobals()
+    },
+  )
+
+  it('rides the exit out on Escape too, and never lingers without an animationend', async () => {
+    const spy = withTrailingKeyframes()
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-prompt')
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(store.getState().capture.prompt).toBeNull()
+    expect(
+      screen
+        .getByTestId('capture-prompt')
+        .closest('.kro-trailing-panel[data-state="closed"]'),
+    ).toBeTruthy()
+
+    // No `animationend` arrives (a hidden tab delivers none): the fallback
+    // still takes the layer down just past the 270ms exit.
+    await waitFor(() =>
+      expect(screen.queryByTestId('capture-prompt')).toBeNull(),
+    )
+    spy.mockRestore()
+  })
+})
+
+describe('a leaving prompt acts on nothing', () => {
+  it('a click on Add during the exit writes nothing — its callbacks are inert', async () => {
+    const real = globalThis.getComputedStyle.bind(globalThis)
+    const spy = vi
+      .spyOn(globalThis, 'getComputedStyle')
+      .mockImplementation((node) => {
+        const style = real(node)
+        if (!(node instanceof HTMLElement)) return style
+        if (!node.classList.contains('kro-trailing-panel')) return style
+        return new Proxy(style, {
+          get: (target, key) =>
+            key === 'animationName'
+              ? node.getAttribute('data-state') === 'closed'
+                ? 'kro-trailing-out'
+                : 'kro-trailing-in'
+              : Reflect.get(target, key),
+        })
+      })
+    const store = makeCaptureStore({ endeavors: [] })
+    // Watch every action the Page dispatches (captured before it mounts).
+    const dispatched: string[] = []
+    const realDispatch = store.dispatch
+    store.dispatch = ((action: Parameters<typeof realDispatch>[0]) => {
+      if (typeof action === 'object' && action !== null && 'type' in action) {
+        dispatched.push(String(action.type))
+      } else {
+        dispatched.push('thunk')
+      }
+      return realDispatch(action)
+    }) as typeof realDispatch
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-prompt')
+    await userEvent.type(screen.getByTestId('capture-title'), 'Call the bank')
+
+    await userEvent.keyboard('{Escape}')
+    expect(store.getState().capture.prompt).toBeNull()
+    const before = dispatched.length
+    fireEvent.click(screen.getByTestId('capture-add'))
+    fireEvent.change(screen.getByTestId('capture-title'), {
+      target: { value: 'Call the bank twice' },
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(dispatched.slice(before)).toEqual([])
+    expect(store.getState().capture.prompt).toBeNull()
+    spy.mockRestore()
+  })
+
+  it('inertPromptProps keeps every value and silences every callback', () => {
+    const submit = vi.fn()
+    const frozen = inertPromptProps({
+      ...({} as CapturePromptFragmentProps),
+      isOpen: true,
+      canSubmit: true,
+      onSubmit: submit,
+    })
+    frozen.onSubmit()
+    expect(submit).not.toHaveBeenCalled()
+    expect(frozen.canSubmit).toBe(true)
+    expect(frozen.isOpen).toBe(true)
+  })
+})
+
 describe('it presents itself from the ported decision table', () => {
   it('sheets on a phone', async () => {
     const store = makeCaptureStore({ endeavors: [], surface: handheldSurface })
@@ -134,12 +296,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await screen.findByTestId('capture-prompt')
 
     await userEvent.click(screen.getByRole('button', { name: 'Time' }))
-    expect(store.getState().capture.prompt?.startEdit).not.toBeNull()
+    expect(store.getState().capture.prompt?.editor?.kind).toBe('time')
 
     await userEvent.click(screen.getByRole('button', { name: 'Event' }))
 
     expect(store.getState().capture.prompt?.draft.kind).toBe(CaptureKind.event)
-    expect(store.getState().capture.prompt?.startEdit).toBeNull()
+    expect(store.getState().capture.prompt?.editor).toBeNull()
   })
 
   it('remembers the picked hosting destination on the draft, not on the app yet', async () => {
@@ -167,6 +329,12 @@ describe('every edit goes through the slice, never through local state', () => {
       screen.getByTestId('capture-title'),
       'Water the plants',
     )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
+    )
     await userEvent.click(screen.getByTestId('capture-add'))
 
     await waitFor(() => {
@@ -184,6 +352,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await screen.findByTestId('capture-title')
 
     await userEvent.type(screen.getByTestId('capture-title'), 'Sort the garage')
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Clear date' }))
     expect(screen.getByRole('button', { name: 'Date: No date' })).toBeTruthy()
 
@@ -205,6 +379,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await userEvent.type(
       screen.getByTestId('capture-title'),
       'Book the flights',
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
     )
 
     // Two presses inside one frame — the shape a double-click takes, and the

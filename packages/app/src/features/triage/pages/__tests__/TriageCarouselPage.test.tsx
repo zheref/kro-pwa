@@ -161,7 +161,7 @@ describe('a long-lived surface, triaging several rows in a row', () => {
     for (const endeavor of [
       triageEndeavorFixtures.unscheduledTask,
       triageEndeavorFixtures.touristReminder,
-      triageEndeavorFixtures.habit,
+      triageEndeavorFixtures.enhancedTask,
     ]) {
       await seedTriageRequest(store, endeavor.id)
       await waitFor(() => {
@@ -631,5 +631,74 @@ describe('the mock clock the fixtures speak', () => {
     expect(store.getState().capture.clockAnchor?.getTime()).toBe(
       TRIAGE_MOCK_NOW.getTime(),
     )
+  })
+})
+
+describe('two hosts, one session — the pane presentation', () => {
+  const mountBoth = (store: TriageStore) =>
+    render(
+      <TriageStoreStage store={store}>
+        <TriageCarouselPage carouselWidth={390} locale="en-US" />
+        <TriageCarouselPage presentation="pane" locale="en-US" />
+      </TriageStoreStage>,
+    )
+
+  it('opens a row tapped in the pane’s Inbox in the pane, and the overlay stays shut', async () => {
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mountBoth(store)
+    await seedTriageRequest(
+      store,
+      triageEndeavorFixtures.touristReminder.id,
+      TRIAGE_MOCK_NOW,
+      'pane',
+    )
+
+    await screen.findByTestId('triage-form')
+    expect(store.getState().triage.presentation).toBe('pane')
+    expect(screen.getByTestId('triage-pane')).toBeTruthy()
+    expect(screen.queryByTestId('triage-carousel')).toBeNull()
+    expect(screen.getAllByTestId('triage-form')).toHaveLength(1)
+  })
+
+  it('leaves an overlay request to the carousel — the pane never opens it', async () => {
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mountBoth(store)
+    await seedTriageRequest(store, triageEndeavorFixtures.unscheduledTask.id)
+
+    await screen.findByTestId('triage-carousel')
+    expect(store.getState().triage.presentation).toBe('carousel')
+    expect(screen.getAllByTestId('triage-form')).toHaveLength(1)
+  })
+
+  it('performs a pane decision once and returns to the Inbox list', async () => {
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mountBoth(store)
+    await seedTriageRequest(
+      store,
+      triageEndeavorFixtures.touristReminder.id,
+      TRIAGE_MOCK_NOW,
+      'pane',
+    )
+    await screen.findByTestId('triage-form')
+
+    fireEvent.click(screen.getByRole('button', { name: /archive/i }))
+    fireEvent.click(await screen.findByTestId('triage-confirm'))
+
+    await waitFor(() => expect(store.getState().triage.save.kind).toBe('saved'))
+    expect(store.getState().triage.outcome).toBeNull()
+    expect(screen.queryByTestId('triage-form')).toBeNull()
+  })
+})
+
+describe('a failed open, end to end in the carousel', () => {
+  it('shows the kind’s copy, not the raw exception, when a habit is asked for', async () => {
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mount(store)
+    await seedTriageRequest(store, triageEndeavorFixtures.habit.id)
+
+    const strip = await screen.findByTestId('triage-status-strip')
+    expect(strip.textContent).toContain('habits')
+    expect(strip.textContent).not.toContain(triageEndeavorFixtures.habit.id)
+    expect(screen.queryByTestId('triage-form')).toBeNull()
   })
 })

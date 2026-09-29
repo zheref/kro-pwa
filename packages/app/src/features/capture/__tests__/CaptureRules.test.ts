@@ -28,6 +28,8 @@ import {
   captureIntentFor,
   captureKindLabel,
   captureKindPlaceholder,
+  captureKindTint,
+  captureKinds,
   captureRecurrenceLabel,
   captureResultFromDraft,
   captureRouteFor,
@@ -57,17 +59,11 @@ import {
 // Kinds and destinations
 // ---------------------------------------------------------------------------
 
-const chipLabels = () =>
-  [
-    CaptureKind.task,
-    CaptureKind.event,
-    CaptureKind.reminder,
-    CaptureKind.habit,
-  ].map(captureKindLabel)
+const chipLabels = () => captureKinds.map(captureKindLabel)
 
 describe('the prompt kind vocabulary', () => {
   it('labels the four chips exactly as the iOS strip does', () => {
-    expect(chipLabels()).toEqual(['Task', 'Event', 'Reminder', 'Habit'])
+    expect(chipLabels()).toEqual(['Task', 'Habit', 'Event', 'Reminder'])
   })
 
   it('asks a different question per kind in the title field', () => {
@@ -273,14 +269,14 @@ describe('the draft the prompt opens with', () => {
     expect(draft.endTime).toEqual(captureMockAt(17, 17, 30))
   })
 
-  it('seeds the reward points at ten and clamps the stepper to 1…999', () => {
+  it('seeds a task at thirty reward points and clamps the stepper to 1…999', () => {
     const draft = makeCaptureDraft({
       kind: CaptureKind.task,
       now: CAPTURE_MOCK_NOW,
       destination: CaptureDestination.local,
     })
 
-    expect(draft.rewards).toBe(10)
+    expect(draft.rewards).toBe(30)
     expect(clampCaptureRewards(0)).toBe(1)
     expect(clampCaptureRewards(1000)).toBe(999)
     expect(clampCaptureRewards(25)).toBe(25)
@@ -421,7 +417,7 @@ describe('what a confirmed prompt emits', () => {
     })
 
     expect(result?.title).toBe('Write the retro')
-    expect(result?.rewards).toBe(10)
+    expect(result?.rewards).toBe(30)
     expect(result?.endTime).toBeNull()
   })
 
@@ -442,7 +438,7 @@ describe('what a confirmed prompt emits', () => {
     // clearing the date is not "as if habit": rewards survive.
     expect(
       captureResultFromDraft(captureDraftFixtures.titledTaskNoDate)?.rewards,
-    ).toBe(10)
+    ).toBe(30)
   })
 
   it('drops a Reminder’s date the same way — Pending Triage has no kind exception', () => {
@@ -702,12 +698,15 @@ describe('the Pending Triage section', () => {
   const rows = pendingTriageEndeavors(captureFixturePool, null)
   const ids = rows.map((row) => row.id)
 
-  it('holds every unscheduled non-event endeavor regardless of age', () => {
+  it('holds every unscheduled task and reminder regardless of age', () => {
     expect(ids).toContain('fresh-task')
     expect(ids).toContain('neglected-task')
     expect(ids).toContain('unscheduled-reminder')
-    expect(ids).toContain('unscheduled-habit')
     expect(ids).toContain('undated-legacy-task')
+  })
+
+  it('leaves habits out — a standing commitment is never waiting to be triaged (canon awaitsTriage)', () => {
+    expect(ids).not.toContain('unscheduled-habit')
   })
 
   it('excludes anything already scheduled, by start or by due date', () => {
@@ -729,7 +728,6 @@ describe('the Pending Triage section', () => {
     expect(ids).toEqual([
       'fresh-task',
       'unscheduled-reminder',
-      'unscheduled-habit',
       'neglected-task',
       'undated-legacy-task',
     ])
@@ -856,5 +854,22 @@ describe('undoing a scheduling', () => {
 describe('the undo window', () => {
   it('lasts about eight seconds, as the toast promises', () => {
     expect(ADD_FOR_TODAY_UNDO_WINDOW_MS).toBe(8_000)
+  })
+})
+
+describe('captureKindTint — the prompt tints each kind with its card badge colour', () => {
+  it('a task picks the task badge colour, as on every task card', () => {
+    expect(captureKindTint(CaptureKind.task)).toBe('kindTask')
+  })
+
+  it('an event picks the event colour, not the task one it defaults from', () => {
+    expect(captureKindTint(CaptureKind.event)).toBe('kindEvent')
+  })
+
+  it('every kind the picker offers resolves to its own distinct colour', () => {
+    const tints = captureKinds.map(captureKindTint)
+    expect(new Set(tints).size).toBe(captureKinds.length)
+    expect(captureKindTint(CaptureKind.habit)).toBe('kindHabit')
+    expect(captureKindTint(CaptureKind.reminder)).toBe('kindReminder')
   })
 })

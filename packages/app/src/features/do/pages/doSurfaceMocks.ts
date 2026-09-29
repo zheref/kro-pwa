@@ -186,6 +186,7 @@ export const doSurfaceProps = (
     rings: ringsOf(state),
     showsRings:
       state.preferences.activityRingsEnabled && !state.isInMarkCompleteMode,
+    keyboardAccelerators: state.preferences.keyboardAcceleratorsEnabled,
     lanes: laneCardsOf(state),
     reminders: reminderCardsOf(state),
     allDayEvents: events.allDay,

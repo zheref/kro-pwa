@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type DetailPaneHostingSnapshot,
   detailPaneReopenRequest,
+  detailPaneShowsDetail,
 } from '../detailPaneHosting'
 
 const reselected: DetailPaneHostingSnapshot = {
@@ -43,5 +44,23 @@ describe('detailPaneReopenRequest', () => {
 
   it('asks for nothing on the tab-bar shell, which has no pane', () => {
     expect(detailPaneReopenRequest({ ...reselected, isHost: false })).toBeNull()
+  })
+})
+
+describe('detailPaneShowsDetail', () => {
+  it('draws Detail on Plan while the pane has a selection', () => {
+    expect(detailPaneShowsDetail(reselected)).toBe(true)
+  })
+
+  it('stands Detail down once the selection is released — Plan shows the Timeline', () => {
+    expect(detailPaneShowsDetail({ ...reselected, paneEndeavorId: null })).toBe(
+      false,
+    )
+  })
+
+  it('never draws Detail on another segment', () => {
+    expect(
+      detailPaneShowsDetail({ ...reselected, paneSegment: 'performance' }),
+    ).toBe(false)
   })
 })

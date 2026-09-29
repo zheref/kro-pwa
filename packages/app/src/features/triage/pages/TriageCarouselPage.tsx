@@ -96,6 +96,8 @@ import {
   selectIsTriageSaving,
   selectTriageBlockedReason,
   selectTriageDueDate,
+  selectTriageOpenFailure,
+  selectTriagePresentation,
   selectTriageDurationChips,
   selectTriageEffortRating,
   selectTriageExpiry,
@@ -113,7 +115,7 @@ import {
   selectTriageSession,
   selectTriageValueRating,
 } from '../TriageSelectors'
-import { TRIAGE_DEFAULT_SYMBOL } from '../TriageState'
+import { TRIAGE_DEFAULT_SYMBOL, type TriagePresentation } from '../TriageState'
 import { TriageCarouselFragment } from './TriageCarouselFragment'
 import { TriageFormFragment } from './TriageFormFragment'
 import { resolveTriageEditReachabilityThunk } from './TriageCapabilitiesProducer'
@@ -123,13 +125,26 @@ export interface TriageCarouselPageProps {
   /** Stories and tests pin the carousel's width; production measures it. */
   readonly carouselWidth?: number
   readonly locale?: string
+  /**
+   * Which host this is. `carousel` (the default) is canon's layer inside the
+   * Inbox sheet, popover or Jot Down page. `pane` is the same layer inside the
+   * web-only Inbox segment of the desktop detail pane. Each opens only the
+   * Triage requests its own Inbox raised, and — since both read the one
+   * `triage` slice — draws and performs only a session it opened.
+   */
+  readonly presentation?: TriagePresentation
 }
 
 export function TriageCarouselPage({
   carouselWidth,
   locale,
+  presentation = 'carousel',
 }: TriageCarouselPageProps) {
   const dispatch = useAppDispatch()
+  const isPane = presentation === 'pane'
+  const hostPresentation = useAppSelector(selectTriagePresentation)
+  const isHost = hostPresentation === presentation
+  const openFailure = useAppSelector(selectTriageOpenFailure)
 
   const request = useAppSelector(selectCaptureTriageRequest)
   const pendingTriage = useAppSelector(selectPendingTriageEndeavors)
@@ -221,8 +236,9 @@ export function TriageCarouselPage({
 
   // --- opening ----------------------------------------------------------
 
+  const requestHost = isPane ? 'pane' : 'overlay'
   useEffect(() => {
-    if (request === null) return
+    if (request === null || request.host !== requestHost) return
     if (openingFor.current === request.endeavorId) return
     openingFor.current = request.endeavorId
 
@@ -251,13 +267,22 @@ export function TriageCarouselPage({
             endeavorSymbol,
             isEditReachable:
               result !== null && result.ok ? result.value : false,
+            presentation,
           }),
         ),
       )
       // The one-shot is spent the moment Triage has been asked to present.
       dispatch(onTriageRequestConsumed())
     })
-  }, [dispatch, track, request, pendingTriage, justCreated])
+  }, [
+    dispatch,
+    track,
+    request,
+    pendingTriage,
+    justCreated,
+    requestHost,
+    presentation,
+  ])
 
   // The next request may be for the same row, so the latch releases as soon as
   // the Inbox has taken its one-shot back.
@@ -268,7 +293,9 @@ export function TriageCarouselPage({
   // --- draining the outcome ---------------------------------------------
 
   useEffect(() => {
-    if (outcome === null) return
+    // Only the host that opened the session performs its outcome — the other
+    // host, if mounted, must not save the same decision twice.
+    if (outcome === null || !isHost) return
     const now = new Date()
 
     const save = async (
@@ -352,7 +379,7 @@ export function TriageCarouselPage({
     }
 
     dispatch(onTriageOutcomeConsumed())
-  }, [dispatch, outcome])
+  }, [dispatch, outcome, isHost])
 
   // --- intents ----------------------------------------------------------
 
@@ -423,7 +450,13 @@ export function TriageCarouselPage({
 
   return (
     <TriageCarouselFragment
-      isPresenting={session !== null}
+      presentation={presentation}
+      isPresenting={isHost && session !== null}
+      loadExceptionMessage={
+        openFailure !== null && openFailure.presentation === presentation
+          ? openFailure.copy
+          : null
+      }
       onDismiss={onTapCancel}
       isSaving={isSaving}
       saveExceptionMessage={
@@ -432,7 +465,10 @@ export function TriageCarouselPage({
       notice={notice}
       carouselWidth={carouselWidth}
     >
-      {session === null || heading === null || rewardPoints === null ? null : (
+      {!isHost ||
+      session === null ||
+      heading === null ||
+      rewardPoints === null ? null : (
         <TriageFormFragment
           endeavorTitle={heading.title}
           endeavorSymbol={heading.symbol}

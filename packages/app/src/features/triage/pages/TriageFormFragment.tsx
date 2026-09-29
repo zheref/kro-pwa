@@ -82,6 +82,8 @@ import {
 const ChevronBackward = triageIcon('chevron.backward')
 const StarFill = triageIcon('star.fill')
 const StarSlash = triageIcon('star.slash')
+/** Reward points — canon's `medal.star` (the Importance star stays a star). */
+const RewardGlyph = triageIcon('medal.star')
 const BoltFill = triageIcon('bolt.fill')
 const BoltSlash = triageIcon('bolt.slash')
 const CheckmarkCircle = triageIcon('checkmark.circle.fill')
@@ -218,17 +220,20 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
       />
 
       {/*
-        Canon's `ScrollView` with `padding(.bottom, scrollBottomInset)` — the
-        action row is anchored over the content, so the last section needs room
-        to clear it rather than sitting permanently underneath.
+        Canon's `ScrollView`. The action row below is a footer in the flow, so
+        this body ends where it begins and needs no bottom inset to clear it.
       */}
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-4 pb-40">
-        <RewardStepper points={rewardPoints} onStep={onStepReward} />
-
-        <DurationPicker chips={durationChips} onSelect={onSelectDuration} />
-
-        <EisenhowerMatrix tiles={quadrantTiles} onSelect={onSelectQuadrant} />
-
+      <div
+        className={cn(
+          'flex flex-col gap-6 pt-4',
+          'min-h-0 flex-1 overflow-y-auto pb-4',
+        )}
+      >
+        {/*
+          Canon's order (KroApple a4bec77e): from "is this worth doing?"
+          through when it is due, how big it is and where it belongs, down to
+          the softer commitments — when it stops mattering, and what it pays.
+        */}
         <RatingSection
           title="Value to my life / goals"
           emoji="🚀"
@@ -241,6 +246,18 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
           dueDate={dueDate}
           locale={locale}
           onSelect={onSelectDueDate}
+        />
+
+        <DurationPicker chips={durationChips} onSelect={onSelectDuration} />
+
+        <EisenhowerMatrix tiles={quadrantTiles} onSelect={onSelectQuadrant} />
+
+        <RatingSection
+          title="Effort required"
+          emoji="🔥"
+          testId="triage-effort"
+          rating={effort}
+          onTapRating={onTapEffortRating}
         />
 
         <ExpirySection
@@ -256,13 +273,7 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
           onTapPreset={onTapExpiryPreset}
         />
 
-        <RatingSection
-          title="Effort required"
-          emoji="🔥"
-          testId="triage-effort"
-          rating={effort}
-          onTapRating={onTapEffortRating}
-        />
+        <RewardStepper points={rewardPoints} onStep={onStepReward} />
       </div>
 
       <ActionRow
@@ -295,7 +306,7 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
  * The badge is *"bound to the same value the Reward stepper edits, so it
  * updates live"*, and it is `aria-hidden` in favour of one label on the wrapper
  * — canon's `.accessibilityElement(children: .ignore)` — so a screen reader
- * announces "Reward: 30 points" rather than a lone star and a lone number.
+ * announces "Reward: 30 points" rather than a lone medal and a lone number.
  */
 function TriageHeader({
   endeavorTitle,
@@ -360,7 +371,7 @@ function TriageHeader({
         aria-label={`Reward: ${rewardPoints} points`}
         className="flex shrink-0 flex-col items-center gap-0.5"
       >
-        <StarFill
+        <RewardGlyph
           size={18}
           aria-hidden
           style={{ color: colorVar('rewardYellow') }}
@@ -473,7 +484,7 @@ function RewardStepper({
           <PlusGlyph size={13} aria-hidden />
         </button>
       </div>
-      <StarFill
+      <RewardGlyph
         size={14}
         aria-hidden
         style={{ color: colorVar('rewardYellow') }}
@@ -508,7 +519,10 @@ function DurationPicker({
         data-testid="triage-duration-chips"
         role="group"
         aria-label="Duration"
-        className={cn('flex gap-2 overflow-x-auto', SECTION_INSET_CLASS)}
+        // Wraps onto more lines rather than scrolling sideways — the capture
+        // prompt's duration editor does the same — so every chip is visible
+        // however narrow the host (the detail pane is ~285px).
+        className={cn('flex flex-wrap gap-2', SECTION_INSET_CLASS)}
       >
         {chips.map((chip) => (
           <SelectionPill
@@ -1233,7 +1247,11 @@ function ActionRow({
     <div
       data-testid="triage-action-row"
       className={cn(
-        'pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 pb-3.5',
+        // A footer in the flow, not a layer over the form: the body above it
+        // ends where it starts, so the last section always scrolls clear of
+        // it however tall the blocked reason makes it (web divergence — canon
+        // scrolls the form behind an inset it measures).
+        'relative flex shrink-0 flex-col gap-2 pt-2 pb-3.5',
         SECTION_INSET_CLASS,
       )}
     >

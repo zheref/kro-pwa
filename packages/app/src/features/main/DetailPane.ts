@@ -3,7 +3,7 @@
  * `MainFeature.DetailPaneSegment` and `State.detailPaneEndeavor` (KroApple
  * `#517`, spec `docs/Features/MacDetailPane.md`).
  *
- * The pane holds one of three segments, and each segment has two modes picked
+ * The pane holds one of four segments, and each segment has two modes picked
  * by whether an endeavor is selected:
  *
  * | Segment        | With an endeavor         | With none                    |
@@ -11,17 +11,30 @@
  * | `sessionSetup` | Set up a session for it  | Set up an arbitrary new task |
  * | `performance`  | Its recorded sessions    | The whole day's reading      |
  * | `plan`         | Its details              | The day's timeline, read-only |
+ * | `inbox`        | The Inbox page           | The Inbox page               |
+ *
+ * **`inbox` is a web-only divergence.** Canon's `DetailPaneSegment` has three
+ * cases; its Inbox is a sheet or popover. The fourth segment hosts the real
+ * Inbox page — Triage opens inside it — and is where a capture routed to the
+ * Inbox lands on a pane host. It reads no endeavor: the Inbox is its own
+ * list. It is gated by the web-only `detailPaneInbox` flag (see
+ * `docs/Features/MacDetailPane.md`), and every canon-mirroring table here
+ * lists it last so the three canon segments keep canon's order.
  *
  * Only the sidebar shell renders the pane — the web's twin of canon's
  * macOS-only presentation. The tab-bar shell keeps its sheets.
  */
 import { assertNever } from '@kro/core'
 
-/** Canon's `DetailPaneSegment.allCases`, in the toolbar's own order. */
+/**
+ * Canon's `DetailPaneSegment.allCases`, in the toolbar's own order — plus the
+ * web-only `inbox`, last, shown only while `detailPaneInbox` is on.
+ */
 export const DETAIL_PANE_SEGMENTS = [
   'sessionSetup',
   'performance',
   'plan',
+  'inbox',
 ] as const
 
 export type DetailPaneSegment = (typeof DETAIL_PANE_SEGMENTS)[number]
@@ -65,6 +78,8 @@ export const detailPaneSegmentLabel = (segment: DetailPaneSegment): string => {
       return 'Performance'
     case 'plan':
       return 'Plan'
+    case 'inbox':
+      return 'Inbox'
     default:
       return assertNever(segment)
   }
@@ -85,10 +100,29 @@ export const detailPaneTitle = (
       return endeavorName === null ? 'Day Progress' : 'Endeavor Activity'
     case 'plan':
       return endeavorName === null ? 'Timeline' : 'Details'
+    case 'inbox':
+      // Web-only; the Inbox reads no endeavor, so both modes are one title.
+      return 'Inbox'
     default:
       return assertNever(segment)
   }
 }
+
+/**
+ * The segments the toolbar group offers: canon's three always, `inbox` only
+ * while the web-only `detailPaneInbox` flag is on.
+ */
+export const detailPaneSegmentsOffered = (
+  isInboxEnabled: boolean,
+): readonly DetailPaneSegment[] =>
+  DETAIL_PANE_SEGMENTS.filter(
+    (segment) => segment !== 'inbox' || isInboxEnabled,
+  )
+
+/** Whether a segment reads the pointed-at endeavor at all (the Inbox does not). */
+export const detailPaneSegmentReadsEndeavor = (
+  segment: DetailPaneSegment,
+): boolean => segment !== 'inbox'
 
 /**
  * One place the pane can be — a segment reading an endeavor (or the day).

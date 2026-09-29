@@ -145,11 +145,35 @@ describe('the var() helpers', () => {
     expect(semanticVar('kindHabit')).toBe('var(--kro-role-kind-habit)')
     expect(spacingVar('medium')).toBe('var(--kro-space-medium)')
     expect(radiusVar('surface')).toBe('var(--kro-radius-surface)')
+    expect(radiusVar('panel')).toBe('var(--kro-radius-panel)')
     expect(shadowVar('card')).toBe('var(--kro-shadow-card)')
   })
 
   it('exposes the role lists the gallery and the suite both iterate', () => {
     expect(COLOR_ROLES.length).toBe(Object.keys(COLOR_ROLE_VARS).length)
     expect(SEMANTIC_ROLES.length).toBe(22)
+  })
+})
+
+describe('the field focus ring', () => {
+  it('is one thin 1.5px brand-green ring — the Search field and the prompt share it', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { dirname, join } = await import('node:path')
+    const { fileURLToPath } = await import('node:url')
+    const here = dirname(fileURLToPath(import.meta.url))
+    const tokens = readFileSync(join(here, 'tokens.css'), 'utf8')
+    const styles = readFileSync(join(here, '..', 'styles.css'), 'utf8')
+    // Width is the maintainer's call (1.5px); the colour is a token of its own
+    // so light mode can clear SC 1.4.11 (the contrast suite measures it).
+    expect(tokens).toContain(
+      '--kro-ring-field: 0 0 0 1.5px var(--kro-color-ring-field);',
+    )
+    expect(tokens).toContain('--kro-color-ring-field: #2f6b00;')
+    expect(tokens).toContain(
+      '--kro-color-ring-field: var(--kro-color-glow-lime);',
+    )
+    expect(styles).toContain(
+      ':where([data-kro-field]):focus-within {\n  box-shadow: var(--kro-ring-field);',
+    )
   })
 })

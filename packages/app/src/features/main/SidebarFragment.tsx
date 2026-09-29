@@ -101,6 +101,9 @@ export function SidebarFragment(props: SidebarFragmentProps) {
         'relative z-10 mt-kro-small self-stretch shrink-0 overflow-y-auto text-kro-fore',
       )}
       style={{
+        // The app sidebar takes the panel corner (`--kro-radius-panel`), inline
+        // over `.kro-glass--sidebar`'s generic menu-row radius.
+        borderRadius: 'var(--kro-radius-panel)',
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,
         width: `${SIDEBAR_IDEAL_WIDTH}px`,
         gap: `${TOUCH_CONTROL_SPACING}px`,

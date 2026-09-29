@@ -41,8 +41,12 @@ import {
   type WeekDay,
   assertNever,
   dailyBase,
-  hasBeenCompleted,
+  type ReconciliationContext,
+  awaitsTriage,
+  canBeTriaged,
   isSameCalendarDay,
+  makeReconciliationContext,
+  resolvedKind,
   makeDefer,
   makeEndeavor,
   makeRepeatConfig,
@@ -50,6 +54,7 @@ import {
   weeklyBase,
   yearlyBase,
 } from '@kro/core'
+import { computedSymbol } from '../../design/endeavor/endeavorCardModel'
 
 // ---------------------------------------------------------------------------
 // Kinds — the prompt's four chips
@@ -61,9 +66,9 @@ import {
  */
 export const CaptureKind = {
   task: 'task',
+  habit: 'habit',
   event: 'event',
   reminder: 'reminder',
-  habit: 'habit',
 } as const
 
 export type CaptureKind = (typeof CaptureKind)[keyof typeof CaptureKind]
@@ -71,9 +76,9 @@ export type CaptureKind = (typeof CaptureKind)[keyof typeof CaptureKind]
 /** `EndeavorKind.allCases` on the prompt's own enum. */
 export const captureKinds: readonly CaptureKind[] = [
   CaptureKind.task,
+  CaptureKind.habit,
   CaptureKind.event,
   CaptureKind.reminder,
-  CaptureKind.habit,
 ]
 
 /** `EndeavorKind.label` — the chip's title, verbatim. */
@@ -87,6 +92,27 @@ export const captureKindLabel = (kind: CaptureKind): string => {
       return 'Reminder'
     case CaptureKind.habit:
       return 'Habit'
+    default:
+      return assertNever(kind)
+  }
+}
+
+/**
+ * `EndeavorKind.tint` — the kind's badge colour (`resolvedKind.badgeColor`),
+ * so a kind reads the same colour in the prompt as on every card.
+ */
+export const captureKindTint = (
+  kind: CaptureKind,
+): 'kindTask' | 'kindEvent' | 'kindReminder' | 'kindHabit' => {
+  switch (kind) {
+    case CaptureKind.task:
+      return 'kindTask'
+    case CaptureKind.event:
+      return 'kindEvent'
+    case CaptureKind.reminder:
+      return 'kindReminder'
+    case CaptureKind.habit:
+      return 'kindHabit'
     default:
       return assertNever(kind)
   }
@@ -142,6 +168,72 @@ export const endeavorKindForCaptureKind = (kind: CaptureKind): EndeavorKind => {
       return assertNever(kind)
   }
 }
+
+/**
+ * `EndeavorKind.defaultRewards` — tasks open at 30 (a real unit of work),
+ * habits at the lighter 10, and the kinds that earn nothing at 0.
+ */
+export const captureKindDefaultRewards = (kind: CaptureKind): number => {
+  switch (kind) {
+    case CaptureKind.task:
+      return 30
+    case CaptureKind.habit:
+      return 10
+    case CaptureKind.event:
+    case CaptureKind.reminder:
+      return 0
+    default:
+      return assertNever(kind)
+  }
+}
+
+/** `EndeavorKind.earnsRewards` — tasks and habits. */
+export const captureKindEarnsRewards = (kind: CaptureKind): boolean =>
+  kind === CaptureKind.task || kind === CaptureKind.habit
+
+/**
+ * `EndeavorKind.supportsDuration` — tasks and habits. Events derive theirs
+ * from the start/end pair instead.
+ */
+export const captureKindSupportsDuration = (kind: CaptureKind): boolean =>
+  kind === CaptureKind.task || kind === CaptureKind.habit
+
+/** `EndeavorKind.supportsValue` — canon defines it as `supportsDuration`. */
+export const captureKindSupportsValue = (kind: CaptureKind): boolean =>
+  captureKindSupportsDuration(kind)
+
+/**
+ * `EndeavorKind.requiresValue` — a task, subject to the host being able to
+ * store one (`isCaptureValueRequired`).
+ */
+export const captureKindRequiresValue = (kind: CaptureKind): boolean =>
+  kind === CaptureKind.task
+
+/** `EndeavorKind.requiresTime` — a habit is a commitment to a moment. */
+export const captureKindRequiresTime = (kind: CaptureKind): boolean =>
+  kind === CaptureKind.habit
+
+/** `EndeavorKind.requiresRecurrence` — a habit that never repeats is a task. */
+export const captureKindRequiresRecurrence = (kind: CaptureKind): boolean =>
+  kind === CaptureKind.habit
+
+/** What a kind can carry — the prompt's chips and panels read this, whole. */
+export interface CaptureKindCapabilities {
+  readonly earnsRewards: boolean
+  readonly supportsValue: boolean
+  readonly supportsDuration: boolean
+  /** A habit's time is required, so its time chip offers no Clear. */
+  readonly isTimeClearable: boolean
+}
+
+export const captureKindCapabilities = (
+  kind: CaptureKind,
+): CaptureKindCapabilities => ({
+  earnsRewards: captureKindEarnsRewards(kind),
+  supportsValue: captureKindSupportsValue(kind),
+  supportsDuration: captureKindSupportsDuration(kind),
+  isTimeClearable: !captureKindRequiresTime(kind),
+})
 
 // ---------------------------------------------------------------------------
 // Hosting destinations
@@ -250,6 +342,86 @@ export const endeavorHostForDestination = (
     default:
       return assertNever(destination)
   }
+}
+
+/**
+ * `EndeavorHostingDestination.storesKroEnhancedFields` — whether the host
+ * owns the record outright and can therefore persist value, effort and expiry.
+ * Foreign hosts have nowhere to put them, so the prompt never *requires* a
+ * value one of them would drop on save.
+ */
+export const captureDestinationStoresKroEnhancedFields = (
+  destination: CaptureDestination,
+): boolean => {
+  switch (destination) {
+    case CaptureDestination.local:
+    case CaptureDestination.kroCloud:
+      return true
+    case CaptureDestination.appleReminders:
+    case CaptureDestination.appleCalendar:
+      return false
+    default:
+      return assertNever(destination)
+  }
+}
+
+/**
+ * `EndeavorHostingDestination.supported(for:)`, in canon's preference order,
+ * minus `googleCalendar` — a destination this web prompt has no case for.
+ */
+export const supportedCaptureDestinations = (
+  kind: CaptureKind,
+): readonly CaptureDestination[] => {
+  switch (kind) {
+    case CaptureKind.task:
+    case CaptureKind.habit:
+      return [
+        CaptureDestination.kroCloud,
+        CaptureDestination.local,
+        CaptureDestination.appleReminders,
+      ]
+    case CaptureKind.event:
+      return [
+        CaptureDestination.appleCalendar,
+        CaptureDestination.kroCloud,
+        CaptureDestination.local,
+      ]
+    case CaptureKind.reminder:
+      return [CaptureDestination.appleReminders, CaptureDestination.local]
+    default:
+      return assertNever(kind)
+  }
+}
+
+/**
+ * What the host picker may offer for a kind: canon's `supported(for:)`
+ * intersected with what this browser actually has, in canon's preference
+ * order. Local is supported by every kind and always available, so the list
+ * is never empty in practice; `.local` is still returned as the floor.
+ */
+export const captureDestinationsForKind = (
+  kind: CaptureKind,
+  available: readonly CaptureDestination[],
+): readonly CaptureDestination[] => {
+  const offered = supportedCaptureDestinations(kind).filter((destination) =>
+    available.includes(destination),
+  )
+  return offered.length > 0 ? offered : [CaptureDestination.local]
+}
+
+/**
+ * The destination a draft of `kind` should carry: `preferred` while it is
+ * still offered, otherwise the first one the kind's preference order offers.
+ */
+export const resolvedCaptureDestination = (
+  kind: CaptureKind,
+  preferred: CaptureDestination,
+  available: readonly CaptureDestination[],
+): CaptureDestination => {
+  const offered = captureDestinationsForKind(kind, available)
+  return offered.includes(preferred)
+    ? preferred
+    : (offered[0] ?? CaptureDestination.local)
 }
 
 /**
@@ -526,12 +698,88 @@ export interface CaptureDraft {
   readonly hasEndTime: boolean
   readonly endTime: Date
   readonly rewards: number
+  /**
+   * `true` once the user has moved the rewards stepper. Until then the value
+   * tracks the kind's default, so Habit → Task re-seeds 10 → 30.
+   */
+  readonly hasCustomRewards: boolean
+  /** 1–5 value-to-goals rating (Kro-enhanced). Tasks and habits only. */
+  readonly value: number | null
+  /** Optional estimate, in seconds. Tasks and habits only; never mandatory. */
+  readonly duration: number | null
+  /**
+   * The emoji chosen from the picker. Deliberately **not** written into
+   * `title` while typing — it is folded in at save by
+   * `captureTitleForPersistence`, exactly as canon does.
+   */
+  readonly pickedEmoji: string | null
   readonly recurrence: CaptureRecurrence
   readonly destination: CaptureDestination
 }
 
-/** Canon's `rewards` seed, and the stepper's bounds. */
-export const DEFAULT_CAPTURE_REWARDS = 10
+/** The habit seed canon calls `.everyDay`. */
+export const EVERY_DAY_RECURRENCE: CaptureRecurrence = {
+  kind: 'daily',
+  interval: 1,
+}
+
+/** The value rating's bounds. */
+export const MINIMUM_CAPTURE_VALUE = 1
+export const MAXIMUM_CAPTURE_VALUE = 5
+
+/** `valueLabels` — shared with Triage so one rating means one thing. */
+export const CAPTURE_VALUE_LABELS: readonly string[] = [
+  'Trivial',
+  'Minor',
+  'Meaningful',
+  'Major',
+  'Life-changing',
+]
+
+/** The descriptor for a rating, or `null` outside 1…5. */
+export const captureValueLabel = (value: number): string | null =>
+  CAPTURE_VALUE_LABELS[value - 1] ?? null
+
+/** `durationLabel(minutes:)` — Triage's duration chip wording, verbatim. */
+export const captureDurationLabel = (minutes: number): string => {
+  switch (minutes) {
+    case 1:
+      return 'A minute'
+    case 120:
+      return '2 hours'
+    case 180:
+      return '3 hours'
+    default:
+      return `${minutes} min`
+  }
+}
+
+/**
+ * `applyKindChanged(to:)` — re-seeds every kind-derived default, leaving
+ * anything the user explicitly touched alone. Canon's event-end resolution is
+ * not ported here; this repo's event rules (both times required, never
+ * auto-filled) stand. `hasDate` is pinned for an Event (`KC-IS-#75`).
+ */
+export const applyCaptureKindDefaults = (
+  draft: CaptureDraft,
+  kind: CaptureKind,
+): CaptureDraft => ({
+  ...draft,
+  kind,
+  rewards: draft.hasCustomRewards
+    ? draft.rewards
+    : captureKindDefaultRewards(kind),
+  duration: captureKindSupportsDuration(kind) ? draft.duration : null,
+  value: captureKindSupportsValue(kind) ? draft.value : null,
+  recurrence:
+    captureKindRequiresRecurrence(kind) && draft.recurrence.kind === 'never'
+      ? EVERY_DAY_RECURRENCE
+      : draft.recurrence,
+  hasTime: captureKindRequiresTime(kind) ? true : draft.hasTime,
+  hasDate: kind === CaptureKind.event ? true : draft.hasDate,
+})
+
+/** The rewards stepper's bounds. */
 export const MINIMUM_CAPTURE_REWARDS = 1
 export const MAXIMUM_CAPTURE_REWARDS = 999
 
@@ -555,7 +803,7 @@ export const makeCaptureDraft = (params: {
   const date = new Date(initialStart ?? params.now)
   date.setHours(0, 0, 0, 0)
 
-  return {
+  const seeded: CaptureDraft = {
     title: '',
     kind: params.kind,
     date,
@@ -567,10 +815,16 @@ export const makeCaptureDraft = (params: {
     time: base,
     hasEndTime: initialStart !== null,
     endTime,
-    rewards: DEFAULT_CAPTURE_REWARDS,
+    rewards: captureKindDefaultRewards(params.kind),
+    hasCustomRewards: false,
+    value: null,
+    duration: null,
+    pickedEmoji: null,
     recurrence: NO_RECURRENCE,
     destination: params.destination,
   }
+  // Opening *on* a kind and switching *to* it seed the same defaults.
+  return applyCaptureKindDefaults(seeded, params.kind)
 }
 
 /** Canon's stepper clamp — 1…999, applied wherever the value is set. */
@@ -597,6 +851,9 @@ export const CaptureBlocker = {
   missingEventStart: 'missingEventStart',
   missingEventEnd: 'missingEventEnd',
   missingEventStartAndEnd: 'missingEventStartAndEnd',
+  missingHabitTime: 'missingHabitTime',
+  missingHabitRecurrence: 'missingHabitRecurrence',
+  missingValue: 'missingValue',
 } as const
 
 export type CaptureBlocker =
@@ -620,19 +877,42 @@ export const captureBlocker = (draft: CaptureDraft): CaptureBlocker | null => {
   if (trimmedCaptureTitle(draft).length === 0) {
     return CaptureBlocker.missingTitle
   }
-  if (draft.kind !== CaptureKind.event) return null
-  if (!draft.hasTime && !draft.hasEndTime) {
-    return CaptureBlocker.missingEventStartAndEnd
+  if (draft.kind === CaptureKind.event) {
+    if (!draft.hasTime && !draft.hasEndTime) {
+      return CaptureBlocker.missingEventStartAndEnd
+    }
+    if (!draft.hasTime) return CaptureBlocker.missingEventStart
+    if (!draft.hasEndTime) return CaptureBlocker.missingEventEnd
   }
-  if (!draft.hasTime) return CaptureBlocker.missingEventStart
-  if (!draft.hasEndTime) return CaptureBlocker.missingEventEnd
+  if (captureKindRequiresTime(draft.kind) && !draft.hasTime) {
+    return CaptureBlocker.missingHabitTime
+  }
+  if (
+    captureKindRequiresRecurrence(draft.kind) &&
+    draft.recurrence.kind === 'never'
+  ) {
+    return CaptureBlocker.missingHabitRecurrence
+  }
+  if (isCaptureValueRequired(draft) && draft.value === null) {
+    return CaptureBlocker.missingValue
+  }
   return null
 }
+
+/**
+ * `isValueRequired` — the kind demands a rating **and** the host can store
+ * one. A task bound for Reminders is never blocked over a number the host
+ * would drop.
+ */
+export const isCaptureValueRequired = (draft: CaptureDraft): boolean =>
+  captureKindRequiresValue(draft.kind) &&
+  captureDestinationStoresKroEnhancedFields(draft.destination)
 
 /** The copy a disabled Add announces. */
 export const captureBlockerReason = (
   blocker: CaptureBlocker,
   kind: CaptureKind,
+  destination: CaptureDestination,
 ): string => {
   switch (blocker) {
     case CaptureBlocker.missingTitle:
@@ -643,6 +923,13 @@ export const captureBlockerReason = (
       return 'Pick a start time to add this event.'
     case CaptureBlocker.missingEventEnd:
       return 'Pick an end time to add this event.'
+    case CaptureBlocker.missingHabitTime:
+      return 'Pick a time to add this habit.'
+    case CaptureBlocker.missingHabitRecurrence:
+      return 'Pick a repeat schedule to add this habit.'
+    case CaptureBlocker.missingValue:
+      // Names the host that demands it, as canon's "Required for <host>" does.
+      return `Pick a value rating — required for ${captureDestinationLabel(destination)}.`
     default:
       return assertNever(blocker)
   }
@@ -651,7 +938,9 @@ export const captureBlockerReason = (
 /** The reason string for a draft, or `null` when nothing blocks submission. */
 export const captureBlockedReason = (draft: CaptureDraft): string | null => {
   const blocker = captureBlocker(draft)
-  return blocker === null ? null : captureBlockerReason(blocker, draft.kind)
+  return blocker === null
+    ? null
+    : captureBlockerReason(blocker, draft.kind, draft.destination)
 }
 
 /** `canSubmit` — `!isEmpty && !isEventMissingTimes`, by another route. */
@@ -676,7 +965,60 @@ export interface CaptureResult {
   readonly recurrence: CaptureRecurrence
   /** `null` for the kinds that earn nothing — reminder and event. */
   readonly rewards: number | null
+  /** 1–5 rating; always `null` for the kinds that do not support one. */
+  readonly value: number | null
+  /** Estimate in seconds; always `null` for the kinds without one. */
+  readonly duration: number | null
 }
+
+// ---------------------------------------------------------------------------
+// The symbol, and the persisted title
+// ---------------------------------------------------------------------------
+
+/**
+ * The first emoji **anywhere** in a string — `Character.isEmojiSymbol` over
+ * whole grapheme-ish sequences (variation selectors, skin tones, ZWJ joins).
+ * Same pattern as `leadingEmoji`, un-anchored.
+ */
+const FIRST_EMOJI =
+  /\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier}|\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*/u
+
+/**
+ * `titleForPersistence` — the title as it is actually stored.
+ *
+ * Kro has no emoji column: the emoji in the title *is* the symbol. So a pick
+ * replaces the **first** emoji found anywhere in the trimmed title (a leading
+ * one also normalizes the whitespace after it), or is prepended when there is
+ * none. With no pick the trimmed title is stored as typed — an inferred
+ * keyword symbol is a preview affordance, never persisted.
+ */
+export const captureTitleForPersistence = (
+  title: string,
+  pickedEmoji: string | null,
+): string => {
+  const trimmed = title.trim()
+  if (pickedEmoji === null) return trimmed
+  const match = FIRST_EMOJI.exec(trimmed)
+  if (match === null) {
+    return trimmed.length === 0 ? pickedEmoji : `${pickedEmoji} ${trimmed}`
+  }
+  if (match.index > 0) {
+    return (
+      trimmed.slice(0, match.index) +
+      pickedEmoji +
+      trimmed.slice(match.index + match[0].length)
+    )
+  }
+  const body = trimmed.slice(match[0].length).trimStart()
+  return body.length === 0 ? pickedEmoji : `${pickedEmoji} ${body}`
+}
+
+/**
+ * `resolvedSymbol` — the title row's badge: a pick wins over a typed emoji,
+ * else the same `computedSymbol` rules every saved card renders with.
+ */
+export const captureResolvedSymbol = (draft: CaptureDraft): string =>
+  draft.pickedEmoji ?? computedSymbol(trimmedCaptureTitle(draft))
 
 /**
  * `commitIfValid()` — the result, or `null` when the draft may not be
@@ -697,7 +1039,7 @@ export const captureResultFromDraft = (
   if (!canSubmitCapture(draft)) return null
   const isEvent = draft.kind === CaptureKind.event
   return {
-    title: trimmedCaptureTitle(draft),
+    title: captureTitleForPersistence(draft.title, draft.pickedEmoji),
     kind: draft.kind,
     date:
       draft.kind === CaptureKind.habit
@@ -709,10 +1051,9 @@ export const captureResultFromDraft = (
     endTime: isEvent && draft.hasEndTime ? draft.endTime : null,
     destination: draft.destination,
     recurrence: draft.recurrence,
-    rewards:
-      draft.kind === CaptureKind.task || draft.kind === CaptureKind.habit
-        ? draft.rewards
-        : null,
+    rewards: captureKindEarnsRewards(draft.kind) ? draft.rewards : null,
+    value: captureKindSupportsValue(draft.kind) ? draft.value : null,
+    duration: captureKindSupportsDuration(draft.kind) ? draft.duration : null,
   }
 }
 
@@ -771,8 +1112,13 @@ export const endeavorFromCaptureResult = (
     })
   }
 
+  // Canon `toEndeavor`: a habit is anchored by its time of day, not a date —
+  // its repeat rule supplies the day — so it saves a `start` from the picked
+  // time and no `due`. Every other non-event keeps its dated `due`.
+  const isHabit = result.kind === CaptureKind.habit
+  const start = isHabit ? result.time : null
   const due =
-    result.date === null
+    isHabit || result.date === null
       ? null
       : result.time === null
         ? result.date
@@ -783,12 +1129,56 @@ export const endeavorFromCaptureResult = (
     title: result.title,
     kind: endeavorKindForCaptureKind(result.kind),
     status: EndeavorStatus.pending,
+    start,
     due,
     repeatConfig: repeatConfigFromCaptureRecurrence(result.recurrence),
     createdAt: options.now,
     sessionPoints: result.rewards,
+    value: result.value,
+    duration: result.duration,
     hostedBy: [host],
   })
+}
+
+/**
+ * The rest of a multi-add's Just Created rows, in the order they were added —
+ * the same non-event guard as the single slot.
+ */
+export const alsoJustCreatedEndeavors = (
+  endeavors: readonly Endeavor[],
+  ids: readonly string[],
+): readonly Endeavor[] =>
+  ids.flatMap((id) => {
+    const found = endeavors.find((endeavor) => endeavor.id === id)
+    return found === undefined || found.kind === EndeavorKind.calendarEvent
+      ? []
+      : [found]
+  })
+
+/**
+ * Where a multi-add from the suggestions pane takes the user: the Inbox with
+ * every Inbox-bound row Just Created when at least one landed there; else —
+ * every one an event — the Plan, exactly like a single event capture. `null`
+ * for an empty batch.
+ */
+export const multiAddIntentFor = (
+  added: readonly Endeavor[],
+  now: Date,
+): CaptureNavigationIntent | null => {
+  const inboxBound = added.filter(
+    (endeavor) => captureRouteFor(endeavor).kind === 'inbox',
+  )
+  const first = inboxBound[0]
+  if (first === undefined) {
+    const event = added[0]
+    return event === undefined ? null : captureIntentFor(event, now)
+  }
+  const route: InboxCaptureRoute = {
+    kind: 'inbox',
+    endeavorId: first.id,
+    additionalEndeavorIds: inboxBound.slice(1).map((endeavor) => endeavor.id),
+  }
+  return { route, decidedAt: now, deliverAfterMs: captureRouteDelayMs(route) }
 }
 
 // ---------------------------------------------------------------------------
@@ -848,6 +1238,11 @@ export interface PlanCaptureRoute {
 export interface InboxCaptureRoute {
   readonly kind: 'inbox'
   readonly endeavorId: string
+  /**
+   * Further endeavors created in the same step (a multi-add from the
+   * suggestions pane), shown beneath the first in the Just Created slot.
+   */
+  readonly additionalEndeavorIds?: readonly string[]
 }
 
 export type CaptureRoute = PlanCaptureRoute | InboxCaptureRoute
@@ -943,12 +1338,13 @@ export const isCaptureIntentDue = (
  * `pendingTriageSelector` — every **unscheduled non-event** endeavor, with no
  * age bound at either end, newest first.
  *
- * Four terms, all canon's:
- * - calendar events are excluded outright (they never reach the Inbox);
+ * Three terms, all canon's:
+ * - `awaitsTriage` — the shared, kind-specific gate: only tasks and reminders
+ *   (habits, calendar events, behaviors, blueprints and background work never
+ *   queue), never completed or delegated work, never one already carrying
+ *   every rating plus a disposition;
  * - "unscheduled" is `start == null && due == null`;
- * - the Just Created row is excluded, because it has its own slot;
- * - completed work is excluded (`hasBeenCompleted`, which also counts skipped,
- *   reviewing and qa).
+ * - the Just Created row is excluded, because it has its own slot.
  *
  * There is deliberately **no** `createdAt != null` gate: *"some legacy /
  * import paths create tasks without a timestamp, and the user must still be
@@ -957,21 +1353,38 @@ export const isCaptureIntentDue = (
 export const pendingTriageEndeavors = (
   endeavors: readonly Endeavor[],
   justCreatedEndeavorId: string | null,
+  alsoJustCreatedIds: readonly string[] = [],
+  context: ReconciliationContext = makeReconciliationContext(),
 ): readonly Endeavor[] =>
   endeavors
     .filter(
       (endeavor) =>
-        endeavor.kind !== EndeavorKind.calendarEvent &&
+        // The resolved kind, as Triage's own gate reads it — a row a
+        // classifying provider resolves to an event must not be listed here
+        // and then refused when its Triage opens.
+        awaitsTriage(endeavor, resolvedKind(endeavor, context)) &&
         endeavor.start === null &&
         endeavor.due === null &&
         endeavor.id !== justCreatedEndeavorId &&
-        !hasBeenCompleted(endeavor),
+        !alsoJustCreatedIds.includes(endeavor.id),
     )
     .sort(
       (left, right) =>
         (right.createdAt?.getTime() ?? Number.NEGATIVE_INFINITY) -
         (left.createdAt?.getTime() ?? Number.NEGATIVE_INFINITY),
     )
+
+/**
+ * Whether a row's Triage button may be offered: its resolved kind is one
+ * Triage applies to and it is not completed — the same gate `openTriageThunk`
+ * enforces, so a row never offers a Triage that would then refuse to open.
+ * (Pending Triage rows pass by construction; Just Created rows need asking —
+ * a multi-added habit lands there.)
+ */
+export const isCaptureRowTriageable = (
+  endeavor: Endeavor,
+  context: ReconciliationContext = makeReconciliationContext(),
+): boolean => canBeTriaged(endeavor, resolvedKind(endeavor, context))
 
 /**
  * `justCreatedCardSelector` — the single row at the top of the sheet.

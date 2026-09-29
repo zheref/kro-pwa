@@ -77,7 +77,26 @@ import {
   type SidebarDestination,
   destinationHeading,
 } from './SidebarDestination'
-import { SidebarFragment, type SidebarFragmentProps } from './SidebarFragment'
+import {
+  CollisionInsetsProvider,
+  NO_COLLISION_INSETS,
+} from '../../design/system/primitives/collision'
+import {
+  SIDEBAR_IDEAL_WIDTH,
+  SidebarFragment,
+  type SidebarFragmentProps,
+} from './SidebarFragment'
+
+/**
+ * The sidebar's footprint from the viewport's leading edge: the shell's
+ * `pl-kro-small` (8px) plus the column's own width.
+ */
+const SIDEBAR_COLLISION_INSETS = {
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 8 + SIDEBAR_IDEAL_WIDTH,
+} as const
 import { TabBarFragment } from './TabBarFragment'
 import { CapsuleSegmentGroup } from '../../design/hig/selection/CapsuleSegmentGroup'
 import { ToolbarOutlet, useToolbarSlotFilled } from './ToolbarSlots'
@@ -107,6 +126,11 @@ export interface MainShellFragmentProps
  */
 export interface DetailPaneChrome {
   readonly segment: DetailPaneSegment | null
+  /**
+   * The segments the toolbar group offers. Canon's three when omitted; the
+   * web-only Inbox joins them while its flag is on.
+   */
+  readonly segments?: readonly DetailPaneSegment[]
   readonly title: string | null
   readonly subtitle: string | null
   readonly onSelectSegment: (segment: DetailPaneSegment) => void
@@ -188,89 +212,95 @@ export function MainShellFragment(props: MainShellFragmentProps) {
   )
 
   return shape === 'sidebar' ? (
-    <div
-      ref={shellRef}
-      data-testid="shell-sidebar-shape"
-      data-shell-shape="sidebar"
-      data-kro-idiom="desktop"
-      className="relative flex h-dvh w-full overflow-hidden overscroll-y-contain"
-      style={shellStyle}
+    // The sidebar is an obstacle for every popover and menu: they flip and
+    // shift clear of it, toward the content, never under it.
+    <CollisionInsetsProvider
+      insets={isSidebarVisible ? SIDEBAR_COLLISION_INSETS : NO_COLLISION_INSETS}
     >
-      <DetailBackdrop />
       <div
-        data-kro-title-slab-host=""
-        data-testid="shell-title-slab-host"
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1]"
-      />
+        ref={shellRef}
+        data-testid="shell-sidebar-shape"
+        data-shell-shape="sidebar"
+        data-kro-idiom="desktop"
+        className="relative flex h-dvh w-full overflow-hidden overscroll-y-contain"
+        style={shellStyle}
+      >
+        <DetailBackdrop />
+        <div
+          data-kro-title-slab-host=""
+          data-testid="shell-title-slab-host"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[1]"
+        />
 
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small pb-kro-small pl-kro-small">
-        {isSidebarVisible && (
-          <SidebarFragment
-            {...sidebar}
-            sections={sections}
-            selected={selected}
-            layout={layout}
-          />
-        )}
-
-        <ContentColumn>
-          <ContentToolbar
-            layout={layout}
-            selected={selected}
-            onToggleSidebar={onToggleSidebar}
-            onTapProfile={onTapProfile}
-            onTapInbox={onTapInbox}
-            detailPane={detailPane}
-          />
-
-          <main className="relative z-0 min-h-0 flex-1 overflow-x-clip overflow-y-auto">
-            {children}
-          </main>
-        </ContentColumn>
-      </div>
-
-      {detailPane === null ? null : (
-        <TrailingDetailPanel
-          isPresented={isDetailPanePresented}
-          title={detailPane.title ?? ''}
-          subtitle={detailPane.subtitle}
-          onDismiss={detailPane.onDismiss}
-          onBack={detailPane.onBack ?? null}
-          navigationDepth={detailPane.navigationDepth ?? 0}
-          navigationKey={detailPane.navigationKey}
-          topInset={panelTop ?? undefined}
-          titleContent={
-            isPaneTitleSlotted ? (
-              <ToolbarOutlet
-                placement="detailPaneTitle"
-                className="flex items-center"
-              />
-            ) : null
-          }
-          backdrop={<ToolbarOutlet placement="detailPaneBackdrop" />}
-          leadingAccessory={
-            isPaneLeadingSlotted ? (
-              <ToolbarOutlet
-                placement="detailPaneLeading"
-                className="flex items-center"
-              />
-            ) : undefined
-          }
-          trailingAccessory={
-            <ToolbarOutlet
-              placement="detailPaneTrailing"
-              className="flex items-center"
+        <div className="relative z-10 flex min-h-0 min-w-0 flex-1 gap-kro-small pb-kro-small pl-kro-small">
+          {isSidebarVisible && (
+            <SidebarFragment
+              {...sidebar}
+              sections={sections}
+              selected={selected}
+              layout={layout}
             />
-          }
-        >
-          <ToolbarOutlet
-            placement="detailPane"
-            className="flex flex-1 flex-col"
-          />
-        </TrailingDetailPanel>
-      )}
-    </div>
+          )}
+
+          <ContentColumn>
+            <ContentToolbar
+              layout={layout}
+              selected={selected}
+              onToggleSidebar={onToggleSidebar}
+              onTapProfile={onTapProfile}
+              onTapInbox={onTapInbox}
+              detailPane={detailPane}
+            />
+
+            <main className="relative z-0 min-h-0 flex-1 overflow-x-clip overflow-y-auto">
+              {children}
+            </main>
+          </ContentColumn>
+        </div>
+
+        {detailPane === null ? null : (
+          <TrailingDetailPanel
+            isPresented={isDetailPanePresented}
+            title={detailPane.title ?? ''}
+            subtitle={detailPane.subtitle}
+            onDismiss={detailPane.onDismiss}
+            onBack={detailPane.onBack ?? null}
+            navigationDepth={detailPane.navigationDepth ?? 0}
+            navigationKey={detailPane.navigationKey}
+            topInset={panelTop ?? undefined}
+            titleContent={
+              isPaneTitleSlotted ? (
+                <ToolbarOutlet
+                  placement="detailPaneTitle"
+                  className="flex items-center"
+                />
+              ) : null
+            }
+            backdrop={<ToolbarOutlet placement="detailPaneBackdrop" />}
+            leadingAccessory={
+              isPaneLeadingSlotted ? (
+                <ToolbarOutlet
+                  placement="detailPaneLeading"
+                  className="flex items-center"
+                />
+              ) : undefined
+            }
+            trailingAccessory={
+              <ToolbarOutlet
+                placement="detailPaneTrailing"
+                className="flex items-center"
+              />
+            }
+          >
+            <ToolbarOutlet
+              placement="detailPane"
+              className="flex flex-1 flex-col"
+            />
+          </TrailingDetailPanel>
+        )}
+      </div>
+    </CollisionInsetsProvider>
   ) : (
     <div
       data-testid="shell-tab-bar-shape"
@@ -622,31 +652,43 @@ function DetailPaneSegmentGroup({
     <CapsuleSegmentGroup
       label="Detail pane"
       testId="detail-pane-segments"
-      options={DETAIL_PANE_SEGMENTS.map((segment) => {
-        const Glyph = DETAIL_PANE_GLYPH[segment]
-        return {
-          value: segment,
-          label: detailPaneSegmentLabel(segment),
-          icon: (isSelected: boolean) => (
-            <Glyph
-              size={headerGlyph(layout)}
-              strokeWidth={isSelected ? 2.5 : 2}
-              aria-hidden="true"
-            />
-          ),
-        }
-      })}
+      options={(detailPane.segments ?? CANON_DETAIL_PANE_SEGMENTS).map(
+        (segment) => {
+          const Glyph = DETAIL_PANE_GLYPH[segment]
+          return {
+            value: segment,
+            label: detailPaneSegmentLabel(segment),
+            icon: (isSelected: boolean) => (
+              <Glyph
+                size={headerGlyph(layout)}
+                strokeWidth={isSelected ? 2.5 : 2}
+                aria-hidden="true"
+              />
+            ),
+          }
+        },
+      )}
       value={detailPane.segment}
       onSelect={detailPane.onSelectSegment}
     />
   )
 }
 
-/** Canon's `systemImage`s: timer, chart.bar.fill, calendar.day.timeline.left. */
+/** Canon's three segments — what the group offers when not told otherwise. */
+const CANON_DETAIL_PANE_SEGMENTS = DETAIL_PANE_SEGMENTS.filter(
+  (segment) => segment !== 'inbox',
+)
+
+/**
+ * Canon's `systemImage`s: timer, chart.bar.fill, calendar.day.timeline.left —
+ * plus the web-only Inbox segment's tray — the same glyph as the toolbar's own
+ * Inbox button.
+ */
 const DETAIL_PANE_GLYPH = {
   sessionSetup: Timer,
   performance: ChartNoAxesColumn,
   plan: CalendarClock,
+  inbox: Inbox,
 } as const satisfies Record<DetailPaneSegment, unknown>
 
 function headerGlyph(layout: DoSurfaceLayout): number {

@@ -145,6 +145,15 @@ export const selectAreDoRingsVisible = createSelector(
     }),
 )
 
+/**
+ * Whether the quick-action button answers the keyboard — Return toggles it and
+ * its entries' letters perform them (`keyboardAccelerators`, web-only).
+ */
+export const selectAreDoKeyboardAcceleratorsEnabled = createSelector(
+  [selectDoSlice],
+  (slice) => slice.preferences.keyboardAcceleratorsEnabled,
+)
+
 // ---------------------------------------------------------------------------
 // Suggestions
 // ---------------------------------------------------------------------------

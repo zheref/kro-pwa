@@ -37,9 +37,10 @@ describe('the Chromium field-outline reset', () => {
       /:where\(\[data-kro-field\] :is\(input, textarea, select\)\):focus-visible[\s\S]*?box-shadow:\s*none/,
     )
     expect(STYLES).toMatch(
-      /:where\(\[data-slot="input"\], \[data-slot="textarea"\]\):focus-visible[\s\S]*?box-shadow:\s*0 0 0 3px var\(--kro-color-glow-lime\)/,
+      /:where\(\[data-slot="input"\], \[data-slot="textarea"\]\):focus-visible[\s\S]*?box-shadow:\s*var\(--kro-ring-field\)/,
     )
-    expect(STYLES).toContain('var(--kro-color-glow-lime)')
+    // `--kro-ring-field` is the lime glow (tokens.css).
+    expect(STYLES).toContain('var(--kro-ring-field)')
   })
 })
 

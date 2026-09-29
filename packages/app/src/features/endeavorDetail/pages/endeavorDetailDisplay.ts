@@ -127,7 +127,8 @@ export const fieldIcon = (field: EndeavorField): KitSymbolName => {
     case EndeavorField.duration:
       return 'timer'
     case EndeavorField.sessionPoints:
-      return 'bolt.fill'
+      // Canon's `medal.star` — every reward-points surface draws it.
+      return 'medal.star'
     case EndeavorField.value:
       return 'star.fill'
     case EndeavorField.effort:

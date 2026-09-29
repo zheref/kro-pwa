@@ -6,6 +6,7 @@
 import type { ReactNode } from 'react'
 import type { PerformancePaneFragmentProps } from './PerformancePaneFragment'
 import type { TimelinePaneFragmentProps } from './TimelinePaneFragment'
+import type { InboxPaneFragmentProps } from './InboxPaneFragment'
 import { ToolbarOutlet, ToolbarSlotsProvider } from './ToolbarSlots'
 
 const body = (label: string) => (
@@ -28,6 +29,12 @@ export const TimelinePaneFragmentMocks = {
   emptyDay: { isShown: true, children: body('Nothing planned today') },
   hidden: { isShown: false, children: body('Today’s timeline') },
 } satisfies Record<string, TimelinePaneFragmentProps>
+
+export const InboxPaneFragmentMocks = {
+  shown: { isShown: true, children: body('Just Created · Pending Triage') },
+  empty: { isShown: true, children: body('Nothing to triage') },
+  hidden: { isShown: false, children: body('Just Created · Pending Triage') },
+} satisfies Record<string, InboxPaneFragmentProps>
 
 /** The pane body outlet a segment Fragment portals into. */
 export function PaneBody({ children }: { readonly children: ReactNode }) {

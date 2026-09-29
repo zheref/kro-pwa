@@ -9,8 +9,8 @@
  * same content") — `EarnFragment` picks which of the two mounts by
  * `presentation`, never both at once.
  */
+import { iconForSymbol } from '../../../design/system/icons/icons'
 import type { Reward } from '@kro/core'
-import { Zap } from 'lucide-react'
 import { Button } from '../../../design/system/primitives/button'
 import {
   Sheet,
@@ -19,6 +19,9 @@ import {
   SheetTitle,
 } from '../../../design/system/primitives/sheet'
 import { colorVar } from '../../../design/system/tokens/roles'
+
+/** Reward points — canon's `medal.star`, from the shared symbol map. */
+const RewardGlyph = iconForSymbol('medal.star')
 
 export interface ClaimConfirmationBodyProps {
   readonly reward: Reward
@@ -48,7 +51,7 @@ export function ClaimConfirmationBody({
           className="m-0 flex items-center justify-center gap-1 font-semibold text-sm"
           style={{ color: colorVar('foreSecondary') }}
         >
-          <Zap
+          <RewardGlyph
             className="size-4"
             aria-hidden
             style={{ color: colorVar('rewardYellow') }}

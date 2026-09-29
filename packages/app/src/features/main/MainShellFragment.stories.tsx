@@ -15,7 +15,11 @@ import {
 } from './MainMocks'
 import type { MainState } from './MainFeature'
 import { type DetailPaneChrome, MainShellFragment } from './MainShellFragment'
-import { detailPaneTitle } from './DetailPane'
+import {
+  detailPaneSegmentReadsEndeavor,
+  detailPaneSegmentsOffered,
+  detailPaneTitle,
+} from './DetailPane'
 import {
   searchDestination,
   sidebarSections,
@@ -252,11 +256,15 @@ const paneFrom = (state: MainState): DetailPaneChrome => {
   const { segment, endeavor } = state.detailPane
   return {
     segment,
+    segments: detailPaneSegmentsOffered(state.isDetailPaneInboxEnabled),
     title:
       segment === null
         ? null
         : detailPaneTitle(segment, endeavor?.title ?? null),
-    subtitle: segment === null ? null : (endeavor?.title ?? null),
+    subtitle:
+      segment === null || !detailPaneSegmentReadsEndeavor(segment)
+        ? null
+        : (endeavor?.title ?? null),
     onSelectSegment: noop,
     onDismiss: noop,
   }
@@ -295,6 +303,24 @@ export const DetailPaneDayProgress = {
       {shell(desktopSurface, {
         detailPane: paneFrom(MainMocks.desktopDetailPaneDayProgress),
       })}
+    </Stage>
+  ),
+}
+
+/**
+ * Web-only: the Inbox segment's flag on — four segments, the pane on the
+ * Inbox with a stand-in body.
+ */
+export const DetailPaneInbox = {
+  render: () => (
+    <Stage width={1100}>
+      {shell(
+        desktopSurface,
+        { detailPane: paneFrom(MainMocks.desktopDetailPaneInbox) },
+        <ToolbarSlot placement="detailPane">
+          <p style={{ padding: 16 }}>The Inbox renders here.</p>
+        </ToolbarSlot>,
+      )}
     </Stage>
   ),
 }

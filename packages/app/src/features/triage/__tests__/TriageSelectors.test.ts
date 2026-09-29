@@ -47,6 +47,9 @@ import {
   selectTriageSaveException,
   selectTriageSecondaryAction,
   selectTriageSelectedExpiryToken,
+  selectIsTriageShownInPane,
+  selectTriageOpenFailure,
+  selectTriagePresentation,
   selectTriageSession,
   selectTriageValueRating,
   selectTriageWillPromote,
@@ -85,6 +88,71 @@ const rootWith = (slice: TriageState): RootState => ({
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+})
+
+describe('selectTriagePresentation', () => {
+  it('reads the Inbox carousel on a fresh slice — canon’s only host', () => {
+    expect(selectTriagePresentation(rootWith(initialTriageState))).toBe(
+      'carousel',
+    )
+  })
+
+  it('reads the pane once the pane has asked for a session', () => {
+    expect(
+      selectTriagePresentation(rootWith(triageStateMocks.loadingInPane)),
+    ).toBe('pane')
+  })
+
+  it('keeps naming the host after its session ended, for the outcome drain', () => {
+    expect(
+      selectTriagePresentation(rootWith(triageStateMocks.savingInPane)),
+    ).toBe('pane')
+  })
+})
+
+describe('selectIsTriageShownInPane', () => {
+  it('is false while the pane is still opening its session', () => {
+    expect(
+      selectIsTriageShownInPane(rootWith(triageStateMocks.loadingInPane)),
+    ).toBe(false)
+  })
+
+  it('is false for a session the Inbox overlay opened', () => {
+    expect(selectIsTriageShownInPane(rootWith(triageStateMocks.pristine))).toBe(
+      false,
+    )
+  })
+
+  it('is true once the pane’s session is open, and false after it is decided', () => {
+    expect(
+      selectIsTriageShownInPane(rootWith(triageStateMocks.openInPane)),
+    ).toBe(true)
+    expect(
+      selectIsTriageShownInPane(rootWith(triageStateMocks.savingInPane)),
+    ).toBe(false)
+  })
+})
+
+describe('selectTriageOpenFailure', () => {
+  it('names the host that asked and gives user copy, not the raw message', () => {
+    const failure = selectTriageOpenFailure(
+      rootWith(triageStateMocks.notTriageableInPane),
+    )
+    expect(failure?.presentation).toBe('pane')
+    expect(failure?.copy).not.toContain('Habit isn')
+  })
+
+  it('reports the carousel’s own failed open too', () => {
+    expect(
+      selectTriageOpenFailure(rootWith(triageStateMocks.failed))?.presentation,
+    ).toBe('carousel')
+  })
+
+  it('is null while nothing failed to open', () => {
+    expect(
+      selectTriageOpenFailure(rootWith(triageStateMocks.pristine)),
+    ).toBeNull()
+  })
 })
 
 describe('lifecycle selectors', () => {

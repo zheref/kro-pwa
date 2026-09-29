@@ -18,6 +18,8 @@ import type { RootState } from '../../library/store'
 import {
   type DetailPaneEndeavor,
   type DetailPaneSegment,
+  detailPaneSegmentReadsEndeavor,
+  detailPaneSegmentsOffered,
   detailPaneTitle,
 } from './DetailPane'
 import {
@@ -27,6 +29,7 @@ import {
   shellShapeFor,
 } from './DoSurfaceLayout'
 import { selectCaptureNavigationIntent } from '../capture/CaptureSelectors'
+import { isInboxHostedByPane } from './MainShifters'
 import {
   selectSessionIdentity,
   selectSessionPhase,
@@ -263,11 +266,26 @@ export const selectIsDetailPaneAvailable = createSelector(
   (slice, shape) => slice.isDetailPaneEnabled && shape === 'sidebar',
 )
 
-/** Canon's `detailPaneSegment`, or `null` where the pane is unavailable. */
+/**
+ * The toolbar group's segments: canon's three, plus the web-only Inbox while
+ * `detailPaneInbox` is on.
+ */
+export const selectDetailPaneSegments = createSelector(
+  [selectMainSlice],
+  (slice): readonly DetailPaneSegment[] =>
+    detailPaneSegmentsOffered(slice.isDetailPaneInboxEnabled),
+)
+
+/**
+ * Canon's `detailPaneSegment`, or `null` where the pane is unavailable — or
+ * where it is on the web-only Inbox segment with that segment's flag off.
+ */
 export const selectDetailPaneSegment = createSelector(
-  [selectMainSlice, selectIsDetailPaneAvailable],
-  (slice, isAvailable): DetailPaneSegment | null =>
-    isAvailable ? slice.detailPane.segment : null,
+  [selectMainSlice, selectIsDetailPaneAvailable, selectDetailPaneSegments],
+  (slice, isAvailable, offered): DetailPaneSegment | null => {
+    const segment = isAvailable ? slice.detailPane.segment : null
+    return segment !== null && offered.includes(segment) ? segment : null
+  },
 )
 
 /**
@@ -374,5 +392,20 @@ export const selectDetailPaneTitle = createSelector(
 export const selectDetailPaneSubtitle = createSelector(
   [selectDetailPaneSegment, selectDetailPaneHeaderEndeavor],
   (segment, endeavor): string | null =>
-    segment === null ? null : (endeavor?.title ?? null),
+    segment === null || !detailPaneSegmentReadsEndeavor(segment)
+      ? null
+      : (endeavor?.title ?? null),
+)
+
+/**
+ * Web-only: whether a capture routed to the Inbox lands in the pane's Inbox
+ * segment rather than the Inbox overlay — the pane is hosted here and the
+ * `detailPaneInbox` flag is on. What the shell's Page tells the capture slice
+ * when it delivers the route (`RC-20`: composed here, never read by capture).
+ */
+export const selectIsInboxHostedByPane = createSelector(
+  [selectMainSlice],
+  // One definition of the fact: the same predicate the reveal Shifter gates
+  // on, so the Page's answer to capture and the reducer's can never differ.
+  isInboxHostedByPane,
 )

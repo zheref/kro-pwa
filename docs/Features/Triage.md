@@ -23,6 +23,27 @@ one-thing-at-a-time surface that gets a real decision made before items pile up.
   affordance described below. It is **disabled** in the shipped default set, so
   the affordance is not shown today.
 
+## Which items can be triaged
+
+Triage applies to **tasks and reminders** only — the two kinds of item that
+are waiting to be told when they happen. Every surface answers the question the
+same way:
+
+- **Habits** are never triaged: a habit is a standing commitment to a moment in
+  the day, decided when it was created.
+- **Calendar events** are never triaged: they already are a commitment to a
+  moment.
+- **Behaviors, blueprints and background work** are never triaged.
+- **Completed work** (done, skipped, in review) is never triaged.
+
+An item still *owes* a decision until it carries a value, a deadline and a
+reward **and** has been scheduled, delegated or archived. Effort is offered but
+not required. Only items that owe a decision appear in the Inbox's Pending
+Triage; an item that already carries everything is never queued.
+
+The form itself is the same for every kind it applies to — the fields,
+defaults, the confirm rule and the decision do not vary by kind.
+
 ## Entry points
 
 - The **Triage** button on a row in the Inbox. Triage opens *inside* the Inbox
@@ -32,6 +53,9 @@ one-thing-at-a-time surface that gets a real decision made before items pile up.
   Jot Down destination.
 - There is no address for Triage. It is not a place you can link to or land on;
   it is a layer over the Inbox, and it exists only while the Inbox does.
+- **Web only:** the Inbox hosted in the desktop window's trailing detail pane
+  (see [Mac Detail Pane](./MacDetailPane.md) and the Web notes below). Triage
+  opens there as the same layer over that Inbox's list.
 
 ## Core concepts
 
@@ -68,23 +92,25 @@ one-thing-at-a-time surface that gets a real decision made before items pile up.
 
 ## Layout
 
-Top to bottom:
+Top to bottom — from "is this worth doing?" through when it is due, how big it
+is and where it belongs, down to when it stops mattering and what it pays:
 
 1. **Header** — a back control, the item's emoji, the word "Triage" over the
    item's title, and a reward badge that tracks the stepper live and stays
    visible however far the form is scrolled.
-2. **Reward points** — a stepper. It moves by five below fifty and by ten at
-   fifty and above, and stays between one and 999.
-3. **Duration** — the chip row, scrolling sideways, with no Skip chip.
-4. **The matrix** — a two-by-two grid with the urgency words above and the
+2. **Value** — five rockets, with the descriptor for the current step shown
+   beside them: *Trivial / Minor / Meaningful / Major / Life-changing*. Tapping
+   the current rating clears it. The default is one rocket.
+3. **Scheduled date** — a date-and-time control, or a button that reveals one
+   when no date has been picked.
+4. **Duration** — the chips, wrapping onto as many lines as the width needs (web; canon
+   scrolls them sideways), with no Skip chip.
+5. **The matrix** — a two-by-two grid with the urgency words above and the
    importance words down the left. An unpicked tile shows its two axes in
    words, with the positives set heavier than the negations. The picked tile
    shows its name, a one-line caption, its own colour and a check mark.
-5. **Value** — five rockets, with the descriptor for the current step shown
-   beside them: *Trivial / Minor / Meaningful / Major / Life-changing*. Tapping
-   the current rating clears it. The default is one rocket.
-6. **Scheduled date** — a date-and-time control, or a button that reveals one
-   when no date has been picked.
+6. **Effort** — five flames, laid out like Value: *Autopilot / Easy /
+   Cumbersome / Hard / Grueling*. Default one flame.
 7. **Expires at** — once a date exists, one sideways-scrolling row: a
    date-and-time control at the leading edge, then preset pills — *At the
    moment, An hour later, 2h later, 4h later, EoD, EoW* — and an informational
@@ -92,10 +118,11 @@ Top to bottom:
    Picking anything moves the matching pill to the front of the row and scrolls
    back to the leading edge so the choice stays in view. Without a date the
    section falls back to a plain control and an "Add an expiry" button.
-8. **Effort** — five flames, laid out like Value: *Autopilot / Easy /
-   Cumbersome / Hard / Grueling*. Default one flame.
-9. **The action row** — anchored to the bottom with the form scrolling behind
-   it.
+8. **Reward points** — a stepper. It moves by five below fifty and by ten at
+   fifty and above, and stays between one and 999.
+9. **The action row** — pinned to the bottom. On the web it is a footer beneath the
+   form rather than a layer the form scrolls behind, so the last section always
+   scrolls clear of it, however tall the blocked-reason line makes it.
    - Before a quadrant is picked, one full-width **Complete Triage**, disabled,
      and a line of text naming what is missing.
    - After a quadrant is picked, the primary shrinks to **Complete Only** and a
@@ -193,10 +220,12 @@ The decision is applied and then saved, in this order:
 
 ## Interactions with other features
 
-- **Inbox** — the only entry point, and the surface Triage lives inside. On
+- **Inbox** — the canonical entry point, and the surface Triage lives inside. On
   confirmation the Inbox re-reads its rows, which is what makes the triaged row
   disappear from Pending Triage.
 - **Focus session** — Start Now prepares a session for the item.
+- **Mac Detail Pane** (web only) — the pane's Inbox reading hosts the Inbox,
+  and so this layer, beside the window's content.
 - **Item editing** — behind the dark-launch flag, the inline Edit affordance
   opens the editing surface for the same item without applying a decision.
 
@@ -245,6 +274,23 @@ because this is a browser.
   reported on the Inbox surface itself rather than on a screen that has already
   gone.
 
+- **Triage in the detail pane's Inbox (web only; canon has no such reading).**
+  On the desktop window, behind the `detailPaneInbox` flag, the Inbox can be
+  shown in the trailing detail pane, and a capture routed to the Inbox lands
+  there. Tapping Triage on a row there opens the same layer over the pane's
+  list — on the pane's own glass rather than an opaque panel, and without the
+  edge drag, since the pane sits beside the window's content — and confirming
+  or backing out returns to that list. Deleting the item being triaged closes
+  the layer. The form keeps its own
+  header and back control. Only the Inbox whose row was tapped opens the layer,
+  so the pane's Inbox and the Inbox overlay never both show one session.
+- **Not yet ported from canon** (named, not silently dropped): canon has since
+  split the *due* date from an optional *scheduled* date (the deadline versus
+  when the person plans to sit down for it), re-labelled the date row "Due
+  date", made the default expiry follow the duration rather than a flat hour,
+  and added a "Recently Added" Inbox section. This copy still describes the
+  single-date form the web ships.
+
 ## Open questions
 
 - Should Archive move the item into a separately-browsable archive rather than
@@ -282,6 +328,34 @@ flowchart TD
     session --> drain
     share --> drain
     close --> drain
+```
+
+### Which items reach Triage
+
+```mermaid
+flowchart TD
+    item[An item] --> kind{Its kind}
+    kind -->|habit, calendar event, behavior, blueprint, background| never[Never triaged]
+    kind -->|task or reminder| done{Finished?}
+    done -->|done, skipped or in review| never
+    done -->|no| ready{Carries value, deadline and reward, and is scheduled, delegated or archived?}
+    ready -->|yes| decided[Can be re-triaged, but is not queued]
+    ready -->|no| owes[Owes a decision]
+    owes --> queue{Unscheduled?}
+    queue -->|yes| pending[Listed in Pending Triage]
+    queue -->|no| decidedLater[Reachable, not listed]
+```
+
+### Triage in the detail pane's Inbox (web only)
+
+```mermaid
+flowchart TD
+    add[Person adds a task in the creation prompt] --> route{Where does the Inbox live here?}
+    route -->|desktop window, pane Inbox on| pane[The pane opens on the Inbox, the new task on top]
+    route -->|phone, or pane Inbox off| overlay[The Inbox sheet or popover opens]
+    pane --> tap[Tap Triage on a row]
+    tap --> form[The Triage layer covers the pane's list]
+    form -->|any decision, or back out| pane
 ```
 
 ### States

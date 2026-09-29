@@ -20,7 +20,6 @@ import {
   withAddForTodayRequested,
   withAddForTodayTimeAdjusted,
   withCaptureCommitted,
-  withContextLoaded,
   withDateCleared,
   withDatePicked,
   withDestinationSelected,
@@ -35,7 +34,6 @@ import {
   withRecurrencePicked,
   withRewardsPicked,
   withRouteDelivered,
-  withSchedulingApplied,
   withSchedulingUndone,
   withTimeEditBegun,
   withTimeEditEnded,
@@ -211,7 +209,7 @@ describe('withKindSelected', () => {
   it('closes a half-open time edit rather than carrying it into the new kind', () => {
     const editing = withTimeEditBegun(openPrompt, 'start')
     const switched = withKindSelected(editing, CaptureKind.event)
-    expect(switched.prompt?.startEdit).toBeNull()
+    expect(switched.prompt?.editor).toBeNull()
   })
 
   it('keeps what the user already typed', () => {
@@ -295,9 +293,10 @@ describe('withTimeEditBegun', () => {
   it('marks the time as set the moment the picker opens', () => {
     const editing = withTimeEditBegun(openPrompt, 'start')
     expect(editing.prompt?.draft.hasTime).toBe(true)
-    expect(editing.prompt?.startEdit).toEqual({
-      time: openPrompt.prompt?.draft.time,
-      wasSet: false,
+    expect(editing.prompt?.editor).toEqual({
+      kind: 'time',
+      field: 'start',
+      snapshot: { time: openPrompt.prompt?.draft.time, wasSet: false },
     })
   })
 
@@ -307,7 +306,11 @@ describe('withTimeEditBegun', () => {
       'end',
     )
     expect(editing.prompt?.draft.hasEndTime).toBe(true)
-    expect(editing.prompt?.endEdit?.wasSet).toBe(false)
+    expect(editing.prompt?.editor).toMatchObject({
+      kind: 'time',
+      field: 'end',
+      snapshot: { wasSet: false },
+    })
   })
 
   it('keeps the original snapshot when the picker is re-opened', () => {
@@ -359,7 +362,7 @@ describe('withTimeEditEnded', () => {
     const done = withTimeEditEnded(edited, 'start', 'done')
     expect(done.prompt?.draft.time).toEqual(captureMockAt(17, 11, 30))
     expect(done.prompt?.draft.hasTime).toBe(true)
-    expect(done.prompt?.startEdit).toBeNull()
+    expect(done.prompt?.editor).toBeNull()
   })
 
   it('puts an unscheduled task back to unscheduled on Discard', () => {
@@ -377,7 +380,7 @@ describe('withTimeEditEnded', () => {
     const edited = withTimeEditBegun(openPrompt, 'start')
     const cleared = withTimeEditEnded(edited, 'start', 'clear')
     expect(cleared.prompt?.draft.hasTime).toBe(false)
-    expect(cleared.prompt?.startEdit).toBeNull()
+    expect(cleared.prompt?.editor).toBeNull()
   })
 
   it('clears an event’s end time without touching its start', () => {
@@ -516,6 +519,7 @@ describe('withRouteDelivered', () => {
     expect(delivered.inbox).toEqual({
       isOpen: true,
       justCreatedEndeavorId: 'captured-task',
+      alsoJustCreatedIds: [],
     })
     expect(delivered.navigation).toBeNull()
   })
@@ -537,6 +541,33 @@ describe('withRouteDelivered', () => {
 // ---------------------------------------------------------------------------
 // The Inbox
 // ---------------------------------------------------------------------------
+
+describe('withRouteDelivered — the Inbox hosted by the detail pane (web-only)', () => {
+  const pending = captureStateMocks.taskCapturedAwaitingInbox
+  const due = new Date(CAPTURE_MOCK_NOW.getTime() + 500)
+
+  it('keeps the overlay shut but stamps the Just Created row for the pane', () => {
+    expect(withRouteDelivered(pending, due, true).inbox).toEqual({
+      isOpen: false,
+      justCreatedEndeavorId: 'captured-task',
+      alsoJustCreatedIds: [],
+    })
+  })
+
+  it('still spends the routing one-shot, so it is never replayed', () => {
+    expect(withRouteDelivered(pending, due, true).navigation).toBeNull()
+  })
+
+  it('waits out the prompt’s dismissal in the pane just as in the overlay', () => {
+    expect(
+      withRouteDelivered(
+        pending,
+        new Date(CAPTURE_MOCK_NOW.getTime() + 499),
+        true,
+      ),
+    ).toBe(pending)
+  })
+})
 
 describe('withInboxOpened', () => {
   it('opens the sheet from the Plan tab affordance', () => {
@@ -574,6 +605,28 @@ describe('withInboxDismissed', () => {
     expect(
       withInboxDismissed(captureStateMocks.addForTodayOpen).addForToday,
     ).toBeNull()
+  })
+})
+
+describe('withTriageRequested — which Inbox asked', () => {
+  it('addresses the overlay’s Triage layer by default, as canon’s Inbox does', () => {
+    expect(
+      withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW).triageRequest
+        ?.host,
+    ).toBe('overlay')
+  })
+
+  it('addresses the pane’s Triage layer when the pane’s Inbox asked', () => {
+    expect(
+      withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW, 'pane')
+        .triageRequest?.host,
+    ).toBe('pane')
+  })
+
+  it('stays a no-op for an unknown row whichever Inbox asked', () => {
+    expect(withTriageRequested(loaded, 'gone', CAPTURE_MOCK_NOW, 'pane')).toBe(
+      loaded,
+    )
   })
 })
 

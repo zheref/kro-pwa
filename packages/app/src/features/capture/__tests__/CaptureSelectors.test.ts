@@ -24,6 +24,7 @@ import {
 } from '../CaptureMocks'
 import {
   CaptureDestination,
+  CaptureKind,
   captureResultFromDraft,
   endeavorFromCaptureResult,
 } from '../CaptureRules'
@@ -33,8 +34,12 @@ import {
   selectAvailableCaptureDestinations,
   selectCanSubmitCapture,
   selectCaptureBlockedReason,
+  selectCaptureBlocker,
+  selectCaptureDestinationsForKind,
   selectCaptureDraft,
   selectCaptureException,
+  selectCaptureResolvedSymbol,
+  selectIsCaptureValueRequired,
   selectCaptureNavigationIntent,
   selectCaptureTriageRequest,
   selectInboxSwipeOperations,
@@ -54,6 +59,8 @@ import {
 import {
   withCaptureCommitted,
   withDestinationSelected,
+  withEmojiPicked,
+  withKindSelected,
   withException,
   withInboxOpened,
   withTriageRequested,
@@ -356,11 +363,11 @@ describe('selectJustCreatedEndeavor', () => {
 })
 
 describe('selectPendingTriageEndeavors', () => {
-  it('lists every unscheduled non-event endeavor, newest first', () => {
+  it('lists every unscheduled task and reminder, newest first, habits excluded', () => {
     expect(selectPendingTriageEndeavors(loaded).map((row) => row.id)).toEqual([
       'fresh-task',
       'unscheduled-reminder',
-      'unscheduled-habit',
+
       'neglected-task',
       'undated-legacy-task',
     ])
@@ -433,7 +440,7 @@ describe('selectIsInboxEmpty', () => {
 
 describe('selectInboxTotalCount', () => {
   it('counts the pending rows on a manual open', () => {
-    expect(selectInboxTotalCount(loaded)).toBe(5)
+    expect(selectInboxTotalCount(loaded)).toBe(4)
   })
 
   it('counts the Just Created row on top of them', () => {
@@ -441,7 +448,7 @@ describe('selectInboxTotalCount', () => {
       selectInboxTotalCount(
         rootWith(captureStateMocks.inboxOpenWithJustCreated),
       ),
-    ).toBe(6)
+    ).toBe(5)
   })
 
   it('counts nothing on an empty pool', () => {
@@ -486,6 +493,7 @@ describe('selectCaptureTriageRequest', () => {
     expect(selectCaptureTriageRequest(rootWith(requested))).toEqual({
       endeavorId: 'fresh-task',
       nextFreeSlotToday: captureMockAt(17, 10, 15),
+      host: 'overlay',
     })
   })
 
@@ -601,5 +609,102 @@ describe('selectUndoSnapshot', () => {
     expect(
       selectUndoSnapshot(rootWith(captureStateMocks.undoExpired)),
     ).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Per-kind properties
+// ---------------------------------------------------------------------------
+
+describe('selectCaptureDestinationsForKind', () => {
+  it('offers a task canon’s task hosts among the connected ones', () => {
+    expect(
+      selectCaptureDestinationsForKind(
+        rootWith(captureStateMocks.promptOpenWithEveryHost),
+      ),
+    ).toEqual(['kroCloud', 'local', 'appleReminders'])
+  })
+
+  it('narrows to Calendar, Kro Cloud and On Device for an event', () => {
+    expect(
+      selectCaptureDestinationsForKind(
+        rootWith(
+          withKindSelected(
+            captureStateMocks.promptOpenWithEveryHost,
+            CaptureKind.event,
+          ),
+        ),
+      ),
+    ).toEqual(['appleCalendar', 'kroCloud', 'local'])
+  })
+
+  it('offers every available host with no prompt open', () => {
+    expect(selectCaptureDestinationsForKind(loaded)).toEqual(['local'])
+  })
+})
+
+describe('selectCaptureResolvedSymbol', () => {
+  it('draws the picked emoji', () => {
+    expect(
+      selectCaptureResolvedSymbol(
+        rootWith(withEmojiPicked(captureStateMocks.promptOpenOnTask, '🧺')),
+      ),
+    ).toBe('🧺')
+  })
+
+  it('draws the keyword symbol for a typed title', () => {
+    expect(
+      selectCaptureResolvedSymbol(
+        rootWith(captureStateMocks.promptReadyToSubmit),
+      ),
+      // "Book the flights" matches canon's `book` keyword.
+    ).toBe('📚')
+  })
+
+  it('is null with no prompt open', () => {
+    expect(selectCaptureResolvedSymbol(loaded)).toBeNull()
+  })
+})
+
+describe('selectIsCaptureValueRequired', () => {
+  it('is true for a task bound for local storage', () => {
+    expect(
+      selectIsCaptureValueRequired(
+        rootWith(captureStateMocks.promptTaskMissingValue),
+      ),
+    ).toBe(true)
+  })
+
+  it('is false for a habit — the rating stays optional', () => {
+    expect(
+      selectIsCaptureValueRequired(
+        rootWith(captureStateMocks.promptOpenOnHabit),
+      ),
+    ).toBe(false)
+  })
+
+  it('is false with no prompt open', () => {
+    expect(selectIsCaptureValueRequired(loaded)).toBe(false)
+  })
+})
+
+describe('selectCaptureBlocker', () => {
+  it('names the missing rating on an unrated local task', () => {
+    expect(
+      selectCaptureBlocker(rootWith(captureStateMocks.promptTaskMissingValue)),
+    ).toBe('missingValue')
+  })
+
+  it('names the title first on a fresh prompt', () => {
+    expect(
+      selectCaptureBlocker(rootWith(captureStateMocks.promptOpenOnTask)),
+    ).toBe('missingTitle')
+  })
+
+  it('is null once submittable, or with no prompt open', () => {
+    expect(
+      selectCaptureBlocker(rootWith(captureStateMocks.promptReadyToSubmit)),
+    ).toBeNull()
+    expect(selectCaptureBlocker(loaded)).toBeNull()
   })
 })

@@ -2,9 +2,11 @@ import {
   type CSSProperties,
   type KeyboardEvent,
   useCallback,
+  useEffect,
   useId,
   useRef,
 } from 'react'
+import { ShortcutHint } from '../../system/primitives/button'
 import { type SfSymbolName, iconForSymbol } from '../../system/icons/icons'
 import { cn } from '../../system/utils/cn'
 import { RotatingGlow, type RotatingGlowProps } from '../glow/RotatingGlow'
@@ -44,6 +46,11 @@ export interface FABMenuEntry {
   readonly glyph: SfSymbolName
   readonly onSelect: () => void
   readonly disabled?: boolean
+  /**
+   * A single key that performs this entry while the menu is open (`a`).
+   * Shown as a trailing hint and exposed through `aria-keyshortcuts`.
+   */
+  readonly shortcut?: string
 }
 
 export interface LiquidGlassFABMenuProps {
@@ -66,6 +73,60 @@ export interface LiquidGlassFABMenuProps {
   readonly isGlowActive?: boolean
   readonly className?: string
   readonly style?: CSSProperties
+  /**
+   * Plain Return anywhere on the page toggles the menu, whenever nothing else
+   * owns Return (see `ownsReturn`), and the open menu's entries answer their
+   * `shortcut` letters. A web addition; canon has no keyboard here, so it is
+   * OFF unless a caller opts in — the Do page does, behind the
+   * `keyboardAccelerators` flag.
+   */
+  readonly returnKeyToggles?: boolean
+  /** Whether entries draw their key hints — off on touch-primary layouts. */
+  readonly showShortcutHints?: boolean
+}
+
+/**
+ * Whether something on the page should keep Return (or a letter) for itself:
+ * a focused field or control, an IME composition, or an open dialog, popover
+ * or menu elsewhere. The FAB's global keys only act when this is false.
+ */
+export const fabKeysAreOwnedElsewhere = (
+  root: Element,
+  active: Element | null,
+): boolean => {
+  if (
+    active !== null &&
+    !root.contains(active) &&
+    active.matches(
+      'input, textarea, select, button, a[href], [contenteditable=""], [contenteditable="true"], [role="button"], [role="textbox"], [role="combobox"], [role="menuitem"], [role="option"], [role="slider"], [role="spinbutton"]',
+    )
+  ) {
+    return true
+  }
+  // An open overlay owns the keyboard — unless the menu itself lives in it.
+  const overlays = document.querySelectorAll(
+    '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper]',
+  )
+  for (const overlay of Array.from(overlays)) {
+    if (!overlay.contains(root) && isOverlayShowing(overlay)) return true
+  }
+  return root.closest('[inert]') !== null
+}
+
+/**
+ * Whether an overlay-shaped node is actually on screen. A matching node can
+ * outlive its presentation — a dialog playing its exit (`data-state="closed"`),
+ * one kept mounted but hidden or inert, or a popper wrapper left laid out at
+ * zero size — and none of those may take the keyboard from the FAB.
+ */
+export const isOverlayShowing = (overlay: Element): boolean => {
+  if (overlay.closest('[data-state="closed"]') !== null) return false
+  if (overlay.closest('[hidden], [inert], [aria-hidden="true"]') !== null) {
+    return false
+  }
+  const style = window.getComputedStyle(overlay)
+  if (style.display === 'none' || style.visibility === 'hidden') return false
+  return true
 }
 
 /** Canon: `VStack(alignment: .trailing, spacing: 12)`. */
@@ -87,6 +148,8 @@ export function LiquidGlassFABMenu({
   isGlowActive = true,
   className,
   style,
+  returnKeyToggles = false,
+  showShortcutHints = true,
 }: LiquidGlassFABMenuProps) {
   const [expanded, setExpanded] = useDisclosure(isExpanded, onExpandedChange)
   const menuId = useId()
@@ -124,6 +187,50 @@ export function LiquidGlassFABMenu({
     [expanded, setExpanded, returnFocusToTrigger],
   )
 
+  /**
+   * The page-level keys, capture phase on `window` so a plain Return reaches
+   * the menu even with focus on the page body. Everything a focused control,
+   * a text field, an IME or an open overlay should own is left alone.
+   */
+  useEffect(() => {
+    if (!returnKeyToggles) return
+    const onWindowKeyDown = (event: globalThis.KeyboardEvent) => {
+      const root = rootRef.current
+      if (root === null || event.defaultPrevented || event.isComposing) return
+      if (event.altKey || event.ctrlKey || event.metaKey) return
+      const active = document.activeElement
+      const focusInMenu = active !== null && root.contains(active)
+      if (fabKeysAreOwnedElsewhere(root, active)) return
+
+      if (expanded && !event.shiftKey) {
+        if (event.key === 'Escape' && !focusInMenu) {
+          event.preventDefault()
+          setExpanded(false)
+          return
+        }
+        const entry = items.find(
+          (candidate) =>
+            candidate.shortcut !== undefined &&
+            !candidate.disabled &&
+            candidate.shortcut.toLowerCase() === event.key.toLowerCase(),
+        )
+        if (entry !== undefined) {
+          event.preventDefault()
+          event.stopPropagation()
+          choose(entry)
+          return
+        }
+      }
+
+      // A focused disc or row handles Return natively (its own click).
+      if (event.key !== 'Enter' || event.shiftKey || focusInMenu) return
+      event.preventDefault()
+      setExpanded(!expanded)
+    }
+    window.addEventListener('keydown', onWindowKeyDown, true)
+    return () => window.removeEventListener('keydown', onWindowKeyDown, true)
+  }, [returnKeyToggles, expanded, items, setExpanded, choose])
+
   const mainButton = (
     <LiquidGlassFAB
       glyph={expanded ? 'xmark' : mainGlyph}
@@ -131,6 +238,7 @@ export function LiquidGlassFABMenu({
       onClick={() => setExpanded(!expanded)}
       aria-expanded={expanded}
       aria-controls={menuId}
+      aria-keyshortcuts={returnKeyToggles ? 'Enter' : undefined}
     />
   )
 
@@ -195,6 +303,8 @@ export function LiquidGlassFABMenu({
             // Bottom-most row first: it is the one nearest the button, so it
             // is the one that should appear to push the others upward.
             delayMs={(items.length - 1 - index) * ROW_STAGGER_MS}
+            showShortcutHint={showShortcutHints && returnKeyToggles}
+            keysActive={returnKeyToggles}
             onSelect={choose}
           />
         ))}
@@ -207,11 +317,16 @@ function MenuRow({
   entry,
   expanded,
   delayMs,
+  showShortcutHint,
+  keysActive,
   onSelect,
 }: {
   entry: FABMenuEntry
   expanded: boolean
   delayMs: number
+  showShortcutHint: boolean
+  /** Whether the page-level keys are live — a letter is named only then. */
+  keysActive: boolean
   onSelect: (entry: FABMenuEntry) => void
 }) {
   const Glyph = iconForSymbol(entry.glyph)
@@ -227,6 +342,7 @@ function MenuRow({
       type="button"
       disabled={entry.disabled}
       onClick={() => onSelect(entry)}
+      aria-keyshortcuts={keysActive ? entry.shortcut?.toUpperCase() : undefined}
       data-kro-fab-menu-item=""
       className={cn(
         'kro-glass kro-glass--control kro-glass--interactive',
@@ -252,6 +368,11 @@ function MenuRow({
     >
       <Glyph className="size-4" strokeWidth={2.25} aria-hidden="true" />
       {entry.label}
+      {showShortcutHint && entry.shortcut !== undefined ? (
+        <ShortcutHint className="ms-1">
+          {entry.shortcut.toUpperCase()}
+        </ShortcutHint>
+      ) : null}
     </button>
   )
 }

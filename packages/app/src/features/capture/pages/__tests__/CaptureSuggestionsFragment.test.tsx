@@ -78,7 +78,7 @@ describe('the suggestions pane', () => {
           captureSuggestionMocks.reminder,
         ]}
         selectedIds={[]}
-        inboxCount={0}
+        addCount={0}
         revealChord={false}
         now={CAPTURE_MOCK_NOW}
         onPick={onPick}

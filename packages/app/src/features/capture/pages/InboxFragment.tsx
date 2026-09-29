@@ -116,6 +116,11 @@ export interface InboxFragmentProps {
   readonly alsoJustCreated?: readonly EndeavorCardModel[]
   /** Canon's `pendingTriageSelector`, newest first. */
   readonly pendingTriage: readonly EndeavorCardModel[]
+  /**
+   * Rows whose Triage would refuse to open (a multi-added habit in Just
+   * Created): their Triage button is not offered at all.
+   */
+  readonly untriageableIds?: readonly string[]
   readonly totalCount: number
   readonly isEmpty: boolean
   /** The Inbox vista's declared row operations — swipe on touch, hover on pointer. */
@@ -258,11 +263,14 @@ export function InboxFragment(props: InboxFragmentProps) {
 /* Body                                                                      */
 /* ------------------------------------------------------------------------ */
 
+const NO_IDS: readonly string[] = []
+
 function InboxBody({
   presentation,
   justCreated,
   alsoJustCreated = NO_CARDS,
   pendingTriage,
+  untriageableIds = NO_IDS,
   totalCount,
   isEmpty,
   capabilities,
@@ -281,6 +289,7 @@ function InboxBody({
 }: InboxFragmentProps) {
   const rowProps = {
     presentation,
+    untriageableIds,
     capabilities,
     rowLayout,
     addForToday,
@@ -405,6 +414,7 @@ type SectionProps = {
 } & Pick<
   InboxFragmentProps,
   | 'presentation'
+  | 'untriageableIds'
   | 'capabilities'
   | 'rowLayout'
   | 'addForToday'
@@ -470,6 +480,7 @@ function InboxSection({ title, glyph, cards, ...row }: SectionProps) {
 function InboxRow({
   card,
   presentation,
+  untriageableIds = NO_IDS,
   capabilities,
   rowLayout,
   addForToday,
@@ -495,6 +506,7 @@ function InboxRow({
   const stacksActions = presentation === 'pane'
   const compact = stacksActions || rowLayout === 'compactDesktop'
   const isScheduling = addForToday?.endeavorId === card.id
+  const canTriage = !untriageableIds.includes(card.id)
 
   const actions = (
     <div
@@ -502,7 +514,7 @@ function InboxRow({
       data-stacked={stacksActions ? 'true' : 'false'}
       className={cn(
         'relative z-2 flex shrink-0',
-        compact ? 'items-center gap-1.5' : 'w-[130px] flex-col gap-1.5',
+        compact ? 'items-center gap-2' : 'w-[130px] flex-col gap-2',
         stacksActions && 'justify-start',
       )}
       style={{
@@ -520,21 +532,23 @@ function InboxRow({
       // against KC-IS-#14's lane with this PR.
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        aria-label={`Triage ${card.title}`}
-        onClick={() => onTapTriage(card.id)}
-        className={cn(
-          'inline-flex items-center justify-center gap-1 rounded-kro-pill px-2.5',
-          'font-semibold text-white text-xs',
-          'outline-none focus-visible:shadow-[var(--kro-ring)]',
-          compact ? 'h-7' : 'w-full py-1.5',
-        )}
-        style={{ backgroundColor: colorVar('badgeBlue') }}
-      >
-        <TriageGlyph size={11} aria-hidden />
-        Triage
-      </button>
+      {canTriage ? (
+        <button
+          type="button"
+          aria-label={`Triage ${card.title}`}
+          onClick={() => onTapTriage(card.id)}
+          className={cn(
+            'inline-flex items-center justify-center gap-1 rounded-kro-pill px-2.5',
+            'font-semibold text-white text-xs',
+            'outline-none focus-visible:shadow-[var(--kro-ring)]',
+            compact ? 'h-7' : 'w-full py-1.5',
+          )}
+          style={{ backgroundColor: colorVar('badgeBlue') }}
+        >
+          <TriageGlyph size={11} aria-hidden />
+          Triage
+        </button>
+      ) : null}
 
       <button
         type="button"

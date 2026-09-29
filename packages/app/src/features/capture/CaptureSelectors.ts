@@ -13,11 +13,12 @@ import {
   type EndeavorOperationBinding,
   EndeavorsVistas,
   bindingsForGesture,
+  makeReconciliationContext,
 } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
 import type { CaptureException } from './CaptureException'
-import type { CaptureState } from './CaptureFeature'
+import type { CapturePromptPanel, CaptureState } from './CaptureFeature'
 import {
   CAPTURE_SUGGESTIONS,
   type CaptureSuggestion,
@@ -32,9 +33,12 @@ import {
   isCaptureValueRequired,
   alsoJustCreatedEndeavors,
   justCreatedEndeavor,
+  isCaptureRowTriageable,
   pendingTriageEndeavors,
   resolvedCaptureDestination,
   type CaptureDestination,
+  type CaptureKindCapabilities,
+  captureKindCapabilities,
 } from './CaptureRules'
 
 const selectCaptureSlice = (state: RootState): CaptureState => state.capture
@@ -180,13 +184,24 @@ export const selectAlsoJustCreatedEndeavors = createSelector(
 )
 
 /** `pendingTriageSelector` — every unscheduled non-event endeavor, newest first. */
+/**
+ * The reconciliation context the pool was reconciled with on load
+ * (`withContextLoaded`: `makeReconciliationContext({ now })`), re-derived at
+ * the slice's own clock anchor — never the wall clock.
+ */
+const selectCaptureReconciliationContext = createSelector(
+  [(state: RootState) => state.capture.clockAnchor],
+  (now) => makeReconciliationContext({ now }),
+)
+
 export const selectPendingTriageEndeavors = createSelector(
-  [selectCaptureSlice],
-  (slice) =>
+  [selectCaptureSlice, selectCaptureReconciliationContext],
+  (slice, context) =>
     pendingTriageEndeavors(
       slice.endeavors,
       slice.inbox.justCreatedEndeavorId,
       slice.inbox.alsoJustCreatedIds,
+      context,
     ),
 )
 
@@ -331,11 +346,11 @@ export const selectSelectedSuggestionIds = createSelector(
 )
 
 /**
- * What **Add N to Inbox** would write: the ticked, Inbox-able suggestions,
+ * What **Add N** would write: every ticked suggestion, events included,
  * each paired with the host its kind supports — the draft's host when it
  * can, else the kind's first choice.
  */
-export const selectSuggestionsForInbox = createSelector(
+export const selectSuggestionsToAdd = createSelector(
   [selectCaptureSlice, selectSelectedSuggestionIds],
   (
     slice,
@@ -389,4 +404,79 @@ export const selectCanShowCaptureSuggestions = createSelector(
 export const selectIsCaptureSuggestionsShown = createSelector(
   [selectCaptureSlice],
   (slice) => slice.isSuggestionsShown,
+)
+
+/** The open prompt's draft kind, or `null` with no prompt open. */
+const selectCapturePromptKind = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.prompt?.draft.kind ?? null,
+)
+
+/**
+ * What the draft's kind can carry (`UZF-11`): rewards, a value, a duration, a
+ * clearable time. `null` with no prompt open. Recomputed only when the kind
+ * changes, so the prompt's props stay referentially stable while typing.
+ */
+export const selectCaptureKindCapabilities = createSelector(
+  [selectCapturePromptKind],
+  (kind): CaptureKindCapabilities | null =>
+    kind === null ? null : captureKindCapabilities(kind),
+)
+
+/** The open inline panel, or `null` — the panel half of the one editor. */
+export const selectCaptureOpenPanel = createSelector(
+  [selectCaptureSlice],
+  (slice): CapturePromptPanel | null =>
+    slice.prompt?.editor?.kind === 'panel' ? slice.prompt.editor.panel : null,
+)
+
+/** Whether the start-time picker is the open editor. */
+export const selectIsEditingCaptureStartTime = createSelector(
+  [selectCaptureSlice],
+  (slice) =>
+    slice.prompt?.editor?.kind === 'time' &&
+    slice.prompt.editor.field === 'start',
+)
+
+/** Whether the end-time picker is the open editor. */
+export const selectIsEditingCaptureEndTime = createSelector(
+  [selectCaptureSlice],
+  (slice) =>
+    slice.prompt?.editor?.kind === 'time' &&
+    slice.prompt.editor.field === 'end',
+)
+
+/** Whether a multi-add is being written — Add stays spent until it settles. */
+export const selectIsAddingCaptureSuggestions = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.prompt?.isAddingSuggestions ?? false,
+)
+
+const NO_UNTRIAGEABLE: readonly string[] = []
+
+/**
+ * The Inbox rows whose Triage would refuse to open — a multi-added habit in
+ * Just Created, or a row whose resolved kind is not triaged. The Inbox hides
+ * their Triage button rather than offer a button that fails.
+ */
+export const selectUntriageableInboxRowIds = createSelector(
+  [
+    selectJustCreatedEndeavor,
+    selectAlsoJustCreatedEndeavors,
+    selectCaptureReconciliationContext,
+  ],
+  (justCreated, alsoJustCreated, context): readonly string[] => {
+    const rows =
+      justCreated === null ? alsoJustCreated : [justCreated, ...alsoJustCreated]
+    const ids = rows
+      .filter((row) => !isCaptureRowTriageable(row, context))
+      .map((row) => row.id)
+    return ids.length === 0 ? NO_UNTRIAGEABLE : ids
+  },
+)
+
+/** Whether the web-only keyboard accelerators are on (`keyboardAccelerators`). */
+export const selectAreCaptureKeyboardAcceleratorsEnabled = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.isKeyboardAcceleratorsEnabled,
 )

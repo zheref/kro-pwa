@@ -148,6 +148,7 @@ const WithKeyHints = {
             mainGlyph="plus"
             mainAccessibilityLabel="Quick input"
             isExpanded
+            returnKeyToggles
           />
         </Anchored>
       )}

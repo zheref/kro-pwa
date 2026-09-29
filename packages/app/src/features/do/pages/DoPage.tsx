@@ -76,6 +76,7 @@ import {
 } from '../DoProducer'
 import { DoLane, type DoVisibility, doLensFor, laneCards } from '../DoRules'
 import {
+  selectAreDoKeyboardAcceleratorsEnabled,
   selectAreDoRingsVisible,
   selectAreDoSuggestionsVisible,
   selectDoException,
@@ -140,6 +141,9 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
   const tasksRing = useAppSelector(selectDoTasksRing)
   const habitsRing = useAppSelector(selectDoHabitsRing)
   const showsRings = useAppSelector(selectAreDoRingsVisible)
+  const keyboardAccelerators = useAppSelector(
+    selectAreDoKeyboardAcceleratorsEnabled,
+  )
   const suggestions = useAppSelector(selectDoSuggestions)
   const showsSuggestions = useAppSelector(selectAreDoSuggestionsVisible)
 
@@ -469,6 +473,7 @@ export function DoPage({ now, locale, initialLaneWidth }: DoPageProps) {
         }
         shape={shape}
         layout={layout}
+        keyboardAccelerators={keyboardAccelerators}
         header={header}
         rings={rings}
         showsRings={showsRings}

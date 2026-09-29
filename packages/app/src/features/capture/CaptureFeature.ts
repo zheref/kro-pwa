@@ -34,9 +34,8 @@ import type { Endeavor } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import type { CaptureException } from './CaptureException'
 import { CaptureExceptions } from './CaptureException'
-import { captureSuggestionById } from './CaptureSuggestions'
 import {
-  addSuggestionsToInboxThunk,
+  addSuggestionsThunk,
   setSuggestionsShownThunk,
   applyInboxOperationThunk,
   loadCaptureContextThunk,
@@ -76,10 +75,13 @@ import {
   withRouteDelivered,
   withSchedulingApplied,
   withSchedulingUndone,
-  withSuggestionApplied,
+  withPanelSet,
+  withSuggestionBatchSettled,
+  withSuggestionPicked,
+  withSuggestionsAddFailed,
+  withSuggestionsAddStarted,
   withSuggestionsShown,
   withSuggestionSelectionToggled,
-  withSuggestionsAddedToInbox,
   withTimeEditBegun,
   withTimeEditEnded,
   withTimePicked,
@@ -117,14 +119,41 @@ export interface CapturePickerSnapshot {
   readonly wasSet: boolean
 }
 
+/** The prompt's inline editors, as the view names them. */
+export type CapturePromptPanel =
+  | 'value'
+  | 'duration'
+  | 'date'
+  | 'rewards'
+  | 'repeat'
+  | 'destination'
+
+/**
+ * The one editor open on the prompt, if any (`UZF-9`).
+ *
+ * An inline panel and a time picker are mutually exclusive — opening one
+ * closes the other — so they are ONE value, never a view-held panel beside two
+ * slice-held snapshots that could all be set at once. A time editor carries
+ * its snapshot, which is what **Discard** restores; a panel carries nothing.
+ */
+export type CapturePromptEditor =
+  | { readonly kind: 'panel'; readonly panel: CapturePromptPanel }
+  | {
+      readonly kind: 'time'
+      readonly field: CaptureTimeField
+      readonly snapshot: CapturePickerSnapshot
+    }
+
 export interface CapturePromptState {
   readonly draft: CaptureDraft
-  readonly startEdit: CapturePickerSnapshot | null
-  readonly endEdit: CapturePickerSnapshot | null
+  /** The one open editor; `null` when every editor is closed. */
+  readonly editor: CapturePromptEditor | null
   /** Suggestions ticked for a multi-add to the Inbox, in tick order. */
   readonly selectedSuggestionIds: readonly string[]
   /** The last multi-add's tally, for the status line; cleared by any edit. */
   readonly suggestionNotice: CaptureSuggestionNotice | null
+  /** A multi-add is being written — Add is spent until it settles. */
+  readonly isAddingSuggestions: boolean
 }
 
 /** How a multi-add to the Inbox went. */
@@ -190,7 +219,13 @@ export interface CaptureTriageRequest {
   readonly host: CaptureInboxHost
 }
 
-/** See `CaptureTriageRequest.host`. */
+/**
+ * Which Inbox surface hosts a Triage — the ONE host vocabulary. Triage's own
+ * presentation reads the same two words (`overlay` for the sheet/popover and
+ * the Jot Down page, `pane` for the desktop detail pane), so a request and the
+ * surface that answers it can never be named two ways. See
+ * `CaptureTriageRequest.host`.
+ */
 export type CaptureInboxHost = 'overlay' | 'pane'
 
 export interface CaptureState {
@@ -223,6 +258,12 @@ export interface CaptureState {
   readonly isSuggestionsEnabled: boolean
   /** The user's remembered choice to show the suggestions pane. Default off. */
   readonly isSuggestionsShown: boolean
+  /**
+   * Web-only `keyboardAccelerators` flag's answer — the prompt's ⌥ chords,
+   * keycaps, key hints and Return-walk. Off, the prompt keeps only what it
+   * had before: Return on the title adds a capture that is ready.
+   */
+  readonly isKeyboardAcceleratorsEnabled: boolean
 }
 
 export const initialCaptureState: CaptureState = {
@@ -239,6 +280,7 @@ export const initialCaptureState: CaptureState = {
   clockAnchor: null,
   isSuggestionsEnabled: false,
   isSuggestionsShown: false,
+  isKeyboardAcceleratorsEnabled: false,
 }
 
 export const captureSlice = createSlice({
@@ -367,12 +409,18 @@ export const captureSlice = createSlice({
       state,
       action: PayloadAction<{ suggestionId: string; now: Date }>,
     ) {
-      const suggestion = captureSuggestionById(action.payload.suggestionId)
-      if (suggestion === null) return
-      Object.assign(
-        state,
-        withSuggestionApplied(state, { suggestion, now: action.payload.now }),
-      )
+      Object.assign(state, withSuggestionPicked(state, action.payload))
+    },
+
+    /**
+     * User intent: an inline editor opened, or closed with `null`. One
+     * exclusive editor — opening a panel closes an open time picker.
+     */
+    userDidSetPanel(
+      state,
+      action: PayloadAction<{ panel: CapturePromptPanel | null }>,
+    ) {
+      Object.assign(state, withPanelSet(state, action.payload.panel))
     },
 
     /** User intent: a suggestion ticked into or out of the multi-add. */
@@ -578,34 +626,23 @@ export const captureSlice = createSlice({
           )
         }
       })
-      .addCase(addSuggestionsToInboxThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        if (!result.ok) {
-          Object.assign(state, withException(state, result.error))
-          return
-        }
-        const added = result.value.items.flatMap((item) =>
-          item.result.ok
-            ? [{ suggestionId: item.suggestionId, endeavor: item.result.value }]
-            : [],
-        )
-        const failedSuggestionIds = result.value.items.flatMap((item) =>
-          item.result.ok ? [] : [item.suggestionId],
-        )
-        Object.assign(
-          state,
-          withSuggestionsAddedToInbox(state, {
-            added,
-            failedSuggestionIds,
-            now: result.value.now,
-          }),
-        )
+      .addCase(addSuggestionsThunk.pending, (state) => {
+        Object.assign(state, withSuggestionsAddStarted(state))
       })
-      .addCase(addSuggestionsToInboxThunk.rejected, (state, action) => {
-        if (action.meta.aborted) return
+      .addCase(addSuggestionsThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (result.ok) {
+          Object.assign(state, withSuggestionBatchSettled(state, result.value))
+        } else {
+          Object.assign(state, withSuggestionsAddFailed(state, result.error))
+        }
+      })
+      .addCase(addSuggestionsThunk.rejected, (state, action) => {
+        // A spent-Add refusal (`condition`) and a cancellation are silent.
+        if (action.meta.aborted || action.meta.condition) return
         Object.assign(
           state,
-          withException(
+          withSuggestionsAddFailed(
             state,
             CaptureExceptions.unknown(action.error.message ?? 'Unknown error'),
           ),
@@ -718,6 +755,7 @@ export const {
   userDidPickRecurrence,
   userDidPickRewards,
   userDidPickSuggestion,
+  userDidSetPanel,
   userDidPickTime,
   userDidPickValue,
   userDidRequestAddForToday,

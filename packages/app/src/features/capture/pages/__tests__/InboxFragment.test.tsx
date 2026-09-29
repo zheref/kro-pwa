@@ -394,3 +394,49 @@ describe('the pane presentation’s row layout and overlay', () => {
     expect(screen.getByText('triage layer')).toBeTruthy()
   })
 })
+
+describe('Triage is offered only where it would open (N1)', () => {
+  const habitJustCreated = endeavorCardModelFrom(
+    captureEndeavorFixtures.unscheduledHabit,
+    CAPTURE_MOCK_NOW,
+  )
+
+  it('hides Triage on a multi-added habit in Just Created, keeping Add for Today', () => {
+    renderInbox({
+      justCreated,
+      alsoJustCreated: [habitJustCreated],
+      pendingTriage: [],
+      untriageableIds: [habitJustCreated.id],
+    })
+
+    expect(
+      screen.queryByRole('button', {
+        name: `Triage ${habitJustCreated.title}`,
+      }),
+    ).toBeNull()
+    expect(
+      screen.getByRole('button', {
+        name: `Add ${habitJustCreated.title} for today`,
+      }),
+    ).toBeTruthy()
+  })
+
+  it('still offers Triage on the task beside it', () => {
+    renderInbox({
+      justCreated,
+      alsoJustCreated: [habitJustCreated],
+      pendingTriage: [],
+      untriageableIds: [habitJustCreated.id],
+    })
+
+    expect(
+      screen.getByRole('button', { name: `Triage ${justCreated.title}` }),
+    ).toBeTruthy()
+  })
+
+  it('offers Triage on every row when nothing is untriageable', () => {
+    renderInbox({ pendingTriage: [] })
+
+    expect(screen.getAllByRole('button', { name: /^Triage / }).length).toBe(1)
+  })
+})

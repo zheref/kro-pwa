@@ -12,14 +12,22 @@
  * land one tick after a dismiss and the slice must not invent a prompt to hold
  * it.
  */
-import { type Endeavor, makeReconciliationContext, reconcile } from '@kro/core'
+import {
+  type Endeavor,
+  type Result,
+  makeReconciliationContext,
+  reconcile,
+} from '@kro/core'
 import type { CaptureException } from './CaptureException'
 import {
   type CaptureSuggestion,
   applyCaptureSuggestion,
+  captureSuggestionById,
 } from './CaptureSuggestions'
 import type {
   CaptureAddForTodayState,
+  CapturePickerSnapshot,
+  CapturePromptPanel,
   CapturePromptState,
   CaptureInboxHost,
   CaptureState,
@@ -69,8 +77,14 @@ const withDraft = (
   }
 }
 
-const snapshotFieldOf = (field: CaptureTimeField) =>
-  field === 'start' ? ('startEdit' as const) : ('endEdit' as const)
+/** The open time editor's snapshot for `field`, or `null` when it is not open. */
+const timeSnapshotOf = (
+  prompt: CapturePromptState,
+  field: CaptureTimeField,
+): CapturePickerSnapshot | null =>
+  prompt.editor?.kind === 'time' && prompt.editor.field === field
+    ? prompt.editor.snapshot
+    : null
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -120,6 +134,8 @@ export function withContextLoaded(
     readonly isSuggestionsEnabled?: boolean
     /** The remembered pane choice; absent reads as hidden. */
     readonly isSuggestionsShown?: boolean
+    /** The web-only `keyboardAccelerators` flag; absent reads as off. */
+    readonly isKeyboardAcceleratorsEnabled?: boolean
   },
 ): CaptureState {
   return {
@@ -134,6 +150,8 @@ export function withContextLoaded(
     clockAnchor: loaded.now,
     isSuggestionsEnabled: loaded.isSuggestionsEnabled ?? false,
     isSuggestionsShown: loaded.isSuggestionsShown ?? false,
+    isKeyboardAcceleratorsEnabled:
+      loaded.isKeyboardAcceleratorsEnabled ?? false,
   }
 }
 
@@ -171,10 +189,10 @@ export function withPromptOpened(
       initialStart: params.initialStart,
       destination: preferred,
     }),
-    startEdit: null,
-    endEdit: null,
+    editor: null,
     selectedSuggestionIds: [],
     suggestionNotice: null,
+    isAddingSuggestions: false,
   }
   return { ...state, prompt, clockAnchor: params.now }
 }
@@ -222,8 +240,7 @@ export function withKindSelected(
           state.availableDestinations,
         ),
       },
-      startEdit: null,
-      endEdit: null,
+      editor: null,
     },
   }
 }
@@ -267,9 +284,10 @@ export function withTimeEditBegun(
 ): CaptureState {
   const prompt = state.prompt
   if (prompt === null) return state
-  const key = snapshotFieldOf(field)
-  if (prompt[key] !== null) return state
+  if (timeSnapshotOf(prompt, field) !== null) return state
 
+  // Opening this picker closes whatever else was open — another picker keeps
+  // what it was turned to (its "done"), a panel simply shuts.
   const draft = prompt.draft
   const snapshot =
     field === 'start'
@@ -280,7 +298,14 @@ export function withTimeEditBegun(
       ? { ...draft, hasTime: true }
       : { ...draft, hasEndTime: true }
 
-  return { ...state, prompt: { ...prompt, draft: edited, [key]: snapshot } }
+  return {
+    ...state,
+    prompt: {
+      ...prompt,
+      draft: edited,
+      editor: { kind: 'time', field, snapshot },
+    },
+  }
 }
 
 /** One concern: the wheel moved. The field stays set while it is being turned. */
@@ -315,8 +340,9 @@ export function withTimeEditEnded(
 ): CaptureState {
   const prompt = state.prompt
   if (prompt === null) return state
-  const key = snapshotFieldOf(field)
-  const snapshot = prompt[key]
+  const snapshot = timeSnapshotOf(prompt, field)
+  // Only this field's own editor closes; a panel open meanwhile stays open.
+  const editor = snapshot === null ? prompt.editor : null
 
   if (outcome === 'clear') {
     // A habit's time is required and never clearable (`requiresTime`).
@@ -327,13 +353,13 @@ export function withTimeEditEnded(
       field === 'start'
         ? { ...prompt.draft, hasTime: false }
         : { ...prompt.draft, hasEndTime: false }
-    return { ...state, prompt: { ...prompt, draft: cleared, [key]: null } }
+    return { ...state, prompt: { ...prompt, draft: cleared, editor } }
   }
 
   if (snapshot === null) return state
 
   if (outcome === 'done') {
-    return { ...state, prompt: { ...prompt, [key]: null } }
+    return { ...state, prompt: { ...prompt, editor: null } }
   }
 
   const restored: CaptureDraft =
@@ -344,7 +370,30 @@ export function withTimeEditEnded(
           endTime: snapshot.time,
           hasEndTime: snapshot.wasSet,
         }
-  return { ...state, prompt: { ...prompt, draft: restored, [key]: null } }
+  return { ...state, prompt: { ...prompt, draft: restored, editor: null } }
+}
+
+/**
+ * One concern: an inline panel opened, or closed with `null`.
+ *
+ * Opening a panel closes an open time picker the way its **Done** would —
+ * the value it was turned to stays — because the two are one exclusive
+ * editor. Closing a panel leaves a time picker alone.
+ */
+export function withPanelSet(
+  state: CaptureState,
+  panel: CapturePromptPanel | null,
+): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null) return state
+  if (panel === null) {
+    if (prompt.editor?.kind !== 'panel') return state
+    return { ...state, prompt: { ...prompt, editor: null } }
+  }
+  if (prompt.editor?.kind === 'panel' && prompt.editor.panel === panel) {
+    return state
+  }
+  return { ...state, prompt: { ...prompt, editor: { kind: 'panel', panel } } }
 }
 
 /**
@@ -750,12 +799,24 @@ export function withSuggestionApplied(
           state.availableDestinations,
         ),
       },
-      startEdit: null,
-      endEdit: null,
+      editor: null,
       suggestionNotice: null,
     },
     clockAnchor: params.now,
   }
+}
+
+/**
+ * One concern: a suggestion card was picked by id — the catalogue lookup
+ * `withSuggestionApplied` needs. An id the catalogue does not know is a no-op.
+ */
+export function withSuggestionPicked(
+  state: CaptureState,
+  params: { readonly suggestionId: string; readonly now: Date },
+): CaptureState {
+  const suggestion = captureSuggestionById(params.suggestionId)
+  if (suggestion === null) return state
+  return withSuggestionApplied(state, { suggestion, now: params.now })
 }
 
 /** One concern: a suggestion ticked into (or out of) the multi-add selection. */
@@ -776,12 +837,68 @@ export function withSuggestionSelectionToggled(
 }
 
 /**
- * One concern: a multi-add to the Inbox settled, item by item.
+ * One concern: a multi-add started writing, so Add is spent until it settles
+ * (`RC-24` — the in-flight write is state, not a view ref).
+ */
+export function withSuggestionsAddStarted(state: CaptureState): CaptureState {
+  const prompt = state.prompt
+  if (prompt === null || prompt.isAddingSuggestions) return state
+  return { ...state, prompt: { ...prompt, isAddingSuggestions: true } }
+}
+
+/**
+ * One concern: a multi-add could not run at all — the exception is reported
+ * and Add is live again for a retry.
+ */
+export function withSuggestionsAddFailed(
+  state: CaptureState,
+  exception: CaptureException,
+): CaptureState {
+  const failed = withException(state, exception)
+  const prompt = failed.prompt
+  if (prompt === null || !prompt.isAddingSuggestions) return failed
+  return { ...failed, prompt: { ...prompt, isAddingSuggestions: false } }
+}
+
+/**
+ * One concern: a multi-add's per-item outcomes, split into what landed and
+ * what failed, then settled through `withSuggestionsAddedToInbox`.
+ */
+export function withSuggestionBatchSettled(
+  state: CaptureState,
+  params: {
+    readonly items: readonly {
+      readonly suggestionId: string
+      readonly result: Result<Endeavor, CaptureException>
+    }[]
+    readonly now: Date
+  },
+): CaptureState {
+  const added = params.items.flatMap((item) =>
+    item.result.ok
+      ? [{ suggestionId: item.suggestionId, endeavor: item.result.value }]
+      : [],
+  )
+  const failedSuggestionIds = params.items.flatMap((item) =>
+    item.result.ok ? [] : [item.suggestionId],
+  )
+  const settled = withSuggestionsAddedToInbox(state, {
+    added,
+    failedSuggestionIds,
+    now: params.now,
+  })
+  const prompt = settled.prompt
+  if (prompt === null || !prompt.isAddingSuggestions) return settled
+  return { ...settled, prompt: { ...prompt, isAddingSuggestions: false } }
+}
+
+/**
+ * One concern: a multi-add settled, item by item.
  *
- * Every stored endeavor joins the pool; those suggestions leave the
- * selection, while the ones that failed stay ticked so a retry is one key
- * away. The tally goes to the status line. The prompt stays open — the
- * user's own capture is untouched. An empty batch changes nothing.
+ * Every stored endeavor joins the pool. When everything landed the prompt
+ * closes and the user is taken to what they added. When any item failed the
+ * prompt stays up instead: those suggestions stay ticked so a retry is one key
+ * away, and the tally goes to the status line. An empty batch changes nothing.
  */
 export function withSuggestionsAddedToInbox(
   state: CaptureState,

@@ -28,6 +28,10 @@ desktop.
   flag.
 - Opening a card's Detail follows the disabled-by-default `endeavorDetail`
   rollout flag, which is that feature's own.
+- The quick-action menu's keyboard (see *Web notes*) follows the web-only
+  `keyboardAccelerators` flag: **off** in the status-quo set, **on** in the
+  web's shipping build. Off, the menu answers only the pointer and focus, as
+  the Apple app's does.
 
 ## Entry points
 
@@ -231,7 +235,8 @@ stateDiagram-v2
   Canon writes the count and a plural noun with no singular form ("1 items");
   the web fixes that on every lane badge.
 
-- **Keyboard for the quick-action menu (web-only; canon has none).** With
+- **Keyboard for the quick-action menu (web-only; canon has none; behind
+  `keyboardAccelerators`).** With
   nothing else holding the keyboard — no field, button or link focused, no
   sheet, dialog, popover or menu open, no input method composing — a plain
   Return opens the quick-action menu and a second Return closes it; Escape
@@ -240,5 +245,5 @@ stateDiagram-v2
   Expired, **A** Quick Add, **S** Start Session. Letters rather than numbers
   because they read as the action and stay put when an action is added,
   removed or disabled. Touch layouts show no key hints; the keys still work
-  with a keyboard attached. The same Return toggle applies to any screen's
-  quick-action menu.
+  with a keyboard attached. Only the Do page's menu opts into these keys; other
+  screens' quick-action menus answer the pointer and focus alone.

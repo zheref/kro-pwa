@@ -90,6 +90,8 @@ describe('loadDoPreferencesThunk', () => {
         // Both ship enabled in the statusQuo baseline.
         activityRingsEnabled: true,
         googleCalendarEnabled: true,
+        // Web-only and greenfield: off in the status quo.
+        keyboardAcceleratorsEnabled: false,
       },
     })
   })

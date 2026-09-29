@@ -30,12 +30,10 @@ import {
   captureBlockedReason,
   captureBlocker,
   captureResolvedSymbol,
+  captureKindCapabilities,
   isCaptureValueRequired,
 } from '../../CaptureRules'
-import {
-  CapturePromptFragment,
-  type CapturePromptFragmentProps,
-} from '../CapturePromptFragment'
+import type { CapturePromptFragmentProps } from '../CapturePromptFragment'
 import { CAPTURE_PROMPT_POPOVER_WIDTH } from '../capturePresentation'
 import {
   PANEL_EASE_IN,
@@ -43,7 +41,7 @@ import {
   durationChipLabel,
   finiteOrNull,
 } from '../CapturePromptFragment'
-import { installCaptureEnvironment } from './captureHarness'
+import { PanelledPrompt, installCaptureEnvironment } from './captureHarness'
 
 let teardownRadix: () => void
 let teardownCapture: () => void
@@ -96,13 +94,26 @@ const promptProps = (
   onSelectDestination: noop,
   onDiscard: noop,
   onSubmit: noop,
+  openPanel: null,
+  onSetPanel: noop,
+  capabilities: captureKindCapabilities(draft.kind),
+  keyboardAccelerators: true,
   ...overrides,
 })
 
 const renderPrompt = (
   draft: CaptureDraft,
   overrides: Partial<CapturePromptFragmentProps> = {},
-) => render(<CapturePromptFragment {...promptProps(draft, overrides)} />)
+) => render(<PanelledPrompt {...harnessProps(draft, overrides)} />)
+
+/** `promptProps` minus the panel pin, unless a test pins one on purpose. */
+const harnessProps = (
+  draft: CaptureDraft,
+  overrides: Partial<CapturePromptFragmentProps> = {},
+) => {
+  const { openPanel, onSetPanel, ...rest } = promptProps(draft, overrides)
+  return 'openPanel' in overrides ? { ...rest, openPanel, onSetPanel } : rest
+}
 
 describe('the disabled Add names what blocks it (acceptance criterion 1)', () => {
   it('asks for a title on a fresh Task prompt', () => {
@@ -1011,7 +1022,7 @@ describe('the suggestions pane (mirrors the Popover/Sheet suggestion stories)', 
         captureSuggestionMocks.task.id,
         captureSuggestionMocks.reminder.id,
       ],
-      suggestionInboxCount: 2,
+      suggestionAddCount: 2,
       onAddSuggestions,
     })
     expect(screen.getByTestId('capture-suggestions-add').textContent).toContain(
@@ -1113,8 +1124,8 @@ describe('the suggestions toggle and the float-in motion', () => {
       suggestions: CAPTURE_SUGGESTIONS,
     })
     rerender(
-      <CapturePromptFragment
-        {...promptProps(captureDraftFixtures.emptyTask, {
+      <PanelledPrompt
+        {...harnessProps(captureDraftFixtures.emptyTask, {
           presentation: 'popover',
           suggestions: CAPTURE_SUGGESTIONS,
           isOpen: false,
@@ -1138,8 +1149,8 @@ describe('the suggestions toggle and the float-in motion', () => {
     expect(pane()?.className).not.toContain('kro-trailing-panel')
     fireEvent.click(screen.getByTestId('capture-suggestions-toggle'))
     rerender(
-      <CapturePromptFragment
-        {...promptProps(captureDraftFixtures.emptyTask, {
+      <PanelledPrompt
+        {...harnessProps(captureDraftFixtures.emptyTask, {
           presentation: 'popover',
           suggestions: [],
           canToggleSuggestions: true,
@@ -1152,8 +1163,8 @@ describe('the suggestions toggle and the float-in motion', () => {
     expect(pane()?.hasAttribute('inert')).toBe(true)
 
     rerender(
-      <CapturePromptFragment
-        {...promptProps(captureDraftFixtures.emptyTask, {
+      <PanelledPrompt
+        {...harnessProps(captureDraftFixtures.emptyTask, {
           presentation: 'popover',
           suggestions: CAPTURE_SUGGESTIONS,
           canToggleSuggestions: true,

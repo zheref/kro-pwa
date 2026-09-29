@@ -21,11 +21,17 @@ flows* below.
 
 ## Feature flag
 
-- Name: none (Inbox is always available for non-event captures)
-- Default state: on
-- Rollout / sunset notes: Inbox is a permanent surface. Specific buttons it
-  shows ([Triage](./Triage.md), Add for Today) have their own per-feature
-  gates.
+- The Inbox itself has no flag: it is a permanent surface, always available
+  for non-event captures. Specific buttons it shows ([Triage](./Triage.md),
+  Add for Today) have their own per-feature gates.
+- `captureSuggestions` (web-only) — the suggestions pane above the desktop
+  capture prompt, with single pick and multi-add. **Off** in the status-quo
+  set; the web's shipping build turns it **on**. It stays the kill switch.
+- `keyboardAccelerators` (web-only) — the capture prompt's Option chords,
+  held-Option keycaps, key hints in the status line and the Return walk to the
+  next requirement (see *Keyboard*). **Off** in the status-quo set; **on** in
+  the web's shipping build. Off, the prompt keeps only what it always had:
+  Return in the title adds a capture that is ready, and Escape discards.
 
 ## Entry points
 
@@ -51,6 +57,13 @@ flows* below.
   never been triaged: brand-new captures (under 24 hours old) and
   long-neglected ones (weeks or months old) both appear here. An endeavor is
   "unscheduled" when it has neither a scheduled time (start) nor a due date.
+  Only things that still owe a triage decision are listed — tasks and
+  reminders; a habit never queues — judged by what the endeavor *is* once its
+  calendar or reminders source has classified it, the same judgement Triage
+  itself makes, so a listed row never refuses to open in Triage.
+- **Triage on a row** — offered only where Triage would open. A Just Created
+  row that cannot be triaged (a habit added from the suggestions) shows Add for
+  Today but no Triage button.
 - **Triage** — the act of deciding *where* an endeavor belongs (urgency /
   importance). See [Triage](./Triage.md).
 - **Add for Today** — the act of scheduling an endeavor to a specific time on
@@ -238,9 +251,10 @@ prompt and the standard margin below the top of the window.
   ⌥-click or Space (Shift+Space also works), then choose **Add N** (Shift+Return). With
   nothing ticked the action reads a neutral "Select to add" and is disabled.
   Each kind lands where a capture of it would: a task or reminder unscheduled
-  in Pending Triage; a habit with its every-day rule and a time, also in
-  Pending Triage; an event — which cannot be undated — at its suggested time
-  and length, in the Plan. Rewards come with the kinds that earn them; value is
+  in Pending Triage; a habit with its every-day rule and a time — shown as Just
+  Created after the multi-add, but never in Pending Triage, because a habit
+  never owes a triage decision (its row offers no Triage); an event — which
+  cannot be undated — at its suggested time and length, in the Plan. Rewards come with the kinds that earn them; value is
   decided at triage. Each item succeeds or fails on its own. When everything
   lands, the prompt closes and the user is taken where a single capture would
   take them: the Inbox — every added row in its Just Created slot, ready to
@@ -267,7 +281,8 @@ flowchart TD
     addN --> each[Each written on its own]
     each --> where{Kind?}
     where -->|event| plan[At its suggested time — the Plan]
-    where -->|task / reminder / habit| inbox[Unscheduled — Pending Triage]
+    where -->|task / reminder| inbox[Unscheduled — Pending Triage]
+    where -->|habit| habit[Every day at a time — Just Created only, no Triage]
     each --> ok{All saved?}
     ok -->|yes, some to the Inbox| toInbox[Prompt closes; Inbox opens with them Just Created]
     ok -->|yes, all events| toPlan[Prompt closes; Plan, like a single event]
@@ -369,8 +384,8 @@ because this is a browser.
 - **An Event's end is not auto-filled from its start.** Canon resolves a
   missing end to start + the default event length; the web prompt keeps
   asking for both times explicitly.
-- **Keyboard (web-only; canon defines no shortcuts here).** A capture can
-  be completed without a pointer:
+- **Keyboard (web-only; canon defines no shortcuts here; behind
+  `keyboardAccelerators`).** A capture can be completed without a pointer:
   - **Return** is never taken by a focused control (a property, a star, a
     preset). When nothing blocks the capture it adds it, from anywhere in the
     prompt. When something does, it moves to the next unmet requirement, in
@@ -413,7 +428,7 @@ because this is a browser.
   dismissed; showing or hiding the pane animates it the same way. With
   Reduce Motion on, both appear and disappear at once.
 - **One corner radius for the prompt and its pane.** Both use the design
-  system's surface radius, and the prompt's dark status band follows it at
+  system's panel radius (12 px), and the prompt's dark status band follows it at
   its bottom corners, so nothing squares off the rounded panel.
 - **One status line.** The line under Add is the only place the prompt says
   what blocks it — including a required value, which names the host that

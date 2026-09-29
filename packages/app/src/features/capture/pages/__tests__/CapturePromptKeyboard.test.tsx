@@ -22,6 +22,7 @@ import {
 import { stubbedThunkExtra } from '../../../../library/store'
 import {
   onCaptureRouteDelivered,
+  userDidPickValue,
   userDidRequestCapture,
 } from '../../CaptureFeature'
 import { CAPTURE_INBOX_DELAY_MS } from '../../CaptureRules'
@@ -58,13 +59,25 @@ afterEach(() => {
   teardownCapture()
 })
 
-const start = async () => {
-  const store = makeCaptureStore({ endeavors: [], surface: desktopSurface })
+/** The web's shipping flags for this suite: the accelerators it exercises. */
+const acceleratorFlags = () =>
+  makeHardcodedFeatureFlagService({
+    base: stubbedThunkExtra.featureFlags,
+    overrides: [enabledAssignment(FeatureFlags.keyboardAccelerators)],
+  })
+
+const start = async (keyboardAccelerators = true) => {
+  const store = makeCaptureStore({
+    endeavors: [],
+    surface: desktopSurface,
+    extra: keyboardAccelerators ? { featureFlags: acceleratorFlags() } : {},
+  })
   render(
     <CaptureStoreStage store={store}>
       <CapturePromptPage />
     </CaptureStoreStage>,
   )
+  await store.dispatch(loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }))
   store.dispatch(
     userDidRequestCapture({ kind: CaptureKind.task, now: CAPTURE_MOCK_NOW }),
   )
@@ -277,7 +290,10 @@ describe('the suggestions pane, from the keyboard through the real focus path', 
         localStore,
         featureFlags: makeHardcodedFeatureFlagService({
           base: stubbedThunkExtra.featureFlags,
-          overrides: [enabledAssignment(FeatureFlags.captureSuggestions)],
+          overrides: [
+            enabledAssignment(FeatureFlags.captureSuggestions),
+            enabledAssignment(FeatureFlags.keyboardAccelerators),
+          ],
         }),
       },
     })
@@ -382,7 +398,10 @@ describe('the suggestions pane, from the keyboard through the real focus path', 
         localStore,
         featureFlags: makeHardcodedFeatureFlagService({
           base: stubbedThunkExtra.featureFlags,
-          overrides: [enabledAssignment(FeatureFlags.captureSuggestions)],
+          overrides: [
+            enabledAssignment(FeatureFlags.captureSuggestions),
+            enabledAssignment(FeatureFlags.keyboardAccelerators),
+          ],
         }),
       },
     })
@@ -433,5 +452,37 @@ describe('the suggestions pane, from the keyboard through the real focus path', 
     await start()
     expect(screen.queryByTestId('capture-suggestions-toggle')).toBeNull()
     expect(screen.queryByTestId('capture-suggestions')).toBeNull()
+  })
+})
+
+describe('with keyboardAccelerators off — the status quo', () => {
+  it('Return on the title still adds a ready capture', async () => {
+    const { store } = await start(false)
+    await userEvent.keyboard('Book the flights')
+    // A Task on this device needs a value; set it the pointer's way.
+    store.dispatch(userDidPickValue({ value: 3 }))
+
+    await userEvent.keyboard('{Enter}')
+
+    const endeavor = await stored(store)
+    expect(endeavor.title).toContain('Book the flights')
+  })
+
+  it('an ⌥ chord does nothing, and no chord is named to assistive tech', async () => {
+    const { store } = await start(false)
+
+    await userEvent.keyboard('{Alt>}d{/Alt}')
+
+    expect(store.getState().capture.prompt?.editor).toBeNull()
+    expect(document.querySelector('[aria-keyshortcuts*="Alt"]')).toBeNull()
+  })
+
+  it('Return on a blocked draft adds nothing and walks nowhere', async () => {
+    const { store } = await start(false)
+
+    await userEvent.keyboard('{Enter}')
+
+    expect(store.getState().capture.endeavors).toEqual([])
+    expect(store.getState().capture.prompt?.editor).toBeNull()
   })
 })

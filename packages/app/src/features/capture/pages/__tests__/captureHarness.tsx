@@ -16,7 +16,7 @@
  */
 
 import type { EndeavorRecord } from '@kro/core'
-import { type ReactNode, useEffect } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import {
   type ThunkExtra,
@@ -35,6 +35,12 @@ import {
 } from '../../../main/SidebarDestination'
 import type { DoSurface } from '../../../main/DoSurfaceLayout'
 import { CAPTURE_MOCK_NOW, captureFixtureRecords } from '../../CaptureMocks'
+
+import type { CapturePromptPanel } from '../../CaptureFeature'
+import {
+  CapturePromptFragment,
+  type CapturePromptFragmentProps,
+} from '../CapturePromptFragment'
 
 export { desktopSurface, handheldSurface }
 export { CAPTURE_MOCK_NOW }
@@ -186,4 +192,29 @@ export function CaptureStoreStage({
   readonly children: ReactNode
 }) {
   return <StoreProvider store={store}>{children}</StoreProvider>
+}
+
+/**
+ * The prompt Fragment with its one piece of slice state — the open inline
+ * panel — held locally, so an isolated render (a story, a render test) can open
+ * and close panels the way the Page's store would. Supplying `openPanel` in the
+ * props pins it instead. The Fragment itself holds no panel state (`UZF-9`).
+ */
+export function PanelledPrompt(
+  props: Omit<CapturePromptFragmentProps, 'openPanel' | 'onSetPanel'> &
+    Partial<Pick<CapturePromptFragmentProps, 'openPanel' | 'onSetPanel'>>,
+) {
+  const [panel, setPanel] = useState<CapturePromptPanel | null>(
+    props.openPanel ?? null,
+  )
+  return (
+    <CapturePromptFragment
+      {...props}
+      openPanel={props.openPanel === undefined ? panel : props.openPanel}
+      onSetPanel={(next) => {
+        setPanel(next)
+        props.onSetPanel?.(next)
+      }}
+    />
+  )
 }

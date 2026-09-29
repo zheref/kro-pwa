@@ -23,7 +23,7 @@ export const NothingSelected = {
         <CaptureSuggestionsFragment
           suggestions={CAPTURE_SUGGESTIONS}
           selectedIds={[]}
-          inboxCount={0}
+          addCount={0}
           revealChord={false}
           now={CAPTURE_MOCK_NOW}
           onPick={noop}
@@ -46,7 +46,7 @@ export const TwoSelected = {
             captureSuggestionMocks.task.id,
             captureSuggestionMocks.reminder.id,
           ]}
-          inboxCount={2}
+          addCount={2}
           revealChord={false}
           now={CAPTURE_MOCK_NOW}
           onPick={noop}
@@ -71,7 +71,7 @@ export const OptionHeldWithEvents = {
             captureSuggestionMocks.habit,
           ]}
           selectedIds={[]}
-          inboxCount={0}
+          addCount={0}
           revealChord
           now={CAPTURE_MOCK_NOW}
           onPick={noop}

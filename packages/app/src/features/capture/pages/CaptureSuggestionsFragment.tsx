@@ -43,8 +43,10 @@ import { suggestionGridNeighbour } from './capturePromptKeyboard'
 export interface CaptureSuggestionsFragmentProps {
   readonly suggestions: readonly CaptureSuggestion[]
   readonly selectedIds: readonly string[]
-  /** How many ticked rows **Add to Inbox** would write (events excluded). */
-  readonly inboxCount: number
+  /** How many ticked rows **Add N** would write, events included. */
+  readonly addCount: number
+  /** A multi-add is being written — Add is spent until it settles. */
+  readonly isAdding?: boolean
   /** The ⌥S keycap, revealed while Option is held. */
   readonly revealChord: boolean
   /** `now` for the rows' formatting — never a clock read. */
@@ -82,7 +84,8 @@ export const suggestionsAddLabel = (count: number): string =>
 export function CaptureSuggestionsFragment({
   suggestions,
   selectedIds,
-  inboxCount,
+  addCount,
+  isAdding = false,
   revealChord,
   now,
   onPick,
@@ -126,7 +129,7 @@ export function CaptureSuggestionsFragment({
     }
   }
 
-  const hasSelection = inboxCount > 0
+  const hasSelection = addCount > 0
   /** Whether a card holds focus — the arrow keys only mean something then. */
   const [isBrowsing, setBrowsing] = useState(false)
 
@@ -173,11 +176,11 @@ export function CaptureSuggestionsFragment({
           variant={hasSelection ? 'primary' : 'secondary'}
           size="sm"
           data-testid="capture-suggestions-add"
-          disabled={!hasSelection}
+          disabled={!hasSelection || isAdding}
           aria-keyshortcuts={hasSelection ? 'Shift+Enter' : undefined}
           onClick={onAddSelected}
         >
-          {suggestionsAddLabel(inboxCount)}
+          {suggestionsAddLabel(addCount)}
           {hasSelection ? (
             <ShortcutHint className="ms-1">⇧⏎</ShortcutHint>
           ) : null}

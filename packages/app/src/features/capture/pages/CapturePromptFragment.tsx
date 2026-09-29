@@ -45,11 +45,9 @@
 import { assertNever, defaultTriageDurationOptionsMinutes } from '@kro/core'
 import { Hourglass } from 'lucide-react'
 import {
-  type Dispatch,
   type MutableRefObject,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
-  type SetStateAction,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -91,10 +89,7 @@ import {
   captureDestinationLabel,
   captureDurationLabel,
   captureKindDefaultRewards,
-  captureKindEarnsRewards,
-  captureKindRequiresTime,
-  captureKindSupportsDuration,
-  captureKindSupportsValue,
+  type CaptureKindCapabilities,
   captureValueLabel,
   captureKindGlyph,
   captureKindLabel,
@@ -228,8 +223,10 @@ export interface CapturePromptFragmentProps {
    */
   readonly suggestions?: readonly CaptureSuggestion[]
   readonly selectedSuggestionIds?: readonly string[]
-  /** How many ticked suggestions **Add to Inbox** would write. */
-  readonly suggestionInboxCount?: number
+  /** How many ticked suggestions **Add N** would write, events included. */
+  readonly suggestionAddCount?: number
+  /** A multi-add is being written — its Add is spent until it settles. */
+  readonly isAddingSuggestions?: boolean
   readonly onPickSuggestion?: (suggestionId: string) => void
   readonly onToggleSuggestion?: (suggestionId: string) => void
   readonly onAddSuggestions?: () => void
@@ -242,6 +239,20 @@ export interface CapturePromptFragmentProps {
   readonly onSelectDestination: (destination: CaptureDestination) => void
   readonly onDiscard: () => void
   readonly onSubmit: () => void
+  /**
+   * The open inline panel — the panel half of the slice's one exclusive
+   * editor (`UZF-9`). The time half arrives as `isEditing…Time`.
+   */
+  readonly openPanel: CapturePromptPanel | null
+  /** Open a panel, or close it with `null`. */
+  readonly onSetPanel: (panel: CapturePromptPanel | null) => void
+  /** What the draft's kind can carry — a Selector's answer (`UZF-11`). */
+  readonly capabilities: CaptureKindCapabilities
+  /**
+   * The web-only `keyboardAccelerators` flag: ⌥ chords, keycaps, key hints
+   * and the Return-walk. Off, only Return-on-the-title adds.
+   */
+  readonly keyboardAccelerators: boolean
 }
 
 export function CapturePromptFragment(props: CapturePromptFragmentProps) {
@@ -253,11 +264,10 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
     isEditingEndTime,
     onDiscard,
     onEndTimeEdit,
+    openPanel: panel,
+    onSetPanel,
   } = props
   const isSheet = presentation === 'sheet'
-  // Which inline panel is open lives here, above the dialog, because Escape
-  // is the dialog's key: it has to know whether a panel would absorb it.
-  const [panel, setPanel] = useState<PromptPanel>(null)
 
   /**
    * Escape peels one layer at a time, innermost first (HIG layering; canon
@@ -291,7 +301,7 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
     }
     if (panel !== null) {
       event.preventDefault()
-      setPanel(null)
+      onSetPanel(null)
       return
     }
     if (isEditingStartTime || isEditingEndTime) {
@@ -336,12 +346,7 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           onKeyDownCapture={onDialogKeyDownCapture}
         >
           {heading}
-          <PromptForm
-            {...props}
-            panel={panel}
-            onPanelChange={setPanel}
-            keyHandlerRef={promptKeyHandler}
-          />
+          <PromptForm {...props} keyHandlerRef={promptKeyHandler} />
         </SheetContent>
       ) : (
         <DialogContent
@@ -381,12 +386,7 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           }}
         >
           {heading}
-          <PromptForm
-            {...props}
-            panel={panel}
-            onPanelChange={setPanel}
-            keyHandlerRef={promptKeyHandler}
-          />
+          <PromptForm {...props} keyHandlerRef={promptKeyHandler} />
         </DialogContent>
       )}
     </Dialog>
@@ -424,7 +424,7 @@ function PromptForm({
   onPickEmoji,
   suggestions = NO_SUGGESTIONS,
   selectedSuggestionIds = NO_SUGGESTION_IDS,
-  suggestionInboxCount = 0,
+  suggestionAddCount = 0,
   onPickSuggestion,
   onToggleSuggestion,
   onAddSuggestions,
@@ -435,12 +435,13 @@ function PromptForm({
   onSelectDestination,
   onDiscard,
   onSubmit,
-  panel,
-  onPanelChange: setPanel,
+  openPanel: panel,
+  onSetPanel: setPanel,
+  capabilities,
+  isAddingSuggestions = false,
+  keyboardAccelerators,
   keyHandlerRef,
 }: CapturePromptFragmentProps & {
-  readonly panel: PromptPanel
-  readonly onPanelChange: Dispatch<SetStateAction<PromptPanel>>
   /** Where this form hands the dialog its key handler. */
   readonly keyHandlerRef: MutableRefObject<
     ((event: ReactKeyboardEvent<HTMLDivElement>) => void) | null
@@ -460,10 +461,8 @@ function PromptForm({
 
   const isEvent = draft.kind === CaptureKind.event
   const isHabit = draft.kind === CaptureKind.habit
-  const earnsRewards = captureKindEarnsRewards(draft.kind)
-  const supportsValue = captureKindSupportsValue(draft.kind)
-  const supportsDuration = captureKindSupportsDuration(draft.kind)
-  const isTimeClearable = !captureKindRequiresTime(draft.kind)
+  const { earnsRewards, supportsValue, supportsDuration, isTimeClearable } =
+    capabilities
   // A draft from before these fields existed (a long-lived tab across a hot
   // reload) can carry `undefined` here. Read them through a finite-number
   // guard so a chip falls back to canon's placeholder rather than "undefined"
@@ -473,6 +472,14 @@ function PromptForm({
   const draftRewards =
     finiteOrNull(draft.rewards) ?? captureKindDefaultRewards(draft.kind)
   const isCompact = presentation === 'popover'
+  /**
+   * The web-only `keyboardAccelerators` flag, for what is SEEN: keycaps, chord
+   * tooltips and key hints show only on the desktop popover with it on. Off,
+   * the prompt behaves as it did before — Return on the title adds a ready
+   * capture, and Escape (the dialog's own) discards.
+   */
+  const hints = isCompact && keyboardAccelerators
+  const chordAria = (aria: string) => (keyboardAccelerators ? aria : undefined)
   // The suggestions pane is a desktop affordance: the phone sheet's height
   // is its content, so a pane above it has nowhere to go.
   const showsSuggestions = isCompact && suggestions.length > 0
@@ -573,7 +580,7 @@ function PromptForm({
   }
 
   const togglePanel = (next: Exclude<PromptPanel, null>) => {
-    setPanel((current) => (current === next ? null : next))
+    setPanel(panel === next ? null : next)
     closeOpenTimeEditors()
   }
 
@@ -594,6 +601,24 @@ function PromptForm({
     // React bubbles portal events through the React tree, so the emoji
     // picker's keys arrive here too. Its Return picks an emoji; leave it be.
     if (target === null || !event.currentTarget.contains(target)) return
+    if (!keyboardAccelerators) {
+      // Flag off: only the status quo — plain Return on the title adds a
+      // capture that is ready. No chords, no Return-walk, no grid keys.
+      if (
+        event.key === 'Enter' &&
+        target === titleRef.current &&
+        !event.nativeEvent.isComposing &&
+        !event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        canSubmit
+      ) {
+        event.preventDefault()
+        onSubmit()
+      }
+      return
+    }
     // Return on a focused suggestion card picks it into the prompt and hands
     // focus to the title; the NEXT Return is the prompt's own (Add or walk).
     const card = target.closest<HTMLElement>('[data-kro-row-pick]')
@@ -704,7 +729,7 @@ function PromptForm({
         return
       }
       case 'addSelectedSuggestions':
-        if (suggestionInboxCount > 0) onAddSuggestions?.()
+        if (suggestionAddCount > 0) onAddSuggestions?.()
         return
       default:
         assertNever(intent)
@@ -770,7 +795,7 @@ function PromptForm({
    */
   const [isKeyboardDriven, setKeyboardDriven] = useState(false)
   useEffect(() => {
-    if (!isCompact) return
+    if (!hints) return
     const onKeyDown = (event: KeyboardEvent) => {
       setOptionHeld(event.altKey)
       setKeyboardDriven(true)
@@ -791,9 +816,9 @@ function PromptForm({
       window.removeEventListener('blur', release)
       window.removeEventListener('pointerdown', onPointerDown)
     }
-  }, [isCompact])
+  }, [hints])
 
-  const hintFor = (glyph: string) => (isCompact ? glyph : undefined)
+  const hintFor = (glyph: string) => (hints ? glyph : undefined)
 
   /** A digit in an open list editor: the nth option, then back to the title. */
   const pickNth = (index: number) => {
@@ -835,7 +860,7 @@ function PromptForm({
   )
   const statusLine = composeCaptureStatusLine({
     reason: blockedReason,
-    isKeyboardDriven: isCompact && isKeyboardDriven,
+    isKeyboardDriven: hints && isKeyboardDriven,
     editorKeys: keyHint,
     canSubmit,
   })
@@ -888,7 +913,8 @@ function PromptForm({
           <CaptureSuggestionsFragment
             suggestions={lastSuggestions.current}
             selectedIds={selectedSuggestionIds}
-            inboxCount={suggestionInboxCount}
+            addCount={suggestionAddCount}
+            isAdding={isAddingSuggestions}
             revealChord={isOptionHeld}
             now={now}
             onPick={(id) => {
@@ -916,8 +942,10 @@ function PromptForm({
             data-testid="capture-suggestions-toggle"
             aria-label="Suggestions"
             aria-pressed={isSuggestionsShown}
-            aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.suggestions.aria}
-            title={`${isSuggestionsShown ? 'Hide' : 'Show'} suggestions (${CAPTURE_PROMPT_CHORDS.suggestions.glyph})`}
+            aria-keyshortcuts={chordAria(
+              CAPTURE_PROMPT_CHORDS.suggestions.aria,
+            )}
+            title={`${isSuggestionsShown ? 'Hide' : 'Show'} suggestions${hints ? ` (${CAPTURE_PROMPT_CHORDS.suggestions.glyph})` : ''}`}
             onClick={toggleSuggestions}
             className="kro-motion-quick absolute top-1/2 left-3 inline-flex -translate-y-1/2 items-center justify-center rounded-kro-small outline-none hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)] focus-visible:shadow-[var(--kro-ring-field)]"
             style={{
@@ -931,9 +959,11 @@ function PromptForm({
                 : undefined,
             }}
           >
-            <ShortcutHint placement="keycap" reveal={isOptionHeld}>
-              {CAPTURE_PROMPT_CHORDS.suggestions.glyph}
-            </ShortcutHint>
+            {hints ? (
+              <ShortcutHint placement="keycap" reveal={isOptionHeld}>
+                {CAPTURE_PROMPT_CHORDS.suggestions.glyph}
+              </ShortcutHint>
+            ) : null}
             <SparklesGlyph size={14} aria-hidden />
           </button>
         ) : null}
@@ -945,8 +975,10 @@ function PromptForm({
             return {
               value: kind,
               label: captureKindLabel(kind),
-              keyShortcuts: `Alt+${position}`,
-              shortcutHint: isCompact ? `⌥${position}` : undefined,
+              keyShortcuts: keyboardAccelerators
+                ? `Alt+${position}`
+                : undefined,
+              shortcutHint: hints ? `⌥${position}` : undefined,
               // Canon's KindChip: the glyph carries the kind's tint at rest,
               // the label stays neutral, and the selected segment takes the
               // tint as its fill.
@@ -1005,9 +1037,9 @@ function PromptForm({
             type="button"
             data-testid="capture-symbol"
             aria-label={`Symbol: ${resolvedSymbol}`}
-            aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.emoji.aria}
+            aria-keyshortcuts={chordAria(CAPTURE_PROMPT_CHORDS.emoji.aria)}
             title={
-              isCompact
+              hints
                 ? `Symbol (${CAPTURE_PROMPT_CHORDS.emoji.glyph})`
                 : undefined
             }
@@ -1018,7 +1050,7 @@ function PromptForm({
             style={{ width: 34, height: 34, fontSize: 20, lineHeight: 1 }}
           >
             {resolvedSymbol}
-            {isCompact ? (
+            {hints ? (
               <ShortcutHint placement="keycap" reveal={isOptionHeld}>
                 {CAPTURE_PROMPT_CHORDS.emoji.glyph}
               </ShortcutHint>
@@ -1060,11 +1092,11 @@ function PromptForm({
             isExpanded={panel === 'rewards'}
             accessibilityLabel={`Rewards: ${draftRewards} points`}
             onSelect={() => togglePanel('rewards')}
-            keyShortcuts={CAPTURE_PROMPT_CHORDS.rewards.aria}
+            keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.rewards.aria)}
             shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.rewards.glyph)}
             revealShortcutHint={isOptionHeld}
             tooltip={
-              isCompact
+              hints
                 ? `Rewards (${CAPTURE_PROMPT_CHORDS.rewards.glyph})`
                 : undefined
             }
@@ -1120,11 +1152,11 @@ function PromptForm({
                     : 'Value, not set'
               }
               onSelect={() => togglePanel('value')}
-              keyShortcuts={CAPTURE_PROMPT_CHORDS.value.aria}
+              keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.value.aria)}
               shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.value.glyph)}
               revealShortcutHint={isOptionHeld}
               tooltip={
-                isCompact
+                hints
                   ? `Value (${CAPTURE_PROMPT_CHORDS.value.glyph})`
                   : undefined
               }
@@ -1148,11 +1180,11 @@ function PromptForm({
                   : `Duration: ${durationChipLabel(draftDuration)}`
               }
               onSelect={() => togglePanel('duration')}
-              keyShortcuts={CAPTURE_PROMPT_CHORDS.duration.aria}
+              keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.duration.aria)}
               shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.duration.glyph)}
               revealShortcutHint={isOptionHeld}
               tooltip={
-                isCompact
+                hints
                   ? `Duration (${CAPTURE_PROMPT_CHORDS.duration.glyph})`
                   : undefined
               }
@@ -1180,13 +1212,11 @@ function PromptForm({
                   : 'Date: No date'
               }
               onSelect={() => togglePanel('date')}
-              keyShortcuts={CAPTURE_PROMPT_CHORDS.date.aria}
+              keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.date.aria)}
               shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.date.glyph)}
               revealShortcutHint={isOptionHeld}
               tooltip={
-                isCompact
-                  ? `Date (${CAPTURE_PROMPT_CHORDS.date.glyph})`
-                  : undefined
+                hints ? `Date (${CAPTURE_PROMPT_CHORDS.date.glyph})` : undefined
               }
               // Never offered for an Event — `Endeavor.event(...)` has no way
               // to represent one without a start, and `withDateCleared`
@@ -1210,13 +1240,11 @@ function PromptForm({
             isExpanded={isEditingStartTime}
             accessibilityLabel={isEvent ? 'Start time' : 'Time'}
             onSelect={() => toggleTimeEdit('start')}
-            keyShortcuts={CAPTURE_PROMPT_CHORDS.time.aria}
+            keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.time.aria)}
             shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.time.glyph)}
             revealShortcutHint={isOptionHeld}
             tooltip={
-              isCompact
-                ? `Time (${CAPTURE_PROMPT_CHORDS.time.glyph})`
-                : undefined
+              hints ? `Time (${CAPTURE_PROMPT_CHORDS.time.glyph})` : undefined
             }
             // An event's start is cleared from its panel; a habit's time is
             // required and never clearable (`requiresTime`).
@@ -1241,11 +1269,11 @@ function PromptForm({
               isExpanded={isEditingEndTime}
               accessibilityLabel="End time"
               onSelect={() => toggleTimeEdit('end')}
-              keyShortcuts={CAPTURE_PROMPT_CHORDS.end.aria}
+              keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.end.aria)}
               shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.end.glyph)}
               revealShortcutHint={isOptionHeld}
               tooltip={
-                isCompact
+                hints
                   ? `End time (${CAPTURE_PROMPT_CHORDS.end.glyph})`
                   : undefined
               }
@@ -1270,11 +1298,11 @@ function PromptForm({
                 : `Repeat: ${captureRepeatChipLabel(draft.recurrence)}`
             }
             onSelect={() => togglePanel('repeat')}
-            keyShortcuts={CAPTURE_PROMPT_CHORDS.repeat.aria}
+            keyShortcuts={chordAria(CAPTURE_PROMPT_CHORDS.repeat.aria)}
             shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.repeat.glyph)}
             revealShortcutHint={isOptionHeld}
             tooltip={
-              isCompact
+              hints
                 ? `Repeat (${CAPTURE_PROMPT_CHORDS.repeat.glyph})`
                 : undefined
             }
@@ -1412,6 +1440,7 @@ function PromptForm({
             available={availableDestinations}
             isExpanded={panel === 'destination'}
             isCompact={isCompact}
+            hasChords={keyboardAccelerators}
             shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.host.glyph)}
             revealShortcutHint={isOptionHeld}
             onToggle={() => togglePanel('destination')}
@@ -1427,7 +1456,7 @@ function PromptForm({
               size={isCompact ? 'sm' : 'pill'}
               className="min-w-24 px-3"
               shortcut="escape"
-              showShortcut={isCompact}
+              showShortcut={hints}
               aria-label={`Discard new ${captureKindLabel(draft.kind).toLowerCase()}`}
               onClick={onDiscard}
             >
@@ -1439,7 +1468,7 @@ function PromptForm({
               className="min-w-24 px-3"
               data-testid="capture-add"
               shortcut="return"
-              showShortcut={isCompact}
+              showShortcut={hints}
               disabled={!canSubmit}
               // A disabled control leaves the action surface of the a11y tree,
               // so the reason is attached to it explicitly. This is the epic's
@@ -1892,6 +1921,7 @@ function DestinationPicker({
   available,
   isExpanded,
   isCompact,
+  hasChords,
   shortcutHint,
   revealShortcutHint,
   onToggle,
@@ -1901,6 +1931,8 @@ function DestinationPicker({
   readonly available: readonly CaptureDestination[]
   readonly isExpanded: boolean
   readonly isCompact: boolean
+  /** The `keyboardAccelerators` flag — whether ⌥H is named at all. */
+  readonly hasChords: boolean
   readonly shortcutHint?: string
   readonly revealShortcutHint: boolean
   readonly onToggle: () => void
@@ -1914,9 +1946,13 @@ function DestinationPicker({
         type="button"
         aria-label={`Hosting destination: ${captureDestinationLabel(selected)}`}
         aria-expanded={isExpanded}
-        aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.host.aria}
+        aria-keyshortcuts={
+          hasChords ? CAPTURE_PROMPT_CHORDS.host.aria : undefined
+        }
         title={
-          isCompact ? `Host (${CAPTURE_PROMPT_CHORDS.host.glyph})` : undefined
+          isCompact && hasChords
+            ? `Host (${CAPTURE_PROMPT_CHORDS.host.glyph})`
+            : undefined
         }
         onClick={onToggle}
         className={cn(

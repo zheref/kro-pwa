@@ -112,6 +112,11 @@ export interface DoPreferences {
   readonly activityRingsEnabled: boolean
   /** The `googleCalendar` flag — whether the connect nudge is offerable at all. */
   readonly googleCalendarEnabled: boolean
+  /**
+   * The web-only `keyboardAccelerators` flag — whether the quick-action button
+   * answers Return and its entries' letters. Canon has no keyboard here.
+   */
+  readonly keyboardAcceleratorsEnabled: boolean
 }
 
 /**
@@ -128,6 +133,7 @@ export const defaultDoPreferences: DoPreferences = {
   autoAdvanceAfterComplete: false,
   activityRingsEnabled: false,
   googleCalendarEnabled: false,
+  keyboardAcceleratorsEnabled: false,
 }
 
 /**

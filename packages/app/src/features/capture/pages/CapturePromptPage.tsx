@@ -15,10 +15,17 @@
  * lets the Plan timeline's press-to-create (KC-IS-#19) reuse it unchanged.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { selectLayout } from '../../main/MainSelectors'
 import type {
+  CapturePromptPanel,
   CaptureTimeEditOutcome,
   CaptureTimeField,
 } from '../CaptureFeature'
@@ -39,9 +46,10 @@ import {
   userDidToggleSuggestion,
   userDidSelectDestination,
   userDidSelectKind,
+  userDidSetPanel,
 } from '../CaptureFeature'
 import {
-  addSuggestionsToInboxThunk,
+  addSuggestionsThunk,
   setSuggestionsShownThunk,
   submitCaptureThunk,
 } from '../CaptureProducer'
@@ -58,11 +66,17 @@ import {
   selectCaptureSuggestions,
   selectIsCaptureSuggestionsShown,
   selectSelectedSuggestionIds,
-  selectSuggestionsForInbox,
+  selectSuggestionsToAdd,
   selectCaptureDestinationsForKind,
   selectCaptureDraft,
   selectCaptureResolvedSymbol,
   selectIsCaptureValueRequired,
+  selectAreCaptureKeyboardAcceleratorsEnabled,
+  selectCaptureKindCapabilities,
+  selectCaptureOpenPanel,
+  selectIsAddingCaptureSuggestions,
+  selectIsEditingCaptureEndTime,
+  selectIsEditingCaptureStartTime,
 } from '../CaptureSelectors'
 import {
   CapturePromptFragment,
@@ -84,17 +98,22 @@ export function CapturePromptPage() {
   const canToggleSuggestions = useAppSelector(selectCanShowCaptureSuggestions)
   const isSuggestionsShown = useAppSelector(selectIsCaptureSuggestionsShown)
   const selectedSuggestionIds = useAppSelector(selectSelectedSuggestionIds)
-  const suggestionsForInbox = useAppSelector(selectSuggestionsForInbox)
+  const suggestionsToAdd = useAppSelector(selectSuggestionsToAdd)
   const blocker = useAppSelector(selectCaptureBlocker)
   const availableDestinations = useAppSelector(selectCaptureDestinationsForKind)
   const resolvedSymbol = useAppSelector(selectCaptureResolvedSymbol)
   const isValueRequired = useAppSelector(selectIsCaptureValueRequired)
   const layout = useAppSelector(selectLayout)
 
-  // O(1) field reads (`RC-5`): the snapshot objects themselves, never a boolean
-  // assembled inside the callback. The null check is done here, in the Page.
-  const startEdit = useAppSelector((state) => state.capture.prompt?.startEdit)
-  const endEdit = useAppSelector((state) => state.capture.prompt?.endEdit)
+  // The one exclusive editor (`UZF-9`), read through its named Selectors.
+  const openPanel = useAppSelector(selectCaptureOpenPanel)
+  const isEditingStartTime = useAppSelector(selectIsEditingCaptureStartTime)
+  const isEditingEndTime = useAppSelector(selectIsEditingCaptureEndTime)
+  const capabilities = useAppSelector(selectCaptureKindCapabilities)
+  const isAddingSuggestions = useAppSelector(selectIsAddingCaptureSuggestions)
+  const keyboardAccelerators = useAppSelector(
+    selectAreCaptureKeyboardAcceleratorsEnabled,
+  )
 
   /**
    * The instant the date chip is read against.
@@ -145,37 +164,108 @@ export function CapturePromptPage() {
     })
   }, [dispatch, draft])
 
-  /** One multi-add at a time, for the same reason as `isSubmitting`. */
-  const isAddingSuggestions = useRef(false)
+  /**
+   * One multi-add at a time. The in-flight write is the slice's
+   * (`isAddingSuggestions`, `RC-24`), and the thunk's own `condition` refuses a
+   * second press synchronously — so this handler holds no ref of its own.
+   */
   const onAddSuggestions = useCallback(() => {
-    if (isAddingSuggestions.current || suggestionsForInbox.length === 0) return
-    isAddingSuggestions.current = true
+    if (suggestionsToAdd.length === 0) return
     void dispatch(
-      addSuggestionsToInboxThunk({
-        items: suggestionsForInbox.map((item) => ({
+      addSuggestionsThunk({
+        items: suggestionsToAdd.map((item) => ({
           ...item,
           // Identity is the composition root's to supply (`CaptureProducer`).
           id: crypto.randomUUID(),
         })),
         now: new Date(),
       }),
-    ).finally(() => {
-      isAddingSuggestions.current = false
-    })
-  }, [dispatch, suggestionsForInbox])
+    )
+  }, [dispatch, suggestionsToAdd])
+
+  const isOpen =
+    draft !== null && resolvedSymbol !== null && capabilities !== null
+  const props: CapturePromptFragmentProps | null = !isOpen
+    ? null
+    : {
+        isOpen: true,
+        draft,
+        isEditingStartTime,
+        isEditingEndTime,
+        openPanel,
+        onSetPanel: (panel: CapturePromptPanel | null) =>
+          dispatch(userDidSetPanel({ panel })),
+        capabilities,
+        keyboardAccelerators,
+        availableDestinations,
+        resolvedSymbol,
+        isValueRequired,
+        canSubmit,
+        blockedReason,
+        blocker,
+        presentation: capturePromptPresentation(layout),
+        now,
+        onEditTitle: (title: string) => dispatch(userDidEditTitle({ title })),
+        onSelectKind: (kind: CaptureKind) =>
+          dispatch(userDidSelectKind({ kind })),
+        onPickDate: (date: Date) => dispatch(userDidPickDate({ date })),
+        onClearDate: () => dispatch(userDidClearDate()),
+        onBeginTimeEdit: (field: CaptureTimeField) =>
+          dispatch(userDidBeginTimeEdit({ field })),
+        onPickTime: (field: CaptureTimeField, time: Date) =>
+          dispatch(userDidPickTime({ field, time })),
+        onEndTimeEdit: (
+          field: CaptureTimeField,
+          outcome: CaptureTimeEditOutcome,
+        ) => dispatch(userDidEndTimeEdit({ field, outcome })),
+        onPickRewards: (points: number) =>
+          dispatch(userDidPickRewards({ points })),
+        onPickValue: (value: number | null) =>
+          dispatch(userDidPickValue({ value })),
+        onPickDuration: (seconds: number | null) =>
+          dispatch(userDidPickDuration({ seconds })),
+        onPickEmoji: (emoji: string) => dispatch(userDidPickEmoji({ emoji })),
+        suggestions,
+        selectedSuggestionIds,
+        suggestionAddCount: suggestionsToAdd.length,
+        isAddingSuggestions,
+        onPickSuggestion: (suggestionId: string) =>
+          dispatch(userDidPickSuggestion({ suggestionId, now: new Date() })),
+        onToggleSuggestion: (suggestionId: string) =>
+          dispatch(userDidToggleSuggestion({ suggestionId })),
+        onAddSuggestions,
+        canToggleSuggestions,
+        isSuggestionsShown,
+        onToggleSuggestions: () =>
+          void dispatch(
+            setSuggestionsShownThunk({ shown: !isSuggestionsShown }),
+          ),
+        onPickRecurrence: (recurrence: CaptureRecurrence) =>
+          dispatch(userDidPickRecurrence({ recurrence })),
+        onSelectDestination: (destination: CaptureDestination) =>
+          dispatch(userDidSelectDestination({ destination })),
+        onDiscard: () => dispatch(userDidDiscardCapture()),
+        onSubmit,
+      }
 
   /**
    * The exit snapshot. Every close path (Discard, Escape, the overlay, Add,
    * multi-add) sets `capture.prompt` to `null` — so if this Page stopped
    * rendering, the Dialog would unmount on the same commit and Radix's Presence
    * would never get to play `kro-trailing-out`. Instead the last open props are
-   * frozen here (the way the suggestions pane freezes its last list) and
-   * rendered with `isOpen={false}`: the content stays mounted with
-   * `data-state="closed"` until its exit animation ends, then Presence removes
-   * it. The snapshot is view plumbing, not feature state (`RC-4`).
+   * kept (the way the suggestions pane keeps its last list) and rendered with
+   * `isOpen={false}`: the content stays mounted with `data-state="closed"`
+   * until its exit animation ends, then Presence removes it.
+   *
+   * Kept in a layout effect, never written during render, and kept INERT: every
+   * callback is swapped for a no-op, so a click that lands on the leaving
+   * prompt during its 270ms exit cannot submit, discard or edit a draft that is
+   * already gone. The snapshot is view plumbing, not feature state (`RC-4`).
    */
   const lastOpenProps = useRef<CapturePromptFragmentProps | null>(null)
-  const isOpen = draft !== null && resolvedSymbol !== null
+  useLayoutEffect(() => {
+    if (props !== null) lastOpenProps.current = inertPromptProps(props)
+  })
   // Presence unmounts on `animationend`, which a hidden tab never delivers. So
   // the snapshot is also dropped shortly after the 270ms exit — the same
   // fallback the suggestions pane keeps — and the Dialog unmounts with it.
@@ -188,61 +278,29 @@ export function CapturePromptPage() {
     }, EXIT_FALLBACK_MS)
     return () => clearTimeout(fallback)
   }, [isOpen])
-  if (!isOpen) {
+
+  if (props === null) {
     const frozen = lastOpenProps.current
     return frozen === null ? null : (
       <CapturePromptFragment {...frozen} isOpen={false} />
     )
   }
-
-  const props: CapturePromptFragmentProps = {
-    isOpen: true,
-    draft,
-    isEditingStartTime: startEdit != null,
-    isEditingEndTime: endEdit != null,
-    availableDestinations: availableDestinations,
-    resolvedSymbol: resolvedSymbol,
-    isValueRequired: isValueRequired,
-    canSubmit: canSubmit,
-    blockedReason: blockedReason,
-    blocker: blocker,
-    presentation: capturePromptPresentation(layout),
-    now: now,
-    onEditTitle: (title: string) => dispatch(userDidEditTitle({ title })),
-    onSelectKind: (kind: CaptureKind) => dispatch(userDidSelectKind({ kind })),
-    onPickDate: (date: Date) => dispatch(userDidPickDate({ date })),
-    onClearDate: () => dispatch(userDidClearDate()),
-    onBeginTimeEdit: (field: CaptureTimeField) =>
-      dispatch(userDidBeginTimeEdit({ field })),
-    onPickTime: (field: CaptureTimeField, time: Date) =>
-      dispatch(userDidPickTime({ field, time })),
-    onEndTimeEdit: (field: CaptureTimeField, outcome: CaptureTimeEditOutcome) =>
-      dispatch(userDidEndTimeEdit({ field, outcome })),
-    onPickRewards: (points: number) => dispatch(userDidPickRewards({ points })),
-    onPickValue: (value: number | null) =>
-      dispatch(userDidPickValue({ value })),
-    onPickDuration: (seconds: number | null) =>
-      dispatch(userDidPickDuration({ seconds })),
-    onPickEmoji: (emoji: string) => dispatch(userDidPickEmoji({ emoji })),
-    suggestions: suggestions,
-    selectedSuggestionIds: selectedSuggestionIds,
-    suggestionInboxCount: suggestionsForInbox.length,
-    onPickSuggestion: (suggestionId: string) =>
-      dispatch(userDidPickSuggestion({ suggestionId, now: new Date() })),
-    onToggleSuggestion: (suggestionId: string) =>
-      dispatch(userDidToggleSuggestion({ suggestionId })),
-    onAddSuggestions: onAddSuggestions,
-    canToggleSuggestions: canToggleSuggestions,
-    isSuggestionsShown: isSuggestionsShown,
-    onToggleSuggestions: () =>
-      void dispatch(setSuggestionsShownThunk({ shown: !isSuggestionsShown })),
-    onPickRecurrence: (recurrence: CaptureRecurrence) =>
-      dispatch(userDidPickRecurrence({ recurrence })),
-    onSelectDestination: (destination: CaptureDestination) =>
-      dispatch(userDidSelectDestination({ destination })),
-    onDiscard: () => dispatch(userDidDiscardCapture()),
-    onSubmit: onSubmit,
-  }
-  lastOpenProps.current = props
   return <CapturePromptFragment {...props} />
+}
+
+const noop = () => {}
+
+/**
+ * A leaving prompt's props: the same values, every callback a no-op. What the
+ * user sees during the exit is the last frame; nothing on it acts any more.
+ */
+export function inertPromptProps(
+  props: CapturePromptFragmentProps,
+): CapturePromptFragmentProps {
+  return Object.fromEntries(
+    Object.entries(props).map(([key, value]) => [
+      key,
+      typeof value === 'function' ? noop : value,
+    ]),
+  ) as unknown as CapturePromptFragmentProps
 }

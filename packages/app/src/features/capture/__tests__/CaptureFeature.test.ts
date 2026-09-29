@@ -259,7 +259,7 @@ describe('the time picker arms', () => {
       userDidEndTimeEdit({ field: 'start', outcome: 'done' }),
     )
     expect(done.prompt?.draft.hasTime).toBe(true)
-    expect(done.prompt?.startEdit).toBeNull()
+    expect(done.prompt?.editor).toBeNull()
   })
 })
 

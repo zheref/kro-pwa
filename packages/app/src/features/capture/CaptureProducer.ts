@@ -17,6 +17,10 @@
  * suite dispatch `undoScheduleForTodayThunk` with a snapshot the store never
  * held, to prove the reducer's own guard rather than the caller's.
  *
+ * The one narrow read is `addSuggestionsThunk`'s `condition`: it asks whether a
+ * multi-add is already being written, through a structural type rather than
+ * `RootState`, so a second press refuses itself before any write begins.
+ *
  * ## A malformed row is skipped, never fatal
  *
  * `endeavorFromRecord` fails only on an unknown `kind` or `status`, and canon's
@@ -82,6 +86,7 @@ export interface CaptureContext {
   readonly now: Date
   readonly isSuggestionsEnabled: boolean
   readonly isSuggestionsShown: boolean
+  readonly isKeyboardAcceleratorsEnabled: boolean
 }
 
 const messageOf = (error: unknown): string =>
@@ -158,6 +163,9 @@ export const loadCaptureContextThunk = createAsyncThunk<
       }),
       now,
       isSuggestionsEnabled: flags.isEnabled(FeatureFlags.captureSuggestions),
+      isKeyboardAcceleratorsEnabled: flags.isEnabled(
+        FeatureFlags.keyboardAccelerators,
+      ),
       isSuggestionsShown: suggestionsShownFromStored(
         preferences.get(SUGGESTIONS_SHOWN_KEY),
       ),
@@ -449,12 +457,14 @@ export interface CaptureSuggestionInboxOutcome {
  *
  * Each selected suggestion is written through the same Mapper and persistence
  * path a confirmed capture uses (`endeavorFromCaptureResult` →
- * `persistEndeavor`), unscheduled so it lands in Pending Triage. Items are
- * written one after another and each gets its own `Result`: one failure never
- * throws, never stops the rest, and never rolls back what already landed. An
- * event is refused per item — the Inbox holds no events.
+ * `persistEndeavor`). Where each lands is its kind's (`captureResultFromSuggestion`):
+ * an event at its seeded window, in the Plan; a task or reminder unscheduled,
+ * in Pending Triage; a habit with its time and every-day rule, which never
+ * queues for triage. Items are written one after another and each gets its own
+ * `Result`: one failure never throws, never stops the rest, and never rolls
+ * back what already landed.
  */
-export const addSuggestionsToInboxThunk = createAsyncThunk<
+export const addSuggestionsThunk = createAsyncThunk<
   Result<CaptureSuggestionInboxOutcome, CaptureException>,
   { items: readonly CaptureSuggestionInboxItem[]; now: Date },
   { extra: ThunkExtra }
@@ -490,7 +500,21 @@ export const addSuggestionsToInboxThunk = createAsyncThunk<
     }
     return ok({ items: outcomes, now })
   },
+  {
+    // One multi-add at a time (`RC-24`): the slice's in-flight flag, read
+    // synchronously, so a double press cannot mint a second batch.
+    condition: (_arg, { getState }) =>
+      !(getState() as SuggestionsAddInFlightRead).capture.prompt
+        ?.isAddingSuggestions,
+  },
 )
+
+/** The one field `addSuggestionsThunk`'s `condition` reads — never `RootState`. */
+interface SuggestionsAddInFlightRead {
+  readonly capture: {
+    readonly prompt: { readonly isAddingSuggestions: boolean } | null
+  }
+}
 
 /**
  * Show or hide the suggestions pane, and remember the choice on this device.
@@ -503,11 +527,14 @@ export const setSuggestionsShownThunk = createAsyncThunk<
   Result<boolean, CaptureException>,
   { shown: boolean },
   { extra: ThunkExtra }
->('capture/onSuggestionsVisibilityChanged', async ({ shown }, { extra }) => {
-  try {
-    extra.localStore.preferences.set(SUGGESTIONS_SHOWN_KEY, shown)
-  } catch {
-    // See above: the pane still toggles.
-  }
-  return ok(shown)
-})
+>(
+  'capture/onSuggestionsVisibilityChangeCompleted',
+  async ({ shown }, { extra }) => {
+    try {
+      extra.localStore.preferences.set(SUGGESTIONS_SHOWN_KEY, shown)
+    } catch {
+      // See above: the pane still toggles.
+    }
+    return ok(shown)
+  },
+)

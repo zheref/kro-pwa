@@ -26,9 +26,11 @@ import {
   EndeavorKind,
   EndeavorStatus,
   endeavorRecordFromEndeavor,
+  err,
   makeEndeavor,
+  ok,
 } from '@kro/core'
-import { type CaptureState, initialCaptureState } from './CaptureFeature'
+import { initialCaptureState } from './CaptureFeature'
 import { CaptureExceptions } from './CaptureException'
 import {
   ADD_FOR_TODAY_UNDO_WINDOW_MS,
@@ -40,6 +42,8 @@ import {
   schedulingSnapshotOf,
 } from './CaptureRules'
 import {
+  withSuggestionBatchSettled,
+  withSuggestionsAddStarted,
   withSuggestionSelectionToggled,
   withValuePicked,
   withAddForTodayRequested,
@@ -635,16 +639,107 @@ const promptWithSuggestions = withPromptOpened(suggestionsOn, {
   initialStart: null,
 })
 
+const promptWithTwoSelected = withSuggestionSelectionToggled(
+  withSuggestionSelectionToggled(
+    promptWithSuggestions,
+    captureSuggestionMocks.task.id,
+  ),
+  captureSuggestionMocks.reminder.id,
+)
+
+/**
+ * A multi-added habit: it lands in Just Created, but Triage never applies to a
+ * habit, so its row offers no Triage.
+ */
+const multiAddedHabit = makeEndeavor({
+  id: 'multi-added-habit',
+  title: '🧘 Meditate',
+  kind: EndeavorKind.habit,
+  createdAt: CAPTURE_MOCK_NOW,
+})
+
+/** What the two ticked suggestions become once a multi-add stores them. */
+export const multiAddedEndeavors = {
+  task: makeEndeavor({
+    id: 'multi-added-task',
+    title: '📊 Prepare presentation slides',
+    kind: EndeavorKind.task,
+    createdAt: CAPTURE_MOCK_NOW,
+  }),
+  reminder: makeEndeavor({
+    id: 'multi-added-reminder',
+    title: '💊 Take vitamins',
+    kind: EndeavorKind.reminder,
+    createdAt: CAPTURE_MOCK_NOW,
+  }),
+  habit: multiAddedHabit,
+}
+
+const multiAddInFlight = withSuggestionsAddStarted(promptWithTwoSelected)
+
 /** Prompt states with the suggestions pane on. */
 export const captureSuggestionStateMocks = {
   /** The flag on, the prompt open on Task, nothing ticked. */
   promptWithSuggestions,
-  /** Two Inbox-able suggestions ticked for a multi-add. */
-  promptWithTwoSelected: withSuggestionSelectionToggled(
-    withSuggestionSelectionToggled(
-      promptWithSuggestions,
-      captureSuggestionMocks.task.id,
+  /** Two suggestions (a task and a reminder) ticked for a multi-add. */
+  promptWithTwoSelected,
+  /** Those two being written — Add is spent. */
+  multiAddInFlight,
+  /** One stored, one failed: the prompt stays up with the tally. */
+  multiAddPartlyFailed: withSuggestionBatchSettled(multiAddInFlight, {
+    items: [
+      {
+        suggestionId: captureSuggestionMocks.task.id,
+        result: ok(multiAddedEndeavors.task),
+      },
+      {
+        suggestionId: captureSuggestionMocks.reminder.id,
+        result: err(CaptureExceptions.captureFailed('quota exceeded')),
+      },
+    ],
+    now: CAPTURE_MOCK_NOW,
+  }),
+  /** Both stored and the Inbox reached: every added row is Just Created. */
+  multiAddDelivered: withRouteDelivered(
+    withSuggestionBatchSettled(multiAddInFlight, {
+      items: [
+        {
+          suggestionId: captureSuggestionMocks.task.id,
+          result: ok(multiAddedEndeavors.task),
+        },
+        {
+          suggestionId: captureSuggestionMocks.reminder.id,
+          result: ok(multiAddedEndeavors.reminder),
+        },
+      ],
+      now: CAPTURE_MOCK_NOW,
+    }),
+    new Date(CAPTURE_MOCK_NOW.getTime() + 1000),
+  ),
+  /** A task and a habit stored and delivered — the habit offers no Triage. */
+  multiAddDeliveredWithHabit: withRouteDelivered(
+    withSuggestionBatchSettled(
+      withSuggestionSelectionToggled(
+        withSuggestionSelectionToggled(
+          withSuggestionsAddStarted(promptWithSuggestions),
+          captureSuggestionMocks.task.id,
+        ),
+        captureSuggestionMocks.habit.id,
+      ),
+      {
+        items: [
+          {
+            suggestionId: captureSuggestionMocks.task.id,
+            result: ok(multiAddedEndeavors.task),
+          },
+          {
+            suggestionId: captureSuggestionMocks.habit.id,
+            result: ok(multiAddedHabit),
+          },
+        ],
+        now: CAPTURE_MOCK_NOW,
+      },
     ),
-    captureSuggestionMocks.reminder.id,
+    new Date(CAPTURE_MOCK_NOW.getTime() + 1000),
   ),
 }

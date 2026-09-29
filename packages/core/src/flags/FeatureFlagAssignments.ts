@@ -2,7 +2,7 @@
  * `FeatureFlagAssignment.statusQuoSet` — canon
  * `KroCore/Domain/FeatureFlags.swift`, ported assignment for assignment.
  *
- * The ship baseline: 27 of the 31 declared flags carry an explicit assignment;
+ * The ship baseline: 29 of the 33 declared flags carry an explicit assignment;
  * **`matrix`, `board`, `blueprints` and `developmentActions` carry none**, so
  * `state(for:)` resolves `null` for them and `enabledResolver` reads that as
  * off. That is not an omission to tidy up — an unassigned flag is how canon
@@ -88,6 +88,10 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   // Greenfield, so the status quo keeps it off; kro-pwa turns it on in
   // `liveThunkExtra` as a product override.
   disabledAssignment(FeatureFlags.captureSuggestions),
+  // Web-only (no canon counterpart): the prompt's and the quick-action
+  // button's keyboard accelerators. Greenfield, so the status quo keeps them
+  // off; kro-pwa turns them on in `liveThunkExtra` as a product override.
+  disabledAssignment(FeatureFlags.keyboardAccelerators),
 ]
 
 /**

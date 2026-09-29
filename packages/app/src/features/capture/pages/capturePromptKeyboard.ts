@@ -18,17 +18,11 @@
  *   such an editor is open a digit is the pick, not title text.
  */
 import { assertNever } from '@kro/core'
-import type { CaptureTimeField } from '../CaptureFeature'
+import type { CapturePromptPanel, CaptureTimeField } from '../CaptureFeature'
 import { type CaptureKind, captureKinds } from '../CaptureRules'
 
-/** The inline panels, as the Fragment names them. */
-export type CapturePromptPanel =
-  | 'value'
-  | 'duration'
-  | 'date'
-  | 'rewards'
-  | 'repeat'
-  | 'destination'
+/** The inline panels — the slice's own name for them, re-exported. */
+export type { CapturePromptPanel }
 
 /** What a keystroke asks the prompt to do. */
 export type CapturePromptKeyIntent =

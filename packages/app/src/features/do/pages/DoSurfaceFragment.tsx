@@ -89,6 +89,12 @@ export interface DoSurfaceFragmentProps
   > {
   readonly shape: ShellShape
   readonly layout: DoSurfaceLayout
+  /**
+   * The web-only `keyboardAccelerators` flag: page-level Return opens the
+   * quick-action menu and its mnemonic letters perform an entry. Off, the
+   * button is pointer- and focus-driven only, as canon's is.
+   */
+  readonly keyboardAccelerators?: boolean
   readonly header: DoHeaderContent
   readonly rings: readonly ActivityRing[]
   readonly showsRings: boolean
@@ -414,6 +420,7 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
             // added, removed or disabled, and read as the action (Complete,
             // eXpired, Add, Session). Hints are pointer-layout only.
             showShortcutHints={!layout.isTouchPrimary}
+            returnKeyToggles={props.keyboardAccelerators ?? false}
             items={[
               {
                 id: 'mark-complete',

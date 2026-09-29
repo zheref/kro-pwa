@@ -38,12 +38,17 @@ function captureEntries(
   ]
 }
 
-function renderMenu(items = captureEntries()) {
+function renderMenu(
+  items = captureEntries(),
+  options: { readonly keys?: boolean; readonly hints?: boolean } = {},
+) {
   return render(
     <LiquidGlassFABMenu
       items={items}
       mainGlyph="plus"
       mainAccessibilityLabel="Quick input"
+      returnKeyToggles={options.keys ?? false}
+      showShortcutHints={options.hints ?? true}
     />,
   )
 }
@@ -309,6 +314,31 @@ describe('the glow decorates the button, never the menu', () => {
   })
 })
 
+describe('the page-level keyboard is opt-in (status quo: none)', () => {
+  it('ignores a plain Return when the caller has not opted in', async () => {
+    renderMenu()
+    await userEvent.keyboard('{Enter}')
+    expect(
+      document
+        .querySelector('[data-kro-fab-menu]')
+        ?.getAttribute('data-kro-fab-menu'),
+    ).toBe('collapsed')
+  })
+
+  it('names no key on the disc or its entries', () => {
+    renderMenu(captureEntries().map((entry) => ({ ...entry, shortcut: 'e' })))
+    expect(document.querySelector('[aria-keyshortcuts]')).toBeNull()
+  })
+
+  it('draws no letter hints even with hints allowed', () => {
+    renderMenu(
+      captureEntries().map((entry) => ({ ...entry, shortcut: 'e' })),
+      { hints: true },
+    )
+    expect(document.querySelector('[data-slot="button-shortcut"]')).toBeNull()
+  })
+})
+
 describe('the page-level keyboard (web addition)', () => {
   const lettered = () =>
     captureEntries().map((entry, index) => ({
@@ -322,7 +352,7 @@ describe('the page-level keyboard (web addition)', () => {
       ?.getAttribute('data-kro-fab-menu') === 'expanded'
 
   it('toggles open and shut on a plain Return with nothing focused', async () => {
-    renderMenu()
+    renderMenu(undefined, { keys: true })
     await userEvent.keyboard('{Enter}')
     expect(isOpen()).toBe(true)
     await userEvent.keyboard('{Enter}')
@@ -330,7 +360,7 @@ describe('the page-level keyboard (web addition)', () => {
   })
 
   it('names Enter on the disc and each entry’s key, with a trailing hint', async () => {
-    renderMenu(lettered())
+    renderMenu(lettered(), { keys: true })
     expect(
       screen
         .getByRole('button', { name: 'Quick input' })
@@ -349,7 +379,7 @@ describe('the page-level keyboard (web addition)', () => {
       ...entry,
       shortcut: ['e', 't', 'r', 'h'][index],
     }))
-    renderMenu(items)
+    renderMenu(items, { keys: true })
     await userEvent.keyboard('t')
     expect(task).not.toHaveBeenCalled() // closed: letters do nothing
 
@@ -420,6 +450,7 @@ describe('the page-level keyboard (web addition)', () => {
         mainGlyph="plus"
         mainAccessibilityLabel="Quick input"
         showShortcutHints={false}
+        returnKeyToggles
       />,
     )
     expect(document.querySelector('[data-slot="button-shortcut"]')).toBeNull()

@@ -44,6 +44,7 @@ import {
   selectAlsoJustCreatedEndeavors,
   selectJustCreatedEndeavor,
   selectPendingTriageEndeavors,
+  selectUntriageableInboxRowIds,
 } from '../CaptureSelectors'
 import { type InboxRowLayout, inboxRowLayoutFor } from './capturePresentation'
 
@@ -53,6 +54,8 @@ export interface InboxSurfaceViewModel {
   /** A multi-add's further Just Created rows. */
   readonly alsoJustCreated: readonly EndeavorCardModel[]
   readonly pendingTriage: readonly EndeavorCardModel[]
+  /** Rows whose Triage would refuse to open — their button is hidden. */
+  readonly untriageableIds: readonly string[]
   readonly totalCount: number
   readonly isEmpty: boolean
   readonly capabilities: ReturnType<typeof selectInboxVista>['capabilities']
@@ -81,6 +84,7 @@ export function useInboxSurface(): InboxSurfaceViewModel {
     selectAlsoJustCreatedEndeavors,
   )
   const pendingTriageEndeavors = useAppSelector(selectPendingTriageEndeavors)
+  const untriageableIds = useAppSelector(selectUntriageableInboxRowIds)
   const totalCount = useAppSelector(selectInboxTotalCount)
   const isEmpty = useAppSelector(selectIsInboxEmpty)
   const vista = useAppSelector(selectInboxVista)
@@ -188,6 +192,7 @@ export function useInboxSurface(): InboxSurfaceViewModel {
     justCreated,
     alsoJustCreated,
     pendingTriage,
+    untriageableIds,
     totalCount,
     isEmpty,
     capabilities: vista.capabilities,

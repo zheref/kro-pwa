@@ -253,12 +253,23 @@ const shippingCaptureSuggestionsOverride = enabledAssignment(
   FeatureFlags.captureSuggestions,
 )
 
+/**
+ * `keyboardAccelerators` — the prompt's ⌥ chords, keycaps, key hints and
+ * Return-walk, and the quick-action button's Return and letters — ships
+ * **enabled** here while `statusQuoSet` keeps it off as greenfield. The flag
+ * stays the kill switch.
+ */
+const shippingKeyboardAcceleratorsOverride = enabledAssignment(
+  FeatureFlags.keyboardAccelerators,
+)
+
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
   overrides: [
     shippingAppearanceOverride,
     shippingSupabaseHostingOverride,
     shippingDetailPaneInboxOverride,
     shippingCaptureSuggestionsOverride,
+    shippingKeyboardAcceleratorsOverride,
   ],
 })
 

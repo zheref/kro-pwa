@@ -135,6 +135,9 @@ export const loadDoPreferencesThunk = createAsyncThunk<
       ),
       activityRingsEnabled: flags.isEnabled(FeatureFlags.doActivityRings),
       googleCalendarEnabled: flags.isEnabled(FeatureFlags.googleCalendar),
+      keyboardAcceleratorsEnabled: flags.isEnabled(
+        FeatureFlags.keyboardAccelerators,
+      ),
     })
   } catch (error) {
     return err(DoExceptions.preferencesLoadFailed(messageOf(error)))

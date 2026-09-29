@@ -9,7 +9,7 @@
  * this set one for one (`RC-11`).
  */
 
-import { ThemeScope } from './__tests__/captureHarness'
+import { PanelledPrompt, ThemeScope } from './__tests__/captureHarness'
 import {
   captureDraftFixtures,
   captureSuggestionMocks,
@@ -23,6 +23,7 @@ import {
   captureBlockedReason,
   captureBlocker,
   captureResolvedSymbol,
+  captureKindCapabilities,
   isCaptureValueRequired,
 } from '../CaptureRules'
 import {
@@ -44,9 +45,11 @@ const prompt = (
   presentation: CapturePresentationKind,
   overrides: Partial<CapturePromptFragmentProps> = {},
 ) => (
-  <CapturePromptFragment
+  <PanelledPrompt
     isOpen
     draft={draft}
+    capabilities={captureKindCapabilities(draft.kind)}
+    keyboardAccelerators
     isEditingStartTime={false}
     isEditingEndTime={false}
     availableDestinations={[
@@ -230,7 +233,7 @@ export const PopoverWithTwoSuggestionsSelected = {
           captureSuggestionMocks.task.id,
           captureSuggestionMocks.reminder.id,
         ],
-        suggestionInboxCount: 2,
+        suggestionAddCount: 2,
       })}
     </ThemeScope>
   ),

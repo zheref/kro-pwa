@@ -41,8 +41,12 @@ import {
   type WeekDay,
   assertNever,
   dailyBase,
+  type ReconciliationContext,
   awaitsTriage,
+  canBeTriaged,
   isSameCalendarDay,
+  makeReconciliationContext,
+  resolvedKind,
   makeDefer,
   makeEndeavor,
   makeRepeatConfig,
@@ -212,6 +216,24 @@ export const captureKindRequiresTime = (kind: CaptureKind): boolean =>
 /** `EndeavorKind.requiresRecurrence` — a habit that never repeats is a task. */
 export const captureKindRequiresRecurrence = (kind: CaptureKind): boolean =>
   kind === CaptureKind.habit
+
+/** What a kind can carry — the prompt's chips and panels read this, whole. */
+export interface CaptureKindCapabilities {
+  readonly earnsRewards: boolean
+  readonly supportsValue: boolean
+  readonly supportsDuration: boolean
+  /** A habit's time is required, so its time chip offers no Clear. */
+  readonly isTimeClearable: boolean
+}
+
+export const captureKindCapabilities = (
+  kind: CaptureKind,
+): CaptureKindCapabilities => ({
+  earnsRewards: captureKindEarnsRewards(kind),
+  supportsValue: captureKindSupportsValue(kind),
+  supportsDuration: captureKindSupportsDuration(kind),
+  isTimeClearable: !captureKindRequiresTime(kind),
+})
 
 // ---------------------------------------------------------------------------
 // Hosting destinations
@@ -1326,11 +1348,15 @@ export const pendingTriageEndeavors = (
   endeavors: readonly Endeavor[],
   justCreatedEndeavorId: string | null,
   alsoJustCreatedIds: readonly string[] = [],
+  context: ReconciliationContext = makeReconciliationContext(),
 ): readonly Endeavor[] =>
   endeavors
     .filter(
       (endeavor) =>
-        awaitsTriage(endeavor) &&
+        // The resolved kind, as Triage's own gate reads it — a row a
+        // classifying provider resolves to an event must not be listed here
+        // and then refused when its Triage opens.
+        awaitsTriage(endeavor, resolvedKind(endeavor, context)) &&
         endeavor.start === null &&
         endeavor.due === null &&
         endeavor.id !== justCreatedEndeavorId &&
@@ -1341,6 +1367,18 @@ export const pendingTriageEndeavors = (
         (right.createdAt?.getTime() ?? Number.NEGATIVE_INFINITY) -
         (left.createdAt?.getTime() ?? Number.NEGATIVE_INFINITY),
     )
+
+/**
+ * Whether a row's Triage button may be offered: its resolved kind is one
+ * Triage applies to and it is not completed — the same gate `openTriageThunk`
+ * enforces, so a row never offers a Triage that would then refuse to open.
+ * (Pending Triage rows pass by construction; Just Created rows need asking —
+ * a multi-added habit lands there.)
+ */
+export const isCaptureRowTriageable = (
+  endeavor: Endeavor,
+  context: ReconciliationContext = makeReconciliationContext(),
+): boolean => canBeTriaged(endeavor, resolvedKind(endeavor, context))
 
 /**
  * `justCreatedCardSelector` — the single row at the top of the sheet.

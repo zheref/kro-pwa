@@ -76,6 +76,14 @@ export const FeatureFlags = {
    * swipe with no multi-add — see `docs/Features/Inbox.md` § Web notes.
    */
   captureSuggestions: { name: 'captureSuggestions' },
+  /**
+   * Web-only: keyboard accelerators with no canon counterpart — the capture
+   * prompt's ⌥ chords, held-Option keycaps, key hints and Return-walk, and the
+   * quick-action button's page-level Return and mnemonic letters. Canon defines
+   * no keyboard shortcuts on these surfaces — see `docs/Features/Do.md` and
+   * `docs/Features/Inbox.md`.
+   */
+  keyboardAccelerators: { name: 'keyboardAccelerators' },
 } as const satisfies Record<string, FeatureFlag>
 
 /** The key set of `FeatureFlags` — every declared flag's name, as a type. */

@@ -28,6 +28,7 @@ const CANON_FLAG_NAMES: readonly string[] = [
   'googleCalendar',
   'googleCalendarIntegration',
   'habits',
+  'keyboardAccelerators',
   'lists',
   'macDetailPane',
   'matrix',
@@ -49,9 +50,9 @@ const CANON_FLAG_NAMES: readonly string[] = [
 ]
 
 describe('the declared flag registry', () => {
-  it('declares canon’s 30 flags plus the web-only detailPaneInbox and captureSuggestions, and no others', () => {
+  it('declares canon’s 30 flags plus the web-only detailPaneInbox, captureSuggestions and keyboardAccelerators, and no others', () => {
     expect(allKnownFlagNames).toEqual(CANON_FLAG_NAMES)
-    expect(allKnownFlags).toHaveLength(32)
+    expect(allKnownFlags).toHaveLength(33)
   })
 
   it('keeps every constant in step with its own name, so a persisted key resolves', () => {

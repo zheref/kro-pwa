@@ -75,7 +75,10 @@ export interface LiquidGlassFABMenuProps {
   readonly style?: CSSProperties
   /**
    * Plain Return anywhere on the page toggles the menu, whenever nothing else
-   * owns Return (see `ownsReturn`). A web addition; canon has no keyboard here.
+   * owns Return (see `ownsReturn`), and the open menu's entries answer their
+   * `shortcut` letters. A web addition; canon has no keyboard here, so it is
+   * OFF unless a caller opts in — the Do page does, behind the
+   * `keyboardAccelerators` flag.
    */
   readonly returnKeyToggles?: boolean
   /** Whether entries draw their key hints — off on touch-primary layouts. */
@@ -129,7 +132,7 @@ export function LiquidGlassFABMenu({
   isGlowActive = true,
   className,
   style,
-  returnKeyToggles = true,
+  returnKeyToggles = false,
   showShortcutHints = true,
 }: LiquidGlassFABMenuProps) {
   const [expanded, setExpanded] = useDisclosure(isExpanded, onExpandedChange)
@@ -284,7 +287,8 @@ export function LiquidGlassFABMenu({
             // Bottom-most row first: it is the one nearest the button, so it
             // is the one that should appear to push the others upward.
             delayMs={(items.length - 1 - index) * ROW_STAGGER_MS}
-            showShortcutHint={showShortcutHints}
+            showShortcutHint={showShortcutHints && returnKeyToggles}
+            keysActive={returnKeyToggles}
             onSelect={choose}
           />
         ))}
@@ -298,12 +302,15 @@ function MenuRow({
   expanded,
   delayMs,
   showShortcutHint,
+  keysActive,
   onSelect,
 }: {
   entry: FABMenuEntry
   expanded: boolean
   delayMs: number
   showShortcutHint: boolean
+  /** Whether the page-level keys are live — a letter is named only then. */
+  keysActive: boolean
   onSelect: (entry: FABMenuEntry) => void
 }) {
   const Glyph = iconForSymbol(entry.glyph)
@@ -319,7 +326,7 @@ function MenuRow({
       type="button"
       disabled={entry.disabled}
       onClick={() => onSelect(entry)}
-      aria-keyshortcuts={entry.shortcut?.toUpperCase()}
+      aria-keyshortcuts={keysActive ? entry.shortcut?.toUpperCase() : undefined}
       data-kro-fab-menu-item=""
       className={cn(
         'kro-glass kro-glass--control kro-glass--interactive',

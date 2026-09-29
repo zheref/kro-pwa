@@ -22,9 +22,10 @@ import {
   captureStateMocks,
   captureSuggestionMocks,
   captureSuggestionStateMocks,
+  multiAddedEndeavors,
 } from '../CaptureMocks'
 import {
-  addSuggestionsToInboxThunk,
+  addSuggestionsThunk,
   loadCaptureContextThunk,
   setSuggestionsShownThunk,
 } from '../CaptureProducer'
@@ -45,7 +46,7 @@ import {
   selectCaptureStatusReason,
   selectIsCaptureSuggestionsShown,
   selectCaptureSuggestions,
-  selectSuggestionsForInbox,
+  selectSuggestionsToAdd,
 } from '../CaptureSelectors'
 import {
   withSuggestionApplied,
@@ -75,7 +76,7 @@ describe('withSuggestionApplied', () => {
       suggestion: captureSuggestionMocks.eventSoon,
       now: CAPTURE_MOCK_NOW,
     })
-    expect(next.prompt?.startEdit).toBeNull()
+    expect(next.prompt?.editor).toBeNull()
     expect(next.prompt?.draft.destination).toBe(CaptureDestination.local)
     expect(next.prompt?.draft.kind).toBe(CaptureKind.event)
   })
@@ -202,8 +203,12 @@ describe('userDidPickSuggestion / userDidToggleSuggestion', () => {
   })
 })
 
+/**
+ * A hand-built root (`RC-55`): the Selectors read `capture` alone, so the
+ * root is that slice and nothing else — never a real store's state.
+ */
 const root = (capture: RootState['capture']): RootState =>
-  ({ ...makeStore(stubbedThunkExtra).getState(), capture }) as RootState
+  ({ capture }) as unknown as RootState
 
 describe('the suggestion Selectors', () => {
   it('offers the catalogue only with the flag on and a prompt open', () => {
@@ -215,7 +220,7 @@ describe('the suggestion Selectors', () => {
   })
 
   it('pairs every ticked card, events included, with a host its kind supports', () => {
-    const items = selectSuggestionsForInbox(
+    const items = selectSuggestionsToAdd(
       root(
         withSuggestionSelectionToggled(
           twoSelected,
@@ -246,7 +251,7 @@ describe('the suggestion Selectors', () => {
   })
 })
 
-describe('addSuggestionsToInboxThunk', () => {
+describe('addSuggestionsThunk', () => {
   const storeWith = (localStore: LocalStore): AppStore => {
     const store = makeStore({ ...stubbedThunkExtra, localStore })
     return store
@@ -268,7 +273,7 @@ describe('addSuggestionsToInboxThunk', () => {
     const localStore = makeInMemoryLocalStore({ endeavors: [] })
     const store = storeWith(localStore)
     const action = await store.dispatch(
-      addSuggestionsToInboxThunk({ items, now: CAPTURE_MOCK_NOW }),
+      addSuggestionsThunk({ items, now: CAPTURE_MOCK_NOW }),
     )
     const payload = action.payload as {
       ok: boolean
@@ -303,7 +308,7 @@ describe('addSuggestionsToInboxThunk', () => {
     }
     const store = storeWith(flaky)
     const action = await store.dispatch(
-      addSuggestionsToInboxThunk({
+      addSuggestionsThunk({
         items: [
           ...items,
           {
@@ -334,7 +339,7 @@ describe('addSuggestionsToInboxThunk', () => {
   it('resolves an empty batch to no outcomes', async () => {
     const store = storeWith(makeInMemoryLocalStore({ endeavors: [] }))
     const action = await store.dispatch(
-      addSuggestionsToInboxThunk({ items: [], now: CAPTURE_MOCK_NOW }),
+      addSuggestionsThunk({ items: [], now: CAPTURE_MOCK_NOW }),
     )
     const payload = action.payload as {
       ok: boolean
@@ -354,7 +359,7 @@ describe('a mixed-kind multi-add', () => {
       userDidRequestCapture({ kind: CaptureKind.task, now: CAPTURE_MOCK_NOW }),
     )
     await store.dispatch(
-      addSuggestionsToInboxThunk({
+      addSuggestionsThunk({
         items: [
           {
             suggestion: captureSuggestionMocks.task,
@@ -505,31 +510,18 @@ describe('where a multi-add takes the user', () => {
   })
 
   it('shows every added row as Just Created once delivered, and keeps them out of Pending Triage', () => {
-    const intent = multiAddIntentFor(
-      [at('a', EndeavorKind.task), at('b', EndeavorKind.task)],
-      CAPTURE_MOCK_NOW,
+    const state = root(captureSuggestionStateMocks.multiAddDelivered)
+    expect(selectJustCreatedEndeavor(state)?.id).toBe(
+      multiAddedEndeavors.task.id,
     )
-    const withRows = {
-      ...captureStateMocks.loadedPool,
-      endeavors: [
-        ...captureStateMocks.loadedPool.endeavors,
-        at('a', EndeavorKind.task),
-        at('b', EndeavorKind.task),
-      ],
-      navigation: intent,
-    }
-    const delivered = withRouteDelivered(
-      withRows,
-      new Date(CAPTURE_MOCK_NOW.getTime() + 1000),
-    )
-    const state = root(delivered)
-    expect(selectJustCreatedEndeavor(state)?.id).toBe('a')
     expect(selectAlsoJustCreatedEndeavors(state).map((row) => row.id)).toEqual([
-      'b',
+      multiAddedEndeavors.reminder.id,
     ])
     expect(
       selectPendingTriageEndeavors(state).some(
-        (row) => row.id === 'a' || row.id === 'b',
+        (row) =>
+          row.id === multiAddedEndeavors.task.id ||
+          row.id === multiAddedEndeavors.reminder.id,
       ),
     ).toBe(false)
   })

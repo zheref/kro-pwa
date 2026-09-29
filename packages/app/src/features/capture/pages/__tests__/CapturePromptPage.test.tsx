@@ -20,7 +20,8 @@ import { userDidRequestCapture } from '../../CaptureFeature'
 import { CAPTURE_MOCK_NOW } from '../../CaptureMocks'
 import { CaptureKind } from '../../CaptureRules'
 import { CAPTURE_PROMPT_POPOVER_WIDTH } from '../capturePresentation'
-import { CapturePromptPage } from '../CapturePromptPage'
+import type { CapturePromptFragmentProps } from '../CapturePromptFragment'
+import { CapturePromptPage, inertPromptProps } from '../CapturePromptPage'
 import {
   type CaptureStore,
   CaptureStoreStage,
@@ -172,6 +173,72 @@ describe('it leaves the way it arrived', () => {
   })
 })
 
+describe('a leaving prompt acts on nothing', () => {
+  it('a click on Add during the exit writes nothing — its callbacks are inert', async () => {
+    const real = globalThis.getComputedStyle.bind(globalThis)
+    const spy = vi
+      .spyOn(globalThis, 'getComputedStyle')
+      .mockImplementation((node) => {
+        const style = real(node)
+        if (!(node instanceof HTMLElement)) return style
+        if (!node.classList.contains('kro-trailing-panel')) return style
+        return new Proxy(style, {
+          get: (target, key) =>
+            key === 'animationName'
+              ? node.getAttribute('data-state') === 'closed'
+                ? 'kro-trailing-out'
+                : 'kro-trailing-in'
+              : Reflect.get(target, key),
+        })
+      })
+    const store = makeCaptureStore({ endeavors: [] })
+    // Watch every action the Page dispatches (captured before it mounts).
+    const dispatched: string[] = []
+    const realDispatch = store.dispatch
+    store.dispatch = ((action: Parameters<typeof realDispatch>[0]) => {
+      if (typeof action === 'object' && action !== null && 'type' in action) {
+        dispatched.push(String(action.type))
+      } else {
+        dispatched.push('thunk')
+      }
+      return realDispatch(action)
+    }) as typeof realDispatch
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-prompt')
+    await userEvent.type(screen.getByTestId('capture-title'), 'Call the bank')
+
+    await userEvent.keyboard('{Escape}')
+    expect(store.getState().capture.prompt).toBeNull()
+    const before = dispatched.length
+    fireEvent.click(screen.getByTestId('capture-add'))
+    fireEvent.change(screen.getByTestId('capture-title'), {
+      target: { value: 'Call the bank twice' },
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(dispatched.slice(before)).toEqual([])
+    expect(store.getState().capture.prompt).toBeNull()
+    spy.mockRestore()
+  })
+
+  it('inertPromptProps keeps every value and silences every callback', () => {
+    const submit = vi.fn()
+    const frozen = inertPromptProps({
+      ...({} as CapturePromptFragmentProps),
+      isOpen: true,
+      canSubmit: true,
+      onSubmit: submit,
+    })
+    frozen.onSubmit()
+    expect(submit).not.toHaveBeenCalled()
+    expect(frozen.canSubmit).toBe(true)
+    expect(frozen.isOpen).toBe(true)
+  })
+})
+
 describe('it presents itself from the ported decision table', () => {
   it('sheets on a phone', async () => {
     const store = makeCaptureStore({ endeavors: [], surface: handheldSurface })
@@ -229,12 +296,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await screen.findByTestId('capture-prompt')
 
     await userEvent.click(screen.getByRole('button', { name: 'Time' }))
-    expect(store.getState().capture.prompt?.startEdit).not.toBeNull()
+    expect(store.getState().capture.prompt?.editor?.kind).toBe('time')
 
     await userEvent.click(screen.getByRole('button', { name: 'Event' }))
 
     expect(store.getState().capture.prompt?.draft.kind).toBe(CaptureKind.event)
-    expect(store.getState().capture.prompt?.startEdit).toBeNull()
+    expect(store.getState().capture.prompt?.editor).toBeNull()
   })
 
   it('remembers the picked hosting destination on the draft, not on the app yet', async () => {

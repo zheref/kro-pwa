@@ -70,11 +70,11 @@
   on it. Unlayered, so this beats the base layer's `:focus-visible` ring.
 */
 :where([data-slot="input"], [data-slot="textarea"]):focus-visible {
-  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+  box-shadow: var(--kro-ring-field);
 }
 
 :where([data-kro-field]):focus-within {
-  box-shadow: 0 0 0 3px var(--kro-color-glow-lime);
+  box-shadow: var(--kro-ring-field);
 }
 
 :where([data-kro-field] :is(input, textarea, select)):focus,

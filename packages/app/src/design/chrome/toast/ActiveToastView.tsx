@@ -50,7 +50,8 @@ export interface ActiveToastViewProps {
   readonly style?: CSSProperties
 }
 
-const RewardGlyph = iconForSymbol('sparkles')
+/** Canon's `medal.star` — the reward glyph every surface shares. */
+const RewardGlyph = iconForSymbol('medal.star')
 
 const ACTION_STYLES: Record<ToastActionStyle, CSSProperties> = {
   /** Canon: plain text in the accent colour, no background. */

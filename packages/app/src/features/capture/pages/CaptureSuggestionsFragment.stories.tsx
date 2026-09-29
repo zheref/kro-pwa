@@ -35,7 +35,7 @@ export const NothingSelected = {
   ),
 }
 
-/** Two cards ticked — "Add 2 to Inbox" is armed, ⇧⏎ hinted. */
+/** Two cards ticked — "Add 2" is armed, ⇧⏎ hinted. */
 export const TwoSelected = {
   render: () => (
     <ThemeScope theme="dark">
@@ -58,7 +58,7 @@ export const TwoSelected = {
   ),
 }
 
-/** Option held — the ⌥S keycap floats over the header. Events can't be ticked. */
+/** Option held — the ⌥S keycap floats over the header; every kind, events too, can be ticked. */
 export const OptionHeldWithEvents = {
   render: () => (
     <ThemeScope theme="light">

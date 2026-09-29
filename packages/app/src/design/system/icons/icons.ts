@@ -123,6 +123,7 @@ import {
   Sunrise,
   Sunset,
   Tag,
+  Medal,
   Target,
   Timer,
   Trash2,
@@ -220,6 +221,9 @@ export const SF_SYMBOL_TO_LUCIDE = {
   star: Star,
   'star.fill': Star,
   'star.circle': Trophy,
+  // Reward points — canon draws `medal.star` on every reward surface (the
+  // prompt's pill, card and row badges, Triage, Earn, Activity, the toast).
+  'medal.star': Medal,
   flame: Flame,
   'flame.fill': Flame,
   'flag.checkered': FlagTriangleRight,

@@ -61,46 +61,48 @@ afterEach(() => {
 
 const noop = () => {}
 
+const promptProps = (
+  draft: CaptureDraft,
+  overrides: Partial<CapturePromptFragmentProps> = {},
+): CapturePromptFragmentProps => ({
+  isOpen: true,
+  draft,
+  isEditingStartTime: false,
+  isEditingEndTime: false,
+  availableDestinations: [
+    CaptureDestination.local,
+    CaptureDestination.kroCloud,
+  ],
+  resolvedSymbol: captureResolvedSymbol(draft),
+  isValueRequired: isCaptureValueRequired(draft),
+  canSubmit: canSubmitCapture(draft),
+  blockedReason: captureBlockedReason(draft),
+  blocker: captureBlocker(draft),
+  presentation: 'sheet',
+  now: CAPTURE_MOCK_NOW,
+  locale: 'en-US',
+  onEditTitle: noop,
+  onSelectKind: noop,
+  onPickDate: noop,
+  onClearDate: noop,
+  onBeginTimeEdit: noop,
+  onPickTime: noop,
+  onEndTimeEdit: noop,
+  onPickRewards: noop,
+  onPickValue: noop,
+  onPickDuration: noop,
+  onPickEmoji: noop,
+  onPickRecurrence: noop,
+  onSelectDestination: noop,
+  onDiscard: noop,
+  onSubmit: noop,
+  ...overrides,
+})
+
 const renderPrompt = (
   draft: CaptureDraft,
   overrides: Partial<CapturePromptFragmentProps> = {},
-) =>
-  render(
-    <CapturePromptFragment
-      isOpen
-      draft={draft}
-      isEditingStartTime={false}
-      isEditingEndTime={false}
-      availableDestinations={[
-        CaptureDestination.local,
-        CaptureDestination.kroCloud,
-      ]}
-      resolvedSymbol={captureResolvedSymbol(draft)}
-      isValueRequired={isCaptureValueRequired(draft)}
-      canSubmit={canSubmitCapture(draft)}
-      blockedReason={captureBlockedReason(draft)}
-      blocker={captureBlocker(draft)}
-      presentation="sheet"
-      now={CAPTURE_MOCK_NOW}
-      locale="en-US"
-      onEditTitle={noop}
-      onSelectKind={noop}
-      onPickDate={noop}
-      onClearDate={noop}
-      onBeginTimeEdit={noop}
-      onPickTime={noop}
-      onEndTimeEdit={noop}
-      onPickRewards={noop}
-      onPickValue={noop}
-      onPickDuration={noop}
-      onPickEmoji={noop}
-      onPickRecurrence={noop}
-      onSelectDestination={noop}
-      onDiscard={noop}
-      onSubmit={noop}
-      {...overrides}
-    />,
-  )
+) => render(<CapturePromptFragment {...promptProps(draft, overrides)} />)
 
 describe('the disabled Add names what blocks it (acceptance criterion 1)', () => {
   it('asks for a title on a fresh Task prompt', () => {
@@ -259,7 +261,10 @@ describe('the two presentations', () => {
     expect(row?.className).not.toContain('overflow-x-auto')
   })
 
-  it('renders nothing at all while it is closed', () => {
+  // Closed from its first render there is nothing to leave, so nothing mounts.
+  // A prompt that WAS open keeps its closed content through `kro-trailing-out`
+  // instead — that exit phase is pinned in CapturePromptPage.test.tsx.
+  it('renders nothing when it was never opened', () => {
     renderPrompt(captureDraftFixtures.emptyTask, { isOpen: false })
 
     expect(screen.queryByTestId('capture-prompt')).toBeNull()
@@ -1010,7 +1015,7 @@ describe('the suggestions pane (mirrors the Popover/Sheet suggestion stories)', 
       onAddSuggestions,
     })
     expect(screen.getByTestId('capture-suggestions-add').textContent).toContain(
-      'Add 2 to Inbox',
+      'Add 2',
     )
     await userEvent.keyboard('{Shift>}{Enter}{/Shift}')
     expect(onAddSuggestions).toHaveBeenCalledTimes(1)
@@ -1053,5 +1058,118 @@ describe('the floating panes share the panel corner', () => {
     expect(screen.getByTestId('capture-suggestions').style.borderRadius).toBe(
       'var(--kro-radius-panel)',
     )
+  })
+})
+
+describe('the suggestions toggle and the float-in motion', () => {
+  it('pins a pressed/unpressed sparkles toggle left of the kind picker', async () => {
+    const onToggleSuggestions = vi.fn()
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      canToggleSuggestions: true,
+      isSuggestionsShown: false,
+      onToggleSuggestions,
+    })
+    const toggle = screen.getByTestId('capture-suggestions-toggle')
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+    expect(toggle.getAttribute('aria-keyshortcuts')).toBe('Alt+S')
+    expect(toggle.getAttribute('title')).toBe('Show suggestions (⌥S)')
+    expect(toggle.className).toContain('left-3')
+    await userEvent.click(toggle)
+    expect(onToggleSuggestions).toHaveBeenCalledTimes(1)
+  })
+
+  it('draws no toggle on the phone sheet or with the pane unavailable', () => {
+    const { unmount } = renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'sheet',
+      canToggleSuggestions: true,
+    })
+    expect(screen.queryByTestId('capture-suggestions-toggle')).toBeNull()
+    unmount()
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+    expect(screen.queryByTestId('capture-suggestions-toggle')).toBeNull()
+  })
+
+  const pane = () =>
+    document.querySelector<HTMLElement>(
+      '[data-slot="capture-suggestions-pane"]',
+    )
+
+  it("embeds the pane in the prompt's own motion while it presents, so both move as one", () => {
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      suggestions: CAPTURE_SUGGESTIONS,
+    })
+    const prompt = screen.getByTestId('capture-prompt')
+    expect(prompt.className).toContain('kro-trailing-panel')
+    expect(prompt.getAttribute('data-state')).toBe('open')
+    expect(pane()?.className).not.toContain('kro-trailing-panel')
+    expect(pane()?.getAttribute('data-kro-pane-motion')).toBe('embedded')
+  })
+
+  it('keeps the pane embedded while the prompt dismisses, riding the prompt out', () => {
+    const { rerender } = renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      suggestions: CAPTURE_SUGGESTIONS,
+    })
+    rerender(
+      <CapturePromptFragment
+        {...promptProps(captureDraftFixtures.emptyTask, {
+          presentation: 'popover',
+          suggestions: CAPTURE_SUGGESTIONS,
+          isOpen: false,
+        })}
+      />,
+    )
+    const embedded = pane()
+    if (embedded !== null) {
+      expect(embedded.className).not.toContain('kro-trailing-panel')
+      expect(embedded.getAttribute('data-state')).toBe('open')
+    }
+  })
+
+  it('gives the pane its own trailing motion only when toggled while the prompt stays open', () => {
+    const { rerender } = renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      suggestions: CAPTURE_SUGGESTIONS,
+      canToggleSuggestions: true,
+    })
+    // Suggestions that merely change stay embedded; only the user's toggle frees the pane.
+    expect(pane()?.className).not.toContain('kro-trailing-panel')
+    fireEvent.click(screen.getByTestId('capture-suggestions-toggle'))
+    rerender(
+      <CapturePromptFragment
+        {...promptProps(captureDraftFixtures.emptyTask, {
+          presentation: 'popover',
+          suggestions: [],
+          canToggleSuggestions: true,
+        })}
+      />,
+    )
+    // Kept mounted, inert, while it animates out on its own.
+    expect(pane()?.className).toContain('kro-trailing-panel')
+    expect(pane()?.getAttribute('data-state')).toBe('closed')
+    expect(pane()?.hasAttribute('inert')).toBe(true)
+
+    rerender(
+      <CapturePromptFragment
+        {...promptProps(captureDraftFixtures.emptyTask, {
+          presentation: 'popover',
+          suggestions: CAPTURE_SUGGESTIONS,
+          canToggleSuggestions: true,
+        })}
+      />,
+    )
+    expect(pane()?.className).toContain('kro-trailing-panel')
+    expect(pane()?.getAttribute('data-state')).toBe('open')
+  })
+
+  it('is laid out on the very first render when shown by preference, never measured in later', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      suggestions: CAPTURE_SUGGESTIONS,
+    })
+    // No waiting: the height is set before the first paint.
+    expect(pane()?.style.height).toMatch(/px$/)
   })
 })

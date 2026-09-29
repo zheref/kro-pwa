@@ -27,6 +27,8 @@ import {
   captureKindDefaultRewards,
   captureTitleForPersistence,
   captureKindRequiresRecurrence,
+  captureKindRequiresTime,
+  nearestQuarterHourSlot,
 } from './CaptureRules'
 
 /** `SuggestedEndeavor`. */
@@ -530,33 +532,58 @@ export const applyCaptureSuggestion = (
   }
 }
 
-/**
- * Whether a suggestion can go straight to the Inbox. Events cannot: the Inbox
- * is for unscheduled non-event endeavors, and an event has no shape without a
- * start. Pick an event suggestion into the prompt instead.
- */
-export const isCaptureSuggestionInboxable = (
-  suggested: CaptureSuggestion,
-): boolean => suggested.kind !== CaptureKind.event
+/** Where a multi-added suggestion lands: the Inbox, or (an event) the Plan. */
+export type CaptureSuggestionLanding = 'inbox' | 'plan'
 
 /**
- * The result a multi-add writes for one suggestion: unscheduled (no date, no
- * time — Pending Triage), its rewards when the kind earns them, a habit's
- * every-day rule, and no value or duration: the Inbox is where those are
- * decided, exactly as canon's own Inbox path allows (only the prompt's Add
- * gate demands a value). `null` for an event.
+ * How a multi-add places each kind. An event cannot be undated — the Inbox
+ * holds no events — so it is created at its seeded window and lands in the
+ * Plan, exactly where a captured event goes. Every other kind lands in the
+ * Inbox, unscheduled.
+ */
+export const captureSuggestionLanding = (
+  suggested: CaptureSuggestion,
+): CaptureSuggestionLanding =>
+  suggested.kind === CaptureKind.event ? 'plan' : 'inbox'
+
+/**
+ * The result a multi-add writes for one suggestion, by kind:
+ *
+ * - **Event** — its seeded window (`captureSuggestionEventWindow`: the seed's
+ *   offset or the next quarter hour, the seed's length or an hour).
+ * - **Habit** — its every-day rule and a time (the quarter hour nearest now,
+ *   the prompt's own habit seed); no date, so it stays in Pending Triage.
+ * - **Task / Reminder** — unscheduled (Pending Triage).
+ *
+ * Rewards when the kind earns them; no value or duration — those are decided
+ * at triage, as canon's own Inbox path allows (only the prompt's Add gate
+ * demands a value).
  */
 export const captureResultFromSuggestion = (
   suggested: CaptureSuggestion,
   destination: CaptureDestination,
-): CaptureResult | null => {
-  if (!isCaptureSuggestionInboxable(suggested)) return null
+  now: Date,
+): CaptureResult => {
+  const window = captureSuggestionEventWindow(suggested, now)
+  const eventDay =
+    window === null
+      ? null
+      : (() => {
+          const day = new Date(window.start)
+          day.setHours(0, 0, 0, 0)
+          return day
+        })()
   return {
     title: captureTitleForPersistence(suggested.title, suggested.emoji),
     kind: suggested.kind,
-    date: null,
-    time: null,
-    endTime: null,
+    date: eventDay,
+    time:
+      window !== null
+        ? window.start
+        : captureKindRequiresTime(suggested.kind)
+          ? nearestQuarterHourSlot(now)
+          : null,
+    endTime: window?.end ?? null,
     destination,
     recurrence: captureKindRequiresRecurrence(suggested.kind)
       ? EVERY_DAY_RECURRENCE
@@ -570,3 +597,30 @@ export const captureResultFromSuggestion = (
     duration: null,
   }
 }
+
+/**
+ * The multi-add tally, truthfully split by where things landed: "Added 2 to
+ * Inbox.", "Added 1 to Plan.", "Added 3 — 2 to Inbox, 1 to Plan.". `null`
+ * when nothing landed.
+ */
+export const captureSuggestionTallyText = (
+  toInbox: number,
+  toPlan: number,
+): string | null => {
+  const total = toInbox + toPlan
+  if (total === 0) return null
+  if (toPlan === 0) return `Added ${toInbox} to Inbox.`
+  if (toInbox === 0) return `Added ${toPlan} to Plan.`
+  return `Added ${total} — ${toInbox} to Inbox, ${toPlan} to Plan.`
+}
+
+/**
+ * Where the suggestions pane's on/off choice is remembered — the same
+ * device preferences store the last-used host lives in, under the product's
+ * `kro:` namespace (so a sign-out's `clearAll()` resets it to hidden).
+ */
+export const SUGGESTIONS_SHOWN_KEY = 'kro:captureSuggestionsShown'
+
+/** The stored choice, read defensively. Anything but `true` is hidden. */
+export const suggestionsShownFromStored = (stored: unknown): boolean =>
+  stored === true || stored === 'true'

@@ -240,3 +240,25 @@ export const composeCaptureStatusLine = (params: {
   if (params.canSubmit) return { reason: reason ?? 'Ready', keys: '⏎ Add' }
   return { reason, keys: '⏎ next' }
 }
+
+/**
+ * The suggestions grid's arrow keys: ←/→ move one card, ↑/↓ one row (a
+ * column-count stride). `null` at an edge — the focus stays put.
+ */
+export const suggestionGridNeighbour = (
+  index: number,
+  count: number,
+  columns: number,
+  key: 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown',
+): number | null => {
+  const stride = Math.max(1, columns)
+  const next =
+    key === 'ArrowLeft'
+      ? index - 1
+      : key === 'ArrowRight'
+        ? index + 1
+        : key === 'ArrowUp'
+          ? index - stride
+          : index + stride
+  return next >= 0 && next < count ? next : null
+}

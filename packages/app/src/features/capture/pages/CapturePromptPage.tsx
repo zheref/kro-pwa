@@ -15,7 +15,7 @@
  * lets the Plan timeline's press-to-create (KC-IS-#19) reuse it unchanged.
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../../library/hooks'
 import { selectLayout } from '../../main/MainSelectors'
 import type {
@@ -42,6 +42,7 @@ import {
 } from '../CaptureFeature'
 import {
   addSuggestionsToInboxThunk,
+  setSuggestionsShownThunk,
   submitCaptureThunk,
 } from '../CaptureProducer'
 import type {
@@ -53,7 +54,9 @@ import {
   selectCanSubmitCapture,
   selectCaptureBlocker,
   selectCaptureStatusReason,
+  selectCanShowCaptureSuggestions,
   selectCaptureSuggestions,
+  selectIsCaptureSuggestionsShown,
   selectSelectedSuggestionIds,
   selectSuggestionsForInbox,
   selectCaptureDestinationsForKind,
@@ -61,8 +64,14 @@ import {
   selectCaptureResolvedSymbol,
   selectIsCaptureValueRequired,
 } from '../CaptureSelectors'
-import { CapturePromptFragment } from './CapturePromptFragment'
+import {
+  CapturePromptFragment,
+  type CapturePromptFragmentProps,
+} from './CapturePromptFragment'
 import { capturePromptPresentation } from './capturePresentation'
+
+/** Past the 270ms trailing exit, before anyone would notice a lingering layer. */
+const EXIT_FALLBACK_MS = 400
 
 export function CapturePromptPage() {
   const dispatch = useAppDispatch()
@@ -72,6 +81,8 @@ export function CapturePromptPage() {
   // The status line: a multi-add's tally while it stands, else the blocker.
   const blockedReason = useAppSelector(selectCaptureStatusReason)
   const suggestions = useAppSelector(selectCaptureSuggestions)
+  const canToggleSuggestions = useAppSelector(selectCanShowCaptureSuggestions)
+  const isSuggestionsShown = useAppSelector(selectIsCaptureSuggestionsShown)
   const selectedSuggestionIds = useAppSelector(selectSelectedSuggestionIds)
   const suggestionsForInbox = useAppSelector(selectSuggestionsForInbox)
   const blocker = useAppSelector(selectCaptureBlocker)
@@ -153,66 +164,85 @@ export function CapturePromptPage() {
     })
   }, [dispatch, suggestionsForInbox])
 
-  if (draft === null || resolvedSymbol === null) return null
+  /**
+   * The exit snapshot. Every close path (Discard, Escape, the overlay, Add,
+   * multi-add) sets `capture.prompt` to `null` — so if this Page stopped
+   * rendering, the Dialog would unmount on the same commit and Radix's Presence
+   * would never get to play `kro-trailing-out`. Instead the last open props are
+   * frozen here (the way the suggestions pane freezes its last list) and
+   * rendered with `isOpen={false}`: the content stays mounted with
+   * `data-state="closed"` until its exit animation ends, then Presence removes
+   * it. The snapshot is view plumbing, not feature state (`RC-4`).
+   */
+  const lastOpenProps = useRef<CapturePromptFragmentProps | null>(null)
+  const isOpen = draft !== null && resolvedSymbol !== null
+  // Presence unmounts on `animationend`, which a hidden tab never delivers. So
+  // the snapshot is also dropped shortly after the 270ms exit — the same
+  // fallback the suggestions pane keeps — and the Dialog unmounts with it.
+  const [, setExitSettled] = useState(0)
+  useEffect(() => {
+    if (isOpen || lastOpenProps.current === null) return
+    const fallback = setTimeout(() => {
+      lastOpenProps.current = null
+      setExitSettled((settled) => settled + 1)
+    }, EXIT_FALLBACK_MS)
+    return () => clearTimeout(fallback)
+  }, [isOpen])
+  if (!isOpen) {
+    const frozen = lastOpenProps.current
+    return frozen === null ? null : (
+      <CapturePromptFragment {...frozen} isOpen={false} />
+    )
+  }
 
-  return (
-    <CapturePromptFragment
-      isOpen
-      draft={draft}
-      isEditingStartTime={startEdit != null}
-      isEditingEndTime={endEdit != null}
-      availableDestinations={availableDestinations}
-      resolvedSymbol={resolvedSymbol}
-      isValueRequired={isValueRequired}
-      canSubmit={canSubmit}
-      blockedReason={blockedReason}
-      blocker={blocker}
-      presentation={capturePromptPresentation(layout)}
-      now={now}
-      onEditTitle={(title: string) => dispatch(userDidEditTitle({ title }))}
-      onSelectKind={(kind: CaptureKind) =>
-        dispatch(userDidSelectKind({ kind }))
-      }
-      onPickDate={(date: Date) => dispatch(userDidPickDate({ date }))}
-      onClearDate={() => dispatch(userDidClearDate())}
-      onBeginTimeEdit={(field: CaptureTimeField) =>
-        dispatch(userDidBeginTimeEdit({ field }))
-      }
-      onPickTime={(field: CaptureTimeField, time: Date) =>
-        dispatch(userDidPickTime({ field, time }))
-      }
-      onEndTimeEdit={(
-        field: CaptureTimeField,
-        outcome: CaptureTimeEditOutcome,
-      ) => dispatch(userDidEndTimeEdit({ field, outcome }))}
-      onPickRewards={(points: number) =>
-        dispatch(userDidPickRewards({ points }))
-      }
-      onPickValue={(value: number | null) =>
-        dispatch(userDidPickValue({ value }))
-      }
-      onPickDuration={(seconds: number | null) =>
-        dispatch(userDidPickDuration({ seconds }))
-      }
-      onPickEmoji={(emoji: string) => dispatch(userDidPickEmoji({ emoji }))}
-      suggestions={suggestions}
-      selectedSuggestionIds={selectedSuggestionIds}
-      suggestionInboxCount={suggestionsForInbox.length}
-      onPickSuggestion={(suggestionId: string) =>
-        dispatch(userDidPickSuggestion({ suggestionId, now: new Date() }))
-      }
-      onToggleSuggestion={(suggestionId: string) =>
-        dispatch(userDidToggleSuggestion({ suggestionId }))
-      }
-      onAddSuggestions={onAddSuggestions}
-      onPickRecurrence={(recurrence: CaptureRecurrence) =>
-        dispatch(userDidPickRecurrence({ recurrence }))
-      }
-      onSelectDestination={(destination: CaptureDestination) =>
-        dispatch(userDidSelectDestination({ destination }))
-      }
-      onDiscard={() => dispatch(userDidDiscardCapture())}
-      onSubmit={onSubmit}
-    />
-  )
+  const props: CapturePromptFragmentProps = {
+    isOpen: true,
+    draft,
+    isEditingStartTime: startEdit != null,
+    isEditingEndTime: endEdit != null,
+    availableDestinations: availableDestinations,
+    resolvedSymbol: resolvedSymbol,
+    isValueRequired: isValueRequired,
+    canSubmit: canSubmit,
+    blockedReason: blockedReason,
+    blocker: blocker,
+    presentation: capturePromptPresentation(layout),
+    now: now,
+    onEditTitle: (title: string) => dispatch(userDidEditTitle({ title })),
+    onSelectKind: (kind: CaptureKind) => dispatch(userDidSelectKind({ kind })),
+    onPickDate: (date: Date) => dispatch(userDidPickDate({ date })),
+    onClearDate: () => dispatch(userDidClearDate()),
+    onBeginTimeEdit: (field: CaptureTimeField) =>
+      dispatch(userDidBeginTimeEdit({ field })),
+    onPickTime: (field: CaptureTimeField, time: Date) =>
+      dispatch(userDidPickTime({ field, time })),
+    onEndTimeEdit: (field: CaptureTimeField, outcome: CaptureTimeEditOutcome) =>
+      dispatch(userDidEndTimeEdit({ field, outcome })),
+    onPickRewards: (points: number) => dispatch(userDidPickRewards({ points })),
+    onPickValue: (value: number | null) =>
+      dispatch(userDidPickValue({ value })),
+    onPickDuration: (seconds: number | null) =>
+      dispatch(userDidPickDuration({ seconds })),
+    onPickEmoji: (emoji: string) => dispatch(userDidPickEmoji({ emoji })),
+    suggestions: suggestions,
+    selectedSuggestionIds: selectedSuggestionIds,
+    suggestionInboxCount: suggestionsForInbox.length,
+    onPickSuggestion: (suggestionId: string) =>
+      dispatch(userDidPickSuggestion({ suggestionId, now: new Date() })),
+    onToggleSuggestion: (suggestionId: string) =>
+      dispatch(userDidToggleSuggestion({ suggestionId })),
+    onAddSuggestions: onAddSuggestions,
+    canToggleSuggestions: canToggleSuggestions,
+    isSuggestionsShown: isSuggestionsShown,
+    onToggleSuggestions: () =>
+      void dispatch(setSuggestionsShownThunk({ shown: !isSuggestionsShown })),
+    onPickRecurrence: (recurrence: CaptureRecurrence) =>
+      dispatch(userDidPickRecurrence({ recurrence })),
+    onSelectDestination: (destination: CaptureDestination) =>
+      dispatch(userDidSelectDestination({ destination })),
+    onDiscard: () => dispatch(userDidDiscardCapture()),
+    onSubmit: onSubmit,
+  }
+  lastOpenProps.current = props
+  return <CapturePromptFragment {...props} />
 }

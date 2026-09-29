@@ -20,7 +20,8 @@ import {
   captureResultFromSuggestion,
   captureSuggestionById,
   captureSuggestionEventWindow,
-  isCaptureSuggestionInboxable,
+  captureSuggestionLanding,
+  captureSuggestionTallyText,
 } from '../CaptureSuggestions'
 
 describe('the suggestion catalogue', () => {
@@ -127,25 +128,20 @@ describe('applyCaptureSuggestion — canon’s applySuggestion', () => {
 })
 
 describe('what a multi-add writes', () => {
-  it('keeps events out of the Inbox', () => {
-    expect(isCaptureSuggestionInboxable(captureSuggestionMocks.eventSoon)).toBe(
-      false,
+  it('lands events in the Plan and everything else in the Inbox', () => {
+    expect(captureSuggestionLanding(captureSuggestionMocks.eventSoon)).toBe(
+      'plan',
     )
-    expect(isCaptureSuggestionInboxable(captureSuggestionMocks.task)).toBe(true)
-    expect(
-      captureResultFromSuggestion(
-        captureSuggestionMocks.eventSoon,
-        CaptureDestination.local,
-      ),
-    ).toBeNull()
+    expect(captureSuggestionLanding(captureSuggestionMocks.task)).toBe('inbox')
+    expect(captureSuggestionLanding(captureSuggestionMocks.habit)).toBe('inbox')
   })
 
   it('writes a task unscheduled, with its emoji, rewards and no value', () => {
     const result = captureResultFromSuggestion(
       captureSuggestionMocks.task,
       CaptureDestination.local,
+      CAPTURE_MOCK_NOW,
     )
-    if (result === null) throw new Error('a task must be inboxable')
     const endeavor = endeavorFromCaptureResult(result, {
       id: 'x',
       now: CAPTURE_MOCK_NOW,
@@ -158,18 +154,50 @@ describe('what a multi-add writes', () => {
     expect(endeavor.kind).toBe(EndeavorKind.task)
   })
 
-  it('gives a habit its every-day rule and a reminder no rewards', () => {
-    expect(
-      captureResultFromSuggestion(
-        captureSuggestionMocks.habit,
-        CaptureDestination.local,
-      )?.recurrence,
-    ).toEqual(EVERY_DAY_RECURRENCE)
+  it('creates an event at its seeded window', () => {
+    const result = captureResultFromSuggestion(
+      captureSuggestionMocks.eventSoon,
+      CaptureDestination.local,
+      CAPTURE_MOCK_NOW,
+    )
+    const endeavor = endeavorFromCaptureResult(result, {
+      id: 'e',
+      now: CAPTURE_MOCK_NOW,
+    })
+    expect(endeavor.kind).toBe(EndeavorKind.calendarEvent)
+    expect(endeavor.start).toEqual(new Date(2026, 2, 17, 10, 37))
+    expect(endeavor.duration).toBe(30 * 60)
+  })
+
+  it('gives a habit its every-day rule and a time, a reminder no rewards', () => {
+    const habit = captureResultFromSuggestion(
+      captureSuggestionMocks.habit,
+      CaptureDestination.local,
+      CAPTURE_MOCK_NOW,
+    )
+    expect(habit.recurrence).toEqual(EVERY_DAY_RECURRENCE)
+    expect(habit.time).toEqual(new Date(2026, 2, 17, 10, 0))
+    expect(habit.date).toBeNull()
     expect(
       captureResultFromSuggestion(
         captureSuggestionMocks.reminder,
         CaptureDestination.local,
-      )?.rewards,
+        CAPTURE_MOCK_NOW,
+      ).rewards,
     ).toBeNull()
+  })
+})
+
+describe('captureSuggestionTallyText', () => {
+  it('says Inbox only, Plan only, or splits a mixed batch', () => {
+    expect(captureSuggestionTallyText(2, 0)).toBe('Added 2 to Inbox.')
+    expect(captureSuggestionTallyText(0, 1)).toBe('Added 1 to Plan.')
+    expect(captureSuggestionTallyText(2, 1)).toBe(
+      'Added 3 — 2 to Inbox, 1 to Plan.',
+    )
+  })
+
+  it('is null when nothing landed', () => {
+    expect(captureSuggestionTallyText(0, 0)).toBeNull()
   })
 })

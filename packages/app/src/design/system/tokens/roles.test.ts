@@ -154,3 +154,20 @@ describe('the var() helpers', () => {
     expect(SEMANTIC_ROLES.length).toBe(22)
   })
 })
+
+describe('the field focus ring', () => {
+  it('is one thin 1.5px brand-green ring — the Search field and the prompt share it', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { dirname, join } = await import('node:path')
+    const { fileURLToPath } = await import('node:url')
+    const here = dirname(fileURLToPath(import.meta.url))
+    const tokens = readFileSync(join(here, 'tokens.css'), 'utf8')
+    const styles = readFileSync(join(here, '..', 'styles.css'), 'utf8')
+    expect(tokens).toContain(
+      '--kro-ring-field: 0 0 0 1.5px var(--kro-color-glow-lime);',
+    )
+    expect(styles).toContain(
+      ':where([data-kro-field]):focus-within {\n  box-shadow: var(--kro-ring-field);',
+    )
+  })
+})

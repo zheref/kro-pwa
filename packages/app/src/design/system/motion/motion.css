@@ -36,12 +36,23 @@
   --kro-duration-quick-spring: 198ms;
   --kro-duration-standard-spring: 270ms;
 
+  /* A floating panel or sheet — long enough to read as travel, not a blink. */
+  --kro-duration-panel: 380ms;
+  --kro-duration-panel-exit: 240ms;
+
   /* Easings.
      `--kro-ease-standard` is the system curve SwiftUI's non-spring animations
      read as; `--kro-ease-out` is the decelerating curve for anything entering
      the screen. */
   --kro-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --kro-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* A panel settling in — an emphasized decelerate that keeps the travel
+     readable. Sampled in the browser, the steeper (0.16, 1, 0.3, 1) had
+     finished 64% of the travel by 50ms and 87% by 100ms, so the slide read
+     as a pop; this one is 28% / 63% / 80% at 50 / 100 / 150ms. */
+  --kro-ease-panel: cubic-bezier(0.2, 0, 0, 1);
+  /* Accelerating away — exits. */
+  --kro-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
   /* quick spring — duration 0.18, bounce 0.10 (zeta 0.90) */
   --kro-ease-quick-spring: linear(
@@ -167,12 +178,125 @@
   }
 }
 
+/*
+  The trailing panel — ONE motion for every glass panel that floats in from
+  the window's trailing edge: the detail pane on Today, the desktop capture
+  prompt and its suggestions pane. It slides in from its full width plus the
+  pane's 16px trailing margin, fading from 0 to 1, over the standard spring
+  (270ms, `--kro-ease-standard-spring`), and leaves exactly the reverse way.
+
+  The detail pane drives these values with a CSS transition (it stays
+  mounted); the prompt and pane mount and unmount through Radix Presence, so
+  they drive the same values with keyframes on `data-state`. Both read the
+  three custom properties below — one source, so they cannot drift. Under
+  Reduce Motion the spring duration collapses (block below) — instant, as the
+  detail pane's is.
+*/
+:root {
+  --kro-trailing-panel-offset: calc(100% + 16px);
+  --kro-trailing-panel-duration: var(--kro-duration-standard-spring);
+  --kro-trailing-panel-ease: var(--kro-ease-standard-spring);
+}
+
+@keyframes kro-trailing-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--kro-trailing-panel-offset));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes kro-trailing-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(var(--kro-trailing-panel-offset));
+  }
+}
+
+.kro-trailing-panel[data-state="open"] {
+  animation: kro-trailing-in var(--kro-trailing-panel-duration)
+    var(--kro-trailing-panel-ease) both;
+}
+
+.kro-trailing-panel[data-state="closed"] {
+  animation: kro-trailing-out var(--kro-trailing-panel-duration)
+    var(--kro-trailing-panel-ease) both;
+}
+
+/*
+  A bottom sheet rises from the screen's bottom edge and sinks back into it;
+  its overlay fades with it. Every `SheetContent side="bottom"` gets this,
+  driven by Radix's `data-state` (its Presence keeps the sheet mounted until
+  the exit ends).
+*/
+@keyframes kro-sheet-rise {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes kro-sheet-sink {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes kro-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kro-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.kro-sheet-bottom[data-state="open"] {
+  animation: kro-sheet-rise var(--kro-duration-panel) var(--kro-ease-panel) both;
+}
+
+.kro-sheet-bottom[data-state="closed"] {
+  animation: kro-sheet-sink var(--kro-duration-panel-exit) var(--kro-ease-in)
+    both;
+}
+
+.kro-fade-overlay[data-state="open"] {
+  animation: kro-fade-in var(--kro-duration-panel) var(--kro-ease-out) both;
+}
+
+.kro-fade-overlay[data-state="closed"] {
+  animation: kro-fade-out var(--kro-duration-panel-exit) var(--kro-ease-in) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --kro-duration-quick: 0.01ms;
     --kro-duration-standard: 0.01ms;
     --kro-duration-quick-spring: 0.01ms;
     --kro-duration-standard-spring: 0.01ms;
+    --kro-duration-panel: 0.01ms;
+    --kro-duration-panel-exit: 0.01ms;
   }
 
   *,

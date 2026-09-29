@@ -37,6 +37,8 @@ import {
   MINIMUM_CAPTURE_VALUE,
   applyCaptureKindDefaults,
   captureIntentFor,
+  multiAddIntentFor,
+  captureRouteFor,
   captureKindRequiresTime,
   captureKindSupportsDuration,
   captureKindSupportsValue,
@@ -116,6 +118,8 @@ export function withContextLoaded(
     readonly now: Date
     /** The web-only `captureSuggestions` flag; absent reads as off. */
     readonly isSuggestionsEnabled?: boolean
+    /** The remembered pane choice; absent reads as hidden. */
+    readonly isSuggestionsShown?: boolean
   },
 ): CaptureState {
   return {
@@ -129,6 +133,7 @@ export function withContextLoaded(
     availableDestinations: loaded.availableDestinations,
     clockAnchor: loaded.now,
     isSuggestionsEnabled: loaded.isSuggestionsEnabled ?? false,
+    isSuggestionsShown: loaded.isSuggestionsShown ?? false,
   }
 }
 
@@ -495,6 +500,7 @@ export function withRouteDelivered(
       inbox: {
         isOpen: !presentsInPane,
         justCreatedEndeavorId: intent.route.endeavorId,
+        alsoJustCreatedIds: intent.route.additionalEndeavorIds ?? [],
       },
       clockAnchor: now,
     }
@@ -514,14 +520,25 @@ export function withRouteDelivered(
  * *"on any subsequent open, that endeavor moves into Pending Triage"*.
  */
 export function withInboxOpened(state: CaptureState): CaptureState {
-  return { ...state, inbox: { isOpen: true, justCreatedEndeavorId: null } }
+  return {
+    ...state,
+    inbox: {
+      isOpen: true,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
+  }
 }
 
 /** One concern: the Inbox dismissed. The slot drains with it. */
 export function withInboxDismissed(state: CaptureState): CaptureState {
   return {
     ...state,
-    inbox: { isOpen: false, justCreatedEndeavorId: null },
+    inbox: {
+      isOpen: false,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
     addForToday: null,
   }
 }
@@ -640,7 +657,11 @@ export function withSchedulingApplied(
     endeavors: state.endeavors.map((endeavor) =>
       endeavor.id === applied.endeavor.id ? applied.endeavor : endeavor,
     ),
-    inbox: { isOpen: false, justCreatedEndeavorId: null },
+    inbox: {
+      isOpen: false,
+      justCreatedEndeavorId: null,
+      alsoJustCreatedIds: [],
+    },
     addForToday: null,
     navigation: schedulingIntentFor({
       endeavorId: applied.endeavor.id,
@@ -778,6 +799,20 @@ export function withSuggestionsAddedToInbox(
   }
   const addedIds = params.added.map((item) => item.suggestionId)
   const prompt = state.prompt
+  // Everything landed: close the prompt and take the user to what they added
+  // — the Inbox with each row Just Created (or the Plan, for all-events) —
+  // through the same route-delivery path a single capture uses.
+  if (params.failedSuggestionIds.length === 0) {
+    const endeavors = params.added.map((item) => item.endeavor)
+    return {
+      ...state,
+      load: { kind: 'loaded' },
+      endeavors: [...state.endeavors, ...endeavors],
+      prompt: null,
+      navigation: multiAddIntentFor(endeavors, params.now),
+      clockAnchor: params.now,
+    }
+  }
   return {
     ...state,
     load: { kind: 'loaded' },
@@ -794,10 +829,24 @@ export function withSuggestionsAddedToInbox(
               (id) => !addedIds.includes(id),
             ),
             suggestionNotice: {
-              added: params.added.length,
+              toInbox: params.added.filter(
+                (item) => captureRouteFor(item.endeavor).kind === 'inbox',
+              ).length,
+              toPlan: params.added.filter(
+                (item) => captureRouteFor(item.endeavor).kind === 'plan',
+              ).length,
               failed: params.failedSuggestionIds.length,
             },
           },
     clockAnchor: params.now,
   }
+}
+
+/** One concern: the suggestions pane shown or hidden. */
+export function withSuggestionsShown(
+  state: CaptureState,
+  shown: boolean,
+): CaptureState {
+  if (state.isSuggestionsShown === shown) return state
+  return { ...state, isSuggestionsShown: shown }
 }

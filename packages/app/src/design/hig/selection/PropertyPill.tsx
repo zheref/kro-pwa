@@ -111,7 +111,7 @@ export function PropertyPill({
         aria-keyshortcuts={keyShortcuts}
         title={tooltip}
         onClick={onSelect}
-        className="inline-flex items-center gap-1.5 outline-none focus-visible:shadow-[var(--kro-ring)]"
+        className="inline-flex items-center gap-1.5 outline-none focus-visible:shadow-[var(--kro-ring-field)]"
         style={{
           padding: PROPERTY_PILL_PADDING[density],
           fontWeight: isExpanded ? 700 : 500,
@@ -149,7 +149,7 @@ export function PropertyPill({
             type="button"
             aria-label={clearLabel ?? `Clear ${label}`}
             onClick={onClear}
-            className="inline-flex items-center justify-center outline-none focus-visible:shadow-[var(--kro-ring)]"
+            className="inline-flex items-center justify-center outline-none focus-visible:shadow-[var(--kro-ring-field)]"
             style={{
               minWidth: minSize,
               color: foreground,

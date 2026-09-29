@@ -238,7 +238,8 @@ describe('the mobile idiom restyles a default button and nothing else', () => {
     expect(styles).toContain(':not([data-size="pill"])')
     expect(styles).toContain('[data-kro-fab]')
     expect(styles).toContain('[data-kro-field]):focus-within')
-    expect(styles).toContain('var(--kro-color-glow-lime)')
+    // The field's lime glow, now the named `--kro-ring-field` token.
+    expect(styles).toContain('var(--kro-ring-field)')
     expect(styles).toContain('[data-slot="input"]')
   })
 })

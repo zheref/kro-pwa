@@ -6,6 +6,7 @@ import {
   capturePromptKeyHint,
   composeCaptureStatusLine,
   resolveCapturePromptKey,
+  suggestionGridNeighbour,
 } from '../capturePromptKeyboard'
 
 const stroke = (
@@ -263,5 +264,27 @@ describe('the suggestions keys', () => {
         task,
       ),
     ).toEqual({ kind: 'submit' })
+  })
+})
+
+describe('suggestionGridNeighbour', () => {
+  it('moves one card with ← / →', () => {
+    expect(suggestionGridNeighbour(4, 9, 3, 'ArrowRight')).toBe(5)
+    expect(suggestionGridNeighbour(4, 9, 3, 'ArrowLeft')).toBe(3)
+  })
+
+  it('moves one row with ↑ / ↓ — a column-count stride', () => {
+    expect(suggestionGridNeighbour(4, 9, 3, 'ArrowDown')).toBe(7)
+    expect(suggestionGridNeighbour(4, 9, 3, 'ArrowUp')).toBe(1)
+  })
+
+  it('stays put at an edge', () => {
+    expect(suggestionGridNeighbour(0, 9, 3, 'ArrowLeft')).toBeNull()
+    expect(suggestionGridNeighbour(7, 9, 3, 'ArrowDown')).toBeNull()
+    expect(suggestionGridNeighbour(1, 9, 3, 'ArrowUp')).toBeNull()
+  })
+
+  it('treats an unmeasured grid as one column', () => {
+    expect(suggestionGridNeighbour(0, 3, 0, 'ArrowDown')).toBe(1)
   })
 })

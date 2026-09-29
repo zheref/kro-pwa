@@ -256,15 +256,27 @@ const WithFooter = {
   ),
 }
 
-/** Pick + selection mode — a list the user chooses from, one row ticked. */
+/**
+ * Pick + selection mode on canon's horizontal card — the emoji in its
+ * kind-washed tile, one row ticked, one that cannot be ticked.
+ */
 const PickAndSelect = {
   render: () => (
-    <div style={{ width: 360, padding: 16, display: 'grid', gap: 8 }}>
+    <div
+      style={{
+        width: 680,
+        padding: 16,
+        display: 'grid',
+        gap: 8,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+      }}
+    >
       <EndeavorRow
         symbol="📊"
         title="Prepare presentation slides"
         badges={[{ kind: 'reward', amount: 30 }]}
-        config="compactDesktopInbox"
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-task)"
         now={new Date(2026, 8, 28, 9, 0)}
         onPick={() => {}}
         selection={{ checked: true, label: 'Select', onToggle: () => {} }}
@@ -272,13 +284,23 @@ const PickAndSelect = {
       <EndeavorRow
         symbol="🤝"
         title="Team sync meeting"
-        config="compactDesktopInbox"
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-event)"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{ checked: false, label: 'Select', onToggle: () => {} }}
+      />
+      <EndeavorRow
+        symbol="🧘"
+        title="Meditate for 10 minutes"
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-habit)"
         now={new Date(2026, 8, 28, 9, 0)}
         onPick={() => {}}
         selection={{
           checked: false,
           disabled: true,
-          label: 'Needs a time',
+          label: 'Unavailable',
           onToggle: () => {},
         }}
       />

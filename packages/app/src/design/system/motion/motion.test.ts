@@ -178,3 +178,66 @@ describe('the var() helpers', () => {
     expect(easingVar('standardSpring')).toBe('var(--kro-ease-standard-spring)')
   })
 })
+
+describe('one trailing-panel motion for the detail pane, the prompt and its pane', () => {
+  it('slides from the full width plus the 16px margin over the standard spring', () => {
+    expect(MOTION_CSS).toContain(
+      '--kro-trailing-panel-offset: calc(100% + 16px);',
+    )
+    expect(MOTION_CSS).toContain(
+      '--kro-trailing-panel-duration: var(--kro-duration-standard-spring);',
+    )
+    expect(MOTION_CSS).toContain(
+      '--kro-trailing-panel-ease: var(--kro-ease-standard-spring);',
+    )
+  })
+
+  it('drives the prompt and pane in and out on data-state with those same values', () => {
+    expect(MOTION_CSS).toMatch(
+      /\.kro-trailing-panel\[data-state="open"\][^}]*kro-trailing-in var\(--kro-trailing-panel-duration\)\s+var\(--kro-trailing-panel-ease\)/,
+    )
+    expect(MOTION_CSS).toMatch(
+      /\.kro-trailing-panel\[data-state="closed"\][^}]*kro-trailing-out var\(--kro-trailing-panel-duration\)\s+var\(--kro-trailing-panel-ease\)/,
+    )
+    expect(MOTION_CSS).toMatch(
+      /@keyframes kro-trailing-in \{\s*from \{\s*opacity: 0;\s*transform: translateX\(var\(--kro-trailing-panel-offset\)\);/,
+    )
+    expect(MOTION_CSS).not.toContain('kro-float-in')
+  })
+
+  it('is flattened by the reduced-motion block, which stops every animation', () => {
+    const reduced = MOTION_CSS.slice(
+      MOTION_CSS.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+    expect(reduced).toContain('--kro-duration-standard-spring: 0.01ms')
+    expect(reduced).toContain('animation-duration: 0.01ms !important')
+  })
+})
+
+describe('the panel motion tokens and the bottom sheet', () => {
+  it('gives panels a readable travel time: 380ms in, 240ms out', () => {
+    expect(declaredRoot['--kro-duration-panel']).toBe('380ms')
+    expect(declaredRoot['--kro-duration-panel-exit']).toBe('240ms')
+  })
+
+  it('rises a bottom sheet in and sinks it out on data-state, overlay fading', () => {
+    expect(MOTION_CSS).toMatch(
+      /\.kro-sheet-bottom\[data-state="open"\][^}]*kro-sheet-rise var\(--kro-duration-panel\) var\(--kro-ease-panel\)/,
+    )
+    expect(MOTION_CSS).toMatch(
+      /\.kro-sheet-bottom\[data-state="closed"\][^}]*kro-sheet-sink var\(--kro-duration-panel-exit\) var\(--kro-ease-in\)/,
+    )
+    expect(MOTION_CSS).toMatch(
+      /\.kro-fade-overlay\[data-state="open"\][^}]*kro-fade-in/,
+    )
+    expect(MOTION_CSS).toMatch(
+      /\.kro-fade-overlay\[data-state="closed"\][^}]*kro-fade-out/,
+    )
+  })
+})
+
+describe('the panel easing is a readable slide, not a pop', () => {
+  it('uses an emphasized decelerate, not the front-loaded (0.16, 1, 0.3, 1)', () => {
+    expect(declaredRoot['--kro-ease-panel']).toBe('cubic-bezier(0.2, 0, 0, 1)')
+  })
+})

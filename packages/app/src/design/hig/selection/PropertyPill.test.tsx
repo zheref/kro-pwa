@@ -171,4 +171,13 @@ describe('PropertyPill', () => {
       'var(--kro-duration-quick, 180ms)',
     )
   })
+
+  it('focuses with the field ring — the same brand green the Search field uses', () => {
+    render(SetAndClearable.render())
+    for (const button of screen.getAllByRole('button')) {
+      expect(button.className).toContain(
+        'focus-visible:shadow-[var(--kro-ring-field)]',
+      )
+    }
+  })
 })

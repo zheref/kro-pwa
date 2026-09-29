@@ -82,6 +82,8 @@ import {
 const ChevronBackward = triageIcon('chevron.backward')
 const StarFill = triageIcon('star.fill')
 const StarSlash = triageIcon('star.slash')
+/** Reward points — canon's `medal.star` (the Importance star stays a star). */
+const RewardGlyph = triageIcon('medal.star')
 const BoltFill = triageIcon('bolt.fill')
 const BoltSlash = triageIcon('bolt.slash')
 const CheckmarkCircle = triageIcon('checkmark.circle.fill')
@@ -304,7 +306,7 @@ export function TriageFormFragment(props: TriageFormFragmentProps) {
  * The badge is *"bound to the same value the Reward stepper edits, so it
  * updates live"*, and it is `aria-hidden` in favour of one label on the wrapper
  * — canon's `.accessibilityElement(children: .ignore)` — so a screen reader
- * announces "Reward: 30 points" rather than a lone star and a lone number.
+ * announces "Reward: 30 points" rather than a lone medal and a lone number.
  */
 function TriageHeader({
   endeavorTitle,
@@ -369,7 +371,7 @@ function TriageHeader({
         aria-label={`Reward: ${rewardPoints} points`}
         className="flex shrink-0 flex-col items-center gap-0.5"
       >
-        <StarFill
+        <RewardGlyph
           size={18}
           aria-hidden
           style={{ color: colorVar('rewardYellow') }}
@@ -482,7 +484,7 @@ function RewardStepper({
           <PlusGlyph size={13} aria-hidden />
         </button>
       </div>
-      <StarFill
+      <RewardGlyph
         size={14}
         aria-hidden
         style={{ color: colorVar('rewardYellow') }}

@@ -1112,6 +1112,47 @@ export const endeavorFromCaptureResult = (
   })
 }
 
+/**
+ * The rest of a multi-add's Just Created rows, in the order they were added —
+ * the same non-event guard as the single slot.
+ */
+export const alsoJustCreatedEndeavors = (
+  endeavors: readonly Endeavor[],
+  ids: readonly string[],
+): readonly Endeavor[] =>
+  ids.flatMap((id) => {
+    const found = endeavors.find((endeavor) => endeavor.id === id)
+    return found === undefined || found.kind === EndeavorKind.calendarEvent
+      ? []
+      : [found]
+  })
+
+/**
+ * Where a multi-add from the suggestions pane takes the user: the Inbox with
+ * every Inbox-bound row Just Created when at least one landed there; else —
+ * every one an event — the Plan, exactly like a single event capture. `null`
+ * for an empty batch.
+ */
+export const multiAddIntentFor = (
+  added: readonly Endeavor[],
+  now: Date,
+): CaptureNavigationIntent | null => {
+  const inboxBound = added.filter(
+    (endeavor) => captureRouteFor(endeavor).kind === 'inbox',
+  )
+  const first = inboxBound[0]
+  if (first === undefined) {
+    const event = added[0]
+    return event === undefined ? null : captureIntentFor(event, now)
+  }
+  const route: InboxCaptureRoute = {
+    kind: 'inbox',
+    endeavorId: first.id,
+    additionalEndeavorIds: inboxBound.slice(1).map((endeavor) => endeavor.id),
+  }
+  return { route, decidedAt: now, deliverAfterMs: captureRouteDelayMs(route) }
+}
+
 // ---------------------------------------------------------------------------
 // Capture routing
 // ---------------------------------------------------------------------------
@@ -1169,6 +1210,11 @@ export interface PlanCaptureRoute {
 export interface InboxCaptureRoute {
   readonly kind: 'inbox'
   readonly endeavorId: string
+  /**
+   * Further endeavors created in the same step (a multi-add from the
+   * suggestions pane), shown beneath the first in the Just Created slot.
+   */
+  readonly additionalEndeavorIds?: readonly string[]
 }
 
 export type CaptureRoute = PlanCaptureRoute | InboxCaptureRoute
@@ -1279,6 +1325,7 @@ export const isCaptureIntentDue = (
 export const pendingTriageEndeavors = (
   endeavors: readonly Endeavor[],
   justCreatedEndeavorId: string | null,
+  alsoJustCreatedIds: readonly string[] = [],
 ): readonly Endeavor[] =>
   endeavors
     .filter(
@@ -1286,7 +1333,8 @@ export const pendingTriageEndeavors = (
         awaitsTriage(endeavor) &&
         endeavor.start === null &&
         endeavor.due === null &&
-        endeavor.id !== justCreatedEndeavorId,
+        endeavor.id !== justCreatedEndeavorId &&
+        !alsoJustCreatedIds.includes(endeavor.id),
     )
     .sort(
       (left, right) =>

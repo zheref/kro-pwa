@@ -112,6 +112,8 @@ export interface InboxFragmentProps {
   readonly presentation: InboxPresentation
   /** Canon's `justCreatedCardSelector` — one row, or none. */
   readonly justCreated: EndeavorCardModel | null
+  /** A multi-add's further Just Created rows, beneath the first. */
+  readonly alsoJustCreated?: readonly EndeavorCardModel[]
   /** Canon's `pendingTriageSelector`, newest first. */
   readonly pendingTriage: readonly EndeavorCardModel[]
   readonly totalCount: number
@@ -155,6 +157,8 @@ export interface InboxFragmentProps {
     endeavorId: string,
   ) => void
 }
+
+const NO_CARDS: readonly EndeavorCardModel[] = []
 
 export function InboxFragment(props: InboxFragmentProps) {
   const { isOpen, presentation, onDismiss } = props
@@ -257,6 +261,7 @@ export function InboxFragment(props: InboxFragmentProps) {
 function InboxBody({
   presentation,
   justCreated,
+  alsoJustCreated = NO_CARDS,
   pendingTriage,
   totalCount,
   isEmpty,
@@ -311,7 +316,7 @@ function InboxBody({
             <InboxSection
               title="Just Created"
               glyph={<Sparkles size={14} aria-hidden />}
-              cards={[justCreated]}
+              cards={[justCreated, ...alsoJustCreated]}
               {...rowProps}
             />
           )}

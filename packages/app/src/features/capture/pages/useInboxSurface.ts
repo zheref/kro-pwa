@@ -41,6 +41,7 @@ import {
   selectInboxVista,
   selectIsInboxEmpty,
   selectIsInboxOpen,
+  selectAlsoJustCreatedEndeavors,
   selectJustCreatedEndeavor,
   selectPendingTriageEndeavors,
 } from '../CaptureSelectors'
@@ -49,6 +50,8 @@ import { type InboxRowLayout, inboxRowLayoutFor } from './capturePresentation'
 export interface InboxSurfaceViewModel {
   readonly isOpen: boolean
   readonly justCreated: EndeavorCardModel | null
+  /** A multi-add's further Just Created rows. */
+  readonly alsoJustCreated: readonly EndeavorCardModel[]
   readonly pendingTriage: readonly EndeavorCardModel[]
   readonly totalCount: number
   readonly isEmpty: boolean
@@ -74,6 +77,9 @@ export function useInboxSurface(): InboxSurfaceViewModel {
 
   const isOpen = useAppSelector(selectIsInboxOpen)
   const justCreatedEndeavor = useAppSelector(selectJustCreatedEndeavor)
+  const alsoJustCreatedEndeavors = useAppSelector(
+    selectAlsoJustCreatedEndeavors,
+  )
   const pendingTriageEndeavors = useAppSelector(selectPendingTriageEndeavors)
   const totalCount = useAppSelector(selectInboxTotalCount)
   const isEmpty = useAppSelector(selectIsInboxEmpty)
@@ -107,6 +113,14 @@ export function useInboxSurface(): InboxSurfaceViewModel {
         ? null
         : endeavorCardModelFrom(justCreatedEndeavor, new Date(nowMs)),
     [justCreatedEndeavor, nowMs],
+  )
+
+  const alsoJustCreated = useMemo(
+    () =>
+      alsoJustCreatedEndeavors.map((endeavor) =>
+        endeavorCardModelFrom(endeavor, new Date(nowMs)),
+      ),
+    [alsoJustCreatedEndeavors, nowMs],
   )
 
   const pendingTriage = useMemo(
@@ -172,6 +186,7 @@ export function useInboxSurface(): InboxSurfaceViewModel {
   return {
     isOpen,
     justCreated,
+    alsoJustCreated,
     pendingTriage,
     totalCount,
     isEmpty,

@@ -220,7 +220,7 @@ export const PopoverWithSuggestions = {
   ),
 }
 
-/** Two suggestions ticked for a multi-add — "Add 2 to Inbox" armed. */
+/** Two suggestions ticked for a multi-add — "Add 2" armed. */
 export const PopoverWithTwoSuggestionsSelected = {
   render: () => (
     <ThemeScope theme="dark">

@@ -53,8 +53,9 @@
  * (claimable/locked non-empty) — never merely once loading has stopped,
  * which a first-attempt failure also does without ever making either true.
  */
+import { iconForSymbol } from '../../../design/system/icons/icons'
 import { ToolbarSlot } from '../../main'
-import { Settings, Zap } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Reward } from '@kro/core'
 import { LiquidGlassFAB } from '../../../design/chrome/fab/LiquidGlassFAB'
@@ -69,6 +70,9 @@ import { SuggestionRewardRow } from './SuggestionRewardRow'
 /** `MainScreen.fabTrailingPadding` / `fabBottomPadding` — the "legacy" pair. */
 const FAB_TRAILING_PADDING = 16
 const FAB_BOTTOM_PADDING = 60
+
+/** Reward points — canon's `medal.star`, from the shared symbol map. */
+const RewardGlyph = iconForSymbol('medal.star')
 
 export interface EarnFragmentProps {
   readonly claimableRewards: readonly Reward[]
@@ -178,7 +182,7 @@ export function EarnFragment(props: EarnFragmentProps) {
       ) : null}
 
       <div className="flex items-center gap-1.5 px-kro-medium pt-kro-small pb-kro-tiny">
-        <Zap
+        <RewardGlyph
           className="size-4"
           aria-hidden
           style={{ color: colorVar('rewardYellow') }}

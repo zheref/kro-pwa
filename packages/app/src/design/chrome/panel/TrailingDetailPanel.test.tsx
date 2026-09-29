@@ -69,7 +69,9 @@ describe('TrailingDetailPanel — the stories', () => {
     expect(panel.getAttribute('data-presented')).toBe('false')
     expect(panel.getAttribute('aria-hidden')).toBe('true')
     expect(panel.style.opacity).toBe('0')
-    expect(panel.style.transform).toContain('translateX(calc(100% + 16px))')
+    expect(panel.style.transform).toContain(
+      'translateX(var(--kro-trailing-panel-offset))',
+    )
   })
 })
 

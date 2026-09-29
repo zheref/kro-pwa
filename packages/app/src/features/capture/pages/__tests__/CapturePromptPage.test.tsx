@@ -5,9 +5,16 @@
  * A Page's job is selection and dispatch, so these read the store rather than
  * the markup wherever the markup is the Fragment's business.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installRadixEnvironment } from '../../../../design/system/primitives/__tests__/radixEnvironment'
 import { userDidRequestCapture } from '../../CaptureFeature'
 import { CAPTURE_MOCK_NOW } from '../../CaptureMocks'
@@ -74,6 +81,94 @@ describe('the Page renders nothing until a draft exists', () => {
     )
 
     expect(screen.queryByTestId('capture-prompt')).toBeNull()
+  })
+})
+
+describe('it leaves the way it arrived', () => {
+  /**
+   * jsdom runs no CSS, so Radix's Presence would see `animation-name: none` and
+   * unmount on the spot. This gives the trailing panel the names `motion.css`
+   * gives it, so the test observes the real exit contract.
+   */
+  const withTrailingKeyframes = () => {
+    const real = globalThis.getComputedStyle.bind(globalThis)
+    return vi
+      .spyOn(globalThis, 'getComputedStyle')
+      .mockImplementation((node) => {
+        const style = real(node)
+        if (!(node instanceof HTMLElement)) return style
+        if (!node.classList.contains('kro-trailing-panel')) return style
+        // Read live, as a real computed style is: Presence holds on to it.
+        const name = () =>
+          node.getAttribute('data-state') === 'closed'
+            ? 'kro-trailing-out'
+            : 'kro-trailing-in'
+        return new Proxy(style, {
+          get: (target, key) =>
+            key === 'animationName' ? name() : Reflect.get(target, key),
+        })
+      })
+  }
+
+  it.each([
+    ['Discard', () => screen.getByRole('button', { name: 'Discard new task' })],
+  ])(
+    'keeps the closed content mounted through kro-trailing-out after %s, then removes it',
+    async (_path, control) => {
+      const spy = withTrailingKeyframes()
+      // Presence matches the ended animation with `CSS.escape`, absent in jsdom.
+      vi.stubGlobal('CSS', { escape: (value: string) => value })
+      const store = makeCaptureStore({ endeavors: [] })
+      mount(store)
+      open(store)
+      const prompt = await screen.findByTestId('capture-prompt')
+      const panel = prompt.closest('.kro-trailing-panel') ?? prompt
+
+      await userEvent.click(control())
+
+      expect(store.getState().capture.prompt).toBeNull()
+      const closing = screen.getByTestId('capture-prompt')
+      expect(closing.closest('[data-state="closed"]')).toBeTruthy()
+      expect(closing.closest('.kro-trailing-panel')).toBeTruthy()
+
+      // jsdom's AnimationEvent drops `animationName` from its init dict.
+      const ended = new Event('animationend', { bubbles: true })
+      Object.defineProperty(ended, 'animationName', {
+        value: 'kro-trailing-out',
+      })
+      act(() => {
+        fireEvent(panel, ended)
+      })
+      await waitFor(() =>
+        expect(screen.queryByTestId('capture-prompt')).toBeNull(),
+      )
+      spy.mockRestore()
+      vi.unstubAllGlobals()
+    },
+  )
+
+  it('rides the exit out on Escape too, and never lingers without an animationend', async () => {
+    const spy = withTrailingKeyframes()
+    const store = makeCaptureStore({ endeavors: [] })
+    mount(store)
+    open(store)
+    await screen.findByTestId('capture-prompt')
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(store.getState().capture.prompt).toBeNull()
+    expect(
+      screen
+        .getByTestId('capture-prompt')
+        .closest('.kro-trailing-panel[data-state="closed"]'),
+    ).toBeTruthy()
+
+    // No `animationend` arrives (a hidden tab delivers none): the fallback
+    // still takes the layer down just past the 270ms exit.
+    await waitFor(() =>
+      expect(screen.queryByTestId('capture-prompt')).toBeNull(),
+    )
+    spy.mockRestore()
   })
 })
 

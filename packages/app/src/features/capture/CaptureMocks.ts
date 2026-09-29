@@ -626,6 +626,7 @@ const suggestionsOn = withContextLoaded(initialCaptureState, {
   availableDestinations: [CaptureDestination.local],
   now: CAPTURE_MOCK_NOW,
   isSuggestionsEnabled: true,
+  isSuggestionsShown: true,
 })
 
 const promptWithSuggestions = withPromptOpened(suggestionsOn, {

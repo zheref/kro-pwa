@@ -26,7 +26,9 @@
  */
 import {
   type CaptureSuggestion,
+  SUGGESTIONS_SHOWN_KEY,
   captureResultFromSuggestion,
+  suggestionsShownFromStored,
 } from './CaptureSuggestions'
 import {
   type Endeavor,
@@ -79,6 +81,7 @@ export interface CaptureContext {
   readonly availableDestinations: readonly CaptureDestination[]
   readonly now: Date
   readonly isSuggestionsEnabled: boolean
+  readonly isSuggestionsShown: boolean
 }
 
 const messageOf = (error: unknown): string =>
@@ -155,6 +158,9 @@ export const loadCaptureContextThunk = createAsyncThunk<
       }),
       now,
       isSuggestionsEnabled: flags.isEnabled(FeatureFlags.captureSuggestions),
+      isSuggestionsShown: suggestionsShownFromStored(
+        preferences.get(SUGGESTIONS_SHOWN_KEY),
+      ),
     })
   } catch (error) {
     return err(CaptureExceptions.contextLoadFailed(messageOf(error)))
@@ -460,18 +466,8 @@ export const addSuggestionsToInboxThunk = createAsyncThunk<
       const result = captureResultFromSuggestion(
         item.suggestion,
         item.destination,
+        now,
       )
-      if (result === null) {
-        outcomes.push({
-          suggestionId: item.suggestion.id,
-          result: err(
-            CaptureExceptions.invalidCapture(
-              'An event needs a time, so it cannot go to the Inbox.',
-            ),
-          ),
-        })
-        continue
-      }
       const endeavor = endeavorFromCaptureResult(result, { id: item.id, now })
       try {
         await persistEndeavor(
@@ -495,3 +491,23 @@ export const addSuggestionsToInboxThunk = createAsyncThunk<
     return ok({ items: outcomes, now })
   },
 )
+
+/**
+ * Show or hide the suggestions pane, and remember the choice on this device.
+ *
+ * The choice always applies: failing to remember it is a convenience lost,
+ * not a failed toggle, so a storage error still resolves `ok(shown)` — the
+ * same stance as remembering the last-used host.
+ */
+export const setSuggestionsShownThunk = createAsyncThunk<
+  Result<boolean, CaptureException>,
+  { shown: boolean },
+  { extra: ThunkExtra }
+>('capture/onSuggestionsVisibilityChanged', async ({ shown }, { extra }) => {
+  try {
+    extra.localStore.preferences.set(SUGGESTIONS_SHOWN_KEY, shown)
+  } catch {
+    // See above: the pane still toggles.
+  }
+  return ok(shown)
+})

@@ -2,7 +2,7 @@
  * The suggestions pane's state tier: Shifters, reducer arms, Selectors and the
  * multi-add Producer — always through `makeStore` with stubbed services.
  */
-import { type LocalStore, makeEndeavor, EndeavorKind } from '@kro/core'
+import { EndeavorKind, type LocalStore, makeEndeavor } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import {
   type AppStore,
@@ -13,6 +13,7 @@ import {
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
 import {
   captureSlice,
+  userDidRequestCapture,
   userDidPickSuggestion,
   userDidToggleSuggestion,
 } from '../CaptureFeature'
@@ -22,17 +23,36 @@ import {
   captureSuggestionMocks,
   captureSuggestionStateMocks,
 } from '../CaptureMocks'
-import { addSuggestionsToInboxThunk } from '../CaptureProducer'
-import { CaptureDestination, CaptureKind } from '../CaptureRules'
 import {
+  addSuggestionsToInboxThunk,
+  loadCaptureContextThunk,
+  setSuggestionsShownThunk,
+} from '../CaptureProducer'
+import {
+  SUGGESTIONS_SHOWN_KEY,
+  suggestionsShownFromStored,
+} from '../CaptureSuggestions'
+import {
+  CaptureDestination,
+  CaptureKind,
+  multiAddIntentFor,
+} from '../CaptureRules'
+import {
+  selectAlsoJustCreatedEndeavors,
+  selectCanShowCaptureSuggestions,
+  selectJustCreatedEndeavor,
+  selectPendingTriageEndeavors,
   selectCaptureStatusReason,
+  selectIsCaptureSuggestionsShown,
   selectCaptureSuggestions,
   selectSuggestionsForInbox,
 } from '../CaptureSelectors'
 import {
   withSuggestionApplied,
   withSuggestionSelectionToggled,
+  withRouteDelivered,
   withSuggestionsAddedToInbox,
+  withSuggestionsShown,
 } from '../CaptureShifters'
 
 const reduce = captureSlice.reducer
@@ -112,7 +132,11 @@ describe('withSuggestionsAddedToInbox', () => {
     expect(next.prompt?.selectedSuggestionIds).toEqual([
       captureSuggestionMocks.reminder.id,
     ])
-    expect(next.prompt?.suggestionNotice).toEqual({ added: 1, failed: 1 })
+    expect(next.prompt?.suggestionNotice).toEqual({
+      toInbox: 1,
+      toPlan: 0,
+      failed: 1,
+    })
     expect(next.prompt?.draft).toBe(twoSelected.prompt?.draft)
   })
 
@@ -190,7 +214,7 @@ describe('the suggestion Selectors', () => {
     expect(selectCaptureSuggestions(root(closed))).toEqual([])
   })
 
-  it('pairs each ticked, Inbox-able card with a host its kind supports', () => {
+  it('pairs every ticked card, events included, with a host its kind supports', () => {
     const items = selectSuggestionsForInbox(
       root(
         withSuggestionSelectionToggled(
@@ -202,6 +226,7 @@ describe('the suggestion Selectors', () => {
     expect(items.map((item) => item.suggestion.id)).toEqual([
       captureSuggestionMocks.task.id,
       captureSuggestionMocks.reminder.id,
+      captureSuggestionMocks.eventSoon.id,
     ])
     expect(items.every((item) => item.destination === 'local')).toBe(true)
   })
@@ -213,7 +238,7 @@ describe('the suggestion Selectors', () => {
       now: CAPTURE_MOCK_NOW,
     })
     expect(selectCaptureStatusReason(root(tallied))).toBe(
-      'Added 0 to Inbox. 1 couldn’t be saved — still selected.',
+      '1 couldn’t be saved — still selected.',
     )
     expect(selectCaptureStatusReason(root(open))).toBe(
       'Enter a title to add this task.',
@@ -298,10 +323,11 @@ describe('addSuggestionsToInboxThunk', () => {
     expect(payload.value.items.map((item) => item.result.ok)).toEqual([
       false,
       true,
-      false,
+      true,
     ])
     expect(store.getState().capture.endeavors.map((row) => row.id)).toEqual([
       'new-reminder',
+      'new-event',
     ])
   })
 
@@ -317,5 +343,194 @@ describe('addSuggestionsToInboxThunk', () => {
     expect(payload.ok).toBe(true)
     expect(payload.value.items).toEqual([])
     expect(store.getState().capture.endeavors).toEqual([])
+  })
+})
+
+describe('a mixed-kind multi-add', () => {
+  it('stores every kind, closes the prompt and routes to the Inbox', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const store = makeStore({ ...stubbedThunkExtra, localStore })
+    store.dispatch(
+      userDidRequestCapture({ kind: CaptureKind.task, now: CAPTURE_MOCK_NOW }),
+    )
+    await store.dispatch(
+      addSuggestionsToInboxThunk({
+        items: [
+          {
+            suggestion: captureSuggestionMocks.task,
+            id: 't',
+            destination: CaptureDestination.local,
+          },
+          {
+            suggestion: captureSuggestionMocks.habit,
+            id: 'h',
+            destination: CaptureDestination.local,
+          },
+          {
+            suggestion: captureSuggestionMocks.eventSoon,
+            id: 'e',
+            destination: CaptureDestination.local,
+          },
+        ],
+        now: CAPTURE_MOCK_NOW,
+      }),
+    )
+    const rows = store.getState().capture.endeavors
+    expect(rows.map((row) => row.id)).toEqual(['t', 'h', 'e'])
+    expect(rows.find((row) => row.id === 'e')?.start).not.toBeNull()
+    // Everything landed: the prompt closes and the Inbox is the next stop,
+    // with both Inbox-bound rows Just Created (the event is in the Plan).
+    expect(store.getState().capture.prompt).toBeNull()
+    expect(store.getState().capture.navigation?.route).toEqual({
+      kind: 'inbox',
+      endeavorId: 't',
+      additionalEndeavorIds: ['h'],
+    })
+  })
+})
+
+describe('the suggestions pane’s on/off choice', () => {
+  it('withSuggestionsShown shows, hides, and is a no-op when unchanged', () => {
+    const hidden = captureStateMocks.promptOpenOnTask
+    expect(hidden.isSuggestionsShown).toBe(false)
+    const shown = withSuggestionsShown(hidden, true)
+    expect(shown.isSuggestionsShown).toBe(true)
+    expect(withSuggestionsShown(shown, false).isSuggestionsShown).toBe(false)
+    expect(withSuggestionsShown(shown, true)).toBe(shown)
+  })
+
+  it('persists the choice and applies it, even if storage fails', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    const store = makeStore({ ...stubbedThunkExtra, localStore })
+    await store.dispatch(setSuggestionsShownThunk({ shown: true }))
+    expect(store.getState().capture.isSuggestionsShown).toBe(true)
+    expect(localStore.preferences.get(SUGGESTIONS_SHOWN_KEY)).toBe(true)
+
+    const broken: LocalStore = {
+      ...localStore,
+      preferences: {
+        ...localStore.preferences,
+        set: () => {
+          throw new Error('quota exceeded')
+        },
+      },
+    }
+    const brokenStore = makeStore({ ...stubbedThunkExtra, localStore: broken })
+    const action = await brokenStore.dispatch(
+      setSuggestionsShownThunk({ shown: true }),
+    )
+    expect((action.payload as { ok: boolean }).ok).toBe(true)
+    expect(brokenStore.getState().capture.isSuggestionsShown).toBe(true)
+  })
+
+  it('loads the remembered choice with the capture context, hidden by default', async () => {
+    const fresh = makeStore({
+      ...stubbedThunkExtra,
+      localStore: makeInMemoryLocalStore({ endeavors: [] }),
+    })
+    await fresh.dispatch(loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }))
+    expect(fresh.getState().capture.isSuggestionsShown).toBe(false)
+
+    const remembered = makeInMemoryLocalStore({ endeavors: [] })
+    remembered.preferences.set(SUGGESTIONS_SHOWN_KEY, true)
+    const store = makeStore({ ...stubbedThunkExtra, localStore: remembered })
+    await store.dispatch(loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }))
+    expect(store.getState().capture.isSuggestionsShown).toBe(true)
+  })
+
+  it('reads the stored value defensively', () => {
+    expect(suggestionsShownFromStored(true)).toBe(true)
+    expect(suggestionsShownFromStored('true')).toBe(true)
+    expect(suggestionsShownFromStored(undefined)).toBe(false)
+    expect(suggestionsShownFromStored('yes')).toBe(false)
+  })
+
+  it('offers the toggle whenever the flag is on, and cards only when shown', () => {
+    const hiddenOn = withSuggestionsShown(
+      captureSuggestionStateMocks.promptWithSuggestions,
+      false,
+    )
+    expect(selectCanShowCaptureSuggestions(root(hiddenOn))).toBe(true)
+    expect(selectCaptureSuggestions(root(hiddenOn))).toEqual([])
+    expect(selectIsCaptureSuggestionsShown(root(open))).toBe(true)
+    expect(
+      selectCanShowCaptureSuggestions(root(captureStateMocks.promptOpenOnTask)),
+    ).toBe(false)
+  })
+})
+
+describe('where a multi-add takes the user', () => {
+  const at = (id: string, kind: EndeavorKind, start: Date | null = null) =>
+    makeEndeavor({
+      id,
+      title: id,
+      kind,
+      start,
+      duration: start ? 1800 : null,
+      createdAt: CAPTURE_MOCK_NOW,
+    })
+
+  it('goes to the Inbox with every Inbox-bound row Just Created', () => {
+    const intent = multiAddIntentFor(
+      [at('a', EndeavorKind.task), at('b', EndeavorKind.reminder)],
+      CAPTURE_MOCK_NOW,
+    )
+    expect(intent?.route).toEqual({
+      kind: 'inbox',
+      endeavorId: 'a',
+      additionalEndeavorIds: ['b'],
+    })
+  })
+
+  it('still goes to the Inbox when some rows went to the Plan', () => {
+    const intent = multiAddIntentFor(
+      [
+        at('e', EndeavorKind.calendarEvent, new Date(2026, 2, 17, 11)),
+        at('t', EndeavorKind.task),
+      ],
+      CAPTURE_MOCK_NOW,
+    )
+    expect(intent?.route.kind).toBe('inbox')
+    if (intent?.route.kind === 'inbox')
+      expect(intent.route.endeavorId).toBe('t')
+  })
+
+  it('routes an all-events batch like a single event capture, and nothing for none', () => {
+    const intent = multiAddIntentFor(
+      [at('e', EndeavorKind.calendarEvent, new Date(2026, 2, 17, 11))],
+      CAPTURE_MOCK_NOW,
+    )
+    expect(intent?.route.kind).toBe('plan')
+    expect(multiAddIntentFor([], CAPTURE_MOCK_NOW)).toBeNull()
+  })
+
+  it('shows every added row as Just Created once delivered, and keeps them out of Pending Triage', () => {
+    const intent = multiAddIntentFor(
+      [at('a', EndeavorKind.task), at('b', EndeavorKind.task)],
+      CAPTURE_MOCK_NOW,
+    )
+    const withRows = {
+      ...captureStateMocks.loadedPool,
+      endeavors: [
+        ...captureStateMocks.loadedPool.endeavors,
+        at('a', EndeavorKind.task),
+        at('b', EndeavorKind.task),
+      ],
+      navigation: intent,
+    }
+    const delivered = withRouteDelivered(
+      withRows,
+      new Date(CAPTURE_MOCK_NOW.getTime() + 1000),
+    )
+    const state = root(delivered)
+    expect(selectJustCreatedEndeavor(state)?.id).toBe('a')
+    expect(selectAlsoJustCreatedEndeavors(state).map((row) => row.id)).toEqual([
+      'b',
+    ])
+    expect(
+      selectPendingTriageEndeavors(state).some(
+        (row) => row.id === 'a' || row.id === 'b',
+      ),
+    ).toBe(false)
   })
 })

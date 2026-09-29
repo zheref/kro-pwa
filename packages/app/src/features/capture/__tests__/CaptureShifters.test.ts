@@ -516,6 +516,7 @@ describe('withRouteDelivered', () => {
     expect(delivered.inbox).toEqual({
       isOpen: true,
       justCreatedEndeavorId: 'captured-task',
+      alsoJustCreatedIds: [],
     })
     expect(delivered.navigation).toBeNull()
   })
@@ -546,6 +547,7 @@ describe('withRouteDelivered — the Inbox hosted by the detail pane (web-only)'
     expect(withRouteDelivered(pending, due, true).inbox).toEqual({
       isOpen: false,
       justCreatedEndeavorId: 'captured-task',
+      alsoJustCreatedIds: [],
     })
   })
 

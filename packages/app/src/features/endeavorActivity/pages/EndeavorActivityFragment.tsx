@@ -4,7 +4,11 @@
  * store hook, no dispatch. Every string it shows was derived upstream except
  * the date and duration copy, which depend on the `locale` prop.
  */
-import { Award, CircleCheck, CircleX, Flag, Timer, Zap } from 'lucide-react'
+import { CircleCheck, CircleX, Flag, Timer, Zap } from 'lucide-react'
+import { iconForSymbol } from '../../../design/system/icons/icons'
+
+/** Reward points — canon's `medal.star` (sessions keep `bolt.fill`). */
+const RewardGlyph = iconForSymbol('medal.star')
 import type { PerformResolution } from '@kro/core'
 import type { ReactNode } from 'react'
 import { SegmentedControl } from '../../../design/hig/selection/SegmentedControl'
@@ -93,7 +97,7 @@ function Row({ row, locale }: { row: ActivityRow; locale: string }) {
           className="inline-flex items-center gap-1"
           style={{ color: colorVar('foreSecondary') }}
         >
-          <Award size={12} aria-hidden />
+          <RewardGlyph size={12} aria-hidden />
           {row.rewardPoints}
         </span>
       </span>
@@ -157,7 +161,7 @@ export function EndeavorActivityFragment({
                 label={formatActivityDuration(view.summary.totalDuration)}
               />
               <Chip
-                icon={<Award size={12} aria-hidden />}
+                icon={<RewardGlyph size={12} aria-hidden />}
                 label={`${view.summary.totalPoints} pts`}
               />
             </div>

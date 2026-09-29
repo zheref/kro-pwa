@@ -176,6 +176,7 @@ describe('a capture routed to the Inbox (web-only pane Inbox)', () => {
     expect(store.getState().capture.inbox).toEqual({
       isOpen: false,
       justCreatedEndeavorId: 'just-added',
+      alsoJustCreatedIds: [],
     })
   })
 

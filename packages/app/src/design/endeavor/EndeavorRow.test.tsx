@@ -6,6 +6,7 @@ import {
   ENDEAVOR_ROW_CONFIGS,
   EndeavorRow,
   endeavorRowPropsFromCardModel,
+  rowShadow,
 } from './EndeavorRow'
 import { EndeavorUrgency } from './endeavorCardModel'
 import { NOW, endeavorCardMocks } from './endeavorMocks'
@@ -442,5 +443,121 @@ describe('EndeavorRow pick and selection mode', () => {
     render(<EndeavorRow symbol="🤝" title="Sync" now={NOW} />)
     expect(screen.queryByRole('button')).toBeNull()
     expect(screen.queryByRole('checkbox')).toBeNull()
+  })
+})
+
+describe('EndeavorRow emoji box and horizontal card', () => {
+  it('surrounds the emoji in canon’s washed tile when given a wash', () => {
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        now={NOW}
+        config="horizontalCard"
+        symbolWash="var(--kro-role-kind-task)"
+      />,
+    )
+    const box = container.querySelector<HTMLElement>(
+      '[data-slot="endeavor-row-emoji-box"]',
+    )
+    expect(box?.textContent).toBe('📊')
+    expect(box?.style.width).toBe('46px')
+    expect(box?.style.borderRadius).toBe('12px')
+    expect(box?.style.backgroundColor).toContain('18%')
+  })
+
+  it('keeps a bare emoji without a wash', () => {
+    const { container } = render(
+      <EndeavorRow symbol="📊" title="Slides" now={NOW} />,
+    )
+    expect(
+      container.querySelector('[data-slot="endeavor-row-emoji-box"]'),
+    ).toBeNull()
+  })
+
+  it('pads the horizontal card on the spacing scale', () => {
+    const { container } = render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        now={NOW}
+        config="horizontalCard"
+      />,
+    )
+    const row = container.querySelector<HTMLElement>(
+      '[data-slot="endeavor-row"]',
+    )
+    expect(row?.style.padding).toBe('8px 16px')
+    expect(row?.style.gap).toBe('8px')
+  })
+})
+
+describe('EndeavorRow horizontal card bounds', () => {
+  it('keeps the title to one line with its full text as the pick tooltip', () => {
+    const long = 'Update personal website or portfolio before the conference'
+    const { container } = render(
+      <EndeavorRow
+        symbol="🌐"
+        title={long}
+        now={NOW}
+        config="horizontalCard"
+        onPick={() => {}}
+      />,
+    )
+    const title = container.querySelector<HTMLElement>(
+      '[data-slot="endeavor-row"] p',
+    )
+    expect(title?.style.webkitLineClamp).toBe('1')
+    const pick = screen.getByRole('button', { name: long })
+    expect(pick.getAttribute('title')).toBe(long)
+  })
+
+  it('gives the cell a fixed height that clips its text column, not its focus ring', () => {
+    const { container } = render(
+      <EndeavorRow
+        symbol="🌐"
+        title="Slides"
+        now={NOW}
+        config="horizontalCard"
+        badges={[{ kind: 'reward', amount: 30 }]}
+      />,
+    )
+    const row = container.querySelector<HTMLElement>(
+      '[data-slot="endeavor-row"]',
+    )
+    expect(row?.style.height).toBe('64px')
+    expect(row?.style.overflow).toBe('')
+    expect(row?.querySelector('.overflow-hidden')).not.toBeNull()
+  })
+})
+
+describe('rowShadow — a row on a glass pane casts no card shadow', () => {
+  it('lifts a standalone row with the card shadow', () => {
+    expect(rowShadow(true, false)).toBe('var(--kro-shadow-card)')
+  })
+
+  it('draws only the soft glass-rim outline under a grid card, never a lift', () => {
+    expect(rowShadow(false, false)).toBe('inset 0 0 0 1px var(--kro-glass-rim)')
+    expect(ENDEAVOR_ROW_CONFIGS.horizontalCard.elevated).toBe(false)
+  })
+
+  it('keeps the ticked ring on a flat card, and adds the lift only when elevated', () => {
+    expect(rowShadow(false, true)).toBe(
+      'inset 0 0 0 2px var(--kro-color-accent), inset 0 0 0 1px var(--kro-glass-rim)',
+    )
+    expect(rowShadow(true, true)).toBe(
+      'inset 0 0 0 2px var(--kro-color-accent), var(--kro-shadow-card)',
+    )
+  })
+})
+
+describe('EndeavorRow pick focus', () => {
+  it('rings a focused pick card with the field ring, not the app-wide ring', () => {
+    render(
+      <EndeavorRow symbol="📊" title="Slides" now={NOW} onPick={() => {}} />,
+    )
+    expect(screen.getByRole('button', { name: 'Slides' }).className).toContain(
+      'focus-visible:shadow-[var(--kro-ring-field)]',
+    )
   })
 })

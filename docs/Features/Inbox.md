@@ -216,27 +216,39 @@ flowchart TD
 ### 1b. Suggestions above the prompt (web-only, flagged)
 
 Behind the `captureSuggestions` flag (off in the status-quo set, on in the
-web's shipping build), the desktop prompt shows a second glass pane directly
-above it, at the same width and with the same rounded corners, holding a
-vertical, scrolling list of suggested endeavors — the Apple app's sample set,
-in its order, each drawn as the same compact row the desktop Inbox uses. The
+web's shipping build), the desktop prompt can show a second glass pane directly
+above it. It is **hidden by default**: a sparkles button at the left of the
+kind picker (or ⌥S) shows and hides it, and the choice is remembered on this
+device. When shown, the pane sits at the same width and with the same rounded corners, holding a
+scrolling grid of suggested endeavors — the Apple app's sample set, in its
+order — laid out as many across as fit (two at the prompt's width). Each is
+drawn as the Apple app's horizontal endeavor card: the emoji in a rounded tile
+washed in the kind's colour, the title on one line (in full on hover), and the kind and reward points
+beneath. The
 pane fills the height above the prompt, leaving the standard gap above the
 prompt and the standard margin below the top of the window.
 
-- **Pick one:** clicking a row (or focusing it and pressing Space) fills the
+- **Pick one:** any card can be picked, whatever kind the prompt is on.
+  Clicking it (or focusing it and pressing Return) fills the
   prompt as the Apple app's carousel does — the title and its emoji, the
-  kind with its defaults, the card's reward points as the user's own, and for
+  kind with its defaults (the kind picker follows the card), the card's reward points as the user's own, and for
   an event a start and end from the card's suggested time and length. Return
   then adds it, or walks to anything still required (a task's value).
-- **Add several to the Inbox:** tick rows with their checkbox, ⌥-click or
-  Shift+Space, then choose **Add N to Inbox** (Shift+Return). With nothing
-  ticked the action reads a neutral "Select to add" and is disabled. Each lands
-  unscheduled in Pending Triage, with its reward points and no value — value
-  is decided at triage, and only the prompt's own Add demands it. Each item
-  succeeds or fails on its own; the status line reports the tally ("Added 2
-  to Inbox"), and anything that failed stays ticked for a retry. Events cannot
-  be ticked — the Inbox holds no events — so an event card is picked instead.
-  The prompt stays open, with whatever the user was typing untouched.
+- **Add several at once:** tick cards of any kind with their checkbox,
+  ⌥-click or Space (Shift+Space also works), then choose **Add N** (Shift+Return). With
+  nothing ticked the action reads a neutral "Select to add" and is disabled.
+  Each kind lands where a capture of it would: a task or reminder unscheduled
+  in Pending Triage; a habit with its every-day rule and a time, also in
+  Pending Triage; an event — which cannot be undated — at its suggested time
+  and length, in the Plan. Rewards come with the kinds that earn them; value is
+  decided at triage. Each item succeeds or fails on its own. When everything
+  lands, the prompt closes and the user is taken where a single capture would
+  take them: the Inbox — every added row in its Just Created slot, ready to
+  triage — whenever at least one landed there (even if some events went to
+  the Plan); the Plan, like a single event, when all of them were events. If
+  any failed, the prompt stays open instead: the status line reports where
+  things went ("Added 3 — 2 to Inbox, 1 to Plan") and the failures stay
+  ticked for a retry.
 - The pane is not shown on the phone sheet, and it hides when the room above
   the prompt could not show at least two rows.
 
@@ -251,9 +263,15 @@ flowchart TD
     ret -->|yes| walk[Open the next requirement]
     ret -->|no| added[Added]
     pane --> tick[Tick one or more cards]
-    tick --> addN[Add N to Inbox]
+    tick --> addN[Add N]
     addN --> each[Each written on its own]
-    each --> tally[Status line reports the tally; failures stay ticked]
+    each --> where{Kind?}
+    where -->|event| plan[At its suggested time — the Plan]
+    where -->|task / reminder / habit| inbox[Unscheduled — Pending Triage]
+    each --> ok{All saved?}
+    ok -->|yes, some to the Inbox| toInbox[Prompt closes; Inbox opens with them Just Created]
+    ok -->|yes, all events| toPlan[Prompt closes; Plan, like a single event]
+    ok -->|no| tally[Prompt stays; status line tally; failures stay ticked]
 ```
 
 ### What blocks Add
@@ -371,8 +389,11 @@ because this is a browser.
     ⌥1–4 kind (Task, Habit, Event, Reminder) · ⌥J symbol · ⌥↑ / ⌥= and
     ⌥↓ / ⌥− reward points (shown as ⌥↑↓) · ⌥V value · ⌥U duration · ⌥D date · ⌥T time
     (start, for an event) · ⌥E end (events) · ⌥R repeat · ⌥H host · ⌥S into
-    the suggestions list and back (when it shows). In the list, ↑ / ↓ move,
-    Space picks, Shift+Space ticks, and Shift+Return adds the ticked rows.
+    the suggestions grid and back, opening the pane first if it is hidden. In
+    the grid, ← / → move one card and ↑ / ↓ one row; Return picks the card
+    into the prompt and returns to the title (the next Return adds, or walks
+    to what is still required); Space ticks and unticks; Escape returns to the
+    title; Shift+Return adds the ticked cards.
   - With the value, duration, repeat or host list open, **1–9** picks that
     option, closes the list and returns to the title; digits are not typed
     into the title meanwhile. Date and time open with their field focused and
@@ -386,6 +407,11 @@ because this is a browser.
     names its chord as a tooltip, and the status line shows what to press
     next (see *One status line*). The phone sheet shows no
     hints; the keys still work where a keyboard is attached.
+- **The prompt floats in.** On the desktop the prompt — and its suggestions
+  pane, when shown — slides in with a fade from the bottom-right corner where
+  the quick-action button sits, and slides back out the same way when it is
+  dismissed; showing or hiding the pane animates it the same way. With
+  Reduce Motion on, both appear and disappear at once.
 - **One corner radius for the prompt and its pane.** Both use the design
   system's surface radius, and the prompt's dark status band follows it at
   its bottom corners, so nothing squares off the rounded panel.

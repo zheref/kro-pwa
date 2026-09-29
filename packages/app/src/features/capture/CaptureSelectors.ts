@@ -21,7 +21,7 @@ import type { CaptureState } from './CaptureFeature'
 import {
   CAPTURE_SUGGESTIONS,
   type CaptureSuggestion,
-  isCaptureSuggestionInboxable,
+  captureSuggestionTallyText,
 } from './CaptureSuggestions'
 import {
   captureBlockedReason,
@@ -30,6 +30,7 @@ import {
   captureResolvedSymbol,
   canSubmitCapture,
   isCaptureValueRequired,
+  alsoJustCreatedEndeavors,
   justCreatedEndeavor,
   pendingTriageEndeavors,
   resolvedCaptureDestination,
@@ -168,11 +169,25 @@ export const selectJustCreatedEndeavor = createSelector(
     justCreatedEndeavor(slice.endeavors, slice.inbox.justCreatedEndeavorId),
 )
 
+/**
+ * A multi-add's further Just Created rows, beneath the first — empty for a
+ * single capture.
+ */
+export const selectAlsoJustCreatedEndeavors = createSelector(
+  [selectCaptureSlice],
+  (slice) =>
+    alsoJustCreatedEndeavors(slice.endeavors, slice.inbox.alsoJustCreatedIds),
+)
+
 /** `pendingTriageSelector` — every unscheduled non-event endeavor, newest first. */
 export const selectPendingTriageEndeavors = createSelector(
   [selectCaptureSlice],
   (slice) =>
-    pendingTriageEndeavors(slice.endeavors, slice.inbox.justCreatedEndeavorId),
+    pendingTriageEndeavors(
+      slice.endeavors,
+      slice.inbox.justCreatedEndeavorId,
+      slice.inbox.alsoJustCreatedIds,
+    ),
 )
 
 /** `isEmptySelector` — no section has anything to show. */
@@ -184,9 +199,15 @@ export const selectIsInboxEmpty = createSelector(
 
 /** `totalCountSelector` — rows across both sections. */
 export const selectInboxTotalCount = createSelector(
-  [selectJustCreatedEndeavor, selectPendingTriageEndeavors],
-  (justCreated, pendingTriage) =>
-    (justCreated === null ? 0 : 1) + pendingTriage.length,
+  [
+    selectJustCreatedEndeavor,
+    selectAlsoJustCreatedEndeavors,
+    selectPendingTriageEndeavors,
+  ],
+  (justCreated, alsoJustCreated, pendingTriage) =>
+    (justCreated === null ? 0 : 1) +
+    alsoJustCreated.length +
+    pendingTriage.length,
 )
 
 /**
@@ -294,7 +315,9 @@ const NO_SUGGESTIONS: readonly CaptureSuggestion[] = []
 export const selectCaptureSuggestions = createSelector(
   [selectCaptureSlice],
   (slice) =>
-    slice.isSuggestionsEnabled && slice.prompt !== null
+    slice.isSuggestionsEnabled &&
+    slice.isSuggestionsShown &&
+    slice.prompt !== null
       ? CAPTURE_SUGGESTIONS
       : NO_SUGGESTIONS,
 )
@@ -325,12 +348,7 @@ export const selectSuggestionsForInbox = createSelector(
       slice.prompt?.draft.destination ?? slice.lastUsedDestination
     return ids.flatMap((id) => {
       const suggestion = CAPTURE_SUGGESTIONS.find((item) => item.id === id)
-      if (
-        suggestion === undefined ||
-        !isCaptureSuggestionInboxable(suggestion)
-      ) {
-        return []
-      }
+      if (suggestion === undefined) return []
       return [
         {
           suggestion,
@@ -354,9 +372,21 @@ export const selectCaptureStatusReason = createSelector(
   (slice, blocked) => {
     const notice = slice.prompt?.suggestionNotice ?? null
     if (notice === null) return blocked
-    const added = `Added ${notice.added} to Inbox.`
-    return notice.failed === 0
-      ? added
-      : `${added} ${notice.failed} couldn’t be saved — still selected.`
+    const added = captureSuggestionTallyText(notice.toInbox, notice.toPlan)
+    if (notice.failed === 0) return added
+    const failed = `${notice.failed} couldn’t be saved — still selected.`
+    return added === null ? failed : `${added} ${failed}`
   },
+)
+
+/** Whether the pane may exist at all — flag on and a prompt open. */
+export const selectCanShowCaptureSuggestions = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.isSuggestionsEnabled && slice.prompt !== null,
+)
+
+/** The remembered on/off choice for the pane. */
+export const selectIsCaptureSuggestionsShown = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.isSuggestionsShown,
 )

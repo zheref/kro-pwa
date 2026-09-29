@@ -490,6 +490,7 @@ describe('onCaptureRouteDelivered', () => {
     expect(delivered.inbox).toEqual({
       isOpen: true,
       justCreatedEndeavorId: 'captured-task',
+      alsoJustCreatedIds: [],
     })
   })
 

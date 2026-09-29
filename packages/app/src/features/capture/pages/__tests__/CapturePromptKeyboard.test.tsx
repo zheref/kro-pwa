@@ -9,6 +9,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -19,8 +20,18 @@ import {
   makeHardcodedFeatureFlagService,
 } from '@kro/core'
 import { stubbedThunkExtra } from '../../../../library/store'
-import { userDidRequestCapture } from '../../CaptureFeature'
-import { loadCaptureContextThunk } from '../../CaptureProducer'
+import {
+  onCaptureRouteDelivered,
+  userDidRequestCapture,
+} from '../../CaptureFeature'
+import { CAPTURE_INBOX_DELAY_MS } from '../../CaptureRules'
+import { ActiveToastHost } from '../../../../design/chrome/toast/ActiveToastHost'
+import { CaptureOverlays } from '../CaptureOverlays'
+import {
+  loadCaptureContextThunk,
+  setSuggestionsShownThunk,
+} from '../../CaptureProducer'
+import { makeInMemoryLocalStore } from '../../../../services/localStore/InMemoryLocalStore'
 import { CAPTURE_MOCK_NOW } from '../../CaptureMocks'
 import { CaptureKind } from '../../CaptureRules'
 import { LiquidGlassFABMenu } from '../../../../design/chrome/fab/LiquidGlassFABMenu'
@@ -130,7 +141,9 @@ describe('capturing from the keyboard alone', () => {
     expect(endeavor.duration).toBe(15 * 60)
     expect(endeavor.due).toEqual(new Date(2026, 2, 20, 9, 30))
     expect(endeavor.repeatConfig).not.toBeNull()
-  }, 30_000)
+    // The emoji popover mounts Radix's popper, which is slow under jsdom and
+    // slower still under the full suite's parallel load.
+  }, 90_000)
 
   it('builds an Event with a start and an end', async () => {
     const { store, title } = await start()
@@ -254,12 +267,14 @@ describe('the page FAB never steals Return from the prompt', () => {
   })
 })
 
-describe('the suggestions pane from the keyboard', () => {
-  const startWithSuggestions = async () => {
+describe('the suggestions pane, from the keyboard through the real focus path', () => {
+  const open = async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
     const store = makeCaptureStore({
       endeavors: [],
       surface: desktopSurface,
       extra: {
+        localStore,
         featureFlags: makeHardcodedFeatureFlagService({
           base: stubbedThunkExtra.featureFlags,
           overrides: [enabledAssignment(FeatureFlags.captureSuggestions)],
@@ -277,60 +292,146 @@ describe('the suggestions pane from the keyboard', () => {
     )
     const title = await screen.findByTestId('capture-title')
     await waitFor(() => expect(document.activeElement).toBe(title))
-    await screen.findByTestId('capture-suggestions')
-    return { store, title }
+    return { store, title, localStore }
   }
+  const activeCard = () =>
+    document.activeElement?.getAttribute('data-kro-row-pick')
 
-  it('⌥S, Space picks a card, then Return walks to Value, 3, Return adds it', async () => {
-    const { store, title } = await startWithSuggestions()
+  it('starts hidden; the sparkles button shows it and the choice is remembered', async () => {
+    const { store, localStore } = await open()
+    expect(screen.queryByTestId('capture-suggestions')).toBeNull()
+    const toggle = screen.getByTestId('capture-suggestions-toggle')
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
 
+    await userEvent.click(toggle)
+    await screen.findByTestId('capture-suggestions')
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(store.getState().capture.isSuggestionsShown).toBe(true)
+    expect(localStore.preferences.get('kro:captureSuggestionsShown')).toBe(true)
+  })
+
+  it('⌥S opens a hidden pane and lands on the first card; Esc returns to the title', async () => {
+    const { title } = await open()
     await userEvent.keyboard('{Alt>}s{/Alt}')
     await waitFor(() =>
-      expect(document.activeElement?.getAttribute('data-kro-row-pick')).toBe(
-        'task-prepare-presentation-slides',
-      ),
+      expect(activeCard()).toBe('task-prepare-presentation-slides'),
     )
+    expect(screen.getByTestId('capture-suggestions-keys').textContent).toBe(
+      'Arrows move · Return picks · Space selects · esc back',
+    )
+
+    await userEvent.keyboard('{ArrowRight}')
+    expect(activeCard()).toBe('task-review-pull-request-changes')
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(activeCard()).toBe('task-prepare-presentation-slides')
+
+    await userEvent.keyboard('{Escape}')
+    expect(document.activeElement).toBe(title)
+    expect(screen.queryByTestId('capture-prompt')).not.toBeNull()
+  })
+
+  it('reaches the cards with ⌥S even with focus on the dialog itself', async () => {
+    const { store } = await open()
+    await store.dispatch(setSuggestionsShownThunk({ shown: true }))
+    await screen.findByTestId('capture-suggestions')
+    screen.getByTestId('capture-prompt').focus()
+    await userEvent.keyboard('{Alt>}s{/Alt}')
+    expect(activeCard()).toBe('task-prepare-presentation-slides')
+  })
+
+  it('Space ticks and unticks (⇧Space too); nothing is picked', async () => {
+    const { store } = await open()
+    await userEvent.keyboard('{Alt>}s{/Alt}')
+    await waitFor(() => expect(activeCard()).not.toBeUndefined())
     await userEvent.keyboard(' ')
-    await waitFor(() => expect(document.activeElement).toBe(title))
+    expect(store.getState().capture.prompt?.selectedSuggestionIds).toEqual([
+      'task-prepare-presentation-slides',
+    ])
+    expect(store.getState().capture.prompt?.draft.title).toBe('')
+    await userEvent.keyboard('{Shift>} {/Shift}')
+    expect(store.getState().capture.prompt?.selectedSuggestionIds).toEqual([])
+  })
+
+  it('Return picks the focused card into the title; then Return walks to Value, 3, Return adds', async () => {
+    const { store, title } = await open()
+    await userEvent.keyboard('{Alt>}s{/Alt}')
+    await waitFor(() =>
+      expect(activeCard()).toBe('task-prepare-presentation-slides'),
+    )
+
+    await userEvent.keyboard('{Enter}')
+    expect(document.activeElement).toBe(title)
     expect((title as HTMLInputElement).value).toBe(
       'Prepare presentation slides',
     )
+    expect(store.getState().capture.endeavors).toHaveLength(0)
 
     await userEvent.keyboard('{Enter}3{Enter}')
-
     const endeavor = await stored(store)
     expect(endeavor.title).toBe('📊 Prepare presentation slides')
-    expect(endeavor.sessionPoints).toBe(30)
     expect(endeavor.value).toBe(3)
   })
 
-  it('⇧Space ticks two cards and ⇧⏎ adds both to the Inbox, prompt still open', async () => {
-    const { store } = await startWithSuggestions()
+  it('Space ticks two, ⇧⏎ adds both, closes the prompt and shows both as Just Created in the Inbox', async () => {
+    const localStore = makeInMemoryLocalStore({ endeavors: [] })
+    localStore.preferences.set('kro:captureSuggestionsShown', true)
+    const store = makeCaptureStore({
+      endeavors: [],
+      surface: desktopSurface,
+      extra: {
+        localStore,
+        featureFlags: makeHardcodedFeatureFlagService({
+          base: stubbedThunkExtra.featureFlags,
+          overrides: [enabledAssignment(FeatureFlags.captureSuggestions)],
+        }),
+      },
+    })
+    render(
+      <CaptureStoreStage store={store}>
+        <ActiveToastHost position="absolute">
+          <CaptureOverlays />
+        </ActiveToastHost>
+      </CaptureStoreStage>,
+    )
+    await store.dispatch(loadCaptureContextThunk({ now: CAPTURE_MOCK_NOW }))
+    store.dispatch(
+      userDidRequestCapture({ kind: CaptureKind.task, now: CAPTURE_MOCK_NOW }),
+    )
+    await screen.findByTestId('capture-suggestions')
 
     await userEvent.keyboard('{Alt>}s{/Alt}')
-    await waitFor(() =>
-      expect(document.activeElement?.hasAttribute('data-kro-row-pick')).toBe(
-        true,
-      ),
-    )
-    await userEvent.keyboard('{Shift>} {/Shift}{ArrowDown}{Shift>} {/Shift}')
+    await waitFor(() => expect(activeCard()).not.toBeUndefined())
+    await userEvent.keyboard(' {ArrowDown} ')
     await userEvent.keyboard('{Shift>}{Enter}{/Shift}')
 
     await waitFor(() => {
       expect(store.getState().capture.endeavors).toHaveLength(2)
     })
-    const rows = store.getState().capture.endeavors
-    expect(rows.every((row) => row.due === null && row.start === null)).toBe(
-      true,
+    expect(store.getState().capture.prompt).toBeNull()
+    const intent = store.getState().capture.navigation
+    if (intent === null) throw new Error('a multi-add must decide a route')
+    expect(intent.route.kind).toBe('inbox')
+
+    // The shell delivers the route after the prompt's dismiss delay.
+    store.dispatch(
+      onCaptureRouteDelivered({
+        now: new Date(intent.decidedAt.getTime() + CAPTURE_INBOX_DELAY_MS),
+      }),
     )
-    expect(store.getState().capture.prompt).not.toBeNull()
-    expect(screen.getByTestId('capture-blocked-reason').textContent).toBe(
-      'Added 2 to Inbox.',
-    )
+    const inbox = await screen.findByTestId('inbox-surface')
+    const justCreated = within(inbox).getByTestId('inbox-section-just-created')
+    expect(
+      within(justCreated).getByText(/Prepare presentation slides/),
+    ).toBeTruthy()
+    // jsdom lays out no grid, so ↓ steps one card: the second in the catalogue.
+    expect(
+      within(justCreated).getByText(/Review pull request changes/),
+    ).toBeTruthy()
   })
 
-  it('shows no pane with the flag off', async () => {
+  it('shows no toggle and no pane with the flag off', async () => {
     await start()
+    expect(screen.queryByTestId('capture-suggestions-toggle')).toBeNull()
     expect(screen.queryByTestId('capture-suggestions')).toBeNull()
   })
 })

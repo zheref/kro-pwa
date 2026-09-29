@@ -43,6 +43,23 @@ describe('Sheet', () => {
     expect(screen.getByRole('dialog').dataset.side).toBe('bottom')
   })
 
+  it('rises from the bottom on data-state open, and its overlay fades', () => {
+    render(<InboxSheet />)
+    const sheet = screen.getByRole('dialog')
+    expect(sheet.className).toContain('kro-sheet-bottom')
+    expect(sheet.getAttribute('data-state')).toBe('open')
+    const overlay = document.querySelector('[data-slot="dialog-overlay"]')
+    expect(overlay?.className).toContain('kro-fade-overlay')
+    expect(overlay?.getAttribute('data-state')).toBe('open')
+  })
+
+  it('does not slide a side drawer with the bottom-sheet motion', () => {
+    render(<InboxSheet side="right" />)
+    expect(screen.getByRole('dialog').className).not.toContain(
+      'kro-sheet-bottom',
+    )
+  })
+
   it('supports the other three edges for the desktop drawers', () => {
     for (const side of ['top', 'left', 'right'] as const) {
       cleanup()

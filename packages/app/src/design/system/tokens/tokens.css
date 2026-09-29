@@ -180,6 +180,9 @@
   /** Focus ring, drawn from the live accent so re-tinting carries through. */
   --kro-ring: 0 0 0 3px
     color-mix(in srgb, var(--kro-color-accent) 35%, transparent);
+  /* The field focus ring — one thin (1.5px) brand-green ring: the sidebar's
+     Search field, and the capture prompt's controls and cards. */
+  --kro-ring-field: 0 0 0 1.5px var(--kro-color-glow-lime);
 
   /* ==================================================================
      Semantic roles — "what colour is a Habit" has exactly one answer.

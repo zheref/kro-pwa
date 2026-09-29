@@ -14,8 +14,9 @@
  * `AddRewardProducer`'s own validation so the button's disabled state and the
  * thunk's rejection never disagree.
  */
+import { iconForSymbol } from '../../../design/system/icons/icons'
 import type { ReactNode } from 'react'
-import { Minus, Plus, Zap } from 'lucide-react'
+import { Minus, Plus } from 'lucide-react'
 import { Button } from '../../../design/system/primitives/button'
 import { Input } from '../../../design/system/primitives/input'
 import {
@@ -35,6 +36,9 @@ import type { EarnRewardDraft } from '../EarnFeature'
 const POINTS_STEP = 50
 const POINTS_MIN = 0
 const POINTS_MAX = 100_000
+
+/** Reward points — canon's `medal.star`, from the shared symbol map. */
+const RewardGlyph = iconForSymbol('medal.star')
 
 export interface AddRewardFormProps {
   readonly isOpen: boolean
@@ -193,7 +197,7 @@ function AddRewardFields({
             className="flex flex-1 items-center justify-center gap-1 font-semibold text-sm"
             style={{ color: colorVar('fore') }}
           >
-            <Zap
+            <RewardGlyph
               className="size-4"
               aria-hidden
               style={{ color: colorVar('rewardYellow') }}

@@ -43,9 +43,10 @@
  */
 
 import { assertNever, defaultTriageDurationOptionsMinutes } from '@kro/core'
-import { Hourglass, Medal } from 'lucide-react'
+import { Hourglass } from 'lucide-react'
 import {
   type Dispatch,
+  type MutableRefObject,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
   type SetStateAction,
@@ -133,10 +134,13 @@ import {
 } from './capturePresentation'
 
 const Star = captureIcon('star.fill')
+/** Reward points — canon's `medal.star`, from the shared symbol map. */
+const RewardGlyph = captureIcon('medal.star')
 const CalendarGlyph = captureIcon('calendar')
 const ClockGlyph = captureIcon('clock')
 const ClockEndGlyph = captureIcon('clock.badge.checkmark')
 const EmptyStar = captureIcon('star')
+const SparklesGlyph = captureIcon('sparkles')
 const RepeatGlyph = captureIcon('repeat')
 const ChevronDown = captureIcon('chevron.down')
 const Check = captureIcon('checkmark')
@@ -229,6 +233,11 @@ export interface CapturePromptFragmentProps {
   readonly onPickSuggestion?: (suggestionId: string) => void
   readonly onToggleSuggestion?: (suggestionId: string) => void
   readonly onAddSuggestions?: () => void
+  /** The pane may exist here (desktop popover, flag on) — shows the toggle. */
+  readonly canToggleSuggestions?: boolean
+  /** The remembered on/off choice for the pane. */
+  readonly isSuggestionsShown?: boolean
+  readonly onToggleSuggestions?: () => void
   readonly onPickRecurrence: (recurrence: CaptureRecurrence) => void
   readonly onSelectDestination: (destination: CaptureDestination) => void
   readonly onDiscard: () => void
@@ -256,7 +265,30 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
    * editor closes, an open time editor discards its edit, and only then does
    * Escape discard the whole prompt through the dialog's own dismissal.
    */
+  /**
+   * The form's key handler, registered here so it can listen on the WHOLE
+   * dialog. Listening on the form alone missed every key pressed while focus
+   * sat on the dialog itself — where a click on the pane's glass or the
+   * dialog's own autofocus leaves it — so ⌥S never reached the suggestions
+   * and the arrows fell through to scrolling.
+   */
+  const promptKeyHandler = useRef<
+    ((event: ReactKeyboardEvent<HTMLDivElement>) => void) | null
+  >(null)
+  const onDialogKeyDownCapture = (event: ReactKeyboardEvent<HTMLDivElement>) =>
+    promptKeyHandler.current?.(event)
+
   const onEscapeKeyDown = (event: KeyboardEvent) => {
+    // Escape inside the suggestions returns to the title, not out of the prompt.
+    const active = event.target instanceof Element ? event.target : null
+    const content = active?.closest('[data-testid="capture-prompt"]')
+    if (active?.closest('[data-testid="capture-suggestions"]') && content) {
+      event.preventDefault()
+      content
+        .querySelector<HTMLInputElement>('[data-testid="capture-title"]')
+        ?.focus()
+      return
+    }
     if (panel !== null) {
       event.preventDefault()
       setPanel(null)
@@ -301,9 +333,15 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           data-kro-presentation="sheet"
           className="h-auto gap-0 p-0"
           onEscapeKeyDown={onEscapeKeyDown}
+          onKeyDownCapture={onDialogKeyDownCapture}
         >
           {heading}
-          <PromptForm {...props} panel={panel} onPanelChange={setPanel} />
+          <PromptForm
+            {...props}
+            panel={panel}
+            onPanelChange={setPanel}
+            keyHandlerRef={promptKeyHandler}
+          />
         </SheetContent>
       ) : (
         <DialogContent
@@ -311,10 +349,15 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           data-testid="capture-prompt"
           data-kro-presentation="popover"
           onEscapeKeyDown={onEscapeKeyDown}
+          onKeyDownCapture={onDialogKeyDownCapture}
           className={cn(
             'top-auto right-6 bottom-6 left-auto',
             'translate-x-0 translate-y-0',
             'flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-y-auto p-0',
+            // The detail pane's own motion — slides in from the trailing edge
+            // with a fade, out the same way (motion.css `kro-trailing-panel`;
+            // Radix keeps it mounted through the exit animation).
+            'kro-trailing-panel',
             // The suggestions pane floats above the panel; on a viewport tall
             // enough to show it the panel must not clip it.
             (props.suggestions?.length ?? 0) > 0 && 'overflow-visible',
@@ -338,7 +381,12 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           }}
         >
           {heading}
-          <PromptForm {...props} panel={panel} onPanelChange={setPanel} />
+          <PromptForm
+            {...props}
+            panel={panel}
+            onPanelChange={setPanel}
+            keyHandlerRef={promptKeyHandler}
+          />
         </DialogContent>
       )}
     </Dialog>
@@ -380,15 +428,23 @@ function PromptForm({
   onPickSuggestion,
   onToggleSuggestion,
   onAddSuggestions,
+  canToggleSuggestions = false,
+  isSuggestionsShown = false,
+  onToggleSuggestions,
   onPickRecurrence,
   onSelectDestination,
   onDiscard,
   onSubmit,
   panel,
   onPanelChange: setPanel,
+  keyHandlerRef,
 }: CapturePromptFragmentProps & {
   readonly panel: PromptPanel
   readonly onPanelChange: Dispatch<SetStateAction<PromptPanel>>
+  /** Where this form hands the dialog its key handler. */
+  readonly keyHandlerRef: MutableRefObject<
+    ((event: ReactKeyboardEvent<HTMLDivElement>) => void) | null
+  >
 }) {
   const titleRef = useRef<HTMLInputElement | null>(null)
 
@@ -420,6 +476,53 @@ function PromptForm({
   // The suggestions pane is a desktop affordance: the phone sheet's height
   // is its content, so a pane above it has nowhere to go.
   const showsSuggestions = isCompact && suggestions.length > 0
+  /** ⌥S opened the pane — focus its first card once it has rendered. */
+  const [focusSuggestionsWhenShown, setFocusSuggestionsWhenShown] =
+    useState(false)
+
+  /**
+   * The pane's presence, so hiding it animates out: `open` while shown,
+   * `closed` while its exit animation runs (content kept, last cards
+   * frozen), `gone` once that ends.
+   */
+  const [paneState, setPaneState] = useState<'open' | 'closed' | 'gone'>(
+    showsSuggestions ? 'open' : 'gone',
+  )
+  useEffect(() => {
+    if (!focusSuggestionsWhenShown || !showsSuggestions) return
+    const card = formRef.current?.querySelector<HTMLElement>(
+      '[data-kro-row-pick]',
+    )
+    if (card === null || card === undefined) return
+    card.focus()
+    setFocusSuggestionsWhenShown(false)
+  })
+  const lastSuggestions = useRef(suggestions)
+  if (showsSuggestions) lastSuggestions.current = suggestions
+  /**
+   * Whether the pane moves on its own. While the prompt presents or dismisses,
+   * the pane is part of it — it rides the prompt's transform and carries no
+   * animation of its own, so the two travel as one piece. A second
+   * `kro-trailing-in` inside the prompt's would compound the translate and
+   * trail behind it. Only a toggle while the prompt stays open (the sparkles
+   * button, ⌥S) gives the pane its own trailing motion.
+   */
+  const [paneMovesAlone, setPaneMovesAlone] = useState(false)
+  // The user's toggle is the only thing that frees it: suggestions arriving
+  // a tick after mount are still part of the prompt's own presentation.
+  const toggleSuggestions = () => {
+    setPaneMovesAlone(true)
+    onToggleSuggestions?.()
+  }
+  useLayoutEffect(() => {
+    if (showsSuggestions) {
+      setPaneState('open')
+      return
+    }
+    setPaneState((current) => (current === 'gone' ? 'gone' : 'closed'))
+    const fallback = setTimeout(() => setPaneState('gone'), 400)
+    return () => clearTimeout(fallback)
+  }, [showsSuggestions])
 
   /**
    * The pane's height: everything between the prompt's top edge and the top
@@ -431,7 +534,9 @@ function PromptForm({
   const [suggestionsPaneHeight, setSuggestionsPaneHeight] = useState<
     number | null
   >(null)
-  useEffect(() => {
+  // Layout, not passive: the height lands before the prompt's first paint, so
+  // a pane shown by preference is there on frame one rather than flashing in.
+  useLayoutEffect(() => {
     if (!showsSuggestions) return
     const measure = () => {
       // The popover is pinned `bottom-6` (24px), so the prompt's top edge
@@ -489,6 +594,24 @@ function PromptForm({
     // React bubbles portal events through the React tree, so the emoji
     // picker's keys arrive here too. Its Return picks an emoji; leave it be.
     if (target === null || !event.currentTarget.contains(target)) return
+    // Return on a focused suggestion card picks it into the prompt and hands
+    // focus to the title; the NEXT Return is the prompt's own (Add or walk).
+    const card = target.closest<HTMLElement>('[data-kro-row-pick]')
+    if (
+      card !== null &&
+      event.key === 'Enter' &&
+      !event.nativeEvent.isComposing &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.ctrlKey
+    ) {
+      event.preventDefault()
+      event.stopPropagation()
+      onPickSuggestion?.(card.dataset.kroRowPick ?? '')
+      focusTitle()
+      return
+    }
     const timePanel = target?.closest<HTMLElement>('[data-kro-time-field]')
     const intent = resolveCapturePromptKey(
       {
@@ -510,7 +633,7 @@ function PromptForm({
         earnsRewards,
         supportsValue,
         supportsDuration,
-        hasSuggestions: showsSuggestions,
+        hasSuggestions: showsSuggestions || (isCompact && canToggleSuggestions),
       },
     )
     if (intent === null) return
@@ -564,6 +687,12 @@ function PromptForm({
           return
         }
         setPanel(null)
+        // ⌥S on a hidden pane opens it, then lands in it once it mounts.
+        if (!showsSuggestions) {
+          toggleSuggestions()
+          setFocusSuggestionsWhenShown(true)
+          return
+        }
         const selected = selectedSuggestionIds[0]
         const card =
           (selected === undefined
@@ -581,6 +710,9 @@ function PromptForm({
         assertNever(intent)
     }
   }
+
+  // The dialog forwards every key to this handler (see `promptKeyHandler`).
+  keyHandlerRef.current = onPromptKeyDown
 
   /**
    * Return on a blocked draft: open (and focus) the editor of the first unmet
@@ -725,22 +857,36 @@ function PromptForm({
       ref={formRef}
       className="relative flex flex-col"
       data-slot="capture-prompt-form"
-      onKeyDownCapture={onPromptKeyDown}
       data-kro-density={isCompact ? 'compact' : 'touch'}
     >
-      {showsSuggestions && suggestionsPaneHeight !== null ? (
+      {paneState !== 'gone' && suggestionsPaneHeight !== null ? (
         // Floated above the prompt at its exact width, a medium gap above it,
         // filling the height up to a large margin below the viewport's top.
+        // The detail pane's trailing-edge motion, in and out.
         <div
           data-slot="capture-suggestions-pane"
-          className="absolute right-0 bottom-full left-0"
+          data-state={paneState}
+          inert={paneState === 'closed' ? true : undefined}
+          onAnimationEnd={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              paneState === 'closed'
+            ) {
+              setPaneState('gone')
+            }
+          }}
+          data-kro-pane-motion={paneMovesAlone ? 'own' : 'embedded'}
+          className={cn(
+            'absolute right-0 bottom-full left-0',
+            paneMovesAlone && 'kro-trailing-panel',
+          )}
           style={{
             marginBottom: spacingVar('medium'),
             height: `${suggestionsPaneHeight}px`,
           }}
         >
           <CaptureSuggestionsFragment
-            suggestions={suggestions}
+            suggestions={lastSuggestions.current}
             selectedIds={selectedSuggestionIds}
             inboxCount={suggestionInboxCount}
             revealChord={isOptionHeld}
@@ -759,10 +905,38 @@ function PromptForm({
           sheet's Pomodoro / Stopwatch toggle uses. */}
       <div
         className={cn(
-          'flex justify-center px-3',
+          'relative flex justify-center px-3',
           isCompact ? 'pt-2 pb-2' : 'pt-4 pb-3',
         )}
       >
+        {isCompact && canToggleSuggestions ? (
+          // Pinned to the far left; the segmented control stays centred.
+          <button
+            type="button"
+            data-testid="capture-suggestions-toggle"
+            aria-label="Suggestions"
+            aria-pressed={isSuggestionsShown}
+            aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.suggestions.aria}
+            title={`${isSuggestionsShown ? 'Hide' : 'Show'} suggestions (${CAPTURE_PROMPT_CHORDS.suggestions.glyph})`}
+            onClick={toggleSuggestions}
+            className="kro-motion-quick absolute top-1/2 left-3 inline-flex -translate-y-1/2 items-center justify-center rounded-kro-small outline-none hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)] focus-visible:shadow-[var(--kro-ring-field)]"
+            style={{
+              width: 28,
+              height: 28,
+              color: isSuggestionsShown
+                ? colorVar('accent')
+                : colorVar('foreSecondary'),
+              backgroundColor: isSuggestionsShown
+                ? `color-mix(in srgb, ${colorVar('accent')} 14%, transparent)`
+                : undefined,
+            }}
+          >
+            <ShortcutHint placement="keycap" reveal={isOptionHeld}>
+              {CAPTURE_PROMPT_CHORDS.suggestions.glyph}
+            </ShortcutHint>
+            <SparklesGlyph size={14} aria-hidden />
+          </button>
+        ) : null}
         <SegmentedControl
           label="Kind"
           options={captureKinds.map((kind) => {
@@ -840,7 +1014,7 @@ function PromptForm({
             // A fixed 34px square keeps the field from shifting sideways as
             // the resolved emoji changes width. Flat: the emoji IS the
             // affordance, exactly as canon's `emojiBadge`.
-            className="relative inline-flex shrink-0 items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)]"
+            className="relative inline-flex shrink-0 items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring-field)]"
             style={{ width: 34, height: 34, fontSize: 20, lineHeight: 1 }}
           >
             {resolvedSymbol}
@@ -872,7 +1046,7 @@ function PromptForm({
           <PropertyPill
             density={density}
             glyph={
-              <Medal
+              <RewardGlyph
                 size={12}
                 aria-hidden
                 style={{
@@ -1475,7 +1649,11 @@ function RewardsEditor({
           +
         </Button>
       </div>
-      <Star size={14} aria-hidden style={{ color: colorVar('rewardYellow') }} />
+      <RewardGlyph
+        size={14}
+        aria-hidden
+        style={{ color: colorVar('rewardYellow') }}
+      />
     </div>
   )
 }
@@ -1615,7 +1793,7 @@ function ValueEditor({
                   aria-label={`${captureValueLabel(step) ?? ''}, level ${step}`}
                   aria-pressed={value === step}
                   onClick={() => onPick(value === step ? null : step)}
-                  className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)]"
+                  className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring-field)]"
                   style={{
                     width: 26,
                     height: 28,
@@ -1744,7 +1922,7 @@ function DestinationPicker({
         className={cn(
           'relative inline-flex items-center gap-1.5 rounded-kro-pill px-2.5',
           isCompact ? 'font-medium text-xs' : 'font-medium text-sm',
-          'outline-none focus-visible:shadow-[var(--kro-ring)]',
+          'outline-none focus-visible:shadow-[var(--kro-ring-field)]',
         )}
         style={{
           minHeight: promptControlMinHeight(isCompact),
@@ -1793,7 +1971,7 @@ function DestinationPicker({
                   // A real hover: a visible fill and an outline, and the same
                   // pair for keyboard focus — distinct from the selected fill.
                   'hover:border-[var(--kro-color-hairline)] hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)]',
-                  'focus-visible:border-[var(--kro-color-hairline)] focus-visible:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)] focus-visible:shadow-[var(--kro-ring)]',
+                  'focus-visible:border-[var(--kro-color-hairline)] focus-visible:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)] focus-visible:shadow-[var(--kro-ring-field)]',
                   destination === selected &&
                     'bg-[var(--kro-color-back-inner)]',
                 )}

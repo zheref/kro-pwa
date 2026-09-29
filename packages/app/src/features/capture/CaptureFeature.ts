@@ -37,6 +37,7 @@ import { CaptureExceptions } from './CaptureException'
 import { captureSuggestionById } from './CaptureSuggestions'
 import {
   addSuggestionsToInboxThunk,
+  setSuggestionsShownThunk,
   applyInboxOperationThunk,
   loadCaptureContextThunk,
   scheduleForTodayThunk,
@@ -76,6 +77,7 @@ import {
   withSchedulingApplied,
   withSchedulingUndone,
   withSuggestionApplied,
+  withSuggestionsShown,
   withSuggestionSelectionToggled,
   withSuggestionsAddedToInbox,
   withTimeEditBegun,
@@ -127,7 +129,10 @@ export interface CapturePromptState {
 
 /** How a multi-add to the Inbox went. */
 export interface CaptureSuggestionNotice {
-  readonly added: number
+  /** Stored and unscheduled — Pending Triage. */
+  readonly toInbox: number
+  /** Stored at a seeded time — events, which the Plan shows. */
+  readonly toPlan: number
   readonly failed: number
 }
 
@@ -140,6 +145,8 @@ export interface CaptureInboxState {
    * endeavor is in Pending Triage the next time the sheet opens.
    */
   readonly justCreatedEndeavorId: string | null
+  /** A multi-add's further Just Created rows, beneath the first. */
+  readonly alsoJustCreatedIds: readonly string[]
 }
 
 /** The Add-for-Today popover: which row, and the time it currently offers. */
@@ -214,6 +221,8 @@ export interface CaptureState {
 
   /** Web-only `captureSuggestions` flag's answer — the suggestions pane. */
   readonly isSuggestionsEnabled: boolean
+  /** The user's remembered choice to show the suggestions pane. Default off. */
+  readonly isSuggestionsShown: boolean
 }
 
 export const initialCaptureState: CaptureState = {
@@ -222,13 +231,14 @@ export const initialCaptureState: CaptureState = {
   prompt: null,
   availableDestinations: [CaptureDestination.local],
   lastUsedDestination: CaptureDestination.local,
-  inbox: { isOpen: false, justCreatedEndeavorId: null },
+  inbox: { isOpen: false, justCreatedEndeavorId: null, alsoJustCreatedIds: [] },
   navigation: null,
   addForToday: null,
   undo: { kind: 'idle' },
   triageRequest: null,
   clockAnchor: null,
   isSuggestionsEnabled: false,
+  isSuggestionsShown: false,
 }
 
 export const captureSlice = createSlice({
@@ -553,6 +563,19 @@ export const captureSlice = createSlice({
           )
         } else {
           Object.assign(state, withException(state, result.error))
+        }
+      })
+      // The pane toggles the moment it is asked (pending), so the button
+      // answers instantly; the settled Result confirms it.
+      .addCase(setSuggestionsShownThunk.pending, (state, action) => {
+        Object.assign(state, withSuggestionsShown(state, action.meta.arg.shown))
+      })
+      .addCase(setSuggestionsShownThunk.fulfilled, (state, action) => {
+        if (action.payload.ok) {
+          Object.assign(
+            state,
+            withSuggestionsShown(state, action.payload.value),
+          )
         }
       })
       .addCase(addSuggestionsToInboxThunk.fulfilled, (state, action) => {

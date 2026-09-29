@@ -174,13 +174,13 @@ export function UrgencyBadge({ urgency, compact = false }: UrgencyBadgeProps) {
   )
 }
 
-/** The top-right pill: bolt + amount, always shown. */
+/** The top-right pill: canon's `medal.star` + amount, always shown. */
 export function RewardBadge({ amount }: { readonly amount: number }) {
   return (
     <CardBadge
       backgroundRole={REWARD_BACKGROUND_ROLE}
       foregroundRole={REWARD_FOREGROUND_ROLE}
-      iconSymbol="bolt.fill"
+      iconSymbol="medal.star"
       title={String(amount)}
       accessibleName={`${amount} reward points`}
     />

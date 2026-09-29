@@ -14,8 +14,8 @@ export const MOTION_MS = {
   /** How long the quick spring takes to settle — see the note in motion.css. */
   quickSpring: 198,
   standardSpring: 270,
-  /** A floating panel or sheet arriving — long enough to read as travel. */
-  panel: 380,
+  /** A floating panel or sheet arriving — travel, capped at UX-9's 300ms. */
+  panel: 300,
   /** …and leaving: quicker than it came. */
   panelExit: 240,
 } as const

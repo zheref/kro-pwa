@@ -1184,3 +1184,110 @@ describe('the suggestions toggle and the float-in motion', () => {
     expect(pane()?.style.height).toMatch(/px$/)
   })
 })
+
+describe('Hanten UI settlements — contrast, targets and the narrow sheet', () => {
+  it('writes the status band’s copy in the on-dark roles, with the darker band (H1)', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+
+    const band = document.querySelector<HTMLElement>(
+      '[data-slot="capture-prompt-status-bar"]',
+    )
+    expect(band?.style.getPropertyValue('--kro-glass-tint-strength')).toBe(
+      'var(--kro-status-band-strength)',
+    )
+    expect(screen.getByTestId('capture-status-text').style.color).toBe(
+      'var(--kro-color-fore-secondary-on-band)',
+    )
+    expect(
+      screen.getByRole('button', { name: /^Hosting destination/ }).style.color,
+    ).toBe('var(--kro-color-fore-on-band)')
+  })
+
+  it('paints secondary copy on the glass in the on-glass role, placeholder included (H3)', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'sheet',
+      openPanel: 'value',
+    })
+
+    expect(screen.getByTestId('capture-title').className).toContain(
+      'placeholder:text-[var(--kro-color-fore-secondary-on-glass)]',
+    )
+    expect(screen.getByText('Value to my life / goals').style.color).toBe(
+      'var(--kro-color-fore-secondary-on-glass)',
+    )
+  })
+
+  it('sizes the sheet’s stars, symbol and actions to the 44px touch target, stars 8px apart (H4)', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'sheet',
+      openPanel: 'value',
+    })
+
+    const touch = 'var(--kro-size-min-touch-target)'
+    const stars = screen.getByRole('group', { name: 'Value' })
+    expect(stars.className).toContain('gap-2')
+    const star = stars.querySelector<HTMLElement>('button')
+    expect(star?.style.width).toBe(touch)
+    expect(star?.style.height).toBe(touch)
+    expect(screen.getByTestId('capture-symbol').style.width).toBe(touch)
+    expect(screen.getByTestId('capture-add').style.minHeight).toBe(touch)
+    expect(
+      screen.getByRole('button', { name: /^Discard new/ }).style.minHeight,
+    ).toBe(touch)
+  })
+
+  it('keeps the popover compact: 26×28 stars, a 34px symbol (H4)', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, {
+      presentation: 'popover',
+      openPanel: 'value',
+    })
+
+    const star = screen
+      .getByRole('group', { name: 'Value' })
+      .querySelector<HTMLElement>('button')
+    expect(star?.style.width).toBe('26px')
+    expect(screen.getByTestId('capture-symbol').style.width).toBe('34px')
+    expect(screen.getByTestId('capture-add').style.minHeight).toBe('')
+  })
+
+  it('draws a filled value star in the on-glass reward role, its caption at 12px (H9, H10)', () => {
+    renderPrompt(
+      { ...captureDraftFixtures.emptyTask, value: 3 },
+      { presentation: 'popover', openPanel: 'value' },
+    )
+
+    const [first] = Array.from(
+      screen
+        .getByRole('group', { name: 'Value' })
+        .querySelectorAll<HTMLElement>('button'),
+    )
+    expect(first?.style.color).toBe('var(--kro-color-reward-on-glass)')
+    const caption = screen
+      .getByTestId('capture-value-editor')
+      .querySelector('span[aria-hidden].text-xs')
+    expect(caption).not.toBeNull()
+  })
+
+  it('fits the Kind picker to a 320px sheet: filling, icon-only below 24rem, every name kept (H5)', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'sheet' })
+
+    const kinds = screen.getByRole('group', { name: 'Kind' })
+    expect(kinds.hasAttribute('data-kro-fill')).toBe(true)
+    expect(kinds.className).toContain('@container')
+    for (const name of ['Task', 'Habit', 'Event', 'Reminder']) {
+      const segment = screen.getByRole('button', { name })
+      expect(segment.className).toContain('min-w-0')
+      expect(
+        segment.querySelector('[data-slot="segment-label"]')?.className,
+      ).toContain('@max-[24rem]:sr-only')
+    }
+  })
+
+  it('leaves the popover’s Kind picker at its natural width', () => {
+    renderPrompt(captureDraftFixtures.emptyTask, { presentation: 'popover' })
+
+    expect(
+      screen.getByRole('group', { name: 'Kind' }).hasAttribute('data-kro-fill'),
+    ).toBe(false)
+  })
+})

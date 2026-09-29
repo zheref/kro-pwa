@@ -427,14 +427,26 @@ export function EndeavorRow({
           tabIndex={-1}
           onClick={selection.onToggle}
           data-slot="endeavor-row-check"
-          className="relative inline-flex size-5 shrink-0 items-center justify-center rounded-kro-small outline-none disabled:opacity-40"
-          style={{
-            border: `1.5px solid ${selection.checked ? colorVar('accent') : colorVar('hairline')}`,
-            background: selection.checked ? colorVar('accent') : 'transparent',
-            color: colorVar('back'),
-          }}
+          // A 24×24 hit area (WCAG 2.5.8) around the 20px box.
+          className="relative inline-flex size-6 shrink-0 items-center justify-center rounded-kro-small outline-none disabled:opacity-40"
         >
-          {selection.checked ? <Check size={12} aria-hidden /> : null}
+          <span
+            aria-hidden
+            data-slot="endeavor-row-check-box"
+            className="inline-flex size-5 items-center justify-center rounded-kro-small"
+            style={{
+              // Unchecked, the box's edge is a UI boundary on glass: the
+              // on-glass secondary clears SC 1.4.11's 3:1 where the hairline
+              // (1.2:1) did not.
+              border: `1.5px solid ${selection.checked ? colorVar('accent') : colorVar('foreSecondaryOnGlass')}`,
+              background: selection.checked
+                ? colorVar('accent')
+                : 'transparent',
+              color: colorVar('back'),
+            }}
+          >
+            {selection.checked ? <Check size={12} aria-hidden /> : null}
+          </span>
         </button>
       )}
     </div>

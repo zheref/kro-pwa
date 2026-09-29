@@ -15,6 +15,7 @@ import {
   NON_TEXT_ROLES,
   THEMES,
   UNMEASURED_ROLES,
+  glassOver,
   measuredPairs,
   rolesUnderContract,
 } from './contrastContracts'
@@ -117,6 +118,37 @@ describe('the suite measures the whole palette', () => {
   it('covers all 22 semantic chip roles, the way KroTokens.Colors.all does', () => {
     expect(CHIP_ROLES).toHaveLength(Object.keys(SEMANTIC_ROLE_VARS).length)
     expect(CHIP_ROLES).toHaveLength(22)
+  })
+})
+
+describe('the capture prompt’s glass pairs are under contract (Hanten H1–H3, H9)', () => {
+  const contracts = new Set(pairs.map((pair) => pair.contract))
+
+  it('measures the status band’s text in both schemes, over every backdrop', () => {
+    const band = pairs.filter(
+      (pair) => pair.contract === 'text on the prompt’s dark status band',
+    )
+    expect(band).toHaveLength(2 * 3 * 2)
+  })
+
+  it('measures secondary copy and the field ring on glass, and the ring on fills', () => {
+    expect(contracts).toContain('text on glass, over the worst-case backdrop')
+    expect(contracts).toContain(
+      'graphic on glass, over the worst-case backdrop (SC 1.4.11)',
+    )
+    expect(contracts).toContain(
+      'field focus ring on an opaque fill (SC 1.4.11)',
+    )
+  })
+
+  it('would have failed with the old roles — fore-secondary and lime on light glass', () => {
+    const glass = glassOver('headerGradientGrape', 'light')
+    expect(
+      ratioBetween(resolveToken('--kro-color-fore-secondary', 'light'), glass),
+    ).toBeLessThan(AA_TEXT)
+    expect(
+      ratioBetween(resolveToken('--kro-color-glow-lime', 'light'), glass),
+    ).toBeLessThan(3)
   })
 })
 

@@ -215,8 +215,8 @@ describe('one trailing-panel motion for the detail pane, the prompt and its pane
 })
 
 describe('the panel motion tokens and the bottom sheet', () => {
-  it('gives panels a readable travel time: 380ms in, 240ms out', () => {
-    expect(declaredRoot['--kro-duration-panel']).toBe('380ms')
+  it('gives panels a readable travel time within UX-9: 300ms in, 240ms out', () => {
+    expect(declaredRoot['--kro-duration-panel']).toBe('300ms')
     expect(declaredRoot['--kro-duration-panel-exit']).toBe('240ms')
   })
 

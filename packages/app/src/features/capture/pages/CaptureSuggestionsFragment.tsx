@@ -166,7 +166,7 @@ export function CaptureSuggestionsFragment({
           aria-hidden
           data-testid="capture-suggestions-keys"
           className="min-w-0 flex-1 truncate"
-          style={{ color: colorVar('foreSecondary') }}
+          style={{ color: colorVar('foreSecondaryOnGlass') }}
         >
           {isBrowsing
             ? 'Arrows move · Return picks · Space selects · esc back'

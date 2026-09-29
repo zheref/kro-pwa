@@ -153,6 +153,25 @@
   --kro-color-ring-emerald: #14a86e;
   --kro-color-reward-yellow: #c78c00;
   --kro-color-glow-lime: #8fcc2e;
+  /* The field focus ring's colour. WEB ADAPTATION: the brand lime is the
+     glow's, not a boundary's — it measures ~1:1 on light glass — so light mode
+     draws the ring in a darker brand green that clears SC 1.4.11's 3:1 over
+     the worst-case glass and on every fill; dark mode keeps the lime. */
+  --kro-color-ring-field: #2f6b00;
+  /* Rewards drawn as a graphic on light glass (a filled value star): the
+     yellow is ~1.5:1 there, so light mode uses a deep amber that clears 3:1. */
+  --kro-color-reward-on-glass: #8a5a00;
+  /* Secondary copy ON GLASS. `fore-secondary` is measured on opaque surfaces;
+     over the glass the backdrop shows through, and on light glass over the
+     indigo→grape wash it falls to ~2.7:1. This role clears 4.5:1 there. */
+  --kro-color-fore-secondary-on-glass: #3f4250;
+  /* Text on the prompt's dark status band — which stays dark in BOTH schemes,
+     so its copy is always the on-dark pair. */
+  --kro-color-fore-on-band: #ffffff;
+  --kro-color-fore-secondary-on-band: rgb(255 255 255 / 0.8);
+  /* How much black the status band mixes into the glass — dark enough that
+     both on-band roles clear 4.5:1 over the worst-case backdrop. */
+  --kro-status-band-strength: 66%;
   --kro-color-timeline-today-foreground: #b7162f;
   --kro-color-timeline-today-selected-foreground: #ff5a5a;
   --kro-color-timeline-selection-outline: #c76bff;
@@ -182,7 +201,7 @@
     color-mix(in srgb, var(--kro-color-accent) 35%, transparent);
   /* The field focus ring — one thin (1.5px) brand-green ring: the sidebar's
      Search field, and the capture prompt's controls and cards. */
-  --kro-ring-field: 0 0 0 1.5px var(--kro-color-glow-lime);
+  --kro-ring-field: 0 0 0 1.5px var(--kro-color-ring-field);
 
   /* ==================================================================
      Semantic roles — "what colour is a Habit" has exactly one answer.
@@ -375,6 +394,9 @@
     --kro-color-ring-emerald: #2ac480;
     --kro-color-reward-yellow: #ffd400;
     --kro-color-glow-lime: #b0e84a;
+    --kro-color-ring-field: var(--kro-color-glow-lime);
+    --kro-color-reward-on-glass: var(--kro-color-reward-yellow);
+    --kro-color-fore-secondary-on-glass: var(--kro-color-fore-secondary);
     --kro-color-timeline-today-foreground: #b7162f;
     --kro-color-timeline-today-selected-foreground: #b7162f;
     --kro-color-timeline-selection-outline: #cf8dff;
@@ -457,6 +479,9 @@
   --kro-color-ring-emerald: #2ac480;
   --kro-color-reward-yellow: #ffd400;
   --kro-color-glow-lime: #b0e84a;
+  --kro-color-ring-field: var(--kro-color-glow-lime);
+  --kro-color-reward-on-glass: var(--kro-color-reward-yellow);
+  --kro-color-fore-secondary-on-glass: var(--kro-color-fore-secondary);
   --kro-color-timeline-today-foreground: #b7162f;
   --kro-color-timeline-today-selected-foreground: #b7162f;
   --kro-color-timeline-selection-outline: #cf8dff;

@@ -85,7 +85,10 @@ export function PropertyPill({
     ? SELECTED_CONTROL_STYLE.color
     : isSet
       ? colorVar('fore')
-      : colorVar('foreSecondary')
+      : // A pill sits on glass (the capture prompt); the on-glass secondary
+        // clears 4.5:1 over the worst-case backdrop where `foreSecondary`
+        // measured 2.2–3.3:1.
+        colorVar('foreSecondaryOnGlass')
 
   return (
     <span

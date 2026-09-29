@@ -101,6 +101,7 @@ import { SegmentedControl } from '../../../design/hig/selection/SegmentedControl
 import {
   type ControlDensity,
   controlDensity,
+  controlMinSizeVar,
 } from '../../../design/system/density'
 import { captureIcon, captureIconFor } from './captureIcons'
 import {
@@ -953,7 +954,7 @@ function PromptForm({
               height: 28,
               color: isSuggestionsShown
                 ? colorVar('accent')
-                : colorVar('foreSecondary'),
+                : colorVar('foreSecondaryOnGlass'),
               backgroundColor: isSuggestionsShown
                 ? `color-mix(in srgb, ${colorVar('accent')} 14%, transparent)`
                 : undefined,
@@ -999,6 +1000,9 @@ function PromptForm({
           density={density}
           selectionTint={semanticVar(captureKindTint(draft.kind))}
           revealShortcutHints={isOptionHeld}
+          // The phone sheet fills its width and drops to icon-only segments
+          // below 24rem (320/390px), names kept for assistive tech (UX-7).
+          fill={!isCompact}
           onChange={(kind) => {
             setPanel(null)
             onSelectKind(kind)
@@ -1047,7 +1051,13 @@ function PromptForm({
             // the resolved emoji changes width. Flat: the emoji IS the
             // affordance, exactly as canon's `emojiBadge`.
             className="relative inline-flex shrink-0 items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring-field)]"
-            style={{ width: 34, height: 34, fontSize: 20, lineHeight: 1 }}
+            // Touch: the 44px target (UX-3); the popover keeps its 34px.
+            style={{
+              width: isCompact ? 34 : controlMinSizeVar(density),
+              height: isCompact ? 34 : controlMinSizeVar(density),
+              fontSize: 20,
+              lineHeight: 1,
+            }}
           >
             {resolvedSymbol}
             {hints ? (
@@ -1065,7 +1075,7 @@ function PromptForm({
           className={cn(
             'min-w-0 flex-1 bg-transparent outline-none',
             isCompact ? 'py-1 text-sm' : 'py-2 text-base',
-            'placeholder:text-kro-fore-secondary',
+            'placeholder:text-[var(--kro-color-fore-secondary-on-glass)]',
           )}
           style={{ color: colorVar('fore') }}
           placeholder={captureKindPlaceholder(draft.kind)}
@@ -1137,7 +1147,7 @@ function PromptForm({
                         ? undefined
                         : isValueRequired && draftValue === null
                           ? colorVar('badgeOrange')
-                          : colorVar('rewardYellow'),
+                          : colorVar('rewardOnGlass'),
                   }}
                 />
               }
@@ -1427,6 +1437,10 @@ function PromptForm({
             ? `0 0 ${radiusVar('panel')} ${radiusVar('panel')}`
             : 0,
           ['--kro-glass-tint' as string]: 'black',
+          // Darker than the default tint so both on-band roles clear 4.5:1
+          // over the worst-case backdrop (`--kro-status-band-strength`).
+          ['--kro-glass-tint-strength' as string]:
+            'var(--kro-status-band-strength)',
         }}
       >
         <div
@@ -1455,6 +1469,11 @@ function PromptForm({
               variant="secondary"
               size={isCompact ? 'sm' : 'pill'}
               className="min-w-24 px-3"
+              style={
+                isCompact
+                  ? undefined
+                  : { minHeight: controlMinSizeVar(density) }
+              }
               shortcut="escape"
               showShortcut={hints}
               aria-label={`Discard new ${captureKindLabel(draft.kind).toLowerCase()}`}
@@ -1466,6 +1485,11 @@ function PromptForm({
               variant="primary"
               size={isCompact ? 'sm' : 'pill'}
               className="min-w-24 px-3"
+              style={
+                isCompact
+                  ? undefined
+                  : { minHeight: controlMinSizeVar(density) }
+              }
               data-testid="capture-add"
               shortcut="return"
               showShortcut={hints}
@@ -1508,7 +1532,9 @@ function PromptForm({
             data-testid="capture-status-text"
             title={blockedReason ?? undefined}
             className="m-0 flex min-w-0 max-w-full items-center justify-center gap-1.5 text-xs"
-            style={{ color: colorVar('foreSecondary') }}
+            // The band is dark in both schemes, so its copy is the on-dark
+            // pair (contrast suite: text on the prompt's dark status band).
+            style={{ color: colorVar('foreSecondaryOnBand') }}
           >
             {statusLine.reason === null ? null : (
               <span className="min-w-0 truncate">{statusLine.reason}</span>
@@ -1638,7 +1664,7 @@ function RewardsEditor({
     >
       <span
         className={isCompact ? 'text-xs' : 'text-sm'}
-        style={{ color: colorVar('foreSecondary') }}
+        style={{ color: colorVar('foreSecondaryOnGlass') }}
       >
         Reward points
       </span>
@@ -1805,13 +1831,17 @@ function ValueEditor({
       <div className="flex items-center gap-3">
         <span
           className={isCompact ? 'text-xs' : 'text-sm'}
-          style={{ color: colorVar('foreSecondary') }}
+          style={{ color: colorVar('foreSecondaryOnGlass') }}
         >
           Value to my life / goals
         </span>
         <span className="flex-1" />
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex" role="group" aria-label="Value">
+          <div
+            className={cn('flex', !isCompact && 'gap-2')}
+            role="group"
+            aria-label="Value"
+          >
             {steps.map((step) => {
               const isFilled = (value ?? 0) >= step
               const Glyph = isFilled ? Star : EmptyStar
@@ -1824,11 +1854,15 @@ function ValueEditor({
                   onClick={() => onPick(value === step ? null : step)}
                   className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring-field)]"
                   style={{
-                    width: 26,
-                    height: 28,
+                    // Touch: 44px stars, 8px apart (UX-3); the popover keeps
+                    // its compact 26×28.
+                    width: isCompact ? 26 : controlMinSizeVar('comfortable'),
+                    height: isCompact ? 28 : controlMinSizeVar('comfortable'),
+                    // The deep amber on light glass clears 3:1 (contrast
+                    // suite: graphic on glass); the yellow did not.
                     color: isFilled
-                      ? colorVar('rewardYellow')
-                      : colorVar('foreSecondary'),
+                      ? colorVar('rewardOnGlass')
+                      : colorVar('foreSecondaryOnGlass'),
                   }}
                 >
                   <Glyph
@@ -1844,8 +1878,8 @@ function ValueEditor({
               not shift the stars. */}
           <span
             aria-hidden
-            className="text-[10px]"
-            style={{ color: colorVar('foreSecondary') }}
+            className="text-xs"
+            style={{ color: colorVar('foreSecondaryOnGlass') }}
           >
             {value === null ? '\u00a0' : (captureValueLabel(value) ?? '\u00a0')}
           </span>
@@ -1877,7 +1911,7 @@ function DurationEditor({
     >
       <span
         className={cn('px-3', isCompact ? 'text-xs' : 'text-sm')}
-        style={{ color: colorVar('foreSecondary') }}
+        style={{ color: colorVar('foreSecondaryOnGlass') }}
       >
         How long will it take?
       </span>
@@ -1962,7 +1996,8 @@ function DestinationPicker({
         )}
         style={{
           minHeight: promptControlMinHeight(isCompact),
-          color: colorVar('fore'),
+          // It sits on the dark status band (both schemes): the on-dark ink.
+          color: colorVar('foreOnBand'),
         }}
       >
         {shortcutHint === undefined ? null : (

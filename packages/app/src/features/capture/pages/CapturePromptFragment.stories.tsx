@@ -92,6 +92,23 @@ export const SheetEmptyTask = {
   ),
 }
 
+/**
+ * The phone sheet at 320px, the narrowest supported width: the Kind picker
+ * fills the sheet and drops to icon-only segments (names kept for assistive
+ * tech) so Reminder is never clipped. Mirrored by the H5 render test.
+ */
+export const SheetAt320 = {
+  // Storybook's built-in `mobile1` viewport is 320×568.
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  render: () => (
+    <ThemeScope theme="light">
+      <div style={{ width: 320 }}>
+        {prompt(captureDraftFixtures.emptyTask, 'sheet')}
+      </div>
+    </ThemeScope>
+  ),
+}
+
 /** The same prompt with a title typed — Add enabled, no reason shown. */
 export const SheetReadyToSubmit = {
   render: () => (

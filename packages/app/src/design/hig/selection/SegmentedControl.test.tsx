@@ -202,3 +202,78 @@ describe('SegmentedControl', () => {
     expect(hint?.getAttribute('data-revealed')).toBe('false')
   })
 })
+
+describe('SegmentedControl fill — a four-way control on a 320px phone (UX-7)', () => {
+  const KINDS = [
+    { value: 'task', label: 'Task', icon: <svg aria-hidden /> },
+    { value: 'habit', label: 'Habit', icon: <svg aria-hidden /> },
+    { value: 'event', label: 'Event', icon: <svg aria-hidden /> },
+    { value: 'reminder', label: 'Reminder', icon: <svg aria-hidden /> },
+  ] as const
+
+  it('fills its width and shares it equally, each segment free to shrink', () => {
+    render(
+      <SegmentedControl
+        label="Kind"
+        options={KINDS}
+        value="task"
+        onChange={() => {}}
+        density="comfortable"
+        fill
+      />,
+    )
+    const group = screen.getByRole('group', { name: 'Kind' })
+    expect(group.className).toContain('w-full')
+    expect(
+      screen.getByRole('button', { name: 'Reminder' }).className,
+    ).toContain('flex-1')
+  })
+
+  it('drops to icon-only below 24rem, the label kept for assistive tech', () => {
+    render(
+      <SegmentedControl
+        label="Kind"
+        options={KINDS}
+        value="task"
+        onChange={() => {}}
+        fill
+      />,
+    )
+    const label = screen
+      .getByRole('button', { name: 'Reminder' })
+      .querySelector('[data-slot="segment-label"]')
+    expect(label?.className).toContain('@max-[24rem]:sr-only')
+    expect(label?.className).toContain('truncate')
+  })
+
+  it('never hides the label of a segment with no icon, and leaves non-fill controls alone', () => {
+    render(
+      <SegmentedControl
+        label="Session mode"
+        options={MODES}
+        value="stopwatch"
+        onChange={() => {}}
+        fill
+      />,
+    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Pomodoro' })
+        .querySelector('[data-slot="segment-label"]')?.className,
+    ).not.toContain('sr-only')
+    cleanup()
+    render(
+      <SegmentedControl
+        label="Session mode"
+        options={MODES}
+        value="stopwatch"
+        onChange={() => {}}
+      />,
+    )
+    expect(
+      screen
+        .getByRole('group', { name: 'Session mode' })
+        .hasAttribute('data-kro-fill'),
+    ).toBe(false)
+  })
+})

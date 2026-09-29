@@ -36,8 +36,10 @@
   --kro-duration-quick-spring: 198ms;
   --kro-duration-standard-spring: 270ms;
 
-  /* A floating panel or sheet — long enough to read as travel, not a blink. */
-  --kro-duration-panel: 380ms;
+  /* A floating panel or sheet — long enough to read as travel, not a blink,
+     and capped at UX-9's 300ms: a surface that takes longer than that to
+     arrive reads as lag. */
+  --kro-duration-panel: 300ms;
   --kro-duration-panel-exit: 240ms;
 
   /* Easings.

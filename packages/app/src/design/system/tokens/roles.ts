@@ -66,6 +66,11 @@ export const COLOR_ROLE_VARS = {
   ringEmerald: '--kro-color-ring-emerald',
   rewardYellow: '--kro-color-reward-yellow',
   glowLime: '--kro-color-glow-lime',
+  ringField: '--kro-color-ring-field',
+  rewardOnGlass: '--kro-color-reward-on-glass',
+  foreSecondaryOnGlass: '--kro-color-fore-secondary-on-glass',
+  foreOnBand: '--kro-color-fore-on-band',
+  foreSecondaryOnBand: '--kro-color-fore-secondary-on-band',
   timelineTodayForeground: '--kro-color-timeline-today-foreground',
   timelineTodaySelectedForeground:
     '--kro-color-timeline-today-selected-foreground',

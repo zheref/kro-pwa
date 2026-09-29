@@ -420,6 +420,27 @@ describe('EndeavorRow pick and selection mode', () => {
     expect(toggled).toBe(1)
   })
 
+  it('gives the checkbox a 24×24 hit area and an unchecked edge that clears 3:1 on glass', () => {
+    render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        now={NOW}
+        onPick={noop}
+        selection={{ checked: false, label: 'Select Slides', onToggle: noop }}
+      />,
+    )
+    const box = screen.getByRole('checkbox', { name: 'Select Slides' })
+    expect(box.className).toContain('size-6')
+    const visual = box.querySelector<HTMLElement>(
+      '[data-slot="endeavor-row-check-box"]',
+    )
+    expect(visual?.className).toContain('size-5')
+    expect(visual?.style.border).toContain(
+      'var(--kro-color-fore-secondary-on-glass)',
+    )
+  })
+
   it('disables a row that cannot be selected, and draws no controls without the props', () => {
     const { unmount } = render(
       <EndeavorRow

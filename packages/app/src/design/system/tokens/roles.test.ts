@@ -163,8 +163,14 @@ describe('the field focus ring', () => {
     const here = dirname(fileURLToPath(import.meta.url))
     const tokens = readFileSync(join(here, 'tokens.css'), 'utf8')
     const styles = readFileSync(join(here, '..', 'styles.css'), 'utf8')
+    // Width is the maintainer's call (1.5px); the colour is a token of its own
+    // so light mode can clear SC 1.4.11 (the contrast suite measures it).
     expect(tokens).toContain(
-      '--kro-ring-field: 0 0 0 1.5px var(--kro-color-glow-lime);',
+      '--kro-ring-field: 0 0 0 1.5px var(--kro-color-ring-field);',
+    )
+    expect(tokens).toContain('--kro-color-ring-field: #2f6b00;')
+    expect(tokens).toContain(
+      '--kro-color-ring-field: var(--kro-color-glow-lime);',
     )
     expect(styles).toContain(
       ':where([data-kro-field]):focus-within {\n  box-shadow: var(--kro-ring-field);',

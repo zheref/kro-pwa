@@ -254,13 +254,17 @@ export function ShortcutHint({
           left: -4,
           zIndex: 1,
           padding: '1px 3px',
-          fontSize: 9,
+          // 11px: the smallest legible keycap (UX-8), still floating in no
+          // layout space.
+          fontSize: 11,
           lineHeight: 1.1,
           whiteSpace: 'nowrap',
           borderRadius: 4,
           border: '1px solid var(--kro-color-hairline)',
           background: 'var(--kro-color-back)',
-          color: 'color-mix(in srgb, var(--kro-color-fore) 55%, transparent)',
+          // `fore-secondary` on the opaque `back` chip — a measured ≥4.5:1
+          // pair (contrast suite), where 55% `fore` measured ~3.5:1.
+          color: 'var(--kro-color-fore-secondary)',
           opacity: reveal ? 1 : 0,
           transitionProperty: 'opacity',
           transitionDuration: 'var(--kro-duration-quick, 180ms)',
@@ -279,7 +283,10 @@ export function ShortcutHint({
       data-revealed={reveal ? 'true' : 'false'}
       className={cn('font-normal', className)}
       style={{
-        color: 'color-mix(in srgb, currentColor 55%, transparent)',
+        // 85% of the label's own colour: still recessed, but ≥4.5:1 on both
+        // the primary (accent) and the secondary (glass) fills — 55% was
+        // ~3.3–3.8:1.
+        color: 'color-mix(in srgb, currentColor 85%, transparent)',
         visibility: reveal ? 'visible' : 'hidden',
       }}
     >

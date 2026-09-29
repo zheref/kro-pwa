@@ -96,7 +96,7 @@ import {
   selectIsTriageSaving,
   selectTriageBlockedReason,
   selectTriageDueDate,
-  selectTriageException,
+  selectTriageOpenFailure,
   selectTriagePresentation,
   selectTriageDurationChips,
   selectTriageEffortRating,
@@ -144,7 +144,7 @@ export function TriageCarouselPage({
   const isPane = presentation === 'pane'
   const hostPresentation = useAppSelector(selectTriagePresentation)
   const isHost = hostPresentation === presentation
-  const loadException = useAppSelector(selectTriageException)
+  const openFailure = useAppSelector(selectTriageOpenFailure)
 
   const request = useAppSelector(selectCaptureTriageRequest)
   const pendingTriage = useAppSelector(selectPendingTriageEndeavors)
@@ -453,8 +453,8 @@ export function TriageCarouselPage({
       presentation={presentation}
       isPresenting={isHost && session !== null}
       loadExceptionMessage={
-        isPane && isHost && loadException !== null
-          ? loadException.message
+        openFailure !== null && openFailure.presentation === presentation
+          ? openFailure.copy
           : null
       }
       onDismiss={onTapCancel}

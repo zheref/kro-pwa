@@ -167,6 +167,13 @@ export const openTriageThunk = createAsyncThunk<
   // Canon's `awaitsTriage` kind gate, on the resolved kind canon switches on:
   // habits, calendar events, behaviors, blueprints and background work are
   // never triaged, and neither is completed work.
+  //
+  // Known disagreement (Hanten, Nobunaga): the Inbox's Pending Triage list
+  // (capture's `pendingTriageEndeavors`) gates on the *stored* kind, so a row a
+  // classifying provider resolves to an event could still be listed — and this
+  // gate then refuses it with its own copy. Aligning the list means passing
+  // `resolvedKind(endeavor, context)` to `awaitsTriage` there; that is
+  // capture's lane and is handed over rather than changed here.
   const kind = resolvedKind(endeavor, context)
   if (!canBeTriaged(endeavor, kind)) {
     return err(TriageExceptions.notTriageable(endeavorKindDisplayName(kind)))

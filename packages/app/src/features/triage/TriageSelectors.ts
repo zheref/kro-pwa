@@ -18,7 +18,7 @@ import {
 } from '@kro/core'
 import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '../../library/store'
-import type { TriageException } from './TriageException'
+import { type TriageException, triageOpenFailureCopy } from './TriageException'
 import type { TriageState } from './TriageFeature'
 import {
   type TriageExpiryToken,
@@ -62,6 +62,25 @@ export const selectTriageException = createSelector(
   [selectTriageSlice],
   (slice): TriageException | null =>
     slice.load.kind === 'failed' ? slice.load.exception : null,
+)
+
+/**
+ * Why Triage could not open, as user copy, and which host asked — so only
+ * that host shows it (`RC-5`: the gating lives here, not in the Page).
+ * `null` while nothing failed to open.
+ */
+export const selectTriageOpenFailure = createSelector(
+  [selectTriageSlice],
+  (
+    slice,
+  ): {
+    readonly presentation: TriagePresentation
+    readonly copy: string
+  } | null => {
+    if (slice.load.kind !== 'failed') return null
+    const copy = triageOpenFailureCopy(slice.load.exception)
+    return copy === null ? null : { presentation: slice.presentation, copy }
+  },
 )
 
 /** Which host draws the session and drains its outcome. */

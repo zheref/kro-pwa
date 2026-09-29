@@ -1,6 +1,10 @@
 import { assertNever } from '@kro/core'
 import { describe, expect, it } from 'vitest'
-import { type TriageException, TriageExceptions } from '../TriageException'
+import {
+  type TriageException,
+  TriageExceptions,
+  triageOpenFailureCopy,
+} from '../TriageException'
 
 /** Every case, so adding one without user copy fails the build here first. */
 const copyFor = (exception: TriageException): string => {
@@ -154,5 +158,35 @@ describe('the union', () => {
       'sessionLoadFailed',
       'unknown',
     ])
+  })
+})
+
+describe('triageOpenFailureCopy — user copy per kind, never the raw message', () => {
+  it('explains a kind Triage never applies to without echoing the kind name', () => {
+    const copy = triageOpenFailureCopy(TriageExceptions.notTriageable('Habit'))
+    expect(copy).toContain('habits')
+  })
+
+  it('never leaks a row id or a platform error', () => {
+    expect(
+      triageOpenFailureCopy(TriageExceptions.endeavorNotFound('row-9')),
+    ).not.toContain('row-9')
+    expect(
+      triageOpenFailureCopy(
+        TriageExceptions.sessionLoadFailed('IndexedDB is blocked'),
+      ),
+    ).not.toContain('IndexedDB')
+  })
+
+  it('leaves the save’s own failures to the save status line', () => {
+    expect(
+      triageOpenFailureCopy(TriageExceptions.localSaveFailed('disk')),
+    ).toBeNull()
+    expect(
+      triageOpenFailureCopy(TriageExceptions.incompleteDecision('x')),
+    ).toBeNull()
+    expect(
+      triageOpenFailureCopy(TriageExceptions.unknown('boom')),
+    ).not.toContain('boom')
   })
 })

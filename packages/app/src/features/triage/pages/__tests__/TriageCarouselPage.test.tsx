@@ -689,3 +689,16 @@ describe('two hosts, one session — the pane presentation', () => {
     expect(screen.queryByTestId('triage-form')).toBeNull()
   })
 })
+
+describe('a failed open, end to end in the carousel', () => {
+  it('shows the kind’s copy, not the raw exception, when a habit is asked for', async () => {
+    const store = makeTriageStore({ endeavors: triageFixtureRecords() })
+    mount(store)
+    await seedTriageRequest(store, triageEndeavorFixtures.habit.id)
+
+    const strip = await screen.findByTestId('triage-status-strip')
+    expect(strip.textContent).toContain('habits')
+    expect(strip.textContent).not.toContain(triageEndeavorFixtures.habit.id)
+    expect(screen.queryByTestId('triage-form')).toBeNull()
+  })
+})

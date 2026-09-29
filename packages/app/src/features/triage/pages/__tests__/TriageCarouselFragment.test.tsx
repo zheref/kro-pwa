@@ -341,3 +341,22 @@ describe('the pane presentation — the Pane stories', () => {
     expect(screen.queryByTestId('triage-pane-unavailable')).toBeNull()
   })
 })
+
+describe('a failed open, in the Inbox carousel', () => {
+  it('announces why Triage did not open on the status line', () => {
+    render(
+      <TriageCarouselFragment
+        isPresenting={false}
+        onDismiss={vi.fn()}
+        loadExceptionMessage="This item is no longer available to triage."
+      >
+        {null}
+      </TriageCarouselFragment>,
+    )
+    const strip = screen.getByTestId('triage-status-strip')
+    expect(strip.getAttribute('role')).toBe('alert')
+    expect(strip.textContent).toBe(
+      'This item is no longer available to triage.',
+    )
+  })
+})

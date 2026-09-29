@@ -48,6 +48,7 @@ import {
   selectTriageSecondaryAction,
   selectTriageSelectedExpiryToken,
   selectIsTriageShownInPane,
+  selectTriageOpenFailure,
   selectTriagePresentation,
   selectTriageSession,
   selectTriageValueRating,
@@ -129,6 +130,28 @@ describe('selectIsTriageShownInPane', () => {
     expect(
       selectIsTriageShownInPane(rootWith(triageStateMocks.savingInPane)),
     ).toBe(false)
+  })
+})
+
+describe('selectTriageOpenFailure', () => {
+  it('names the host that asked and gives user copy, not the raw message', () => {
+    const failure = selectTriageOpenFailure(
+      rootWith(triageStateMocks.notTriageableInPane),
+    )
+    expect(failure?.presentation).toBe('pane')
+    expect(failure?.copy).not.toContain('Habit isn')
+  })
+
+  it('reports the carousel’s own failed open too', () => {
+    expect(
+      selectTriageOpenFailure(rootWith(triageStateMocks.failed))?.presentation,
+    ).toBe('carousel')
+  })
+
+  it('is null while nothing failed to open', () => {
+    expect(
+      selectTriageOpenFailure(rootWith(triageStateMocks.pristine)),
+    ).toBeNull()
   })
 })
 

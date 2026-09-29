@@ -382,24 +382,6 @@ export function withExpiryPresetTapped(
 // ---------------------------------------------------------------------------
 
 /**
- * One concern: a terminal button was pressed.
- *
- * Every guard canon applies is applied here, and each refusal is a **no-op**
- * rather than a half-raised outcome:
- *
- * - Cancel always dismisses, gate or no gate.
- * - Edit always raises, and applies no decision — *"No triage decision is
- *   applied"*.
- * - The three confirming buttons need a decision, i.e. an open gate; Start Now
- *   / Share / Archive additionally need **their own quadrant**, so a Share
- *   dispatched on a Prioritize triage does nothing rather than sharing under
- *   the wrong quadrant.
- *
- * Whether the session ends here is `triageOutcomeEndsSession`'s call: a Delegate
- * triage keeps the screen mounted under the share sheet, and Edit keeps it
- * mounted under the Edit surface.
- */
-/**
  * One concern: the endeavor being triaged was deleted elsewhere. The session
  * closes as if backed out of — nothing is saved for a row that is gone — so a
  * host (the detail pane's Inbox above all) returns to its list instead of
@@ -417,6 +399,24 @@ export function withTriagedEndeavorRemoved(
   return withOutcomeRaised(state, 'dismissed')
 }
 
+/**
+ * One concern: a terminal button was pressed.
+ *
+ * Every guard canon applies is applied here, and each refusal is a **no-op**
+ * rather than a half-raised outcome:
+ *
+ * - Cancel always dismisses, gate or no gate.
+ * - Edit always raises, and applies no decision — *"No triage decision is
+ *   applied"*.
+ * - The three confirming buttons need a decision, i.e. an open gate; Start Now
+ *   / Share / Archive additionally need **their own quadrant**, so a Share
+ *   dispatched on a Prioritize triage does nothing rather than sharing under
+ *   the wrong quadrant.
+ *
+ * Whether the session ends here is `triageOutcomeEndsSession`'s call: a Delegate
+ * triage keeps the screen mounted under the share sheet, and Edit keeps it
+ * mounted under the Edit surface.
+ */
 export function withOutcomeRaised(
   state: TriageState,
   kind: TriageOutcomeKind,

@@ -131,9 +131,9 @@ export interface TriageCarouselFragmentProps {
    */
   readonly presentation?: TriagePresentation
   /**
-   * Why the session could not open — e.g. the endeavor is a habit, which
-   * Triage never applies to. Only the pane shows it: the Inbox never lists a
-   * row that could fail this way.
+   * Why the session could not open, as user copy (never the raw message) —
+   * e.g. the endeavor is a habit, which Triage never applies to. Both hosts
+   * show it: the pane in its body, the carousel on its status line.
    */
   readonly loadExceptionMessage?: string | null
 }
@@ -304,7 +304,7 @@ export function TriageCarouselFragment({
     return (
       <TriageStatusStrip
         isSaving={isSaving}
-        saveExceptionMessage={saveExceptionMessage}
+        saveExceptionMessage={saveExceptionMessage ?? loadExceptionMessage}
         notice={notice}
       />
     )

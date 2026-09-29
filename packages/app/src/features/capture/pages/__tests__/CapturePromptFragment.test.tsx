@@ -8,6 +8,7 @@
  * observable.
  */
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -578,20 +579,34 @@ describe('the host menu and the animated editors', () => {
   })
 
   it('starts closed at 0fr and transparent before it flips open', async () => {
-    const states: string[] = []
-    renderPrompt(captureDraftFixtures.titledTask)
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Duration, not set' }),
-    )
-    const panel = screen
-      .getByTestId('capture-duration-editor')
-      .closest<HTMLElement>('[data-slot="capture-inline-panel"]')
-    states.push(panel?.getAttribute('data-state') ?? '')
-    await waitFor(() => {
+    // Hold the panel's "flip open" frame so the closed paint is observed
+    // deterministically. Without this, a slow runner can fire the frame while
+    // the async click is still settling, and the closed state is never seen.
+    const frames: FrameRequestCallback[] = []
+    const raf = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        frames.push(callback)
+        return frames.length
+      })
+    try {
+      renderPrompt(captureDraftFixtures.titledTask)
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Duration, not set' }),
+      )
+      const panel = screen
+        .getByTestId('capture-duration-editor')
+        .closest<HTMLElement>('[data-slot="capture-inline-panel"]')
+      expect(panel?.getAttribute('data-state')).toBe('closed')
+
+      act(() => {
+        for (const frame of frames.splice(0)) frame(performance.now())
+      })
+
       expect(panel?.getAttribute('data-state')).toBe('open')
-    })
-    states.push(panel?.getAttribute('data-state') ?? '')
-    expect(states).toEqual(['closed', 'open'])
+    } finally {
+      raf.mockRestore()
+    }
   })
 
   it('collapses with an ease-in, staying mounted but inert until it ends', async () => {

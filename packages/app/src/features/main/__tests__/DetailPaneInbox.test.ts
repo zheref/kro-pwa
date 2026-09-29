@@ -97,14 +97,17 @@ describe('withDetailPaneInboxRevealed', () => {
     expect(next.detailPane).toEqual({ segment: 'inbox', endeavor: null })
   })
 
-  it('switches a pane showing another reading over to the Inbox', () => {
+  it('switches a pane showing another reading over to the Inbox, keeping its selection', () => {
     const onPlan: MainState = {
       ...MainMocks.desktopDetailPanePlan,
       isDetailPaneInboxEnabled: true,
       detailPaneBackStack: [{ segment: 'performance', endeavor: null }],
     }
     const next = withDetailPaneInboxRevealed(onPlan)
-    expect(next.detailPane.segment).toBe('inbox')
+    expect(next.detailPane).toEqual({
+      segment: 'inbox',
+      endeavor: onPlan.detailPane.endeavor,
+    })
     expect(next.detailPaneBackStack).toEqual([])
   })
 
@@ -149,6 +152,17 @@ describe('a capture routed to the Inbox, delivered', () => {
     expect(
       delivered(MainMocks.desktopDetailPaneInboxReady, inboxRoute).detailPane,
     ).toEqual({ segment: 'inbox', endeavor: null })
+  })
+
+  it('keeps the endeavor the pane was reading — the capture does not drop it', () => {
+    const reading: MainState = {
+      ...MainMocks.desktopDetailPanePlan,
+      isDetailPaneInboxEnabled: true,
+    }
+    expect(delivered(reading, inboxRoute).detailPane).toEqual({
+      segment: 'inbox',
+      endeavor: reading.detailPane.endeavor,
+    })
   })
 
   it('leaves the pane hidden with the flag off — the overlay presents it', () => {

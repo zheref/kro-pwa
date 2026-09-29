@@ -109,10 +109,6 @@ export const detailPaneTitle = (
 }
 
 /**
- * One place the pane can be — a segment reading an endeavor (or the day).
- * What a drill-in pushes and a Back pops.
- */
-/**
  * The segments the toolbar group offers: canon's three always, `inbox` only
  * while the web-only `detailPaneInbox` flag is on.
  */
@@ -128,6 +124,10 @@ export const detailPaneSegmentReadsEndeavor = (
   segment: DetailPaneSegment,
 ): boolean => segment !== 'inbox'
 
+/**
+ * One place the pane can be — a segment reading an endeavor (or the day).
+ * What a drill-in pushes and a Back pops.
+ */
 export interface DetailPaneLocation {
   readonly segment: DetailPaneSegment
   readonly endeavor: DetailPaneEndeavor | null

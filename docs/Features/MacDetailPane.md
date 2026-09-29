@@ -6,7 +6,7 @@
 ## Purpose
 
 On a desktop window, one glass panel runs along the window's trailing edge, and the user
-chooses what it holds. It can show three readings: how a session is set up, how the work
+chooses what it holds. It can show three readings (four on the web — see *Web notes*): how a session is set up, how the work
 is going, and what the day looks like. Each reads either the endeavor currently selected
 or, when nothing is selected, the whole day.
 
@@ -33,7 +33,7 @@ changes that layout.
 ## Entry points
 
 - **The toolbar group in the window's content toolbar**, on the trailing side just
-  before Notifications and Profile: one capsule of three icons, one per reading
+  before Notifications and Profile: one capsule of three icons (four on the web, with Inbox), one per reading
   (Session, Performance, Plan), only one of which is ever selected. Picking one shows the panel
   with that reading. Picking the one already showing hides the panel.
 - **An endeavor's details**: double-clicking a card, long-pressing it, or choosing
@@ -54,16 +54,16 @@ changes that layout.
 
 - **Panel**: the glass surface along the window's trailing edge. There is exactly one,
   and it always belongs to the window.
-- **Reading**: one of the three things the panel can show. The toolbar names them.
+- **Reading**: one of the things the panel can show (three in canon, four on the web). The toolbar names them.
 - **Selected endeavor**: the endeavor the panel is reading. With none selected, every
   reading widens to the whole day. The selection is kept when the panel is hidden, so
   reopening a reading returns to the same endeavor. The panel never shows an endeavor's
-  reading without a selection: once the selection ends (see *Selection ending* below),
+  reading without a selection: once the selection ends (see *Selection ending* under User flows),
   every reading falls back to its whole-day mode.
 - **Resting position**: where the floating action button sits while the panel is hidden.
   While the panel shows, the button moves aside by the panel's width plus a small gap.
 
-## The three readings
+## The readings
 
 | Reading | With an endeavor selected | With none selected |
 | --- | --- | --- |
@@ -121,8 +121,8 @@ timeline.
    the user hides the panel or moves to another reading without choosing, the
    pill keeps the conclusion, as it does everywhere else.
 7. **Selection ending.** When the selected endeavor stops being selected — its card is
-   deselected, its details are closed from inside, it is deleted (from a row or in
-   bulk), or it is found gone when the panel reopens it — the panel stays open and
+   deselected, its details are closed from inside, it is deleted from any surface
+   (Today, Plan, the Inbox, Find — one row or in bulk), or it is found gone when the panel reopens it — the panel stays open and
    every reading falls back to its whole-day mode: Session → *New Session* (a new,
    arbitrary task is set up) — **unless a session is already in flight** (running,
    paused, on a break, or its conclusion unanswered): then Session keeps showing that
@@ -150,7 +150,7 @@ The window's toolbar is never used for this.
 ## States
 
 - **Hidden**: no reading selected. The button is at its resting position, and none of
-  the three toolbar buttons is pressed.
+  the toolbar's segment buttons is pressed.
 - **Showing a whole-day reading**: the header names the reading, with no subtitle.
 - **Showing an endeavor-specific reading**: the header names the reading, with the
   endeavor's name beneath.
@@ -212,7 +212,7 @@ flowchart TD
 - **Selection ending falls back instead of hiding (web divergence).** Canon keeps the
   panel's endeavor until another endeavor (or the rings) replaces it, and hides the
   panel when details close from inside. The web ends the selection in every case listed
-  under *Selection ending* and shows each reading's whole-day mode instead, so the panel
+  under *Selection ending* (User flows) and shows each reading's whole-day mode instead, so the panel
   never names an endeavor that is no longer selected (maintainer's call, 2026-09-28).
 - **The Inbox's rows in the panel** carry Triage and Add for Today on their own line
   inside the row's card, beneath the title and reward, so a title is never squeezed to

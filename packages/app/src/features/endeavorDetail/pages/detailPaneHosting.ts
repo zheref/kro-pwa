@@ -17,6 +17,8 @@
  * without changing it, so the effect keyed on it cannot loop.
  */
 
+import type { DetailPaneSegment } from '../../main/DetailPane'
+
 /** One render's reading of the two slices. */
 export interface DetailPaneHostingSnapshot {
   /** The shell hosts a pane at all (flag on, sidebar shell). */
@@ -24,7 +26,7 @@ export interface DetailPaneHostingSnapshot {
   /** Whether Endeavor Detail is presenting something. */
   readonly isDetailOpen: boolean
   /** The pane's segment, or `null` when it is hidden. */
-  readonly paneSegment: 'sessionSetup' | 'performance' | 'plan' | 'inbox' | null
+  readonly paneSegment: DetailPaneSegment | null
   /** The endeavor the pane is pointed at, if any. */
   readonly paneEndeavorId: string | null
 }

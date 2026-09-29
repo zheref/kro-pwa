@@ -37,11 +37,10 @@ import {
   userDidTapDismiss,
 } from '../endeavorDetail/EndeavorDetailFeature'
 import { openDetailByIdThunk } from '../endeavorDetail/EndeavorDetailProducer'
-import { userDidDeselectCard } from '../do/DoFeature'
 import {
-  performBulkOperationThunk,
-  performEndeavorOperationThunk,
-} from '../find/FindProducer'
+  isEndeavorRemoval,
+  removedEndeavorIds,
+} from '../../library/removals/endeavorRemovals'
 import { type DoSurface, SSR_DEFAULT_SURFACE } from './DoSurfaceLayout'
 import type { MainException } from './MainException'
 import { MainExceptions } from './MainException'
@@ -386,6 +385,14 @@ export const mainSlice = createSlice({
       )
     },
 
+    /**
+     * User intent: the selection the pane reads was dismissed (a Do card
+     * deselected). The pane falls back to its endeavor-free readings.
+     */
+    userDidReleaseDetailPaneSelection(state) {
+      Object.assign(state, withDetailPaneSelectionReleased(state))
+    },
+
     /** User intent: the pane header's Back (or Escape while drilled in). */
     userDidTapDetailPaneBack(state) {
       Object.assign(state, withDetailPaneWentBack(state))
@@ -451,30 +458,6 @@ export const mainSlice = createSlice({
       .addCase(userDidTapDismiss, (state) => {
         Object.assign(state, withDetailPaneReleasedByDetail(state))
       })
-      // ------------------------------------ the selection going away
-      //
-      // Every way the pane's selection can end falls the pane back to its
-      // endeavor-free readings: the Do card deselected, the endeavor deleted
-      // from a row or in bulk, or a reopen finding it gone.
-      .addCase(userDidDeselectCard, (state) => {
-        Object.assign(state, withDetailPaneSelectionReleased(state))
-      })
-      .addCase(performEndeavorOperationThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        if (!result.ok || result.value.kind !== 'removed') return
-        Object.assign(
-          state,
-          withDetailPaneSelectionReleased(state, result.value.endeavorId),
-        )
-      })
-      .addCase(performBulkOperationThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        if (!result.ok || result.value.operation !== 'delete') return
-        for (const id of result.value.endeavorIds) {
-          Object.assign(state, withDetailPaneSelectionReleased(state, id))
-        }
-      })
-
       .addCase(loadShellThunk.pending, (state) => {
         Object.assign(state, withLoadingStarted(state))
       })
@@ -563,6 +546,15 @@ export const mainSlice = createSlice({
           }
         }
       })
+      // ------------------------------------ the selection deleted
+      //
+      // Any delete Producer that removed the pane's selection falls the pane
+      // back to its endeavor-free readings (see `library/removals`).
+      .addMatcher(isEndeavorRemoval, (state, action) => {
+        for (const id of removedEndeavorIds(action)) {
+          Object.assign(state, withDetailPaneSelectionReleased(state, id))
+        }
+      })
   },
 })
 
@@ -580,6 +572,7 @@ export const {
   userDidRequestSessionSetup,
   userDidSelectDetailPaneSegment,
   userDidTapDetailPaneBack,
+  userDidReleaseDetailPaneSelection,
   userDidEditDraftProjectTitle,
   userDidTapAddProject,
   userDidTapDestination,

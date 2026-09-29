@@ -36,6 +36,7 @@ import {
   triageStateMocks,
 } from '../TriageMocks'
 import { openTriageThunk, saveTriageDecisionThunk } from '../TriageProducer'
+import { deleteEndeavorThunk } from '../../do/DoProducer'
 import { FindSurface } from '../../find/FindOperations'
 import {
   performBulkOperationThunk,
@@ -119,6 +120,18 @@ describe('the triaged endeavor deleted elsewhere', () => {
 
   it('closes the session when a row deletes it — the pane returns to its Inbox', () => {
     expect(reduce(opened, removed(endeavorId)).session).toBeNull()
+  })
+
+  it('closes the session when the Do surface deletes it — any delete path', () => {
+    expect(
+      reduce(
+        opened,
+        deleteEndeavorThunk.fulfilled({ ok: true, value: endeavorId }, 'r', {
+          endeavorId,
+          now: TRIAGE_MOCK_NOW,
+        }),
+      ).session,
+    ).toBeNull()
   })
 
   it('keeps the session when another row is deleted', () => {

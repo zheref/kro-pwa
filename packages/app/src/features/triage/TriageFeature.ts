@@ -34,9 +34,9 @@ import type { EisenhowerQuadrant } from '@kro/core'
 import { ShareOutcome } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import {
-  performBulkOperationThunk,
-  performEndeavorOperationThunk,
-} from '../find/FindProducer'
+  isEndeavorRemoval,
+  removedEndeavorIds,
+} from '../../library/removals/endeavorRemovals'
 import type { TriageException } from './TriageException'
 import { TriageExceptions } from './TriageException'
 import type { TriageExpiryPreset } from './TriageExpiry'
@@ -288,23 +288,6 @@ export const triageSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // --- the endeavor deleted elsewhere --------------------------------
-      .addCase(performEndeavorOperationThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        if (!result.ok || result.value.kind !== 'removed') return
-        Object.assign(
-          state,
-          withTriagedEndeavorRemoved(state, [result.value.endeavorId]),
-        )
-      })
-      .addCase(performBulkOperationThunk.fulfilled, (state, action) => {
-        const result = action.payload
-        if (!result.ok || result.value.operation !== 'delete') return
-        Object.assign(
-          state,
-          withTriagedEndeavorRemoved(state, result.value.endeavorIds),
-        )
-      })
       // --- opening the session -------------------------------------------
       .addCase(openTriageThunk.pending, (state, action) => {
         Object.assign(
@@ -369,6 +352,13 @@ export const triageSlice = createSlice({
             state,
             TriageExceptions.unknown(action.error.message ?? 'Unknown error'),
           ),
+        )
+      })
+      // --- the endeavor deleted elsewhere (any delete Producer) ----------
+      .addMatcher(isEndeavorRemoval, (state, action) => {
+        Object.assign(
+          state,
+          withTriagedEndeavorRemoved(state, removedEndeavorIds(action)),
         )
       })
   },

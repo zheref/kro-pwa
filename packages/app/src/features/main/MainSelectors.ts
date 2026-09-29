@@ -29,6 +29,7 @@ import {
   shellShapeFor,
 } from './DoSurfaceLayout'
 import { selectCaptureNavigationIntent } from '../capture/CaptureSelectors'
+import { isInboxHostedByPane } from './MainShifters'
 import {
   selectSessionIdentity,
   selectSessionPhase,
@@ -403,6 +404,8 @@ export const selectDetailPaneSubtitle = createSelector(
  * when it delivers the route (`RC-20`: composed here, never read by capture).
  */
 export const selectIsInboxHostedByPane = createSelector(
-  [selectMainSlice, selectIsDetailPaneAvailable],
-  (slice, isAvailable) => isAvailable && slice.isDetailPaneInboxEnabled,
+  [selectMainSlice],
+  // One definition of the fact: the same predicate the reveal Shifter gates
+  // on, so the Page's answer to capture and the reducer's can never differ.
+  isInboxHostedByPane,
 )

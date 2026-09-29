@@ -4,7 +4,7 @@
  * Driven through the real store (`RC-22`, `RC-35`).
  */
 import { describe, expect, it } from 'vitest'
-import { userDidDeselectCard } from '../../do/DoFeature'
+import { userDidReleaseDetailPaneSelection } from '../MainFeature'
 import { hydrateRunningSessionThunk } from '../../session/SessionProducer'
 import {
   SCENE_START,
@@ -31,7 +31,7 @@ const runningInPane = async () => {
 describe('deselecting while a session runs', () => {
   it('keeps the Session reading on the running session — title and subtitle', async () => {
     const store = await runningInPane()
-    store.dispatch(userDidDeselectCard())
+    store.dispatch(userDidReleaseDetailPaneSelection())
 
     const state = store.getState()
     expect(state.main.detailPane.endeavor).toBeNull()
@@ -46,7 +46,7 @@ describe('deselecting while a session runs', () => {
 
   it('still falls Performance back to Day Progress — only Session follows the run', async () => {
     const store = await runningInPane()
-    store.dispatch(userDidDeselectCard())
+    store.dispatch(userDidReleaseDetailPaneSelection())
     store.dispatch(userDidSelectDetailPaneSegment({ segment: 'performance' }))
     expect(selectDetailPaneTitle(store.getState())).toBe('Day Progress')
     expect(selectDetailPaneSubtitle(store.getState())).toBeNull()
@@ -58,7 +58,7 @@ describe('deselecting while a session runs', () => {
     expect(selectDetailPaneSubtitle(store.getState())).toBe(
       slidesEndeavor.title,
     )
-    store.dispatch(userDidDeselectCard())
+    store.dispatch(userDidReleaseDetailPaneSelection())
     expect(selectDetailPaneTitle(store.getState())).toBe('New Session')
     expect(selectDetailPaneSubtitle(store.getState())).toBeNull()
   })

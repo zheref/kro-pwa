@@ -280,8 +280,9 @@ export const isDetailPaneHost = (state: MainState): boolean =>
 
 /**
  * Web-only: whether the Inbox is hosted by the pane — a pane host with the
- * `detailPaneInbox` segment on. The reducer-tier twin of
- * `selectIsInboxHostedByPane`.
+ * `detailPaneInbox` segment on. **The single definition of that fact**: the
+ * reveal Shifter gates on it and `selectIsInboxHostedByPane` is built from it,
+ * so the reducer and the Page (which tells capture) read one rule.
  */
 export const isInboxHostedByPane = (state: MainState): boolean =>
   isDetailPaneHost(state) && state.isDetailPaneInboxEnabled
@@ -289,12 +290,15 @@ export const isInboxHostedByPane = (state: MainState): boolean =>
 /**
  * Web-only: a capture routed to the Inbox, delivered on a shell whose pane
  * hosts the Inbox — the pane opens (or switches) to the Inbox segment, where
- * the just-created row waits to be triaged. Elsewhere a no-op: the Inbox
+ * the just-created row waits to be triaged. The selected endeavor is kept, as
+ * every segment switch keeps it. Elsewhere a no-op: the Inbox
  * overlay presents the capture, as canon's does.
  */
 export const withDetailPaneInboxRevealed = (state: MainState): MainState =>
   isInboxHostedByPane(state)
-    ? withDetailPaneEndeavorSelected(state, null, 'inbox')
+    ? // The selection is kept: the Inbox reads none, and the other segments
+      // must still read the same endeavor when the user switches back.
+      withDetailPaneEndeavorSelected(state, state.detailPane.endeavor, 'inbox')
     : state
 
 /**

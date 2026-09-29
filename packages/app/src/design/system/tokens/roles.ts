@@ -127,6 +127,7 @@ export const RADIUS_VARS = {
   field: '--kro-radius-field',
   card: '--kro-radius-card',
   surface: '--kro-radius-surface',
+  panel: '--kro-radius-panel',
   large: '--kro-radius-large',
   pill: '--kro-radius-pill',
 } as const

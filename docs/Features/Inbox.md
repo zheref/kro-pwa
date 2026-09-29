@@ -33,6 +33,9 @@ flows* below.
   see *Web notes*) shortly after the user captures a new non-event endeavor
   through the input prompt.
 - Manually openable from the top-bar Inbox affordance.
+- **Web only:** on the desktop window, the Inbox reading of the trailing detail
+  pane (see [Mac Detail Pane](./MacDetailPane.md) and *Web notes*) — which is
+  also where a new capture lands there.
 
 ## Core concepts
 
@@ -78,6 +81,39 @@ flows* below.
    for Pending Triage the moment the Just Created slot drains. This is the
    product-level statement of the fix tracked as `KC-IS-#75`.
 4. The user reviews / triages / schedules from there.
+
+### 1a. What the input prompt asks for, per kind
+
+The prompt's title row shows a **symbol badge** (the emoji the saved endeavor
+will carry — a picked emoji, else one typed in the title, else a keyword
+match), the title, and — for Tasks and Habits — the **reward points**. Tasks
+open at 30 points and Habits at 10; switching kind re-seeds the number until
+the user has changed it themselves.
+
+Below it, the property row, in order: **value** and **duration** (Tasks and
+Habits), **date** (not Habits), **time** ("Start" for Events), **end time**
+(Events), **repeat**. Every set property that may be unset carries its own
+clear control inside the same pill. Value is a 1–5 rating (Trivial, Minor,
+Meaningful, Major, Life-changing); duration is one of Triage's preset lengths.
+Tapping the selected star or preset clears it.
+
+Add stays disabled, naming the first unmet requirement, in this order:
+
+1. No title.
+2. An Event missing its start and/or end.
+3. A Habit missing its time, then a Habit that never repeats. A Habit opens
+   with a time and an every-day repeat already set, and its time cannot be
+   cleared.
+4. A Task with no value rating — **only** when the chosen host can store one
+   (on this device or Kro Cloud). A Task bound for Reminders is never blocked
+   over a rating Reminders would drop.
+
+The host picker offers only the hosts that can hold the chosen kind (Task and
+Habit: Kro Cloud, this device, Reminders; Event: Calendar, Kro Cloud, this
+device; Reminder: Reminders, this device), among those connected. Switching to
+a kind the current host cannot hold moves the draft to that kind's first
+supported host. A picked symbol replaces the first emoji in the saved title,
+or is prepended when the title has none.
 
 ### 2. Triage an inbox row
 
@@ -165,13 +201,82 @@ flowchart TD
     kind -->|task / reminder / habit| dateChoice{Date chip left set, or cleared?}
     dateChoice -->|left set| inboxDelayDated[Brief delay to let prompt dismiss]
     dateChoice -->|cleared| inboxDelayDateless[Brief delay — endeavor carries no due date]
-    inboxDelayDated --> inboxSheet[Inbox sheet opens]
-    inboxDelayDateless --> inboxSheet
+    inboxDelayDated --> where{Desktop window with the pane Inbox on? web only}
+    inboxDelayDateless --> where
+    where -->|no| inboxSheet[Inbox sheet opens]
+    where -->|yes| inboxPane[Detail pane opens on the Inbox]
     inboxSheet --> justCreated[Endeavor sits in the Just Created slot]
+    inboxPane --> justCreated
     justCreated --> reopen[Inbox reopened later]
     reopen --> pendingCheck{Unscheduled — no start, no due?}
     pendingCheck -->|yes| pendingTriage[Appears in Pending Triage]
     pendingCheck -->|no| gone[Not shown — it was scheduled or completed]
+```
+
+### 1b. Suggestions above the prompt (web-only, flagged)
+
+Behind the `captureSuggestions` flag (off in the status-quo set, on in the
+web's shipping build), the desktop prompt shows a second glass pane directly
+above it, at the same width and with the same rounded corners, holding a
+vertical, scrolling list of suggested endeavors — the Apple app's sample set,
+in its order, each drawn as the same compact row the desktop Inbox uses. The
+pane fills the height above the prompt, leaving the standard gap above the
+prompt and the standard margin below the top of the window.
+
+- **Pick one:** clicking a row (or focusing it and pressing Space) fills the
+  prompt as the Apple app's carousel does — the title and its emoji, the
+  kind with its defaults, the card's reward points as the user's own, and for
+  an event a start and end from the card's suggested time and length. Return
+  then adds it, or walks to anything still required (a task's value).
+- **Add several to the Inbox:** tick rows with their checkbox, ⌥-click or
+  Shift+Space, then choose **Add N to Inbox** (Shift+Return). With nothing
+  ticked the action reads a neutral "Select to add" and is disabled. Each lands
+  unscheduled in Pending Triage, with its reward points and no value — value
+  is decided at triage, and only the prompt's own Add demands it. Each item
+  succeeds or fails on its own; the status line reports the tally ("Added 2
+  to Inbox"), and anything that failed stays ticked for a retry. Events cannot
+  be ticked — the Inbox holds no events — so an event card is picked instead.
+  The prompt stays open, with whatever the user was typing untouched.
+- The pane is not shown on the phone sheet, and it hides when the room above
+  the prompt could not show at least two rows.
+
+```mermaid
+flowchart TD
+    open[Prompt opens on desktop] --> flag{Suggestions flag on?}
+    flag -->|no| prompt[Prompt only]
+    flag -->|yes| pane[Suggestions pane above the prompt]
+    pane --> pick[Pick a card]
+    pick --> filled[Prompt filled from the card]
+    filled --> ret{Return — anything still required?}
+    ret -->|yes| walk[Open the next requirement]
+    ret -->|no| added[Added]
+    pane --> tick[Tick one or more cards]
+    tick --> addN[Add N to Inbox]
+    addN --> each[Each written on its own]
+    each --> tally[Status line reports the tally; failures stay ticked]
+```
+
+### What blocks Add
+
+```mermaid
+flowchart TD
+    draft[User edits the draft] --> title{Title entered?}
+    title -->|no| needTitle[Add disabled — asks for a title]
+    title -->|yes| kind{Kind?}
+    kind -->|event| times{Start and end set?}
+    times -->|no| needTimes[Add disabled — asks for the missing time]
+    times -->|yes| ok[Add enabled]
+    kind -->|habit| habitTime{Time set?}
+    habitTime -->|no| needHabitTime[Add disabled — asks for a time]
+    habitTime -->|yes| habitRepeat{Repeats?}
+    habitRepeat -->|no| needRepeat[Add disabled — asks for a repeat schedule]
+    habitRepeat -->|yes| ok
+    kind -->|task| host{Host can store a value?}
+    host -->|no| ok
+    host -->|yes| rated{Value rated?}
+    rated -->|no| needValue[Add disabled — asks for a value rating]
+    rated -->|yes| ok
+    kind -->|reminder| ok
 ```
 
 ### Inbox interactions
@@ -214,6 +319,16 @@ because this is a browser.
   bottom sheet with a custom detent on a phone-width viewport and a glass
   popover anchored to the FAB's own corner on desktop, per `KC-IS-#24`'s web
   idiom for the pair.
+- **The Inbox in the detail pane (web-only divergence).** On the desktop
+  window, behind the `detailPaneInbox` flag, the trailing detail pane offers an
+  **Inbox** reading beside Session, Performance and Plan. It is the same Inbox —
+  Just Created, Pending Triage, the same row actions — with the pane's header
+  ("Inbox" and its close control) in place of the Inbox's own. **A capture that
+  routes to the Inbox opens the pane on this reading instead of the overlay**,
+  with the new item in Just Created, so Triage can start from it right away;
+  Triage opens as a layer over the pane's list and returns to it. On a phone,
+  or with the flag off, the overlay opens exactly as canon's does. Canon has no
+  such reading.
 - **The date chip's Clear affordance is a web-only addition, not a canon
   port (`KC-IS-#75`).** Canon's `EndeavorInputPrompt` date chip is always
   `isSet: true` and offers no way to unset it — only its time chips (start
@@ -229,6 +344,62 @@ because this is a browser.
   button and referenced by it, because a disabled control leaves the
   reachable action surface entirely on the web. Canon has no equivalent — a
   disabled control there carries no explanation.
+- **Hosts the browser cannot reach are never offered.** The per-kind host
+  list is canon's, intersected with what is connected here — there is no
+  Google Calendar host on the web prompt, and Reminders / Calendar appear
+  only when a caller reports them connected.
+- **An Event's end is not auto-filled from its start.** Canon resolves a
+  missing end to start + the default event length; the web prompt keeps
+  asking for both times explicitly.
+- **Keyboard (web-only; canon defines no shortcuts here).** A capture can
+  be completed without a pointer:
+  - **Return** is never taken by a focused control (a property, a star, a
+    preset). When nothing blocks the capture it adds it, from anywhere in the
+    prompt. When something does, it moves to the next unmet requirement, in
+    the order Add reports them — title, an event's start then end, a habit's
+    time then repeat, a task's value — opening that editor with its field
+    focused; optional properties are never visited. Setting the value returns
+    to the title, so the next Return advances again or adds (a Task: type the
+    title, Return, 3, Return). Inside the time editor, Return is that editor's
+    Done. Nothing happens while an input method is composing text, and the
+    blocking reason stays announced.
+  - **Escape** closes the innermost thing first: an open editor or host list,
+    then an open time edit (restoring the previous time), then the prompt.
+  - **Option (⌥) chords** change properties, matched on the physical key so
+    macOS's Option characters do not interfere, and no Cmd/Ctrl combination
+    the browser owns is taken:
+    ⌥1–4 kind (Task, Habit, Event, Reminder) · ⌥J symbol · ⌥↑ / ⌥= and
+    ⌥↓ / ⌥− reward points (shown as ⌥↑↓) · ⌥V value · ⌥U duration · ⌥D date · ⌥T time
+    (start, for an event) · ⌥E end (events) · ⌥R repeat · ⌥H host · ⌥S into
+    the suggestions list and back (when it shows). In the list, ↑ / ↓ move,
+    Space picks, Shift+Space ticks, and Shift+Return adds the ticked rows.
+  - With the value, duration, repeat or host list open, **1–9** picks that
+    option, closes the list and returns to the title; digits are not typed
+    into the title meanwhile. Date and time open with their field focused and
+    are entered with the browser's own keyboard entry.
+  - On the desktop popover, holding Option fades in a small keycap over the
+    top-leading corner of each control naming its chord — the kind segments,
+    the symbol badge, the reward points, every property and the host — and
+    releasing it (or leaving the window) fades them out again, the way Mac
+    menus reveal shortcuts. The keycaps float over the controls and take no
+    space, so the property row never widens, wraps or scrolls because of them. Each also
+    names its chord as a tooltip, and the status line shows what to press
+    next (see *One status line*). The phone sheet shows no
+    hints; the keys still work where a keyboard is attached.
+- **One corner radius for the prompt and its pane.** Both use the design
+  system's surface radius, and the prompt's dark status band follows it at
+  its bottom corners, so nothing squares off the rounded panel.
+- **One status line.** The line under Add is the only place the prompt says
+  what blocks it — including a required value, which names the host that
+  demands it ("Pick a value rating — required for On Device"); the value
+  editor draws no second notice, only the value property's orange glyph. The
+  line has a fixed height: a reason too long for one line is cut short with
+  an ellipsis, and its full text is still announced. On the desktop popover,
+  when the last input was a key press, the line also says what to press
+  next — the open editor's keys, "⏎ next" while something is still required,
+  or "Ready · ⏎ Add" — and the reason's tail is cut before the keys are. A
+  pointer press returns it to the reason alone. Screen readers hear only the
+  reason, never the key hints.
 - **Dates and times use the browser's own date/time controls** rather than a
   wheel picker, reachable by keyboard and by screen reader without anything
   being built.

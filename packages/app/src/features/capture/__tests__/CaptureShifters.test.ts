@@ -538,6 +538,32 @@ describe('withRouteDelivered', () => {
 // The Inbox
 // ---------------------------------------------------------------------------
 
+describe('withRouteDelivered — the Inbox hosted by the detail pane (web-only)', () => {
+  const pending = captureStateMocks.taskCapturedAwaitingInbox
+  const due = new Date(CAPTURE_MOCK_NOW.getTime() + 500)
+
+  it('keeps the overlay shut but stamps the Just Created row for the pane', () => {
+    expect(withRouteDelivered(pending, due, true).inbox).toEqual({
+      isOpen: false,
+      justCreatedEndeavorId: 'captured-task',
+    })
+  })
+
+  it('still spends the routing one-shot, so it is never replayed', () => {
+    expect(withRouteDelivered(pending, due, true).navigation).toBeNull()
+  })
+
+  it('waits out the prompt’s dismissal in the pane just as in the overlay', () => {
+    expect(
+      withRouteDelivered(
+        pending,
+        new Date(CAPTURE_MOCK_NOW.getTime() + 499),
+        true,
+      ),
+    ).toBe(pending)
+  })
+})
+
 describe('withInboxOpened', () => {
   it('opens the sheet from the Plan tab affordance', () => {
     expect(withInboxOpened(loaded).inbox.isOpen).toBe(true)
@@ -574,6 +600,28 @@ describe('withInboxDismissed', () => {
     expect(
       withInboxDismissed(captureStateMocks.addForTodayOpen).addForToday,
     ).toBeNull()
+  })
+})
+
+describe('withTriageRequested — which Inbox asked', () => {
+  it('addresses the overlay’s Triage layer by default, as canon’s Inbox does', () => {
+    expect(
+      withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW).triageRequest
+        ?.host,
+    ).toBe('overlay')
+  })
+
+  it('addresses the pane’s Triage layer when the pane’s Inbox asked', () => {
+    expect(
+      withTriageRequested(loaded, 'fresh-task', CAPTURE_MOCK_NOW, 'pane')
+        .triageRequest?.host,
+    ).toBe('pane')
+  })
+
+  it('stays a no-op for an unknown row whichever Inbox asked', () => {
+    expect(withTriageRequested(loaded, 'gone', CAPTURE_MOCK_NOW, 'pane')).toBe(
+      loaded,
+    )
   })
 })
 

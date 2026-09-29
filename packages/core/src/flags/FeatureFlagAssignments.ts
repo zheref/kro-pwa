@@ -2,7 +2,7 @@
  * `FeatureFlagAssignment.statusQuoSet` — canon
  * `KroCore/Domain/FeatureFlags.swift`, ported assignment for assignment.
  *
- * The ship baseline: 25 of the 29 declared flags carry an explicit assignment;
+ * The ship baseline: 27 of the 31 declared flags carry an explicit assignment;
  * **`matrix`, `board`, `blueprints` and `developmentActions` carry none**, so
  * `state(for:)` resolves `null` for them and `enabledResolver` reads that as
  * off. That is not an omission to tidy up — an unassigned flag is how canon
@@ -79,6 +79,15 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   // toolbar group and the moved detail entry points, not a dark launch. With
   // it off, detail stays a dialog and a session stays a route.
   enabledAssignment(FeatureFlags.macDetailPane),
+  // Web-only (no canon counterpart): the Inbox as a fourth segment of the detail
+  // pane's toolbar group. Greenfield, so the status quo keeps it off; kro-pwa
+  // turns it on in `liveThunkExtra` as a product override, the way it does
+  // `appearanceThemes`.
+  disabledAssignment(FeatureFlags.detailPaneInbox),
+  // Web-only (no canon counterpart): the capture prompt's suggestions pane.
+  // Greenfield, so the status quo keeps it off; kro-pwa turns it on in
+  // `liveThunkExtra` as a product override.
+  disabledAssignment(FeatureFlags.captureSuggestions),
 ]
 
 /**

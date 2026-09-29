@@ -34,7 +34,9 @@ import type { Endeavor } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import type { CaptureException } from './CaptureException'
 import { CaptureExceptions } from './CaptureException'
+import { captureSuggestionById } from './CaptureSuggestions'
 import {
+  addSuggestionsToInboxThunk,
   applyInboxOperationThunk,
   loadCaptureContextThunk,
   scheduleForTodayThunk,
@@ -58,6 +60,8 @@ import {
   withDateCleared,
   withDatePicked,
   withDestinationSelected,
+  withDurationPicked,
+  withEmojiPicked,
   withException,
   withFetchStarted,
   withInboxDismissed,
@@ -71,6 +75,9 @@ import {
   withRouteDelivered,
   withSchedulingApplied,
   withSchedulingUndone,
+  withSuggestionApplied,
+  withSuggestionSelectionToggled,
+  withSuggestionsAddedToInbox,
   withTimeEditBegun,
   withTimeEditEnded,
   withTimePicked,
@@ -78,6 +85,7 @@ import {
   withTriageRequestCleared,
   withTriageRequested,
   withUndoWindowChecked,
+  withValuePicked,
 } from './CaptureShifters'
 
 /** The one lifecycle field (`RC-24`, `UZF-9`). */
@@ -111,6 +119,16 @@ export interface CapturePromptState {
   readonly draft: CaptureDraft
   readonly startEdit: CapturePickerSnapshot | null
   readonly endEdit: CapturePickerSnapshot | null
+  /** Suggestions ticked for a multi-add to the Inbox, in tick order. */
+  readonly selectedSuggestionIds: readonly string[]
+  /** The last multi-add's tally, for the status line; cleared by any edit. */
+  readonly suggestionNotice: CaptureSuggestionNotice | null
+}
+
+/** How a multi-add to the Inbox went. */
+export interface CaptureSuggestionNotice {
+  readonly added: number
+  readonly failed: number
 }
 
 export interface CaptureInboxState {
@@ -157,7 +175,16 @@ export type CaptureUndoState =
 export interface CaptureTriageRequest {
   readonly endeavorId: string
   readonly nextFreeSlotToday: Date
+  /**
+   * Which Inbox surface raised it, so only that surface's Triage layer opens
+   * it. `overlay` is canon's sheet/popover (and the Jot Down page); `pane` is
+   * the web-only Inbox segment of the desktop detail pane.
+   */
+  readonly host: CaptureInboxHost
 }
+
+/** See `CaptureTriageRequest.host`. */
+export type CaptureInboxHost = 'overlay' | 'pane'
 
 export interface CaptureState {
   readonly load: CaptureLoadState
@@ -184,6 +211,9 @@ export interface CaptureState {
 
   /** The instant the slice last classified against — never a clock read. */
   readonly clockAnchor: Date | null
+
+  /** Web-only `captureSuggestions` flag's answer — the suggestions pane. */
+  readonly isSuggestionsEnabled: boolean
 }
 
 export const initialCaptureState: CaptureState = {
@@ -198,6 +228,7 @@ export const initialCaptureState: CaptureState = {
   undo: { kind: 'idle' },
   triageRequest: null,
   clockAnchor: null,
+  isSuggestionsEnabled: false,
 }
 
 export const captureSlice = createSlice({
@@ -305,6 +336,51 @@ export const captureSlice = createSlice({
       Object.assign(state, withRewardsPicked(state, action.payload.points))
     },
 
+    /** User intent: a value star. `null` — the selected star tapped again. */
+    userDidPickValue(state, action: PayloadAction<{ value: number | null }>) {
+      Object.assign(state, withValuePicked(state, action.payload.value))
+    },
+
+    /** User intent: a duration preset, in seconds. `null` clears it. */
+    userDidPickDuration(
+      state,
+      action: PayloadAction<{ seconds: number | null }>,
+    ) {
+      Object.assign(state, withDurationPicked(state, action.payload.seconds))
+    },
+
+    /**
+     * User intent: a suggestion card was picked — canon's `applySuggestion`.
+     * An id the catalogue does not know is ignored.
+     */
+    userDidPickSuggestion(
+      state,
+      action: PayloadAction<{ suggestionId: string; now: Date }>,
+    ) {
+      const suggestion = captureSuggestionById(action.payload.suggestionId)
+      if (suggestion === null) return
+      Object.assign(
+        state,
+        withSuggestionApplied(state, { suggestion, now: action.payload.now }),
+      )
+    },
+
+    /** User intent: a suggestion ticked into or out of the multi-add. */
+    userDidToggleSuggestion(
+      state,
+      action: PayloadAction<{ suggestionId: string }>,
+    ) {
+      Object.assign(
+        state,
+        withSuggestionSelectionToggled(state, action.payload.suggestionId),
+      )
+    },
+
+    /** User intent: the emoji badge's picker chose a symbol. */
+    userDidPickEmoji(state, action: PayloadAction<{ emoji: string }>) {
+      Object.assign(state, withEmojiPicked(state, action.payload.emoji))
+    },
+
     userDidPickRecurrence(
       state,
       action: PayloadAction<{ recurrence: CaptureRecurrence }>,
@@ -347,7 +423,11 @@ export const captureSlice = createSlice({
      */
     userDidTapTriage(
       state,
-      action: PayloadAction<{ endeavorId: string; now: Date }>,
+      action: PayloadAction<{
+        endeavorId: string
+        now: Date
+        host?: CaptureInboxHost
+      }>,
     ) {
       Object.assign(
         state,
@@ -355,6 +435,7 @@ export const captureSlice = createSlice({
           state,
           action.payload.endeavorId,
           action.payload.now,
+          action.payload.host,
         ),
       )
     },
@@ -373,8 +454,18 @@ export const captureSlice = createSlice({
      * the contract, and honouring it here is what replaces canon's
      * `clock.sleep(.milliseconds(500))` without a timer Service.
      */
-    onCaptureRouteDelivered(state, action: PayloadAction<{ now: Date }>) {
-      Object.assign(state, withRouteDelivered(state, action.payload.now))
+    onCaptureRouteDelivered(
+      state,
+      action: PayloadAction<{ now: Date; presentsInPane?: boolean }>,
+    ) {
+      Object.assign(
+        state,
+        withRouteDelivered(
+          state,
+          action.payload.now,
+          action.payload.presentsInPane ?? false,
+        ),
+      )
     },
 
     // --- Add for Today ---------------------------------------------------
@@ -463,6 +554,39 @@ export const captureSlice = createSlice({
         } else {
           Object.assign(state, withException(state, result.error))
         }
+      })
+      .addCase(addSuggestionsToInboxThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok) {
+          Object.assign(state, withException(state, result.error))
+          return
+        }
+        const added = result.value.items.flatMap((item) =>
+          item.result.ok
+            ? [{ suggestionId: item.suggestionId, endeavor: item.result.value }]
+            : [],
+        )
+        const failedSuggestionIds = result.value.items.flatMap((item) =>
+          item.result.ok ? [] : [item.suggestionId],
+        )
+        Object.assign(
+          state,
+          withSuggestionsAddedToInbox(state, {
+            added,
+            failedSuggestionIds,
+            now: result.value.now,
+          }),
+        )
+      })
+      .addCase(addSuggestionsToInboxThunk.rejected, (state, action) => {
+        if (action.meta.aborted) return
+        Object.assign(
+          state,
+          withException(
+            state,
+            CaptureExceptions.unknown(action.error.message ?? 'Unknown error'),
+          ),
+        )
       })
       .addCase(submitCaptureThunk.rejected, (state, action) => {
         if (action.meta.aborted) return
@@ -566,13 +690,18 @@ export const {
   userDidEditTitle,
   userDidEndTimeEdit,
   userDidPickDate,
+  userDidPickDuration,
+  userDidPickEmoji,
   userDidPickRecurrence,
   userDidPickRewards,
+  userDidPickSuggestion,
   userDidPickTime,
+  userDidPickValue,
   userDidRequestAddForToday,
   userDidRequestCapture,
   userDidSelectDestination,
   userDidSelectKind,
   userDidTapOpenInbox,
   userDidTapTriage,
+  userDidToggleSuggestion,
 } = captureSlice.actions

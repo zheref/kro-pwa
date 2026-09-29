@@ -52,13 +52,15 @@ export const capturePromptPresentation = (
  * The prompt panel's desktop width, in CSS pixels.
  *
  * **Not a canon frame** — canon's macOS prompt is an unsized `.sheet`, so there
- * is nothing to port. 420 sits between the two neighbouring canon popovers the
- * design system already fixed (Do notifications 380, Visibility 460): the form
- * is one column of chips over a single-line title field, so it wants less than
- * the Visibility filter list and more than the notification stack. Named here
- * rather than inlined so a re-tune is one edit.
+ * is nothing to port. 680 holds every kind's property pills on ONE line at
+ * their widest: measured with each pill at its longest real value (value 5,
+ * "3 hours", a full date, "12:45 PM", a repeat capped by the pill's label
+ * limit) and every clear button showing, a Task — the widest kind — needs
+ * ~668. The panel keeps this width for its whole life, across kind switches;
+ * only the inline editors below the pills wrap.
+ * Named here rather than inlined so a re-tune is one edit.
  */
-export const CAPTURE_PROMPT_POPOVER_WIDTH = 420
+export const CAPTURE_PROMPT_POPOVER_WIDTH = 680
 
 /**
  * Which `EndeavorRow` preset the Inbox draws with — canon's `InboxView.Layout`.

@@ -445,6 +445,38 @@ describe('onTriageRequestConsumed', () => {
 // Routing arm
 // ---------------------------------------------------------------------------
 
+describe('onCaptureRouteDelivered — presented in the detail pane (web-only)', () => {
+  const pending = captureStateMocks.taskCapturedAwaitingInbox
+  const due = new Date(CAPTURE_MOCK_NOW.getTime() + 500)
+
+  it('leaves the overlay shut when the shell says the pane hosts the Inbox', () => {
+    expect(
+      reduce(
+        pending,
+        onCaptureRouteDelivered({ now: due, presentsInPane: true }),
+      ).inbox,
+    ).toEqual(captureStateMocks.inboxInPaneWithJustCreated.inbox)
+  })
+
+  it('opens the overlay as before when the pane does not', () => {
+    expect(
+      reduce(
+        pending,
+        onCaptureRouteDelivered({ now: due, presentsInPane: false }),
+      ).inbox.isOpen,
+    ).toBe(true)
+  })
+
+  it('never touches the Inbox for an event capture, pane or not', () => {
+    expect(
+      reduce(
+        captureStateMocks.eventCapturedAwaitingPlan,
+        onCaptureRouteDelivered({ now: due, presentsInPane: true }),
+      ).inbox.justCreatedEndeavorId,
+    ).toBeNull()
+  })
+})
+
 describe('onCaptureRouteDelivered', () => {
   const pending = captureStateMocks.taskCapturedAwaitingInbox
 

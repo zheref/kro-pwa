@@ -141,21 +141,35 @@ export const DO_TASK_SECTIONS: readonly DoSectionDescriptor[] = [
   },
 ]
 
-/** Canon's `"\(count) tasks"` / `"\(count) items"` — no singular branch. */
+/**
+ * `"1 task"` / `"N tasks"` — a count and its noun, inflected. Canon writes
+ * `"\(count) tasks"` with no singular branch, which reads "1 items" on
+ * screen; the web inflects every lane badge (a deliberate fix, not a port).
+ */
+export const doCountLabel = (
+  count: number,
+  singular: string,
+  plural: string,
+): string => `${count} ${count === 1 ? singular : plural}`
+
+const SINGULAR_NOUN: Record<DoSectionDescriptor['noun'], string> = {
+  tasks: 'task',
+  items: 'item',
+}
+
+/** A lane's badge — `"1 item"`, `"3 tasks"`. */
 export const doSectionBadgeText = (
   section: DoSectionDescriptor,
   count: number,
-): string => `${count} ${section.noun}`
+): string => doCountLabel(count, SINGULAR_NOUN[section.noun], section.noun)
 
-/**
- * The Reminders badge — the one lane canon does inflect
- * (`"1 reminder"` / `"N reminders"`).
- */
+/** The Reminders badge — `"1 reminder"` / `"N reminders"`. */
 export const doRemindersBadgeText = (count: number): string =>
-  count === 1 ? '1 reminder' : `${count} reminders`
+  doCountLabel(count, 'reminder', 'reminders')
 
 /** The Calendar badge — all-day plus every timed card, as one count. */
-export const doEventsBadgeText = (count: number): string => `${count} events`
+export const doEventsBadgeText = (count: number): string =>
+  doCountLabel(count, 'event', 'events')
 
 /* ------------------------------------------------------------------------ */
 /* The header                                                                */

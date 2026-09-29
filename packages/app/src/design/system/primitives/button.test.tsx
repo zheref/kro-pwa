@@ -242,3 +242,43 @@ describe('the mobile idiom restyles a default button and nothing else', () => {
     expect(styles).toContain('[data-slot="input"]')
   })
 })
+
+describe('Button shortcut', () => {
+  it('draws a decorative trailing ⏎ and exposes Enter to assistive tech', () => {
+    render(<Button shortcut="return">Add</Button>)
+    const button = screen.getByRole('button', { name: 'Add' })
+    expect(button.getAttribute('aria-keyshortcuts')).toBe('Enter')
+    const glyph = button.querySelector('[data-slot="button-shortcut"]')
+    expect(glyph?.textContent).toBe('⏎')
+    expect(glyph?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('keeps the glyph on a disabled button, which still names its key', () => {
+    render(
+      <Button shortcut="escape" disabled>
+        Discard
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Discard' })
+    expect(button.getAttribute('aria-keyshortcuts')).toBe('Escape')
+    expect(button.textContent).toBe('Discardesc')
+  })
+
+  it('hides the glyph on a touch presentation but keeps aria-keyshortcuts', () => {
+    render(
+      <Button shortcut="return" showShortcut={false}>
+        Add
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Add' })
+    expect(button.querySelector('[data-slot="button-shortcut"]')).toBeNull()
+    expect(button.getAttribute('aria-keyshortcuts')).toBe('Enter')
+  })
+
+  it('draws nothing extra without a shortcut', () => {
+    render(<Button>Plain</Button>)
+    const button = screen.getByRole('button', { name: 'Plain' })
+    expect(button.hasAttribute('aria-keyshortcuts')).toBe(false)
+    expect(button.textContent).toBe('Plain')
+  })
+})

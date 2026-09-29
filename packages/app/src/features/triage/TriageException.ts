@@ -31,6 +31,12 @@ export type TriageException =
   | Exception<'sessionLoadFailed'>
   /** The endeavor being triaged is not on disk — a stale row id. */
   | Exception<'endeavorNotFound'>
+  /**
+   * The endeavor is not a kind Triage applies to (a habit, a calendar event…)
+   * or is already completed — canon's `awaitsTriage` kind gate. Only the web's
+   * pane segment can ask for one; canon's Inbox never lists them.
+   */
+  | Exception<'notTriageable'>
   /** Confirm fired while the gate still blocked it. Carries the reason. */
   | Exception<'incompleteDecision'>
   /** The local upsert failed — the decision was **not** captured. */
@@ -46,6 +52,13 @@ export const TriageExceptions = {
     exception(
       'endeavorNotFound',
       `No endeavor with id '${id}' is available to triage.`,
+      false,
+    ),
+
+  notTriageable: (kindName: string): TriageException =>
+    exception(
+      'notTriageable',
+      `A ${kindName.toLowerCase()} isn't triaged — it is already a commitment to a moment, or it is done.`,
       false,
     ),
 

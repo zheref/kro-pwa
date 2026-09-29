@@ -224,3 +224,21 @@ stateDiagram-v2
   person model this product does not have yet. — owner: Sergio, 2026-08-31
 - The Visibility panel offers kinds, states and sources. Calendars arrive with
   the calendar integration. — owner: Sergio, 2026-08-31
+
+## Web notes
+
+- **Lane counts are inflected** — "1 item", "2 items", "1 task", "1 event".
+  Canon writes the count and a plural noun with no singular form ("1 items");
+  the web fixes that on every lane badge.
+
+- **Keyboard for the quick-action menu (web-only; canon has none).** With
+  nothing else holding the keyboard — no field, button or link focused, no
+  sheet, dialog, popover or menu open, no input method composing — a plain
+  Return opens the quick-action menu and a second Return closes it; Escape
+  closes it too. While it is open each action answers to one letter, shown
+  faintly after its label on pointer layouts: **C** Mark Complete…, **X** Clear
+  Expired, **A** Quick Add, **S** Start Session. Letters rather than numbers
+  because they read as the action and stay put when an action is added,
+  removed or disabled. Touch layouts show no key hints; the keys still work
+  with a keyboard attached. The same Return toggle applies to any screen's
+  quick-action menu.

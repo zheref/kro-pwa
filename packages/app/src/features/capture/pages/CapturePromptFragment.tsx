@@ -42,9 +42,21 @@
  * `onChange(of: draft.selectedKind)` does.
  */
 
-import type { ReactNode } from 'react'
-import { useEffect, useRef, useState } from 'react'
-import { Button } from '../../../design/system/primitives/button'
+import { assertNever, defaultTriageDurationOptionsMinutes } from '@kro/core'
+import { Hourglass, Medal } from 'lucide-react'
+import {
+  type Dispatch,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+  type SetStateAction,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
+import { EmojiPickerPopover } from '../../../design/chrome/emoji/EmojiPickerPopover'
+import { PropertyPill } from '../../../design/hig/selection/PropertyPill'
+import { Button, ShortcutHint } from '../../../design/system/primitives/button'
 import {
   Dialog,
   DialogContent,
@@ -53,7 +65,13 @@ import {
 } from '../../../design/system/primitives/dialog'
 import { Input } from '../../../design/system/primitives/input'
 import { SheetContent } from '../../../design/system/primitives/sheet'
-import { colorVar, radiusVar } from '../../../design/system/tokens/roles'
+import {
+  colorVar,
+  radiusVar,
+  spacingVar,
+  semanticVar,
+  shadowVar,
+} from '../../../design/system/tokens/roles'
 import { cn } from '../../../design/system/utils/cn'
 import type {
   CaptureTimeEditOutcome,
@@ -62,18 +80,45 @@ import type {
 import {
   type CaptureDestination,
   type CaptureDraft,
+  CaptureBlocker,
   CaptureKind,
   type CaptureRecurrence,
   MAXIMUM_CAPTURE_REWARDS,
+  MAXIMUM_CAPTURE_VALUE,
   MINIMUM_CAPTURE_REWARDS,
   captureDestinationGlyph,
   captureDestinationLabel,
+  captureDurationLabel,
+  captureKindDefaultRewards,
+  captureKindEarnsRewards,
+  captureKindRequiresTime,
+  captureKindSupportsDuration,
+  captureKindSupportsValue,
+  captureValueLabel,
   captureKindGlyph,
   captureKindLabel,
   captureKindPlaceholder,
+  captureKindTint,
   captureKinds,
 } from '../CaptureRules'
+import { SegmentedControl } from '../../../design/hig/selection/SegmentedControl'
+import {
+  type ControlDensity,
+  controlDensity,
+} from '../../../design/system/density'
 import { captureIcon, captureIconFor } from './captureIcons'
+import {
+  CaptureSuggestionsFragment,
+  SUGGESTIONS_PANE_MIN_HEIGHT_PX,
+} from './CaptureSuggestionsFragment'
+import type { CaptureSuggestion } from '../CaptureSuggestions'
+import {
+  CAPTURE_PROMPT_CHORDS,
+  type CapturePromptPanel,
+  composeCaptureStatusLine,
+  capturePromptKeyHint,
+  resolveCapturePromptKey,
+} from './capturePromptKeyboard'
 import {
   CAPTURE_PROMPT_POPOVER_WIDTH,
   type CapturePresentationKind,
@@ -91,7 +136,7 @@ const Star = captureIcon('star.fill')
 const CalendarGlyph = captureIcon('calendar')
 const ClockGlyph = captureIcon('clock')
 const ClockEndGlyph = captureIcon('clock.badge.checkmark')
-const ClearGlyph = captureIcon('xmark.circle.fill')
+const EmptyStar = captureIcon('star')
 const RepeatGlyph = captureIcon('repeat')
 const ChevronDown = captureIcon('chevron.down')
 const Check = captureIcon('checkmark')
@@ -105,8 +150,34 @@ const promptControlMinHeight = (isCompact: boolean): string =>
     ? 'var(--kro-size-min-pointer-target)'
     : 'var(--kro-size-min-touch-target)'
 
+const NO_SUGGESTIONS: readonly CaptureSuggestion[] = []
+/** The popover's `bottom-6` inset from the viewport's bottom edge. */
+const PROMPT_POPOVER_BOTTOM_INSET_PX = 24
+/** `--kro-space-medium` — the gap between the pane and the prompt. */
+const SUGGESTIONS_PANE_GAP_PX = 16
+/** `--kro-space-large` — the margin between the pane and the viewport's top. */
+const SUGGESTIONS_PANE_TOP_MARGIN_PX = 24
+const NO_SUGGESTION_IDS: readonly string[] = []
+
+/** The status line's fixed height, per presentation (px). */
+export const CAPTURE_STATUS_LINE_HEIGHT = { compact: 32, touch: 44 } as const
+
 /** Which inline panel is expanded. Only one at a time, exactly as canon. */
-type PromptPanel = 'date' | 'rewards' | 'repeat' | 'destination' | null
+type PromptPanel = CapturePromptPanel | null
+
+/** The value when it is a finite number, else `null`. */
+export const finiteOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null
+
+/** A duration in seconds as its chip label — canon's `formattedDuration`. */
+export const durationChipLabel = (
+  seconds: number | null | undefined,
+): string => {
+  const finite = finiteOrNull(seconds)
+  return finite === null
+    ? 'Duration'
+    : captureDurationLabel(Math.max(1, Math.round(finite / 60)))
+}
 
 export interface CapturePromptFragmentProps {
   readonly isOpen: boolean
@@ -114,10 +185,17 @@ export interface CapturePromptFragmentProps {
   /** `prompt.startEdit !== null` — the slice owns the snapshot, not this view. */
   readonly isEditingStartTime: boolean
   readonly isEditingEndTime: boolean
+  /** The hosts the current kind supports, among those available. */
   readonly availableDestinations: readonly CaptureDestination[]
+  /** The title row's badge — the pick, else the computed symbol. */
+  readonly resolvedSymbol: string
+  /** The kind and the host together demand a value rating. */
+  readonly isValueRequired: boolean
   readonly canSubmit: boolean
   /** The epic's a11y contract: a disabled Add names what blocks it. */
   readonly blockedReason: string | null
+  /** The first unmet requirement — where plain Return walks to. */
+  readonly blocker: CaptureBlocker | null
   readonly presentation: CapturePresentationKind
   /** Explicit, never a clock read — "Today" must not depend on the wall clock. */
   readonly now: Date
@@ -135,6 +213,22 @@ export interface CapturePromptFragmentProps {
     outcome: CaptureTimeEditOutcome,
   ) => void
   readonly onPickRewards: (points: number) => void
+  /** `null` clears the rating. */
+  readonly onPickValue: (value: number | null) => void
+  /** Seconds; `null` clears the estimate. */
+  readonly onPickDuration: (seconds: number | null) => void
+  readonly onPickEmoji: (emoji: string) => void
+  /**
+   * The suggestions pane (web-only, `captureSuggestions`). Empty hides it;
+   * it only ever shows on the desktop popover.
+   */
+  readonly suggestions?: readonly CaptureSuggestion[]
+  readonly selectedSuggestionIds?: readonly string[]
+  /** How many ticked suggestions **Add to Inbox** would write. */
+  readonly suggestionInboxCount?: number
+  readonly onPickSuggestion?: (suggestionId: string) => void
+  readonly onToggleSuggestion?: (suggestionId: string) => void
+  readonly onAddSuggestions?: () => void
   readonly onPickRecurrence: (recurrence: CaptureRecurrence) => void
   readonly onSelectDestination: (destination: CaptureDestination) => void
   readonly onDiscard: () => void
@@ -142,8 +236,38 @@ export interface CapturePromptFragmentProps {
 }
 
 export function CapturePromptFragment(props: CapturePromptFragmentProps) {
-  const { isOpen, draft, presentation, onDiscard } = props
+  const {
+    isOpen,
+    draft,
+    presentation,
+    isEditingStartTime,
+    isEditingEndTime,
+    onDiscard,
+    onEndTimeEdit,
+  } = props
   const isSheet = presentation === 'sheet'
+  // Which inline panel is open lives here, above the dialog, because Escape
+  // is the dialog's key: it has to know whether a panel would absorb it.
+  const [panel, setPanel] = useState<PromptPanel>(null)
+
+  /**
+   * Escape peels one layer at a time, innermost first (HIG layering; canon
+   * defines no keyboard shortcuts of its own): an open host menu or inline
+   * editor closes, an open time editor discards its edit, and only then does
+   * Escape discard the whole prompt through the dialog's own dismissal.
+   */
+  const onEscapeKeyDown = (event: KeyboardEvent) => {
+    if (panel !== null) {
+      event.preventDefault()
+      setPanel(null)
+      return
+    }
+    if (isEditingStartTime || isEditingEndTime) {
+      event.preventDefault()
+      if (isEditingStartTime) onEndTimeEdit('start', 'discard')
+      if (isEditingEndTime) onEndTimeEdit('end', 'discard')
+    }
+  }
 
   const heading = (
     <>
@@ -176,22 +300,34 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           data-testid="capture-prompt"
           data-kro-presentation="sheet"
           className="h-auto gap-0 p-0"
+          onEscapeKeyDown={onEscapeKeyDown}
         >
           {heading}
-          <PromptForm {...props} />
+          <PromptForm {...props} panel={panel} onPanelChange={setPanel} />
         </SheetContent>
       ) : (
         <DialogContent
           hideClose
           data-testid="capture-prompt"
           data-kro-presentation="popover"
+          onEscapeKeyDown={onEscapeKeyDown}
           className={cn(
             'top-auto right-6 bottom-6 left-auto',
             'translate-x-0 translate-y-0',
             'flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-y-auto p-0',
+            // The suggestions pane floats above the panel; on a viewport tall
+            // enough to show it the panel must not clip it.
+            (props.suggestions?.length ?? 0) > 0 && 'overflow-visible',
           )}
           style={{
+            // One fixed width for the prompt's whole life — it never resizes
+            // in flight. Sized so a fresh draft's properties fit one line;
+            // longer values wrap onto a second line instead of scrolling.
             width: `${CAPTURE_PROMPT_POPOVER_WIDTH}px`,
+            // The floating panes' corner — `--kro-radius-panel` (12px), shared
+            // with the suggestions pane and the band's bottom corners. Inline
+            // so it beats `rounded-kro-surface` and `.kro-glass`'s default.
+            borderRadius: radiusVar('panel'),
             maxWidth: 'calc(100vw - 3rem)',
             // `p-kro-large` / `gap-kro-medium` on DialogContent do not lose
             // to `p-0 gap-0` — twMerge does not treat the kro-* spacing
@@ -202,7 +338,7 @@ export function CapturePromptFragment(props: CapturePromptFragmentProps) {
           }}
         >
           {heading}
-          <PromptForm {...props} />
+          <PromptForm {...props} panel={panel} onPanelChange={setPanel} />
         </DialogContent>
       )}
     </Dialog>
@@ -219,8 +355,11 @@ function PromptForm({
   isEditingStartTime,
   isEditingEndTime,
   availableDestinations,
+  resolvedSymbol,
+  isValueRequired,
   canSubmit,
   blockedReason,
+  blocker,
   presentation,
   now,
   locale,
@@ -232,12 +371,25 @@ function PromptForm({
   onPickTime,
   onEndTimeEdit,
   onPickRewards,
+  onPickValue,
+  onPickDuration,
+  onPickEmoji,
+  suggestions = NO_SUGGESTIONS,
+  selectedSuggestionIds = NO_SUGGESTION_IDS,
+  suggestionInboxCount = 0,
+  onPickSuggestion,
+  onToggleSuggestion,
+  onAddSuggestions,
   onPickRecurrence,
   onSelectDestination,
   onDiscard,
   onSubmit,
-}: CapturePromptFragmentProps) {
-  const [panel, setPanel] = useState<PromptPanel>(null)
+  panel,
+  onPanelChange: setPanel,
+}: CapturePromptFragmentProps & {
+  readonly panel: PromptPanel
+  readonly onPanelChange: Dispatch<SetStateAction<PromptPanel>>
+}) {
   const titleRef = useRef<HTMLInputElement | null>(null)
 
   // Canon waits out the sheet's presentation animation and then focuses the
@@ -252,9 +404,61 @@ function PromptForm({
 
   const isEvent = draft.kind === CaptureKind.event
   const isHabit = draft.kind === CaptureKind.habit
-  const earnsRewards = draft.kind === CaptureKind.task || isHabit
+  const earnsRewards = captureKindEarnsRewards(draft.kind)
+  const supportsValue = captureKindSupportsValue(draft.kind)
+  const supportsDuration = captureKindSupportsDuration(draft.kind)
+  const isTimeClearable = !captureKindRequiresTime(draft.kind)
+  // A draft from before these fields existed (a long-lived tab across a hot
+  // reload) can carry `undefined` here. Read them through a finite-number
+  // guard so a chip falls back to canon's placeholder rather than "undefined"
+  // or "NaN". State itself is not rewritten.
+  const draftValue = finiteOrNull(draft.value)
+  const draftDuration = finiteOrNull(draft.duration)
+  const draftRewards =
+    finiteOrNull(draft.rewards) ?? captureKindDefaultRewards(draft.kind)
   const isCompact = presentation === 'popover'
+  // The suggestions pane is a desktop affordance: the phone sheet's height
+  // is its content, so a pane above it has nowhere to go.
+  const showsSuggestions = isCompact && suggestions.length > 0
 
+  /**
+   * The pane's height: everything between the prompt's top edge and the top
+   * of the viewport, less a medium gap above the prompt, a large margin
+   * below the viewport's top and the popover's own bottom inset. `null`
+   * hides the pane — too little room for two rows is no room at all.
+   */
+  const formRef = useRef<HTMLDivElement | null>(null)
+  const [suggestionsPaneHeight, setSuggestionsPaneHeight] = useState<
+    number | null
+  >(null)
+  useEffect(() => {
+    if (!showsSuggestions) return
+    const measure = () => {
+      // The popover is pinned `bottom-6` (24px), so the prompt's top edge
+      // sits at the viewport height less that inset and the prompt's height.
+      const promptHeight = formRef.current?.offsetHeight ?? 0
+      const available =
+        window.innerHeight -
+        PROMPT_POPOVER_BOTTOM_INSET_PX -
+        promptHeight -
+        SUGGESTIONS_PANE_GAP_PX -
+        SUGGESTIONS_PANE_TOP_MARGIN_PX
+      setSuggestionsPaneHeight(
+        available >= SUGGESTIONS_PANE_MIN_HEIGHT_PX ? available : null,
+      )
+    }
+    measure()
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    if (formRef.current !== null) observer?.observe(formRef.current)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [showsSuggestions])
+
+  const density = controlDensity(!isCompact)
   /** Canon closes any open editor when another one expands. */
   const closeOpenTimeEditors = () => {
     // `done`, not `discard`: the value the user landed on is kept, which is
@@ -267,6 +471,242 @@ function PromptForm({
     setPanel((current) => (current === next ? null : next))
     closeOpenTimeEditors()
   }
+
+  /** Which panel's first field a keyboard chord should focus once it opens. */
+  const [keyboardFocus, setKeyboardFocus] = useState<
+    'date' | CaptureTimeField | null
+  >(null)
+  const [isEmojiOpen, setEmojiOpen] = useState(false)
+  const focusTitle = () => titleRef.current?.focus()
+
+  /**
+   * The keyboard map (`capturePromptKeyboard.ts`), performed. Capture phase,
+   * so a focused pill, star or preset never turns Return into its own click:
+   * Return is Add from anywhere, or Done inside a time panel.
+   */
+  const onPromptKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const target = event.target instanceof Element ? event.target : null
+    // React bubbles portal events through the React tree, so the emoji
+    // picker's keys arrive here too. Its Return picks an emoji; leave it be.
+    if (target === null || !event.currentTarget.contains(target)) return
+    const timePanel = target?.closest<HTMLElement>('[data-kro-time-field]')
+    const intent = resolveCapturePromptKey(
+      {
+        key: event.key,
+        code: event.code,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        isComposing: event.nativeEvent.isComposing,
+      },
+      {
+        openPanel: panel,
+        timePanelInFocus:
+          (timePanel?.dataset.kroTimeField as CaptureTimeField | undefined) ??
+          null,
+        isEvent,
+        isHabit,
+        earnsRewards,
+        supportsValue,
+        supportsDuration,
+        hasSuggestions: showsSuggestions,
+      },
+    )
+    if (intent === null) return
+    event.preventDefault()
+    event.stopPropagation()
+
+    switch (intent.kind) {
+      case 'submit':
+        // Submittable → Add. Otherwise walk to the next unmet requirement;
+        // nothing submits, and the live reason stays announced.
+        if (canSubmit) onSubmit()
+        else if (blocker !== null) walkTo(blocker)
+        return
+      case 'confirmTime':
+        onEndTimeEdit(intent.field, 'done')
+        focusTitle()
+        return
+      case 'selectKind':
+        setPanel(null)
+        onSelectKind(intent.captureKind)
+        focusTitle()
+        return
+      case 'togglePanel':
+        setKeyboardFocus(intent.panel === 'date' ? 'date' : null)
+        togglePanel(intent.panel)
+        if (intent.panel !== 'date') focusTitle()
+        return
+      case 'toggleTime':
+        setKeyboardFocus(intent.field)
+        toggleTimeEdit(intent.field)
+        return
+      case 'openEmoji':
+        setPanel(null)
+        setEmojiOpen(true)
+        return
+      case 'stepRewards':
+        onPickRewards(
+          intent.direction === 1
+            ? draftRewards + captureRewardStep(draftRewards)
+            : draftRewards - captureRewardStep(draftRewards),
+        )
+        return
+      case 'pickNth':
+        pickNth(intent.index)
+        return
+      case 'toggleSuggestionFocus': {
+        const root = event.currentTarget
+        const inRow = target.closest('[data-testid="capture-suggestions"]')
+        if (inRow !== null) {
+          focusTitle()
+          return
+        }
+        setPanel(null)
+        const selected = selectedSuggestionIds[0]
+        const card =
+          (selected === undefined
+            ? null
+            : root.querySelector<HTMLElement>(
+                `[data-kro-row-pick="${selected}"]`,
+              )) ?? root.querySelector<HTMLElement>('[data-kro-row-pick]')
+        card?.focus()
+        return
+      }
+      case 'addSelectedSuggestions':
+        if (suggestionInboxCount > 0) onAddSuggestions?.()
+        return
+      default:
+        assertNever(intent)
+    }
+  }
+
+  /**
+   * Return on a blocked draft: open (and focus) the editor of the first unmet
+   * requirement, in `captureBlocker`'s canon order. Optional fields are never
+   * visited.
+   */
+  const walkTo = (next: CaptureBlocker) => {
+    const openTime = (field: CaptureTimeField) => {
+      const isEditing =
+        field === 'start' ? isEditingStartTime : isEditingEndTime
+      setKeyboardFocus(field)
+      if (isEditing) return
+      setPanel(null)
+      closeOpenTimeEditors()
+      onBeginTimeEdit(field)
+    }
+    const openList = (target: 'value' | 'repeat') => {
+      closeOpenTimeEditors()
+      setPanel(target)
+      focusTitle()
+    }
+    switch (next) {
+      case CaptureBlocker.missingTitle:
+        setPanel(null)
+        focusTitle()
+        return
+      case CaptureBlocker.missingEventStartAndEnd:
+      case CaptureBlocker.missingEventStart:
+      case CaptureBlocker.missingHabitTime:
+        openTime('start')
+        return
+      case CaptureBlocker.missingEventEnd:
+        openTime('end')
+        return
+      case CaptureBlocker.missingHabitRecurrence:
+        openList('repeat')
+        return
+      case CaptureBlocker.missingValue:
+        openList('value')
+        return
+      default:
+        assertNever(next)
+    }
+  }
+
+  /**
+   * Held-to-reveal: the chord hints show only while Option/Alt is down, the
+   * way macOS menus reveal shortcuts, and never on the touch sheet. The hints'
+   * space is always reserved, so revealing them never reflows the row.
+   */
+  const [isOptionHeld, setOptionHeld] = useState(false)
+  /**
+   * Keyboard modality, simply: the last input was a key press, not a pointer.
+   * It decides whether the status line also says what to press next.
+   */
+  const [isKeyboardDriven, setKeyboardDriven] = useState(false)
+  useEffect(() => {
+    if (!isCompact) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      setOptionHeld(event.altKey)
+      setKeyboardDriven(true)
+    }
+    const onKeyUp = (event: KeyboardEvent) => setOptionHeld(event.altKey)
+    const release = () => setOptionHeld(false)
+    const onPointerDown = () => setKeyboardDriven(false)
+    // Capture phase: the form's own key handler stops Return and the ⌥
+    // chords from bubbling, so a bubbling listener here would never learn
+    // that the user is on the keyboard — or that Option went up.
+    window.addEventListener('keydown', onKeyDown, true)
+    window.addEventListener('keyup', onKeyUp, true)
+    window.addEventListener('blur', release)
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true)
+      window.removeEventListener('keyup', onKeyUp, true)
+      window.removeEventListener('blur', release)
+      window.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [isCompact])
+
+  const hintFor = (glyph: string) => (isCompact ? glyph : undefined)
+
+  /** A digit in an open list editor: the nth option, then back to the title. */
+  const pickNth = (index: number) => {
+    switch (panel) {
+      case 'value':
+        if (index < MAXIMUM_CAPTURE_VALUE) onPickValue(index + 1)
+        break
+      case 'duration': {
+        const minutes = defaultTriageDurationOptionsMinutes[index]
+        if (minutes !== undefined) onPickDuration(minutes * 60)
+        break
+      }
+      case 'repeat': {
+        const preset = captureRecurrencePresets(draft.date)[index]
+        if (preset !== undefined) onPickRecurrence(preset.recurrence)
+        break
+      }
+      case 'destination': {
+        const destination = availableDestinations[index]
+        if (destination !== undefined) onSelectDestination(destination)
+        break
+      }
+      default:
+        return
+    }
+    setPanel(null)
+    focusTitle()
+  }
+
+  const keyHint = capturePromptKeyHint(
+    panel,
+    isEditingStartTime || isEditingEndTime,
+    panel === 'duration'
+      ? defaultTriageDurationOptionsMinutes.length
+      : panel === 'repeat'
+        ? captureRecurrencePresets(draft.date).length
+        : availableDestinations.length,
+    canSubmit,
+  )
+  const statusLine = composeCaptureStatusLine({
+    reason: blockedReason,
+    isKeyboardDriven: isCompact && isKeyboardDriven,
+    editorKeys: keyHint,
+    canSubmit,
+  })
 
   const toggleTimeEdit = (field: CaptureTimeField) => {
     setPanel(null)
@@ -282,55 +722,181 @@ function PromptForm({
 
   return (
     <div
-      className="flex flex-col"
+      ref={formRef}
+      className="relative flex flex-col"
       data-slot="capture-prompt-form"
+      onKeyDownCapture={onPromptKeyDown}
       data-kro-density={isCompact ? 'compact' : 'touch'}
     >
+      {showsSuggestions && suggestionsPaneHeight !== null ? (
+        // Floated above the prompt at its exact width, a medium gap above it,
+        // filling the height up to a large margin below the viewport's top.
+        <div
+          data-slot="capture-suggestions-pane"
+          className="absolute right-0 bottom-full left-0"
+          style={{
+            marginBottom: spacingVar('medium'),
+            height: `${suggestionsPaneHeight}px`,
+          }}
+        >
+          <CaptureSuggestionsFragment
+            suggestions={suggestions}
+            selectedIds={selectedSuggestionIds}
+            inboxCount={suggestionInboxCount}
+            revealChord={isOptionHeld}
+            now={now}
+            onPick={(id) => {
+              onPickSuggestion?.(id)
+              focusTitle()
+            }}
+            onToggle={(id) => onToggleSuggestion?.(id)}
+            onAddSelected={() => onAddSuggestions?.()}
+          />
+        </div>
+      ) : null}
       {/* ── Kind picker ─────────────────────────────────────────────── */}
+      {/* The design system's segmented control — the same one the session
+          sheet's Pomodoro / Stopwatch toggle uses. */}
       <div
         className={cn(
-          'flex gap-2 overflow-x-auto px-3',
+          'flex justify-center px-3',
           isCompact ? 'pt-2 pb-2' : 'pt-4 pb-3',
         )}
-        role="group"
-        aria-label="Kind"
       >
-        {captureKinds.map((kind) => (
-          <KindChip
-            key={kind}
-            kind={kind}
-            isSelected={kind === draft.kind}
-            isCompact={isCompact}
-            onSelect={() => {
-              setPanel(null)
-              onSelectKind(kind)
-            }}
-          />
-        ))}
+        <SegmentedControl
+          label="Kind"
+          options={captureKinds.map((kind) => {
+            const Glyph = captureIconFor(captureKindGlyph(kind))
+            const position = captureKinds.indexOf(kind) + 1
+            return {
+              value: kind,
+              label: captureKindLabel(kind),
+              keyShortcuts: `Alt+${position}`,
+              shortcutHint: isCompact ? `⌥${position}` : undefined,
+              // Canon's KindChip: the glyph carries the kind's tint at rest,
+              // the label stays neutral, and the selected segment takes the
+              // tint as its fill.
+              icon: (
+                <Glyph
+                  size={isCompact ? 11 : 13}
+                  aria-hidden
+                  style={
+                    kind === draft.kind
+                      ? undefined
+                      : { color: semanticVar(captureKindTint(kind)) }
+                  }
+                />
+              ),
+            }
+          })}
+          value={draft.kind}
+          density={density}
+          selectionTint={semanticVar(captureKindTint(draft.kind))}
+          revealShortcutHints={isOptionHeld}
+          onChange={(kind) => {
+            setPanel(null)
+            onSelectKind(kind)
+          }}
+        />
       </div>
 
       <Separator />
 
-      {/* ── Title ───────────────────────────────────────────────────── */}
-      <input
-        ref={titleRef}
-        data-testid="capture-title"
-        aria-label="Title"
+      {/* ── Title row: [symbol] [title] [rewards] ─────────────────── */}
+      <div
         className={cn(
-          'w-full bg-transparent outline-none',
-          isCompact ? 'px-3 py-2 text-sm' : 'px-4 py-3.5 text-base',
-          'placeholder:text-kro-fore-secondary',
+          'flex items-center gap-2.5',
+          isCompact ? 'px-3 py-1.5' : 'px-3 py-2.5',
         )}
-        style={{ color: colorVar('fore') }}
-        placeholder={captureKindPlaceholder(draft.kind)}
-        value={draft.title}
-        onChange={(event) => onEditTitle(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' || !canSubmit) return
-          event.preventDefault()
-          onSubmit()
-        }}
-      />
+      >
+        <EmojiPickerPopover
+          side="top"
+          selection={resolvedSymbol}
+          open={isEmojiOpen}
+          onOpenChange={setEmojiOpen}
+          onPick={(emoji) => {
+            onPickEmoji(emoji)
+            // Radix hands focus back to the badge on close; typing continues
+            // in the title instead.
+            requestAnimationFrame(focusTitle)
+          }}
+          // After a pick (or Escape) typing continues in the title, not on
+          // the badge.
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            focusTitle()
+          }}
+        >
+          <button
+            type="button"
+            data-testid="capture-symbol"
+            aria-label={`Symbol: ${resolvedSymbol}`}
+            aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.emoji.aria}
+            title={
+              isCompact
+                ? `Symbol (${CAPTURE_PROMPT_CHORDS.emoji.glyph})`
+                : undefined
+            }
+            // A fixed 34px square keeps the field from shifting sideways as
+            // the resolved emoji changes width. Flat: the emoji IS the
+            // affordance, exactly as canon's `emojiBadge`.
+            className="relative inline-flex shrink-0 items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)]"
+            style={{ width: 34, height: 34, fontSize: 20, lineHeight: 1 }}
+          >
+            {resolvedSymbol}
+            {isCompact ? (
+              <ShortcutHint placement="keycap" reveal={isOptionHeld}>
+                {CAPTURE_PROMPT_CHORDS.emoji.glyph}
+              </ShortcutHint>
+            ) : null}
+          </button>
+        </EmojiPickerPopover>
+
+        <input
+          ref={titleRef}
+          data-testid="capture-title"
+          aria-label="Title"
+          className={cn(
+            'min-w-0 flex-1 bg-transparent outline-none',
+            isCompact ? 'py-1 text-sm' : 'py-2 text-base',
+            'placeholder:text-kro-fore-secondary',
+          )}
+          style={{ color: colorVar('fore') }}
+          placeholder={captureKindPlaceholder(draft.kind)}
+          value={draft.title}
+          onChange={(event) => onEditTitle(event.target.value)}
+          // Return (Add) is handled for the whole form in `onPromptKeyDown`.
+        />
+
+        {earnsRewards ? (
+          <PropertyPill
+            density={density}
+            glyph={
+              <Medal
+                size={12}
+                aria-hidden
+                style={{
+                  color:
+                    panel === 'rewards' ? undefined : colorVar('rewardYellow'),
+                }}
+              />
+            }
+            label={String(draftRewards)}
+            isSet
+            isExpanded={panel === 'rewards'}
+            accessibilityLabel={`Rewards: ${draftRewards} points`}
+            onSelect={() => togglePanel('rewards')}
+            keyShortcuts={CAPTURE_PROMPT_CHORDS.rewards.aria}
+            shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.rewards.glyph)}
+            revealShortcutHint={isOptionHeld}
+            tooltip={
+              isCompact
+                ? `Rewards (${CAPTURE_PROMPT_CHORDS.rewards.glyph})`
+                : undefined
+            }
+          />
+        ) : null}
+      </div>
 
       <Separator />
 
@@ -341,55 +907,123 @@ function PromptForm({
           isCompact ? 'gap-1.5 py-1.5' : 'gap-2 py-2.5',
         )}
       >
-        <div className="flex gap-2 overflow-x-auto px-3">
-          {earnsRewards ? (
-            <PromptChip
-              isCompact={isCompact}
-              glyph={<Star size={12} aria-hidden />}
-              label={String(draft.rewards)}
-              isSet
-              isExpanded={panel === 'rewards'}
-              accessibilityLabel={`Rewards: ${draft.rewards} points`}
-              onSelect={() => togglePanel('rewards')}
+        {/* One line, never scrolled. The popover is sized to hold every
+            kind's pills at their widest (labels are capped), so it never
+            wraps; the phone sheet cannot widen past the screen, so there —
+            and only there — the pills wrap. */}
+        <div
+          data-slot="capture-prompt-properties"
+          className={cn(
+            'flex gap-2 px-3',
+            isCompact ? 'flex-nowrap' : 'flex-wrap',
+          )}
+        >
+          {supportsValue ? (
+            <PropertyPill
+              density={density}
+              glyph={
+                <Star
+                  size={12}
+                  aria-hidden
+                  style={{
+                    color:
+                      panel === 'value'
+                        ? undefined
+                        : isValueRequired && draftValue === null
+                          ? colorVar('badgeOrange')
+                          : colorVar('rewardYellow'),
+                  }}
+                />
+              }
+              label={draftValue === null ? 'Value' : String(draftValue)}
+              isSet={draftValue !== null}
+              isExpanded={panel === 'value'}
+              accessibilityLabel={
+                draftValue !== null
+                  ? `Value: ${draftValue} of ${MAXIMUM_CAPTURE_VALUE}`
+                  : isValueRequired
+                    ? 'Value, required, not set'
+                    : 'Value, not set'
+              }
+              onSelect={() => togglePanel('value')}
+              keyShortcuts={CAPTURE_PROMPT_CHORDS.value.aria}
+              shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.value.glyph)}
+              revealShortcutHint={isOptionHeld}
+              tooltip={
+                isCompact
+                  ? `Value (${CAPTURE_PROMPT_CHORDS.value.glyph})`
+                  : undefined
+              }
+              onClear={
+                draftValue === null ? undefined : () => onPickValue(null)
+              }
+              clearLabel="Clear value"
+            />
+          ) : null}
+
+          {supportsDuration ? (
+            <PropertyPill
+              density={density}
+              glyph={<Hourglass size={12} aria-hidden />}
+              label={durationChipLabel(draftDuration)}
+              isSet={draftDuration !== null}
+              isExpanded={panel === 'duration'}
+              accessibilityLabel={
+                draftDuration === null
+                  ? 'Duration, not set'
+                  : `Duration: ${durationChipLabel(draftDuration)}`
+              }
+              onSelect={() => togglePanel('duration')}
+              keyShortcuts={CAPTURE_PROMPT_CHORDS.duration.aria}
+              shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.duration.glyph)}
+              revealShortcutHint={isOptionHeld}
+              tooltip={
+                isCompact
+                  ? `Duration (${CAPTURE_PROMPT_CHORDS.duration.glyph})`
+                  : undefined
+              }
+              onClear={
+                draftDuration === null ? undefined : () => onPickDuration(null)
+              }
+              clearLabel="Clear duration"
             />
           ) : null}
 
           {isHabit ? null : (
-            <>
-              <PromptChip
-                isCompact={isCompact}
-                glyph={<CalendarGlyph size={12} aria-hidden />}
-                label={
-                  draft.hasDate
-                    ? formatCaptureDate(draft.date, now, locale)
-                    : 'No date'
-                }
-                isSet={draft.hasDate}
-                isExpanded={panel === 'date'}
-                accessibilityLabel={
-                  draft.hasDate
-                    ? `Date: ${formatCaptureDate(draft.date, now, locale)}`
-                    : 'Date: No date'
-                }
-                onSelect={() => togglePanel('date')}
-              />
-              {/*
-                Never offered for an Event — canon's `Endeavor.event(...)` has
-                no way to represent one without a start, and `withDateCleared`
-                enforces the same invariant at the state layer (`KC-IS-#75`).
-              */}
-              {!isEvent && draft.hasDate ? (
-                <ClearButton
-                  label="Clear date"
-                  isCompact={isCompact}
-                  onSelect={onClearDate}
-                />
-              ) : null}
-            </>
+            <PropertyPill
+              density={density}
+              glyph={<CalendarGlyph size={12} aria-hidden />}
+              label={
+                draft.hasDate
+                  ? formatCaptureDate(draft.date, now, locale)
+                  : 'No date'
+              }
+              isSet={draft.hasDate}
+              isExpanded={panel === 'date'}
+              accessibilityLabel={
+                draft.hasDate
+                  ? `Date: ${formatCaptureDate(draft.date, now, locale)}`
+                  : 'Date: No date'
+              }
+              onSelect={() => togglePanel('date')}
+              keyShortcuts={CAPTURE_PROMPT_CHORDS.date.aria}
+              shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.date.glyph)}
+              revealShortcutHint={isOptionHeld}
+              tooltip={
+                isCompact
+                  ? `Date (${CAPTURE_PROMPT_CHORDS.date.glyph})`
+                  : undefined
+              }
+              // Never offered for an Event — `Endeavor.event(...)` has no way
+              // to represent one without a start, and `withDateCleared`
+              // enforces the same invariant at the state layer (`KC-IS-#75`).
+              onClear={!isEvent && draft.hasDate ? onClearDate : undefined}
+              clearLabel="Clear date"
+            />
           )}
 
-          <PromptChip
-            isCompact={isCompact}
+          <PropertyPill
+            density={density}
             glyph={<ClockGlyph size={12} aria-hidden />}
             label={
               draft.hasTime
@@ -402,41 +1036,56 @@ function PromptForm({
             isExpanded={isEditingStartTime}
             accessibilityLabel={isEvent ? 'Start time' : 'Time'}
             onSelect={() => toggleTimeEdit('start')}
+            keyShortcuts={CAPTURE_PROMPT_CHORDS.time.aria}
+            shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.time.glyph)}
+            revealShortcutHint={isOptionHeld}
+            tooltip={
+              isCompact
+                ? `Time (${CAPTURE_PROMPT_CHORDS.time.glyph})`
+                : undefined
+            }
+            // An event's start is cleared from its panel; a habit's time is
+            // required and never clearable (`requiresTime`).
+            onClear={
+              !isEvent && isTimeClearable && draft.hasTime
+                ? () => onEndTimeEdit('start', 'clear')
+                : undefined
+            }
+            clearLabel="Clear time"
           />
 
           {isEvent ? (
-            <>
-              <PromptChip
-                isCompact={isCompact}
-                glyph={<ClockEndGlyph size={12} aria-hidden />}
-                label={
-                  draft.hasEndTime
-                    ? formatCaptureTime(draft.endTime, locale)
-                    : 'End'
-                }
-                isSet={draft.hasEndTime}
-                isExpanded={isEditingEndTime}
-                accessibilityLabel="End time"
-                onSelect={() => toggleTimeEdit('end')}
-              />
-              {draft.hasEndTime ? (
-                <ClearButton
-                  label="Clear end time"
-                  isCompact={isCompact}
-                  onSelect={() => onEndTimeEdit('end', 'clear')}
-                />
-              ) : null}
-            </>
-          ) : draft.hasTime ? (
-            <ClearButton
-              label="Clear time"
-              isCompact={isCompact}
-              onSelect={() => onEndTimeEdit('start', 'clear')}
+            <PropertyPill
+              density={density}
+              glyph={<ClockEndGlyph size={12} aria-hidden />}
+              label={
+                draft.hasEndTime
+                  ? formatCaptureTime(draft.endTime, locale)
+                  : 'End'
+              }
+              isSet={draft.hasEndTime}
+              isExpanded={isEditingEndTime}
+              accessibilityLabel="End time"
+              onSelect={() => toggleTimeEdit('end')}
+              keyShortcuts={CAPTURE_PROMPT_CHORDS.end.aria}
+              shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.end.glyph)}
+              revealShortcutHint={isOptionHeld}
+              tooltip={
+                isCompact
+                  ? `End time (${CAPTURE_PROMPT_CHORDS.end.glyph})`
+                  : undefined
+              }
+              onClear={
+                draft.hasEndTime
+                  ? () => onEndTimeEdit('end', 'clear')
+                  : undefined
+              }
+              clearLabel="Clear end time"
             />
           ) : null}
 
-          <PromptChip
-            isCompact={isCompact}
+          <PropertyPill
+            density={density}
             glyph={<RepeatGlyph size={12} aria-hidden />}
             label={captureRepeatChipLabel(draft.recurrence)}
             isSet={draft.recurrence.kind !== 'never'}
@@ -447,10 +1096,38 @@ function PromptForm({
                 : `Repeat: ${captureRepeatChipLabel(draft.recurrence)}`
             }
             onSelect={() => togglePanel('repeat')}
+            keyShortcuts={CAPTURE_PROMPT_CHORDS.repeat.aria}
+            shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.repeat.glyph)}
+            revealShortcutHint={isOptionHeld}
+            tooltip={
+              isCompact
+                ? `Repeat (${CAPTURE_PROMPT_CHORDS.repeat.glyph})`
+                : undefined
+            }
           />
         </div>
 
-        {panel === 'date' && !isHabit ? (
+        <InlinePanel open={panel === 'value' && supportsValue}>
+          <ValueEditor
+            value={draftValue}
+            isCompact={isCompact}
+            onPick={onPickValue}
+          />
+        </InlinePanel>
+
+        <InlinePanel open={panel === 'duration' && supportsDuration}>
+          <DurationEditor
+            seconds={draftDuration}
+            density={density}
+            isCompact={isCompact}
+            onPick={onPickDuration}
+          />
+        </InlinePanel>
+
+        <InlinePanel
+          open={panel === 'date' && !isHabit}
+          autoFocus={keyboardFocus === 'date'}
+        >
           <div className="px-3">
             <Input
               type="date"
@@ -466,39 +1143,47 @@ function PromptForm({
               }}
             />
           </div>
-        ) : null}
+        </InlinePanel>
 
-        {isEditingStartTime ? (
+        <InlinePanel
+          open={isEditingStartTime}
+          autoFocus={keyboardFocus === 'start'}
+        >
           <TimePanel
             field="start"
             label={isEvent ? 'Start time' : 'Time'}
             value={draft.time}
             day={draft.date}
+            canClear={isTimeClearable}
             onPick={onPickTime}
             onEnd={onEndTimeEdit}
           />
-        ) : null}
+        </InlinePanel>
 
-        {isEditingEndTime && isEvent ? (
+        <InlinePanel
+          open={isEditingEndTime && isEvent}
+          autoFocus={keyboardFocus === 'end'}
+        >
           <TimePanel
             field="end"
             label="End time"
             value={draft.endTime}
             day={draft.date}
+            canClear
             onPick={onPickTime}
             onEnd={onEndTimeEdit}
           />
-        ) : null}
+        </InlinePanel>
 
-        {panel === 'rewards' && earnsRewards ? (
+        <InlinePanel open={panel === 'rewards' && earnsRewards}>
           <RewardsEditor
-            points={draft.rewards}
+            points={draftRewards}
             isCompact={isCompact}
             onPick={onPickRewards}
           />
-        ) : null}
+        </InlinePanel>
 
-        {panel === 'repeat' ? (
+        <InlinePanel open={panel === 'repeat'}>
           <div
             className="flex flex-wrap gap-2 px-3 py-1"
             role="group"
@@ -506,9 +1191,9 @@ function PromptForm({
             data-testid="capture-repeat-panel"
           >
             {captureRecurrencePresets(draft.date).map((preset) => (
-              <PromptChip
+              <PropertyPill
                 key={preset.id}
-                isCompact={isCompact}
+                density={density}
                 label={preset.label}
                 isSet={preset.recurrence.kind === draft.recurrence.kind}
                 isExpanded={preset.recurrence.kind === draft.recurrence.kind}
@@ -520,24 +1205,41 @@ function PromptForm({
               />
             ))}
           </div>
-        ) : null}
+        </InlinePanel>
       </div>
 
       <Separator />
 
       {/* ── Bottom bar ──────────────────────────────────────────────── */}
+      {/* The actions row and the status line share one band: the prompt's
+          own glass material, tinted toward black so it reads recessed. */}
       <div
-        className={cn(
-          'flex flex-col px-3',
-          isCompact ? 'gap-1.5 py-2' : 'gap-2 py-3',
-        )}
+        data-slot="capture-prompt-status-bar"
+        className="kro-glass kro-glass--tinted flex flex-col text-xs"
+        style={{
+          // The band's bottom corners follow the prompt's own radius, so the
+          // dark glass never squares off the rounded container (the popover
+          // no longer clips its children — the suggestions pane floats out
+          // of it). The sheet has square bottom corners, so nothing there.
+          borderRadius: isCompact
+            ? `0 0 ${radiusVar('panel')} ${radiusVar('panel')}`
+            : 0,
+          ['--kro-glass-tint' as string]: 'black',
+        }}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div
+          className={cn(
+            'flex items-center justify-between gap-2 px-3',
+            isCompact ? 'py-2' : 'py-3',
+          )}
+        >
           <DestinationPicker
             selected={draft.destination}
             available={availableDestinations}
             isExpanded={panel === 'destination'}
             isCompact={isCompact}
+            shortcutHint={hintFor(CAPTURE_PROMPT_CHORDS.host.glyph)}
+            revealShortcutHint={isOptionHeld}
             onToggle={() => togglePanel('destination')}
             onSelect={(destination) => {
               onSelectDestination(destination)
@@ -549,7 +1251,9 @@ function PromptForm({
             <Button
               variant="secondary"
               size={isCompact ? 'sm' : 'pill'}
-              className="w-24 px-0"
+              className="min-w-24 px-3"
+              shortcut="escape"
+              showShortcut={isCompact}
               aria-label={`Discard new ${captureKindLabel(draft.kind).toLowerCase()}`}
               onClick={onDiscard}
             >
@@ -558,8 +1262,10 @@ function PromptForm({
             <Button
               variant="primary"
               size={isCompact ? 'sm' : 'pill'}
-              className="w-24 px-0"
+              className="min-w-24 px-3"
               data-testid="capture-add"
+              shortcut="return"
+              showShortcut={isCompact}
               disabled={!canSubmit}
               // A disabled control leaves the action surface of the a11y tree,
               // so the reason is attached to it explicitly. This is the epic's
@@ -575,19 +1281,56 @@ function PromptForm({
           </div>
         </div>
 
-        {/*
-          Always mounted, so a screen reader announces the reason CHANGING
-          (untitled -> event missing a start) rather than only its arrival.
-        */}
-        <p
-          id="capture-blocked-reason"
-          data-testid="capture-blocked-reason"
-          aria-live="polite"
-          className={cn('m-0 text-sm', blockedReason === null && 'sr-only')}
-          style={{ color: colorVar('foreSecondary') }}
+        {/* The divider between the actions row and the status line. */}
+        <div
+          aria-hidden
+          className="h-px shrink-0"
+          style={{ backgroundColor: colorVar('hairline') }}
+        />
+
+        <div
+          data-slot="capture-status-line"
+          className="flex items-center justify-center overflow-hidden px-3"
+          // A FIXED height — identical with and without a reason, and for any
+          // reason length — so the band never grows under the user's eye.
+          style={{
+            height: `${CAPTURE_STATUS_LINE_HEIGHT[isCompact ? 'compact' : 'touch']}px`,
+          }}
         >
-          {blockedReason ?? ''}
-        </p>
+          {/* What the eye reads: the reason, then — keyboard-driven on the
+              desktop — what to press next. The reason shrinks first, so a
+              long one loses its tail before the keys do. Visual only. */}
+          <p
+            aria-hidden
+            data-testid="capture-status-text"
+            title={blockedReason ?? undefined}
+            className="m-0 flex min-w-0 max-w-full items-center justify-center gap-1.5 text-xs"
+            style={{ color: colorVar('foreSecondary') }}
+          >
+            {statusLine.reason === null ? null : (
+              <span className="min-w-0 truncate">{statusLine.reason}</span>
+            )}
+            {statusLine.keys === null ? null : (
+              <span data-testid="capture-key-hint" className="shrink-0">
+                {statusLine.reason === null ? '' : '· '}
+                {statusLine.keys}
+              </span>
+            )}
+          </p>
+          {/*
+            The live region carries the reason ONLY — never the key hints —
+            and is always mounted, so a screen reader hears the reason CHANGE
+            (untitled -> event missing a start), not only its arrival.
+          */}
+          <p
+            id="capture-blocked-reason"
+            data-testid="capture-blocked-reason"
+            aria-live="polite"
+            className="sr-only"
+          >
+            {blockedReason ?? ''}
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -607,122 +1350,13 @@ function Separator() {
   )
 }
 
-function KindChip({
-  kind,
-  isSelected,
-  isCompact,
-  onSelect,
-}: {
-  readonly kind: CaptureKind
-  readonly isSelected: boolean
-  readonly isCompact: boolean
-  readonly onSelect: () => void
-}) {
-  const Glyph = captureIconFor(captureKindGlyph(kind))
-  return (
-    <button
-      type="button"
-      // A toggle-button group rather than a radiogroup: radios owe the user
-      // arrow-key roving focus, and claiming the role without implementing it
-      // is worse than not claiming it. `aria-pressed` is canon's
-      // `.accessibilityAddTraits(.isSelected)` on the web.
-      aria-pressed={isSelected}
-      aria-label={captureKindLabel(kind)}
-      onClick={onSelect}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill',
-        isCompact
-          ? 'px-2.5 font-semibold text-xs'
-          : 'px-3 font-semibold text-sm',
-        'kro-motion-quick transition-[background-color,color]',
-        'outline-none focus-visible:shadow-[var(--kro-ring)]',
-      )}
-      style={{
-        minHeight: promptControlMinHeight(isCompact),
-        backgroundColor: isSelected ? colorVar('accent') : 'transparent',
-        color: isSelected ? colorVar('onAccent') : colorVar('foreSecondary'),
-      }}
-    >
-      <Glyph size={isCompact ? 11 : 13} aria-hidden />
-      {captureKindLabel(kind)}
-    </button>
-  )
-}
-
-function PromptChip({
-  glyph,
-  label,
-  isSet,
-  isExpanded,
-  isCompact,
-  accessibilityLabel,
-  onSelect,
-}: {
-  readonly glyph?: ReactNode
-  readonly label: string
-  readonly isSet: boolean
-  readonly isExpanded: boolean
-  readonly isCompact: boolean
-  readonly accessibilityLabel: string
-  readonly onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={accessibilityLabel}
-      aria-expanded={isExpanded}
-      onClick={onSelect}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-kro-pill',
-        isCompact ? 'px-2 font-medium text-xs' : 'px-2.5 font-medium text-sm',
-        'outline-none focus-visible:shadow-[var(--kro-ring)]',
-      )}
-      style={{
-        minHeight: promptControlMinHeight(isCompact),
-        backgroundColor: isExpanded
-          ? `color-mix(in srgb, ${colorVar('accent')} 15%, transparent)`
-          : colorVar('backInner'),
-        color: isSet ? colorVar('fore') : colorVar('foreSecondary'),
-      }}
-    >
-      {glyph}
-      {label}
-    </button>
-  )
-}
-
-function ClearButton({
-  label,
-  isCompact,
-  onSelect,
-}: {
-  readonly label: string
-  readonly isCompact: boolean
-  readonly onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onSelect}
-      className="inline-flex shrink-0 items-center justify-center rounded-kro-pill outline-none focus-visible:shadow-[var(--kro-ring)]"
-      style={{
-        minWidth: promptControlMinHeight(isCompact),
-        minHeight: promptControlMinHeight(isCompact),
-        color: colorVar('foreSecondary'),
-      }}
-    >
-      <ClearGlyph size={16} aria-hidden />
-    </button>
-  )
-}
-
 /** Canon's inline `timePickerPanel` — the value, then Discard / Clear / Done. */
 function TimePanel({
   field,
   label,
   value,
   day,
+  canClear,
   onPick,
   onEnd,
 }: {
@@ -730,6 +1364,7 @@ function TimePanel({
   readonly label: string
   readonly value: Date
   readonly day: Date
+  readonly canClear: boolean
   readonly onPick: (field: CaptureTimeField, time: Date) => void
   readonly onEnd: (
     field: CaptureTimeField,
@@ -740,6 +1375,8 @@ function TimePanel({
     <div
       className="flex flex-col gap-2 px-3"
       data-testid={`capture-time-panel-${field}`}
+      // Return inside this panel is its Done (`onPromptKeyDown` reads this).
+      data-kro-time-field={field}
     >
       <Input
         type="time"
@@ -758,13 +1395,15 @@ function TimePanel({
         >
           Discard
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => onEnd(field, 'clear')}
-        >
-          Clear
-        </Button>
+        {canClear ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onEnd(field, 'clear')}
+          >
+            Clear
+          </Button>
+        ) : null}
         <span className="flex-1" />
         <Button
           variant="primary"
@@ -842,6 +1481,225 @@ function RewardsEditor({
 }
 
 /**
+ * One inline editor under the property row, expanding and collapsing with a
+ * height + opacity transition on the design system's motion tokens.
+ *
+ * The height animates with the `grid-template-rows: 0fr → 1fr` technique, so
+ * no measurement is needed. Collapsing animates too: the last content stays
+ * mounted — `inert` and hidden from assistive tech — until the transition ends
+ * (with a timeout fallback for environments that never fire `transitionend`).
+ * Reduced motion needs nothing here: `motion.css` collapses the duration
+ * tokens to ~0 under `prefers-reduced-motion`.
+ */
+function InlinePanel({
+  open,
+  autoFocus = false,
+  children,
+}: {
+  readonly open: boolean
+  /** Focus the panel's first field once it mounts — a keyboard chord opened it. */
+  readonly autoFocus?: boolean
+  readonly children?: ReactNode
+}) {
+  const [isMounted, setMounted] = useState(open)
+  const [isShown, setShown] = useState(open)
+  const ref = useRef<HTMLDivElement | null>(null)
+  const lastChildren = useRef<ReactNode>(children)
+  if (open) lastChildren.current = children
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      return
+    }
+    setShown(false)
+    const fallback = setTimeout(
+      () => setMounted(false),
+      INLINE_PANEL_FALLBACK_MS,
+    )
+    return () => clearTimeout(fallback)
+  }, [open])
+
+  // The closed (0fr, transparent) frame must be *computed* before the flip to
+  // open, or the browser coalesces both and there is nothing to animate from.
+  // Reading layout forces that style pass; the flip then waits a frame.
+  useLayoutEffect(() => {
+    if (!open || !isMounted || isShown) return
+    void ref.current?.offsetHeight
+    const frame = requestAnimationFrame(() => setShown(true))
+    return () => cancelAnimationFrame(frame)
+  }, [open, isMounted, isShown])
+
+  useLayoutEffect(() => {
+    if (!open || !isMounted || !autoFocus) return
+    ref.current?.querySelector<HTMLElement>('input, button')?.focus()
+  }, [open, isMounted, autoFocus])
+
+  if (!isMounted) return null
+  return (
+    <div
+      ref={ref}
+      data-slot="capture-inline-panel"
+      data-state={isShown ? 'open' : 'closed'}
+      aria-hidden={open ? undefined : true}
+      inert={open ? undefined : true}
+      onTransitionEnd={(event) => {
+        if (event.target === event.currentTarget && !open) setMounted(false)
+      }}
+      style={{
+        display: 'grid',
+        gridTemplateRows: isShown ? '1fr' : '0fr',
+        opacity: isShown ? 1 : 0,
+        transitionProperty: 'grid-template-rows, opacity',
+        // The token (240ms) collapses to ~0 under prefers-reduced-motion.
+        transitionDuration: 'var(--kro-duration-standard, 240ms)',
+        transitionTimingFunction: isShown ? PANEL_EASE_OUT : PANEL_EASE_IN,
+      }}
+    >
+      <div style={{ minHeight: 0, overflow: 'hidden' }}>
+        {lastChildren.current}
+      </div>
+    </div>
+  )
+}
+
+/** Presenting decelerates in (the design system's `--kro-ease-out`). */
+export const PANEL_EASE_OUT =
+  'var(--kro-ease-out, cubic-bezier(0.22, 1, 0.36, 1))'
+/**
+ * Hiding accelerates out. The motion tokens have no ease-in, so this is the
+ * standard Material/Apple "accelerate" curve, stated here.
+ */
+export const PANEL_EASE_IN = 'cubic-bezier(0.4, 0, 1, 1)'
+/** Unmount a closing panel even where `transitionend` never fires. */
+const INLINE_PANEL_FALLBACK_MS = 400
+
+/**
+ * Canon's inline `valueEditor` — five stars, the selected rating's descriptor
+ * under them. A required-but-unset rating is announced by the prompt's one
+ * status line (and the chip's orange glyph), not here. Tapping
+ * the selected star clears it, the same toggle Triage's rating rows use.
+ */
+function ValueEditor({
+  value,
+  isCompact,
+  onPick,
+}: {
+  readonly value: number | null
+  readonly isCompact: boolean
+  readonly onPick: (value: number | null) => void
+}) {
+  const steps = Array.from({ length: MAXIMUM_CAPTURE_VALUE }, (_, i) => i + 1)
+  return (
+    <div
+      className="flex flex-col gap-1.5 px-3 py-1"
+      data-testid="capture-value-editor"
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={isCompact ? 'text-xs' : 'text-sm'}
+          style={{ color: colorVar('foreSecondary') }}
+        >
+          Value to my life / goals
+        </span>
+        <span className="flex-1" />
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="flex" role="group" aria-label="Value">
+            {steps.map((step) => {
+              const isFilled = (value ?? 0) >= step
+              const Glyph = isFilled ? Star : EmptyStar
+              return (
+                <button
+                  key={step}
+                  type="button"
+                  aria-label={`${captureValueLabel(step) ?? ''}, level ${step}`}
+                  aria-pressed={value === step}
+                  onClick={() => onPick(value === step ? null : step)}
+                  className="inline-flex items-center justify-center rounded-kro-small outline-none focus-visible:shadow-[var(--kro-ring)]"
+                  style={{
+                    width: 26,
+                    height: 28,
+                    color: isFilled
+                      ? colorVar('rewardYellow')
+                      : colorVar('foreSecondary'),
+                  }}
+                >
+                  <Glyph
+                    size={15}
+                    aria-hidden
+                    fill={isFilled ? 'currentColor' : 'none'}
+                  />
+                </button>
+              )
+            })}
+          </div>
+          {/* Reserved whether or not a rating is set, so picking one does
+              not shift the stars. */}
+          <span
+            aria-hidden
+            className="text-[10px]"
+            style={{ color: colorVar('foreSecondary') }}
+          >
+            {value === null ? '\u00a0' : (captureValueLabel(value) ?? '\u00a0')}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Canon's inline `durationEditor` — Triage's preset lengths as pills. Tapping
+ * the selected one clears it; the estimate never gates Add.
+ */
+function DurationEditor({
+  seconds,
+  density,
+  isCompact,
+  onPick,
+}: {
+  readonly seconds: number | null
+  readonly density: ControlDensity
+  readonly isCompact: boolean
+  readonly onPick: (seconds: number | null) => void
+}) {
+  return (
+    <div
+      className="flex flex-col gap-2 py-1"
+      data-testid="capture-duration-editor"
+    >
+      <span
+        className={cn('px-3', isCompact ? 'text-xs' : 'text-sm')}
+        style={{ color: colorVar('foreSecondary') }}
+      >
+        How long will it take?
+      </span>
+      <div
+        className="flex flex-wrap gap-2 px-3"
+        role="group"
+        aria-label="Duration"
+      >
+        {defaultTriageDurationOptionsMinutes.map((minutes) => {
+          const optionSeconds = minutes * 60
+          const isSelected = seconds === optionSeconds
+          return (
+            <PropertyPill
+              key={minutes}
+              density={density}
+              label={captureDurationLabel(minutes)}
+              isSet={isSelected}
+              isExpanded={isSelected}
+              accessibilityLabel={captureDurationLabel(minutes)}
+              onSelect={() => onPick(isSelected ? null : optionSeconds)}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/**
  * Canon's `destinationMenu`, as an inline disclosure rather than a popper.
  *
  * A Radix `DropdownMenu` is built on `@radix-ui/react-popper`, which this repo
@@ -856,6 +1714,8 @@ function DestinationPicker({
   available,
   isExpanded,
   isCompact,
+  shortcutHint,
+  revealShortcutHint,
   onToggle,
   onSelect,
 }: {
@@ -863,20 +1723,26 @@ function DestinationPicker({
   readonly available: readonly CaptureDestination[]
   readonly isExpanded: boolean
   readonly isCompact: boolean
+  readonly shortcutHint?: string
+  readonly revealShortcutHint: boolean
   readonly onToggle: () => void
   readonly onSelect: (destination: CaptureDestination) => void
 }) {
   const SelectedGlyph = captureIconFor(captureDestinationGlyph(selected))
 
   return (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div className="relative flex min-w-0 flex-col">
       <button
         type="button"
         aria-label={`Hosting destination: ${captureDestinationLabel(selected)}`}
         aria-expanded={isExpanded}
+        aria-keyshortcuts={CAPTURE_PROMPT_CHORDS.host.aria}
+        title={
+          isCompact ? `Host (${CAPTURE_PROMPT_CHORDS.host.glyph})` : undefined
+        }
         onClick={onToggle}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-kro-pill px-2.5',
+          'relative inline-flex items-center gap-1.5 rounded-kro-pill px-2.5',
           isCompact ? 'font-medium text-xs' : 'font-medium text-sm',
           'outline-none focus-visible:shadow-[var(--kro-ring)]',
         )}
@@ -885,6 +1751,11 @@ function DestinationPicker({
           color: colorVar('fore'),
         }}
       >
+        {shortcutHint === undefined ? null : (
+          <ShortcutHint placement="keycap" reveal={revealShortcutHint}>
+            {shortcutHint}
+          </ShortcutHint>
+        )}
         <SelectedGlyph size={14} aria-hidden />
         {captureDestinationLabel(selected)}
         <ChevronDown size={10} aria-hidden />
@@ -895,7 +1766,16 @@ function DestinationPicker({
           role="group"
           aria-label="Hosting destination"
           data-testid="capture-destination-options"
-          className="flex flex-col gap-1"
+          // Floats above the button, over the rest of the prompt, so opening
+          // it never grows the actions row. Upward, because the row sits at
+          // the panel's foot where a downward list would be clipped.
+          className="absolute bottom-full left-0 z-50 mb-1 flex min-w-40 flex-col gap-1 p-1"
+          style={{
+            backgroundColor: colorVar('back'),
+            border: `1px solid ${colorVar('hairline')}`,
+            borderRadius: radiusVar('card'),
+            boxShadow: shadowVar('surface'),
+          }}
         >
           {available.map((destination) => {
             const Glyph = captureIconFor(captureDestinationGlyph(destination))
@@ -905,22 +1785,34 @@ function DestinationPicker({
                 type="button"
                 aria-pressed={destination === selected}
                 onClick={() => onSelect(destination)}
+                data-selected={destination === selected ? '' : undefined}
                 className={cn(
-                  'inline-flex w-full items-center gap-1.5 rounded-kro-small px-2.5',
+                  'kro-motion-quick inline-flex w-full items-center gap-1.5 rounded-kro-small px-2.5',
                   isCompact ? 'text-xs' : 'text-sm',
-                  'outline-none focus-visible:shadow-[var(--kro-ring)]',
+                  'border border-transparent outline-none',
+                  // A real hover: a visible fill and an outline, and the same
+                  // pair for keyboard focus — distinct from the selected fill.
+                  'hover:border-[var(--kro-color-hairline)] hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)]',
+                  'focus-visible:border-[var(--kro-color-hairline)] focus-visible:bg-[color-mix(in_srgb,var(--kro-color-fore)_8%,transparent)] focus-visible:shadow-[var(--kro-ring)]',
+                  destination === selected &&
+                    'bg-[var(--kro-color-back-inner)]',
                 )}
                 style={{
                   minHeight: promptControlMinHeight(isCompact),
                   color: colorVar('fore'),
-                  backgroundColor:
-                    destination === selected
-                      ? colorVar('backInner')
-                      : 'transparent',
                 }}
               >
                 <Glyph size={14} aria-hidden />
-                {captureDestinationLabel(destination)}
+                <span className="flex-1 text-left">
+                  {captureDestinationLabel(destination)}
+                </span>
+                {destination === selected ? (
+                  <Check
+                    size={12}
+                    aria-hidden
+                    data-testid="capture-destination-check"
+                  />
+                ) : null}
               </button>
             )
           })}

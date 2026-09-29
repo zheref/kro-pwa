@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import type { ComponentPropsWithoutRef } from 'react'
 import { ROW_HIGHLIGHT } from '../rowHighlight'
 import { cn } from '../utils/cn'
+import { useDefaultCollisionPadding } from './collision'
 
 /**
  * DropdownMenu — the contextual action list.
@@ -60,13 +61,21 @@ export const DROPDOWN_MENU_CLASSES = {
 export function DropdownMenuContent({
   className,
   sideOffset = 8,
+  avoidCollisions = true,
+  collisionPadding,
   ...rest
 }: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>) {
+  // Flip/shift to fit, clear of the viewport edge AND the shell's sidebar.
+  const padding = useDefaultCollisionPadding(
+    collisionPadding as Parameters<typeof useDefaultCollisionPadding>[0],
+  )
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
+        avoidCollisions={avoidCollisions}
+        collisionPadding={padding}
         className={cn(DROPDOWN_MENU_CLASSES.content, className)}
         {...rest}
       />

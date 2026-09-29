@@ -410,27 +410,35 @@ function DoSurfaceBody(props: DoSurfaceFragmentProps) {
           <LiquidGlassFABMenu
             mainGlyph="bolt.fill"
             mainAccessibilityLabel="Quick action"
+            // Mnemonic letters, not digits: they survive an entry being
+            // added, removed or disabled, and read as the action (Complete,
+            // eXpired, Add, Session). Hints are pointer-layout only.
+            showShortcutHints={!layout.isTouchPrimary}
             items={[
               {
                 id: 'mark-complete',
+                shortcut: 'c',
                 label: 'Mark Complete…',
                 glyph: 'checkmark.circle.fill',
                 onSelect: props.onEnterMarkCompleteMode,
               },
               {
                 id: 'clear-expired',
+                shortcut: 'x',
                 label: 'Clear Expired',
                 glyph: 'clock.badge.xmark',
                 onSelect: props.onClearExpired,
               },
               {
                 id: 'quick-add',
+                shortcut: 'a',
                 label: 'Quick Add',
                 glyph: 'plus',
                 onSelect: props.onQuickAdd,
               },
               {
                 id: 'start-session',
+                shortcut: 's',
                 label: 'Start Session',
                 glyph: 'play.fill',
                 onSelect: props.onStartSession,

@@ -25,6 +25,10 @@
  * `DoProducer` applies to the day.
  */
 import {
+  type CaptureSuggestion,
+  captureResultFromSuggestion,
+} from './CaptureSuggestions'
+import {
   type Endeavor,
   EndeavorOperation,
   EndeavorStatus,
@@ -74,6 +78,7 @@ export interface CaptureContext {
   readonly lastUsedDestination: CaptureDestination
   readonly availableDestinations: readonly CaptureDestination[]
   readonly now: Date
+  readonly isSuggestionsEnabled: boolean
 }
 
 const messageOf = (error: unknown): string =>
@@ -149,6 +154,7 @@ export const loadCaptureContextThunk = createAsyncThunk<
           (await extra.localStore.userProfiles.current()) !== null,
       }),
       now,
+      isSuggestionsEnabled: flags.isEnabled(FeatureFlags.captureSuggestions),
     })
   } catch (error) {
     return err(CaptureExceptions.contextLoadFailed(messageOf(error)))
@@ -413,5 +419,79 @@ export const applyInboxOperationThunk = createAsyncThunk<
     } catch (error) {
       return err(CaptureExceptions.operationFailed(messageOf(error)))
     }
+  },
+)
+
+/** One item of a multi-add: the suggestion, its new id and its host. */
+export interface CaptureSuggestionInboxItem {
+  readonly suggestion: CaptureSuggestion
+  readonly id: string
+  readonly destination: CaptureDestination
+}
+
+/** One Result per item — a partial failure is data, not an exception. */
+export interface CaptureSuggestionInboxOutcome {
+  readonly items: readonly {
+    readonly suggestionId: string
+    readonly result: Result<Endeavor, CaptureException>
+  }[]
+  readonly now: Date
+}
+
+/**
+ * **Add N to Inbox** — the suggestions pane's multi-add (web-only).
+ *
+ * Each selected suggestion is written through the same Mapper and persistence
+ * path a confirmed capture uses (`endeavorFromCaptureResult` →
+ * `persistEndeavor`), unscheduled so it lands in Pending Triage. Items are
+ * written one after another and each gets its own `Result`: one failure never
+ * throws, never stops the rest, and never rolls back what already landed. An
+ * event is refused per item — the Inbox holds no events.
+ */
+export const addSuggestionsToInboxThunk = createAsyncThunk<
+  Result<CaptureSuggestionInboxOutcome, CaptureException>,
+  { items: readonly CaptureSuggestionInboxItem[]; now: Date },
+  { extra: ThunkExtra }
+>(
+  'capture/onSuggestionsInboxAddCompleted',
+  async ({ items, now }, { extra }) => {
+    const outcomes: CaptureSuggestionInboxOutcome['items'][number][] = []
+    for (const item of items) {
+      const result = captureResultFromSuggestion(
+        item.suggestion,
+        item.destination,
+      )
+      if (result === null) {
+        outcomes.push({
+          suggestionId: item.suggestion.id,
+          result: err(
+            CaptureExceptions.invalidCapture(
+              'An event needs a time, so it cannot go to the Inbox.',
+            ),
+          ),
+        })
+        continue
+      }
+      const endeavor = endeavorFromCaptureResult(result, { id: item.id, now })
+      try {
+        await persistEndeavor(
+          extra,
+          endeavor,
+          now,
+          makeReconciliationContext({ now }),
+          item.destination === CaptureDestination.kroCloud ? 'cloud' : 'local',
+        )
+        outcomes.push({
+          suggestionId: item.suggestion.id,
+          result: ok(endeavor),
+        })
+      } catch (error) {
+        outcomes.push({
+          suggestionId: item.suggestion.id,
+          result: err(CaptureExceptions.captureFailed(messageOf(error))),
+        })
+      }
+    }
+    return ok({ items: outcomes, now })
   },
 )

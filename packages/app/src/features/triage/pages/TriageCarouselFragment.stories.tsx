@@ -164,3 +164,56 @@ export const NoticeStrip = {
       </TriageCarouselFragment>,
     ),
 }
+
+/** Web-only: the detail pane's host — the form inline, no swipe layer. */
+const paneSurface = (
+  children: React.ReactNode,
+  theme: 'light' | 'dark' = 'light',
+) => (
+  <ThemeScope theme={theme}>
+    <div style={{ position: 'relative', width: 380, height: 720 }}>
+      {children}
+    </div>
+  </ThemeScope>
+)
+
+/** The pane hosting a session. */
+export const PanePresented = {
+  render: () =>
+    paneSurface(
+      <TriageCarouselFragment presentation="pane" isPresenting onDismiss={noop}>
+        <TriageFormFragment {...triageFormProps(triageStateMocks.scheduled)} />
+      </TriageCarouselFragment>,
+    ),
+}
+
+/** A pane Triage open that failed (e.g. a habit): the reason, not a form. */
+export const PaneNotTriageable = {
+  render: () =>
+    paneSurface(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting={false}
+        onDismiss={noop}
+        loadExceptionMessage="A habit isn't triaged — it is already a commitment to a moment, or it is done."
+      >
+        {null}
+      </TriageCarouselFragment>,
+    ),
+}
+
+/** The pane while a decision saves, dark. */
+export const PaneSavingDark = {
+  render: () =>
+    paneSurface(
+      <TriageCarouselFragment
+        presentation="pane"
+        isPresenting={false}
+        onDismiss={noop}
+        isSaving
+      >
+        {null}
+      </TriageCarouselFragment>,
+      'dark',
+    ),
+}

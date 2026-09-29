@@ -40,7 +40,12 @@ import {
   triageValueLabel,
 } from './TriageRules'
 import { type TriagePushOutcome, triagePushNotice } from './TriageSave'
-import type { TriageForm, TriageOutcome, TriageSession } from './TriageState'
+import type {
+  TriageForm,
+  TriageOutcome,
+  TriagePresentation,
+  TriageSession,
+} from './TriageState'
 
 const selectTriageSlice = (state: RootState): TriageState => state.triage
 
@@ -57,6 +62,22 @@ export const selectTriageException = createSelector(
   [selectTriageSlice],
   (slice): TriageException | null =>
     slice.load.kind === 'failed' ? slice.load.exception : null,
+)
+
+/** Which host draws the session and drains its outcome. */
+export const selectTriagePresentation = createSelector(
+  [selectTriageSlice],
+  (slice): TriagePresentation => slice.presentation,
+)
+
+/**
+ * Whether the detail pane's Inbox is showing a Triage session — the pane host
+ * opened it and it is still open. What tells that Inbox to stand its list
+ * down while the form covers it.
+ */
+export const selectIsTriageShownInPane = createSelector(
+  [selectTriageSlice],
+  (slice) => slice.presentation === 'pane' && slice.session !== null,
 )
 
 /** The open session, or `null` when the screen is not mounted. */

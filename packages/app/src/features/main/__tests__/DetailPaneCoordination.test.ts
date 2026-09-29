@@ -28,7 +28,6 @@ const reduce = mainSlice.reducer
 const task = detailEndeavorMocks.task
 const event = detailEndeavorMocks.event
 const taskRef = { id: task.id, title: task.title }
-const review = { id: 'e-1', title: 'Write the quarterly review' }
 
 describe('isDetailPaneHost', () => {
   it('is a host on the desktop sidebar with the flag on', () => {
@@ -68,12 +67,12 @@ describe('withDetailPaneFollowingDetail', () => {
 })
 
 describe('withDetailPaneReleasedByDetail', () => {
-  it('hides a pane that was showing Detail on Plan', () => {
+  it('falls a pane showing Detail on Plan back to the Timeline', () => {
     const next = withDetailPaneReleasedByDetail(MainMocks.desktopDetailPanePlan)
-    expect(next.detailPane).toEqual({ segment: null, endeavor: review })
+    expect(next.detailPane).toEqual({ segment: 'plan', endeavor: null })
   })
 
-  it('leaves a pane on another segment showing', () => {
+  it('leaves a pane already reading the whole day untouched', () => {
     const before = MainMocks.desktopDetailPaneDayProgress
     expect(withDetailPaneReleasedByDetail(before)).toBe(before)
   })
@@ -181,9 +180,9 @@ describe('openDetailByIdThunk.fulfilled (Detail reopened for the pane)', () => {
 })
 
 describe('userDidTapDismiss (Detail closed from inside)', () => {
-  it('hides the pane that was showing it on Plan', () => {
+  it('falls the pane back to the Timeline instead of naming the closed endeavor', () => {
     const next = reduce(MainMocks.desktopDetailPanePlan, userDidTapDismiss())
-    expect(next.detailPane.segment).toBeNull()
+    expect(next.detailPane).toEqual({ segment: 'plan', endeavor: null })
   })
 
   it('leaves Day Progress up — Detail was not the pane’s content', () => {

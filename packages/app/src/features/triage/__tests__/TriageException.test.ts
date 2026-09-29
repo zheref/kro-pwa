@@ -7,6 +7,7 @@ const copyFor = (exception: TriageException): string => {
   switch (exception.kind) {
     case 'sessionLoadFailed':
     case 'endeavorNotFound':
+    case 'notTriageable':
     case 'incompleteDecision':
     case 'localSaveFailed':
     case 'unknown':
@@ -52,6 +53,23 @@ describe('TriageExceptions.endeavorNotFound', () => {
     expect(TriageExceptions.endeavorNotFound('row-9').kind).toBe(
       'endeavorNotFound',
     )
+  })
+})
+
+describe('TriageExceptions.notTriageable', () => {
+  it('names the kind Triage does not apply to, in running text', () => {
+    expect(TriageExceptions.notTriageable('Calendar Event').message).toContain(
+      'calendar event',
+    )
+  })
+
+  it('is NOT recoverable — the kind will not change on a retry', () => {
+    expect(TriageExceptions.notTriageable('Habit').recoverable).toBe(false)
+  })
+
+  it('carries its own kind for an exhaustive switch', () => {
+    expect(copyFor(TriageExceptions.notTriageable('Habit'))).toContain('habit')
+    expect(TriageExceptions.notTriageable('Habit').kind).toBe('notTriageable')
   })
 })
 
@@ -127,11 +145,12 @@ describe('the union', () => {
     expect(Object.keys(TriageExceptions)).not.toContain('remotePushFailed')
   })
 
-  it('exposes exactly the five factories the feature needs', () => {
+  it('exposes exactly the six factories the feature needs', () => {
     expect(Object.keys(TriageExceptions).sort()).toEqual([
       'endeavorNotFound',
       'incompleteDecision',
       'localSaveFailed',
+      'notTriageable',
       'sessionLoadFailed',
       'unknown',
     ])

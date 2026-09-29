@@ -58,6 +58,7 @@ import type { OnEndeavorOperation } from './rowActions'
 import type { InputCapability } from './useInputCapability'
 
 const Clock = endeavorIcon('clock')
+const Check = endeavorIcon('checkmark')
 const TimerGlyph = endeavorIcon('timer')
 
 /* ------------------------------------------------------------------------ */
@@ -192,6 +193,12 @@ export interface EndeavorRowProps {
   readonly config?: EndeavorRowConfigName
   /** Trailing controls — the Inbox's Triage / Add for Today buttons. */
   readonly trailing?: ReactNode
+  /**
+   * Controls on their own line inside the card, beneath the title and its
+   * badges — for a row too narrow to give them the trailing edge (the Inbox
+   * in the web-only detail pane).
+   */
+  readonly footer?: ReactNode
   /** `now` is explicit; see `formatting.ts`. */
   readonly now: Date
   readonly locale?: string
@@ -201,6 +208,25 @@ export interface EndeavorRowProps {
   readonly endeavorId?: string
   readonly input?: InputCapability
   readonly className?: string
+  /**
+   * Pick mode: the whole row becomes one button (a stretched, transparent
+   * control over the card), for a list the user chooses FROM — a suggestion
+   * picker, say. `pickLabel` is its accessible name and `pickId` lands on it
+   * as `data-kro-row-pick`, so a list can move focus row to row.
+   */
+  readonly onPick?: (event: { readonly altKey: boolean }) => void
+  readonly pickLabel?: string
+  readonly pickId?: string
+  /**
+   * Selection mode: a trailing checkbox, a sibling of the pick control (never
+   * nested inside it), drawn above it. `disabled` rows explain why in `label`.
+   */
+  readonly selection?: {
+    readonly checked: boolean
+    readonly label: string
+    readonly disabled?: boolean
+    readonly onToggle: () => void
+  }
 }
 
 export function EndeavorRow({
@@ -211,6 +237,7 @@ export function EndeavorRow({
   badges = [],
   config = 'default',
   trailing,
+  footer,
   now,
   locale,
   capabilities,
@@ -218,6 +245,10 @@ export function EndeavorRow({
   endeavorId,
   input,
   className,
+  onPick,
+  pickLabel,
+  pickId,
+  selection,
 }: EndeavorRowProps) {
   const preset = ENDEAVOR_ROW_CONFIGS[config]
   const leftBadges = preset.badgesPosition === 'belowTitle' ? badges : []
@@ -241,7 +272,14 @@ export function EndeavorRow({
     <div
       data-slot="endeavor-row"
       data-config={config}
-      className={cn('flex w-full items-center', className)}
+      data-checked={
+        selection === undefined ? undefined : String(selection.checked)
+      }
+      className={cn(
+        'flex w-full items-center',
+        (onPick !== undefined || selection !== undefined) && 'relative',
+        className,
+      )}
       style={{
         gap: preset.rowSpacing,
         minHeight: preset.minHeight,
@@ -253,9 +291,21 @@ export function EndeavorRow({
           : {}),
         borderRadius: preset.cornerRadius,
         backgroundColor: colorVar('absolute'),
-        boxShadow: shadowVar('card'),
+        boxShadow: selection?.checked
+          ? `inset 0 0 0 2px ${colorVar('accent')}, ${shadowVar('card')}`
+          : shadowVar('card'),
       }}
     >
+      {onPick === undefined ? null : (
+        <button
+          type="button"
+          aria-label={pickLabel ?? title}
+          data-kro-row-pick={pickId}
+          onClick={(event) => onPick({ altKey: event.altKey })}
+          className="kro-motion-quick absolute inset-0 outline-none hover:bg-[color-mix(in_srgb,var(--kro-color-fore)_5%,transparent)] focus-visible:shadow-[var(--kro-ring)]"
+          style={{ borderRadius: preset.cornerRadius, cursor: 'default' }}
+        />
+      )}
       <RowSymbol
         symbol={symbol}
         isGenericSymbol={isGenericSymbol}
@@ -287,6 +337,12 @@ export function EndeavorRow({
             ))}
           </div>
         )}
+
+        {footer === undefined || footer === null ? null : (
+          <div data-slot="endeavor-row-footer" className="pt-0.5">
+            {footer}
+          </div>
+        )}
       </div>
 
       {rightBadges.length > 0 ? (
@@ -297,6 +353,26 @@ export function EndeavorRow({
         </div>
       ) : (
         trailing
+      )}
+      {selection === undefined ? null : (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={selection.checked}
+          aria-label={selection.label}
+          disabled={selection.disabled}
+          tabIndex={-1}
+          onClick={selection.onToggle}
+          data-slot="endeavor-row-check"
+          className="relative inline-flex size-5 shrink-0 items-center justify-center rounded-kro-small outline-none disabled:opacity-40"
+          style={{
+            border: `1.5px solid ${selection.checked ? colorVar('accent') : colorVar('hairline')}`,
+            background: selection.checked ? colorVar('accent') : 'transparent',
+            color: colorVar('back'),
+          }}
+        >
+          {selection.checked ? <Check size={12} aria-hidden /> : null}
+        </button>
       )}
     </div>
   )

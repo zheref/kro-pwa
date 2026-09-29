@@ -24,6 +24,11 @@ changes that layout.
 - Rollout: a kill switch rather than a dark launch. Turning it off removes the
   toolbar group and the moved entry points: an endeavor's details open in a
   centred dialog and a session opens on its own destination, as before.
+- **Web only:** a second flag, `detailPaneInbox`, adds a fourth reading,
+  **Inbox** (see Web notes). Canon has no such reading. It is off in the shared
+  status-quo set, as greenfield work is, and the web's shipping build turns it
+  on. Turning it off removes the fourth button, hides a panel left on it, and
+  sends new captures back to the Inbox overlay.
 
 ## Entry points
 
@@ -52,7 +57,9 @@ changes that layout.
 - **Reading**: one of the three things the panel can show. The toolbar names them.
 - **Selected endeavor**: the endeavor the panel is reading. With none selected, every
   reading widens to the whole day. The selection is kept when the panel is hidden, so
-  reopening a reading returns to the same endeavor.
+  reopening a reading returns to the same endeavor. The panel never shows an endeavor's
+  reading without a selection: once the selection ends (see *Selection ending* below),
+  every reading falls back to its whole-day mode.
 - **Resting position**: where the floating action button sits while the panel is hidden.
   While the panel shows, the button moves aside by the panel's width plus a small gap.
 
@@ -63,10 +70,13 @@ changes that layout.
 | **Session** | Session setup for that endeavor | Session setup for a new, arbitrary task |
 | **Performance** | That endeavor's recorded sessions ([EndeavorActivity.md](./EndeavorActivity.md)) | The whole day's progress ([DayProgress.md](./DayProgress.md)) |
 | **Plan** | That endeavor's details | The day's timeline, read-only |
+| **Inbox** *(web only)* | The Inbox | The Inbox |
 
 The panel's header names what it is showing. A reading with an endeavor is titled
 *Session Setup*, *Endeavor Activity* or *Details*, with the endeavor's name beneath. A
 whole-day reading is titled *New Session*, *Day Progress* or *Timeline*, with no subtitle.
+On the web, the Inbox reading is titled *Inbox*, with no subtitle either way — it is its
+own list, not a reading of the selected endeavor.
 
 The day's timeline is the same canvas the Plan tab draws, for today, shown without any
 way to edit it: no opening a block, no dragging, no rescheduling, no creating from an
@@ -110,8 +120,17 @@ timeline.
 6. **A session ends.** The panel opens on Session showing the conclusion. If
    the user hides the panel or moves to another reading without choosing, the
    pill keeps the conclusion, as it does everywhere else.
-7. **Closing details from inside.** If the endeavor's details close for another reason,
-   such as the endeavor being deleted, the panel hides with them.
+7. **Selection ending.** When the selected endeavor stops being selected — its card is
+   deselected, its details are closed from inside, it is deleted (from a row or in
+   bulk), or it is found gone when the panel reopens it — the panel stays open and
+   every reading falls back to its whole-day mode: Session → *New Session* (a new,
+   arbitrary task is set up) — **unless a session is already in flight** (running,
+   paused, on a break, or its conclusion unanswered): then Session keeps showing that
+   session, titled *Session Setup* over its endeavor's name, and nothing new is set up
+   until it ends; once it ends with nothing selected, Session falls back to *New
+   Session* — Performance → *Day Progress*, Plan → *Timeline*, and
+   Inbox stays the Inbox (a Triage session on a deleted endeavor closes). The header
+   follows: the whole-day title, no subtitle. Any drill-in trail is forgotten.
 
 ### Drilling in
 
@@ -149,10 +168,11 @@ stateDiagram-v2
     Hidden --> Showing: open an endeavor's details
     Hidden --> Showing: tap the activity rings
     Hidden --> Showing: start a session, tap the pill, or a session ends
+    Hidden --> Showing: add something bound for the Inbox (web only)
     Showing --> Showing: pick a different reading
     Showing --> Hidden: pick the reading already showing
     Showing --> Hidden: close from the panel's header, or Escape
-    Showing --> Hidden: the details it shows close from inside
+    Showing --> Showing: the selection ends — whole-day readings
 ```
 
 ### Which mode a reading picks
@@ -168,21 +188,35 @@ flowchart TD
     D --> D1[Session: set up a new task]
     D --> D2[Performance: the day's progress]
     D --> D3[Plan: the day's timeline, read-only]
+    A --> E4[Inbox, web only: the Inbox, whatever is selected]
 ```
 
 ## Interactions with other features
 
 - **Endeavor Detail**: on the desktop layout with the flag on, details open in the
   panel's Plan reading instead of a dialog. Leaving Plan, or hiding the panel, closes
-  them. Reselecting Plan reopens them on the same endeavor.
+  them. Reselecting Plan reopens them on the same endeavor. Closing them from inside
+  ends the selection, so Plan falls back to the Timeline.
 - **Session**: on the desktop layout with the flag on, starting a session opens
   it in the panel instead of moving to the Execute destination, which stays
   reachable from the sidebar. The pill hides while the panel shows the session.
+- **Inbox** ([Inbox.md](./Inbox.md)) and **Triage** ([Triage.md](./Triage.md)), web
+  only: the fourth reading hosts the real Inbox, and Triage opens over its list
+  inside the panel. A capture routed to the Inbox opens the panel on this reading.
 - **Do / Plan**: their floating action buttons move aside while the panel shows.
 - **App Shell** ([AppShell.md](./AppShell.md)): the panel and its toolbar group are
   part of the desktop shell.
 
 ## Web notes
+
+- **Selection ending falls back instead of hiding (web divergence).** Canon keeps the
+  panel's endeavor until another endeavor (or the rings) replaces it, and hides the
+  panel when details close from inside. The web ends the selection in every case listed
+  under *Selection ending* and shows each reading's whole-day mode instead, so the panel
+  never names an endeavor that is no longer selected (maintainer's call, 2026-09-28).
+- **The Inbox's rows in the panel** carry Triage and Add for Today on their own line
+  inside the row's card, beneath the title and reward, so a title is never squeezed to
+  an ellipsis by the actions in the narrow panel.
 
 - The desktop layout on the web is the sidebar shell. It is the equivalent of the Mac
   window, and it is the only place the panel appears.
@@ -205,6 +239,17 @@ flowchart TD
   destination has none); otherwise its measurements follow canon's: 16 from the trailing and bottom
   edges, rounded corners of 28, and a width of 36% of the window, never below 320 or
   above 520.
+
+- **A fourth reading, Inbox, is web-only.** Canon's toolbar group has exactly three
+  readings, and its Inbox is a sheet or popover. The web adds Inbox last in the same
+  group, behind `detailPaneInbox`, showing the real Inbox — Just Created and Pending
+  Triage — with the panel's own header in place of the Inbox's. Triage started on a
+  row opens over the list inside the panel, and confirming or backing out returns to
+  the list. **When a person adds something in the creation prompt that belongs in the
+  Inbox, the panel opens (or switches) to this reading with the new item on top**,
+  instead of the Inbox overlay, so it can be triaged right there. On the phone
+  layout, or with the flag off, the overlay opens as before, and the toolbar's own
+  Inbox button still opens the Inbox popover.
 
 ## Out of scope
 

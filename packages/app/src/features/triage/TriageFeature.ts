@@ -33,6 +33,10 @@
 import type { EisenhowerQuadrant } from '@kro/core'
 import { ShareOutcome } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
+import {
+  performBulkOperationThunk,
+  performEndeavorOperationThunk,
+} from '../find/FindProducer'
 import type { TriageException } from './TriageException'
 import { TriageExceptions } from './TriageException'
 import type { TriageExpiryPreset } from './TriageExpiry'
@@ -59,12 +63,14 @@ import {
   withSaveStarted,
   withSaved,
   withSessionOpened,
+  withTriagedEndeavorRemoved,
   withShareOutcome,
   withShareSheetDismissed,
   withValueRatingTapped,
 } from './TriageShifters'
 import type {
   TriageOutcome,
+  TriagePresentation,
   TriageRewardStepDirection,
   TriageSession,
 } from './TriageState'
@@ -114,6 +120,12 @@ export interface TriageState {
   readonly shareOutcome: ShareOutcome | null
   /** The instant the slice last classified against — never a clock read. */
   readonly clockAnchor: Date | null
+  /**
+   * Which host draws the session and performs its outcome — set when a
+   * session starts opening, kept after it ends so its outcome is drained by
+   * the host that raised it.
+   */
+  readonly presentation: TriagePresentation
 }
 
 export const initialTriageState: TriageState = {
@@ -123,6 +135,7 @@ export const initialTriageState: TriageState = {
   outcome: null,
   shareOutcome: null,
   clockAnchor: null,
+  presentation: 'carousel',
 }
 
 export const triageSlice = createSlice({
@@ -275,9 +288,29 @@ export const triageSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // --- the endeavor deleted elsewhere --------------------------------
+      .addCase(performEndeavorOperationThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok || result.value.kind !== 'removed') return
+        Object.assign(
+          state,
+          withTriagedEndeavorRemoved(state, [result.value.endeavorId]),
+        )
+      })
+      .addCase(performBulkOperationThunk.fulfilled, (state, action) => {
+        const result = action.payload
+        if (!result.ok || result.value.operation !== 'delete') return
+        Object.assign(
+          state,
+          withTriagedEndeavorRemoved(state, result.value.endeavorIds),
+        )
+      })
       // --- opening the session -------------------------------------------
-      .addCase(openTriageThunk.pending, (state) => {
-        Object.assign(state, withFetchStarted(state))
+      .addCase(openTriageThunk.pending, (state, action) => {
+        Object.assign(
+          state,
+          withFetchStarted(state, action.meta.arg.presentation ?? 'carousel'),
+        )
       })
       // --- the share hand-off --------------------------------------------
       .addCase(shareTriageBlurbThunk.fulfilled, (state, action) => {

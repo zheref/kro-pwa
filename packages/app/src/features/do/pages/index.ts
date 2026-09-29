@@ -53,6 +53,7 @@ export {
   doNotificationsAccessibilityValue,
   doNotificationsSummary,
   doRemindersBadgeText,
+  doCountLabel,
   doSectionBadgeText,
   doShortDateString,
   doVisibilityToggled,

@@ -145,6 +145,7 @@ describe('the var() helpers', () => {
     expect(semanticVar('kindHabit')).toBe('var(--kro-role-kind-habit)')
     expect(spacingVar('medium')).toBe('var(--kro-space-medium)')
     expect(radiusVar('surface')).toBe('var(--kro-radius-surface)')
+    expect(radiusVar('panel')).toBe('var(--kro-radius-panel)')
     expect(shadowVar('card')).toBe('var(--kro-shadow-card)')
   })
 

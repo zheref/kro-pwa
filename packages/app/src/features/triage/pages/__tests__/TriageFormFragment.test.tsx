@@ -398,3 +398,28 @@ describe('the intents the form raises', () => {
     expect(onSelectDueDate.mock.calls[0]?.[0]).toBeInstanceOf(Date)
   })
 })
+
+describe('the layout contract every host relies on', () => {
+  it('fills its host and scrolls its own body, with the action row a footer beneath it', () => {
+    mount(triageStateMocks.pristine)
+    const form = screen.getByTestId('triage-form')
+    expect(form.className).toContain('h-full')
+    expect(form.className).toContain('min-h-0')
+    const body = form.children[1] as HTMLElement
+    for (const token of ['flex-1', 'min-h-0', 'overflow-y-auto']) {
+      expect(body.className).toContain(token)
+    }
+    // A footer in the flow — never a layer over the last section.
+    const row = screen.getByTestId('triage-action-row')
+    expect(row.className).not.toContain('absolute')
+    expect(row.className).toContain('shrink-0')
+    expect(form.lastElementChild).toBe(row)
+  })
+
+  it('wraps the duration chips onto more lines rather than scrolling sideways', () => {
+    mount(triageStateMocks.pristine)
+    const chips = screen.getByTestId('triage-duration-chips').className
+    expect(chips).toContain('flex-wrap')
+    expect(chips).not.toContain('overflow-x-auto')
+  })
+})

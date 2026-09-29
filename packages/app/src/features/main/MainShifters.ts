@@ -36,6 +36,8 @@ export interface ShellConfiguration {
   readonly listsFailure?: MainException | null
   /** Canon's `isMacDetailPaneEnabled` — the `macDetailPane` flag's answer. */
   readonly isDetailPaneEnabled?: boolean
+  /** Web-only: the `detailPaneInbox` flag's answer. */
+  readonly isDetailPaneInboxEnabled?: boolean
 }
 
 /**
@@ -57,6 +59,7 @@ export const withShellLoaded = (
   gates: configuration.gates,
   projects: configuration.projects,
   isDetailPaneEnabled: configuration.isDetailPaneEnabled ?? false,
+  isDetailPaneInboxEnabled: configuration.isDetailPaneInboxEnabled ?? false,
 })
 
 export const withException = (
@@ -276,6 +279,25 @@ export const isDetailPaneHost = (state: MainState): boolean =>
   state.isDetailPaneEnabled && shellShapeFor(state.surface) === 'sidebar'
 
 /**
+ * Web-only: whether the Inbox is hosted by the pane — a pane host with the
+ * `detailPaneInbox` segment on. The reducer-tier twin of
+ * `selectIsInboxHostedByPane`.
+ */
+export const isInboxHostedByPane = (state: MainState): boolean =>
+  isDetailPaneHost(state) && state.isDetailPaneInboxEnabled
+
+/**
+ * Web-only: a capture routed to the Inbox, delivered on a shell whose pane
+ * hosts the Inbox — the pane opens (or switches) to the Inbox segment, where
+ * the just-created row waits to be triaged. Elsewhere a no-op: the Inbox
+ * overlay presents the capture, as canon's does.
+ */
+export const withDetailPaneInboxRevealed = (state: MainState): MainState =>
+  isInboxHostedByPane(state)
+    ? withDetailPaneEndeavorSelected(state, null, 'inbox')
+    : state
+
+/**
  * Endeavor Detail opened on `endeavor` — canon's `paneEndeavorDetail` mount:
  * on a pane host the pane's Plan points at it. Elsewhere Detail is a dialog or
  * a sheet, and the pane is left exactly as it was.
@@ -289,14 +311,41 @@ export const withDetailPaneFollowingDetail = (
     : state
 
 /**
- * Endeavor Detail closed from inside (its own dismiss, a delete). Where the
- * pane was showing it on Plan, the pane hides with it — canon's *"exactly one
- * content is mounted at a time"*: an empty Plan has nothing to show.
+ * The selection the pane was reading is gone — deselected, closed, deleted.
+ * `endeavorId` names the endeavor that went (`null`: whichever it was); a
+ * release for a different endeavor changes nothing.
+ *
+ * Invariant: the pane never shows endeavor-specific content without a
+ * selection. The segment stays, so it falls back to its endeavor-free reading
+ * — Session → New Session, Performance → Day Progress, Plan → Timeline,
+ * Inbox → the Inbox — and the header follows. The drill-in trail is dropped
+ * with it: every step of it read the endeavor that is gone.
+ *
+ * **Web divergence.** Canon keeps `detailPaneEndeavor` until another endeavor
+ * or the rings replace it, and hides the pane when Detail closes from inside;
+ * the web falls back instead (maintainer's call, 2026-09-28).
+ */
+export const withDetailPaneSelectionReleased = (
+  state: MainState,
+  endeavorId: string | null = null,
+): MainState => {
+  const current = state.detailPane.endeavor
+  if (current === null) return state
+  if (endeavorId !== null && current.id !== endeavorId) return state
+  return {
+    ...state,
+    detailPane: { ...state.detailPane, endeavor: null },
+    detailPaneBackStack: [],
+  }
+}
+
+/**
+ * Endeavor Detail closed from inside. On a pane host the selection it showed
+ * is released, so a pane on Plan falls back to the Timeline rather than
+ * hiding (see `withDetailPaneSelectionReleased`).
  */
 export const withDetailPaneReleasedByDetail = (state: MainState): MainState =>
-  isDetailPaneHost(state) && state.detailPane.segment === 'plan'
-    ? withDetailPaneDismissed(state)
-    : state
+  isDetailPaneHost(state) ? withDetailPaneSelectionReleased(state) : state
 
 /**
  * A countdown ended and the pane should raise Session for it — canon's

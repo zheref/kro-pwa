@@ -748,6 +748,8 @@ export function PlanPage({
             width: presentation.size?.width,
             maxHeight: presentation.size?.height,
             overflowY: 'auto',
+            // A toolbar menu: the panel corner, inline over the glass.
+            borderRadius: 'var(--kro-radius-panel)',
           }}
         >
           {panel}

@@ -24,7 +24,7 @@ export interface DetailPaneHostingSnapshot {
   /** Whether Endeavor Detail is presenting something. */
   readonly isDetailOpen: boolean
   /** The pane's segment, or `null` when it is hidden. */
-  readonly paneSegment: 'sessionSetup' | 'performance' | 'plan' | null
+  readonly paneSegment: 'sessionSetup' | 'performance' | 'plan' | 'inbox' | null
   /** The endeavor the pane is pointed at, if any. */
   readonly paneEndeavorId: string | null
 }
@@ -36,4 +36,16 @@ export function detailPaneReopenRequest(
   const { isHost, isDetailOpen, paneSegment, paneEndeavorId } = snapshot
   if (!isHost || isDetailOpen || paneSegment !== 'plan') return null
   return paneEndeavorId
+}
+
+/**
+ * Whether the pane draws Endeavor Detail at all: only on Plan **and** only
+ * while the pane has a selection. Once the selection is released (deselected,
+ * deleted, closed), Plan falls back to its endeavor-free reading — the
+ * Timeline — so a Detail still loaded in its slice must not be drawn over it.
+ */
+export function detailPaneShowsDetail(
+  snapshot: Pick<DetailPaneHostingSnapshot, 'paneSegment' | 'paneEndeavorId'>,
+): boolean {
+  return snapshot.paneSegment === 'plan' && snapshot.paneEndeavorId !== null
 }

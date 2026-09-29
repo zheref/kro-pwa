@@ -330,3 +330,117 @@ describe('the row reserves the surface’s pointer gutter', () => {
     ).toBeNull()
   })
 })
+
+describe('EndeavorRow footer', () => {
+  const mount = (footer?: React.ReactNode) =>
+    render(
+      <EndeavorRow
+        symbol="📊"
+        title="Review quarterly plan"
+        badges={[{ kind: 'reward', amount: 30 }]}
+        config="compactDesktopInbox"
+        footer={footer}
+        now={NOW}
+      />,
+    )
+
+  it('draws the footer inside the card, beneath the title and badges', () => {
+    const { container } = mount(<button type="button">Triage</button>)
+    const card = container.querySelector('[data-slot="endeavor-row"]')
+    const footer = container.querySelector('[data-slot="endeavor-row-footer"]')
+    expect(footer).not.toBeNull()
+    expect(card?.contains(footer)).toBe(true)
+    const column = footer?.parentElement
+    expect(column?.lastElementChild).toBe(footer)
+    expect(column?.textContent).toContain('Review quarterly plan')
+  })
+
+  it('draws no footer slot when none is given', () => {
+    const { container } = mount()
+    expect(
+      container.querySelector('[data-slot="endeavor-row-footer"]'),
+    ).toBeNull()
+  })
+
+  it('keeps the title’s full column when the footer carries the controls', () => {
+    const { container } = mount(<span>actions</span>)
+    const card = container.querySelector('[data-slot="endeavor-row"]')
+    // Symbol + title column only: nothing competes at the trailing edge.
+    expect(card?.children).toHaveLength(2)
+    expect(screen.getByText('actions')).toBeTruthy()
+  })
+})
+
+describe('EndeavorRow pick and selection mode', () => {
+  const noop = () => {}
+
+  it('covers the row with one pick button carrying its id and name', () => {
+    const picks: boolean[] = []
+    render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        now={NOW}
+        config="compactDesktopInbox"
+        pickId="slides"
+        pickLabel="Slides, Task"
+        onPick={(event) => picks.push(event.altKey)}
+      />,
+    )
+    const pick = screen.getByRole('button', { name: 'Slides, Task' })
+    expect(pick.getAttribute('data-kro-row-pick')).toBe('slides')
+    pick.click()
+    expect(picks).toEqual([false])
+  })
+
+  it('draws a sibling checkbox, never nested in the pick button', () => {
+    let toggled = 0
+    render(
+      <EndeavorRow
+        symbol="📊"
+        title="Slides"
+        now={NOW}
+        onPick={noop}
+        selection={{
+          checked: true,
+          label: 'Select Slides',
+          onToggle: () => {
+            toggled += 1
+          },
+        }}
+      />,
+    )
+    const box = screen.getByRole('checkbox', { name: 'Select Slides' })
+    expect(box.getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Slides' }).contains(box)).toBe(
+      false,
+    )
+    box.click()
+    expect(toggled).toBe(1)
+  })
+
+  it('disables a row that cannot be selected, and draws no controls without the props', () => {
+    const { unmount } = render(
+      <EndeavorRow
+        symbol="🤝"
+        title="Sync"
+        now={NOW}
+        selection={{
+          checked: false,
+          disabled: true,
+          label: 'Needs a time',
+          onToggle: noop,
+        }}
+      />,
+    )
+    expect(
+      screen
+        .getByRole('checkbox', { name: 'Needs a time' })
+        .hasAttribute('disabled'),
+    ).toBe(true)
+    unmount()
+    render(<EndeavorRow symbol="🤝" title="Sync" now={NOW} />)
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByRole('checkbox')).toBeNull()
+  })
+})

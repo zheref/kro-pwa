@@ -9,6 +9,7 @@ import {
   doAllFiltersVisible,
   doCardModels,
   doComputedStateLabel,
+  doCountLabel,
   doEventsBadgeText,
   doHeaderContent,
   doNotificationsAccessibilityValue,
@@ -53,12 +54,27 @@ describe('badge copy', () => {
     expect(doSectionBadgeText(overdue, 3)).toBe('3 tasks')
   })
 
-  it('counts Anytime and Completed Today in items, as canon does', () => {
+  it('counts Anytime in items, inflected — "1 item", never "1 items"', () => {
     const anytime = DO_TASK_SECTIONS.find(
       (section) => section.tag === DoLane.anytime,
     )
     if (anytime === undefined) throw new Error('missing Anytime section')
-    expect(doSectionBadgeText(anytime, 1)).toBe('1 items')
+    expect(doSectionBadgeText(anytime, 1)).toBe('1 item')
+    expect(doSectionBadgeText(anytime, 2)).toBe('2 items')
+    expect(doSectionBadgeText(anytime, 0)).toBe('0 items')
+  })
+
+  it('inflects the task lanes and the events badge too', () => {
+    const overdue = DO_TASK_SECTIONS[0]
+    if (overdue === undefined) throw new Error('missing a section')
+    expect(doSectionBadgeText(overdue, 1)).toBe('1 task')
+    expect(doEventsBadgeText(1)).toBe('1 event')
+  })
+
+  it('builds any count label from a singular and a plural', () => {
+    expect(doCountLabel(1, 'card', 'cards')).toBe('1 card')
+    expect(doCountLabel(0, 'card', 'cards')).toBe('0 cards')
+    expect(doCountLabel(12, 'card', 'cards')).toBe('12 cards')
   })
 
   it('inflects the Reminders lane, which is the only lane canon inflects', () => {

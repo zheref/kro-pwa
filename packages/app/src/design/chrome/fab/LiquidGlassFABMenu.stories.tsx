@@ -134,6 +134,27 @@ const SingleAction = {
   ),
 }
 
+const WithKeyHints = {
+  name: 'Keyboard — Return toggles, each action shows its key',
+  render: () => (
+    <BothSchemes height={420}>
+      {() => (
+        <Anchored>
+          <LiquidGlassFABMenu
+            items={CAPTURE_ITEMS.map((item, index) => ({
+              ...item,
+              shortcut: ['e', 't', 'r', 'h'][index],
+            }))}
+            mainGlyph="plus"
+            mainAccessibilityLabel="Quick input"
+            isExpanded
+          />
+        </Anchored>
+      )}
+    </BothSchemes>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
@@ -143,6 +164,7 @@ export const Gallery = {
       {Interactive.render()}
       {ExpandedWithGlow.render()}
       {SingleAction.render()}
+      {WithKeyHints.render()}
     </StoryGallery>
   ),
 }

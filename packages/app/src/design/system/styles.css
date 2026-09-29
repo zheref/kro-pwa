@@ -87,7 +87,7 @@
 /* ==========================================================================
    Button corners follow the idiom.
 
-   Desktop matches the sidebar and a popover (`--kro-radius-small`). A mobile
+   Desktop matches a menu row (`--kro-radius-small`). A mobile
    idiom keeps the pill. Unlayered on purpose: it has to beat the size
    utility (`rounded-kro-small`), which Tailwind emits inside `@layer utilities`.
 

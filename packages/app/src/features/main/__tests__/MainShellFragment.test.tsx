@@ -6,7 +6,14 @@
  * bar and no sidebar; at a wide one the sidebar, with Profile and Inbox in the
  * content toolbar. That is canon's ownership rule as a rendered fact.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SHELL_BOTTOM_INSET_VAR } from '../../../design/chrome/layout/chromeLayout'
@@ -26,7 +33,11 @@ import {
 } from '../MainMocks'
 import type { MainState } from '../MainFeature'
 import { type DetailPaneChrome, MainShellFragment } from '../MainShellFragment'
-import { detailPaneTitle } from '../DetailPane'
+import {
+  detailPaneSegmentReadsEndeavor,
+  detailPaneSegmentsOffered,
+  detailPaneTitle,
+} from '../DetailPane'
 import {
   searchDestination,
   sidebarSections,
@@ -450,16 +461,65 @@ const paneFrom = (
   const { segment, endeavor } = state.detailPane
   return {
     segment,
+    segments: detailPaneSegmentsOffered(state.isDetailPaneInboxEnabled),
     title:
       segment === null
         ? null
         : detailPaneTitle(segment, endeavor?.title ?? null),
-    subtitle: segment === null ? null : (endeavor?.title ?? null),
+    subtitle:
+      segment === null || !detailPaneSegmentReadsEndeavor(segment)
+        ? null
+        : (endeavor?.title ?? null),
     onSelectSegment: noop,
     onDismiss: noop,
     ...callbacks,
   }
 }
+
+describe('the web-only Inbox segment — mirrors DetailPaneInbox', () => {
+  it('adds Inbox last to the group, pressed, titled Inbox with no subtitle', () => {
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneInbox),
+    })
+    const buttons = Array.from(
+      screen.getByTestId('detail-pane-segments').querySelectorAll('button'),
+    )
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Session',
+      'Performance',
+      'Plan',
+      'Inbox',
+    ])
+    expect(buttons.at(-1)?.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.queryByText('Write the quarterly review')).toBeNull()
+  })
+
+  it('raises the Inbox segment when it is clicked', () => {
+    const onSelectSegment = vi.fn()
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneInboxReady, {
+        onSelectSegment,
+      }),
+    })
+    fireEvent.click(
+      within(screen.getByTestId('detail-pane-segments')).getByRole('button', {
+        name: 'Inbox',
+      }),
+    )
+    expect(onSelectSegment).toHaveBeenCalledWith('inbox')
+  })
+
+  it('keeps canon’s three when the flag is off', () => {
+    renderShell(desktopSurface, {
+      detailPane: paneFrom(MainMocks.desktopDetailPaneReady),
+    })
+    expect(
+      within(screen.getByTestId('detail-pane-segments')).queryByRole('button', {
+        name: 'Inbox',
+      }),
+    ).toBeNull()
+  })
+})
 
 describe('the trailing detail pane — mirrors the DetailPane* stories', () => {
   it('shows the Session, Performance and Plan group with nothing pressed while hidden', () => {

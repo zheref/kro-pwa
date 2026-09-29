@@ -40,6 +40,13 @@ export interface EmojiPickerPopoverProps {
   readonly open?: boolean
   readonly onOpenChange?: (open: boolean) => void
   readonly align?: 'start' | 'center' | 'end'
+  /** Which edge of the trigger the panel opens from. Radix's default: bottom. */
+  readonly side?: 'top' | 'right' | 'bottom' | 'left'
+  /**
+   * Radix's close-autofocus hook. Call `event.preventDefault()` to send focus
+   * somewhere other than the trigger once the panel closes.
+   */
+  readonly onCloseAutoFocus?: (event: Event) => void
 }
 
 /** Wide enough for seven 44px cells, and canon's height. */
@@ -53,6 +60,8 @@ export function EmojiPickerPopover({
   open,
   onOpenChange,
   align = 'start',
+  side,
+  onCloseAutoFocus,
 }: EmojiPickerPopoverProps) {
   // Always a DEFINED `open` handed to Radix — see `useDisclosure`, and the bug
   // it names: `open={undefined}` puts Radix in its own uncontrolled mode, where
@@ -65,11 +74,16 @@ export function EmojiPickerPopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align={align}
+        side={side}
+        onCloseAutoFocus={onCloseAutoFocus}
         aria-label="Choose an emoji"
         // `p-0` because the grid brings its own padding and the pinned headers
         // have to reach the panel's edges to read as pinned rather than inset.
         className="p-0 overflow-hidden"
         style={{
+          // Inline, because twMerge does not treat `p-0` and the primitive's
+          // `p-kro-medium` as one group — the class alone left the padding on.
+          padding: 0,
           width: EMOJI_POPOVER_SIZE.width,
           height: EMOJI_POPOVER_SIZE.height,
         }}

@@ -212,3 +212,71 @@ describe('outside the pane host', () => {
     expect(sessionPaneHostingAction(hidden, hidden)).toBeNull()
   })
 })
+
+describe('the selection released while Session shows', () => {
+  it('re-prepares for a new, arbitrary task — never keeps the old endeavor', () => {
+    const before = onSession({ paneEndeavorId: 'e-slides', identity: slides })
+    const after = onSession({ paneEndeavorId: null, identity: slides })
+    expect(sessionPaneHostingAction(before, after)).toEqual({
+      kind: 'prepare',
+      endeavorId: null,
+    })
+  })
+
+  it('leaves an already-anonymous preparation alone', () => {
+    const before = onSession({
+      paneEndeavorId: 'e-slides',
+      identity: anonymous,
+    })
+    const after = onSession({ paneEndeavorId: null, identity: anonymous })
+    expect(sessionPaneHostingAction(before, after)).toBeNull()
+  })
+
+  it('does not prepare anything when the pane is not on Session', () => {
+    const before = {
+      ...hidden,
+      paneSegment: 'plan' as const,
+      paneEndeavorId: 'e-slides',
+    }
+    const after = { ...before, paneEndeavorId: null }
+    expect(sessionPaneHostingAction(before, after)).toBeNull()
+  })
+})
+
+describe('a session in flight keeps the Session reading when the selection ends', () => {
+  it('does not re-prepare an anonymous task while the session runs', () => {
+    const running = onSession({
+      paneEndeavorId: 'e-slides',
+      identity: slides,
+      isReady: false,
+    })
+    const released = { ...running, paneEndeavorId: null }
+    expect(sessionPaneHostingAction(running, released)).toBeNull()
+  })
+
+  it('does not re-prepare while the conclusion is still pending either', () => {
+    const concluded = onSession({
+      paneEndeavorId: 'e-slides',
+      identity: slides,
+      isReady: false,
+      isPresentingConclusion: true,
+    })
+    expect(
+      sessionPaneHostingAction(concluded, {
+        ...concluded,
+        paneEndeavorId: null,
+      }),
+    ).toBeNull()
+  })
+
+  it('falls back to a new task once the session ends with nothing selected', () => {
+    const ended = onSession({
+      paneEndeavorId: null,
+      identity: slides,
+      isReady: false,
+    })
+    expect(
+      sessionPaneHostingAction(ended, { ...ended, isReady: true }),
+    ).toEqual({ kind: 'prepare', endeavorId: null })
+  })
+})

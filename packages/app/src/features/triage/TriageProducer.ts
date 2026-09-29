@@ -32,7 +32,9 @@ import {
   type LocalStore,
   type ReconciliationContext,
   type Result,
+  canBeTriaged,
   defaultTriageDurationOptionsMinutes,
+  endeavorKindDisplayName,
   deferRecordFromDefer,
   endeavorRecordFromEndeavor,
   epochMillisFromDate,
@@ -57,7 +59,11 @@ import { type TriageException, TriageExceptions } from './TriageException'
 import type { TriageDecision } from './TriageRules'
 import { type TriagePushOutcome, triagePushOutcomeFor } from './TriageSave'
 import { triageBusyIntervalsFor } from './TriageScheduling'
-import { TRIAGE_DEFAULT_SYMBOL, type TriageSessionSeed } from './TriageState'
+import {
+  TRIAGE_DEFAULT_SYMBOL,
+  type TriagePresentation,
+  type TriageSessionSeed,
+} from './TriageState'
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
@@ -137,15 +143,18 @@ export const openTriageThunk = createAsyncThunk<
     nextFreeSlotToday?: Date | null
     endeavorSymbol?: string
     isEditReachable?: boolean
+    /** Which host asked; read by the `.pending` arm. Defaults to `carousel`. */
+    presentation?: TriagePresentation
   },
   { extra: ThunkExtra }
 >('triage/onTriageSessionLoadCompleted', async (params, { extra }) => {
   const { endeavorId, now } = params
   let pool: readonly Endeavor[]
+  const context = makeReconciliationContext({ now })
   try {
     const stored = await readStoredEndeavors(extra.localStore)
     // Reconcile exactly once, before anything reads the pool (#12).
-    pool = reconcile(stored, makeReconciliationContext({ now }))
+    pool = reconcile(stored, context)
   } catch (error) {
     return err(TriageExceptions.sessionLoadFailed(messageOf(error)))
   }
@@ -153,6 +162,14 @@ export const openTriageThunk = createAsyncThunk<
   const endeavor = pool.find((candidate) => candidate.id === endeavorId)
   if (endeavor === undefined) {
     return err(TriageExceptions.endeavorNotFound(endeavorId))
+  }
+
+  // Canon's `awaitsTriage` kind gate, on the resolved kind canon switches on:
+  // habits, calendar events, behaviors, blueprints and background work are
+  // never triaged, and neither is completed work.
+  const kind = resolvedKind(endeavor, context)
+  if (!canBeTriaged(endeavor, kind)) {
+    return err(TriageExceptions.notTriageable(endeavorKindDisplayName(kind)))
   }
 
   return ok({

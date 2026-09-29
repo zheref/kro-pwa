@@ -19,10 +19,21 @@ import type { RootState } from '../../library/store'
 import type { CaptureException } from './CaptureException'
 import type { CaptureState } from './CaptureFeature'
 import {
+  CAPTURE_SUGGESTIONS,
+  type CaptureSuggestion,
+  isCaptureSuggestionInboxable,
+} from './CaptureSuggestions'
+import {
   captureBlockedReason,
+  captureBlocker,
+  captureDestinationsForKind,
+  captureResolvedSymbol,
   canSubmitCapture,
+  isCaptureValueRequired,
   justCreatedEndeavor,
   pendingTriageEndeavors,
+  resolvedCaptureDestination,
+  type CaptureDestination,
 } from './CaptureRules'
 
 const selectCaptureSlice = (state: RootState): CaptureState => state.capture
@@ -77,9 +88,43 @@ export const selectCaptureBlockedReason = createSelector(
   (draft) => (draft === null ? null : captureBlockedReason(draft)),
 )
 
+/**
+ * What blocks submission, as a named requirement — the order Return walks the
+ * required fields in. `null` when Add is enabled or no prompt is open.
+ */
+export const selectCaptureBlocker = createSelector(
+  [selectCaptureDraft],
+  (draft) => (draft === null ? null : captureBlocker(draft)),
+)
+
 export const selectAvailableCaptureDestinations = createSelector(
   [selectCaptureSlice],
   (slice) => slice.availableDestinations,
+)
+
+/**
+ * The hosts the picker offers for the open draft's kind — canon's
+ * `supported(for:)` intersected with what is available. With no prompt open,
+ * every available host.
+ */
+export const selectCaptureDestinationsForKind = createSelector(
+  [selectCaptureDraft, selectAvailableCaptureDestinations],
+  (draft, available) =>
+    draft === null
+      ? available
+      : captureDestinationsForKind(draft.kind, available),
+)
+
+/** The title row's badge symbol, or `null` with no prompt open. */
+export const selectCaptureResolvedSymbol = createSelector(
+  [selectCaptureDraft],
+  (draft) => (draft === null ? null : captureResolvedSymbol(draft)),
+)
+
+/** Whether the open draft must carry a value rating before Add. */
+export const selectIsCaptureValueRequired = createSelector(
+  [selectCaptureDraft],
+  (draft) => (draft === null ? false : isCaptureValueRequired(draft)),
 )
 
 /**
@@ -237,4 +282,81 @@ export const selectIsUndoArmed = createSelector(
 export const selectUndoSnapshot = createSelector(
   [selectCaptureSlice],
   (slice) => (slice.undo.kind === 'armed' ? slice.undo.snapshot : null),
+)
+
+// ---------------------------------------------------------------------------
+// Suggestions (web-only, `captureSuggestions`)
+// ---------------------------------------------------------------------------
+
+const NO_SUGGESTIONS: readonly CaptureSuggestion[] = []
+
+/** The pane's cards — empty with the flag off or no prompt open. */
+export const selectCaptureSuggestions = createSelector(
+  [selectCaptureSlice],
+  (slice) =>
+    slice.isSuggestionsEnabled && slice.prompt !== null
+      ? CAPTURE_SUGGESTIONS
+      : NO_SUGGESTIONS,
+)
+
+const NO_IDS: readonly string[] = []
+
+/** The ids ticked for a multi-add, in tick order. */
+export const selectSelectedSuggestionIds = createSelector(
+  [selectCaptureSlice],
+  (slice) => slice.prompt?.selectedSuggestionIds ?? NO_IDS,
+)
+
+/**
+ * What **Add N to Inbox** would write: the ticked, Inbox-able suggestions,
+ * each paired with the host its kind supports — the draft's host when it
+ * can, else the kind's first choice.
+ */
+export const selectSuggestionsForInbox = createSelector(
+  [selectCaptureSlice, selectSelectedSuggestionIds],
+  (
+    slice,
+    ids,
+  ): readonly {
+    readonly suggestion: CaptureSuggestion
+    readonly destination: CaptureDestination
+  }[] => {
+    const preferred =
+      slice.prompt?.draft.destination ?? slice.lastUsedDestination
+    return ids.flatMap((id) => {
+      const suggestion = CAPTURE_SUGGESTIONS.find((item) => item.id === id)
+      if (
+        suggestion === undefined ||
+        !isCaptureSuggestionInboxable(suggestion)
+      ) {
+        return []
+      }
+      return [
+        {
+          suggestion,
+          destination: resolvedCaptureDestination(
+            suggestion.kind,
+            preferred,
+            slice.availableDestinations,
+          ),
+        },
+      ]
+    })
+  },
+)
+
+/**
+ * The status line's text: the last multi-add's tally while it stands, else
+ * what blocks Add. `null` when there is nothing to say.
+ */
+export const selectCaptureStatusReason = createSelector(
+  [selectCaptureSlice, selectCaptureBlockedReason],
+  (slice, blocked) => {
+    const notice = slice.prompt?.suggestionNotice ?? null
+    if (notice === null) return blocked
+    const added = `Added ${notice.added} to Inbox.`
+    return notice.failed === 0
+      ? added
+      : `${added} ${notice.failed} couldn’t be saved — still selected.`
+  },
 )

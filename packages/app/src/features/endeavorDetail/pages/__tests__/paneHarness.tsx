@@ -42,14 +42,19 @@ import {
 type SeedOptions = Parameters<typeof makeSeededStore>[0]
 
 /**
- * A seeded store on the desktop sidebar with the pane flag on. The shell load
+ * A seeded store on the desktop sidebar with the pane flag (and the web-only
+ * Inbox segment's flag) on. The shell load
  * resolves on the next microtask; a test awaits `waitFor` on what it renders.
  */
 export function makePaneHostStore(options: SeedOptions = {}): AppStore {
   const store = makeSeededStore({
     ...options,
     featureFlags: makeHardcodedFeatureFlagService({
-      overrides: [enabledAssignment(FeatureFlags.macDetailPane)],
+      overrides: [
+        enabledAssignment(FeatureFlags.macDetailPane),
+        // The web-only Inbox segment, so its Page can be hosted here too.
+        enabledAssignment(FeatureFlags.detailPaneInbox),
+      ],
     }),
   })
   store.dispatch(

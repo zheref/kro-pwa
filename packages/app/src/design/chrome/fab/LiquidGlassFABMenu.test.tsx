@@ -308,3 +308,135 @@ describe('the glow decorates the button, never the menu', () => {
     expect(document.querySelector('[data-kro-glow]')).toBeNull()
   })
 })
+
+describe('the page-level keyboard (web addition)', () => {
+  const lettered = () =>
+    captureEntries().map((entry, index) => ({
+      ...entry,
+      shortcut: ['e', 't', 'r', 'h'][index],
+    }))
+
+  const isOpen = () =>
+    document
+      .querySelector('[data-kro-fab-menu]')
+      ?.getAttribute('data-kro-fab-menu') === 'expanded'
+
+  it('toggles open and shut on a plain Return with nothing focused', async () => {
+    renderMenu()
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(true)
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('names Enter on the disc and each entry’s key, with a trailing hint', async () => {
+    renderMenu(lettered())
+    expect(
+      screen
+        .getByRole('button', { name: 'Quick input' })
+        .getAttribute('aria-keyshortcuts'),
+    ).toBe('Enter')
+    const task = rowNamed('Task')
+    expect(task.getAttribute('aria-keyshortcuts')).toBe('T')
+    expect(
+      task.querySelector('[data-slot="button-shortcut"]')?.textContent,
+    ).toBe('T')
+  })
+
+  it('fires an entry by its key while open, and collapses on Escape', async () => {
+    const task = vi.fn()
+    const items = captureEntries({ task }).map((entry, index) => ({
+      ...entry,
+      shortcut: ['e', 't', 'r', 'h'][index],
+    }))
+    renderMenu(items)
+    await userEvent.keyboard('t')
+    expect(task).not.toHaveBeenCalled() // closed: letters do nothing
+
+    await userEvent.keyboard('{Enter}t')
+    expect(task).toHaveBeenCalledTimes(1)
+    expect(isOpen()).toBe(false)
+
+    await userEvent.keyboard('{Enter}{Escape}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('leaves Return to a focused text field, button or link', async () => {
+    render(
+      <>
+        <input aria-label="Field" />
+        <button type="button">Other</button>
+        <LiquidGlassFABMenu
+          items={captureEntries()}
+          mainGlyph="plus"
+          mainAccessibilityLabel="Quick input"
+        />
+      </>,
+    )
+    screen.getByRole('textbox', { name: 'Field' }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+    screen.getByRole('button', { name: 'Other' }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('leaves Return to an open dialog, an IME, and modified keys', async () => {
+    const { rerender } = render(
+      <>
+        <div role="dialog" aria-label="Prompt" />
+        <LiquidGlassFABMenu
+          items={captureEntries()}
+          mainGlyph="plus"
+          mainAccessibilityLabel="Quick input"
+        />
+      </>,
+    )
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+
+    rerender(
+      <LiquidGlassFABMenu
+        items={captureEntries()}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+      />,
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', isComposing: true }),
+    )
+    await userEvent.keyboard('{Shift>}{Enter}{/Shift}{Meta>}{Enter}{/Meta}')
+    expect(isOpen()).toBe(false)
+  })
+
+  it('hides the hints on touch layouts but keeps the keys', async () => {
+    const task = vi.fn()
+    render(
+      <LiquidGlassFABMenu
+        items={captureEntries({ task }).map((entry, index) => ({
+          ...entry,
+          shortcut: ['e', 't', 'r', 'h'][index],
+        }))}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+        showShortcutHints={false}
+      />,
+    )
+    expect(document.querySelector('[data-slot="button-shortcut"]')).toBeNull()
+    await userEvent.keyboard('{Enter}t')
+    expect(task).toHaveBeenCalledTimes(1)
+  })
+
+  it('can be switched off', async () => {
+    render(
+      <LiquidGlassFABMenu
+        items={captureEntries()}
+        mainGlyph="plus"
+        mainAccessibilityLabel="Quick input"
+        returnKeyToggles={false}
+      />,
+    )
+    await userEvent.keyboard('{Enter}')
+    expect(isOpen()).toBe(false)
+  })
+})

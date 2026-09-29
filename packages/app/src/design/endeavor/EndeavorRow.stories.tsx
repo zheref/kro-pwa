@@ -235,6 +235,57 @@ const BothThemes = {
   ),
 }
 
+/** The footer slot — the pane Inbox's actions, inside the card under the title. */
+const WithFooter = {
+  render: () => (
+    <div style={{ width: 285, padding: 16 }}>
+      <EndeavorRow
+        symbol="📊"
+        title="Review quarterly plan"
+        badges={[{ kind: 'reward', amount: 30 }]}
+        config="compactDesktopInbox"
+        now={new Date(2026, 8, 28, 9, 0)}
+        footer={
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button">Triage</button>
+            <button type="button">Add for Today</button>
+          </div>
+        }
+      />
+    </div>
+  ),
+}
+
+/** Pick + selection mode — a list the user chooses from, one row ticked. */
+const PickAndSelect = {
+  render: () => (
+    <div style={{ width: 360, padding: 16, display: 'grid', gap: 8 }}>
+      <EndeavorRow
+        symbol="📊"
+        title="Prepare presentation slides"
+        badges={[{ kind: 'reward', amount: 30 }]}
+        config="compactDesktopInbox"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{ checked: true, label: 'Select', onToggle: () => {} }}
+      />
+      <EndeavorRow
+        symbol="🤝"
+        title="Team sync meeting"
+        config="compactDesktopInbox"
+        now={new Date(2026, 8, 28, 9, 0)}
+        onPick={() => {}}
+        selection={{
+          checked: false,
+          disabled: true,
+          label: 'Needs a time',
+          onToggle: () => {},
+        }}
+      />
+    </div>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
@@ -242,6 +293,8 @@ export const Gallery = {
       {Presets.render()}
       {FindPills.render()}
       {InboxWithTrailingActions.render()}
+      {WithFooter.render()}
+      {PickAndSelect.render()}
       {InputDuality.render()}
       {BothThemes.render()}
     </StoryGallery>

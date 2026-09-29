@@ -167,6 +167,12 @@ describe('every edit goes through the slice, never through local state', () => {
       screen.getByTestId('capture-title'),
       'Water the plants',
     )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
+    )
     await userEvent.click(screen.getByTestId('capture-add'))
 
     await waitFor(() => {
@@ -184,6 +190,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await screen.findByTestId('capture-title')
 
     await userEvent.type(screen.getByTestId('capture-title'), 'Sort the garage')
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Clear date' }))
     expect(screen.getByRole('button', { name: 'Date: No date' })).toBeTruthy()
 
@@ -205,6 +217,12 @@ describe('every edit goes through the slice, never through local state', () => {
     await userEvent.type(
       screen.getByTestId('capture-title'),
       'Book the flights',
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Value, required, not set' }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Meaningful, level 3' }),
     )
 
     // Two presses inside one frame — the shape a double-click takes, and the

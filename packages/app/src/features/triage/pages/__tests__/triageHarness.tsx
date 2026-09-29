@@ -239,9 +239,10 @@ export async function seedTriageRequest(
   store: TriageStore,
   endeavorId: string,
   now: Date = TRIAGE_MOCK_NOW,
+  host: 'overlay' | 'pane' = 'overlay',
 ): Promise<void> {
   await store.dispatch(loadCaptureContextThunk({ now }))
-  store.dispatch(userDidTapTriage({ endeavorId, now }))
+  store.dispatch(userDidTapTriage({ endeavorId, now, host }))
 }
 
 /** The provider wrapper every Page story and Page test renders inside. */

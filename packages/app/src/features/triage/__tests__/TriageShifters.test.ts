@@ -19,6 +19,7 @@ import {
   withExpiryPicked,
   withExpiryPresetTapped,
   withFetchStarted,
+  withTriagedEndeavorRemoved,
   withOutcomeCleared,
   withOutcomeRaised,
   withQuadrantPicked,
@@ -50,6 +51,43 @@ describe('withFetchStarted', () => {
 
   it('leaves an open session alone while a re-read is in flight', () => {
     expect(withFetchStarted(opened).session).toBe(opened.session)
+  })
+})
+
+describe('withFetchStarted — which host asked', () => {
+  it('records the Inbox carousel when no host is named — canon’s only one', () => {
+    expect(withFetchStarted(initialTriageState).presentation).toBe('carousel')
+  })
+
+  it('records the detail pane when the pane opens its own session', () => {
+    expect(withFetchStarted(initialTriageState, 'pane').presentation).toBe(
+      'pane',
+    )
+  })
+
+  it('hands the session back to the carousel when the Inbox opens next', () => {
+    const inPane = withFetchStarted(initialTriageState, 'pane')
+    expect(withFetchStarted(inPane, 'carousel').presentation).toBe('carousel')
+  })
+})
+
+describe('withTriagedEndeavorRemoved', () => {
+  it('closes the open session when its endeavor is deleted elsewhere', () => {
+    const next = withTriagedEndeavorRemoved(opened, [
+      opened.session?.endeavorId ?? '',
+    ])
+    expect(next.session).toBeNull()
+    expect(next.outcome).toEqual({ kind: 'dismissed' })
+  })
+
+  it('leaves a session open when another endeavor is deleted', () => {
+    expect(withTriagedEndeavorRemoved(opened, ['someone-else'])).toBe(opened)
+  })
+
+  it('is a no-op with no session open', () => {
+    expect(withTriagedEndeavorRemoved(initialTriageState, ['x'])).toBe(
+      initialTriageState,
+    )
   })
 })
 

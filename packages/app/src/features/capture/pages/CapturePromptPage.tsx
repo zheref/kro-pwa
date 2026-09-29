@@ -29,23 +29,37 @@ import {
   userDidEditTitle,
   userDidEndTimeEdit,
   userDidPickDate,
+  userDidPickDuration,
+  userDidPickEmoji,
   userDidPickRecurrence,
   userDidPickRewards,
   userDidPickTime,
+  userDidPickSuggestion,
+  userDidPickValue,
+  userDidToggleSuggestion,
   userDidSelectDestination,
   userDidSelectKind,
 } from '../CaptureFeature'
-import { submitCaptureThunk } from '../CaptureProducer'
+import {
+  addSuggestionsToInboxThunk,
+  submitCaptureThunk,
+} from '../CaptureProducer'
 import type {
   CaptureDestination,
   CaptureKind,
   CaptureRecurrence,
 } from '../CaptureRules'
 import {
-  selectAvailableCaptureDestinations,
   selectCanSubmitCapture,
-  selectCaptureBlockedReason,
+  selectCaptureBlocker,
+  selectCaptureStatusReason,
+  selectCaptureSuggestions,
+  selectSelectedSuggestionIds,
+  selectSuggestionsForInbox,
+  selectCaptureDestinationsForKind,
   selectCaptureDraft,
+  selectCaptureResolvedSymbol,
+  selectIsCaptureValueRequired,
 } from '../CaptureSelectors'
 import { CapturePromptFragment } from './CapturePromptFragment'
 import { capturePromptPresentation } from './capturePresentation'
@@ -55,10 +69,15 @@ export function CapturePromptPage() {
 
   const draft = useAppSelector(selectCaptureDraft)
   const canSubmit = useAppSelector(selectCanSubmitCapture)
-  const blockedReason = useAppSelector(selectCaptureBlockedReason)
-  const availableDestinations = useAppSelector(
-    selectAvailableCaptureDestinations,
-  )
+  // The status line: a multi-add's tally while it stands, else the blocker.
+  const blockedReason = useAppSelector(selectCaptureStatusReason)
+  const suggestions = useAppSelector(selectCaptureSuggestions)
+  const selectedSuggestionIds = useAppSelector(selectSelectedSuggestionIds)
+  const suggestionsForInbox = useAppSelector(selectSuggestionsForInbox)
+  const blocker = useAppSelector(selectCaptureBlocker)
+  const availableDestinations = useAppSelector(selectCaptureDestinationsForKind)
+  const resolvedSymbol = useAppSelector(selectCaptureResolvedSymbol)
+  const isValueRequired = useAppSelector(selectIsCaptureValueRequired)
   const layout = useAppSelector(selectLayout)
 
   // O(1) field reads (`RC-5`): the snapshot objects themselves, never a boolean
@@ -115,7 +134,26 @@ export function CapturePromptPage() {
     })
   }, [dispatch, draft])
 
-  if (draft === null) return null
+  /** One multi-add at a time, for the same reason as `isSubmitting`. */
+  const isAddingSuggestions = useRef(false)
+  const onAddSuggestions = useCallback(() => {
+    if (isAddingSuggestions.current || suggestionsForInbox.length === 0) return
+    isAddingSuggestions.current = true
+    void dispatch(
+      addSuggestionsToInboxThunk({
+        items: suggestionsForInbox.map((item) => ({
+          ...item,
+          // Identity is the composition root's to supply (`CaptureProducer`).
+          id: crypto.randomUUID(),
+        })),
+        now: new Date(),
+      }),
+    ).finally(() => {
+      isAddingSuggestions.current = false
+    })
+  }, [dispatch, suggestionsForInbox])
+
+  if (draft === null || resolvedSymbol === null) return null
 
   return (
     <CapturePromptFragment
@@ -124,8 +162,11 @@ export function CapturePromptPage() {
       isEditingStartTime={startEdit != null}
       isEditingEndTime={endEdit != null}
       availableDestinations={availableDestinations}
+      resolvedSymbol={resolvedSymbol}
+      isValueRequired={isValueRequired}
       canSubmit={canSubmit}
       blockedReason={blockedReason}
+      blocker={blocker}
       presentation={capturePromptPresentation(layout)}
       now={now}
       onEditTitle={(title: string) => dispatch(userDidEditTitle({ title }))}
@@ -147,6 +188,23 @@ export function CapturePromptPage() {
       onPickRewards={(points: number) =>
         dispatch(userDidPickRewards({ points }))
       }
+      onPickValue={(value: number | null) =>
+        dispatch(userDidPickValue({ value }))
+      }
+      onPickDuration={(seconds: number | null) =>
+        dispatch(userDidPickDuration({ seconds }))
+      }
+      onPickEmoji={(emoji: string) => dispatch(userDidPickEmoji({ emoji }))}
+      suggestions={suggestions}
+      selectedSuggestionIds={selectedSuggestionIds}
+      suggestionInboxCount={suggestionsForInbox.length}
+      onPickSuggestion={(suggestionId: string) =>
+        dispatch(userDidPickSuggestion({ suggestionId, now: new Date() }))
+      }
+      onToggleSuggestion={(suggestionId: string) =>
+        dispatch(userDidToggleSuggestion({ suggestionId }))
+      }
+      onAddSuggestions={onAddSuggestions}
       onPickRecurrence={(recurrence: CaptureRecurrence) =>
         dispatch(userDidPickRecurrence({ recurrence }))
       }

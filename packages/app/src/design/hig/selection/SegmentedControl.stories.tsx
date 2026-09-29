@@ -97,6 +97,35 @@ const ThreeAndDisabled = {
   ),
 }
 
+const WithShortcutHints = {
+  name: 'Chord hints · revealed while Option is held',
+  render: () => (
+    <HigStage>
+      <HigRow label="Hints">
+        <SegmentedControl
+          label="Range"
+          options={[
+            {
+              value: 'day',
+              label: 'Day',
+              shortcutHint: '⌥1',
+              keyShortcuts: 'Alt+1',
+            },
+            {
+              value: 'week',
+              label: 'Week',
+              shortcutHint: '⌥2',
+              keyShortcuts: 'Alt+2',
+            },
+          ]}
+          value="day"
+          onChange={() => {}}
+        />
+      </HigRow>
+    </HigStage>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
@@ -104,6 +133,7 @@ export const Gallery = {
       {Densities.render()}
       {Tinted.render()}
       {ThreeAndDisabled.render()}
+      {WithShortcutHints.render()}
     </StoryGallery>
   ),
 }

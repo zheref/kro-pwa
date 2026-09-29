@@ -6,6 +6,7 @@ import {
   DENSITY_TYPE,
   SELECTED_CONTROL_STYLE,
 } from '../../system/density'
+import { ShortcutHint } from '../../system/primitives/button'
 import { colorVar } from '../../system/tokens/roles'
 import { cn } from '../../system/utils/cn'
 
@@ -36,6 +37,10 @@ export interface SegmentedOption<T extends string> {
   readonly value: T
   readonly label: string
   readonly icon?: ReactNode
+  /** A chord keycap (`⌥1`) floated over the segment; takes no space. */
+  readonly shortcutHint?: string
+  /** `aria-keyshortcuts` for the segment (`Alt+1`). */
+  readonly keyShortcuts?: string
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -49,6 +54,8 @@ export interface SegmentedControlProps<T extends string> {
   readonly selectionTint?: string | null
   readonly disabled?: boolean
   readonly className?: string
+  /** Whether segments' `shortcutHint`s are visible (e.g. while Option is held). */
+  readonly revealShortcutHints?: boolean
 }
 
 const SEGMENT_PADDING: Record<ControlDensity, string> = {
@@ -72,6 +79,7 @@ export function SegmentedControl<T extends string>({
   selectionTint = null,
   disabled = false,
   className,
+  revealShortcutHints = true,
 }: SegmentedControlProps<T>) {
   return (
     <div
@@ -100,13 +108,14 @@ export function SegmentedControl<T extends string>({
             key={option.value}
             type="button"
             aria-pressed={isSelected}
+            aria-keyshortcuts={option.keyShortcuts}
             disabled={disabled}
             data-kro-segment={isSelected ? 'selected' : 'available'}
             onClick={() => {
               if (!isSelected) onChange(option.value)
             }}
             className={cn(
-              'inline-flex items-center justify-center gap-1 font-medium outline-none focus-visible:shadow-[var(--kro-ring)]',
+              'relative inline-flex items-center justify-center gap-1 font-medium outline-none focus-visible:shadow-[var(--kro-ring)]',
               DENSITY_TYPE[density],
               isTinted && 'kro-glass kro-glass--tinted',
             )}
@@ -124,6 +133,11 @@ export function SegmentedControl<T extends string>({
                 : {}),
             }}
           >
+            {option.shortcutHint === undefined ? null : (
+              <ShortcutHint placement="keycap" reveal={revealShortcutHints}>
+                {option.shortcutHint}
+              </ShortcutHint>
+            )}
             {option.icon}
             {option.label}
           </button>

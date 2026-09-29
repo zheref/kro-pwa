@@ -46,6 +46,7 @@ import {
   type TriageForm,
   type TriageOutcome,
   type TriageOutcomeKind,
+  type TriagePresentation,
   type TriageRewardStepDirection,
   type TriageSession,
   type TriageSessionSeed,
@@ -106,9 +107,15 @@ const withExpiryAwareForm = (
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-/** One concern: a read is in flight, so any prior exception is cleared. */
-export function withFetchStarted(state: TriageState): TriageState {
-  return { ...state, load: { kind: 'loading' } }
+/**
+ * One concern: a read is in flight, so any prior exception is cleared — and the
+ * host that asked is recorded, so only it draws what the read opens.
+ */
+export function withFetchStarted(
+  state: TriageState,
+  presentation: TriagePresentation = 'carousel',
+): TriageState {
+  return { ...state, load: { kind: 'loading' }, presentation }
 }
 
 /**
@@ -392,6 +399,24 @@ export function withExpiryPresetTapped(
  * triage keeps the screen mounted under the share sheet, and Edit keeps it
  * mounted under the Edit surface.
  */
+/**
+ * One concern: the endeavor being triaged was deleted elsewhere. The session
+ * closes as if backed out of — nothing is saved for a row that is gone — so a
+ * host (the detail pane's Inbox above all) returns to its list instead of
+ * showing a form for an endeavor that no longer exists. Any other endeavor's
+ * deletion, or no open session, changes nothing.
+ */
+export function withTriagedEndeavorRemoved(
+  state: TriageState,
+  endeavorIds: readonly string[],
+): TriageState {
+  const session = state.session
+  if (session === null || !endeavorIds.includes(session.endeavorId)) {
+    return state
+  }
+  return withOutcomeRaised(state, 'dismissed')
+}
+
 export function withOutcomeRaised(
   state: TriageState,
   kind: TriageOutcomeKind,

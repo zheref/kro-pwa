@@ -63,6 +63,19 @@ export const FeatureFlags = {
   timelineQuickEventCreation: { name: 'timelineQuickEventCreation' },
   appearanceThemes: { name: 'appearanceThemes' },
   macDetailPane: { name: 'macDetailPane' },
+  /**
+   * Web-only: a fourth Inbox segment in the detail pane's toolbar group,
+   * where a capture routed to the Inbox lands on the desktop window.
+   * Canon's `DetailPaneSegment` has no inbox case — see
+   * `docs/Features/MacDetailPane.md` § Web divergences.
+   */
+  detailPaneInbox: { name: 'detailPaneInbox' },
+  /**
+   * Web-only: the suggestions pane above the desktop capture prompt, with
+   * single pick and multi-add to the Inbox. Canon's carousel is a mobile
+   * swipe with no multi-add — see `docs/Features/Inbox.md` § Web notes.
+   */
+  captureSuggestions: { name: 'captureSuggestions' },
 } as const satisfies Record<string, FeatureFlag>
 
 /** The key set of `FeatureFlags` — every declared flag's name, as a type. */

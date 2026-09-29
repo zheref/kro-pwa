@@ -40,6 +40,8 @@ import {
   schedulingSnapshotOf,
 } from './CaptureRules'
 import {
+  withSuggestionSelectionToggled,
+  withValuePicked,
   withAddForTodayRequested,
   withCaptureCommitted,
   withContextLoaded,
@@ -52,6 +54,10 @@ import {
   withTitleEdited,
   withUndoWindowChecked,
 } from './CaptureShifters'
+import {
+  CAPTURE_SUGGESTIONS,
+  type CaptureSuggestion,
+} from './CaptureSuggestions'
 
 /** Tuesday 17 March 2026, 10:07 local. Every fixture below is relative to it. */
 export const CAPTURE_MOCK_NOW = new Date(2026, 2, 17, 10, 7, 0)
@@ -219,15 +225,42 @@ export const captureDraftFixtures = {
     ...draft,
     title: '   \n ',
   })),
-  /** Titled task, no time — valid: only events require times. */
+  /** Titled task, no time, rated — valid: only events require times. */
   titledTask: draftOf(CaptureKind.task, (draft) => ({
     ...draft,
     title: 'Write the retro',
+    value: 3,
+  })),
+  /**
+   * Titled task bound for local storage with no value rating — blocked:
+   * canon requires a rating whenever the host can store one.
+   */
+  unratedTask: draftOf(CaptureKind.task, (draft) => ({
+    ...draft,
+    title: 'Write the retro',
+  })),
+  /**
+   * The same unrated task bound for Reminders — valid: the host cannot store
+   * a value, so none is demanded.
+   */
+  unratedTaskForReminders: draftOf(CaptureKind.task, (draft) => ({
+    ...draft,
+    title: 'Write the retro',
+    destination: CaptureDestination.appleReminders,
+  })),
+  /** A rated task with a duration and a picked symbol — every optional set. */
+  fullyDescribedTask: draftOf(CaptureKind.task, (draft) => ({
+    ...draft,
+    title: 'Write the retro',
+    value: 5,
+    duration: 45 * 60,
+    pickedEmoji: '📝',
   })),
   /** Titled task with a committed time. */
   timedTask: draftOf(CaptureKind.task, (draft) => ({
     ...draft,
     title: 'Write the retro',
+    value: 3,
     hasTime: true,
   })),
   /**
@@ -237,6 +270,7 @@ export const captureDraftFixtures = {
   titledTaskNoDate: draftOf(CaptureKind.task, (draft) => ({
     ...draft,
     title: 'Sort the garage',
+    value: 2,
     hasDate: false,
   })),
   /** Titled reminder — valid without a time. */
@@ -250,7 +284,22 @@ export const captureDraftFixtures = {
     title: 'Ping the landlord',
     hasDate: false,
   })),
-  /** Titled habit — valid, and its date is dropped on submission. */
+  /**
+   * A habit whose time was cleared and repeat set to never — blocked on the
+   * time first. The prompt itself can never reach it; the table can.
+   */
+  habitMissingTime: draftOf(CaptureKind.habit, (draft) => ({
+    ...draft,
+    title: 'Read ten pages',
+    hasTime: false,
+  })),
+  /** A habit with a time but no repeat rule — blocked on the repeat. */
+  habitMissingRecurrence: draftOf(CaptureKind.habit, (draft) => ({
+    ...draft,
+    title: 'Read ten pages',
+    recurrence: { kind: 'never' },
+  })),
+  /** Titled habit — valid (time and every-day seeded), date dropped on submit. */
   titledHabit: draftOf(CaptureKind.habit, (draft) => ({
     ...draft,
     title: 'Read ten pages',
@@ -372,7 +421,23 @@ export const captureStateMocks = {
   }),
 
   /** The prompt open on Task with a title typed — Add enabled. */
-  promptReadyToSubmit: withTitleEdited(
+  promptReadyToSubmit: withValuePicked(
+    withTitleEdited(
+      withPromptOpened(loadedPool, {
+        kind: CaptureKind.task,
+        now: CAPTURE_MOCK_NOW,
+        initialStart: null,
+      }),
+      'Book the flights',
+    ),
+    3,
+  ),
+
+  /**
+   * The prompt open on Task, titled but unrated — local storage keeps a
+   * value, so Add is blocked on the rating.
+   */
+  promptTaskMissingValue: withTitleEdited(
     withPromptOpened(loadedPool, {
       kind: CaptureKind.task,
       now: CAPTURE_MOCK_NOW,
@@ -382,18 +447,66 @@ export const captureStateMocks = {
   ),
 
   /**
+   * The prompt open on Task with every host connected — what a kind switch
+   * narrows the host picker from.
+   */
+  promptOpenWithEveryHost: withPromptOpened(
+    withContextLoaded(initialCaptureState, {
+      endeavors: captureFixturePool,
+      lastUsedDestination: CaptureDestination.local,
+      availableDestinations: [
+        CaptureDestination.local,
+        CaptureDestination.appleReminders,
+        CaptureDestination.appleCalendar,
+        CaptureDestination.kroCloud,
+      ],
+      now: CAPTURE_MOCK_NOW,
+    }),
+    { kind: CaptureKind.task, now: CAPTURE_MOCK_NOW, initialStart: null },
+  ),
+
+  /**
+   * Every host connected, Kro Cloud remembered, no prompt open — the seed a
+   * kind that Kro Cloud cannot host must not inherit.
+   */
+  everyHostRememberingKroCloud: withContextLoaded(initialCaptureState, {
+    endeavors: captureFixturePool,
+    lastUsedDestination: CaptureDestination.kroCloud,
+    availableDestinations: [
+      CaptureDestination.local,
+      CaptureDestination.appleReminders,
+      CaptureDestination.appleCalendar,
+      CaptureDestination.kroCloud,
+    ],
+    now: CAPTURE_MOCK_NOW,
+  }),
+
+  /** The prompt open on Habit — time and every-day repeat already seeded. */
+  promptOpenOnHabit: withTitleEdited(
+    withPromptOpened(loadedPool, {
+      kind: CaptureKind.habit,
+      now: CAPTURE_MOCK_NOW,
+      initialStart: null,
+    }),
+    'Read ten pages',
+  ),
+
+  /**
    * The prompt open on Task, titled, date cleared — `KC-IS-#75`: still valid
    * (only events require a date), and this IS the dateless-capture affordance
    * the date chip's Clear button unlocks.
    */
   promptTaskDateCleared: withDateCleared(
-    withTitleEdited(
-      withPromptOpened(loadedPool, {
-        kind: CaptureKind.task,
-        now: CAPTURE_MOCK_NOW,
-        initialStart: null,
-      }),
-      'Sort the garage',
+    withValuePicked(
+      withTitleEdited(
+        withPromptOpened(loadedPool, {
+          kind: CaptureKind.task,
+          now: CAPTURE_MOCK_NOW,
+          initialStart: null,
+        }),
+        'Sort the garage',
+      ),
+      2,
     ),
   ),
 
@@ -426,6 +539,16 @@ export const captureStateMocks = {
     new Date(CAPTURE_MOCK_NOW.getTime() + 500),
   ),
 
+  /**
+   * Web-only: the same delivery where the desktop detail pane hosts the Inbox —
+   * the overlay stays shut and the pane's Inbox shows the Just Created row.
+   */
+  inboxInPaneWithJustCreated: withRouteDelivered(
+    afterTaskCapture,
+    new Date(CAPTURE_MOCK_NOW.getTime() + 500),
+    true,
+  ),
+
   /** An event captured: the Plan route is pending and the Inbox stays shut. */
   eventCapturedAwaitingPlan: withCaptureCommitted(loadedPool, {
     endeavor: capturedEvent,
@@ -447,5 +570,80 @@ export const captureStateMocks = {
   undoExpired: withUndoWindowChecked(
     undoArmed,
     new Date(CAPTURE_MOCK_NOW.getTime() + ADD_FOR_TODAY_UNDO_WINDOW_MS),
+  ),
+}
+
+// ---------------------------------------------------------------------------
+// Suggestions (web-only, `captureSuggestions`)
+// ---------------------------------------------------------------------------
+
+const catalogued = (id: string): CaptureSuggestion => {
+  const found = CAPTURE_SUGGESTIONS.find((item) => item.id === id)
+  if (found === undefined) throw new Error(`no suggestion ${id}`)
+  return found
+}
+
+/**
+ * One suggestion per shape the pane and its rules treat differently — three
+ * convenient, one neutral, three inconvenient (`RC-13`).
+ */
+export const captureSuggestionMocks = {
+  /** A task with its own rewards — the everyday pick. */
+  task: catalogued('task-prepare-presentation-slides'),
+  /** A habit — picked, it opens with a time and an every-day repeat. */
+  habit: catalogued('habit-meditate-for-10-minutes'),
+  /** A reminder — earns nothing, carries no value or duration. */
+  reminder: catalogued('reminder-take-out-the-trash'),
+  /** An event seeded 30 minutes out for 30 minutes. */
+  eventSoon: catalogued('event-team-sync-meeting'),
+  /** An event seeded ten hours out — it may cross into tomorrow. */
+  eventTomorrow: catalogued('event-flight-to-conference'),
+  /** An event with no offset of its own — canon's next-quarter-hour fallback. */
+  eventUnpinned: {
+    id: 'event-unpinned',
+    kind: CaptureKind.event,
+    emoji: '🗓️',
+    title: 'Something on the calendar',
+    rewards: 0,
+    startMinutesFromNow: null,
+    durationMinutes: null,
+  } satisfies CaptureSuggestion,
+  /** A long, non-ASCII title — the card clamps it, the persisted title keeps it. */
+  longUnicode: {
+    id: 'task-long-unicode',
+    kind: CaptureKind.task,
+    emoji: '🌸',
+    title: '山田さんとの長い打ち合わせの準備をする — ついでに資料も全部見直す',
+    rewards: 0,
+    startMinutesFromNow: null,
+    durationMinutes: null,
+  } satisfies CaptureSuggestion,
+}
+
+const suggestionsOn = withContextLoaded(initialCaptureState, {
+  endeavors: captureFixturePool,
+  lastUsedDestination: CaptureDestination.local,
+  availableDestinations: [CaptureDestination.local],
+  now: CAPTURE_MOCK_NOW,
+  isSuggestionsEnabled: true,
+})
+
+const promptWithSuggestions = withPromptOpened(suggestionsOn, {
+  kind: CaptureKind.task,
+  now: CAPTURE_MOCK_NOW,
+  initialStart: null,
+})
+
+/** Prompt states with the suggestions pane on. */
+export const captureSuggestionStateMocks = {
+  /** The flag on, the prompt open on Task, nothing ticked. */
+  promptWithSuggestions,
+  /** Two Inbox-able suggestions ticked for a multi-add. */
+  promptWithTwoSelected: withSuggestionSelectionToggled(
+    withSuggestionSelectionToggled(
+      promptWithSuggestions,
+      captureSuggestionMocks.task.id,
+    ),
+    captureSuggestionMocks.reminder.id,
   ),
 }

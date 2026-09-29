@@ -235,6 +235,10 @@
   --kro-radius-field: 12px;
   --kro-radius-card: 12px;
   --kro-radius-surface: 20px;
+  /* Floating panels and chrome panes — the capture prompt, its suggestions
+     pane, the sidebar and the toolbar's menus. Its own role so it can diverge
+     from card/field (same 12px today) without dragging them along. */
+  --kro-radius-panel: 12px;
   --kro-radius-large: 20px;
   /* `.infinity` in SwiftUI; the web idiom for a capsule is a huge finite px. */
   --kro-radius-pill: 9999px;

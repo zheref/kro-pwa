@@ -27,6 +27,11 @@ import { cn } from '../utils/cn'
  *
  * Compact (`sm`) is the default, at the 28px pointer floor. Comfortable
  * (`md`) is the mobile preview. `lg` is the 44px iOS floor, opt-in.
+ *
+ * KEYBOARD SHORTCUTS. `shortcut="return" | "escape"` draws a trailing key
+ * glyph (⏎ / esc) at reduced strength of the label colour and sets
+ * `aria-keyshortcuts`; the glyph is `aria-hidden` and adds no hit area. Pass
+ * `showShortcut={false}` on touch-primary presentations — the attribute stays.
  */
 const buttonVariants = cva(
   cn(
@@ -131,6 +136,32 @@ export interface ButtonProps
    * without nesting an anchor inside a button, which is invalid.
    */
   readonly asChild?: boolean
+  /**
+   * The key that performs this command. Draws a trailing key glyph (⏎, esc)
+   * after the label and exposes the key to assistive tech through
+   * `aria-keyshortcuts`. The glyph itself is decorative (`aria-hidden`).
+   */
+  readonly shortcut?: ButtonShortcut
+  /**
+   * Whether the glyph is drawn. Pass `false` on touch-primary presentations,
+   * where there is no keyboard to hint at; `aria-keyshortcuts` stays.
+   */
+  readonly showShortcut?: boolean
+}
+
+/** The keys a Button can advertise. */
+export type ButtonShortcut = 'return' | 'escape'
+
+/** The glyph drawn for each key — the macOS menu vocabulary. */
+export const BUTTON_SHORTCUT_GLYPH: Record<ButtonShortcut, string> = {
+  return: '⏎',
+  escape: 'esc',
+}
+
+/** The `aria-keyshortcuts` value for each key (WAI-ARIA key names). */
+export const BUTTON_SHORTCUT_ARIA: Record<ButtonShortcut, string> = {
+  return: 'Enter',
+  escape: 'Escape',
 }
 
 export function Button({
@@ -140,9 +171,14 @@ export function Button({
   shape,
   asChild = false,
   type,
+  shortcut,
+  showShortcut = true,
+  children,
   ...rest
 }: ButtonProps) {
   const Component = asChild ? Slot : 'button'
+  // `asChild` renders exactly one child, so a glyph cannot be appended there.
+  const drawsGlyph = shortcut !== undefined && showShortcut && !asChild
 
   return (
     <Component
@@ -153,8 +189,102 @@ export function Button({
       // "Cancel" control ends up submitting the form it sits in.
       type={asChild ? undefined : (type ?? 'button')}
       className={cn(buttonVariants({ variant, size, shape }), className)}
+      aria-keyshortcuts={
+        shortcut === undefined ? undefined : BUTTON_SHORTCUT_ARIA[shortcut]
+      }
       {...rest}
-    />
+    >
+      {drawsGlyph && shortcut !== undefined ? (
+        <>
+          {children}
+          <ShortcutGlyph shortcut={shortcut} />
+        </>
+      ) : (
+        children
+      )}
+    </Component>
+  )
+}
+
+function ShortcutGlyph({ shortcut }: { readonly shortcut: ButtonShortcut }) {
+  return (
+    <ShortcutHint className="ms-1">
+      {BUTTON_SHORTCUT_GLYPH[shortcut]}
+    </ShortcutHint>
+  )
+}
+
+/**
+ * A key hint — the glyph a Button draws for its shortcut, reusable wherever a
+ * control advertises a chord (a property pill, a segment). The label's own
+ * colour at 55% strength: darker than the fill on a light control, lighter on
+ * a dark one. Decorative (`aria-hidden`); the control names the key through
+ * `aria-keyshortcuts`.
+ *
+ * Two placements:
+ * - `inline` (the Button's) sits in the label's flow.
+ * - `keycap` takes ZERO layout space: a small chip floated over the
+ *   top-leading corner of its nearest positioned ancestor, fading with the
+ *   motion tokens (instant under reduced motion), never catching the pointer.
+ *   This is what a held-to-reveal hint uses, so revealing it — or reserving
+ *   for it — can never widen a row.
+ */
+export function ShortcutHint({
+  children,
+  reveal = true,
+  placement = 'inline',
+  className,
+}: {
+  readonly children: string
+  readonly reveal?: boolean
+  readonly placement?: 'inline' | 'keycap'
+  readonly className?: string
+}) {
+  if (placement === 'keycap') {
+    return (
+      <span
+        aria-hidden="true"
+        data-slot="button-shortcut"
+        data-placement="keycap"
+        data-revealed={reveal ? 'true' : 'false'}
+        className={cn('pointer-events-none font-medium', className)}
+        style={{
+          position: 'absolute',
+          top: -7,
+          left: -4,
+          zIndex: 1,
+          padding: '1px 3px',
+          fontSize: 9,
+          lineHeight: 1.1,
+          whiteSpace: 'nowrap',
+          borderRadius: 4,
+          border: '1px solid var(--kro-color-hairline)',
+          background: 'var(--kro-color-back)',
+          color: 'color-mix(in srgb, var(--kro-color-fore) 55%, transparent)',
+          opacity: reveal ? 1 : 0,
+          transitionProperty: 'opacity',
+          transitionDuration: 'var(--kro-duration-quick, 180ms)',
+          transitionTimingFunction: 'var(--kro-ease-standard)',
+        }}
+      >
+        {children}
+      </span>
+    )
+  }
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="button-shortcut"
+      data-placement="inline"
+      data-revealed={reveal ? 'true' : 'false'}
+      className={cn('font-normal', className)}
+      style={{
+        color: 'color-mix(in srgb, currentColor 55%, transparent)',
+        visibility: reveal ? 'visible' : 'hidden',
+      }}
+    >
+      {children}
+    </span>
   )
 }
 

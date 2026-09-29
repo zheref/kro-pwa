@@ -153,6 +153,7 @@
   --radius-kro-field: var(--kro-radius-field);
   --radius-kro-card: var(--kro-radius-card);
   --radius-kro-surface: var(--kro-radius-surface);
+  --radius-kro-panel: var(--kro-radius-panel);
   --radius-kro-large: var(--kro-radius-large);
   --radius-kro-pill: var(--kro-radius-pill);
 

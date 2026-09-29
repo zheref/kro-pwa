@@ -197,6 +197,60 @@ const Densities = {
   ),
 }
 
+/** A trailing key glyph on each filled variant — Return confirms, esc cancels. */
+const WithShortcut = {
+  render: () => (
+    <Stage>
+      <Row label="Shortcut">
+        <Button variant="secondary" shortcut="escape">
+          Discard
+        </Button>
+        <Button variant="primary" shortcut="return">
+          Add
+        </Button>
+      </Row>
+    </Stage>
+  ),
+}
+
+/** Disabled keeps its glyph under the one disabled fade. */
+const DisabledWithShortcut = {
+  render: () => (
+    <Stage>
+      <Row label="Disabled shortcut">
+        <Button variant="primary" shortcut="return" disabled>
+          Add
+        </Button>
+      </Row>
+    </Stage>
+  ),
+}
+
+/** The glyph across every variant, so its contrast reads on each fill. */
+const ShortcutOnEveryVariant = {
+  render: () => (
+    <Stage>
+      <Row label="Every variant">
+        <Button variant="primary" shortcut="return">
+          Save
+        </Button>
+        <Button variant="secondary" shortcut="escape">
+          Cancel
+        </Button>
+        <Button variant="ghost" shortcut="escape">
+          Close
+        </Button>
+        <Button variant="destructive" shortcut="return">
+          Delete
+        </Button>
+        <Button variant="outline" shortcut="return">
+          Confirm
+        </Button>
+      </Row>
+    </Stage>
+  ),
+}
+
 export const Gallery = {
   tags: ['showcase'],
   render: () => (
@@ -208,6 +262,9 @@ export const Gallery = {
       {Disabled.render()}
       {DarkScheme.render()}
       {Densities.render()}
+      {WithShortcut.render()}
+      {DisabledWithShortcut.render()}
+      {ShortcutOnEveryVariant.render()}
     </StoryGallery>
   ),
 }

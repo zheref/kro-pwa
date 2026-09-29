@@ -169,4 +169,36 @@ describe('SegmentedControl', () => {
       expect((button as HTMLButtonElement).disabled).toBe(true)
     }
   })
+
+  it('draws a faint chord on each segment and names it for assistive tech', () => {
+    render(
+      <SegmentedControl
+        label="Range"
+        options={[
+          {
+            value: 'day',
+            label: 'Day',
+            shortcutHint: '⌥1',
+            keyShortcuts: 'Alt+1',
+          },
+          {
+            value: 'week',
+            label: 'Week',
+            shortcutHint: '⌥2',
+            keyShortcuts: 'Alt+2',
+          },
+        ]}
+        value="day"
+        onChange={() => {}}
+        revealShortcutHints={false}
+      />,
+    )
+    const week = screen.getByRole('button', { name: /Week/ })
+    expect(week.getAttribute('aria-keyshortcuts')).toBe('Alt+2')
+    const hint = week.querySelector<HTMLElement>(
+      '[data-slot="button-shortcut"]',
+    )
+    expect(hint?.textContent).toBe('⌥2')
+    expect(hint?.getAttribute('data-revealed')).toBe('false')
+  })
 })

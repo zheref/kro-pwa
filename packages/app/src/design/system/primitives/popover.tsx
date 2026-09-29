@@ -1,6 +1,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import type { ComponentPropsWithoutRef } from 'react'
 import { cn } from '../utils/cn'
+import { useDefaultCollisionPadding } from './collision'
 
 /**
  * Popover — a navigation panel anchored to the control that presented it.
@@ -48,15 +49,23 @@ export function PopoverContent({
   className,
   align = 'center',
   sideOffset = 8,
+  avoidCollisions = true,
+  collisionPadding,
   children,
   ...rest
 }: ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>) {
+  // Flip/shift to fit, clear of the viewport edge AND the shell's sidebar.
+  const padding = useDefaultCollisionPadding(
+    collisionPadding as Parameters<typeof useDefaultCollisionPadding>[0],
+  )
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}
+        avoidCollisions={avoidCollisions}
+        collisionPadding={padding}
         className={cn(POPOVER_CLASSES.content, className)}
         {...rest}
       >

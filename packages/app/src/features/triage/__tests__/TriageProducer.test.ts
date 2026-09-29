@@ -4,6 +4,7 @@ import {
   type LocalStore,
   type Result,
   ShareOutcome,
+  endeavorRecordFromEndeavor,
   isRecordDirty,
   pendingSyncRecords,
 } from '@kro/core'
@@ -96,24 +97,37 @@ describe('openTriageThunk', () => {
   })
 
   it('excludes the endeavor being triaged from its own day’s blocks', async () => {
-    const store = storeWith(seeded())
+    // A task already scheduled 16:00–17:00 on the mock day, being re-triaged:
+    // it must not block the gap it is being re-scheduled into.
+    const scheduledToday = {
+      ...triageEndeavorFixtures.unscheduledTask,
+      id: 'triage-scheduled-today',
+      start: triageMockAt(17, 16),
+      duration: 3600,
+    }
+    const store = storeWith(
+      makeInMemoryLocalStore({
+        endeavors: [
+          ...triageFixtureRecords(),
+          endeavorRecordFromEndeavor(scheduledToday, { now: TRIAGE_MOCK_NOW }),
+        ],
+      }),
+    )
 
     const dispatched = await store.dispatch(
-      openTriageThunk({
-        endeavorId: triageEndeavorFixtures.calendarEvent.id,
-        now: TRIAGE_MOCK_NOW,
-      }),
+      openTriageThunk({ endeavorId: scheduledToday.id, now: TRIAGE_MOCK_NOW }),
     )
     const seed = resolvedValue<TriageSessionSeed>(dispatched.payload)
 
-    // The event runs 14:00–15:00 on the mock day; it must not block itself.
-    expect(
+    const startsAt = (at: Date) =>
       seed.busyIntervals.some(
-        (interval) =>
-          interval.start.getTime() ===
-          (triageEndeavorFixtures.calendarEvent.start as Date).getTime(),
-      ),
-    ).toBe(false)
+        (interval) => interval.start.getTime() === at.getTime(),
+      )
+    expect(startsAt(scheduledToday.start)).toBe(false)
+    // The day's other blocks are still there — the exclusion is targeted.
+    expect(startsAt(triageEndeavorFixtures.calendarEvent.start as Date)).toBe(
+      true,
+    )
   })
 
   it('carries canon’s parent-supplied seed straight through', async () => {
@@ -159,6 +173,51 @@ describe('openTriageThunk', () => {
     )
 
     expect(errorOf(dispatched.payload).kind).toBe('endeavorNotFound')
+  })
+
+  it('refuses a habit — canon never asks when a standing commitment happens', async () => {
+    const store = storeWith(seeded())
+
+    const dispatched = await store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.habit.id,
+        now: TRIAGE_MOCK_NOW,
+      }),
+    )
+
+    const failure = errorOf(dispatched.payload)
+    expect(failure.kind).toBe('notTriageable')
+    expect(failure.message).toContain('habit')
+    expect(failure.recoverable).toBe(false)
+  })
+
+  it('refuses a calendar event pointed at from the pane', async () => {
+    const store = storeWith(seeded())
+
+    const dispatched = await store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.calendarEvent.id,
+        now: TRIAGE_MOCK_NOW,
+      }),
+    )
+
+    expect(errorOf(dispatched.payload).kind).toBe('notTriageable')
+    expect(store.getState().triage.session).toBeNull()
+  })
+
+  it('opens a reminder — the other kind Triage applies to', async () => {
+    const store = storeWith(seeded())
+
+    const dispatched = await store.dispatch(
+      openTriageThunk({
+        endeavorId: triageEndeavorFixtures.touristReminder.id,
+        now: TRIAGE_MOCK_NOW,
+      }),
+    )
+
+    expect(
+      resolvedValue<TriageSessionSeed>(dispatched.payload).endeavor.id,
+    ).toBe(triageEndeavorFixtures.touristReminder.id)
   })
 
   it('resolves a failure rather than throwing when the store is unreadable', async () => {

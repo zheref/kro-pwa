@@ -1,10 +1,6 @@
 import type { CSSProperties } from 'react'
 import { cn } from '../../system/utils/cn'
-import {
-  DEFAULT_EMOJI_CATEGORIES,
-  EMOJI_GRID_COLUMNS,
-  type EmojiCategory,
-} from './emojiCategories'
+import { DEFAULT_EMOJI_CATEGORIES, type EmojiCategory } from './emojiCategories'
 
 /**
  * The emoji picker — a categorised grid with pinned section headers.
@@ -44,8 +40,20 @@ export function EmojiPicker({
   return (
     <div
       data-kro-emoji-picker=""
-      className={cn('overflow-y-auto', className)}
-      style={{ height: '100%', ...style }}
+      // One scroll axis: vertical. The grid below adapts its column count to
+      // the pane's width, so nothing ever overflows sideways.
+      className={cn(
+        'overflow-x-hidden overflow-y-auto overscroll-contain',
+        className,
+      )}
+      style={{ height: '100%', touchAction: 'pan-y', ...style }}
+      // The picker is usually portaled out of a modal dialog, whose scroll
+      // lock listens for wheel/touchmove on the document and cancels any that
+      // did not start inside the dialog. Stopping the bubble here keeps the
+      // browser's own scroll of this element, on both axes, and only hides
+      // the event from that lock.
+      onWheel={(event) => event.stopPropagation()}
+      onTouchMove={(event) => event.stopPropagation()}
     >
       {categories.map((category) => (
         <section key={category.id} data-kro-emoji-category={category.id}>
@@ -59,6 +67,9 @@ export function EmojiPicker({
               // same two properties.
               position: 'sticky',
               top: 0,
+              // Full pane width, so rows scroll under the whole bar.
+              width: '100%',
+              boxSizing: 'border-box',
               zIndex: 1,
               margin: 0,
               padding: '6px 12px',
@@ -76,9 +87,13 @@ export function EmojiPicker({
             aria-label={category.name}
             style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${EMOJI_GRID_COLUMNS}, minmax(var(--kro-size-min-touch-target), 56px))`,
+              // As many touch-sized columns as the pane's width holds, each
+              // stretched to share the leftover — never wider than the pane.
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(var(--kro-size-min-touch-target), 1fr))',
               gap: 4,
-              padding: '6px 12px 12px',
+              // No side inset: the grid takes the pane's whole width.
+              padding: '4px 0 8px',
             }}
           >
             {category.emojis.map((emoji) => {

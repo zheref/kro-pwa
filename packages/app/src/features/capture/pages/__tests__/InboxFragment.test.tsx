@@ -6,7 +6,13 @@
  * pinned header over a centred tray when there is nothing to triage.
  */
 import { EndeavorOperation, EndeavorsVistas } from '@kro/core'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { endeavorCardModelFrom } from '../../../../design/endeavor/endeavorCardModel'
@@ -317,5 +323,74 @@ describe('the row operations come from the vista, not from this file', () => {
     )
 
     expect(onTapTriage).toHaveBeenCalledWith(justCreated.id)
+  })
+})
+
+describe('the detail pane presentation — mirrors the Pane* stories', () => {
+  it('PaneWithJustCreated: draws both sections inline, with no header or dismiss', () => {
+    renderInbox({ presentation: 'pane' })
+    expect(
+      screen.getByTestId('inbox-surface').getAttribute('data-kro-presentation'),
+    ).toBe('pane')
+    expect(screen.getByText('Just Created')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /done/i })).toBeNull()
+  })
+
+  it('PanePendingOnly: lists Pending Triage with each row’s Triage control', () => {
+    const onTapTriage = vi.fn()
+    renderInbox({ presentation: 'pane', justCreated: null, onTapTriage })
+    expect(screen.queryByText('Just Created')).toBeNull()
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: `Triage ${pending[0]?.title ?? ''}`,
+      }),
+    )
+    expect(onTapTriage).toHaveBeenCalledTimes(1)
+  })
+
+  it('PaneEmptyDark: shows the empty tray', () => {
+    renderInbox({
+      presentation: 'pane',
+      justCreated: null,
+      pendingTriage: [],
+      totalCount: 0,
+      isEmpty: true,
+    })
+    expect(screen.getByTestId('inbox-surface').textContent).not.toContain(
+      'Pending Triage',
+    )
+  })
+})
+
+describe('the pane presentation’s row layout and overlay', () => {
+  it('gives the title the row: the actions move onto their own line inside the card', () => {
+    renderInbox({ presentation: 'pane' })
+    const id = justCreated.id
+    const actions = screen.getByTestId(`inbox-row-actions-${id}`)
+    expect(actions.getAttribute('data-stacked')).toBe('true')
+    expect(actions.style.marginRight).toBe('0px')
+    expect(actions.closest('[data-slot="endeavor-row-footer"]')).not.toBeNull()
+    expect(actions.closest('[data-slot="endeavor-row"]')).not.toBeNull()
+  })
+
+  it('keeps the actions inside the row in the overlay presentations', () => {
+    renderInbox({ presentation: 'inline' })
+    expect(
+      screen
+        .getByTestId(`inbox-row-actions-${justCreated.id}`)
+        .getAttribute('data-stacked'),
+    ).toBe('false')
+  })
+
+  it('stands the list down while its overlay covers it, and never positions itself', () => {
+    renderInbox({
+      presentation: 'pane',
+      isOverlayCovering: true,
+      overlay: <p>triage layer</p>,
+    })
+    const surface = screen.getByTestId('inbox-surface')
+    expect(surface.className).not.toContain('relative')
+    expect(screen.queryByText('Just Created')).toBeNull()
+    expect(screen.getByText('triage layer')).toBeTruthy()
   })
 })

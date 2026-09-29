@@ -1112,8 +1112,13 @@ export const endeavorFromCaptureResult = (
     })
   }
 
+  // Canon `toEndeavor`: a habit is anchored by its time of day, not a date —
+  // its repeat rule supplies the day — so it saves a `start` from the picked
+  // time and no `due`. Every other non-event keeps its dated `due`.
+  const isHabit = result.kind === CaptureKind.habit
+  const start = isHabit ? result.time : null
   const due =
-    result.date === null
+    isHabit || result.date === null
       ? null
       : result.time === null
         ? result.date
@@ -1124,6 +1129,7 @@ export const endeavorFromCaptureResult = (
     title: result.title,
     kind: endeavorKindForCaptureKind(result.kind),
     status: EndeavorStatus.pending,
+    start,
     due,
     repeatConfig: repeatConfigFromCaptureRecurrence(result.recurrence),
     createdAt: options.now,

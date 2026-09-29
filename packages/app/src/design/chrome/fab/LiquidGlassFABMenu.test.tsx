@@ -2,7 +2,11 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GLOW_SHAPES } from '../glow/RotatingGlow'
-import { type FABMenuEntry, LiquidGlassFABMenu } from './LiquidGlassFABMenu'
+import {
+  type FABMenuEntry,
+  LiquidGlassFABMenu,
+  fabKeysAreOwnedElsewhere,
+} from './LiquidGlassFABMenu'
 
 afterEach(cleanup)
 
@@ -469,5 +473,38 @@ describe('the page-level keyboard (web addition)', () => {
     )
     await userEvent.keyboard('{Enter}')
     expect(isOpen()).toBe(false)
+  })
+})
+
+describe('a stale overlay never takes the keyboard from the FAB', () => {
+  const setup = (overlayHtml: string) => {
+    document.body.innerHTML = `<div id="fab"></div>${overlayHtml}`
+    const root = document.getElementById('fab') as HTMLElement
+    return root
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('still yields to a dialog that is actually open', () => {
+    const root = setup('<div role="dialog" data-state="open"></div>')
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(true)
+  })
+
+  it('ignores a dialog playing its exit (data-state="closed")', () => {
+    const root = setup(
+      '<div data-state="closed"><div role="dialog"></div></div>',
+    )
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(false)
+  })
+
+  it('ignores a menu kept mounted but hidden, inert or display:none', () => {
+    const root = setup(
+      '<div role="menu" hidden></div>' +
+        '<div inert><div role="listbox"></div></div>' +
+        '<div role="dialog" style="display:none"></div>',
+    )
+    expect(fabKeysAreOwnedElsewhere(root, document.body)).toBe(false)
   })
 })

@@ -108,9 +108,25 @@ export const fabKeysAreOwnedElsewhere = (
     '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper]',
   )
   for (const overlay of Array.from(overlays)) {
-    if (!overlay.contains(root)) return true
+    if (!overlay.contains(root) && isOverlayShowing(overlay)) return true
   }
   return root.closest('[inert]') !== null
+}
+
+/**
+ * Whether an overlay-shaped node is actually on screen. A matching node can
+ * outlive its presentation — a dialog playing its exit (`data-state="closed"`),
+ * one kept mounted but hidden or inert, or a popper wrapper left laid out at
+ * zero size — and none of those may take the keyboard from the FAB.
+ */
+export const isOverlayShowing = (overlay: Element): boolean => {
+  if (overlay.closest('[data-state="closed"]') !== null) return false
+  if (overlay.closest('[hidden], [inert], [aria-hidden="true"]') !== null) {
+    return false
+  }
+  const style = window.getComputedStyle(overlay)
+  if (style.display === 'none' || style.visibility === 'hidden') return false
+  return true
 }
 
 /** Canon: `VStack(alignment: .trailing, spacing: 12)`. */

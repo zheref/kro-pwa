@@ -552,8 +552,8 @@ export const captureSuggestionLanding = (
  * - **Event** — its seeded window (`captureSuggestionEventWindow`: the seed's
  *   offset or the next quarter hour, the seed's length or an hour).
  * - **Habit** — its every-day rule and a time (the quarter hour nearest now,
- *   the prompt's own habit seed); no date. A habit never queues for triage
- *   (`awaitsTriage`), so it shows only as Just Created after the multi-add.
+ *   the prompt's own habit seed), saved as its `start`; no date. It never queues
+ *   for triage (`awaitsTriage`), so it shows only as Just Created.
  * - **Task / Reminder** — unscheduled (Pending Triage).
  *
  * Rewards when the kind earns them; no value or duration — those are decided

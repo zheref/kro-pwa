@@ -289,6 +289,46 @@ describe('captureResolvedSymbol', () => {
   })
 })
 
+describe('a habit saves at its time of day — canon toEndeavor', () => {
+  const build = (draft: typeof captureDraftFixtures.titledHabit) => {
+    const result = captureResultFromDraft(draft)
+    if (result === null) throw new Error('a timed, repeating habit must submit')
+    return endeavorFromCaptureResult(result, { id: 'h', now: CAPTURE_MOCK_NOW })
+  }
+
+  it('anchors a habit on the picked time as its start, not on a date', () => {
+    const draft = captureDraftFixtures.titledHabit
+    const built = build(draft)
+    expect(built.kind).toBe(EndeavorKind.habit)
+    expect(built.start?.getTime()).toBe(draft.time.getTime())
+    expect(built.due).toBeNull()
+  })
+
+  it('keeps the time a user moved the habit to, not the seeded one', () => {
+    const moved = new Date(captureDraftFixtures.titledHabit.time)
+    moved.setHours(6, 45, 0, 0)
+    const built = build({
+      ...captureDraftFixtures.titledHabit,
+      time: moved,
+    })
+    expect(built.start?.getHours()).toBe(6)
+    expect(built.start?.getMinutes()).toBe(45)
+  })
+
+  it('leaves a task on its dated due and gives it no start', () => {
+    const result = captureResultFromDraft(
+      captureDraftFixtures.fullyDescribedTask,
+    )
+    if (result === null) throw new Error('a rated task must submit')
+    const built = endeavorFromCaptureResult(result, {
+      id: 't',
+      now: CAPTURE_MOCK_NOW,
+    })
+    expect(built.start).toBeNull()
+    expect(built.due).not.toBeNull()
+  })
+})
+
 describe('what a confirmed prompt carries for value and duration', () => {
   it('carries a task’s value, duration and folded-in symbol onto the endeavor', () => {
     const result = captureResultFromDraft(

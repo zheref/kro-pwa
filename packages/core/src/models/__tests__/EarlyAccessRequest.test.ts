@@ -2,7 +2,7 @@
  * `EarlyAccessRequest` is a type; these pin what the form hands the Producer.
  */
 import { describe, expect, it } from 'vitest'
-import { earlyAccessRequestMocks } from '../__mocks__/EarlyAccess.mocks'
+import { earlyAccessRequestMocks } from '../__mocks__/EarlyAccessRequest.mocks'
 import type { EarlyAccessRequest } from '../EarlyAccessRequest'
 
 describe('EarlyAccessRequest', () => {

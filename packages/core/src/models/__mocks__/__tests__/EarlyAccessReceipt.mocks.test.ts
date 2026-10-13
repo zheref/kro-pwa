@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EarlyAccessMapper } from '../../EarlyAccessMapper'
-import { isKroPlatform } from '../../KroPlatform'
-import { earlyAccessMocks, earlyAccessRequestMocks } from '../EarlyAccess.mocks'
+import { earlyAccessMocks } from '../EarlyAccessReceipt.mocks'
 
 describe('earlyAccessMocks', () => {
   it('ships at least seven receipts with distinct ids (RC-13)', () => {
@@ -36,27 +35,5 @@ describe('earlyAccessMocks', () => {
         (char) => (char.codePointAt(0) ?? 0) > 127,
       ),
     ).toBe(true)
-  })
-})
-
-describe('earlyAccessRequestMocks', () => {
-  it('holds only plausible emails and declared platforms', () => {
-    for (const request of Object.values(earlyAccessRequestMocks)) {
-      expect(EarlyAccessMapper.isLikelyEmail(request.email)).toBe(true)
-      expect(isKroPlatform(request.platform)).toBe(true)
-    }
-  })
-
-  it('uses only reserved domains, so a fixture never reaches a real inbox', () => {
-    for (const request of Object.values(earlyAccessRequestMocks)) {
-      expect(request.email).toMatch(/@(example\.(com|net|org)|kro\.invalid)$/)
-    }
-  })
-
-  it('names the addresses the stubbed Service answers with a failure', () => {
-    expect(earlyAccessRequestMocks.alreadyJoined.email).toBe(
-      'already@kro.invalid',
-    )
-    expect(earlyAccessRequestMocks.offline.email).toBe('offline@kro.invalid')
   })
 })

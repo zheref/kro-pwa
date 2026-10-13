@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  earlyAccessMocks,
-  earlyAccessRequestMocks,
-} from '../__mocks__/EarlyAccess.mocks'
+import { earlyAccessMocks } from '../__mocks__/EarlyAccessReceipt.mocks'
+import { earlyAccessRequestMocks } from '../__mocks__/EarlyAccessRequest.mocks'
 import { EarlyAccessMapper, isLikelyEmail } from '../EarlyAccessMapper'
 import type { EarlyAccessResponse } from '../EarlyAccessResponse'
 

@@ -1,6 +1,6 @@
 /**
- * ≥7 mock variations of the early-access domain (`RC-13`): receipts and the
- * requests that produce them.
+ * ≥7 mock variations of `EarlyAccessReceipt` (`RC-13`, one file per model —
+ * the requests that produce them live in `EarlyAccessRequest.mocks.ts`).
  *
  * Spread: convenient (typical, justJoined, androidVote), neutral (noPosition)
  * and inconvenient (unicodeEmail, longEmail, staleJoinedAt). Every address is
@@ -8,7 +8,6 @@
  * reach a real inbox.
  */
 import type { EarlyAccessReceipt } from '../EarlyAccessReceipt'
-import type { EarlyAccessRequest } from '../EarlyAccessRequest'
 
 const LONG_LOCAL_PART = 'a-very-patient-person-who-types-their-whole-name'
 
@@ -75,45 +74,4 @@ export const earlyAccessMocks = {
     position: 2,
     joinedAt: new Date('2025-09-01T08:00:00.000Z'),
   } satisfies EarlyAccessReceipt,
-}
-
-/** Requests, for suites driving a form or a Producer. */
-export const earlyAccessRequestMocks = {
-  typical: {
-    email: 'ada@example.com',
-    platform: 'ios',
-    source: 'hero',
-    locale: 'en-US',
-  } satisfies EarlyAccessRequest,
-
-  /** No context at all — only the two required fields. */
-  bare: {
-    email: 'alan@example.net',
-    platform: 'web',
-    source: null,
-    locale: null,
-  } satisfies EarlyAccessRequest,
-
-  androidVote: {
-    email: 'linus@example.org',
-    platform: 'android',
-    source: 'platforms',
-    locale: 'fi-FI',
-  } satisfies EarlyAccessRequest,
-
-  /** The stubbed Service answers this address with a 409. */
-  alreadyJoined: {
-    email: 'already@kro.invalid',
-    platform: 'macos',
-    source: 'hero',
-    locale: 'en-GB',
-  } satisfies EarlyAccessRequest,
-
-  /** The stubbed Service answers this address with a network failure. */
-  offline: {
-    email: 'offline@kro.invalid',
-    platform: 'ios',
-    source: 'footer',
-    locale: 'es-CO',
-  } satisfies EarlyAccessRequest,
 }

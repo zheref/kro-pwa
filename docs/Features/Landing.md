@@ -16,7 +16,9 @@ and no promise about what is not built.
 - Default state: disabled in the status-quo set (a dark launch); enabled in
   the web product's live build.
 - The flag is the kill switch for the whole surface and its early-access
-  sign-up.
+  sign-up: with it off, the front door redirects into the app and the sign-up
+  route answers "not open". The web build reads it once, at build time; a
+  Debug override inside the running app does not reach the front door.
 
 ## Entry points
 
@@ -39,10 +41,15 @@ and no promise about what is not built.
 - **Vote** — a visitor's signal that a not-yet-available platform should come
   sooner. A vote is an anonymous count; it does not collect an address.
 - **Early access request** — an email address plus the platform a visitor
-  wants to hear about. It is the only thing on the page that collects
-  anything, and it collects only that.
-- **Honeypot** — a form field no person can see; a bot that fills it is
-  silently told it worked and nothing is stored.
+  wants to hear about. Sending it stores the address and the platform, which
+  part of the page it came from, the browser's language and the time, on the
+  sign-up list the maintainer runs; a notice under the field says so and how
+  to be removed. The request leaves only from the site's own pages; a slow or
+  absent list shows the "not open yet" message. Nothing else on the page asks
+  for anything; the analytics count visits and events without a name or an
+  address (see *Interactions*).
+- **Honeypot** — a form field no person can see; a bot that fills it gets
+  exactly the answer a real request would have got and nothing is stored.
 - **Theme** — light or dark. The toggle writes the same appearance preference
   the app's own Settings write, so the two never disagree.
 
@@ -66,9 +73,9 @@ and no promise about what is not built.
 4. **Invalid email.** The address is checked when the field is left and again
    on submit. An address that does not look like one shows a message under
    the field; nothing is sent. Typing again clears it.
-5. **Already joined.** The sign-up reports the address is already on the
-   list. The visitor is told so, plainly. This is not something to retry, so
-   the only choice offered is to use a different email.
+5. **Already joined.** The list already holds the address. The visitor sees
+   the same success card as a new sign-up: the page never reveals whether an
+   address is on the list, so nobody can probe it with someone else's.
 6. **Offline.** If the device is offline the visitor is told, the address
    they typed is kept, and "Try again" returns them to the form.
 7. **Service unavailable.** If sign-up is not open on this site yet, the
@@ -101,20 +108,26 @@ and no promise about what is not built.
 - **Early-access form: submitting** — the button is disabled and shows
   progress; a second press does nothing.
 - **Early-access form: joined** — a success card for the chosen platform.
-- **Early-access form: failed** — one of four messages: not a valid address,
-  already on the list, offline, or sign-up not open yet. All but "already on
-  the list" can be retried.
+- **Early-access form: failed** — one of three messages: not a valid address,
+  offline, or sign-up not open yet. Every one can be retried.
 
 ## Interactions with other features
 
 - **Appearance (Settings)** — the theme switch writes the saved appearance
   preference and applies it, exactly as the Appearance pane does. The app's
   single theme owner then follows the preference, so the page never fights it.
+  The page reads the theme when it opens and after each press of the switch;
+  a change made from another tab shows on the next visit.
 - **Early access** — the form is its own feature. It checks the address
   itself, sends the request through the site's own sign-up route, and never
-  holds a secret on the visitor's side.
-- **Analytics** — cookieless product counts. Events never carry what a
-  visitor typed.
+  holds a secret on the visitor's side. The platform picker and the vote
+  buttons hand it the chosen platform as a request it reads for itself; the
+  page never writes the form's state.
+- **Analytics** — cookieless counts. A visit is an anonymous, rotating hash
+  of the site, the network address and the browser, never a name or an
+  address; each event carries the page, the browser's size and language —
+  never the words a visitor typed, never the email. Query strings are never
+  sent.
 
 | What the visitor does | What is counted |
 | --- | --- |
@@ -139,16 +152,23 @@ and no promise about what is not built.
 - Third-party logos or endorsements.
 - A blog, a changelog or localized copy (the page is English only for now).
 - Showing real user data: every screenshot is a mock-fixture render.
+- Proving the visitor owns the address (double opt-in) and durable rate
+  limiting of the sign-up: tracked in issue #104 of this repository.
 
 ## Open questions
 
 - Pricing: the "Is Kro free?" answer says the web app is open to use and that
   other platforms have no announced pricing. Owner: product, to confirm the
   wording before the flag goes on. Opened 2026-10-12.
-- Device frames show one image URL; the WebP sibling is used and the PNG is
-  not offered as a fallback inside the frame. If an older browser must be
-  supported, the frame primitive needs a picture element. Owner: design
-  system. Opened 2026-10-12.
+- Screenshots ship as WebP only, with no PNG fallback inside a device frame.
+  If an older browser must be supported, the frame primitive needs a picture
+  element and the masters come back. Owner: design system. Opened 2026-10-12.
+- The `www` host: today it serves the app, indexable, like any unconfigured
+  alias; whether it redirects to the apex is a hosting decision. Owner:
+  maintainer. Opened 2026-10-13.
+- A contact address for removal requests: the notice under the field points
+  at the footer's link because the page has no mailbox yet. Owner: product.
+  Opened 2026-10-13.
 - The mobile menu's open state is read from the press on its button; closing
   it with the Escape key cannot be seen, so the remembered state self-corrects
   on the next link press. Owner: design system, if the bar should report
@@ -195,7 +215,6 @@ stateDiagram-v2
     Typing --> FailedInvalid: visitor submits something that is not an address
     Typing --> Joined: a hidden field was filled, the form pretends it worked
     Submitting --> Joined: the list accepts the address
-    Submitting --> FailedAlready: the address is already on the list
     Submitting --> FailedOffline: the device is offline
     Submitting --> FailedUnavailable: sign-up is not open yet
     Submitting --> FailedOther: anything unexpected
@@ -203,6 +222,5 @@ stateDiagram-v2
     FailedOffline --> Idle: Try again
     FailedUnavailable --> Idle: Try again
     FailedOther --> Idle: Try again
-    FailedAlready --> Idle: Use a different email
     Joined --> Idle: Add another address
 ```

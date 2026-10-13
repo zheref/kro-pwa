@@ -176,10 +176,10 @@ you.**
 - **Free** — the loop as it ships today, on every platform, with no time limit: My Day,
   Plan's timeline, tasks and lists, focus Sessions, Earn (rings, Challenges
   and Milestones), Inbox and Triage, one calendar connection, sync across
-  devices, light, dark and the four palettes, and the web app and the Apple
-  apps as they open. The parts of the loop not built yet — the Priority
-  Matrix, Habits, breaks between Sessions, Board and Blueprints — sit on the
-  Free card marked Planned, never with a check. Its door opens the app.
+  devices, light, dark and the four palettes, and the web app. What is not
+  open yet — the Priority Matrix, Habits, breaks between Sessions, Board,
+  Blueprints, and the Apple apps as they open — sits on the Free card marked
+  Planned, never with a check. Its door opens the app.
 - **Plus** — $5 a month, or $48 a year ($4 a month). Everything in Free,
   plus the AI: AI capture that turns a note into tasks, planning the day,
   natural-language capture, Session lengths that learn, a weekly review that

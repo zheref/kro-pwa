@@ -876,7 +876,9 @@
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.25em;
-  text-decoration-color: var(--kro-color-accent);
+  /* Foreground ink, not the accent: the frosted sheet varies with what
+     scrolls behind it, and the accent sat on the 3:1 line in light. */
+  text-decoration-color: var(--kro-color-fore);
 }
 
 @media (prefers-reduced-motion: reduce) {

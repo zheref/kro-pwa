@@ -26,6 +26,19 @@ describe('PlatformsSection (mirrors PlatformsSection.stories)', () => {
     expect(container.querySelectorAll('article')).toHaveLength(7)
   })
 
+  it('Desktop — every strip figure caps its frame to the column (the Mac window shrinks below 414px instead of clipping)', () => {
+    const { container } = render(stories.Desktop.render())
+    const figures = [...container.querySelectorAll('figure')]
+    expect(figures).toHaveLength(5)
+    for (const figure of figures) {
+      // A grid figure's auto track would take the frame's fixed width as its
+      // minimum; `grid-cols-1` is minmax(0, 1fr), so the track can shrink.
+      expect(figure.className).toContain('grid-cols-1')
+      expect(figure.className).toContain('max-w-full')
+      expect(figure.className).toContain('min-w-0')
+    }
+  })
+
   it('Desktop — one real screenshot per platform, each in its own device frame', () => {
     const { container } = render(stories.Desktop.render())
     const frameOf = (key: keyof typeof landingAssets) =>

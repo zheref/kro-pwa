@@ -382,7 +382,8 @@ export const pricingTiers: readonly PricingTier[] = [
       has('One calendar connection'),
       has('Sync across your devices'),
       has('Light, dark and four palettes'),
-      has('The web app, and the Apple apps as they open'),
+      has('The web app'),
+      planned('The Apple apps, as they open'),
     ],
     cta: 'Open Kro for Web',
     status: 'Live today',
@@ -494,7 +495,7 @@ export const pricingComparison: readonly PricingRowGroup[] = [
     rows: [
       both('Sync across your devices'),
       both('Kro for Web'),
-      both('The Apple apps, as they open'),
+      bothPlanned('The Apple apps, as they open'),
       plusPlanned('Early access to new platforms'),
     ],
   },

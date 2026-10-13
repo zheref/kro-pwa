@@ -92,13 +92,15 @@ describe('landing copy', () => {
       if (row.plus === 'included') expect(row.free).toBe('included')
     }
     // The status quo (`@kro/core` FeatureFlagAssignments) keeps habits and
-    // session breaks off, and matrix, board and blueprints carry no stage at all.
+    // session breaks off, matrix, board and blueprints carry no stage at all,
+    // and the Apple apps are on TestFlight, not open.
     for (const feature of [
       'Plan: the Priority Matrix',
       'Habits',
       'Breaks between Sessions',
       'Board',
       'Blueprints',
+      'The Apple apps, as they open',
     ]) {
       const row = rows.find((r) => r.feature === feature)
       expect(row, feature).toBeDefined()
@@ -136,6 +138,7 @@ describe('landing copy', () => {
       'Breaks between Sessions',
       'Board',
       'Blueprints',
+      'The Apple apps, as they open',
     ])
     expect(plus?.features[0]).toEqual({
       label: 'Everything in Free',

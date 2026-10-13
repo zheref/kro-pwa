@@ -116,7 +116,7 @@ export function PlatformsSection({
         as="div"
         className="mb-kro-xx-large flex flex-wrap items-end justify-center gap-x-kro-xx-large gap-y-kro-x-large"
       >
-        <figure className="m-0 grid min-w-0 max-w-full justify-items-center gap-kro-small">
+        <figure className="m-0 grid min-w-0 max-w-full grid-cols-1 justify-items-center gap-kro-small">
           <MacWindowFrame
             {...shotFor('webMyDayDesktopLight')}
             scale={DEVICE_SCALE}
@@ -125,13 +125,13 @@ export function PlatformsSection({
             {labelOf('web')}
           </figcaption>
         </figure>
-        <figure className="m-0 grid min-w-0 max-w-full justify-items-center gap-kro-small">
+        <figure className="m-0 grid min-w-0 max-w-full grid-cols-1 justify-items-center gap-kro-small">
           <TabletFrame {...shotFor('ipadosSidebar')} scale={DEVICE_SCALE} />
           <figcaption className="font-medium text-kro-fore text-sm">
             {labelOf('ipados')}
           </figcaption>
         </figure>
-        <figure className="m-0 grid min-w-0 max-w-full justify-items-center gap-kro-small">
+        <figure className="m-0 grid min-w-0 max-w-full grid-cols-1 justify-items-center gap-kro-small">
           <PhoneFrame
             {...shotFor('iosDoPopulatedLanes')}
             scale={DEVICE_SCALE}
@@ -140,7 +140,7 @@ export function PlatformsSection({
             {labelOf('ios')}
           </figcaption>
         </figure>
-        <figure className="m-0 grid min-w-0 max-w-full justify-items-center gap-kro-small">
+        <figure className="m-0 grid min-w-0 max-w-full grid-cols-1 justify-items-center gap-kro-small">
           <PhoneFrame
             {...shotFor('androidDayProgress')}
             platform="android"
@@ -150,7 +150,7 @@ export function PlatformsSection({
             {labelOf('android')}
           </figcaption>
         </figure>
-        <figure className="m-0 grid min-w-0 max-w-full justify-items-center gap-kro-small">
+        <figure className="m-0 grid min-w-0 max-w-full grid-cols-1 justify-items-center gap-kro-small">
           <WatchFrame {...shotFor('watchosFeatured')} scale={DEVICE_SCALE} />
           <figcaption className="font-medium text-kro-fore text-sm">
             {labelOf('watchos')}

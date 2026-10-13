@@ -242,12 +242,15 @@
 }
 
 /* On the indigo field the ink is white in both schemes, as in `.kro-on-gradient`.
-   The marketing ring's back-coloured inner band would vanish into the field, so
-   here the ring is snow inside total: one band always contrasts with the field
-   and the other with whatever control it surrounds. */
+   The marketing ring's accent outer band would vanish into the field, so here
+   the ring is back inside total: the outer band always contrasts with the
+   field (black on it in light, white in dark) and the inner band with the
+   control it surrounds — white against the dark tinted primary in light, the
+   dark back against the light tinted primary in dark, so the inside edge
+   clears 3:1 in both schemes even while the lit rim brightens it. */
 .kro-marketing-section[data-tone="gradient"] {
   color: var(--kro-color-snow);
-  --kro-ring: 0 0 0 2px var(--kro-color-snow), 0 0 0 4px var(--kro-color-total);
+  --kro-ring: 0 0 0 2px var(--kro-color-back), 0 0 0 4px var(--kro-color-total);
 }
 
 .kro-marketing-section[data-tone="gradient"] .kro-lede {
@@ -385,6 +388,11 @@
    bezel is the same share of the screen at 240px as at 412px. The frame
    modules set `--kro-device-w`, `--kro-spec-w` (the logical outer width) and
    `--kro-screen-ar` inline; every other number lives here.
+
+   Hardware colours — bezel metal, keys, the traffic lights, camera glass —
+   are literal `rgb()` values by design: they depict devices, not UI, and
+   never follow the scheme. This block is the one exemption from the
+   tokens-only rule `marketingTokens.test` enforces on the rest of the file.
    -------------------------------------------------------------------------- */
 
 .kro-device {
@@ -859,6 +867,15 @@
   letter-spacing: var(--kro-tracking-title);
   color: var(--kro-color-fore);
   text-decoration: none;
+}
+
+/* The current page in the sheet: the same cue the bar gives, since the bar's
+   links are hidden at the widths the sheet serves. */
+.kro-marketing-menu__link.is-active {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--kro-color-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

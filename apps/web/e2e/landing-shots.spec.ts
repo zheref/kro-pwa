@@ -302,7 +302,7 @@ for (const { name, viewport, scheme } of PRICING_SCENES) {
         page
           .getByRole('navigation', { name: 'Primary' })
           .getByRole('link', { name: 'Pricing' }),
-      ).toHaveAttribute('aria-current', 'location')
+      ).toHaveAttribute('aria-current', 'page')
       await settle(page)
       await expect(page).toHaveScreenshot(scene(name))
     })

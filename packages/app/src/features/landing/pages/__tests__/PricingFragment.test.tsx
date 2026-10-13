@@ -21,7 +21,7 @@ describe('PricingFragment (mirrors PricingFragment.stories)', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(container.querySelectorAll('main#main')).toHaveLength(1)
     const nav = screen.getByRole('navigation', { name: 'Primary' })
-    expect(nav.querySelector('[aria-current="location"]')?.textContent).toBe(
+    expect(nav.querySelector('[aria-current="page"]')?.textContent).toBe(
       'Pricing',
     )
     expect(screen.getByRole('contentinfo')).toBeTruthy()

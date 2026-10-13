@@ -53,6 +53,39 @@ describe('MarketingNav', () => {
     ).toBeNull()
   })
 
+  it('marks a route link as the current page, in the bar and in the open menu', () => {
+    render(
+      <MarketingNav
+        {...props}
+        links={[
+          ...props.links,
+          { id: 'pricing', label: 'Pricing', href: '/pricing' },
+        ]}
+        activeId="pricing"
+        defaultMenuOpen
+      />,
+    )
+    // The open sheet is modal, so the bar behind it is hidden from the tree.
+    const nav = screen.getByRole('navigation', {
+      name: 'Primary',
+      hidden: true,
+    })
+    expect(
+      within(nav)
+        .getByRole('link', { name: 'Pricing', hidden: true })
+        .getAttribute('aria-current'),
+    ).toBe('page')
+    const menu = screen.getByRole('dialog')
+    const item = within(menu).getByRole('link', { name: 'Pricing' })
+    expect(item.getAttribute('aria-current')).toBe('page')
+    expect(item.className).toContain('is-active')
+    expect(
+      within(menu)
+        .getByRole('link', { name: 'Privacy' })
+        .hasAttribute('aria-current'),
+    ).toBe(false)
+  })
+
   it('deepens its shadow once the page has scrolled more than 8px', () => {
     render(<MarketingNav {...props} />)
     const bar = screen.getByRole('banner')

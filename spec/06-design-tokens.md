@@ -59,7 +59,9 @@ Every glass piece carries a light rim. Where it points is decided by one rule:
   no pointer to track). A lit piece ignores where the pointer is: an even rim on every edge
   and a soft centred sheen, as if the pointer were everywhere at once. Script only decides
   lit-or-not; the stylesheet owns the look. A static state is not motion, so reduced motion keeps
-  it. The two-tone focus ring is kept on focus and still clears 3:1.
+  it. The two-tone focus ring is kept on focus and still clears 3:1: on the gradient field its
+  inner band is the scheme's back colour, so it contrasts with the tinted primary in dark (where
+  the primary is light) as well as in light (where it is dark), lit rim included.
 - **A bar lights its bottom edge only.** The fixed top chrome sits on the viewport edges, so its
   top and sides are never drawn. Its bottom hairline has a hotspot that follows the pointer's x
   along the edge, and lights evenly along its whole length when the pointer is inside the bar or

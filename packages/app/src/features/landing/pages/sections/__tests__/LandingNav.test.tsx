@@ -97,13 +97,13 @@ describe('LandingNav intents', () => {
     ).toBe('/pricing')
   })
 
-  it('on the pricing page marks Pricing current and sends the brand home', () => {
+  it('on the pricing page marks Pricing the current page and sends the brand home', () => {
     render(<LandingNav {...props()} surface="pricing" activeId="pricing" />)
     expect(
       screen
         .getByRole('link', { name: 'Pricing' })
         .getAttribute('aria-current'),
-    ).toBe('location')
+    ).toBe('page')
     expect(screen.getByRole('link', { name: 'Kro' }).getAttribute('href')).toBe(
       '/#top',
     )

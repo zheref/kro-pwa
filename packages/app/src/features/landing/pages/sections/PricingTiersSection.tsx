@@ -51,7 +51,7 @@ function TierCard({ tier, href, onPress }: TierCardProps) {
           <h3 id={nameId} className="m-0 font-semibold text-2xl">
             {tier.name}
           </h3>
-          <span className="rounded-kro-pill border border-kro-hairline px-kro-small py-kro-tiny font-medium text-kro-fore-secondary text-sm">
+          <span className="rounded-kro-pill border border-kro-hairline px-kro-small py-kro-tiny font-medium text-base text-kro-fore-secondary">
             {tier.status}
           </span>
         </div>
@@ -96,7 +96,7 @@ function TierCard({ tier, href, onPress }: TierCardProps) {
             {tier.cta}
           </a>
         </Button>
-        <p className="m-0 text-kro-fore-secondary text-sm">{tier.ctaNote}</p>
+        <p className="m-0 text-base text-kro-fore-secondary">{tier.ctaNote}</p>
       </div>
     </article>
   )

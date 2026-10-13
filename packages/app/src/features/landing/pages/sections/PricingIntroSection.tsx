@@ -30,7 +30,7 @@ export function PricingIntroSection() {
           {pricingCopy.title}
         </h1>
         <p className="kro-lede">{pricingCopy.lede}</p>
-        <p className="m-0 rounded-kro-pill border border-current px-kro-medium py-kro-tiny font-semibold text-sm">
+        <p className="m-0 rounded-kro-pill border border-current px-kro-medium py-kro-tiny font-semibold text-base">
           {pricingCopy.note}
         </p>
       </div>

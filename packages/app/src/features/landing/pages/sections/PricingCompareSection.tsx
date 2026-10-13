@@ -61,8 +61,17 @@ export function PricingCompareSection() {
         headingId={titleId}
       />
       <Reveal>
-        <div className="overflow-x-auto rounded-kro-surface border border-kro-hairline bg-kro-back">
-          <table className="w-full min-w-[20rem] border-collapse text-left text-kro-fore">
+        {/* A scroller must be reachable from the keyboard: it is a labelled
+            region with a tab stop, and the table has no minimum width so the
+            three columns fit a 280px viewport without scrolling at all. */}
+        <div
+          className="overflow-x-auto rounded-kro-surface border border-kro-hairline bg-kro-back"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll region is reachable from the keyboard only through a tab stop (WCAG 2.1.1); it is a labelled region, not a control
+          tabIndex={0}
+          role="region"
+          aria-labelledby={titleId}
+        >
+          <table className="w-full border-collapse text-left text-kro-fore">
             <caption className="sr-only">{pricingCopy.compareCaption}</caption>
             <thead>
               <tr className="border-kro-hairline border-b">

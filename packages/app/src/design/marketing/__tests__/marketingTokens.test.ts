@@ -87,6 +87,14 @@ describe('marketing.css', () => {
     }
   })
 
+  it('keeps literal rgb() colour to the device-art block, which its header exempts', () => {
+    const deviceArt = MARKETING.indexOf('   Device frames')
+    expect(deviceArt).toBeGreaterThan(0)
+    expect(MARKETING.slice(deviceArt)).toContain(
+      'are literal `rgb()` values by design',
+    )
+  })
+
   it('reads colours from tokens and never retypes a hex value', () => {
     expect(MARKETING).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
@@ -106,7 +114,7 @@ describe('marketing.css', () => {
       /--kro-ring:\s+0 0 0 2px var\(--kro-color-back\),\s+0 0 0 4px var\(--kro-color-accent\);/,
     )
     expect(MARKETING).toMatch(
-      /--kro-ring:\s+0 0 0 2px var\(--kro-color-snow\),\s+0 0 0 4px var\(--kro-color-total\);/,
+      /--kro-ring:\s+0 0 0 2px var\(--kro-color-back\),\s+0 0 0 4px var\(--kro-color-total\);/,
     )
     expect(TOKENS).toContain(
       'color-mix(in srgb, var(--kro-color-accent) 35%, transparent)',

@@ -119,7 +119,9 @@ test.describe('early access · desktop · light', () => {
       route.fulfill({ status: 200, json: joinedBody }),
     )
     const section = await openForm(page)
-    await section.getByLabel(/email/i).fill('ada@example.com')
+    await section
+      .getByRole('textbox', { name: /email/i })
+      .fill('ada@example.com')
     await section.getByRole('button', { name: /early access/i }).click()
     await expect(section.getByText(/on the list/i)).toBeVisible()
     await settle(page)
@@ -131,7 +133,9 @@ test.describe('early access · desktop · light', () => {
       route.fulfill({ status: 409, json: alreadyJoinedBody }),
     )
     const section = await openForm(page)
-    await section.getByLabel(/email/i).fill('already@example.com')
+    await section
+      .getByRole('textbox', { name: /email/i })
+      .fill('already@example.com')
     await section.getByRole('button', { name: /early access/i }).click()
     await expect(section.getByRole('alert')).toBeVisible()
     await settle(page)

@@ -33,9 +33,10 @@ bankai-core `docs/HUMAN-GATES.md`):
 | **Critical page** | CON-8 | A `critical` security finding or production incident | Immediate maintainer response; overrides all cadence. |
 
 **Readiness is not a vibe.** A PR may be called ready **only** when
-`REPO=zheref/kro-pwa scripts/pr_ready_gate.sh --verdict <n>` (run from a bankai-core checkout)
-exits `0` at the PR's current head (CON-32). Until the automated reviewers below are wired, that
-gate cannot fully run here — see the interim bar at the end.
+`nen pr ready <n> --gh-repo zheref/kro-pwa --explain` answers *ready* at the PR's current head
+(CON-32), judged against the reviewer identities declared as data in `nen/gates.json`. That
+replaced the earlier `scripts/pr_ready_gate.sh --verdict` run from a bankai-core checkout on
+2026-10-12, when this repository repinned nen to `0.20` and adopted the review-round gate below.
 
 ---
 
@@ -99,8 +100,10 @@ is stale and owed again.
 | **Sasuke** (App: `sasuke / review`) | Correctness & architecture | UZF conformance: slices/Selectors/Shifters/Producers, store discipline, forbidden patterns, test minimums | `UZF-{n}` + this repo's stack rules `RC-1..63` (`handbooks/stacks/react-uzf-v1/`) |
 | **Tenma** (App: `tenma / review`) | Security | Secrets, authz at the data layer (RLS — `SEC-6`), typed boundary parsing (`SEC-7`), token/PII hygiene (`SEC-5`), CI supply chain (`SEC-14`) | `SEC-{n}` + CWE/OWASP. A `critical` finding **pages the maintainer** (CON-8) |
 | **Bisky** (App: `bisky / review`) | Design & UX quality | Accessibility, touch/pointer target sizes, tokens, contrast, motion (incl. reduced-motion), platform conventions | `UX-{n}` (+ WCAG) — required here because this repo ships UI |
-| **Copilot** | Bounded extra round | General code review; requested per-PR via the user PAT; a stalled pending request (>30 min) fails readiness | CON-16 (`bounded`: owed only while a request is pending) |
-| **The maintainer** | **G2** | Everything above plus product judgment | The only actor who merges |
+| **hanten** (check: `hanten`, `.github/workflows/hanten.yml`) | **The review round** (since 2026-10-12) | That the PR body's `## Adversarial review (hanten)` section records a settled pre-PR adversarial review — every finding `fixed`, `pushed-back` with a reason, or `deferred` to an issue — and the checklist ticks it. `scripts/hanten_gate.sh`, tested by `make test-hanten-gate` under `make lint` | CON-32(b) through `nen/gates.json` → `base_reviewers: ["hanten"]` (maintainer ruling 2026-10-05, as on `zheref/KroApple`) |
+| **Nobunaga · Hisoka · Chrollo · Feitan** (local, `hatsu:hanten`) | Pre-PR adversarial review | `nen review scopes` raises one reviewer per touched scope (`nen/workflow.json` → `review.scopes`: code, ui, architecture, security); their findings and dispositions are what the `hanten` check attests | `UZF-{n}`, `RC-{n}`, `UX-{n}`, `SEC-{n}` |
+| **Copilot** · **Cursor Bugbot** | Recognised, not owed | Both are declared in `nen/gates.json` so a round either posts is read and its threads bind (CON-32(d)); neither is in the base set while their review credits are exhausted | CON-16 (`bounded_policy_exempt`: a round is owed only while a request is pending) |
+| **The maintainer** | **G2** | Everything above plus product judgment | The only actor who merges — every PR ends at `en`'s merge prompt (ruling 2026-09-30) |
 
 ### What "fully green" means (CON-32, jointly)
 
@@ -111,15 +114,30 @@ is stale and owed again.
 - **(e)** every channel-less finding dispositioned (the unit is the finding, not the thread).
 
 No actor — local or CI — may report, label, or hand off a PR as ready until (a)–(e) all hold, and
-the only readiness claim that counts is the exit status of `scripts/pr_ready_gate.sh --verdict`
-at the current head. Every human-merged PR additionally carries CON-17's two sections:
+the only readiness claim that counts is `nen pr ready`'s verdict at the current head. Every human-merged PR additionally carries CON-17's two sections:
 `# What this changes for you` (effect before mechanism, costs stated) and `## How to verify`
 (numbered steps with exact expected results) — a PR missing either is not merge-ready.
 
 ### Interim bar (until the Apps and checks above are wired)
 
-Automated rounds cannot post yet, so a PR here is held to: local `lint`/`typecheck`/`test`/`build`
-green, the CON-17 body sections present, the child issue's acceptance criteria demonstrably met,
-and the maintainer's own review. Every PR must still be honest about this state — "ready" in the
-full CON-32 sense begins the day the review pair is live, which is exactly why the G5 queue above
-matters.
+The Bankai review apps (Sasuke, Tenma, Bisky) cannot post yet, so the automated round is the
+`hanten` check: a PR here is held to local `lint`/`typecheck`/`test`/`build` green, the CON-17
+body sections present, a settled `## Adversarial review (hanten)` section, UZF-26 evidence
+mirrored to `zheref/kro-assets` by `scripts/pr_screenshots.sh`, the child issue's acceptance
+criteria demonstrably met, and the maintainer's own review. "Ready" in the full CON-32 sense is
+what `nen pr ready` answers; the day the review pair is live, their rows join `nen/gates.json` and
+nothing else in this document changes.
+
+### The Hatsu/Nen machinery this repository carries (2026-10-12)
+
+- `nen/contract.json` — pinned to nen `v0.20.0` (minimum `0.20`), the same pin as `zheref/hatsu`
+  and `zheref/KroApple`; `project.evidence` declares the `public-mirror` mechanism.
+- `nen/workflow.json` — review scopes, report sections, run profile, `mukai.autoEn`, `direct.publish`.
+- `nen/gates.json` — the reviewer identities above; `nen/labels.json` — the GitHub label set plus
+  the `lang/`, `job/` and `model/` families (synced to GitHub only after the declaration lands);
+  `nen/repos.json` — this repository as consumer `KC`; `nen/colors.yml` — the status/severity
+  vocabulary the backlog boards read.
+- `.github/workflows/hanten.yml` + `scripts/hanten_gate.sh` — the review-round check;
+  `.github/pull_request_template.md` — the body shape it reads.
+- `scripts/pr_screenshots.sh` — mirrors `apps/web/e2e/__screenshots__/**/*.png` to
+  `zheref/kro-assets/kro-pwa/pr-<N>/` for the PR's UZF-26 table.

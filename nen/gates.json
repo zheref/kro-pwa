@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "$comment": "Reviewer identities for zheref/kro-pwa, read by `nen pr ready` (CON-32). Declared as DATA so the readiness verdict is deterministic for every pull request: without this file nen refuses to judge rather than guess a reviewer set. This is a single-maintainer consumer repository: the human merge at G2 is the approval, so no default approver is a machine identity. Copilot reviews automatically once at open; Cursor Bugbot posts a check and reviews only when it has findings.",
+  "$comment": "Reviewer identities for zheref/kro-pwa, read by `nen pr ready` (CON-32). Declared as DATA so the readiness verdict is deterministic for every pull request: without this file nen refuses to judge rather than guess a reviewer set. This is a single-maintainer consumer repository: the human merge at G2 is the real approval and stays outside the automated verdict. REWORKED 2026-10-12 to the shape zheref/KroApple adopted under the maintainer's ruling of 2026-10-05: Copilot and Cursor Bugbot ran out of review credits, so the base reviewer is the `hanten` check (.github/workflows/hanten.yml + scripts/hanten_gate.sh) and no AI bot round is owed; both bots stay declared so a round either does post is recognised and its threads still bind.",
   "reviewers": [
     {
-      "$comment": "Posts as copilot-pull-request-reviewer[bot]. Reviews once when the PR opens; nothing re-requests it after a push, so under the bounded policy only a PENDING request owes a round.",
+      "$comment": "Posts as copilot-pull-request-reviewer[bot]. Reviews once when the PR opens when it has credits; nothing re-requests it after a push, so under the bounded policy only a PENDING request owes a round. Not in `base_reviewers` since 2026-10-12 (credits exhausted); a round it does post is still recognised and its threads must be resolved (CON-32(d)).",
       "name": "copilot",
       "login_pattern": {
-        "pattern": "copilot",
+        "pattern": "^(copilot|copilot-pull-request-reviewer(\\[bot\\])?)$",
         "ignoreCase": true
       },
       "bounded_policy_exempt": true
     },
     {
-      "$comment": "Cursor Bugbot posts under a login carrying either word and its check name varies with the installation -- an unanchored, case-insensitive substring.",
+      "$comment": "Cursor Bugbot posts under a login carrying either word and its check name varies with the installation -- an unanchored, case-insensitive substring. It enrols only when its own check is present at the head (optional, but binding once it shows up) and is `bounded_policy_exempt` (maintainer ruling 2026-09-25): Cursor bills per review and can run out of credits mid-effort, so an enrolled bugbot owes a round only while a request for one is pending -- a missing bugbot is silence, not a blocker; a bugbot that spoke is binding.",
       "name": "bugbot",
       "login_pattern": {
         "pattern": "cursor|bugbot",
@@ -25,10 +25,23 @@
       "enrolment_check_pattern": {
         "pattern": "bugbot",
         "ignoreCase": true
+      },
+      "bounded_policy_exempt": true
+    },
+    {
+      "$comment": "The hanten round, as a check (maintainer ruling 2026-10-05, adopted here 2026-10-12). Copilot and Cursor Bugbot both ran out of review credits, so no AI bot round can be what CON-32(b) waits on. `hanten` is the one base reviewer instead: its round is the `hanten` job of .github/workflows/hanten.yml, which runs scripts/hanten_gate.sh against the pull request body and concludes SUCCESS only when the `## Adversarial review (hanten)` section is present, every row of its findings table is fixed, pushed-back or deferred, and the checklist ticks `Adversarial review settled`. The job re-runs on `edited`, so settling a finding in the body re-reads the round. The login pattern is anchored to a name no reviewer posts under: the check is the round, never a review.",
+      "name": "hanten",
+      "login_pattern": {
+        "pattern": "^hanten$",
+        "ignoreCase": true
+      },
+      "round_check_pattern": {
+        "pattern": "^hanten$",
+        "ignoreCase": true
       }
     },
     {
-      "$comment": "The maintainer. The human merge at G2 is the real approval; this row exists because an empty approval set is refused, and it names who that human is.",
+      "$comment": "The maintainer. The human merge at G2 is the real approval; this row exists so a review the maintainer posts is recognised. Not a default approver under `review-round-only`: an APPROVED review is not required for readiness, the merge decision itself is the approval.",
       "name": "zheref",
       "login_pattern": {
         "pattern": "^zheref$",
@@ -36,13 +49,18 @@
       }
     }
   ],
-  "default_approvers": ["zheref"],
-  "base_reviewers": ["copilot"],
+  "$approval": "POLICY. `review-round-only` with no default approvers matches zheref/hatsu's and zheref/KroApple's gates.json and the maintainer's ruling of 2026-09-12: the automated review round is what readiness waits on, a separate APPROVED review is not required, and the human merge decision stays outside the automated verdict.",
+  "approval_policy": "review-round-only",
+  "$approval_policy": "one of: required | review-round-only",
+  "default_approvers": [],
+  "$base_reviewers": "RULING 2026-10-05 (zheref/KroApple), adopted here 2026-10-12: the base set is `hanten` alone, and no minimum round is expected from any AI bot reviewer. Copilot and bugbot stay declared, so a round either one does post is recognised and its threads still have to be resolved (CON-32(d) reads every thread whatever the reviewer set), but neither is in the base set, so neither owes anything, and the ruleset's automatic Copilot request, which a credit-exhausted Copilot never answers, cannot stall the gate. Copilot has no enrolment check, so a request for it enrols nothing; bugbot enrols only when its own check is present, and as `bounded_policy_exempt` it then owes a round only while a request for one is pending. The schema refuses an empty base set, which is why hanten's check stands in rather than the set simply being emptied. Revert to [\"copilot\"] when its credits return, if the maintainer wants the bot round back.",
+  "base_reviewers": ["hanten"],
   "round_policy": {
     "maxRounds": 2
   },
+  "$round_policy": "Reviewer-round caps by default (ruling 2026-09-30): at most two requested bot rounds per pull request. nen reads `maxRounds` from 0.21 (`pr request-reviews` refuses a request past it); at the 0.20 pin the key is preserved as data.",
   "delivery": {
-    "$comment": "No delivery bot or integration branch exists in this repository yet; the pattern matches nobody so no PR is judged as a delivery PR.",
+    "$comment": "What a delivery (integration) pull request looks like here. No delivery bot exists in this repository, so the author pattern matches nobody; the `integration/` head prefix is the one real signal -- the landing-page effort of 2026-10-12 is the first integration branch (integration/landing-page), opened by the maintainer's own credentials.",
     "author_pattern": {
       "pattern": "(^|/)roy-bankai(\\\\[bot\\\\])?$",
       "ignoreCase": true

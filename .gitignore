@@ -47,3 +47,6 @@ next-env.d.ts
 # nen / hatsu (bankai local machinery)
 Reports/
 .nen/
+
+# Claude Code's own worktrees (the one harness-native exception to .nen/worktrees/<surface>/)
+.claude/worktrees/

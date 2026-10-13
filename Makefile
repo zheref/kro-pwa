@@ -45,6 +45,15 @@ build:
 lint:
 	$(PNPM) exec biome check .
 	$(PNPM) turbo run lint
+	$(MAKE) test-hanten-gate
+
+## test-hanten-gate: the hanten review-round check against its own cases
+#
+# scripts/hanten_gate.sh is the `hanten` check (.github/workflows/hanten.yml),
+# the review round nen/gates.json waits on. Its tests run under `make lint` so
+# the gate cannot drift from what it claims to enforce.
+test-hanten-gate:
+	bash scripts/test_hanten_gate.sh
 
 ## format: rewrite the repo with Biome's formatter and safe fixes
 format:

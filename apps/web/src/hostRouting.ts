@@ -14,9 +14,11 @@
  * |-------|-------------------------|------------------------------------------------|
  * | apex  | `/hub`, `/hub/<rest>`   | 307 → `https://<hub>/<rest>?query`             |
  * | apex  | an app path (`/plan` …) | 307 → `https://<hub>/plan?query`               |
- * | apex  | anything else           | served as is (`/` is the landing)              |
+ * | apex  | anything else           | served as is (`/` is the landing, and every    |
+ * |       |                         | marketing path such as `/pricing`)             |
  * | hub   | `/`                     | REWRITE to `/my-day?query` (`?code=` survives) |
  * | hub   | `/hub`, `/hub/<rest>`   | 307 → `/<rest>?query` on the hub               |
+ * | hub   | a marketing path        | 307 → `https://<apex>/pricing?query`           |
  * | hub   | anything else           | served as is                                   |
  * | other | `/hub`, `/hub/<rest>`   | 307 → `/<rest>?query` on the same host         |
  * | other | anything else           | served as is (no host redirects at all)        |
@@ -59,6 +61,13 @@ export const APP_PATHS: readonly string[] = [
   '/settings',
   '/integrations',
 ]
+
+/**
+ * The marketing pages besides `/` itself. They belong to the apex: on the hub
+ * they 307 to the same path there, so the app host never serves (or has
+ * indexed) a marketing page. Matched as a whole segment, like `APP_PATHS`.
+ */
+export const MARKETING_PATHS: readonly string[] = ['/pricing']
 
 /** The hub's landing destination — the same one `/` has always redirected to. */
 export const HUB_LANDING_PATH = '/my-day'
@@ -123,6 +132,10 @@ export const isBypassed = (pathname: string): boolean =>
 export const isAppPath = (pathname: string): boolean =>
   APP_PATHS.some((prefix) => startsWithSegment(pathname, prefix))
 
+/** True for a marketing page other than `/` (`/pricing` …). */
+export const isMarketingPath = (pathname: string): boolean =>
+  MARKETING_PATHS.some((prefix) => startsWithSegment(pathname, prefix))
+
 /** `host:port` → `host`, lower-cased; empty when absent. */
 export const normalizeHost = (host: string | null | undefined): string =>
   (host ?? '').trim().toLowerCase().replace(/:\d+$/, '')
@@ -168,6 +181,9 @@ export const resolveHostRouting = ({
   if (configured && here === hub) {
     if (underHub !== null) {
       return { kind: 'redirect', url: `${underHub}${search}` }
+    }
+    if (isMarketingPath(pathname)) {
+      return { kind: 'redirect', url: `https://${site}${pathname}${search}` }
     }
     if (pathname === '/') {
       return {

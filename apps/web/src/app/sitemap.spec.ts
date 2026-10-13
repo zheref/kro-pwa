@@ -6,13 +6,23 @@ afterEach(() => {
 })
 
 describe('sitemap', () => {
-  it('lists only the landing, on the public origin', () => {
+  it('lists only the marketing pages — the landing, then pricing — on the public origin', () => {
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://kroapp.com')
 
     const entries = sitemap()
 
-    expect(entries).toHaveLength(1)
-    expect(entries[0]?.url).toBe('https://kroapp.com/')
+    expect(entries.map((entry) => entry.url)).toEqual([
+      'https://kroapp.com/',
+      'https://kroapp.com/pricing',
+    ])
+  })
+
+  it('marks pricing monthly, below the landing, with a modification date', () => {
+    const pricing = sitemap()[1]
+
+    expect(pricing?.changeFrequency).toBe('monthly')
+    expect(pricing?.priority).toBeLessThan(1)
+    expect(pricing?.lastModified).toBeInstanceOf(Date)
   })
 
   it('marks the landing weekly, top priority, with a modification date', () => {
@@ -27,5 +37,6 @@ describe('sitemap', () => {
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', '')
 
     expect(sitemap()[0]?.url).toBe('http://localhost:3000/')
+    expect(sitemap()[1]?.url).toBe('http://localhost:3000/pricing')
   })
 })

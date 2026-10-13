@@ -51,7 +51,7 @@ export function HeroSection({
         />
       </div>
       <div className="relative grid grid-cols-1 items-center gap-kro-xx-large lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        <div className="grid grid-cols-1 justify-items-start gap-kro-large">
+        <div className="kro-hero-copy grid grid-cols-1 justify-items-start gap-kro-large">
           <p className="kro-eyebrow">{heroCopy.eyebrow}</p>
           <h1 id={titleId} className="kro-display-hero">
             {heroCopy.title}

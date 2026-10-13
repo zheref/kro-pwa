@@ -29,6 +29,20 @@
   max-width: 14ch;
 }
 
+/* The hero's copy column is a size container. Once the hero splits (`lg`),
+   the headline follows the column rather than the viewport, so the calls to
+   action stay above the fold from 1024×768 up. Below `lg` it keeps the
+   viewport-fluid size. */
+.kro-hero-copy {
+  container-type: inline-size;
+}
+
+@media (min-width: 64rem) {
+  .kro-hero-copy .kro-display-hero {
+    font-size: var(--kro-text-hero-split);
+  }
+}
+
 .kro-display-1 {
   font-size: var(--kro-text-display-1);
   line-height: 1.04;
@@ -57,7 +71,7 @@
   align-items: center;
   gap: 10px;
   margin: 0;
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -234,7 +248,7 @@
 }
 
 .kro-section-header[data-level="3"] .kro-display-2 {
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  font-size: var(--kro-text-display-3);
 }
 
 /* --------------------------------------------------------------------------
@@ -382,7 +396,7 @@
   flex: 1;
   margin-right: 52px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--kro-text-caption);
   font-weight: 500;
   color: var(--kro-color-fore-secondary);
   overflow: hidden;
@@ -441,7 +455,7 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  font-size: 17px;
+  font-size: var(--kro-text-body-marketing);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--kro-color-fore);
@@ -468,7 +482,7 @@
   align-items: center;
   min-height: 44px;
   padding-inline: 12px;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   font-weight: 500;
   color: var(--kro-color-fore);
   text-decoration: none;
@@ -597,7 +611,7 @@
   display: flex;
   align-items: center;
   min-height: 44px;
-  font-size: 22px;
+  font-size: var(--kro-text-menu);
   font-weight: 600;
   letter-spacing: var(--kro-tracking-title);
   color: var(--kro-color-fore);
@@ -643,7 +657,7 @@
 
 .kro-marketing-footer__title {
   margin: 0 0 var(--kro-space-small);
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   font-weight: 600;
 }
 
@@ -657,7 +671,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   color: var(--kro-color-fore-secondary);
   text-decoration: none;
 }
@@ -670,7 +684,7 @@
 .kro-marketing-footer__tagline {
   margin: 0;
   max-width: 32ch;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -678,7 +692,7 @@
   margin: var(--kro-space-x-large) 0 0;
   padding-top: var(--kro-space-medium);
   border-top: 1px solid var(--kro-color-hairline);
-  font-size: 12px;
+  font-size: var(--kro-text-caption);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -722,7 +736,7 @@
 
 .kro-feature-card__title {
   margin: 0;
-  font-size: 19px;
+  font-size: var(--kro-text-card-title);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -789,7 +803,7 @@
 }
 
 .kro-stat-row__label {
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -910,7 +924,7 @@
   border-radius: var(--kro-radius-pill);
   background: var(--kro-color-absolute);
   color: var(--kro-color-fore);
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   font-weight: 600;
   text-decoration: none;
   cursor: default;

@@ -21,7 +21,13 @@ const EXPECTED: Record<string, string> = {
   '--kro-text-display-2': 'clamp(2rem, 1.4rem + 2.2vw, 3rem)',
   '--kro-text-lede': 'clamp(1.125rem, 1rem + 0.5vw, 1.375rem)',
   '--kro-text-body-marketing': '1.0625rem',
+  '--kro-text-hero-split': 'clamp(3rem, 14cqi, 6rem)',
+  '--kro-text-display-3': 'clamp(1.5rem, 1.2rem + 1.2vw, 2rem)',
   '--kro-text-caption': '0.75rem',
+  '--kro-text-footnote': '0.8125rem',
+  '--kro-text-label': '0.875rem',
+  '--kro-text-card-title': '1.1875rem',
+  '--kro-text-menu': '1.375rem',
   '--kro-tracking-display': '-0.045em',
   '--kro-tracking-title': '-0.03em',
   '--kro-container-narrow': '720px',
@@ -110,6 +116,25 @@ describe('marketing.css', () => {
   it('gives the marketing primary an opaque accent fill so its label reads', () => {
     expect(MARKETING).toMatch(
       /\.kro-glass\.kro-glass--accent::before,[^{]*\{\s*background: var\(--kro-color-accent\);/,
+    )
+  })
+
+  it('sizes every piece of type from a token, never a literal', () => {
+    const sizes = [...MARKETING.matchAll(/font-size:\s*([^;]+);/g)].map(
+      (match) => match[1],
+    )
+    expect(sizes.length).toBeGreaterThan(10)
+    for (const size of sizes) {
+      expect(size, size).toMatch(/^var\(--kro-text-[a-z0-9-]+\)$/)
+    }
+  })
+
+  it('sizes the split hero by its copy column, not the viewport', () => {
+    expect(MARKETING).toMatch(
+      /\.kro-hero-copy\s*\{\s*container-type: inline-size;/,
+    )
+    expect(MARKETING).toMatch(
+      /@media \(min-width: 64rem\)\s*\{\s*\.kro-hero-copy \.kro-display-hero\s*\{\s*font-size: var\(--kro-text-hero-split\);/,
     )
   })
 })

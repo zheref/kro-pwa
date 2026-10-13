@@ -28,6 +28,9 @@ and no promise about what is not built.
 - Section anchors: the loop, focus, platforms, federation, privacy, early
   access and the questions each have a stable address fragment, and the
   navigation bar and footer link to them.
+- The pricing page, at its own address on the apex, linked from the bar (and
+  so from the menu on small screens), the footer and the "Is Kro free?"
+  answer. See *Pricing*.
 
 ## Core concepts
 
@@ -146,8 +149,8 @@ and no promise about what is not built.
 | --- | --- |
 | Opens the page | One page view, with the path |
 | Scrolls a section into view | The section's name, once per section |
-| Presses an Open Kro button | Where the button was (bar, hero, platforms, closing, success card) |
-| Presses a Get early access button or a TestFlight chip | Where it was |
+| Presses an Open Kro button | Where the button was (bar, hero, platforms, closing, success card, or the pricing page) |
+| Presses a Get early access button or a TestFlight chip | Where it was (the pricing page counts as one place) |
 | Submits the early-access form | The platform and that it came from the landing page |
 | Joins successfully | The platform |
 | The sign-up fails | The kind of failure only |
@@ -156,6 +159,50 @@ and no promise about what is not built.
 | Follows an outside link | The destination's host only |
 | Uses the theme switch | The theme chosen |
 | Opens the menu on a small screen | That it was opened |
+
+## Pricing
+
+A page of its own, on the apex at the pricing address, sharing the landing's
+bar, footer, theme and analytics. It answers "what does Kro cost?" in one
+honest screen: **Free is the whole loop; Plus is the part that thinks with
+you.**
+
+- **Entry points.** The Pricing link in the bar (marked current on this page)
+  and in the small-screen menu, the footer's Product column, and the link
+  under the "Is Kro free?" answer. On the app's own host the address moves
+  to the apex, so the app host never shows a marketing page. With the
+  landing switched off, the pricing address goes to the app, like the front
+  door.
+- **Free** — the whole loop on every platform, with no time limit: My Day,
+  Plan (timeline and Priority Matrix), tasks and lists, habits, focus
+  Sessions with breaks, Earn (rings, Challenges and Milestones), Inbox and
+  Triage, Board, Blueprints, one calendar connection, sync across devices,
+  and the web app and the Apple apps as they open. Its door opens the app.
+- **Plus** — $5 a month, or $48 a year ($4 a month). Everything in Free,
+  plus the AI: capture suggestions that turn a note into tasks, planning the
+  day, natural-language capture, Session lengths that learn, a weekly review
+  that writes itself, smart reminders; and several calendars (Google and
+  Outlook), more integrations, unlimited Blueprints, themes and palettes,
+  early access to new platforms — and keeping the maker shipping. Plus is
+  **not on sale**: its door leads to the landing's early-access form, and
+  the card says so.
+- **Launch pricing.** The prices are labelled "Launch pricing, subject to
+  change" beside the page's opening, once.
+- **The comparison.** One table, features as rows and the two plans as
+  columns, grouped by part of the product. A cell is included, not included,
+  or **Planned**. *The Planned rule:* anything not built today reads
+  Planned, never a check, and Planned is never a date. Every Plus-only row is
+  Planned today.
+- **Pricing questions.** Four, answered in the open (nothing to expand):
+  billing, cancelling, what happens to data on Free, and discounts. None
+  promises terms that do not exist yet; where the terms are not set, the
+  answer says so.
+- **States.** One state: the page at rest, in light or dark. The bar marks
+  Pricing as current from the first paint.
+- **Interactions.** Early access — Plus's door and the closing call to
+  action lead to the landing's form; the form itself is unchanged. Analytics
+  — the page view carries the pricing address; every door on the page except
+  the bar's counts with the pricing place. The theme switch is the same one.
 
 ## Out of scope
 
@@ -170,9 +217,12 @@ and no promise about what is not built.
 
 ## Open questions
 
-- Pricing: the "Is Kro free?" answer says the web app is open to use and that
-  other platforms have no announced pricing. Owner: product, to confirm the
-  wording before the flag goes on. Opened 2026-10-12.
+- ~~Pricing: what "Is Kro free?" should answer.~~ Resolved 2026-10-13 by
+  the pricing page: the core is free on every platform, and Plus adds the AI
+  features at launch pricing, not on sale yet. See *Pricing*.
+- Plus is aspirational: its price, its contents and which features sit behind
+  it are launch pricing, subject to change, and nothing can be bought yet.
+  Owner: maintainer, before Plus goes on sale. Opened 2026-10-13.
 - Screenshots ship as WebP only, with no PNG fallback inside a device frame.
   If an older browser must be supported, the frame primitive needs a picture
   element and the masters come back. Owner: design system. Opened 2026-10-12.
@@ -215,6 +265,9 @@ flowchart TD
     O --> D
     O --> J
     C -->|Theme switch| P[Preference saved, page and app change theme]
+    C -->|Pricing link| Q[Pricing page: Free and Plus, the comparison]
+    Q -->|Free: Open Kro for Web| D
+    Q -->|Plus: Get early access, not on sale yet| J
 ```
 
 ### Early-access form

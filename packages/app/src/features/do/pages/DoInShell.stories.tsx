@@ -26,6 +26,9 @@ export default {
   title: 'Shell/App shell (live My Day)',
   component: MainShellPage,
   parameters: { layout: 'fullscreen' },
+  // The surfaces below are data the stories and their mirror test share, not
+  // stories: CSF would otherwise index them and mount the shell with no store.
+  excludeStories: ['DESKTOP_SURFACE', 'PHONE_SURFACE'],
 }
 
 /** The window a story is meant for: what the shell measures to pick its idiom. */

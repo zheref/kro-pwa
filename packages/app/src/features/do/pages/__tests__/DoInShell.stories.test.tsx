@@ -36,6 +36,21 @@ beforeEach(() => resetSurfaceCache())
 afterEach(cleanup)
 
 describe('DoInShell live-shell stories', () => {
+  it('indexes exactly the three stories — the shared surfaces are excluded from CSF', () => {
+    expect(stories.default.excludeStories).toEqual([
+      'DESKTOP_SURFACE',
+      'PHONE_SURFACE',
+    ])
+    const exported = Object.keys(stories).filter(
+      (k) => k !== 'default' && !stories.default.excludeStories.includes(k),
+    )
+    expect(exported.sort()).toEqual([
+      'AnEmptyDayInTheShell',
+      'MyDayInTheShell',
+      'MyDayInTheTabBarShell',
+    ])
+  })
+
   it('MyDayInTheShell — a desktop-wide viewport shows the sidebar and the populated lanes', async () => {
     installSurface(stories.MyDayInTheShell.parameters.surface)
     render(stories.MyDayInTheShell.render())

@@ -19,7 +19,7 @@ import { PricingPageClient } from './PricingPageClient'
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'Kro is free for the whole loop on every platform. Plus adds the AI that plans with you, at launch pricing of $5 a month or $48 a year. Plus is not on sale yet.',
+    'Kro is free for the loop as it ships, on every platform. Plus adds the AI that plans with you, at launch pricing of $5 a month or $48 a year. Plus is not on sale yet.',
   alternates: { canonical: '/pricing' },
 }
 

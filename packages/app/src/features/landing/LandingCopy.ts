@@ -282,7 +282,7 @@ export const faqEntries: readonly FaqEntry[] = [
     id: 'free',
     question: 'Is Kro free?',
     answer:
-      'The core is free on every platform: capture, triage, plan, do and earn, with sync across your devices. Plus adds the AI features for about $5 a month, or less paid yearly. Plus is not on sale yet.',
+      'The core is free on every platform: capture, triage, plan, do and earn, with sync across your devices. Plus adds the AI features, more calendars and more palettes for about $5 a month, or less paid yearly. Plus is not on sale yet.',
     link: { label: 'See pricing', href: PRICING_PATH },
   },
   {
@@ -366,7 +366,7 @@ export const pricingTiers: readonly PricingTier[] = [
     name: 'Free',
     price: '$0',
     cadence: 'no card, no trial clock',
-    promise: 'The whole loop, on every platform.',
+    promise: 'The loop as it ships today, on every platform.',
     features: [
       has('My Day'),
       has('Plan: the timeline'),

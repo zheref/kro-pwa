@@ -49,6 +49,13 @@ export interface MarketingNavProps {
 export const NAV_SCROLL_THRESHOLD = 8
 
 /**
+ * `aria-current` says what the link is current *as*: an in-page anchor is the
+ * current location in the page, a route is the current page (WAI-ARIA).
+ */
+const currentToken = (href: string): 'page' | 'location' =>
+  href.includes('#') ? 'location' : 'page'
+
+/**
  * The fixed glass navigation bar.
  *
  * ≥768px: brand, link row, trailing slot, compact CTA. Below: brand, trailing
@@ -56,13 +63,6 @@ export const NAV_SCROLL_THRESHOLD = 8
  * body scroll locked — Radix Dialog underneath) whose items stagger in.
  * Links are plain anchors: `packages/app` never imports `next/*`.
  */
-/**
- * `aria-current` says what the link is current *as*: an in-page anchor is the
- * current location in the page, a route is the current page (WAI-ARIA).
- */
-const currentToken = (href: string): 'page' | 'location' =>
-  href.includes('#') ? 'location' : 'page'
-
 export function MarketingNav({
   brand,
   links,

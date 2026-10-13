@@ -391,8 +391,9 @@
 
    Hardware colours — bezel metal, keys, the traffic lights, camera glass —
    are literal `rgb()` values by design: they depict devices, not UI, and
-   never follow the scheme. This block is the one exemption from the
-   tokens-only rule `marketingTokens.test` enforces on the rest of the file.
+   never follow the scheme. Outside this block the file types no colour
+   literal except white light (`rgb(255 255 255 / …)`, the glass sheens);
+   `marketingTokens.test` holds both halves of that rule.
    -------------------------------------------------------------------------- */
 
 .kro-device {

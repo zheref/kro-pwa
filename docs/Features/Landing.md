@@ -173,7 +173,7 @@ you.**
   to the apex, so the app host never shows a marketing page. With the
   landing switched off, the pricing address goes to the app, like the front
   door.
-- **Free** — the whole loop on every platform, with no time limit: My Day,
+- **Free** — the loop as it ships today, on every platform, with no time limit: My Day,
   Plan's timeline, tasks and lists, focus Sessions, Earn (rings, Challenges
   and Milestones), Inbox and Triage, one calendar connection, sync across
   devices, light, dark and the four palettes, and the web app and the Apple

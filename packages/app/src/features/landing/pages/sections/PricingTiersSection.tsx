@@ -79,6 +79,7 @@ function TierCard({ tier, href, onPress }: TierCardProps) {
               // Not built yet: the word, never a check (the Planned rule).
               <span className="mt-0.5 shrink-0 rounded-kro-pill border border-kro-hairline px-kro-small font-medium text-kro-fore-secondary text-xs">
                 {PRICING_CELL_TEXT.planned.mark}
+                <span className="sr-only">: </span>
               </span>
             )}
             <span>{feature.label}</span>

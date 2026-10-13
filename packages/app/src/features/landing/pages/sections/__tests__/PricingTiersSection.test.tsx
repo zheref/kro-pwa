@@ -63,8 +63,9 @@ describe('PricingTiersSection (mirrors PricingTiersSection.stories)', () => {
     const free = within(card('Free'))
       .getAllByRole('listitem')
       .map((li) => li.textContent)
-    expect(free).toContain('PlannedHabits')
-    expect(free).toContain('PlannedBlueprints')
+    // A planned item reads "Planned: Habits" to a screen reader, never run together.
+    expect(free).toContain('Planned: Habits')
+    expect(free).toContain('Planned: Blueprints')
     expect(free).toContain('My Day')
   })
 })

@@ -87,12 +87,18 @@ describe('marketing.css', () => {
     }
   })
 
-  it('keeps literal rgb() colour to the device-art block, which its header exempts', () => {
+  it('types no colour literal outside the device art except white light, as its header says', () => {
     const deviceArt = MARKETING.indexOf('   Device frames')
     expect(deviceArt).toBeGreaterThan(0)
     expect(MARKETING.slice(deviceArt)).toContain(
       'are literal `rgb()` values by design',
     )
+    const outside = MARKETING.slice(0, deviceArt).replace(
+      /rgb\(255 255 255[^)]*\)/g,
+      '',
+    )
+    expect(outside).not.toMatch(/\brgba?\(/)
+    expect(outside).not.toMatch(/\bhsla?\(/)
   })
 
   it('reads colours from tokens and never retypes a hex value', () => {

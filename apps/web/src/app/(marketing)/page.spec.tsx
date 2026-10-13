@@ -12,11 +12,17 @@ vi.mock('next/navigation', () => ({
   redirect: (path: string) => redirect(path),
 }))
 
-// The landing wrapper is a stub today; keep the route test independent of it.
-vi.mock('./LandingPageClient', () => ({ LandingPageClient: () => null }))
+// The route test is about the decision, not the landing's markup: the wrapper
+// is a sentinel element and the flag read is controlled per case.
+vi.mock('./LandingPageClient', () => ({
+  LandingPageClient: () => 'landing-page-client',
+}))
+const landingEnabled = vi.fn(() => false)
+vi.mock('./landingFlag', () => ({ isLandingEnabled: () => landingEnabled() }))
 
 describe('the root route', () => {
-  it('lands a cold visit on My Day, the destination canon flags initial', async () => {
+  it('lands a cold visit on My Day while the landing flag is off — the pre-landing behaviour, kept', async () => {
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({})
@@ -24,8 +30,30 @@ describe('the root route', () => {
     expect(redirect).toHaveBeenCalledWith('/my-day')
   })
 
+  it('mounts the landing on a cold visit when the flag is on — the apex front door', async () => {
+    redirect.mockClear()
+    landingEnabled.mockReturnValue(true)
+    const { default: RootRoute } = await import('./page')
+
+    const rendered = await RootRoute({})
+
+    expect(redirect).not.toHaveBeenCalled()
+    expect(rendered).not.toBeUndefined()
+  })
+
+  it('still forwards a provider return to My Day when the flag is on — the PKCE exchange outranks the landing', async () => {
+    redirect.mockClear()
+    landingEnabled.mockReturnValue(true)
+    const { default: RootRoute } = await import('./page')
+
+    await RootRoute({ searchParams: Promise.resolve({ code: 'abc-123' }) })
+
+    expect(redirect).toHaveBeenCalledWith('/my-day?code=abc-123')
+  })
+
   it('sends nobody to the retired template page it replaced', async () => {
     redirect.mockClear()
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({})
@@ -34,8 +62,9 @@ describe('the root route', () => {
     expect(redirect).not.toHaveBeenCalledWith('/')
   })
 
-  it('renders nothing of its own — a passive shell, not a page', async () => {
+  it('renders nothing of its own while redirecting — a passive shell, not a page', async () => {
     redirect.mockClear()
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     expect(await RootRoute({})).toBeUndefined()
@@ -43,6 +72,7 @@ describe('the root route', () => {
 
   it('carries the provider return query through the hop — Supabase appends ?code= to the address it was given', async () => {
     redirect.mockClear()
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({ searchParams: Promise.resolve({ code: 'abc-123' }) })
@@ -52,6 +82,7 @@ describe('the root route', () => {
 
   it('forwards only the provider return parameters — an arbitrary query never rides through the server tier', async () => {
     redirect.mockClear()
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({
@@ -72,6 +103,7 @@ describe('the root route', () => {
 
   it('adds no stray question mark when the visit carries no query', async () => {
     redirect.mockClear()
+    landingEnabled.mockReturnValue(false)
     const { default: RootRoute } = await import('./page')
 
     await RootRoute({ searchParams: Promise.resolve({}) })

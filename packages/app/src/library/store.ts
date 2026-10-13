@@ -18,9 +18,9 @@ import {
   type FeatureFlagService,
   type LocalStore,
   type SignOutWipe,
-  FeatureFlags,
-  enabledAssignment,
   makeHardcodedFeatureFlagService,
+  makeWebShippingFeatureFlagService,
+  webShippingAppearanceOverride,
 } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { authSlice } from '../features/auth/AuthFeature'
@@ -230,78 +230,17 @@ export interface ThunkExtra {
 }
 
 /**
- * The live flag service.
+ * The web product's flag Provider (`RC-47`): canon's `statusQuo` baseline plus
+ * the web shipping overrides, which live in `@kro/core`
+ * (`flags/WebShippingOverrides.ts`) so `apps/web`'s root route can read the
+ * same registry before a client store exists. Every override's product call is
+ * recorded there, beside the flag it moves.
  *
- * Built once here so the endeavor engine's gate and any Selector reading a flag
- * see the same overrides within one browser session. `apps/web` will hand the
- * same instance down when the composition root lands (#13).
- *
- * `appearanceThemes` ships **enabled** here even though `statusQuoSet` keeps
- * it disabled (Apple's dark launch). Adjust is asked to offer Appearance, so
- * the web extras turn the flag on as a product override.
+ * Built once, at module scope, so every store in a session reads the same
+ * instance and a Debug override is seen app-wide. `apps/web` hands the same
+ * instance down from the composition root.
  */
-const shippingAppearanceOverride = enabledAssignment(
-  FeatureFlags.appearanceThemes,
-)
-
-/**
- * `supabaseHosting` — Kro Cloud — also ships **enabled** here. `statusQuoSet`
- * keeps it disabled because Apple's rollout is remote-flagged; the web has no
- * remote flag service yet and its whole account story (sign in, then see your
- * endeavors) is the cloud, so a signed-in user on a build with the gate shut
- * would sign in to nothing. A build with no Kro Cloud project configured is
- * still local-only: the sync service reports `unavailable` on its own.
- */
-const shippingSupabaseHostingOverride = enabledAssignment(
-  FeatureFlags.supabaseHosting,
-)
-
-/**
- * `detailPaneInbox` — the web-only Inbox segment of the trailing pane — ships
- * **enabled** here while `statusQuoSet` keeps it off as greenfield. The
- * maintainer asked for captures to land in the pane Inbox; the flag stays the kill switch.
- */
-const shippingDetailPaneInboxOverride = enabledAssignment(
-  FeatureFlags.detailPaneInbox,
-)
-
-/**
- * `captureSuggestions` — the web-only suggestions pane above the desktop
- * capture prompt — ships **enabled** here while `statusQuoSet` keeps it off
- * as greenfield. The flag stays the kill switch.
- */
-const shippingCaptureSuggestionsOverride = enabledAssignment(
-  FeatureFlags.captureSuggestions,
-)
-
-/**
- * `keyboardAccelerators` — the prompt's ⌥ chords, keycaps, key hints and
- * Return-walk, and the quick-action button's Return and letters — ships
- * **enabled** here while `statusQuoSet` keeps it off as greenfield. The flag
- * stays the kill switch.
- */
-const shippingKeyboardAcceleratorsOverride = enabledAssignment(
-  FeatureFlags.keyboardAccelerators,
-)
-
-/**
- * `landingPage` — the web-only marketing landing page and its early-access
- * sign-up — ships **enabled** here while `statusQuoSet` dark-launches it. The
- * flag stays the kill switch; the stubbed extra keeps the status quo, so a
- * suite sees the landing surface only when it turns the flag on itself.
- */
-const shippingLandingPageOverride = enabledAssignment(FeatureFlags.landingPage)
-
-const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
-  overrides: [
-    shippingAppearanceOverride,
-    shippingSupabaseHostingOverride,
-    shippingDetailPaneInboxOverride,
-    shippingCaptureSuggestionsOverride,
-    shippingKeyboardAcceleratorsOverride,
-    shippingLandingPageOverride,
-  ],
-})
+const liveFeatureFlags: FeatureFlagService = makeWebShippingFeatureFlagService()
 
 /**
  * The live Google binding, built once so the service and the `PlanHost` adapted
@@ -370,7 +309,7 @@ export const stubbedThunkExtra: ThunkExtra = {
   // `statusQuo` by default, plus the web product override that turns
   // Appearance on — `supabaseHosting` stays disabled, exactly like canon.
   featureFlags: makeHardcodedFeatureFlagService({
-    overrides: [shippingAppearanceOverride],
+    overrides: [webShippingAppearanceOverride],
   }),
   authService: stubbedAuthService,
   settingsSync: stubbedSettingsSyncService,

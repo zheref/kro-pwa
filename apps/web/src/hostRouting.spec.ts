@@ -6,6 +6,7 @@ import {
   normalizeHost,
   resolveHostRouting,
   siteUrl,
+  hubUrl,
 } from './hostRouting'
 
 const production = { siteHost: 'kroapp.com', hubHost: 'hub.kroapp.com' }
@@ -181,5 +182,20 @@ describe('host routing — helpers', () => {
     expect(siteUrl('https://kroapp.com/')).toBe('https://kroapp.com')
     expect(siteUrl('')).toBe('http://localhost:3000')
     expect(siteUrl(undefined)).toBe('http://localhost:3000')
+  })
+})
+
+describe('hubUrl', () => {
+  it('points a landing link at the hub host when one is configured', () => {
+    expect(hubUrl('hub.kroapp.com')).toBe('https://hub.kroapp.com/my-day')
+  })
+
+  it('falls back to the same-host My Day path on localhost and previews', () => {
+    expect(hubUrl('')).toBe('/my-day')
+    expect(hubUrl(undefined)).toBe('/my-day')
+  })
+
+  it('normalises the host it is given — scheme, port and case never leak into the link', () => {
+    expect(hubUrl('HUB.kroapp.com')).toBe('https://hub.kroapp.com/my-day')
   })
 })

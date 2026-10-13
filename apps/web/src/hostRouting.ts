@@ -189,3 +189,18 @@ export const siteUrl = (
   const trimmed = (value ?? '').trim().replace(/\/+$/, '')
   return trimmed.length > 0 ? trimmed : 'http://localhost:3000'
 }
+
+/**
+ * The app's canonical address for a landing-page link — the hub host when one
+ * is configured (`https://hub.kroapp.com/my-day`), else the same-host path the
+ * middleware serves on localhost and previews (`/my-day`). The landing page
+ * receives it as a prop: `packages/app` reads no env.
+ */
+export const hubUrl = (
+  hubHost: string | null | undefined = process.env.NEXT_PUBLIC_HUB_HOST,
+): string => {
+  const host = normalizeHost(hubHost)
+  return host.length > 0
+    ? `https://${host}${HUB_LANDING_PATH}`
+    : HUB_LANDING_PATH
+}

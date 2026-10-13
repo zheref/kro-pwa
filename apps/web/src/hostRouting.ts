@@ -127,11 +127,17 @@ export const isAppPath = (pathname: string): boolean =>
 export const normalizeHost = (host: string | null | undefined): string =>
   (host ?? '').trim().toLowerCase().replace(/:\d+$/, '')
 
-/** `/hub` → `/`, `/hub/plan` → `/plan`; `null` when the path is not under `/hub`. */
+/**
+ * `/hub` → `/`, `/hub/plan` → `/plan`; `null` when the path is not under `/hub`.
+ *
+ * The rest becomes a relative `Location` on the hub and on "other" hosts, so
+ * any run of leading `/` and `\` collapses to exactly one `/` (`SEC-7`):
+ * `/hub//evil.com` would otherwise yield `//evil.com` and `/hub/\evil.com`
+ * `/\evil.com`, both of which a browser resolves to another host.
+ */
 const stripHubPrefix = (pathname: string): string | null => {
   if (!startsWithSegment(pathname, '/hub')) return null
-  const rest = pathname.slice('/hub'.length)
-  return rest.length === 0 ? '/' : rest
+  return `/${pathname.slice('/hub'.length).replace(/^[\\/]+/, '')}`
 }
 
 export const resolveHostRouting = ({

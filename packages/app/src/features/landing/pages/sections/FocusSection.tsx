@@ -63,9 +63,9 @@ export function FocusSection() {
         <Reveal className="grid grid-cols-1 justify-items-center gap-kro-x-large">
           <div className="flex items-end justify-center gap-kro-large">
             <div className="w-[min(60vw,260px)]">
-              <PhoneFrame {...shotFor('webSessionMobileDark')} />
+              <PhoneFrame {...shotFor('iosSessionRunning')} />
             </div>
-            <div className="w-[min(26vw,120px)]">
+            <div className="w-[min(30vw,150px)]">
               <WatchFrame {...shotFor('watchosFeatured')} />
             </div>
           </div>

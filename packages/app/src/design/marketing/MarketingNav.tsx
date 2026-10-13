@@ -49,6 +49,13 @@ export interface MarketingNavProps {
 export const NAV_SCROLL_THRESHOLD = 8
 
 /**
+ * `aria-current` says what the link is current *as*: an in-page anchor is the
+ * current location in the page, a route is the current page (WAI-ARIA).
+ */
+const currentToken = (href: string): 'page' | 'location' =>
+  href.includes('#') ? 'location' : 'page'
+
+/**
  * The fixed glass navigation bar.
  *
  * ≥768px: brand, link row, trailing slot, compact CTA. Below: brand, trailing
@@ -111,7 +118,7 @@ export function MarketingNav({
                       active && 'is-active',
                     )}
                     href={link.href}
-                    aria-current={active ? 'location' : undefined}
+                    aria-current={active ? currentToken(link.href) : undefined}
                     onClick={follow(link.href)}
                   >
                     {link.label}
@@ -153,21 +160,31 @@ export function MarketingNav({
               {[
                 ...links.map((link) => ({ ...link, extra: undefined })),
                 { label: cta.label, href: cta.href, extra: cta.onClick },
-              ].map((item, index) => (
-                <li
-                  key={item.href + item.label}
-                  className="kro-marketing-menu__item"
-                  style={{ '--i': index } as CSSProperties}
-                >
-                  <a
-                    className="kro-marketing-menu__link"
-                    href={item.href}
-                    onClick={follow(item.href, item.extra)}
+              ].map((item, index) => {
+                const current =
+                  'id' in item && item.id !== undefined && item.id === activeId
+                return (
+                  <li
+                    key={item.href + item.label}
+                    className="kro-marketing-menu__item"
+                    style={{ '--i': index } as CSSProperties}
                   >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
+                    <a
+                      className={cn(
+                        'kro-marketing-menu__link',
+                        current && 'is-active',
+                      )}
+                      href={item.href}
+                      aria-current={
+                        current ? currentToken(item.href) : undefined
+                      }
+                      onClick={follow(item.href, item.extra)}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
           </SheetContent>
         </Sheet>

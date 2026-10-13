@@ -275,3 +275,56 @@ test.describe('early access · desktop · dark', () => {
     )
   })
 })
+
+/*
+ * The pricing page (`/pricing`): the opening on both schemes at desktop, the
+ * phone at light, and the comparison table scrolled into view.
+ */
+const PRICING_SCENES = [
+  {
+    name: 'pricing-desktop-light',
+    viewport: VIEWPORTS.desktop,
+    scheme: 'light',
+  },
+  { name: 'pricing-desktop-dark', viewport: VIEWPORTS.desktop, scheme: 'dark' },
+  { name: 'pricing-mobile-light', viewport: VIEWPORTS.mobile, scheme: 'light' },
+] as const
+
+for (const { name, viewport, scheme } of PRICING_SCENES) {
+  test.describe(`pricing · ${name}`, () => {
+    test.use({ viewport, colorScheme: scheme, ...REDUCED_MOTION })
+
+    test(`pricing (typical) — ${name}`, async ({ page }) => {
+      await page.goto('/pricing')
+      await expect(page).toHaveURL(/\/pricing$/)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      // The bar's link row exists from 768px; below it the links live in the
+      // menu sheet, which the scene does not open.
+      if (viewport.width >= 768) {
+        await expect(
+          page
+            .getByRole('navigation', { name: 'Primary' })
+            .getByRole('link', { name: 'Pricing' }),
+        ).toHaveAttribute('aria-current', 'page')
+      }
+      await settle(page)
+      await expect(page).toHaveScreenshot(scene(name))
+    })
+  })
+}
+
+test.describe('pricing · table · desktop · light', () => {
+  test.use({
+    viewport: VIEWPORTS.desktop,
+    colorScheme: 'light',
+    ...REDUCED_MOTION,
+  })
+
+  test('comparison table (typical) — desktop-light', async ({ page }) => {
+    await page.goto('/pricing#compare')
+    await settle(page)
+    await expect(page.locator('#compare')).toBeInViewport()
+    await expect(page.getByRole('table')).toBeVisible()
+    await expect(page).toHaveScreenshot(scene('pricing-table-desktop-light'))
+  })
+})

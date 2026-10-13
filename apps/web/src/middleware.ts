@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { umamiConfig } from './analyticsConfig'
-import { resolveHostRouting } from './hostRouting'
+import { isMarketingPath, resolveHostRouting } from './hostRouting'
 import { landingSecurityHeaders } from './securityHeaders'
 
 /**
@@ -15,9 +15,11 @@ import { landingSecurityHeaders } from './securityHeaders'
  * The hosts are read from `NEXT_PUBLIC_SITE_HOST` / `NEXT_PUBLIC_HUB_HOST`,
  * inlined at build time (see `hostRouting.ts`). Unset → no host redirects.
  *
- * The landing document — `/` served as is, which the decision table yields
- * only on a non-hub host — also carries `landingSecurityHeaders` (`SEC-10`).
- * The hub's `/` is a rewrite to the app and never gets the landing's policy.
+ * The marketing documents — `/` and the `MARKETING_PATHS` (`/pricing`) served
+ * as is, which the decision table yields only on a non-hub host — also carry
+ * `landingSecurityHeaders` (`SEC-10`). The hub's `/` is a rewrite to the app
+ * and never gets the landing's policy; the hub's `/pricing` is a redirect to
+ * the apex and carries nothing either.
  */
 export function middleware(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl
@@ -36,11 +38,12 @@ export function middleware(request: NextRequest): NextResponse {
     decision.kind === 'rewrite'
       ? NextResponse.rewrite(new URL(decision.url, request.url))
       : NextResponse.next()
-  const servesLanding = decision.kind === 'next' && pathname === '/'
-  const umami = servesLanding ? umamiConfig() : null
+  const servesMarketing =
+    decision.kind === 'next' && (pathname === '/' || isMarketingPath(pathname))
+  const umami = servesMarketing ? umamiConfig() : null
   const headers = {
     ...(decision.headers ?? {}),
-    ...(servesLanding
+    ...(servesMarketing
       ? landingSecurityHeaders({
           umamiOrigin: umami?.origin ?? null,
           umamiCollectOrigin: umami?.collectOrigin ?? null,

@@ -89,4 +89,26 @@ describe('LandingNav intents', () => {
     press(screen.getByRole('button', { name: 'Open menu' }))
     expect(p.onOpenMenu).toHaveBeenCalledTimes(1)
   })
+
+  it('carries a Pricing link to its own page, in the bar and so in the menu', () => {
+    render(<LandingNav {...props()} />)
+    expect(
+      screen.getByRole('link', { name: 'Pricing' }).getAttribute('href'),
+    ).toBe('/pricing')
+  })
+
+  it('on the pricing page marks Pricing the current page and sends the brand home', () => {
+    render(<LandingNav {...props()} surface="pricing" activeId="pricing" />)
+    expect(
+      screen
+        .getByRole('link', { name: 'Pricing' })
+        .getAttribute('aria-current'),
+    ).toBe('page')
+    expect(screen.getByRole('link', { name: 'Kro' }).getAttribute('href')).toBe(
+      '/#top',
+    )
+    expect(
+      screen.getByRole('link', { name: 'Platforms' }).getAttribute('href'),
+    ).toBe('/#platforms')
+  })
 })

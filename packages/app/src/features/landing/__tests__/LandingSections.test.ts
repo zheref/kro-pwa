@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   LANDING_OBSERVED_IDS,
   LANDING_SECTION_IDS,
+  PRICING_SECTION_IDS,
   headingIdFor,
+  landingSectionHref,
+  marketingNavLinks,
   sectionHref,
 } from '../LandingSections'
 
@@ -49,5 +52,62 @@ describe('sectionHref / headingIdFor', () => {
     for (const id of Object.values(LANDING_SECTION_IDS)) {
       expect(Object.values(LANDING_SECTION_IDS)).not.toContain(headingIdFor(id))
     }
+  })
+})
+
+describe('landingSectionHref', () => {
+  it('is an in-page anchor on the landing itself', () => {
+    expect(landingSectionHref('faq', 'landing')).toBe('#faq')
+  })
+
+  it('leads back to the landing from the pricing page', () => {
+    expect(landingSectionHref('early-access', 'pricing')).toBe('/#early-access')
+  })
+
+  it('keeps the top anchor addressable from anywhere', () => {
+    expect(landingSectionHref('top', 'pricing')).toBe('/#top')
+  })
+})
+
+describe('marketingNavLinks', () => {
+  it('lists the landing sections, then Pricing, on the landing', () => {
+    expect(marketingNavLinks('landing').map((link) => link.label)).toEqual([
+      'The loop',
+      'Sessions',
+      'Platforms',
+      'Privacy',
+      'FAQ',
+      'Pricing',
+    ])
+  })
+
+  it('points the section links back at the landing from the pricing page', () => {
+    const links = marketingNavLinks('pricing')
+    expect(links.find((link) => link.label === 'FAQ')?.href).toBe('/#faq')
+    expect(links.find((link) => link.label === 'Pricing')?.href).toBe(
+      '/pricing',
+    )
+  })
+
+  it('gives every link a unique id, so only one can be current', () => {
+    const ids = marketingNavLinks('landing').map((link) => link.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('PRICING_SECTION_IDS', () => {
+  it('never reuses a landing id — the landing observer cannot mistake a pricing band', () => {
+    for (const id of Object.values(PRICING_SECTION_IDS))
+      expect(Object.values(LANDING_SECTION_IDS)).not.toContain(id)
+  })
+
+  it('has no duplicate ids', () => {
+    const ids = Object.values(PRICING_SECTION_IDS)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('derives heading ids that collide with no anchor', () => {
+    for (const id of Object.values(PRICING_SECTION_IDS))
+      expect(Object.values(PRICING_SECTION_IDS)).not.toContain(headingIdFor(id))
   })
 })

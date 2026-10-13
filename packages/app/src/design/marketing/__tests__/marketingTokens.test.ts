@@ -87,6 +87,20 @@ describe('marketing.css', () => {
     }
   })
 
+  it('types no colour literal outside the device art except white light, as its header says', () => {
+    const deviceArt = MARKETING.indexOf('   Device frames')
+    expect(deviceArt).toBeGreaterThan(0)
+    expect(MARKETING.slice(deviceArt)).toContain(
+      'are literal `rgb()` values by design',
+    )
+    const outside = MARKETING.slice(0, deviceArt).replace(
+      /rgb\(255 255 255[^)]*\)/g,
+      '',
+    )
+    expect(outside).not.toMatch(/\brgba?\(/)
+    expect(outside).not.toMatch(/\bhsla?\(/)
+  })
+
   it('reads colours from tokens and never retypes a hex value', () => {
     expect(MARKETING).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
@@ -106,16 +120,42 @@ describe('marketing.css', () => {
       /--kro-ring:\s+0 0 0 2px var\(--kro-color-back\),\s+0 0 0 4px var\(--kro-color-accent\);/,
     )
     expect(MARKETING).toMatch(
-      /--kro-ring:\s+0 0 0 2px var\(--kro-color-snow\),\s+0 0 0 4px var\(--kro-color-total\);/,
+      /--kro-ring:\s+0 0 0 2px var\(--kro-color-back\),\s+0 0 0 4px var\(--kro-color-total\);/,
     )
     expect(TOKENS).toContain(
       'color-mix(in srgb, var(--kro-color-accent) 35%, transparent)',
     )
   })
 
-  it('gives the marketing primary an opaque accent fill so its label reads', () => {
+  it('tints the marketing primary as glass: accent mixed into the surface, never a flat fill', () => {
     expect(MARKETING).toMatch(
-      /\.kro-glass\.kro-glass--accent::before,[^{]*\{\s*background: var\(--kro-color-accent\);/,
+      /\.kro-glass\.kro-glass--accent::before\s*\{\s*background: color-mix\(\s*in srgb,\s*var\(--kro-color-accent\) var\(--kro-primary-tint\),\s*var\(--kro-glass-surface\)/,
+    )
+  })
+
+  it('holds the dark primary at 88–92 % accent so black ink keeps 4.5:1', () => {
+    const dark = MARKETING.match(
+      /\[data-theme="dark"\]\s*:is\([^)]*\)\s*\.kro-glass--accent\s*\{([^}]+)\}/,
+    )?.[1]
+    const tint = Number(dark?.match(/--kro-primary-tint:\s*(\d+)%/)?.[1])
+    expect(tint).toBeGreaterThanOrEqual(86)
+    expect(tint).toBeLessThanOrEqual(92)
+    expect(dark).toContain('--kro-primary-sheen: linear-gradient')
+  })
+
+  it('gives the light primary no sheen, which would drop white ink under 4.5:1', () => {
+    const light = MARKETING.match(
+      /\.kro-marketing-nav\) \.kro-glass--accent\s*\{([^}]+)\}/,
+    )?.[1]
+    expect(light).toContain('--kro-primary-sheen: none')
+    expect(
+      Number(light?.match(/--kro-primary-tint:\s*(\d+)%/)?.[1]),
+    ).toBeGreaterThanOrEqual(90)
+  })
+
+  it('falls back to the opaque accent when transparency is reduced', () => {
+    expect(MARKETING).toMatch(
+      /@media \(prefers-reduced-transparency: reduce\)\s*\{[^@]*background: var\(--kro-color-accent\);/,
     )
   })
 

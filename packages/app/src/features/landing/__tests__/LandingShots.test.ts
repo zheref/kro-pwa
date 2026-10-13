@@ -4,8 +4,8 @@ import { shotFor } from '../LandingShots'
 
 describe('shotFor', () => {
   it('serves the catalog WebP', () => {
-    const shot = shotFor('webMyDayDesktopDark')
-    expect(shot.src).toBe(landingAssets.webMyDayDesktopDark.src)
+    const shot = shotFor('webMyDayDesktopLight')
+    expect(shot.src).toBe(landingAssets.webMyDayDesktopLight.src)
     expect(shot.src.endsWith('.webp')).toBe(true)
   })
 

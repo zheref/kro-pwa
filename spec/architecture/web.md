@@ -282,7 +282,9 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   one pure, unit-tested function): on the apex, `/hub` and `/hub/<path>` and every app path
   (`/my-day` … `/lists/x`, `/settings`, `/integrations`) 307 to the same path on the hub, query
   kept; on the hub, `/` is **rewritten** (not redirected) to `/my-day`, query kept, so a
-  Supabase `?code=` return still reaches the PKCE exchange; on any other host — localhost, a
+  Supabase `?code=` return still reaches the PKCE exchange, and a marketing path (`/pricing`,
+  the `MARKETING_PATHS` list) 307s to the same path on the apex, query kept, so the app host
+  never serves a marketing page; on any other host — localhost, a
   preview, and every host while either env value is unset — nothing host-related happens and
   `/hub/<path>` 307s to `/<path>` on the same host; whatever follows `/hub`, any run of leading
   `/` or `\` collapses to one `/`, so a crafted `/hub//evil.com` can never become a
@@ -290,8 +292,8 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   say — is "other" too: it serves the full app with no `noindex`, so an alias either redirects at
   the host level or stays unconfigured on purpose (the `www` decision is open, G5). `/api/*`,
   `/_next/*` and the static files (icons, sounds, `/landing/*`, `sw.js`, the manifest, robots,
-  sitemap, `llms.txt`, the OG image) are never routed. The landing document (`/` on a non-hub
-  host) answers the security headers `src/securityHeaders.ts` builds — a CSP admitting only the
+  sitemap, `llms.txt`, the OG image) are never routed. The marketing documents (`/` and
+  `/pricing` on a non-hub host) answer the security headers `src/securityHeaders.ts` builds — a CSP admitting only the
   page's own scripts plus the analytics script's origin, and connections only to itself and the
   tracker's collect origin (`gateway.umami.is` for Umami Cloud, the script's own origin for a
   self-hosted instance; the tag's `data-host-url` names the same origin, so the policy and the
@@ -306,16 +308,19 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   `(shell)` is the parity set — `/my-day` · `/tasks` · `/inbox` · `/matrix` · `/plan` ·
   `/habits` · `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
   `/storybook` · `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared
-  ≤10-line client wrapper, wrapped by `providers.tsx` and the shell. `(marketing)` holds `/`:
+  ≤10-line client wrapper, wrapped by `providers.tsx` and the shell. `(marketing)` holds `/` and `/pricing`:
   its layout wraps the same `providers.tsx` (the one composition root) **without** the shell,
-  and its `page.tsx` asks `landingRouteDecision` what to do — an OAuth return
+  and the landing's `page.tsx` asks `landingRouteDecision` what to do — an OAuth return
   (`code`/`state`/`error`/`error_description`, and only those) always goes to `/my-day?…`;
   otherwise the landing when the `landingPage` flag is on and `/my-day` (307) when it is off. It
   is on: the web product's shipping overrides (`@kro/core` `flags/WebShippingOverrides.ts`)
   enable it, read at build time by the Server Page through `landingFlag.ts` — a Debug override
   in the running app does not reach `/` — and the same read gates `/api/early-access`, so the
   flag is the kill switch for the page and its sign-up together. The landing's Page lives in
-  `packages/app` and mounts through `(marketing)/LandingPageClient.tsx`. Each route group mounts
+  `packages/app` and mounts through `(marketing)/LandingPageClient.tsx`; `/pricing` is the same
+  shape — a passive Server Page reading the same flag (off → 307 to `/my-day`) over a ≤10-line
+  wrapper mounting `PricingPage`, with the bar marking Pricing current and the hub sending the
+  path to the apex (above). Each route group mounts
   its own `providers.tsx`, so a same-origin hop from the landing into the shell (localhost, a
   preview) builds a second store instance — harmless, and in production the hub is another
   origin; `makeStore(...)` keeps its one call site (`RC-41`). Beside the groups sit two **redirects**, directly under
@@ -333,7 +338,7 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
 - **SEO surface:** the root layout's metadata (`metadataBase` from `NEXT_PUBLIC_SITE_URL`, the
   `%s · Kro` title template, Open Graph + large-image Twitter card, `robots: index`), the
   `(marketing)` Open Graph image (1200×630, the `indigoGrape` gradient), `sitemap.ts` (the
-  landing only), `robots.ts` (allow `/`, disallow `/api/` and `/hub` — never the app paths: a crawler barred by
+  landing and `/pricing`), `robots.ts` (allow `/`, disallow `/api/` and `/hub` — never the app paths: a crawler barred by
   robots never fetches the page and never reads the hub's `noindex` header) and
   `public/llms.txt`. The `(shell)` routes inherit the metadata; the hub's `noindex` header is
   what keeps them out of indexes.
@@ -364,8 +369,11 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   (`marketingTokens.test.ts` asserts it). From `lg` the hero headline is sized by its copy column
   (`cqi`), so the primary actions sit above the fold on laptop viewports. The landing roots scope a
   two-tone focus ring — back then accent; snow then total on the gradient field — and the global
-  `--kro-ring` is unchanged; a marketing primary button is an opaque accent fill without the glass
-  sheen (white on the accent is 5.65:1). Device frames carry the catalog's `alt` on the image
+  `--kro-ring` is unchanged; a marketing primary button is tinted glass in both schemes
+  (`spec/06-design-tokens.md` § *The light canon*: 94 % accent under white ink in light, 88 %
+  under black ink in dark; the label's 5th-percentile contrast measured 4.83–5.37:1 light and
+  6.61–7.17:1 dark), a lit piece — focused, pointer inside, pressed — glows evenly instead of
+  tracking the pointer, and the fixed bar lights only its bottom hairline. Device frames carry the catalog's `alt` on the image
   itself.
 - **Appearance helper:** `library/storedAppearance.ts` (read, key and apply the stored appearance)
   is shared by Settings, the landing and the composition root — `library/`, never a sibling

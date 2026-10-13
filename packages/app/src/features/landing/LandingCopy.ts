@@ -1,3 +1,5 @@
+import { PRICING_PATH } from './LandingSections'
+
 /**
  * Everything the landing page says, typed and in one place.
  *
@@ -260,6 +262,8 @@ export interface FaqEntry {
   readonly id: string
   readonly question: string
   readonly answer: string
+  /** A link that follows the answer, for the detail behind it. */
+  readonly link?: { readonly label: string; readonly href: string }
 }
 
 export const faqCopy = {
@@ -278,7 +282,8 @@ export const faqEntries: readonly FaqEntry[] = [
     id: 'free',
     question: 'Is Kro free?',
     answer:
-      'Kro for Web is open to use today, and you can start without an account. We have not announced pricing for the other platforms, and we would rather say so than guess.',
+      'The core is free on every platform: capture, triage, plan, do and earn, with sync across your devices. Plus adds the AI features, more calendars and more palettes for about $5 a month, or less paid yearly. Plus is not on sale yet.',
+    link: { label: 'See pricing', href: PRICING_PATH },
   },
   {
     id: 'data',
@@ -305,6 +310,253 @@ export const faqEntries: readonly FaqEntry[] = [
       'A to-do list stores tasks. Kro runs the whole loop: Capture, Triage with Value and Effort, Plan, Do with focus Sessions, and Earn what you have worked for.',
   },
 ]
+
+/*
+ * The pricing page. Launch pricing, aspirational and labelled so on the page:
+ * Plus is not on sale, and anything not built today reads "Planned" in the
+ * comparison. No count, rating or quote, as everywhere on the site.
+ */
+
+export const pricingCopy = {
+  eyebrow: 'Pricing',
+  title: 'Free is the whole loop. Plus is the part that thinks with you.',
+  lede: 'Capture, triage, plan, do and earn cost nothing, on every platform. Plus adds the AI that plans alongside you, and keeps the maker shipping.',
+  note: 'Launch pricing, subject to change. Plus is not on sale yet.',
+  tiersTitle: 'Two plans',
+  compareEyebrow: 'Compare',
+  compareTitle: 'Everything, side by side.',
+  compareLede:
+    'What each plan includes. Planned means it is not built yet; it is not a date.',
+  compareCaption: 'What Free and Plus include',
+} as const
+
+/** One line on a tier card: shipped today, or planned — never a check. */
+export interface PricingFeature {
+  readonly label: string
+  readonly status: 'included' | 'planned'
+}
+
+const has = (label: string): PricingFeature => ({ label, status: 'included' })
+const planned = (label: string): PricingFeature => ({
+  label,
+  status: 'planned',
+})
+
+export type PricingTierId = 'free' | 'plus'
+
+export interface PricingTier {
+  readonly id: PricingTierId
+  readonly name: string
+  readonly price: string
+  readonly cadence: string
+  /** A second way to pay, under the price. */
+  readonly alternate?: string
+  readonly promise: string
+  readonly features: readonly PricingFeature[]
+  readonly cta: string
+  /** A short status shown beside the name. */
+  readonly status: string
+  /** The line under the call to action. */
+  readonly ctaNote: string
+}
+
+export const pricingTiers: readonly PricingTier[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: '$0',
+    cadence: 'no card, no trial clock',
+    promise: 'The loop as it ships today, on every platform.',
+    features: [
+      has('My Day'),
+      has('Plan: the timeline'),
+      planned('Plan: the Priority Matrix'),
+      has('Tasks and lists'),
+      planned('Habits'),
+      has('Sessions: the focus timer'),
+      planned('Breaks between Sessions'),
+      has('Earn: rings, Challenges and Milestones'),
+      has('Inbox and Triage'),
+      planned('Board'),
+      planned('Blueprints'),
+      has('One calendar connection'),
+      has('Sync across your devices'),
+      has('Light, dark and four palettes'),
+      has('The web app'),
+      planned('The Apple apps, as they open'),
+    ],
+    cta: 'Open Kro for Web',
+    status: 'Live today',
+    ctaNote: 'Open on the web today, no account needed to start.',
+  },
+  {
+    id: 'plus',
+    name: 'Plus',
+    price: '$5',
+    cadence: 'a month',
+    alternate: 'or $48 a year, $4 a month',
+    promise: 'Everything in Free, plus the part that thinks with you.',
+    features: [
+      has('Everything in Free'),
+      planned('AI capture: a note becomes tasks'),
+      planned('Plan my day'),
+      planned('Natural-language capture'),
+      planned('Session lengths that learn from you'),
+      planned('A weekly review that writes itself'),
+      planned('Smart reminders'),
+      planned('Several calendars: Google and Outlook'),
+      planned('More palettes and themes'),
+      planned('Early access to new platforms'),
+      has('You keep the maker shipping'),
+    ],
+    cta: 'Get early access',
+    status: 'Not on sale yet',
+    ctaNote:
+      'Plus is not on sale yet. Join early access and we will write when it opens.',
+  },
+]
+
+/** A comparison cell: included, not included, or not built yet. */
+export type PricingCell = 'included' | 'excluded' | 'planned'
+
+export interface PricingRow {
+  readonly feature: string
+  readonly free: PricingCell
+  readonly plus: PricingCell
+}
+
+export interface PricingRowGroup {
+  readonly title: string
+  readonly rows: readonly PricingRow[]
+}
+
+const both = (feature: string): PricingRow => ({
+  feature,
+  free: 'included',
+  plus: 'included',
+})
+
+const plusPlanned = (feature: string): PricingRow => ({
+  feature,
+  free: 'excluded',
+  plus: 'planned',
+})
+
+/** Not built on any plan yet: Planned in both columns, never a check. */
+const bothPlanned = (feature: string): PricingRow => ({
+  feature,
+  free: 'planned',
+  plus: 'planned',
+})
+
+export const pricingComparison: readonly PricingRowGroup[] = [
+  {
+    title: 'The loop',
+    rows: [
+      both('Capture, Inbox and Triage'),
+      both('My Day'),
+      both('Plan: the timeline'),
+      bothPlanned('Plan: the Priority Matrix'),
+      both('Tasks and lists'),
+      bothPlanned('Habits'),
+      bothPlanned('Board'),
+      bothPlanned('Blueprints'),
+    ],
+  },
+  {
+    title: 'Focus and reward',
+    rows: [
+      both('Sessions: the focus timer'),
+      bothPlanned('Breaks between Sessions'),
+      both('Earn: rings, Challenges and Milestones'),
+    ],
+  },
+  {
+    title: 'Thinks with you',
+    rows: [
+      plusPlanned('AI capture: a note becomes tasks'),
+      plusPlanned('Plan my day'),
+      plusPlanned('Natural-language capture'),
+      plusPlanned('Session lengths that learn from you'),
+      plusPlanned('A weekly review that writes itself'),
+      plusPlanned('Smart reminders'),
+    ],
+  },
+  {
+    title: 'Calendars and integrations',
+    rows: [
+      both('One calendar connection (Google Calendar)'),
+      plusPlanned('Several calendars: Google and Outlook'),
+      plusPlanned('Google Tasks, Microsoft To Do, GitHub and Jira'),
+    ],
+  },
+  {
+    title: 'Everywhere',
+    rows: [
+      both('Sync across your devices'),
+      both('Kro for Web'),
+      bothPlanned('The Apple apps, as they open'),
+      plusPlanned('Early access to new platforms'),
+    ],
+  },
+  {
+    title: 'Make it yours',
+    rows: [
+      both('Light, dark and four palettes'),
+      plusPlanned('More palettes and themes'),
+    ],
+  },
+]
+
+/** What a cell says, to the eye and to a screen reader. */
+export const PRICING_CELL_TEXT: Record<
+  PricingCell,
+  { readonly mark: string; readonly label: string }
+> = {
+  included: { mark: '✓', label: 'Included' },
+  excluded: { mark: '—', label: 'Not included' },
+  planned: { mark: 'Planned', label: 'Planned' },
+}
+
+export const pricingFaqCopy = {
+  eyebrow: 'Pricing questions',
+  title: 'Plainly, before anyone pays.',
+} as const
+
+export const pricingFaqEntries: readonly FaqEntry[] = [
+  {
+    id: 'billing',
+    question: 'How will billing work?',
+    answer:
+      'Plus will be $5 a month, or $48 a year, which is $4 a month. These are launch prices and may change before Plus opens. Nobody is charged today, because Plus is not on sale yet.',
+  },
+  {
+    id: 'cancel',
+    question: 'Can I cancel any time?',
+    answer:
+      'That is the plan: cancel whenever you like and keep Plus until the end of the period you paid for. We will publish the exact terms before we take a single payment.',
+  },
+  {
+    id: 'data',
+    question: 'What happens to my data on Free?',
+    answer:
+      'It stays yours, with no time limit. Your plans live on your device first and sync through Kro Cloud if you sign in. Leaving Plus is meant to switch off the Plus features, never your plans.',
+  },
+  {
+    id: 'discount',
+    question: 'Is there a student or launch discount?',
+    answer:
+      'Not today, and we would rather say so than guess. If we add one, it will be on this page.',
+  },
+]
+
+export const pricingCtaCopy = {
+  eyebrow: heroCopy.eyebrow,
+  title: 'Start free today.',
+  lede: 'The whole loop is open on the web. Plus follows when it is ready.',
+  primary: 'Open Kro for Web',
+  secondary: 'Get early access',
+} as const
 
 export const finalCtaCopy = {
   eyebrow: LANDING_TAGLINE,

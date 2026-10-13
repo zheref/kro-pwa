@@ -8,6 +8,12 @@ import {
   loopChapters,
   platformCards,
   platformsCopy,
+  pricingComparison,
+  pricingCopy,
+  pricingCtaCopy,
+  pricingFaqCopy,
+  pricingFaqEntries,
+  pricingTiers,
   privacyCards,
 } from '../LandingCopy'
 
@@ -30,6 +36,12 @@ const allCopy = (): string[] => {
     faqEntries,
     finalCtaCopy,
     footerCopy,
+    pricingCopy,
+    pricingTiers,
+    pricingComparison,
+    pricingFaqCopy,
+    pricingFaqEntries,
+    pricingCtaCopy,
   ])
     walk(group)
   return out
@@ -56,8 +68,91 @@ describe('landing copy', () => {
       .join('\n')
       .replace(/© 2026/g, '')
       .replace(/^[1-5] · /gm, '')
+      .replace(/\$(0|4|5|48)\b/g, '')
     expect(text).not.toMatch(/\d/)
     expect(text).not.toMatch(/★|stars? rating|users|customers|testimonial/i)
+  })
+
+  it('names only the launch prices — $0, $5 a month, $48 a year, $4 a month — and labels them', () => {
+    const prices = allCopy().join('\n').match(/\$\d+/g) ?? []
+    expect([...new Set(prices)].sort()).toEqual(['$0', '$4', '$48', '$5'])
+    expect(pricingCopy.note).toBe(
+      'Launch pricing, subject to change. Plus is not on sale yet.',
+    )
+    const plus = pricingTiers.find((tier) => tier.id === 'plus')
+    expect(plus?.price).toBe('$5')
+    expect(plus?.alternate).toBe('or $48 a year, $4 a month')
+  })
+
+  it('marks every Plus-only row Planned, and what is not built on any plan Planned on both — never a check', () => {
+    const rows = pricingComparison.flatMap((group) => group.rows)
+    for (const row of rows) {
+      if (row.free === 'excluded') expect(row.plus).toBe('planned')
+      if (row.free === 'planned') expect(row.plus).toBe('planned')
+      if (row.plus === 'included') expect(row.free).toBe('included')
+    }
+    // The status quo (`@kro/core` FeatureFlagAssignments) keeps habits and
+    // session breaks off, matrix, board and blueprints carry no stage at all,
+    // and the Apple apps are on TestFlight, not open.
+    for (const feature of [
+      'Plan: the Priority Matrix',
+      'Habits',
+      'Breaks between Sessions',
+      'Board',
+      'Blueprints',
+      'The Apple apps, as they open',
+    ]) {
+      const row = rows.find((r) => r.feature === feature)
+      expect(row, feature).toBeDefined()
+      expect(row?.free, feature).toBe('planned')
+      expect(row?.plus, feature).toBe('planned')
+    }
+    expect(
+      rows.some((row) => row.free === 'excluded' && row.plus === 'planned'),
+    ).toBe(true)
+  })
+
+  it('keeps what Free users have today on Free: the four palettes stay, Plus adds more', () => {
+    const rows = pricingComparison.flatMap((group) => group.rows)
+    expect(
+      rows.find((r) => r.feature === 'Light, dark and four palettes'),
+    ).toEqual({
+      feature: 'Light, dark and four palettes',
+      free: 'included',
+      plus: 'included',
+    })
+    expect(
+      rows.find((r) => r.feature === 'More palettes and themes')?.free,
+    ).toBe('excluded')
+    expect(rows.some((r) => /unlimited/i.test(r.feature))).toBe(false)
+  })
+
+  it('puts a check only beside tier features that are built; the rest read Planned', () => {
+    const free = pricingTiers.find((t) => t.id === 'free')
+    const plus = pricingTiers.find((t) => t.id === 'plus')
+    const planned = (tier: typeof free) =>
+      tier?.features.filter((f) => f.status === 'planned').map((f) => f.label)
+    expect(planned(free)).toEqual([
+      'Plan: the Priority Matrix',
+      'Habits',
+      'Breaks between Sessions',
+      'Board',
+      'Blueprints',
+      'The Apple apps, as they open',
+    ])
+    expect(plus?.features[0]).toEqual({
+      label: 'Everything in Free',
+      status: 'included',
+    })
+    expect(planned(plus)).toHaveLength(9)
+    expect(plus?.features.at(-1)?.status).toBe('included')
+  })
+
+  it('answers "Is Kro free?" with the core free, Plus not on sale, and a link to pricing', () => {
+    const free = faqEntries.find((entry) => entry.id === 'free')
+    expect(free?.answer).toContain('The core is free on every platform')
+    expect(free?.answer).toContain('Plus is not on sale yet')
+    expect(free?.link).toEqual({ label: 'See pricing', href: '/pricing' })
   })
 
   it('has the five loop chapters in order and six FAQ entries', () => {

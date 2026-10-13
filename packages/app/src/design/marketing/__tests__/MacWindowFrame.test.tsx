@@ -64,3 +64,32 @@ describe('MacWindowFrame chrome', () => {
     )
   })
 })
+
+describe('MacWindowFrame size', () => {
+  const frameOf = (container: HTMLElement) =>
+    container.querySelector('.kro-device') as HTMLElement
+
+  it('is a 1440 pt window at its logical size', () => {
+    const { container } = render(<MacWindowFrame {...props} />)
+    expect(frameOf(container).style.getPropertyValue('--kro-device-w')).toBe(
+      '1440px',
+    )
+  })
+
+  it('shows the window at a fraction of its logical width', () => {
+    const { container } = render(<MacWindowFrame {...props} scale={0.5} />)
+    expect(frameOf(container).style.getPropertyValue('--kro-device-w')).toBe(
+      '720px',
+    )
+  })
+
+  it('colours the traffic lights close, minimize and zoom in that order', () => {
+    const { container } = render(<MacWindowFrame {...props} />)
+    const lights = [...container.querySelectorAll('.kro-device__light')].map(
+      (el) => el.className,
+    )
+    expect(lights[0]).toContain('--close')
+    expect(lights[1]).toContain('--minimize')
+    expect(lights[2]).toContain('--zoom')
+  })
+})

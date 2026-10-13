@@ -1,13 +1,24 @@
 /** The footer: product anchors, the open-source link, trust, and the legal line. */
 import { MarketingFooter } from '../../../../design/marketing'
 import { LANDING_BRAND, footerCopy } from '../../LandingCopy'
-import { LANDING_SECTION_IDS, sectionHref } from '../../LandingSections'
+import {
+  LANDING_SECTION_IDS,
+  type MarketingSurface,
+  PRICING_PATH,
+  landingSectionHref,
+} from '../../LandingSections'
 
 export interface LandingFooterProps {
   readonly onOutbound: (href: string) => void
+  /** The page the footer closes; off the landing its anchors lead back to it. */
+  readonly surface?: MarketingSurface
 }
 
-export function LandingFooter({ onOutbound }: LandingFooterProps) {
+export function LandingFooter({
+  onOutbound,
+  surface = 'landing',
+}: LandingFooterProps) {
+  const sectionHref = (id: string) => landingSectionHref(id, surface)
   return (
     <>
       {/* The footer primitive renders plain anchors; an outbound press is
@@ -43,6 +54,7 @@ export function LandingFooter({ onOutbound }: LandingFooterProps) {
                   label: 'Early access',
                   href: sectionHref(LANDING_SECTION_IDS.earlyAccess),
                 },
+                { label: 'Pricing', href: PRICING_PATH },
               ],
             },
             {

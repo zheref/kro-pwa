@@ -32,8 +32,8 @@ export function HeroSection({
   onOpenHub,
   onGetEarlyAccess,
 }: HeroSectionProps) {
-  const mac = shotFor('webMyDayDesktopDark')
-  const phone = shotFor('iosPlanTimeline')
+  const mac = shotFor('webMyDayDesktopLight')
+  const phone = shotFor('iosDoPopulatedLanes')
   const titleId = headingIdFor(LANDING_SECTION_IDS.top)
   return (
     <MarketingSection
@@ -76,7 +76,7 @@ export function HeroSection({
           </div>
         </div>
         <div className="relative flex flex-col md:block md:pb-12">
-          <div className="order-first mx-auto mb-kro-large w-[min(100%,240px)] md:absolute md:right-[2%] md:bottom-0 md:order-none md:mx-0 md:mb-0 md:w-[30%] md:min-w-[180px]">
+          <div className="relative z-10 order-first mx-auto mb-kro-large w-[min(100%,240px)] md:absolute md:right-[2%] md:bottom-0 md:order-none md:mx-0 md:mb-0 md:w-[30%] md:min-w-[180px]">
             <PhoneFrame {...phone} priority />
           </div>
           <div className="md:w-[88%]">

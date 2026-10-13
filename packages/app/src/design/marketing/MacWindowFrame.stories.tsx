@@ -49,7 +49,13 @@ export const Untitled = {
   render: () => (
     <MarketingStage>
       <div style={{ padding: 32 }}>
-        <MacWindowFrame src={SHOT} alt={alt} width={900} height={570} />
+        <MacWindowFrame
+          src={SHOT}
+          alt={alt}
+          width={900}
+          height={570}
+          scale={0.6}
+        />
       </div>
     </MarketingStage>
   ),

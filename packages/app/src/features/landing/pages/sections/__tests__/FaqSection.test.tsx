@@ -30,7 +30,10 @@ describe('FaqSection (mirrors FaqSection.stories)', () => {
         .getByRole('button', { name: 'What is an endeavor?' })
         .getAttribute('aria-expanded'),
     ).toBe('false')
-    expect(screen.getByText(/we would rather say so than guess/)).toBeTruthy()
+    expect(screen.getByText(/Plus is not on sale yet/)).toBeTruthy()
+    expect(
+      screen.getByRole('link', { name: 'See pricing' }).getAttribute('href'),
+    ).toBe('/pricing')
   })
 
   it('OpenPhone — the h2 names the section and every target is at least 44px tall by class', () => {

@@ -1,3 +1,4 @@
+import { Button } from '../system/primitives/button'
 import { GlassCta } from './GlassCta'
 import { MarketingStage } from './marketingStage'
 
@@ -49,6 +50,42 @@ export const Mobile = {
   render: () => (
     <MarketingStage idiom="mobile" width={390}>
       <GlassCta {...PROPS} />
+    </MarketingStage>
+  ),
+}
+
+export const LitPrimaryLight = {
+  name: 'Light · a lit primary glows evenly on every edge',
+  render: () => (
+    <MarketingStage>
+      <GlassCta {...PROPS}>
+        <Button
+          variant="primary"
+          size="lg"
+          shape="circular"
+          className="kro-glass--lit"
+        >
+          Lit primary
+        </Button>
+      </GlassCta>
+    </MarketingStage>
+  ),
+}
+
+export const LitPrimaryDark = {
+  name: 'Dark · a lit primary is tinted glass with a rim, not a flat fill',
+  render: () => (
+    <MarketingStage theme="dark">
+      <GlassCta {...PROPS}>
+        <Button
+          variant="primary"
+          size="lg"
+          shape="circular"
+          className="kro-glass--lit"
+        >
+          Lit primary
+        </Button>
+      </GlassCta>
     </MarketingStage>
   ),
 }

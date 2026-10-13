@@ -8,7 +8,9 @@
  * table, and checks that a section uses every key, so the catalog cannot go
  * stale or grow unused weight.
  *
- * `src` is the WebP master actually served — no PNG ships. `webp` stays in the
+ * `src` is the WebP master actually served — no PNG ships. Sizes are the
+ * files' pixels: the iOS goldens are 390 x 844 pt at @2x, the web captures are
+ * the 1440 x 900 pt desktop shell resized to 1600 px wide.
  */
 export type LandingPlatform = 'web' | 'ios' | 'ipados' | 'watchos' | 'android'
 
@@ -23,55 +25,48 @@ export type LandingAsset = {
 }
 
 export type LandingAssetKey =
+  | 'webMyDayDesktopLight'
   | 'webMyDayDesktopDark'
-  | 'webPlanTimelineDesktopLight'
-  | 'webMyDayMobileDark'
-  | 'webSessionMobileDark'
+  | 'iosDoPopulatedLanes'
   | 'iosPlanTimeline'
   | 'iosPlanMatrix'
   | 'iosInbox'
   | 'iosTriagePrioritize'
   | 'iosDayProgress'
+  | 'iosSessionRunning'
   | 'iosLiveActivityRunning'
+  | 'ipadosSidebar'
   | 'watchosFeatured'
   | 'androidEarnCelebrating'
+  | 'androidDayProgress'
 
 export const landingAssets: Record<LandingAssetKey, LandingAsset> = {
-  webMyDayDesktopDark: {
-    src: '/landing/web/web-my-day-desktop-dark.webp',
-    width: 1424,
-    height: 1280,
-    alt: "Kro's My Day in a desktop-sized window, dark theme: the header with the date and progress ring, reminders, a calendar event and the Now lane of task cards on a dark canvas.",
+  webMyDayDesktopLight: {
+    src: '/landing/web/web-my-day-desktop-light.webp',
+    width: 1600,
+    height: 1000,
+    alt: "Kro on the web, My Day in the desktop shell: a glass sidebar with Today, All Tasks, the workflow and Adjust beside the day's reminders, a Design review calendar event and a Now lane of task cards, on the indigo-to-grape field.",
     platform: 'web',
-    scene: 'My Day, desktop',
-    theme: 'dark',
-  },
-  webPlanTimelineDesktopLight: {
-    src: '/landing/web/web-plan-timeline-desktop-light.webp',
-    width: 760,
-    height: 1536,
-    alt: "Kro's Plan timeline for a busy Monday: a day picker above an hourly grid with overlapping events such as Design review, Vendor call, Sync and Retro.",
-    platform: 'web',
-    scene: 'Plan timeline',
+    scene: 'My Day, desktop shell',
     theme: 'light',
   },
-  webMyDayMobileDark: {
-    src: '/landing/web/web-my-day-mobile-dark.webp',
-    width: 780,
-    height: 1280,
-    alt: "Kro's My Day in a phone-sized window, dark theme: the date and progress ring, reminders, a calendar event and the Now lane of task cards.",
+  webMyDayDesktopDark: {
+    src: '/landing/web/web-my-day-desktop-dark.webp',
+    width: 1600,
+    height: 1000,
+    alt: 'Kro on the web, My Day in the desktop shell with the dark theme: the same sidebar, reminders, Design review event and Now lane of task cards on a deep indigo field.',
     platform: 'web',
-    scene: 'My Day, phone-sized',
+    scene: 'My Day, desktop shell',
     theme: 'dark',
   },
-  webSessionMobileDark: {
-    src: '/landing/web/web-session-mobile-dark.webp',
+  iosDoPopulatedLanes: {
+    src: '/landing/ios/ios-do-populated-lanes.webp',
     width: 780,
-    height: 1342,
-    alt: "Kro's focus session sheet on a phone-sized window: a Pomodoro clock counting down from fifteen minutes for the task Prepare slides, with pause and stop buttons.",
-    platform: 'web',
-    scene: 'Focus session running',
-    theme: 'dark',
+    height: 1688,
+    alt: 'Kro on iPhone, My Day: the date and Tasks, Habits and Events chips above a week strip, then the Now lane with Fold laundry, Read research notes and Draft project update cards and an Overdue lane below.',
+    platform: 'ios',
+    scene: 'My Day with populated lanes',
+    theme: 'light',
   },
   iosPlanTimeline: {
     src: '/landing/ios/ios-plan-timeline.webp',
@@ -118,6 +113,15 @@ export const landingAssets: Record<LandingAssetKey, LandingAsset> = {
     scene: 'Day progress',
     theme: 'dark',
   },
+  iosSessionRunning: {
+    src: '/landing/ios/ios-session-running.webp',
+    width: 780,
+    height: 1688,
+    alt: 'Kro on iPhone, a focus session running on a green sheet: the task Write release notes with a 24:00 Pomodoro countdown ring, pause and stop buttons.',
+    platform: 'ios',
+    scene: 'Focus session running',
+    theme: 'dark',
+  },
   iosLiveActivityRunning: {
     src: '/landing/ios/ios-live-activity-running.webp',
     width: 844,
@@ -126,6 +130,15 @@ export const landingAssets: Record<LandingAssetKey, LandingAsset> = {
     platform: 'ios',
     scene: 'Live Activity, running countdown',
     theme: 'dark',
+  },
+  ipadosSidebar: {
+    src: '/landing/ipados/ipad-sidebar.webp',
+    width: 960,
+    height: 1800,
+    alt: "Kro's sidebar on iPad: a Get started group with Today and All Tasks, and a Workflow group with Jot Down, Plan, Execute and Earn.",
+    platform: 'ipados',
+    scene: 'Sidebar on iPad',
+    theme: 'light',
   },
   watchosFeatured: {
     src: '/landing/watchos/watch-featured.webp',
@@ -144,6 +157,15 @@ export const landingAssets: Record<LandingAssetKey, LandingAsset> = {
     platform: 'android',
     scene: 'Earn celebrating a claim',
     theme: 'dark',
+  },
+  androidDayProgress: {
+    src: '/landing/android/android-day-progress.webp',
+    width: 461,
+    height: 1000,
+    alt: 'Kro on Android, Day Progress: a week of rings, a large ring with habit and task totals, and an activity list of a completed session, a run and a reading session.',
+    platform: 'android',
+    scene: 'Day progress, a full day',
+    theme: 'light',
   },
 }
 

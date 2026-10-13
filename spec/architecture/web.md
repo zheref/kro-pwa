@@ -83,10 +83,16 @@ Fragment or Page belongs in `packages/app`, never here.
 
 What `apps/web` does still own is what the platform mandates and canon puts here on purpose:
 the passive Server Pages (`RC-38`), the ≤10-line client wrappers (`RC-39`), the root layout and
-the composition root (`RC-41`), and the three redirects. Some of those render JSX — `layout.tsx`
-is the document, `providers.tsx` is the provider tree, and `(shell)/AppShellClient.tsx` mounts
-`MainShellPage` plus the global overlay list. They are **compositions**, not components: each
-one wires or forwards, and none is reusable or has a body worth lifting. The distinction is the
+the composition root (`RC-41`), the two redirects, the host-routing middleware (a thin adapter
+over the pure, tested `src/hostRouting.ts`), and the `(marketing)` group's thin files — its
+passive layout (the same `Providers` plus a skip link and the optional Umami script), the `/`
+route with its pure `landingRoute.ts` decision, the `LandingPageClient` wrapper, the Open Graph
+image — beside the root-level `manifest.ts`, `sitemap.ts` and `robots.ts`. Some of those render
+JSX — `layout.tsx` is the document, `providers.tsx` is the provider tree, and
+`(shell)/AppShellClient.tsx` mounts `MainShellPage` plus the global overlay list. They are
+**compositions**, not components: each one wires or forwards, and none is reusable or has a body
+worth lifting. The landing's Page itself belongs in `packages/app` like every other. The
+distinction is the
 `RC-62` "apps are thin shells" line, not "no `.tsx` under `apps/web`".
 
 Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing points back.
@@ -256,21 +262,48 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
 
 ## 8. Project specifics
 
-- **Route map:** one group under one passive root layout, and a route group changes no URL.
+- **Hosts:** one deployment, two hosts. The **apex** (`NEXT_PUBLIC_SITE_HOST`, `kroapp.com`)
+  serves the marketing landing at `/` and is indexable; the **hub** (`NEXT_PUBLIC_HUB_HOST`,
+  `hub.kroapp.com`) is the app's canonical host and answers `X-Robots-Tag: noindex, nofollow`.
+  `src/middleware.ts` applies `resolveHostRouting` (`src/hostRouting.ts`, the whole matrix in
+  one pure, unit-tested function): on the apex, `/hub` and `/hub/<path>` and every app path
+  (`/my-day` … `/lists/x`, `/settings`, `/integrations`) 307 to the same path on the hub, query
+  kept; on the hub, `/` is **rewritten** (not redirected) to `/my-day`, query kept, so a
+  Supabase `?code=` return still reaches the PKCE exchange; on any other host — localhost, a
+  preview, and every host while either env value is unset — nothing host-related happens and
+  `/hub/<path>` 307s to `/<path>` on the same host. `/api/*`, `/_next/*` and the static files
+  (icons, sounds, `/landing/*`, `sw.js`, the manifest, robots, sitemap, `llms.txt`, the OG
+  image) are never routed. The hosts are `NEXT_PUBLIC_` values inlined at build time: a
+  deployment sets them in its build environment. The apex/hub split is a product decision the
+  landing-page effort assumed; it is recorded here, not in canon.
+- **Route map:** two groups under one passive root layout, and a route group changes no URL.
   `(shell)` is the parity set — `/my-day` · `/tasks` · `/inbox` · `/matrix` · `/plan` ·
   `/habits` · `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
-  `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared ≤10-line client
-  wrapper, wrapped by `providers.tsx` and the shell. Beside it sit three **redirects**, directly
-  under the root layout because they render nothing and so need no providers: `/` → `/my-day`
-  (307 — the landing destination is a product call that can change, and `/` is the installed
-  app's `start_url`), `/settings` → `/adjust`, `/integrations` → `/adjust` (calendar-connect is
-  a pane inside the Settings hub, not a destination). The second group, `(legacy)`, held those
-  three plus `/session` and the Chakra provider tree; #22 retired `/session` and #79 retired the
-  group, the tree, the 56 vendored Chakra components and the Chakra/emotion/react-icons
-  dependencies with it. Route files are the shell child's (#13) exclusively; a feature child
-  replaces a destination's Page in `packages/app` instead. The macOS names are what keep the
-  parity set unambiguous without a prefix: canon calls the session destination "Execute" and the
-  settings one "Adjust".
+  `/storybook` · `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared
+  ≤10-line client wrapper, wrapped by `providers.tsx` and the shell. `(marketing)` holds `/`:
+  its layout wraps the same `providers.tsx` (the one composition root) **without** the shell,
+  and its `page.tsx` asks `landingRouteDecision` what to do — an OAuth return
+  (`code`/`state`/`error`/`error_description`, and only those) always goes to `/my-day?…`;
+  otherwise the landing when it is enabled, `/my-day` (307) while it is not. Today it is not:
+  the landing's Page arrives with the landing feature, mounted through
+  `(marketing)/LandingPageClient.tsx`. Beside the groups sit two **redirects**, directly under
+  the root layout because they render nothing: `/settings` → `/adjust`, `/integrations` →
+  `/adjust` (calendar-connect is a pane inside the Settings hub; the Google OAuth callback still
+  lands on `/integrations?google=…`, which on the apex first hops to the hub). The installed
+  app's `start_url` is `/my-day` — the app on whichever host served the manifest — while its
+  `id` stays `/` so no install is orphaned. The old `(legacy)` group held `/`, `/settings`,
+  `/integrations`, `/session` and the Chakra provider tree; #22 retired `/session` and #79
+  retired the group, the tree, the 56 vendored Chakra components and the
+  Chakra/emotion/react-icons dependencies with it. Shell route files are the shell child's (#13)
+  exclusively; a feature child replaces a destination's Page in `packages/app` instead. The macOS
+  names are what keep the parity set unambiguous without a prefix: canon calls the session
+  destination "Execute" and the settings one "Adjust".
+- **SEO surface:** the root layout's metadata (`metadataBase` from `NEXT_PUBLIC_SITE_URL`, the
+  `%s · Kro` title template, Open Graph + large-image Twitter card, `robots: index`), the
+  `(marketing)` Open Graph image (1200×630, the `indigoGrape` gradient), `sitemap.ts` (the
+  landing only), `robots.ts` (allow `/`, disallow the app paths, `/api/`, `/hub`) and
+  `public/llms.txt`. The `(shell)` routes inherit the metadata; the hub's `noindex` header is
+  what keeps them out of indexes.
 - **Offline shell:** `public/sw.js` precaches the landing **document** (`/my-day`), never `/`.
   `cache.add('/')` follows the redirect and stores a redirected response; per Fetch, answering a
   navigation (redirect mode `manual`) with a response whose URL list has more than one entry is

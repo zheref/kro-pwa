@@ -12,6 +12,9 @@ vi.mock('next/navigation', () => ({
   redirect: (path: string) => redirect(path),
 }))
 
+// The landing wrapper is a stub today; keep the route test independent of it.
+vi.mock('./LandingPageClient', () => ({ LandingPageClient: () => null }))
+
 describe('the root route', () => {
   it('lands a cold visit on My Day, the destination canon flags initial', async () => {
     const { default: RootRoute } = await import('./page')

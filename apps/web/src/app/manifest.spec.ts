@@ -20,8 +20,9 @@ describe('manifest — identity', () => {
     expect(generated.description).toContain('Control your time')
   })
 
-  it('pins a stable app id, so a later start_url change is not a new app', () => {
+  it('pins a stable app id, so the start_url move to /my-day is not a new app', () => {
     expect(generated.id).toBe('/')
+    expect(generated.id).not.toBe(generated.start_url)
   })
 
   it("themes the chrome with the indigoGrape header's first stop", () => {
@@ -31,9 +32,13 @@ describe('manifest — identity', () => {
 })
 
 describe('manifest — installability', () => {
-  it('declares a start_url and a scope', () => {
-    expect(generated.start_url).toBe('/')
+  it('starts in the app (My Day), not on the marketing landing at /', () => {
+    expect(generated.start_url).toBe('/my-day')
+  })
+
+  it('keeps the whole origin in scope, so the start page is inside it', () => {
     expect(generated.scope).toBe('/')
+    expect(generated.start_url?.startsWith(generated.scope ?? '')).toBe(true)
   })
 
   it('runs standalone, without browser chrome', () => {

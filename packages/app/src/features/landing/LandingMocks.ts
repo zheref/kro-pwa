@@ -71,6 +71,22 @@ export const landingValueProps = (state: LandingState) => ({
   hubUrl: state.hubUrl,
 })
 
+/** The pricing Fragment's value props, read from a state mock. */
+export const pricingValueProps = (state: LandingState) => ({
+  theme: state.theme,
+  hubUrl: state.hubUrl,
+})
+
+/** The callbacks the pricing Fragment takes, as no-ops. */
+export const noopPricingCallbacks = {
+  onToggleTheme: noop,
+  onOpenHub: noop,
+  onGetEarlyAccess: noop,
+  onOutbound: noop,
+  onNavigate: noop,
+  onOpenMenu: noop,
+}
+
 /**
  * The landing's store: the early-access form's store (the page composes it),
  * on the stubbed extra. A test that asserts on what was sent passes recording

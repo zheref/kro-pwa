@@ -20,7 +20,22 @@ export interface FaqSectionProps {
 const ITEMS = faqEntries.map((entry) => ({
   id: entry.id,
   title: entry.question,
-  content: <p className="m-0 text-kro-fore-secondary">{entry.answer}</p>,
+  content: (
+    <p className="m-0 text-kro-fore-secondary">
+      {entry.answer}
+      {entry.link === undefined ? null : (
+        <>
+          {' '}
+          <a
+            className="font-medium text-kro-fore underline underline-offset-2"
+            href={entry.link.href}
+          >
+            {entry.link.label}
+          </a>
+        </>
+      )}
+    </p>
+  ),
 }))
 
 export function FaqSection({ openId, onOpen, onClose }: FaqSectionProps) {

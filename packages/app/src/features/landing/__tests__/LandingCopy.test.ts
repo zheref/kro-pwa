@@ -8,6 +8,12 @@ import {
   loopChapters,
   platformCards,
   platformsCopy,
+  pricingComparison,
+  pricingCopy,
+  pricingCtaCopy,
+  pricingFaqCopy,
+  pricingFaqEntries,
+  pricingTiers,
   privacyCards,
 } from '../LandingCopy'
 
@@ -30,6 +36,12 @@ const allCopy = (): string[] => {
     faqEntries,
     finalCtaCopy,
     footerCopy,
+    pricingCopy,
+    pricingTiers,
+    pricingComparison,
+    pricingFaqCopy,
+    pricingFaqEntries,
+    pricingCtaCopy,
   ])
     walk(group)
   return out
@@ -56,8 +68,36 @@ describe('landing copy', () => {
       .join('\n')
       .replace(/© 2026/g, '')
       .replace(/^[1-5] · /gm, '')
+      .replace(/\$(0|4|5|48)\b/g, '')
     expect(text).not.toMatch(/\d/)
     expect(text).not.toMatch(/★|stars? rating|users|customers|testimonial/i)
+  })
+
+  it('names only the launch prices — $0, $5 a month, $48 a year, $4 a month — and labels them', () => {
+    const prices = allCopy().join('\n').match(/\$\d+/g) ?? []
+    expect([...new Set(prices)].sort()).toEqual(['$0', '$4', '$48', '$5'])
+    expect(pricingCopy.note).toBe(
+      'Launch pricing, subject to change. Plus is not on sale yet.',
+    )
+    const plus = pricingTiers.find((tier) => tier.id === 'plus')
+    expect(plus?.price).toBe('$5')
+    expect(plus?.alternate).toBe('or $48 a year, $4 a month')
+  })
+
+  it('marks every Plus-only row Planned and never promises a Plus feature to Free', () => {
+    const rows = pricingComparison.flatMap((group) => group.rows)
+    for (const row of rows) {
+      if (row.free === 'excluded') expect(row.plus).toBe('planned')
+      expect(row.free).not.toBe('planned')
+    }
+    expect(rows.some((row) => row.plus === 'planned')).toBe(true)
+  })
+
+  it('answers "Is Kro free?" with the core free, Plus not on sale, and a link to pricing', () => {
+    const free = faqEntries.find((entry) => entry.id === 'free')
+    expect(free?.answer).toContain('The core is free on every platform')
+    expect(free?.answer).toContain('Plus is not on sale yet')
+    expect(free?.link).toEqual({ label: 'See pricing', href: '/pricing' })
   })
 
   it('has the five loop chapters in order and six FAQ entries', () => {

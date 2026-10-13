@@ -22,8 +22,17 @@ import { type LandingException, LandingExceptions } from './LandingException'
 
 type LandingThunkConfig = { extra: ThunkExtra; state: RootState }
 
-/** Where a call to action sits on the page, for the `placement` prop. */
-export type CtaPlacement = 'nav' | 'hero' | 'platforms' | 'final' | 'success'
+/**
+ * Where a call to action sits, for the `placement` prop. `pricing` is any
+ * door on the pricing page other than its bar (a tier card or its closing).
+ */
+export type CtaPlacement =
+  | 'nav'
+  | 'hero'
+  | 'platforms'
+  | 'final'
+  | 'success'
+  | 'pricing'
 
 /** What a call to action opens. */
 export type CtaTarget = 'hub' | 'early-access'

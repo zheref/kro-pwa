@@ -201,5 +201,10 @@ export * from './features/triage/pages'
  * logic tier (both slices, their Producers and Selectors) stays unexported:
  * the route reaches the page, never the store's shape.
  */
-export { type LandingPageProps, LandingPage } from './features/landing/pages'
+export {
+  type LandingPageProps,
+  LandingPage,
+  type PricingPageProps,
+  PricingPage,
+} from './features/landing/pages'
 export { EarlyAccessPage } from './features/earlyAccess/pages'

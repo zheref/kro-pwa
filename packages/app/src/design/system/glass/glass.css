@@ -22,6 +22,20 @@
    right, and a card that is later made sticky must not silently acquire the
    bug. The element itself therefore never carries `backdrop-filter`.
 
+   THE LIGHT, in words (the canon is `spec/06-design-tokens.md`).
+     - A piece the pointer is OUTSIDE of is lit from the pointer: the rim's
+       bright edge faces it (`--kro-glass-light-x/-y`, eased by script).
+     - A LIT piece — keyboard focus (`:focus-visible`), the pointer inside its
+       box (`.kro-glass--lit`, toggled by script), or a press on a control
+       (`:active`) — ignores where the pointer is. It glows uniformly, as if
+       the pointer were everywhere at once: an even rim on every edge and a
+       centred sheen. The script only decides lit-or-not; this file owns the
+       look. A static state is not motion, so reduced motion keeps it.
+     - A BAR (the fixed top chrome) lights its BOTTOM edge only. Its top and
+       sides sit on the viewport edge and are never drawn; the hairline's
+       hotspot follows the pointer's x (`--kro-glass-bar-x`), and lights
+       along its whole length when the bar is lit.
+
    `isolation: isolate` is what makes `z-index: -1` safe. It gives the element
    its own stacking context, so the pseudo-layers paint above the element's own
    background and below its content, and can never fall behind an ancestor.
@@ -61,6 +75,25 @@
       -2
     ) 8px
     rgb(255 255 255 / 0.1);
+  /*
+    The lit state. Zero offsets make the rim symmetric: a soft bloom plus a
+    tight core on every edge. The sheen is a centred soft radial whose strength
+    is the scheme's own highlight token (0.55 light, 0.2 dark) halved, so the
+    glow tracks the scheme without a second set of numbers. A centred radial
+    rather than a flat veil: it reads as light gathering at the middle and
+    falling off to the edge, "glowing all around", and it stays out of the
+    label's way at the rim where the rim does the work.
+  */
+  --kro-glass-lit-rim:
+    inset 0 0 9px 1px rgb(255 255 255 / 0.3),
+    inset 0 0 2px rgb(255 255 255 / 0.5);
+  --kro-glass-lit-sheen: radial-gradient(
+    110% 160% at 50% 50%,
+    color-mix(in srgb, var(--kro-glass-hi) 50%, transparent),
+    transparent 72%
+  );
+  /* The bar's bottom edge: the pointer's x along the bar (px; script-set). */
+  --kro-glass-bar-x: 30vw;
   box-shadow:
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.15),
     var(--kro-shadow-card);
@@ -181,14 +214,39 @@
 }
 
 /**
- * A bar — the fixed top chrome. The rim becomes a bottom hairline instead of a
- * full ring, because a bar has no left or right edge to draw.
+ * A bar — the fixed top chrome. It sits against the viewport edges, so its
+ * top and sides are never drawn: no ring, no top sheen. The one lit edge is
+ * the bottom — a hairline plus a thin bloom, hot under the pointer's x
+ * (`--kro-glass-bar-x`, a px offset from the bar's left) and dim elsewhere.
+ * Hotspot width is 320px of hairline, 520px of bloom.
  */
 .kro-glass--bar {
   border-radius: 0;
   box-shadow:
     0 1px 2px rgb(0 0 0 / 0.05),
     inset 0 -8px 14px -10px rgb(0 0 0 / 0.1);
+}
+
+.kro-glass--bar::after {
+  box-shadow: none;
+  background:
+    radial-gradient(closest-side, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0))
+    calc(var(--kro-glass-bar-x) - 160px) 100% / 320px 1px no-repeat,
+    radial-gradient(closest-side, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0))
+    calc(var(--kro-glass-bar-x) - 260px) 100% / 520px 8px no-repeat,
+    linear-gradient(
+      color-mix(in srgb, var(--kro-glass-rim) 60%, transparent) 0 0
+    )
+    0 100% / 100% 1px no-repeat;
+}
+
+/* Lit bar — the pointer is inside it, or a control in it has keyboard focus:
+   the whole bottom edge lights evenly. */
+.kro-glass--bar:is(.kro-glass--lit, :has(:focus-visible))::after {
+  background:
+    linear-gradient(rgb(255 255 255 / 0.6) 0 0) 0 100% / 100% 1px no-repeat,
+    linear-gradient(0deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0)) 0 100% /
+    100% 8px no-repeat;
 }
 
 /**
@@ -292,6 +350,21 @@
   box-shadow: var(--kro-ring);
 }
 
+/**
+ * Lit — see the light canon in the header. Keyboard focus, the pointer inside
+ * the box (`.kro-glass--lit`, from script), and — for a control — hover and a
+ * press (a tap on touch has no pointer to track, so it lights while held).
+ * Bars are excluded: their lit edge is the bottom only, above.
+ */
+.kro-glass:not(.kro-glass--bar):is(
+  .kro-glass--lit,
+  .kro-glass--interactive:is(:hover, :focus-visible, :active),
+  :focus-visible
+)::after {
+  background: var(--kro-glass-lit-sheen);
+  box-shadow: var(--kro-glass-lit-rim);
+}
+
 /* The popover uses the same light rim as the sidebar. The corner matches a menu row. */
 .kro-popover.kro-glass {
   border-radius: var(--kro-radius-small);
@@ -336,7 +409,12 @@
     backdrop-filter: none;
   }
 
-  .kro-glass::after {
+  .kro-glass::after,
+  .kro-glass:not(.kro-glass--bar):is(
+    .kro-glass--lit,
+    .kro-glass--interactive:is(:hover, :focus-visible, :active),
+    :focus-visible
+  )::after {
     background: none;
   }
 

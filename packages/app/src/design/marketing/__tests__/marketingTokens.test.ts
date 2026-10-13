@@ -113,9 +113,35 @@ describe('marketing.css', () => {
     )
   })
 
-  it('gives the marketing primary an opaque accent fill so its label reads', () => {
+  it('tints the marketing primary as glass: accent mixed into the surface, never a flat fill', () => {
     expect(MARKETING).toMatch(
-      /\.kro-glass\.kro-glass--accent::before,[^{]*\{\s*background: var\(--kro-color-accent\);/,
+      /\.kro-glass\.kro-glass--accent::before\s*\{\s*background: color-mix\(\s*in srgb,\s*var\(--kro-color-accent\) var\(--kro-primary-tint\),\s*var\(--kro-glass-surface\)/,
+    )
+  })
+
+  it('holds the dark primary at 88–92 % accent so black ink keeps 4.5:1', () => {
+    const dark = MARKETING.match(
+      /\[data-theme="dark"\]\s*:is\([^)]*\)\s*\.kro-glass--accent\s*\{([^}]+)\}/,
+    )?.[1]
+    const tint = Number(dark?.match(/--kro-primary-tint:\s*(\d+)%/)?.[1])
+    expect(tint).toBeGreaterThanOrEqual(86)
+    expect(tint).toBeLessThanOrEqual(92)
+    expect(dark).toContain('--kro-primary-sheen: linear-gradient')
+  })
+
+  it('gives the light primary no sheen, which would drop white ink under 4.5:1', () => {
+    const light = MARKETING.match(
+      /\.kro-marketing-nav\) \.kro-glass--accent\s*\{([^}]+)\}/,
+    )?.[1]
+    expect(light).toContain('--kro-primary-sheen: none')
+    expect(
+      Number(light?.match(/--kro-primary-tint:\s*(\d+)%/)?.[1]),
+    ).toBeGreaterThanOrEqual(90)
+  })
+
+  it('falls back to the opaque accent when transparency is reduced', () => {
+    expect(MARKETING).toMatch(
+      /@media \(prefers-reduced-transparency: reduce\)\s*\{[^@]*background: var\(--kro-color-accent\);/,
     )
   })
 

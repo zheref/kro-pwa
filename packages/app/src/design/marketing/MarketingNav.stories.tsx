@@ -57,3 +57,12 @@ export const MobileMenuOpen = {
     </MarketingStage>
   ),
 }
+
+export const DesktopLit = {
+  name: 'Desktop · lit bar, the whole bottom edge glows',
+  render: () => (
+    <MarketingStage contained={160}>
+      <MarketingNav {...PROPS} activeId="features" className="kro-glass--lit" />
+    </MarketingStage>
+  ),
+}

@@ -54,5 +54,6 @@ export {
   type ThemeToggleProps,
   type ThemeValue,
 } from './ThemeToggle'
+export { TabletFrame, type TabletFrameProps } from './TabletFrame'
 export { WatchFrame, type WatchFrameProps } from './WatchFrame'
 export { useActiveSection } from './useActiveSection'

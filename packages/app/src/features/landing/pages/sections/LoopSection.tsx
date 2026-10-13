@@ -46,27 +46,32 @@ export function LoopSection() {
         </div>
       </Chapter>
       <Chapter {...chapter('plan')}>
-        <div className="flex items-end justify-center gap-kro-large">
-          <div className="w-[52%] max-w-[300px]">
-            <MacWindowFrame
-              {...shotFor('webPlanTimelineDesktopLight')}
-              title="Plan"
-            />
+        <div className="flex items-start justify-center gap-kro-large">
+          <div className="w-[46%] max-w-[240px]">
+            <PhoneFrame {...shotFor('iosPlanTimeline')} />
           </div>
-          <div className="w-[40%] max-w-[240px]">
+          <div className="mt-kro-xx-large w-[46%] max-w-[240px]">
             <PhoneFrame {...shotFor('iosPlanMatrix')} />
           </div>
         </div>
       </Chapter>
       <Chapter {...chapter('do')} flip>
-        <div className={PHONE_COLUMN}>
-          <PhoneFrame {...shotFor('webMyDayMobileDark')} />
+        <div className="flex items-end justify-center gap-kro-medium">
+          <div className="w-[68%]">
+            <MacWindowFrame {...shotFor('webMyDayDesktopDark')} title="Kro" />
+          </div>
+          <div className="w-[28%] max-w-[170px]">
+            <PhoneFrame {...shotFor('iosDoPopulatedLanes')} />
+          </div>
         </div>
       </Chapter>
       <Chapter {...chapter('earn')}>
         <div className="flex items-start justify-center gap-kro-large">
           <div className="w-[46%] max-w-[240px]">
-            <PhoneFrame {...shotFor('androidEarnCelebrating')} />
+            <PhoneFrame
+              {...shotFor('androidEarnCelebrating')}
+              platform="android"
+            />
           </div>
           <div className="mt-kro-xx-large w-[46%] max-w-[240px]">
             <PhoneFrame {...shotFor('iosDayProgress')} />

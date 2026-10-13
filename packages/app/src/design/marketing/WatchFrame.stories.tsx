@@ -7,7 +7,7 @@ export default {
   parameters: { layout: 'fullscreen' },
 }
 
-const SHOT = placeholderShot(184, 224)
+const SHOT = placeholderShot(396, 484)
 const alt = 'Apple Watch showing the running focus session'
 
 export const Light = {
@@ -15,7 +15,7 @@ export const Light = {
   render: () => (
     <MarketingStage>
       <div style={{ padding: 32 }}>
-        <WatchFrame src={SHOT} alt={alt} width={184} height={224} />
+        <WatchFrame src={SHOT} alt={alt} width={396} height={484} scale={1.4} />
       </div>
     </MarketingStage>
   ),
@@ -26,7 +26,7 @@ export const Dark = {
   render: () => (
     <MarketingStage theme="dark">
       <div style={{ padding: 32 }}>
-        <WatchFrame src={SHOT} alt={alt} width={184} height={224} />
+        <WatchFrame src={SHOT} alt={alt} width={396} height={484} scale={1.4} />
       </div>
     </MarketingStage>
   ),
@@ -37,7 +37,14 @@ export const Priority = {
   render: () => (
     <MarketingStage>
       <div style={{ padding: 32 }}>
-        <WatchFrame src={SHOT} alt={alt} width={184} height={224} priority />
+        <WatchFrame
+          src={SHOT}
+          alt={alt}
+          width={396}
+          height={484}
+          scale={1.4}
+          priority
+        />
       </div>
     </MarketingStage>
   ),

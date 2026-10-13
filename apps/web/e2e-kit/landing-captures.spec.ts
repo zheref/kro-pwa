@@ -17,7 +17,8 @@ test.skip(
 )
 
 // PNG masters are scratch output (gitignored); convert to WebP (quality 82, via
-// sharp) into `public/landing/web/` — only the WebP is served or committed.
+// sharp, resized to 1600 px wide) into `public/landing/web/` — only the WebP is
+// served or committed.
 const OUT_DIR = join(__dirname, '..', '.landing-captures')
 
 type Clip = {
@@ -35,47 +36,38 @@ type Scene = {
   readonly viewport: { readonly width: number; readonly height: number }
   /** CSS-pixel region of the canvas; omitted = the story's own frame. */
   readonly clip?: Clip
+  /** Capture the whole viewport (the story is the app, no gallery frame). */
+  readonly fullViewport?: boolean
   /** Scroll the tallest scroller this far (0–1) before the picture. */
   readonly scrollTo?: number
 }
 
 const DESKTOP = { width: 1440, height: 900 } as const
-const PHONE = { width: 390, height: 844 } as const
 
-// Stories pin their own colour scheme, so the dark My Day is the right-hand
-// pane of the story that renders both schemes side by side.
+// Both web scenes are the real app shell around My Day (`MainShellPage` over a
+// seeded in-memory store): the story fills the viewport, so the shell measures
+// the browser itself and picks the sidebar shell. The default palette
+// (indigo->grape, `kroPalette: purple`) is the one a first-time visitor sees.
+// Light is the product's default scheme and the hero shot; dark is the second
+// scheme the Do chapter shows, so the page proves both.
+const MY_DAY_STORY = 'shell-app-shell-live-my-day--my-day-in-the-shell'
+
 const SCENES: readonly Scene[] = [
   {
-    name: 'web-my-day-desktop-dark',
-    story: 'do-surface--both-schemes',
-    idiom: 'desktop',
-    scheme: 'dark',
-    viewport: DESKTOP,
-    clip: { x: 728, y: 0, width: 712, height: 640 },
-  },
-  {
-    name: 'web-plan-timeline-desktop-light',
-    story: 'plan-page--busy-day-desktop',
+    name: 'web-my-day-desktop-light',
+    story: MY_DAY_STORY,
     idiom: 'desktop',
     scheme: 'light',
     viewport: DESKTOP,
-    scrollTo: 0.42,
-    clip: { x: 0, y: 0, width: 380, height: 768 },
+    fullViewport: true,
   },
   {
-    name: 'web-my-day-mobile-dark',
-    story: 'do-surface--both-schemes-narrow',
-    idiom: 'mobile',
+    name: 'web-my-day-desktop-dark',
+    story: MY_DAY_STORY,
+    idiom: 'desktop',
     scheme: 'dark',
-    viewport: { width: 900, height: 900 },
-    clip: { x: 405, y: 0, width: 390, height: 640 },
-  },
-  {
-    name: 'web-session-mobile-dark',
-    story: 'session-session-sheet--running',
-    idiom: 'mobile',
-    scheme: 'dark',
-    viewport: PHONE,
+    viewport: DESKTOP,
+    fullViewport: true,
   },
 ]
 
@@ -88,7 +80,9 @@ for (const scene of SCENES) {
     })
     const page = await context.newPage()
     const globals = `kroScheme:${scene.scheme};kroIdiom:${scene.idiom}`
-    const base = process.env.PLAYWRIGHT_STORYBOOK_URL ?? 'http://localhost:6007'
+    const base =
+      process.env.PLAYWRIGHT_STORYBOOK_URL ??
+      `http://localhost:${process.env.PLAYWRIGHT_STORYBOOK_PORT ?? 6007}`
     await page.goto(
       `${base}/iframe.html?id=${scene.story}&viewMode=story&globals=${globals}`,
     )
@@ -117,6 +111,11 @@ for (const scene of SCENES) {
         if (tallest) tallest.scrollTop = tallest.scrollHeight * fraction
       }, scene.scrollTo)
       await page.waitForTimeout(200)
+    }
+    if (scene.fullViewport) {
+      await page.screenshot({ path: join(OUT_DIR, `${scene.name}.png`) })
+      await context.close()
+      return
     }
     if (scene.clip) {
       await page.screenshot({

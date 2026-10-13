@@ -21,7 +21,7 @@ describe('FocusSection (mirrors FocusSection.stories)', () => {
   it('Dark — the session phone, the watch and the Live Activity each carry their catalog alt', () => {
     render(stories.Dark.render())
     expect(
-      screen.getByRole('img', { name: landingAssets.webSessionMobileDark.alt }),
+      screen.getByRole('img', { name: landingAssets.iosSessionRunning.alt }),
     ).toBeTruthy()
     expect(
       screen.getByRole('img', { name: landingAssets.watchosFeatured.alt }),

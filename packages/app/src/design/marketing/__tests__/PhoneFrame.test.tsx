@@ -43,3 +43,42 @@ describe('PhoneFrame', () => {
     expect(frame.className).toContain('extra')
   })
 })
+
+describe('PhoneFrame platforms and size', () => {
+  const frameOf = (container: HTMLElement) =>
+    container.querySelector('.kro-device') as HTMLElement
+
+  it('draws an iPhone by default: Dynamic Island chrome, 390 pt screen + 11 pt bezels', () => {
+    const { container } = render(<PhoneFrame {...props} />)
+    const frame = frameOf(container)
+    expect(frame.className).toContain('kro-device--ios')
+    expect(frame.style.getPropertyValue('--kro-device-w')).toBe('412px')
+    expect(frame.style.getPropertyValue('--kro-screen-ar')).toBe('390 / 844')
+    expect(container.querySelector('.kro-device__cutout')).not.toBeNull()
+  })
+
+  it('draws an Android phone with its thinner bezel and its own screen ratio', () => {
+    const { container } = render(<PhoneFrame {...props} platform="android" />)
+    const frame = frameOf(container)
+    expect(frame.className).toContain('kro-device--android')
+    expect(frame.className).not.toContain('kro-device--ios')
+    expect(frame.style.getPropertyValue('--kro-device-w')).toBe('426px')
+    expect(frame.style.getPropertyValue('--kro-screen-ar')).toBe('412 / 892')
+  })
+
+  it('renders a half-scale iPhone at half its logical width', () => {
+    const { container } = render(<PhoneFrame {...props} scale={0.5} />)
+    expect(frameOf(container).style.getPropertyValue('--kro-device-w')).toBe(
+      '206px',
+    )
+  })
+
+  it('hides the cutout from assistive technology', () => {
+    const { container } = render(<PhoneFrame {...props} />)
+    expect(
+      container
+        .querySelector('.kro-device__cutout')
+        ?.getAttribute('aria-hidden'),
+    ).toBe('true')
+  })
+})

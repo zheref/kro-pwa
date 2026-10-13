@@ -33,9 +33,10 @@ describe('LoopSection (mirrors LoopSection.stories)', () => {
     for (const key of [
       'iosInbox',
       'iosTriagePrioritize',
-      'webPlanTimelineDesktopLight',
+      'iosPlanTimeline',
       'iosPlanMatrix',
-      'webMyDayMobileDark',
+      'webMyDayDesktopDark',
+      'iosDoPopulatedLanes',
       'androidEarnCelebrating',
       'iosDayProgress',
     ] as const) {
@@ -44,7 +45,7 @@ describe('LoopSection (mirrors LoopSection.stories)', () => {
       ).toBeTruthy()
     }
     const images = container.querySelectorAll('img')
-    expect(images).toHaveLength(7)
+    expect(images).toHaveLength(8)
     for (const image of images) {
       expect(image.getAttribute('loading')).toBe('lazy')
       expect(image.getAttribute('width')).toBeTruthy()
@@ -68,12 +69,22 @@ describe('LoopSection copy', () => {
     }
   })
 
-  it('never uses the avoided shots (the populated-lanes loading header)', () => {
+  it('shows Do as the real web shell beside the iPhone My Day — one concept on two devices', () => {
     const { container } = render(stories.Desktop.render())
     const sources = [...container.querySelectorAll('img')].map((i) =>
       i.getAttribute('src'),
     )
-    expect(sources.join()).not.toContain('ios-do-populated-lanes')
+    expect(sources).toContain(landingAssets.webMyDayDesktopDark.src)
+    expect(sources).toContain(landingAssets.iosDoPopulatedLanes.src)
+  })
+
+  it('frames the Android Earn shot as an Android phone and the iOS ones as iPhones', () => {
+    const { container } = render(stories.Desktop.render())
+    const android = screen
+      .getByRole('img', { name: landingAssets.androidEarnCelebrating.alt })
+      .closest('.kro-device') as HTMLElement
+    expect(android.className).toContain('kro-device--android')
+    expect(container.querySelectorAll('.kro-device--ios').length).toBe(6)
   })
 
   it('has the five lanes of Do', () => {

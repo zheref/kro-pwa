@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { LandingPageClient } from './LandingPageClient'
+import { isLandingEnabled } from './landingFlag'
 import { type SearchParams, landingRouteDecision } from './landingRoute'
 
 /**
@@ -32,9 +33,9 @@ export default async function RootRoute(props: {
 }) {
   const decision = landingRouteDecision({
     searchParams: (await props.searchParams) ?? {},
-    // TODO(landing): mount <LandingPageClient /> when kind === 'landing' (piece P2-B)
-    // — flip this to the landing's feature flag; the branch below already mounts it.
-    landingEnabled: false,
+    // The flag registry decides (`UZF-22`): on, the landing mounts; off, the
+    // route is the passive 307 to My Day it has been since KC-IS-#79.
+    landingEnabled: isLandingEnabled(),
   })
   if (decision.kind === 'landing') return <LandingPageClient />
   redirect(decision.to)

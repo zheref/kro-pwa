@@ -16,7 +16,9 @@ test.skip(
   'set LANDING_CAPTURES=1 to capture',
 )
 
-const OUT_DIR = join(__dirname, '..', 'public', 'landing', 'web')
+// PNG masters are scratch output (gitignored); convert to WebP (quality 82, via
+// sharp) into `public/landing/web/` — only the WebP is served or committed.
+const OUT_DIR = join(__dirname, '..', '.landing-captures')
 
 type Clip = {
   readonly x: number
@@ -44,13 +46,6 @@ const PHONE = { width: 390, height: 844 } as const
 // pane of the story that renders both schemes side by side.
 const SCENES: readonly Scene[] = [
   {
-    name: 'web-my-day-desktop-light',
-    story: 'do-surface--desktop',
-    idiom: 'desktop',
-    scheme: 'light',
-    viewport: DESKTOP,
-  },
-  {
     name: 'web-my-day-desktop-dark',
     story: 'do-surface--both-schemes',
     idiom: 'desktop',
@@ -68,50 +63,12 @@ const SCENES: readonly Scene[] = [
     clip: { x: 0, y: 0, width: 380, height: 768 },
   },
   {
-    name: 'web-matrix-desktop-light',
-    story: 'plan-priority-matrix--all-four-quadrants',
-    idiom: 'desktop',
-    scheme: 'light',
-    viewport: DESKTOP,
-    clip: { x: 0, y: 0, width: 420, height: 580 },
-  },
-  {
-    name: 'web-earn-desktop-light',
-    story: 'earn-earnpage--typical',
-    idiom: 'desktop',
-    scheme: 'light',
-    viewport: DESKTOP,
-  },
-  {
-    name: 'web-capture-prompt-desktop-dark',
-    story: 'capture-prompt--popover-with-two-suggestions-selected',
-    idiom: 'desktop',
-    scheme: 'dark',
-    viewport: { width: 1000, height: 900 },
-    clip: { x: 290, y: 16, width: 696, height: 868 },
-  },
-  {
-    name: 'web-my-day-mobile-light',
-    story: 'do-surface--handheld',
-    idiom: 'mobile',
-    scheme: 'light',
-    viewport: PHONE,
-  },
-  {
     name: 'web-my-day-mobile-dark',
     story: 'do-surface--both-schemes-narrow',
     idiom: 'mobile',
     scheme: 'dark',
     viewport: { width: 900, height: 900 },
     clip: { x: 405, y: 0, width: 390, height: 640 },
-  },
-  {
-    name: 'web-earn-mobile-light',
-    story: 'earn-earnfragment--mobile-gear-both-schemes',
-    idiom: 'mobile',
-    scheme: 'light',
-    viewport: { width: 900, height: 900 },
-    clip: { x: 0, y: 0, width: 450, height: 640 },
   },
   {
     name: 'web-session-mobile-dark',

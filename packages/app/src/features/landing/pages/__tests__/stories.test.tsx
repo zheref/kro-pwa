@@ -19,9 +19,16 @@ import * as landingFooter from '../sections/LandingFooter.stories'
 import * as landingNav from '../sections/LandingNav.stories'
 import * as loopSection from '../sections/LoopSection.stories'
 import * as platformsSection from '../sections/PlatformsSection.stories'
+import * as pricingCompareSection from '../sections/PricingCompareSection.stories'
+import * as pricingCtaSection from '../sections/PricingCtaSection.stories'
+import * as pricingFaqSection from '../sections/PricingFaqSection.stories'
+import * as pricingIntroSection from '../sections/PricingIntroSection.stories'
+import * as pricingTiersSection from '../sections/PricingTiersSection.stories'
 import * as privacySection from '../sections/PrivacySection.stories'
 import * as landingFragment from '../LandingFragment.stories'
 import * as landingPage from '../LandingPage.stories'
+import * as pricingFragment from '../PricingFragment.stories'
+import * as pricingPage from '../PricingPage.stories'
 
 interface Story {
   readonly name?: string
@@ -45,6 +52,13 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['LandingPage', landingPage],
   ['LoopSection', loopSection],
   ['PlatformsSection', platformsSection],
+  ['PricingCompareSection', pricingCompareSection],
+  ['PricingCtaSection', pricingCtaSection],
+  ['PricingFaqSection', pricingFaqSection],
+  ['PricingFragment', pricingFragment],
+  ['PricingIntroSection', pricingIntroSection],
+  ['PricingPage', pricingPage],
+  ['PricingTiersSection', pricingTiersSection],
   ['PrivacySection', privacySection],
 ]
 

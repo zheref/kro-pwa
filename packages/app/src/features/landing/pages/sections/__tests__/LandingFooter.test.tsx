@@ -60,4 +60,23 @@ describe('LandingFooter intents', () => {
       '#early-access',
     ])
   })
+
+  it('lists Pricing as its own page in the Product column', () => {
+    render(<LandingFooter onOutbound={vi.fn()} />)
+    expect(
+      screen.getByRole('link', { name: 'Pricing' }).getAttribute('href'),
+    ).toBe('/pricing')
+  })
+
+  it('on the pricing page every section link leads back to the landing, and none is outbound', () => {
+    const onOutbound = vi.fn()
+    render(<LandingFooter surface="pricing" onOutbound={onOutbound} />)
+    expect(
+      ['The loop', 'Early access', 'Privacy'].map((name) =>
+        screen.getByRole('link', { name }).getAttribute('href'),
+      ),
+    ).toEqual(['/#the-loop', '/#early-access', '/#privacy'])
+    press(screen.getByRole('link', { name: 'The loop' }))
+    expect(onOutbound).not.toHaveBeenCalled()
+  })
 })

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   APP_PATHS,
+  MARKETING_PATHS,
   isAppPath,
+  isMarketingPath,
   isBypassed,
   normalizeHost,
   resolveHostRouting,
@@ -304,5 +306,52 @@ describe('siteOrigins — the public origins a browser may post from', () => {
     } finally {
       vi.unstubAllEnvs()
     }
+  })
+})
+
+describe('host routing — marketing paths (/pricing)', () => {
+  it('serves /pricing on the apex as is — it is a marketing page', () => {
+    expect(route('kroapp.com', '/pricing')).toEqual({ kind: 'next' })
+  })
+
+  it('sends /pricing on the hub to the same path on the apex, query kept', () => {
+    expect(route('hub.kroapp.com', '/pricing', '?ref=nav')).toEqual({
+      kind: 'redirect',
+      url: 'https://kroapp.com/pricing?ref=nav',
+    })
+  })
+
+  it('normalises the apex host it redirects to — case and port never leak', () => {
+    expect(
+      route('HUB.kroapp.com:443', '/pricing', '', {
+        siteHost: 'KroApp.com:8443',
+        hubHost: 'hub.kroapp.com',
+      }),
+    ).toEqual({ kind: 'redirect', url: 'https://kroapp.com/pricing' })
+  })
+
+  it('serves /pricing as is on any other host — a preview never bounces to production', () => {
+    expect(route('localhost:3119', '/pricing')).toEqual({ kind: 'next' })
+    expect(route('kro-git-x.vercel.app', '/pricing')).toEqual({ kind: 'next' })
+  })
+
+  it('serves /pricing as is on the hub while the hosts are unset', () => {
+    expect(route('hub.kroapp.com', '/pricing', '', {})).toEqual({
+      kind: 'next',
+    })
+    expect(
+      route('hub.kroapp.com', '/pricing', '', { hubHost: 'hub.kroapp.com' }),
+    ).toEqual({ kind: 'next' })
+  })
+
+  it('does not mistake a look-alike (/pricingx) for a marketing path, and is not an app path', () => {
+    expect(isMarketingPath('/pricing')).toBe(true)
+    expect(isMarketingPath('/pricing/plus')).toBe(true)
+    expect(isMarketingPath('/pricingx')).toBe(false)
+    for (const path of MARKETING_PATHS) expect(isAppPath(path)).toBe(false)
+    expect(route('hub.kroapp.com', '/pricingx')).toEqual({
+      kind: 'next',
+      headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+    })
   })
 })

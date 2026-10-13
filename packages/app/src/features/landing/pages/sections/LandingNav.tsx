@@ -5,7 +5,12 @@
  */
 import { MarketingNav, ThemeToggle } from '../../../../design/marketing'
 import { LANDING_BRAND } from '../../LandingCopy'
-import { LANDING_SECTION_IDS, sectionHref } from '../../LandingSections'
+import {
+  LANDING_SECTION_IDS,
+  type MarketingSurface,
+  landingSectionHref,
+  marketingNavLinks,
+} from '../../LandingSections'
 import type { LandingTheme } from '../../LandingFeature'
 
 export interface LandingNavProps {
@@ -18,15 +23,12 @@ export interface LandingNavProps {
   readonly onNavigate: (href: string) => void
   /** The mobile menu button was pressed. */
   readonly onOpenMenu: () => void
+  /**
+   * The page the bar sits on. On the landing its links are in-page anchors;
+   * anywhere else they lead back to the landing's sections (`/#the-loop`).
+   */
+  readonly surface?: MarketingSurface
 }
-
-const LINKS = [
-  { label: 'The loop', id: LANDING_SECTION_IDS.loop },
-  { label: 'Sessions', id: LANDING_SECTION_IDS.focus },
-  { label: 'Platforms', id: LANDING_SECTION_IDS.platforms },
-  { label: 'Privacy', id: LANDING_SECTION_IDS.privacy },
-  { label: 'FAQ', id: LANDING_SECTION_IDS.faq },
-].map((link) => ({ ...link, href: sectionHref(link.id) }))
 
 export function LandingNav({
   activeId,
@@ -36,6 +38,7 @@ export function LandingNav({
   onOpenHub,
   onNavigate,
   onOpenMenu,
+  surface = 'landing',
 }: LandingNavProps) {
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: delegation only — the menu button inside is the keyboard-reachable control.
@@ -49,7 +52,7 @@ export function LandingNav({
       <MarketingNav
         brand={{
           label: LANDING_BRAND,
-          href: sectionHref(LANDING_SECTION_IDS.top),
+          href: landingSectionHref(LANDING_SECTION_IDS.top, surface),
           mark: (
             <img
               src="/landing/brand/kro-mark-192.png"
@@ -60,7 +63,7 @@ export function LandingNav({
             />
           ),
         }}
-        links={LINKS}
+        links={marketingNavLinks(surface)}
         cta={{ label: 'Open Kro', href: hubUrl, onClick: onOpenHub }}
         activeId={activeId}
         onNavigate={onNavigate}

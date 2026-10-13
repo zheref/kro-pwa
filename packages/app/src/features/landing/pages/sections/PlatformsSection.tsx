@@ -16,14 +16,29 @@ import {
 import { Button } from '../../../../design'
 import {
   FeatureCard,
+  MacWindowFrame,
   MarketingSection,
+  PhoneFrame,
   PlatformBadge,
   Reveal,
   SectionHeader,
+  TabletFrame,
+  WatchFrame,
 } from '../../../../design/marketing'
 import { platformCards, platformsCopy } from '../../LandingCopy'
 import type { CtaPlacement } from '../../LandingProducer'
 import { LANDING_SECTION_IDS, headingIdFor } from '../../LandingSections'
+import { shotFor } from '../../LandingShots'
+
+/**
+ * Every device at the same scale, so their sizes read true against each other
+ * (an iPhone is 390 pt wide, an iPad 820, the Watch 198, the web window 1440).
+ */
+const DEVICE_SCALE = 0.28
+
+function labelOf(platform: KroPlatform): string {
+  return platformCards.find((card) => card.platform === platform)?.label ?? ''
+}
 
 const ICONS: Record<KroPlatform, LucideIcon> = {
   ios: Smartphone,
@@ -96,6 +111,51 @@ export function PlatformsSection({
             </li>
           ))}
         </ul>
+      </Reveal>
+      <Reveal
+        as="div"
+        className="mb-kro-xx-large flex flex-wrap items-end justify-center gap-x-kro-xx-large gap-y-kro-x-large"
+      >
+        <figure className="m-0 grid justify-items-center gap-kro-small">
+          <MacWindowFrame
+            {...shotFor('webMyDayDesktopLight')}
+            scale={DEVICE_SCALE}
+          />
+          <figcaption className="text-kro-fore-secondary text-sm">
+            {labelOf('web')}
+          </figcaption>
+        </figure>
+        <figure className="m-0 grid justify-items-center gap-kro-small">
+          <TabletFrame {...shotFor('ipadosSidebar')} scale={DEVICE_SCALE} />
+          <figcaption className="text-kro-fore-secondary text-sm">
+            {labelOf('ipados')}
+          </figcaption>
+        </figure>
+        <figure className="m-0 grid justify-items-center gap-kro-small">
+          <PhoneFrame
+            {...shotFor('iosDoPopulatedLanes')}
+            scale={DEVICE_SCALE}
+          />
+          <figcaption className="text-kro-fore-secondary text-sm">
+            {labelOf('ios')}
+          </figcaption>
+        </figure>
+        <figure className="m-0 grid justify-items-center gap-kro-small">
+          <PhoneFrame
+            {...shotFor('androidDayProgress')}
+            platform="android"
+            scale={DEVICE_SCALE}
+          />
+          <figcaption className="text-kro-fore-secondary text-sm">
+            {labelOf('android')}
+          </figcaption>
+        </figure>
+        <figure className="m-0 grid justify-items-center gap-kro-small">
+          <WatchFrame {...shotFor('watchosFeatured')} scale={DEVICE_SCALE} />
+          <figcaption className="text-kro-fore-secondary text-sm">
+            {labelOf('watchos')}
+          </figcaption>
+        </figure>
       </Reveal>
       <Reveal className="grid grid-cols-1 gap-kro-large sm:grid-cols-2 lg:grid-cols-3">
         {platformCards.map((card) => (

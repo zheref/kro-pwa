@@ -160,7 +160,7 @@ describe('landingAssetsByPlatform', () => {
 
   it('returns only the requested platform — the web captures are not mixed with iOS goldens', () => {
     const web = landingAssetsByPlatform('web')
-    expect(web.length).toBeGreaterThanOrEqual(4)
+    expect(web).toHaveLength(2)
     expect(web.every((asset) => asset.platform === 'web')).toBe(true)
   })
 
@@ -172,13 +172,13 @@ describe('landingAssetsByPlatform', () => {
     expect(total).toBe(entries.length)
   })
 
-  it('every platform the page shows has at least one screenshot (iPadOS has none since the unused-asset purge)', () => {
+  it('every platform the page shows has at least one screenshot (iPadOS included)', () => {
     for (const platform of PLATFORMS) {
       expect(
         landingAssetsByPlatform(platform).length,
         platform,
       ).toBeGreaterThan(0)
     }
-    expect(landingAssetsByPlatform('ipados')).toHaveLength(0)
+    expect(landingAssetsByPlatform('ipados')).toHaveLength(1)
   })
 })

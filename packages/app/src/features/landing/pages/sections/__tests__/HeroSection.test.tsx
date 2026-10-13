@@ -36,10 +36,10 @@ describe('HeroSection (mirrors HeroSection.stories)', () => {
   it('Phone — the product shots carry real alt text from the catalog, and the hero image is eager', () => {
     const { container } = render(stories.Phone.render())
     expect(
-      screen.getByRole('img', { name: landingAssets.webMyDayDesktopDark.alt }),
+      screen.getByRole('img', { name: landingAssets.webMyDayDesktopLight.alt }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('img', { name: landingAssets.iosPlanTimeline.alt }),
+      screen.getByRole('img', { name: landingAssets.iosDoPopulatedLanes.alt }),
     ).toBeTruthy()
     for (const image of container.querySelectorAll('img')) {
       expect(image.getAttribute('loading')).toBe('eager')

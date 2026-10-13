@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { contactEmail } from '../../contactConfig'
 import { LandingPageClient } from './LandingPageClient'
 import { isLandingEnabled } from './landingFlag'
 import { type SearchParams, landingRouteDecision } from './landingRoute'
@@ -40,6 +41,7 @@ export default async function RootRoute(props: {
     // route is the passive 307 to My Day it has been since KC-IS-#79.
     landingEnabled: isLandingEnabled(),
   })
-  if (decision.kind === 'landing') return <LandingPageClient />
+  if (decision.kind === 'landing')
+    return <LandingPageClient contactEmail={contactEmail()} />
   redirect(decision.to)
 }

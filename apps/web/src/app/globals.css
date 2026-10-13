@@ -56,6 +56,7 @@
   --color-kro-total: var(--kro-color-total);
   --color-kro-fore: var(--kro-color-fore);
   --color-kro-fore-secondary: var(--kro-color-fore-secondary);
+  --color-kro-fore-danger: var(--kro-color-fore-danger);
   --color-kro-hairline: var(--kro-color-hairline);
 
   /* --- Accent --- */

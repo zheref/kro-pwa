@@ -17,12 +17,15 @@ export interface EarlyAccessPageProps {
   readonly onOpenHub?: () => void
   /** A platform the landing asked for; the form selects it. */
   readonly requestedPlatform?: RequestedPlatform | null
+  /** Where to write to be removed; the notice names it when given. */
+  readonly contactEmail?: string | null
 }
 
 export function EarlyAccessPage({
   hubUrl = '/my-day',
   onOpenHub,
   requestedPlatform = null,
+  contactEmail = null,
 }: EarlyAccessPageProps) {
   const early = useEarlyAccess(requestedPlatform)
   return (
@@ -35,6 +38,7 @@ export function EarlyAccessPage({
       failureCopy={early.failureCopy}
       failureIsRetryable={early.failureIsRetryable}
       hubUrl={hubUrl}
+      contactEmail={contactEmail}
       onEmailChange={early.onEmailChange}
       onEmailBlur={early.onEmailBlur}
       onPlatformChange={early.onPlatformChange}

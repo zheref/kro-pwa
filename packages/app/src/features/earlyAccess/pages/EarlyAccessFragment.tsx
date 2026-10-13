@@ -13,13 +13,14 @@
  */
 import { KroPlatforms } from '@kro/core'
 import type { KroPlatform } from '@kro/core'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Button, GlassSurface, Input, Field } from '../../../design'
 import { Spinner } from '../../../design/fluent/status/Spinner'
 import type { EarlyAccessSubmitState } from '../EarlyAccessFeature'
 import {
   EARLY_ACCESS_PLATFORM_ORDER,
   EARLY_ACCESS_PRIVACY_NOTICE,
+  EARLY_ACCESS_REMOVAL_LEAD,
   EARLY_ACCESS_PROMISE,
 } from '../EarlyAccessCopy'
 
@@ -35,6 +36,8 @@ export interface EarlyAccessFragmentProps {
   readonly failureIsRetryable: boolean
   /** The hub link on the success card. */
   readonly hubUrl: string
+  /** Where to write to be removed, or `null` when the deployment has none. */
+  readonly contactEmail?: string | null
   readonly onEmailChange: (value: string) => void
   readonly onEmailBlur: () => void
   readonly onPlatformChange: (platform: KroPlatform) => void
@@ -63,6 +66,7 @@ export function EarlyAccessFragment({
   failureCopy,
   failureIsRetryable,
   hubUrl,
+  contactEmail = null,
   onEmailChange,
   onEmailBlur,
   onPlatformChange,
@@ -78,6 +82,15 @@ export function EarlyAccessFragment({
   const noticeId = `${ids}-notice`
   const honeypotId = `${ids}-website`
   const submitting = submit.kind === 'submitting'
+  const emailRef = useRef<HTMLInputElement>(null)
+  // A submit refused for the address hands focus to the field that needs fixing.
+  const refusedForAddress =
+    submit.kind === 'failed' &&
+    failureCopy !== null &&
+    failureCopy === emailError
+  useEffect(() => {
+    if (refusedForAddress) emailRef.current?.focus()
+  }, [refusedForAddress])
 
   if (submit.kind === 'joined') {
     const label = KroPlatforms.label(submit.receipt.platform)
@@ -129,12 +142,13 @@ export function EarlyAccessFragment({
         className="grid gap-kro-large"
         onSubmit={(event) => {
           event.preventDefault()
-          onSubmit()
+          if (!submitting) onSubmit()
         }}
       >
         <Field label="Email address" required htmlFor={emailId}>
           <Input
             id={emailId}
+            ref={emailRef}
             name="email"
             type="email"
             inputMode="email"
@@ -158,13 +172,23 @@ export function EarlyAccessFragment({
             <p
               id={errorId}
               role="alert"
-              className="m-0 text-kro-banner-danger text-sm"
+              className="m-0 text-kro-fore-danger text-sm"
             >
               {emailError}
             </p>
           )}
           <p id={noticeId} className="m-0 text-kro-fore-secondary text-xs">
             {EARLY_ACCESS_PRIVACY_NOTICE}
+            {contactEmail === null ? null : (
+              <>
+                {' '}
+                {EARLY_ACCESS_REMOVAL_LEAD}
+                <a href={`mailto:${contactEmail}`} className="underline">
+                  {contactEmail}
+                </a>
+                .
+              </>
+            )}
           </p>
         </Field>
 
@@ -246,7 +270,8 @@ export function EarlyAccessFragment({
             variant="primary"
             size="lg"
             shape="circular"
-            disabled={submitting}
+            aria-disabled={submitting}
+            className="aria-disabled:opacity-[var(--kro-opacity-disabled)]"
           >
             {submitting ? (
               <Spinner size="tiny" label="Joining the list" />

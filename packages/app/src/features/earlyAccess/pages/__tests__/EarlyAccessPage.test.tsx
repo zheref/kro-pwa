@@ -122,6 +122,25 @@ describe('EarlyAccessPage wiring (a REAL store, the stubbed Service)', () => {
     expect(onOpenHub).toHaveBeenCalledTimes(1)
   })
 
+  it('a submit of garbage ends with the email field focused and the error showing', async () => {
+    mount()
+    fireEvent.change(email(), { target: { value: 'not-an-email' } })
+    await submit()
+    expect(document.activeElement).toBe(email())
+    expect(screen.getByRole('alert').textContent).toMatch(
+      /does not look right/i,
+    )
+  })
+
+  it('a contact address from the shell reaches the notice as the removal link', () => {
+    mount({ contactEmail: 'privacy@example.com' })
+    expect(
+      screen
+        .getByRole('link', { name: 'privacy@example.com' })
+        .getAttribute('href'),
+    ).toBe('mailto:privacy@example.com')
+  })
+
   it('a platform requested by the landing arrives selected in the form', () => {
     mount({ requestedPlatform: { platform: 'windows', seq: 1 } })
     expect(

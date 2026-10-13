@@ -22,6 +22,7 @@ export const COLOR_ROLE_VARS = {
   // Foregrounds
   fore: '--kro-color-fore',
   foreSecondary: '--kro-color-fore-secondary',
+  foreDanger: '--kro-color-fore-danger',
   // Neutral scale
   snow: '--kro-color-snow',
   eggshell: '--kro-color-eggshell',

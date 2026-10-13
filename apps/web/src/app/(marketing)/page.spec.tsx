@@ -17,6 +17,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('./LandingPageClient', () => ({
   LandingPageClient: () => 'landing-page-client',
 }))
+vi.mock('../../contactConfig', () => ({
+  contactEmail: () => 'privacy@example.com',
+}))
 const landingEnabled = vi.fn(() => false)
 vi.mock('./landingFlag', () => ({ isLandingEnabled: () => landingEnabled() }))
 
@@ -109,5 +112,17 @@ describe('the root route', () => {
     await RootRoute({ searchParams: Promise.resolve({}) })
 
     expect(redirect).toHaveBeenCalledWith('/my-day')
+  })
+
+  it('hands the landing the contact address the deployment sets — the notice names it', async () => {
+    redirect.mockClear()
+    landingEnabled.mockReturnValue(true)
+    const { default: RootRoute } = await import('./page')
+
+    const rendered = (await RootRoute({})) as {
+      props: { contactEmail: string | null }
+    }
+
+    expect(rendered.props.contactEmail).toBe('privacy@example.com')
   })
 })

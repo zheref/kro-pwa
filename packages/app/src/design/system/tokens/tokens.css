@@ -121,6 +121,9 @@
    * back-next 4.85, back 5.07, absolute 5.29.
    */
   --kro-color-fore-secondary: #666b7e;
+  /* Danger as TEXT or a border on the page surface (banner-danger stays the
+     banner background): #891123 clears 4.5:1 on the light surfaces. */
+  --kro-color-fore-danger: #891123;
 
   /* ------------------------------------------------------------------
      Neutral scale
@@ -402,6 +405,7 @@
     --kro-color-total: #ffffff;
     --kro-color-fore: #ffffff;
     --kro-color-fore-secondary: #eaeded;
+    --kro-color-fore-danger: #ffbcbc;
     --kro-color-snow: #ffffff;
     --kro-color-eggshell: #faf3dd;
     --kro-color-mist: #f5f5f5;
@@ -487,6 +491,7 @@
   --kro-color-total: #ffffff;
   --kro-color-fore: #ffffff;
   --kro-color-fore-secondary: #eaeded;
+  --kro-color-fore-danger: #ffbcbc;
   --kro-color-snow: #ffffff;
   --kro-color-eggshell: #faf3dd;
   --kro-color-mist: #f5f5f5;

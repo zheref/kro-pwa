@@ -3,9 +3,9 @@ import { landingAssets } from '../LandingAssets'
 import { shotFor } from '../LandingShots'
 
 describe('shotFor', () => {
-  it('prefers the WebP sibling when the catalog has one', () => {
+  it('serves the catalog WebP', () => {
     const shot = shotFor('webMyDayDesktopDark')
-    expect(shot.src).toBe(landingAssets.webMyDayDesktopDark.webp)
+    expect(shot.src).toBe(landingAssets.webMyDayDesktopDark.src)
     expect(shot.src.endsWith('.webp')).toBe(true)
   })
 
@@ -17,13 +17,12 @@ describe('shotFor', () => {
     expect(shot.alt.length).toBeGreaterThan(20)
   })
 
-  it('falls back to the PNG for an asset with no WebP', () => {
-    const entries = Object.entries(landingAssets).filter(
-      ([, a]) => a.webp === undefined,
-    )
-    for (const [key, asset] of entries) {
-      expect(shotFor(key as keyof typeof landingAssets).src).toBe(asset.src)
+  it('prefers an explicit webp override and otherwise falls back to src', () => {
+    for (const [key, asset] of Object.entries(landingAssets)) {
+      expect(shotFor(key as keyof typeof landingAssets).src).toBe(
+        asset.webp ?? asset.src,
+      )
     }
-    expect(shotFor('watchosFeatured').src).toMatch(/\.(png|webp)$/)
+    expect(shotFor('watchosFeatured').src).toMatch(/\.webp$/)
   })
 })

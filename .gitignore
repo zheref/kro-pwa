@@ -50,3 +50,4 @@ Reports/
 
 # Claude Code's own worktrees (the one harness-native exception to .nen/worktrees/<surface>/)
 .claude/worktrees/
+apps/web/.landing-captures/

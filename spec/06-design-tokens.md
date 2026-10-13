@@ -48,6 +48,28 @@ original):
 `position: fixed` element — carry it on an inner pseudo-element. A glass surface that ignores
 this renders wrong on Safari, which is a supported browser.
 
+### The light canon
+
+Every glass piece carries a light rim. Where it points is decided by one rule:
+
+- **Outside a piece, the pointer aims its rim.** The bright edge faces the pointer and eases
+  toward it frame by frame. Reduced motion keeps the resting light (upper left) and never tracks.
+- **A lit piece glows uniformly.** A piece is lit while it has keyboard focus (`:focus-visible`),
+  while the pointer is inside its box, or, for a control, while it is pressed (a tap on touch has
+  no pointer to track). A lit piece ignores where the pointer is: an even rim on every edge
+  and a soft centred sheen, as if the pointer were everywhere at once. Script only decides
+  lit-or-not; the stylesheet owns the look. A static state is not motion, so reduced motion keeps
+  it. The two-tone focus ring is kept on focus and still clears 3:1.
+- **A bar lights its bottom edge only.** The fixed top chrome sits on the viewport edges, so its
+  top and sides are never drawn. Its bottom hairline has a hotspot that follows the pointer's x
+  along the edge, and lights evenly along its whole length when the pointer is inside the bar or
+  a control in it has keyboard focus. Scrolled bars keep their shadow.
+- **The primary on marketing surfaces is tinted glass in both schemes**, never a flat fill. Dark:
+  88 % accent (hover 92 %) over the glass surface with a restrained top sheen; ink is black.
+  Light: 94 % accent (hover 96 %) with no sheen; ink is white. The ink floor is 4.5:1 at the 5th
+  percentile of every pixel under the label, idle, hovered, lit and focused. Reduced
+  transparency falls back to the opaque accent.
+
 ## What must be true when this file is filled
 
 - Every token has a name, a light value, a dark value, and the surface it applies to.

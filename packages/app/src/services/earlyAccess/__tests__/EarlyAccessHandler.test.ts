@@ -1,11 +1,12 @@
+// @vitest-environment node
 /**
  * The handler driven end to end over a stubbed sink — no network, no Next
- * runtime. The sink's own wire behaviour has its suite in
- * `earlyAccessSink.spec.ts`.
+ * runtime (`RC-43`). The sink's own wire behaviour has its suite in
+ * `EarlyAccessSinkService.test.ts`.
  */
 import { describe, expect, it, vi } from 'vitest'
-import { makeEarlyAccessHandler } from './earlyAccessHandler'
-import { makeStubbedEarlyAccessSink } from './earlyAccessSink'
+import { makeEarlyAccessHandler } from '../EarlyAccessHandler'
+import { makeStubbedEarlyAccessSink } from '../EarlyAccessSinkService'
 
 const post = (body: unknown) =>
   new Request('https://kro.app/api/early-access', {

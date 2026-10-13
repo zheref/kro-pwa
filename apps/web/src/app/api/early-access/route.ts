@@ -5,16 +5,18 @@
  * `EARLY_ACCESS_WEBHOOK_URL` set, requests go to that webhook (with
  * `EARLY_ACCESS_WEBHOOK_TOKEN` as a bearer token when set); without it, every
  * request answers the typed `unavailable` outcome (503) rather than failing.
- * All behaviour lives in `earlyAccessHandler.ts`.
+ * The handler (a Producer, `RC-43`) and the sink (a Service that calls
+ * `fetch`, `RC-3`) live in `@kro/app/early-access`, never in this shell
+ * (`RC-62`).
  *
  * The environment is read per request, so a deployment that adds the variable
  * needs no rebuild to start accepting sign-ups.
  */
-import { makeEarlyAccessHandler } from './earlyAccessHandler'
 import {
+  makeEarlyAccessHandler,
   makeUnavailableEarlyAccessSink,
   makeWebhookEarlyAccessSink,
-} from './earlyAccessSink'
+} from '@kro/app/early-access'
 
 export const dynamic = 'force-dynamic'
 

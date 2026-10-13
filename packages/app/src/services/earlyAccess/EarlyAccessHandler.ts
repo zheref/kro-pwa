@@ -3,9 +3,11 @@
  * sink) and answers a `Result`, serialised as `{ ok: true, value }` or
  * `{ ok: false, error: { kind, message, recoverable } }`.
  *
- * Built as a factory over its dependencies so the spec drives the real
- * handler with a stubbed sink and no network; `route.ts` only binds the live
- * (or unavailable) sink from the environment.
+ * Built as a factory over its dependencies so the suite drives the real
+ * handler with a stubbed sink and no network; `apps/web`'s `route.ts` only
+ * reads the environment and binds the live (or unavailable) sink. It lives in
+ * `@kro/app` because a Producer belongs to the shared tier, never to the app
+ * shell (`RC-62`), and is reached through `@kro/app/early-access`.
  *
  * Order of checks: a body that is not a JSON object is `unknown` (400); a
  * filled honeypot (`website`) gets a convincing fake receipt and never reaches
@@ -23,7 +25,7 @@ import {
   type EarlyAccessResponse,
   isKroPlatform,
 } from '@kro/core'
-import type { EarlyAccessSink } from './earlyAccessSink'
+import type { EarlyAccessSink } from './EarlyAccessSinkService'
 
 export interface EarlyAccessHandlerDependencies {
   readonly sink: EarlyAccessSink

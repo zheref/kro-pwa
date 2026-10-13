@@ -6,7 +6,12 @@
  * the route handler is the Producer that turns those into a `Result`
  * (`RC-43`), via `EarlyAccessMapper.toException`.
  *
- * This module reads **no environment**. `route.ts` is the one file that reads
+ * It lives under `@kro/app`'s `src/services/**` because it calls `fetch`
+ * (`RC-3`), and ships the Service's full set (`RC-33`, `RC-59`): the live
+ * webhook binding, the always-503 binding, and a stub backed by
+ * `earlyAccessSink.fixtures.json`.
+ *
+ * This module reads **no environment**. `apps/web`'s `route.ts` is the one file that reads
  * `EARLY_ACCESS_WEBHOOK_URL` / `EARLY_ACCESS_WEBHOOK_TOKEN` and passes the
  * values in, so the sink is testable with nothing exported in the shell and a
  * misconfiguration surfaces as the typed `unavailable` outcome, not a crash.
@@ -14,6 +19,7 @@
  * It never logs, and never puts the email anywhere but the request body.
  */
 import type { EarlyAccessRequest, EarlyAccessResponse } from '@kro/core'
+import fixtures from './earlyAccessSink.fixtures.json'
 
 export interface EarlyAccessSink {
   add(request: EarlyAccessRequest): Promise<EarlyAccessResponse>
@@ -113,13 +119,27 @@ export interface StubbedEarlyAccessSink extends EarlyAccessSink {
 }
 
 export interface StubbedEarlyAccessSinkOptions {
-  /** Makes every `add` reject with this value. */
+  /** Makes every `add` reject with this value, whatever the fixture says. */
   readonly rejectWith?: unknown
-  /** The `joined_at` the stub stamps. */
+  /** The `joined_at` the stub stamps. Defaults to the fixture's. */
   readonly joinedAt?: string
 }
 
-/** A recording, in-memory sink for specs — no network at all. */
+const fixtureReceipts = fixtures.receipts as Record<
+  string,
+  { id: string; position: number | null } | undefined
+>
+const fixtureFailures = fixtures.failures as Record<
+  string,
+  { status: number } | undefined
+>
+
+/**
+ * A recording, in-memory sink — no network at all. Backed by
+ * `earlyAccessSink.fixtures.json`: the `*@kro.invalid` addresses there answer
+ * a canned receipt, a status failure or a network failure; any other address
+ * joins with a sequential `ea-stub-<n>` id and position.
+ */
 export const makeStubbedEarlyAccessSink = (
   options: StubbedEarlyAccessSinkOptions = {},
 ): StubbedEarlyAccessSink => {
@@ -129,12 +149,17 @@ export const makeStubbedEarlyAccessSink = (
     async add(request) {
       added.push(request)
       if (options.rejectWith !== undefined) throw options.rejectWith
+      if (fixtures.networkFailures.includes(request.email))
+        throw new TypeError('fetch failed')
+      const failure = fixtureFailures[request.email]
+      if (failure !== undefined) throw statusError(failure.status)
+      const canned = fixtureReceipts[request.email]
       return {
-        id: `ea-stub-${added.length}`,
+        id: canned?.id ?? `ea-stub-${added.length}`,
         email: request.email,
         platform: request.platform,
-        position: added.length,
-        joined_at: options.joinedAt ?? '2026-10-12T12:00:00.000Z',
+        position: canned === undefined ? added.length : canned.position,
+        joined_at: options.joinedAt ?? fixtures.joinedAt,
       }
     },
   }

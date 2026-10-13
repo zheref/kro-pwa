@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * The sink is the one module that wraps the waitlist wire, so this is the one
  * suite that stands in for `fetch` — injected, never a global patch. Every
@@ -11,7 +12,7 @@ import {
   makeUnavailableEarlyAccessSink,
   makeWebhookEarlyAccessSink,
   stubbedEarlyAccessSink,
-} from './earlyAccessSink'
+} from '../EarlyAccessSinkService'
 
 const WEBHOOK = 'https://hooks.example.invalid/early-access'
 const now = () => new Date('2026-10-12T09:00:00.000Z')
@@ -165,6 +166,24 @@ describe('the stubbed sink', () => {
       status: 409,
     })
     expect(sink.added).toHaveLength(1)
+  })
+
+  it('answers the fixture’s canned receipt for a known address', async () => {
+    const receipt = await makeStubbedEarlyAccessSink().add({
+      ...earlyAccessRequestMocks.bare,
+      email: 'queued@kro.invalid',
+    })
+    expect(receipt).toMatchObject({ id: 'ea-fixture-queued', position: 12 })
+  })
+
+  it('fails the fixture’s failing addresses the way the webhook would', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const as = (email: string) =>
+      caught(sink.add({ ...earlyAccessRequestMocks.bare, email }))
+
+    expect(await as('already@kro.invalid')).toMatchObject({ status: 409 })
+    expect(await as('broken@kro.invalid')).toMatchObject({ status: 500 })
+    expect(await as('offline@kro.invalid')).toBeInstanceOf(TypeError)
   })
 
   it('ships a shared default that answers a valid receipt', async () => {

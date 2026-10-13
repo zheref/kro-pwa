@@ -2,7 +2,7 @@
  * The route file itself, with **no network**: with the webhook unset every
  * request answers the typed `unavailable` outcome, and with it set a request
  * that fails validation never reaches the sink. The behaviour proper has its
- * suite in `earlyAccessHandler.spec.ts`.
+ * suite in `@kro/app`'s `EarlyAccessHandler.test.ts`.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST, dynamic } from './route'

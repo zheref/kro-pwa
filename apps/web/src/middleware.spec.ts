@@ -158,4 +158,33 @@ describe('the landing security headers (SEC-10)', () => {
 
     expect(response.headers.get('content-security-policy')).toBeNull()
   })
+
+  it('puts the same policy on the apex pricing page — it carries the same analytics tag', () => {
+    production()
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_WEBSITE_ID', 'site-123')
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_SCRIPT_URL', '')
+
+    const response = middleware(
+      request('https://kroapp.com/pricing', 'kroapp.com'),
+    )
+
+    const csp = response.headers.get('content-security-policy') ?? ''
+    expect(csp).toContain("frame-ancestors 'none'")
+    expect(csp).toContain("connect-src 'self' https://gateway.umami.is")
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+
+  it('leaves the hub pricing redirect (a 307 to the apex) without the policy', () => {
+    production()
+
+    const response = middleware(
+      request('https://hub.kroapp.com/pricing?ref=nav', 'hub.kroapp.com'),
+    )
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe(
+      'https://kroapp.com/pricing?ref=nav',
+    )
+    expect(response.headers.get('content-security-policy')).toBeNull()
+  })
 })

@@ -31,7 +31,7 @@ export default function MarketingLayout({
     <Providers>
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-kro-back focus:px-4 focus:py-2 inline-flex min-h-11 items-center"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-kro-back focus:px-4 focus:py-2 inline-flex min-h-11 items-center focus:outline-none focus:ring-2 focus:ring-kro-accent focus:ring-offset-2 focus:ring-offset-kro-back"
       >
         Skip to content
       </a>

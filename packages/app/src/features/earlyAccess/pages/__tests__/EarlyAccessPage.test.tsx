@@ -2,14 +2,14 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import { press } from '../../../landing/__tests__/domHelpers'
-import { makeLandingStore } from '../../../landing/LandingMocks'
+import { makeRecordedStore } from '../../__tests__/recordedStore'
 import { EarlyAccessPage } from '../EarlyAccessPage'
 import * as stories from '../EarlyAccessPage.stories'
 
 afterEach(cleanup)
 
 const mount = (props: Parameters<typeof EarlyAccessPage>[0] = {}) => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const view = render(
     <StoreProvider store={store}>
       <EarlyAccessPage {...props} />

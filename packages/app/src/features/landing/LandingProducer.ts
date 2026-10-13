@@ -16,7 +16,7 @@ import {
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { RootState, ThunkExtra } from '../../library/store'
 import type { AnalyticsEventName, AnalyticsProps } from '../../library/store'
-import { applyStoredAppearance } from '../settings/applyStoredAppearance'
+import { applyStoredAppearance } from '../../library/storedAppearance'
 import type { LandingTheme } from './LandingFeature'
 import { type LandingException, LandingExceptions } from './LandingException'
 

@@ -4,11 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installFakeObserver } from '../../../design/marketing/__tests__/testEnv'
 import { StoreProvider } from '../../../library/StoreProvider'
 import { LANDING_OBSERVED_IDS } from '../LandingSections'
-import { makeLandingStore } from '../LandingMocks'
+import { makeRecordedStore } from '../../earlyAccess/__tests__/recordedStore'
 import { useLanding } from '../useLanding'
 
 const mountHook = (hubUrl = '/my-day') => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const wrapper = ({ children }: { children: ReactNode }) => (
     <StoreProvider store={store}>{children}</StoreProvider>
   )
@@ -16,7 +16,7 @@ const mountHook = (hubUrl = '/my-day') => {
   return { ...rendered, store, services }
 }
 
-const tracked = (services: ReturnType<typeof makeLandingStore>['services']) =>
+const tracked = (services: ReturnType<typeof makeRecordedStore>['services']) =>
   services.analytics.calls.map((c) =>
     c.kind === 'track' ? [c.event, c.props] : ['identify'],
   )

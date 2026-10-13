@@ -2,10 +2,8 @@ import type { EarlyAccessResponse } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import type { EarlyAccessService } from '../../../library/store'
-import {
-  makeRecordingAnalyticsService,
-  makeRecordingEarlyAccessService,
-} from '../../../library/store'
+import { makeRecordingAnalyticsService } from '../../../services/analytics/AnalyticsService'
+import { makeRecordingEarlyAccessService } from '../../../services/earlyAccess/EarlyAccessService'
 import {
   userDidEditEmail,
   userDidEditHoneypot,

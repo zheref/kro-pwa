@@ -99,7 +99,7 @@ export {
   applyStoredAppearance,
   readStoredAppearance,
   storedAppearanceKey,
-} from './applyStoredAppearance'
+} from '../../library/storedAppearance'
 export { SettingsMocks, defaultSettingValues } from './SettingsMocks'
 
 // --- the render tier -------------------------------------------------------

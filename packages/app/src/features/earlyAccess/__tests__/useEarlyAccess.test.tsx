@@ -2,11 +2,11 @@ import { act, cleanup, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { StoreProvider } from '../../../library/StoreProvider'
-import { makeLandingStore } from '../../landing/LandingMocks'
+import { makeRecordedStore } from './recordedStore'
 import { useEarlyAccess } from '../useEarlyAccess'
 
 const mountHook = () => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const wrapper = ({ children }: { children: ReactNode }) => (
     <StoreProvider store={store}>{children}</StoreProvider>
   )

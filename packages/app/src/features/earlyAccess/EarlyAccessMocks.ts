@@ -5,6 +5,11 @@
  */
 import { EarlyAccessExceptions, EarlyAccessMapper } from '@kro/core'
 import { earlyAccessMocks } from '@kro/core/mocks'
+import {
+  type ThunkExtra,
+  makeStore,
+  stubbedThunkExtra,
+} from '../../library/store'
 import { type EarlyAccessState, earlyAccessSlice } from './EarlyAccessFeature'
 
 const base: EarlyAccessState = earlyAccessSlice.getInitialState()
@@ -104,3 +109,14 @@ export const earlyAccessFragmentProps = (
     ...noopEarlyAccessCallbacks,
   }
 }
+
+/**
+ * A store on the stubbed extra, so a story never reaches a network: the
+ * stubbed sign-up and analytics Services send nothing. The one way a story or
+ * test gets a store is `makeStore` (`RC-22`); `overrides` swaps a Service for
+ * a double the caller builds (a recording one, imported from its Service
+ * module — a test may, a mocks file may not).
+ */
+export const makeEarlyAccessStore = (overrides: Partial<ThunkExtra> = {}) => ({
+  store: makeStore({ ...stubbedThunkExtra, ...overrides }),
+})

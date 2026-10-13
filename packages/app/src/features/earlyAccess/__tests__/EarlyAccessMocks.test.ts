@@ -3,6 +3,7 @@ import { initialEarlyAccessState } from '../EarlyAccessFeature'
 import {
   EarlyAccessMocks,
   earlyAccessFragmentProps,
+  makeEarlyAccessStore,
   noopEarlyAccessCallbacks,
 } from '../EarlyAccessMocks'
 
@@ -58,5 +59,34 @@ describe('earlyAccessFragmentProps', () => {
         (key) => typeof (props as Record<string, unknown>)[key] === 'function',
       ),
     ).toBe(true)
+  })
+})
+
+describe('makeEarlyAccessStore', () => {
+  it('builds the one store with both slices registered and the form idle', () => {
+    const { store } = makeEarlyAccessStore()
+    expect(store.getState().earlyAccess).toEqual(initialEarlyAccessState)
+    expect(store.getState().landing.navOpen).toBe(false)
+  })
+
+  it('gives every call its own store, so one story never leaks into the next', () => {
+    const first = makeEarlyAccessStore().store
+    const second = makeEarlyAccessStore().store
+    expect(first).not.toBe(second)
+  })
+
+  it('swaps a Service for the double a caller passes and leaves the rest stubbed', async () => {
+    const tracked: string[] = []
+    const { store } = makeEarlyAccessStore({
+      analyticsService: {
+        track: (event) => void tracked.push(event),
+        identify: () => undefined,
+      },
+    })
+    const { trackLandingEventThunk } = await import(
+      '../../landing/LandingProducer'
+    )
+    await store.dispatch(trackLandingEventThunk({ name: 'nav_open' }))
+    expect(tracked).toEqual(['nav_open'])
   })
 })

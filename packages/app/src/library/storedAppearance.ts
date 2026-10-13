@@ -13,7 +13,7 @@ import {
   appearancePaletteOption,
   makePreferences,
 } from '@kro/core'
-import { applyAppearanceValues } from '../../design/system/tokens/readToken'
+import { applyAppearanceValues } from '../design/system/tokens/readToken'
 
 export interface StoredAppearance {
   readonly theme: string | null

@@ -5,13 +5,7 @@
  * is never built inline. `makeLandingStore` is the one way a story or test
  * gets a store: through `makeStore`, never a second `configureStore` (`RC-22`).
  */
-import { makeStore, stubbedThunkExtra } from '../../library/store'
-import {
-  makeRecordingAnalyticsService,
-  makeRecordingEarlyAccessService,
-} from '../../library/store'
-import type { RecordingAnalyticsService } from '../../library/store'
-import type { RecordingEarlyAccessService } from '../../library/store'
+import { makeEarlyAccessStore } from '../earlyAccess/EarlyAccessMocks'
 import { LANDING_SECTION_IDS } from './LandingSections'
 import { type LandingState, initialLandingState } from './LandingFeature'
 
@@ -71,24 +65,9 @@ export const landingValueProps = (state: LandingState) => ({
   hubUrl: state.hubUrl,
 })
 
-export interface LandingStoryServices {
-  readonly analytics: RecordingAnalyticsService
-  readonly earlyAccess: RecordingEarlyAccessService
-}
-
 /**
- * A store on the stubbed extra with recording analytics and sign-up Services,
- * so a story never reaches a network and a test can assert on what was sent.
+ * The landing's store: the early-access form's store (the page composes it),
+ * on the stubbed extra. A test that asserts on what was sent passes recording
+ * doubles through `overrides`.
  */
-export const makeLandingStore = () => {
-  const services: LandingStoryServices = {
-    analytics: makeRecordingAnalyticsService(),
-    earlyAccess: makeRecordingEarlyAccessService(),
-  }
-  const store = makeStore({
-    ...stubbedThunkExtra,
-    analyticsService: services.analytics,
-    earlyAccessService: services.earlyAccess,
-  })
-  return { store, services }
-}
+export const makeLandingStore = makeEarlyAccessStore

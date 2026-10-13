@@ -343,27 +343,20 @@ export const stubbedThunkExtra: ThunkExtra = {
 }
 
 /*
- * The landing tier's Service TYPES and test doubles, re-exported here because
+ * The landing tier's Service TYPES only, re-exported because
  * `check-uzf-boundaries.mjs` lets only this file (and tests) import a Service
- * module, and the package barrel re-exports from here. The live bindings are
- * deliberately NOT re-exported: production code reaches them only through
- * `liveThunkExtra`.
+ * module, and a Producer needs the event-name and prop types. No value — no
+ * stubbed binding, no recording factory — leaves this file: a suite that
+ * asserts on calls imports the double straight from its Service module
+ * (allowed for tests), and the live bindings are reached only through
+ * `liveThunkExtra` (`RC-6`).
  */
-export {
-  type AnalyticsCall,
-  type AnalyticsEventName,
-  type AnalyticsProps,
-  type AnalyticsService,
-  type RecordingAnalyticsService,
-  makeRecordingAnalyticsService,
-  stubbedAnalyticsService,
+export type {
+  AnalyticsEventName,
+  AnalyticsProps,
+  AnalyticsService,
 } from '../services/analytics/AnalyticsService'
-export {
-  type EarlyAccessService,
-  type RecordingEarlyAccessService,
-  makeRecordingEarlyAccessService,
-  stubbedEarlyAccessService,
-} from '../services/earlyAccess/EarlyAccessService'
+export type { EarlyAccessService } from '../services/earlyAccess/EarlyAccessService'
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
   configureStore({

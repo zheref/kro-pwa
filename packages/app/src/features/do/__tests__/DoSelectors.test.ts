@@ -37,6 +37,8 @@ import { initialTriageState } from '../../triage/TriageFeature'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (slice: DoState): RootState => ({
@@ -60,6 +62,8 @@ const rootWith = (slice: DoState): RootState => ({
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 const loaded = rootWith(doStateMocks.loadedTypicalDay)

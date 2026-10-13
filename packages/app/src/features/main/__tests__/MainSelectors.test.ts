@@ -28,6 +28,8 @@ import { initialGreetingState } from '../../greeting/GreetingFeature'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 import {
   type MainState,
   mainSlice,
@@ -72,6 +74,8 @@ const rootWith = (main: MainState): RootState => ({
   settings: initialSettingsState,
   main,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 describe('the shell shape', () => {

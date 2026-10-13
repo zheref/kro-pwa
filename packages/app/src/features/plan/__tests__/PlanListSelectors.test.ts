@@ -26,6 +26,8 @@ import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSessionState } from '../../session/SessionState'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { planDayKey, startOfPlanDay } from '../../../library/plan/PlanCalendar'
 import {
@@ -84,6 +86,8 @@ const rootWith = (
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 describe('selectPlanListSort', () => {

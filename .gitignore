@@ -52,3 +52,4 @@ Reports/
 .claude/worktrees/
 # The harness's per-checkout permission/settings file: local, may hold allow-lists, never committed
 .claude/settings.local.json
+apps/web/.landing-captures/

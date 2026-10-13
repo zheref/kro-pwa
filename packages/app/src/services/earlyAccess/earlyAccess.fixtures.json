@@ -1,0 +1,9 @@
+{
+  "joinedAt": "2026-10-12T12:00:00.000Z",
+  "failures": {
+    "already@kro.invalid": { "status": 409, "kind": "alreadyJoined" },
+    "unavailable@kro.invalid": { "status": 503, "kind": "unavailable" },
+    "invalid@kro.invalid": { "status": 400, "kind": "invalidEmail" }
+  },
+  "networkFailures": ["offline@kro.invalid"]
+}

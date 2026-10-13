@@ -14,7 +14,7 @@
  *          `src/library/StoreProvider.tsx`.
  *   RC-6   a Service module is imported only by `src/library/store.ts` (which
  *          assembles `ThunkExtra`) and by test/mock files.
- *   RC-3   `fetch(` is called only inside `src/services/**`.
+ *   RC-3   `fetch(` is called only inside a `…Service.ts` under `src/services/**`.
  *   RC-1   `createSlice(` appears only in a `…Feature.ts` file.
  *   RC-3   `createAsyncThunk(` appears only in a `…Producer.ts` file.
  *   RC-5   `createSelector(` appears only in a `…Selectors.ts` file.
@@ -72,6 +72,10 @@ const isTestFile = (where) =>
   /(\.test\.tsx?|\.stories\.tsx?|\.mocks\.ts)$/.test(where) ||
   where.includes('/__tests__/')
 const isServiceFile = (where) => where.startsWith('src/services/')
+// Only a Service binding may touch the wire. A route-handler Producer that
+// lives beside its Service (services/<x>/…Handler.ts, RC-43) imports the
+// Service's interface and calls it, but never fetch() itself (RC-3).
+const mayFetch = (where) => isServiceFile(where) && /Service\.ts$/.test(where)
 const isServiceSpecifier = (specifier) =>
   /(^|\/)services\//.test(specifier) || /Service(\.js)?$/.test(specifier)
 
@@ -87,9 +91,9 @@ for (const file of collectFiles(sourceRoot)) {
     )
   }
 
-  if (!isServiceFile(where) && /(?<![.\w$])fetch\s*\(/.test(source)) {
+  if (!mayFetch(where) && /(?<![.\w$])fetch\s*\(/.test(source)) {
     violations.push(
-      `${where}: calls fetch() outside services/ — go through a Service (RC-3)`,
+      `${where}: calls fetch() outside a …Service.ts under services/ — go through a Service (RC-3)`,
     )
   }
 

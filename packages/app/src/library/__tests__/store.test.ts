@@ -12,6 +12,7 @@ import {
   liveThunkExtra,
   makeStore,
   stubbedThunkExtra,
+  makeStubbedStore,
 } from '../store'
 
 afterEach(() => {
@@ -119,9 +120,79 @@ describe('the shipping feature-flag overrides', () => {
     ).toBe(false)
   })
 
+  it('turns the landing page on for the shipping build only — dark-launched in the status quo', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.landingPage),
+    ).toBe(true)
+    expect(
+      stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.landingPage),
+    ).toBe(false)
+  })
+
   it('leaves the stubbed extra on the status-quo set, so tests never sync by accident', () => {
     expect(
       stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.supabaseHosting),
     ).toBe(false)
+  })
+})
+
+describe('the landing services in the manifest', () => {
+  it('wires the fixture-backed early-access stub into the stubbed extra', async () => {
+    const response = await stubbedThunkExtra.earlyAccessService.join({
+      email: 'ada@example.com',
+      platform: 'ios',
+      source: null,
+      locale: null,
+    })
+    expect(response.position).toBeNull()
+  })
+
+  it('wires a silent analytics stub into the stubbed extra', () => {
+    expect(() =>
+      stubbedThunkExtra.analyticsService.track('page_view'),
+    ).not.toThrow()
+  })
+
+  it('gives the live extra a distinct binding for both, never the stubs', () => {
+    expect(liveThunkExtra.earlyAccessService).not.toBe(
+      stubbedThunkExtra.earlyAccessService,
+    )
+    expect(liveThunkExtra.analyticsService).not.toBe(
+      stubbedThunkExtra.analyticsService,
+    )
+  })
+})
+
+describe('makeStubbedStore — the one store a story or a test builds', () => {
+  it('builds on the stubbed extra, so a thunk reaches a double and never the network', async () => {
+    const store = makeStubbedStore()
+    await store.dispatch(
+      fetchGreetingThunk({ recipient: greetingMocks.typical.recipient }),
+    )
+    expect(store.getState().greeting.load.kind).not.toBe('idle')
+  })
+
+  it('lets a caller swap one Service for its own double and keeps the rest stubbed', () => {
+    const calls: string[] = []
+    const greetingService: GreetingService = {
+      ...stubbedThunkExtra.greetingService,
+      fetchGreeting: async (recipient, options) => {
+        calls.push(recipient)
+        return stubbedThunkExtra.greetingService.fetchGreeting(
+          recipient,
+          options,
+        )
+      },
+    }
+    const store = makeStubbedStore({ greetingService })
+    void store.dispatch(fetchGreetingThunk({ recipient: 'Ada' }))
+    expect(calls).toEqual(['Ada'])
+  })
+
+  it('returns a fresh store on every call — two stories never share state', () => {
+    const a = makeStubbedStore()
+    const b = makeStubbedStore()
+    expect(a).not.toBe(b)
+    expect(a.getState()).toEqual(b.getState())
   })
 })

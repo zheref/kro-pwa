@@ -76,6 +76,8 @@ import {
 } from '../SessionVocabulary'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 
 /** Selectors run against a hand-built root state, never a live store. */
 const rootWith = (session: SessionState): RootState => ({
@@ -98,6 +100,8 @@ const rootWith = (session: SessionState): RootState => ({
   main: initialMainState,
   settings: initialSettingsState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 const running = rootWith(sessionStateMocks.running)

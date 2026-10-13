@@ -78,8 +78,10 @@ from the epic's pin in its PR. See [`../00-product-brief.md`](../00-product-brie
 
 - **Shared context / cross-feature state:** none today. When it appears it composes through
   root-level Selectors, never by one slice importing another slice's shape (`RC-20`).
-- **Composition root:** `apps/web` builds the store once per browser session and hands the
-  instance to `StoreProvider`; `makeStore(...)` is called in exactly one file (`RC-41`).
+- **Composition root:** `apps/web` builds the store once per mount of a route group's
+  `providers.tsx` — one per browser session in production, where the landing and the hub are
+  different origins — and hands the instance to `StoreProvider`; `makeStore(...)` is called in
+  exactly one file (`RC-41`).
 - **Platform services** (notifications, sounds, wake lock, storage, calendar) are Services
   behind `ThunkExtra`, each with a `stubbed…` twin — never imported directly by a component
   (`RC-6`, `RC-33`).

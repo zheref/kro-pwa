@@ -28,7 +28,6 @@ export {
   makeStore,
   stubbedThunkExtra,
 } from './library/store'
-
 /*
  * No Service is exported here, including the navigation one (`RC-6`). The
  * *live* navigation binding cannot be built inside this package anyway —
@@ -178,7 +177,7 @@ export {
   applyStoredAppearance,
   readStoredAppearance,
   storedAppearanceKey,
-} from './features/settings/applyStoredAppearance'
+} from './library/storedAppearance'
 
 /**
  * The Triage render tier (KC-IS-#26) — the carousel that mounts **inside** the
@@ -195,3 +194,12 @@ export {
  * one of the pieces.
  */
 export * from './features/triage/pages'
+
+/**
+ * The marketing landing page (KC landing-page effort) — the Page `apps/web`'s
+ * `(marketing)` route mounts, and the early-access form it composes. The
+ * logic tier (both slices, their Producers and Selectors) stays unexported:
+ * the route reaches the page, never the store's shape.
+ */
+export { type LandingPageProps, LandingPage } from './features/landing/pages'
+export { EarlyAccessPage } from './features/earlyAccess/pages'

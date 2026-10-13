@@ -83,10 +83,16 @@ Fragment or Page belongs in `packages/app`, never here.
 
 What `apps/web` does still own is what the platform mandates and canon puts here on purpose:
 the passive Server Pages (`RC-38`), the ≤10-line client wrappers (`RC-39`), the root layout and
-the composition root (`RC-41`), and the three redirects. Some of those render JSX — `layout.tsx`
-is the document, `providers.tsx` is the provider tree, and `(shell)/AppShellClient.tsx` mounts
-`MainShellPage` plus the global overlay list. They are **compositions**, not components: each
-one wires or forwards, and none is reusable or has a body worth lifting. The distinction is the
+the composition root (`RC-41`), the two redirects, the host-routing middleware (a thin adapter
+over the pure, tested `src/hostRouting.ts`), and the `(marketing)` group's thin files — its
+passive layout (the same `Providers` plus a skip link and the optional Umami script), the `/`
+route with its pure `landingRoute.ts` decision, the `LandingPageClient` wrapper, the Open Graph
+image — beside the root-level `manifest.ts`, `sitemap.ts` and `robots.ts`. Some of those render
+JSX — `layout.tsx` is the document, `providers.tsx` is the provider tree, and
+`(shell)/AppShellClient.tsx` mounts `MainShellPage` plus the global overlay list. They are
+**compositions**, not components: each one wires or forwards, and none is reusable or has a body
+worth lifting. The landing's Page itself belongs in `packages/app` like every other. The
+distinction is the
 `RC-62` "apps are thin shells" line, not "no `.tsx` under `apps/web`".
 
 Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing points back.
@@ -98,13 +104,15 @@ Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing p
 | `@kro/core` imports no react/next/DOM/Node | `scripts/check-platform-free.mjs` (its `lint` task) + `lib: ["ES2022"]`, `types: []` | `RC-50` |
 | `configureStore` only in `library/store.ts` | `packages/app/scripts/check-uzf-boundaries.mjs` | `RC-22` |
 | `react-redux` only in `hooks.ts` / `StoreProvider.tsx` | same | `RC-10` |
-| A Service module imported only by `store.ts` + tests | same | `RC-6`, `RC-21` |
-| `fetch(` only under `src/services/**` | same | `RC-3` |
+| A Service module imported only by `store.ts`, tests, and the `services/` tree's own files (a sibling binding, a subpath barrel such as `services/earlyAccess/server.ts` or `services/googleCalendar/index.ts`) | same | `RC-6`, `RC-21` |
+| `fetch(` only in a `…Service.ts` under `src/services/**` — a route-handler Producer beside its Service may call the Service, never the wire | same | `RC-3` |
 | `createSlice` / `createAsyncThunk` / `createSelector` only in `…Feature.ts` / `…Producer.ts` / `…Selectors.ts` | same | `RC-1`, `RC-3`, `RC-5` |
 | `@kro/app` imports no `next/*` | same | `RC-40` |
 
 Both scripts run as their package's `lint` task, so `make lint` (and therefore `pr.yml`) fails
-on a violation. That is what makes "components cannot fetch" a structural fact.
+on a violation. That is what makes "components cannot fetch" a structural fact — inside
+`packages/app`. `apps/web` is not scanned for `fetch(`, which is why the early-access sink lives
+in `packages/app/src/services/` and reaches the shell through a subpath export (§ 8).
 
 > **Citation note.** The last row is `RC-40` — *"the shared Page never imports a Next.js API"* —
 > because the rule governs `packages/app`, the shared render layer. `RC-50` is the neighbouring
@@ -134,7 +142,7 @@ would breach `@kro/core`'s platform-free contract. Ruled that way in the deliver
 | Producer | `createAsyncThunk` factory; takes narrow inputs, reads services from `extra`, passes `thunkAPI.signal` to the Service, **never throws** | `<F>Producer.ts` | `RC-3`, `RC-6`, `RC-25` |
 | Effect | the promise `createAsyncThunk` builds, resolving `Result<T, <F>Exception>` | — | `RC-7`, `RC-25` |
 | Result | `Result<T,E> = {ok:true,value} \| {ok:false,error}` with `ok()` / `err()` / `isOk` / `isErr` | `@kro/core` `library/result.ts` | `RC-7` |
-| Exception | `Exception<Kind> = {kind, message, recoverable}` in a closed union + an `<X>Exceptions` factory; user copy derived per `kind`, never read from `message` | `models/<X>Exception.ts` | `RC-8`, `RC-9` |
+| Exception | `Exception<Kind> = {kind, message, recoverable}` in a closed union + an `<X>Exceptions` factory; user copy derived per `kind` by the `<X>Exceptions` factory and carried in `message`, so a Selector reads the factory's copy and never assembles any from a transport string (the `.rejected` arm routes through the factory's generic case) | `models/<X>Exception.ts` | `RC-8`, `RC-9` |
 | Service | `interface <X>Service` + `live<X>Service` / `stubbed<X>Service` pair + a backing fixture; returns the **wire** shape and may throw — the `Result` boundary is the Producer's | `services/<x>/<X>Service.ts` | `RC-33`, `RC-59` |
 | Mapper | plain object of pure functions `toDomain` / `fromDomain` / `toException` — the only wire↔domain↔exception conversion site | `models/<X>Mapper.ts` | `RC-30` |
 | Model / Response | domain types only, one per file / wire format mirrored exactly, never imported outside Service→Producer→Mapper | `models/` | `RC-28`, `RC-29` |
@@ -142,6 +150,7 @@ would breach `@kro/core`'s platform-free contract. Ruled that way in the deliver
 | Page (stateful container) | the only artifact calling `useAppSelector`/`useAppDispatch` for a feature; owns no markup beyond its single Fragment call | `<F>Page.tsx` | `RC-37`, `RC-61` |
 | Fragment (passive) | may `useAppSelector`, never dispatches a thunk; intent arrives via callback props | `<F>Fragment.tsx` | `RC-15`, `RC-61` |
 | Component (domain-less) | reusable, imports nothing from `react-redux`, a slice or a Producer | `design/` | `RC-14` |
+| Route handler (Producer-equivalent) | `services/<x>/<X>Handler.ts` in `packages/app`, beside the Service it binds and exported through a subpath (`@kro/app/early-access`); `apps/web`'s `route.ts` reads the environment and binds; the handler answers a `Result` and never touches the wire itself | `services/<x>/` | `RC-43`, `RC-62` |
 | Route entry | `apps/web/src/app/**/page.tsx` — a passive Server Component: param resolution + optional prefetch, no hook, no dispatch; a `…PageClient.tsx` wrapper ≤10 lines forwards props | `apps/web` | `RC-38`, `RC-39`, `RC-62` |
 | Composition root | `app/layout.tsx` passive; one client `providers.tsx` wires Store + Theme + Navigation and is the one place `makeStore(...)` is called | `apps/web` | `RC-41` |
 | Navigation | a `NavigationService` behind `ThunkExtra`; `router.navigate(...)` is invoked from a Producer, never a component | `RC-17`, `RC-63` |
@@ -202,8 +211,12 @@ So: the only generated tree in the repo is `.claude/rules/`. Anything else descr
 ## 6. Tests & minimums
 
 **Toolbox** — Vitest + `@testing-library/react` in all three members; Playwright for E2E;
-Storybook + its test-runner as the `UZF-26` visual-evidence carrier (`RC-53`, `RC-11`). No
-device snapshot runner: this is a headless web stack.
+Storybook for the `RC-11` story/test pairing. The `UZF-26` evidence itself is the `public-mirror`
+mechanism `nen/contract.json` → `project.evidence` declares: Playwright captures of the production
+build (`apps/web/e2e/*-shots.spec.ts`, asserted with `toHaveScreenshot` against the committed
+`e2e/__screenshots__/<suite>/<scene>.png`), mirrored to `zheref/kro-assets` by
+`scripts/pr_screenshots.sh` — a departure from `RC-11`'s story-capture carrier, recorded in § 7.
+No device snapshot runner: this is a headless web stack.
 
 **Per-artifact minimums (`RC-12`, `RC-54`…`RC-57`, `UZF-18`):**
 
@@ -247,6 +260,12 @@ so the generated mirror reads truthfully rather than describing a repo that does
 | `RC-53` — Storybook 8 | Storybook 10 | Storybook 8 cannot run on Next 15.3 (upstream-fixed in 9.x). Filed as **[BC-IS-#905](https://github.com/zheref/bankai-core/issues/905)**. |
 | `RC-44`/`RC-45` — Expo Router route files, `app/_layout.tsx` | N/A | No native target. |
 | `{{CI_TEST_WORKFLOW}}` = `test.yml` | `.github/workflows/pr.yml` | One workflow carries lint + typecheck + test + build here. |
+| `RC-11` — the stories' own captures are the `UZF-26` evidence | Playwright captures of the built page (`e2e/*-shots.spec.ts` → `e2e/__screenshots__/`), mirrored to the public assets repository | A story covers one module; a reviewer judges the page as the production build serves it, and the Storybook test-runner is not wired. Recorded, not ruled. |
+| `09-testing.md` § What NOT to test (unnumbered) — never `toMatchSnapshot()` on a DOM tree | The story-mirror sweeps (`__tests__/stories.test.tsx`) snapshot the normalised DOM beside RTL semantic tests | A repo-wide pattern older than the landing (nine files on `main`); the sweep guards "every story renders, unchanged", the RTL tests carry `RC-11`. Open handbook question **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
+| `RC-6`/`UZF-16` — a Service holds no state | The live analytics Service buffers `track` calls until the deferred tracker loads (`// State holder:` inline) | A single-transport readiness buffer fits neither the stateless Service nor the two-Service Repository. Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
+| `RC-15`/`RC-37` — a Page owns one Fragment | `LandingPage` composes `EarlyAccessPage` as its Fragment's slot; each Page dispatches only its own events | Local precedent (`DestinationPage` → `EarnPage`, `MainShellPage` → `ProfileControlPage`). Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
+| `RC-3` rule 5 — a Producer never touches a boundary directly | `userDidToggleThemeThunk` and `SettingsProducer` paint the document through `applyStoredAppearance` | The appearance paint predates the landing (`SettingsProducer.ts`, on `main`); an `AppearanceService` behind `ThunkExtra` is tracked as KC-IS-#106. |
+| `02-store-setup.md` § 7 — `library/` holds only what compiles against bare RTK | `library/storedAppearance.ts` (and the older `library/persistence`, `plan`, `rings`, `timeline`) hold domain helpers | `UZF-6` sends cross-feature logic to `library/`; the two readings conflict. Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**, question 4. |
 
 `RC-26` vs `RC-3` (does a cancelled thunk's `.rejected` reach the exception Shifter?) is a
 further open question — **[BC-IS-#904](https://github.com/zheref/bankai-core/issues/904)**. This
@@ -256,21 +275,101 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
 
 ## 8. Project specifics
 
-- **Route map:** one group under one passive root layout, and a route group changes no URL.
+- **Hosts:** one deployment, two hosts. The **apex** (`NEXT_PUBLIC_SITE_HOST`, `kroapp.com`)
+  serves the marketing landing at `/` and is indexable; the **hub** (`NEXT_PUBLIC_HUB_HOST`,
+  `hub.kroapp.com`) is the app's canonical host and answers `X-Robots-Tag: noindex, nofollow`.
+  `src/middleware.ts` applies `resolveHostRouting` (`src/hostRouting.ts`, the whole matrix in
+  one pure, unit-tested function): on the apex, `/hub` and `/hub/<path>` and every app path
+  (`/my-day` … `/lists/x`, `/settings`, `/integrations`) 307 to the same path on the hub, query
+  kept; on the hub, `/` is **rewritten** (not redirected) to `/my-day`, query kept, so a
+  Supabase `?code=` return still reaches the PKCE exchange; on any other host — localhost, a
+  preview, and every host while either env value is unset — nothing host-related happens and
+  `/hub/<path>` 307s to `/<path>` on the same host; whatever follows `/hub`, any run of leading
+  `/` or `\` collapses to one `/`, so a crafted `/hub//evil.com` can never become a
+  protocol-relative `Location` (SEC-7). A host that is neither — a `www.` alias,
+  say — is "other" too: it serves the full app with no `noindex`, so an alias either redirects at
+  the host level or stays unconfigured on purpose (the `www` decision is open, G5). `/api/*`,
+  `/_next/*` and the static files (icons, sounds, `/landing/*`, `sw.js`, the manifest, robots,
+  sitemap, `llms.txt`, the OG image) are never routed. The landing document (`/` on a non-hub
+  host) answers the security headers `src/securityHeaders.ts` builds — a CSP admitting only the
+  page's own scripts plus the analytics script's origin, and connections only to itself and the
+  tracker's collect origin (`gateway.umami.is` for Umami Cloud, the script's own origin for a
+  self-hosted instance; the tag's `data-host-url` names the same origin, so the policy and the
+  tracker agree), `nosniff`, a referrer policy and `frame-ancestors 'none'` — and the hub
+  inherits none of them. `/landing/*` ships as WebP only,
+  no PNG masters: provenance and regeneration live in `docs/landing-assets.md`, and
+  `LandingAssets.test.ts` enforces that every catalog key is used by a section and that each
+  catalog size matches the WebP header. The hosts are `NEXT_PUBLIC_` values inlined at build time: a
+  deployment sets them in its build environment. The apex/hub split is a product decision the
+  landing-page effort assumed; it is recorded here, not in canon.
+- **Route map:** two groups under one passive root layout, and a route group changes no URL.
   `(shell)` is the parity set — `/my-day` · `/tasks` · `/inbox` · `/matrix` · `/plan` ·
   `/habits` · `/execute` · `/board` · `/earn` · `/blueprints` · `/adjust` · `/tweak` ·
-  `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared ≤10-line client
-  wrapper, wrapped by `providers.tsx` and the shell. Beside it sit three **redirects**, directly
-  under the root layout because they render nothing and so need no providers: `/` → `/my-day`
-  (307 — the landing destination is a product call that can change, and `/` is the installed
-  app's `start_url`), `/settings` → `/adjust`, `/integrations` → `/adjust` (calendar-connect is
-  a pane inside the Settings hub, not a destination). The second group, `(legacy)`, held those
-  three plus `/session` and the Chakra provider tree; #22 retired `/session` and #79 retired the
-  group, the tree, the 56 vendored Chakra components and the Chakra/emotion/react-icons
-  dependencies with it. Route files are the shell child's (#13) exclusively; a feature child
-  replaces a destination's Page in `packages/app` instead. The macOS names are what keep the
-  parity set unambiguous without a prefix: canon calls the session destination "Execute" and the
-  settings one "Adjust".
+  `/storybook` · `/search` · `/lists/[listId]` — each a passive `page.tsx` over one shared
+  ≤10-line client wrapper, wrapped by `providers.tsx` and the shell. `(marketing)` holds `/`:
+  its layout wraps the same `providers.tsx` (the one composition root) **without** the shell,
+  and its `page.tsx` asks `landingRouteDecision` what to do — an OAuth return
+  (`code`/`state`/`error`/`error_description`, and only those) always goes to `/my-day?…`;
+  otherwise the landing when the `landingPage` flag is on and `/my-day` (307) when it is off. It
+  is on: the web product's shipping overrides (`@kro/core` `flags/WebShippingOverrides.ts`)
+  enable it, read at build time by the Server Page through `landingFlag.ts` — a Debug override
+  in the running app does not reach `/` — and the same read gates `/api/early-access`, so the
+  flag is the kill switch for the page and its sign-up together. The landing's Page lives in
+  `packages/app` and mounts through `(marketing)/LandingPageClient.tsx`. Each route group mounts
+  its own `providers.tsx`, so a same-origin hop from the landing into the shell (localhost, a
+  preview) builds a second store instance — harmless, and in production the hub is another
+  origin; `makeStore(...)` keeps its one call site (`RC-41`). Beside the groups sit two **redirects**, directly under
+  the root layout because they render nothing: `/settings` → `/adjust`, `/integrations` →
+  `/adjust` (calendar-connect is a pane inside the Settings hub; the Google OAuth callback still
+  lands on `/integrations?google=…`, which on the apex first hops to the hub). The installed
+  app's `start_url` is `/my-day` — the app on whichever host served the manifest — while its
+  `id` stays `/` so no install is orphaned. The old `(legacy)` group held `/`, `/settings`,
+  `/integrations`, `/session` and the Chakra provider tree; #22 retired `/session` and #79
+  retired the group, the tree, the 56 vendored Chakra components and the
+  Chakra/emotion/react-icons dependencies with it. Shell route files are the shell child's (#13)
+  exclusively; a feature child replaces a destination's Page in `packages/app` instead. The macOS
+  names are what keep the parity set unambiguous without a prefix: canon calls the session
+  destination "Execute" and the settings one "Adjust".
+- **SEO surface:** the root layout's metadata (`metadataBase` from `NEXT_PUBLIC_SITE_URL`, the
+  `%s · Kro` title template, Open Graph + large-image Twitter card, `robots: index`), the
+  `(marketing)` Open Graph image (1200×630, the `indigoGrape` gradient), `sitemap.ts` (the
+  landing only), `robots.ts` (allow `/`, disallow `/api/` and `/hub` — never the app paths: a crawler barred by
+  robots never fetches the page and never reads the hub's `noindex` header) and
+  `public/llms.txt`. The `(shell)` routes inherit the metadata; the hub's `noindex` header is
+  what keeps them out of indexes.
+- **Early access:** the browser side is a Service pair (`services/earlyAccess/EarlyAccessService.ts`,
+  live POSTs to the site's own route, stubbed reads fixtures); the server side — the webhook
+  **sink** (`EarlyAccessSinkService.ts`: live, unavailable and stubbed bindings over a fixture) and
+  the **handler** (`EarlyAccessHandler.ts`, a Producer-equivalent answering a `Result`, `RC-43`) —
+  lives in `packages/app/src/services/earlyAccess/` and reaches `apps/web` through the
+  `@kro/app/early-access` subpath, the `./google` precedent, so no `fetch` lives in the shell
+  (`RC-3`). `route.ts` only reads the environment (an `https:` webhook URL, else the unavailable
+  sink; the flag) and binds. The handler refuses cross-site origins and non-JSON bodies, gives the
+  honeypot the same answer a real request would get, answers every join — new or already listed —
+  with a generated receipt (a fresh id, no queue position) so the two are indistinguishable
+  whatever the webhook returns (SEC-8, SEC-12), checks a browser's `Origin` against the
+  configured site and hub origins rather than the server's bind origin so a TLS-terminating proxy
+  never refuses a real sign-up (SEC-7), and binds the webhook only when a removal channel exists
+  (`NEXT_PUBLIC_CONTACT_EMAIL`, shown under the field): no collection without a way to be removed.
+  Durable throttling, double opt-in and a nonce CSP are tracked in KC-IS-#104. `store.ts` re-exports the Service *types* a Producer needs
+  and nothing else: the stubbed and recording doubles are imported by tests from the Service
+  modules, which the boundary script allows. A composing Page never dispatches into the composed
+  feature's slice (`RC-1`): the landing hands the platform pick down as a numbered request and
+  `EarlyAccessPage` reacts with its own `onPlatformRequested` event; two older cross-slice
+  dispatches on `main` (`MainShellPage`, `InboxPanePage`) predate that reading and are not
+  touched here.
+- **Marketing surfaces:** type reads only `--kro-text-*` tokens (hero, hero-split, display-1/2/3,
+  lede, body-marketing, card-title, menu, label, caption, footnote), declared in the scheme-free
+  `:root` block of `tokens.css`; `marketing.css` types no font-size literal
+  (`marketingTokens.test.ts` asserts it). From `lg` the hero headline is sized by its copy column
+  (`cqi`), so the primary actions sit above the fold on laptop viewports. The landing roots scope a
+  two-tone focus ring — back then accent; snow then total on the gradient field — and the global
+  `--kro-ring` is unchanged; a marketing primary button is an opaque accent fill without the glass
+  sheen (white on the accent is 5.65:1). Device frames carry the catalog's `alt` on the image
+  itself.
+- **Appearance helper:** `library/storedAppearance.ts` (read, key and apply the stored appearance)
+  is shared by Settings, the landing and the composition root — `library/`, never a sibling
+  feature folder (`UZF-6`).
 - **Offline shell:** `public/sw.js` precaches the landing **document** (`/my-day`), never `/`.
   `cache.add('/')` follows the redirect and stores a redirected response; per Fetch, answering a
   navigation (redirect mode `manual`) with a response whose URL list has more than one entry is

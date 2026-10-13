@@ -1,0 +1,15 @@
+{
+  "joinedAt": "2026-10-12T12:00:00.000Z",
+  "receipts": {
+    "queued@kro.invalid": { "id": "ea-fixture-queued", "position": 12 },
+    "unqueued@kro.invalid": { "id": "ea-fixture-unqueued", "position": null }
+  },
+  "failures": {
+    "already@kro.invalid": { "status": 409 },
+    "unavailable@kro.invalid": { "status": 503 },
+    "invalid@kro.invalid": { "status": 422 },
+    "broken@kro.invalid": { "status": 500 }
+  },
+  "networkFailures": ["offline@kro.invalid"],
+  "timeouts": ["slow@kro.invalid"]
+}

@@ -18,9 +18,9 @@ import {
   type FeatureFlagService,
   type LocalStore,
   type SignOutWipe,
-  FeatureFlags,
-  enabledAssignment,
   makeHardcodedFeatureFlagService,
+  makeWebShippingFeatureFlagService,
+  webShippingAppearanceOverride,
 } from '@kro/core'
 import { configureStore, isPlain } from '@reduxjs/toolkit'
 import { authSlice } from '../features/auth/AuthFeature'
@@ -28,11 +28,13 @@ import { captureSlice } from '../features/capture/CaptureFeature'
 import { dayProgressSlice } from '../features/dayProgress/DayProgressFeature'
 import { dayTimelineSlice } from '../features/dayTimeline/DayTimelineFeature'
 import { doSlice } from '../features/do/DoFeature'
+import { earlyAccessSlice } from '../features/earlyAccess/EarlyAccessFeature'
 import { earnSlice } from '../features/earn/EarnFeature'
 import { endeavorActivitySlice } from '../features/endeavorActivity/EndeavorActivityFeature'
 import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFeature'
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
+import { landingSlice } from '../features/landing/LandingFeature'
 import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { platformSlice } from '../features/platform/PlatformFeature'
@@ -40,6 +42,11 @@ import { sessionSlice } from '../features/session/SessionFeature'
 import { settingsSlice } from '../features/settings/SettingsFeature'
 import { thirstSlice } from '../features/thirst/ThirstFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
+import {
+  type AnalyticsService,
+  liveAnalyticsService,
+  stubbedAnalyticsService,
+} from '../services/analytics/AnalyticsService'
 import {
   type AuthService,
   makeLiveAuthService,
@@ -52,6 +59,11 @@ import {
   makeLiveGoogleCalendarService,
   stubbedGoogleCalendarService,
 } from '../services/googleCalendar'
+import {
+  type EarlyAccessService,
+  liveEarlyAccessService,
+  stubbedEarlyAccessService,
+} from '../services/earlyAccess/EarlyAccessService'
 import {
   type GreetingService,
   liveGreetingService,
@@ -206,72 +218,31 @@ export interface ThunkExtra {
    * "no counts, sign-in required to vote" rather than a crash.
    */
   readonly thirstService: ThirstService
+  /**
+   * The landing page's early-access sign-up. The browser binding posts to this
+   * app's own `/api/early-access` route, which owns the waitlist sink — no
+   * webhook URL or token is ever on this side of the wire.
+   */
+  readonly earlyAccessService: EarlyAccessService
+  /**
+   * Cookieless product analytics (Umami). Counts and timings only — never what
+   * a visitor wrote. Never throws, never blocks; see the Service's header.
+   */
+  readonly analyticsService: AnalyticsService
 }
 
 /**
- * The live flag service.
+ * The web product's flag Provider (`RC-47`): canon's `statusQuo` baseline plus
+ * the web shipping overrides, which live in `@kro/core`
+ * (`flags/WebShippingOverrides.ts`) so `apps/web`'s root route can read the
+ * same registry before a client store exists. Every override's product call is
+ * recorded there, beside the flag it moves.
  *
- * Built once here so the endeavor engine's gate and any Selector reading a flag
- * see the same overrides within one browser session. `apps/web` will hand the
- * same instance down when the composition root lands (#13).
- *
- * `appearanceThemes` ships **enabled** here even though `statusQuoSet` keeps
- * it disabled (Apple's dark launch). Adjust is asked to offer Appearance, so
- * the web extras turn the flag on as a product override.
+ * Built once, at module scope, so every store in a session reads the same
+ * instance and a Debug override is seen app-wide. `apps/web` hands the same
+ * instance down from the composition root.
  */
-const shippingAppearanceOverride = enabledAssignment(
-  FeatureFlags.appearanceThemes,
-)
-
-/**
- * `supabaseHosting` — Kro Cloud — also ships **enabled** here. `statusQuoSet`
- * keeps it disabled because Apple's rollout is remote-flagged; the web has no
- * remote flag service yet and its whole account story (sign in, then see your
- * endeavors) is the cloud, so a signed-in user on a build with the gate shut
- * would sign in to nothing. A build with no Kro Cloud project configured is
- * still local-only: the sync service reports `unavailable` on its own.
- */
-const shippingSupabaseHostingOverride = enabledAssignment(
-  FeatureFlags.supabaseHosting,
-)
-
-/**
- * `detailPaneInbox` — the web-only Inbox segment of the trailing pane — ships
- * **enabled** here while `statusQuoSet` keeps it off as greenfield. The
- * maintainer asked for captures to land in the pane Inbox; the flag stays the kill switch.
- */
-const shippingDetailPaneInboxOverride = enabledAssignment(
-  FeatureFlags.detailPaneInbox,
-)
-
-/**
- * `captureSuggestions` — the web-only suggestions pane above the desktop
- * capture prompt — ships **enabled** here while `statusQuoSet` keeps it off
- * as greenfield. The flag stays the kill switch.
- */
-const shippingCaptureSuggestionsOverride = enabledAssignment(
-  FeatureFlags.captureSuggestions,
-)
-
-/**
- * `keyboardAccelerators` — the prompt's ⌥ chords, keycaps, key hints and
- * Return-walk, and the quick-action button's Return and letters — ships
- * **enabled** here while `statusQuoSet` keeps it off as greenfield. The flag
- * stays the kill switch.
- */
-const shippingKeyboardAcceleratorsOverride = enabledAssignment(
-  FeatureFlags.keyboardAccelerators,
-)
-
-const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
-  overrides: [
-    shippingAppearanceOverride,
-    shippingSupabaseHostingOverride,
-    shippingDetailPaneInboxOverride,
-    shippingCaptureSuggestionsOverride,
-    shippingKeyboardAcceleratorsOverride,
-  ],
-})
+const liveFeatureFlags: FeatureFlagService = makeWebShippingFeatureFlagService()
 
 /**
  * The live Google binding, built once so the service and the `PlanHost` adapted
@@ -314,6 +285,8 @@ export const liveThunkExtra: ThunkExtra = {
   thirstService: makeLiveThirstService({
     clientProvider: liveSupabaseClientProvider,
   }),
+  earlyAccessService: liveEarlyAccessService,
+  analyticsService: liveAnalyticsService,
 }
 
 /**
@@ -338,7 +311,7 @@ export const stubbedThunkExtra: ThunkExtra = {
   // `statusQuo` by default, plus the web product override that turns
   // Appearance on — `supabaseHosting` stays disabled, exactly like canon.
   featureFlags: makeHardcodedFeatureFlagService({
-    overrides: [shippingAppearanceOverride],
+    overrides: [webShippingAppearanceOverride],
   }),
   authService: stubbedAuthService,
   settingsSync: stubbedSettingsSyncService,
@@ -360,7 +333,30 @@ export const stubbedThunkExtra: ThunkExtra = {
   // suite that wants a votable/voted surface builds its own binding with
   // `makeStubbedThirstService({ signedIn: true, ... })`.
   thirstService: stubbedThirstService,
+  // Fixture-backed: any address joins with no queue position, the reserved
+  // `already@` / `offline@` / `unavailable@kro.invalid` addresses fail. A
+  // suite asserting on calls passes `makeRecordingEarlyAccessService()`.
+  earlyAccessService: stubbedEarlyAccessService,
+  // Sends nothing. A suite asserting on events passes
+  // `makeRecordingAnalyticsService()`.
+  analyticsService: stubbedAnalyticsService,
 }
+
+/*
+ * The landing tier's Service TYPES only, re-exported because
+ * `check-uzf-boundaries.mjs` lets only this file (and tests) import a Service
+ * module, and a Producer needs the event-name and prop types. No value — no
+ * stubbed binding, no recording factory — leaves this file: a suite that
+ * asserts on calls imports the double straight from its Service module
+ * (allowed for tests), and the live bindings are reached only through
+ * `liveThunkExtra` (`RC-6`).
+ */
+export type {
+  AnalyticsEventName,
+  AnalyticsProps,
+  AnalyticsService,
+} from '../services/analytics/AnalyticsService'
+export type { EarlyAccessService } from '../services/earlyAccess/EarlyAccessService'
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
   configureStore({
@@ -382,6 +378,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       main: mainSlice.reducer,
       settings: settingsSlice.reducer,
       thirst: thirstSlice.reducer,
+      landing: landingSlice.reducer,
+      earlyAccess: earlyAccessSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
@@ -396,6 +394,16 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
         },
       }),
   })
+
+/**
+ * The one store a story or a test builds: `makeStore` over the stubbed extra,
+ * with `overrides` swapping a Service for a double the caller supplies (a
+ * recording one, imported from its Service module — a test may, a mocks file
+ * may not). Shared by every feature's `<F>Mocks.ts`, so no feature imports a
+ * sibling's mocks for it (`UZF-6`).
+ */
+export const makeStubbedStore = (overrides: Partial<ThunkExtra> = {}) =>
+  makeStore({ ...stubbedThunkExtra, ...overrides })
 
 export type AppStore = ReturnType<typeof makeStore>
 export type RootState = ReturnType<AppStore['getState']>

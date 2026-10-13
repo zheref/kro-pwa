@@ -7,15 +7,14 @@
  * - **`id`** pins the app's identity across deploys. Without it the browser
  *   derives identity from `start_url`, so a later change to the start route
  *   would look like a *different* app and orphan every existing install.
- * - **`start_url` stays `/`, which redirects.** Since KC-IS-#79 `/` is a
- *   passive redirect into the shell's landing destination rather than a page.
- *   A launch therefore costs one in-scope hop, which is deliberate: `/` is the
- *   app's front door, and pinning `start_url` to whichever destination is
- *   currently the landing one would have to be re-decided every time that
- *   product call changes. In-scope redirects do not affect installability, and
- *   `id` already carries identity, so this is a free choice rather than a
- *   constrained one. The offline half is the service worker's, and it does NOT
- *   precache `/` — see `SHELL_DOCUMENT` in `public/sw.js`.
+ * - **`start_url` is `/my-day`, the app itself.** Since the apex/hub split,
+ *   `/` is the marketing landing on the apex (and a rewrite to `/my-day` on
+ *   the hub), so a launch must not depend on which host served the manifest:
+ *   pointing straight at the app's landing destination opens the app either
+ *   way, with no hop. `id` stays `/` — identity is pinned there, so this
+ *   change does not orphan an existing install — and `scope` stays `/`. The
+ *   offline half is the service worker's, which precaches that same document
+ *   and never `/` — see `SHELL_DOCUMENT` in `public/sw.js`.
  * - **`theme_color`** is `--kro-color-header-gradient-indigo` (`#5856d6`), the
  *   first stop of canon's `indigoGrape` header slab, so the browser/OS chrome
  *   continues the header rather than fighting it.
@@ -45,7 +44,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       'Control your time, do not let time control you. Plan, Do and Earn, ' +
       'in one personal execution system.',
-    start_url: '/',
+    start_url: '/my-day',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait-primary',

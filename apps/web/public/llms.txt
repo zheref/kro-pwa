@@ -1,0 +1,22 @@
+# Kro
+
+> Control your time, do not let time control you.
+
+Kro is a personal execution system: Plan, Do and Earn, in one place. You plan
+your days and weeks, work through them in focused sessions, and see what your
+time actually earned.
+
+## Platforms
+
+- Web: an installable app (PWA) at https://hub.kroapp.com
+- Native apps for Apple platforms and Android — see the landing page for
+  availability and early access
+
+## Canonical URLs
+
+- Landing page: https://kroapp.com/
+- The app: https://hub.kroapp.com/ (kroapp.com/hub redirects there)
+
+## Privacy
+
+Kro's analytics record counts and timings only — never the words you write.

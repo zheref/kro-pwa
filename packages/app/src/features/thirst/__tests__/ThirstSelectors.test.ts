@@ -11,6 +11,8 @@ import { initialEarnState } from '../../earn/EarnFeature'
 import { initialEndeavorDetailState } from '../../endeavorDetail/EndeavorDetailState'
 import { initialFindState } from '../../find/FindState'
 import { initialGreetingState } from '../../greeting/GreetingFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 import { initialMainState } from '../../main/MainFeature'
 import { initialPlanState } from '../../plan/PlanState'
 import { initialPlatformState } from '../../platform/PlatformFeature'
@@ -57,6 +59,8 @@ const rootWith = (thirst: ThirstState): RootState => ({
   settings: initialSettingsState,
   main: initialMainState,
   thirst,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 /** A resolved entry — the base every scenario below overrides from, so a

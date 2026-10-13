@@ -63,6 +63,8 @@ import { initialPlatformState } from '../../../platform/PlatformFeature'
 import { initialSessionState } from '../../../session/SessionState'
 import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../../landing/LandingFeature'
 import { EisenhowerQuadrant } from '@kro/core'
 import type { TriageState } from '../../TriageFeature'
 import { initialTriageState } from '../../TriageFeature'
@@ -322,6 +324,8 @@ export const triageRootWith = (slice: TriageState): RootState => ({
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 /**

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithRef } from 'react'
 import {
   type ControlDensity,
   DEFAULT_CONTROL_DENSITY,
@@ -19,7 +19,7 @@ import { cn } from '../utils/cn'
  *
  * The disabled fade appears once, here — see the note on `Button`.
  */
-export interface InputProps extends ComponentPropsWithoutRef<'input'> {
+export interface InputProps extends ComponentPropsWithRef<'input'> {
   readonly density?: ControlDensity
 }
 
@@ -43,7 +43,7 @@ export function Input({
         'kro-motion-quick transition-[border-color,box-shadow]',
         'outline-none',
         'disabled:pointer-events-none disabled:opacity-[var(--kro-opacity-disabled)]',
-        'aria-invalid:border-kro-banner-danger',
+        'aria-invalid:border-kro-fore-danger',
         'file:inline-flex file:border-0 file:bg-transparent file:text-xs file:font-medium',
         className,
       )}

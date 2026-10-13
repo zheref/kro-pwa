@@ -2,7 +2,7 @@
  * `FeatureFlagAssignment.statusQuoSet` — canon
  * `KroCore/Domain/FeatureFlags.swift`, ported assignment for assignment.
  *
- * The ship baseline: 29 of the 33 declared flags carry an explicit assignment;
+ * The ship baseline: 30 of the 34 declared flags carry an explicit assignment;
  * **`matrix`, `board`, `blueprints` and `developmentActions` carry none**, so
  * `state(for:)` resolves `null` for them and `enabledResolver` reads that as
  * off. That is not an omission to tidy up — an unassigned flag is how canon
@@ -71,8 +71,8 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   // palette, and the theme/palette actually being applied app-wide.
   // Ships disabled: this is a status-quo-preserving dark launch. With the
   // flag off the app renders exactly as it did before palettes existed;
-  // kro-pwa turns it on in `liveThunkExtra` / `stubbedThunkExtra` so Adjust
-  // offers the section the maintainer asked for.
+  // kro-pwa turns it on through `WebShippingOverrides.ts` so Adjust offers the
+  // section the maintainer asked for.
   disabledAssignment(FeatureFlags.appearanceThemes),
   // The window's trailing glass detail pane on the sidebar shell — canon's
   // `macDetailPane`. Ships enabled, as canon does: a kill switch for the
@@ -81,17 +81,22 @@ export const statusQuoSet: readonly FeatureFlagAssignment[] = [
   enabledAssignment(FeatureFlags.macDetailPane),
   // Web-only (no canon counterpart): the Inbox as a fourth segment of the detail
   // pane's toolbar group. Greenfield, so the status quo keeps it off; kro-pwa
-  // turns it on in `liveThunkExtra` as a product override, the way it does
-  // `appearanceThemes`.
+  // turns it on through `WebShippingOverrides.ts` as a product override, the
+  // way it does `appearanceThemes`.
   disabledAssignment(FeatureFlags.detailPaneInbox),
   // Web-only (no canon counterpart): the capture prompt's suggestions pane.
-  // Greenfield, so the status quo keeps it off; kro-pwa turns it on in
-  // `liveThunkExtra` as a product override.
+  // Greenfield, so the status quo keeps it off; kro-pwa turns it on through
+  // `WebShippingOverrides.ts` as a product override.
   disabledAssignment(FeatureFlags.captureSuggestions),
   // Web-only (no canon counterpart): the prompt's and the quick-action
   // button's keyboard accelerators. Greenfield, so the status quo keeps them
-  // off; kro-pwa turns them on in `liveThunkExtra` as a product override.
+  // off; kro-pwa turns them on through `WebShippingOverrides.ts`.
   disabledAssignment(FeatureFlags.keyboardAccelerators),
+  // Web-only (no canon counterpart): the marketing landing page and its
+  // early-access sign-up. Dark-launched — greenfield, so the status quo keeps
+  // it off; the web product enables it through `WebShippingOverrides.ts` as a
+  // shipping override, and the flag stays the kill switch.
+  disabledAssignment(FeatureFlags.landingPage),
 ]
 
 /**

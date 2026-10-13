@@ -22,6 +22,7 @@ export const COLOR_ROLE_VARS = {
   // Foregrounds
   fore: '--kro-color-fore',
   foreSecondary: '--kro-color-fore-secondary',
+  foreDanger: '--kro-color-fore-danger',
   // Neutral scale
   snow: '--kro-color-snow',
   eggshell: '--kro-color-eggshell',
@@ -135,6 +136,8 @@ export const RADIUS_VARS = {
   panel: '--kro-radius-panel',
   large: '--kro-radius-large',
   pill: '--kro-radius-pill',
+  /** The phone frame's outer bezel (marketing). */
+  device: '--kro-radius-device',
 } as const
 
 export type RadiusRole = keyof typeof RADIUS_VARS

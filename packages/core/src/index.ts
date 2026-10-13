@@ -41,6 +41,13 @@ export * from './models/Greeting'
 export * from './models/GreetingException'
 export * from './models/GreetingMapper'
 export * from './models/GreetingResponse'
+// Landing page — the early-access sign-up's domain (P1-C).
+export * from './models/EarlyAccessException'
+export * from './models/EarlyAccessMapper'
+export * from './models/EarlyAccessReceipt'
+export * from './models/EarlyAccessRequest'
+export * from './models/EarlyAccessResponse'
+export * from './models/KroPlatform'
 export * from './utils/durations'
 
 // --- vistas (#9) -----------------------------------------------------------

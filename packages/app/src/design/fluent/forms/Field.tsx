@@ -35,7 +35,7 @@ const VALIDATION_CLASS: Record<
   Exclude<FieldValidationState, 'none'>,
   string
 > = {
-  error: 'text-kro-banner-danger',
+  error: 'text-kro-fore-danger',
   warning: 'text-kro-banner-warning',
   success: 'text-kro-focus-green',
 }

@@ -234,6 +234,7 @@ export {
 
 export * from './hig'
 export * from './fluent'
+export * from './marketing'
 export {
   KRO_CATALOG,
   KRO_CATEGORIES,

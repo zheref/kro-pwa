@@ -48,6 +48,8 @@ import {
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 
 const rootWith = (earn: EarnState): RootState => ({
   greeting: initialGreetingState,
@@ -69,6 +71,8 @@ const rootWith = (earn: EarnState): RootState => ({
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 const loaded = earnStateMocks.loadedTypical

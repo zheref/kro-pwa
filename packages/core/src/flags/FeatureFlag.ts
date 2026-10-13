@@ -3,7 +3,9 @@
  * `KroCore/Domain/FeatureFlags.swift`, `extension FeatureFlag` and
  * `FeatureFlag.allKnownFlags`.
  *
- * All **29** flags KroApple declares, ported name for name. The name is the
+ * The flags of KroApple's registry that a web surface reads — 30 of the 40 it
+ * declares at `main` on 2026-10-13; a flag is ported when something here first
+ * reads it — plus the four web-only ones marked below, ported name for name. The name is the
  * stable identity: it is what a persisted `debug.ff.<name>` override keys on,
  * what the Debug flag list renders, and what a cross-platform reader compares.
  *
@@ -84,6 +86,15 @@ export const FeatureFlags = {
    * `docs/Features/Inbox.md`.
    */
   keyboardAccelerators: { name: 'keyboardAccelerators' },
+  /**
+   * Web-only: the public marketing landing page — the product story, the
+   * platform picker and the early-access sign-up with its waitlist route.
+   * Canon has no web landing surface; KroApple's marketing lives outside the
+   * app. Dark-launched in `statusQuoSet`; the web product turns it on in
+   * `flags/WebShippingOverrides.ts` (the shipping overrides the store and the
+   * landing route both read), and the flag stays the kill switch.
+   */
+  landingPage: { name: 'landingPage' },
 } as const satisfies Record<string, FeatureFlag>
 
 /** The key set of `FeatureFlags` — every declared flag's name, as a type. */

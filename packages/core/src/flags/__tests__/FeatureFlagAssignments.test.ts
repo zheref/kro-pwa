@@ -46,6 +46,7 @@ const CANON_DISABLED: readonly string[] = [
   'detailPaneInbox',
   'captureSuggestions',
   'keyboardAccelerators',
+  'landingPage',
 ]
 
 const namesWithState = (state: 'enabled' | 'disabled') =>
@@ -59,13 +60,13 @@ describe('statusQuoSet', () => {
     expect(namesWithState('enabled')).toHaveLength(17)
   })
 
-  it('holds off exactly the twelve features staged but not shipped', () => {
+  it('holds off exactly the thirteen features staged but not shipped', () => {
     expect(new Set(namesWithState('disabled'))).toEqual(new Set(CANON_DISABLED))
-    expect(namesWithState('disabled')).toHaveLength(12)
+    expect(namesWithState('disabled')).toHaveLength(13)
   })
 
-  it('assigns 29 of the 33 declared flags', () => {
-    expect(statusQuoSet).toHaveLength(29)
+  it('assigns 30 of the 34 declared flags', () => {
+    expect(statusQuoSet).toHaveLength(30)
   })
 
   it('leaves matrix, board, blueprints and developmentActions unassigned — declared, never staged', () => {
@@ -89,7 +90,7 @@ describe('statusQuoSet', () => {
 
 describe('the allEnabled baseline', () => {
   it('turns on every declared flag, including the four statusQuo never assigns', () => {
-    expect(allEnabledSet).toHaveLength(33)
+    expect(allEnabledSet).toHaveLength(34)
     for (const assignment of allEnabledSet) {
       expect(assignment.state).toBe('enabled')
     }

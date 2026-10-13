@@ -28,11 +28,13 @@ import { captureSlice } from '../features/capture/CaptureFeature'
 import { dayProgressSlice } from '../features/dayProgress/DayProgressFeature'
 import { dayTimelineSlice } from '../features/dayTimeline/DayTimelineFeature'
 import { doSlice } from '../features/do/DoFeature'
+import { earlyAccessSlice } from '../features/earlyAccess/EarlyAccessFeature'
 import { earnSlice } from '../features/earn/EarnFeature'
 import { endeavorActivitySlice } from '../features/endeavorActivity/EndeavorActivityFeature'
 import { endeavorDetailSlice } from '../features/endeavorDetail/EndeavorDetailFeature'
 import { findSlice } from '../features/find/FindFeature'
 import { greetingSlice } from '../features/greeting/GreetingFeature'
+import { landingSlice } from '../features/landing/LandingFeature'
 import { mainSlice } from '../features/main/MainFeature'
 import { planSlice } from '../features/plan/PlanFeature'
 import { platformSlice } from '../features/platform/PlatformFeature'
@@ -383,6 +385,8 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       main: mainSlice.reducer,
       settings: settingsSlice.reducer,
       thirst: thirstSlice.reducer,
+      landing: landingSlice.reducer,
+      earlyAccess: earlyAccessSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

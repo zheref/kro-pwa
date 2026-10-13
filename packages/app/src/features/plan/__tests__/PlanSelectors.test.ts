@@ -79,6 +79,8 @@ import type { PlanState } from '../PlanState'
 import { initialMainState } from '../../main/MainFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 
 const today = startOfPlanDay(PLAN_REFERENCE_DAY)
 const tomorrow = addingPlanDays(today, 1)
@@ -115,6 +117,8 @@ const rootWith = (
   auth: initialAuthState,
   main: initialMainState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 describe('selectPlanViewMode and the FAB rules', () => {

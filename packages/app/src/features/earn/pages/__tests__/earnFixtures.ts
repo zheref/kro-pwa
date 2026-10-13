@@ -26,6 +26,8 @@ import { initialDayProgressState } from '../../../dayProgress/DayProgressFeature
 import { initialDayTimelineState } from '../../../dayTimeline/DayTimelineFeature'
 import { initialSettingsState } from '../../../settings/SettingsState'
 import { initialThirstState } from '../../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../../landing/LandingFeature'
 import { type PerformanceRecord, performanceRecordFromPerform } from '@kro/core'
 import {
   type AppStore,
@@ -86,6 +88,8 @@ export const rootWith = (earn: EarnState): RootState => ({
   main: initialMainState,
   settings: initialSettingsState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 /** `EARN_MOCK_NOW` in epoch millis — the fixture performances' recorded time. */

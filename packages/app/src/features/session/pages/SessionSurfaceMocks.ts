@@ -29,6 +29,8 @@ import { initialPlanState } from '../../plan/PlanState'
 import { initialPlatformState } from '../../platform/PlatformFeature'
 import { initialSettingsState } from '../../settings/SettingsState'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { DEFAULT_DURATION_PRESETS } from '../../../design/chrome/dial/DurationDial'
 import { sessionStateMocks } from '../SessionMocks'
@@ -77,6 +79,8 @@ export const rootStateWithSession = (session: SessionState): RootState => ({
   main: initialMainState,
   settings: initialSettingsState,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 const noop = () => {}

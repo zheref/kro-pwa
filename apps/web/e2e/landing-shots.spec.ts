@@ -262,4 +262,16 @@ test.describe('early access · desktop · dark', () => {
       scene('early-access-empty-desktop-dark'),
     )
   })
+
+  test('typing (invalid address) — dark', async ({ page }) => {
+    // The danger text must read on the dark glass (hanten round 2, UX-1).
+    const section = await openForm(page)
+    await emailField(section).fill('not-an-email')
+    await emailField(section).press('Tab')
+    await expect(section.getByText(/does not look right/i)).toBeVisible()
+    await settle(page)
+    await expect(page).toHaveScreenshot(
+      scene('early-access-typing-invalid-desktop-dark'),
+    )
+  })
 })

@@ -215,3 +215,12 @@ export {
  * one of the pieces.
  */
 export * from './features/triage/pages'
+
+/**
+ * The marketing landing page (KC landing-page effort) — the Page `apps/web`'s
+ * `(marketing)` route mounts, and the early-access form it composes. The
+ * logic tier (both slices, their Producers and Selectors) stays unexported:
+ * the route reaches the page, never the store's shape.
+ */
+export { type LandingPageProps, LandingPage } from './features/landing/pages'
+export { EarlyAccessPage } from './features/earlyAccess/pages'

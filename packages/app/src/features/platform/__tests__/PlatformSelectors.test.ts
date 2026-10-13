@@ -19,6 +19,8 @@ import { initialPlanState } from '../../plan/PlanState'
 import { initialSessionState } from '../../session/SessionState'
 import { initialTriageState } from '../../triage/TriageFeature'
 import { initialThirstState } from '../../thirst/ThirstFeature'
+import { initialEarlyAccessState } from '../../earlyAccess/EarlyAccessFeature'
+import { initialLandingState } from '../../landing/LandingFeature'
 import type { PlatformState } from '../PlatformFeature'
 import { PlatformMocks } from '../PlatformMocks'
 import {
@@ -57,6 +59,8 @@ const rootWith = (platform: PlatformState): RootState => ({
   settings: initialSettingsState,
   platform,
   thirst: initialThirstState,
+  landing: initialLandingState,
+  earlyAccess: initialEarlyAccessState,
 })
 
 describe('selectIsPlatformLoading', () => {

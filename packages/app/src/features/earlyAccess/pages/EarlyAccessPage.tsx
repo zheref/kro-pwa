@@ -8,20 +8,23 @@
  * landing as props, because the sign-up does not know where the app lives.
  */
 import { EarlyAccessFragment } from './EarlyAccessFragment'
-import { useEarlyAccess } from '../useEarlyAccess'
+import { type RequestedPlatform, useEarlyAccess } from '../useEarlyAccess'
 
 export interface EarlyAccessPageProps {
   /** Where the success card's "Open Kro for Web" goes. Default the hub route. */
   readonly hubUrl?: string
   /** Called when that link is pressed, so the landing can record the press. */
   readonly onOpenHub?: () => void
+  /** A platform the landing asked for; the form selects it. */
+  readonly requestedPlatform?: RequestedPlatform | null
 }
 
 export function EarlyAccessPage({
   hubUrl = '/my-day',
   onOpenHub,
+  requestedPlatform = null,
 }: EarlyAccessPageProps) {
-  const early = useEarlyAccess()
+  const early = useEarlyAccess(requestedPlatform)
   return (
     <EarlyAccessFragment
       email={early.email}

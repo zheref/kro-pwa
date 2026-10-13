@@ -33,6 +33,12 @@ export const landingStateMocks = {
     viewedSectionIds: [LANDING_SECTION_IDS.top, LANDING_SECTION_IDS.focus],
   } satisfies LandingState,
 
+  /** A visitor asked for the Mac twice: the second ask is its own request. */
+  platformRequested: {
+    ...initialLandingState,
+    platformRequest: { platform: 'macos', seq: 2 },
+  } satisfies LandingState,
+
   /** Dark theme, with the hub on its own origin. */
   dark: {
     ...initialLandingState,

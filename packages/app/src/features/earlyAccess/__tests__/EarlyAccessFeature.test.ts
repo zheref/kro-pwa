@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   earlyAccessSlice,
   initialEarlyAccessState,
+  onPlatformRequested,
   userDidBlurEmail,
   userDidDismissFailure,
   userDidEditEmail,
@@ -81,6 +82,33 @@ describe('early-access reducers', () => {
           userDidPickPlatform({ platform: 'ipados' }),
         ).email,
       ).toBe('ada@example.com')
+    })
+  })
+
+  describe('onPlatformRequested', () => {
+    it('the landing asked for the Mac — the form picks it', () => {
+      expect(
+        reduce(
+          initialEarlyAccessState,
+          onPlatformRequested({ platform: 'macos' }),
+        ).platform,
+      ).toBe('macos')
+    })
+    it('replaces a pick the visitor already made (they just voted for another)', () => {
+      expect(
+        reduce(
+          EarlyAccessMocks.typing,
+          onPlatformRequested({ platform: 'android' }),
+        ).platform,
+      ).toBe('android')
+    })
+    it('keeps the typed address and a failed sign-up as they were', () => {
+      const next = reduce(
+        EarlyAccessMocks.failedOffline,
+        onPlatformRequested({ platform: 'web' }),
+      )
+      expect(next.email).toBe('ada@example.com')
+      expect(next.submit).toEqual(EarlyAccessMocks.failedOffline.submit)
     })
   })
 

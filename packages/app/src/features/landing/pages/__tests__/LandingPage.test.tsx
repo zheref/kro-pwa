@@ -96,6 +96,21 @@ describe('LandingPage wiring', () => {
     expect(android.checked).toBe(true)
   })
 
+  it('voting twice for Android after choosing another platform selects Android again', async () => {
+    mount()
+    await act(async () =>
+      press(screen.getByRole('button', { name: 'Vote for Android' })),
+    )
+    press(screen.getByRole('radio', { name: 'Mac' }))
+    await act(async () =>
+      press(screen.getByRole('button', { name: 'Vote for Android' })),
+    )
+    expect(
+      (screen.getByRole('radio', { name: 'Android' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
+  })
+
   it('toggling the theme flips the toggle and paints the document', async () => {
     mount()
     const toggle = screen.getByRole('button', { name: 'Dark mode' })

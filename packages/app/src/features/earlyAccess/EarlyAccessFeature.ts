@@ -67,6 +67,16 @@ export const earlyAccessSlice = createSlice({
     ) {
       Object.assign(state, withPlatform(state, action.payload.platform))
     },
+    /**
+     * Lifecycle signal: the page above asked for a platform (a vote, a pick in
+     * its platforms band). The form records it as its own pick.
+     */
+    onPlatformRequested(
+      state,
+      action: PayloadAction<{ platform: KroPlatform }>,
+    ) {
+      Object.assign(state, withPlatform(state, action.payload.platform))
+    },
     userDidEditHoneypot(state, action: PayloadAction<{ value: string }>) {
       Object.assign(state, withHoneypot(state, action.payload.value))
     },
@@ -110,6 +120,7 @@ export const {
   userDidBlurEmail,
   userDidDismissFailure,
   userDidEditEmail,
+  onPlatformRequested,
   userDidEditHoneypot,
   userDidPickPlatform,
   userDidStartOver,

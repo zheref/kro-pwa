@@ -127,7 +127,7 @@ describe('useLanding — callbacks', () => {
     ])
   })
 
-  it('onVotePlatform records the vote, pre-selects the platform and scrolls to the form', async () => {
+  it('onVotePlatform records the vote, requests the platform (never writing the form) and scrolls to the form', async () => {
     document.body.innerHTML =
       '<section id="early-access"><input name="email" /></section>'
     const section = document.getElementById('early-access') as HTMLElement
@@ -138,15 +138,23 @@ describe('useLanding — callbacks', () => {
       'platform_vote',
       { platform: 'android' },
     ])
-    expect(store.getState().earlyAccess.platform).toBe('android')
+    expect(store.getState().landing.platformRequest).toEqual({
+      platform: 'android',
+      seq: 1,
+    })
+    expect(store.getState().earlyAccess.platform).toBe('ios')
+    expect(result.current.platformRequest?.platform).toBe('android')
     expect(section.scrollIntoView).toHaveBeenCalled()
     expect(document.activeElement).toBe(section.querySelector('input'))
   })
 
-  it('onPickPlatform pre-selects and counts an early-access tap from the platforms band', async () => {
+  it('onPickPlatform requests the platform and counts an early-access tap from the platforms band', async () => {
     const { result, store, services } = mountHook()
     await act(async () => result.current.onPickPlatform('macos'))
-    expect(store.getState().earlyAccess.platform).toBe('macos')
+    expect(store.getState().landing.platformRequest).toEqual({
+      platform: 'macos',
+      seq: 1,
+    })
     expect(tracked(services)).toContainEqual([
       'cta_early_access',
       { placement: 'platforms' },
@@ -189,12 +197,28 @@ describe('useLanding — callbacks', () => {
     ])
   })
 
-  it('opening the menu tracks nav_open and toggles the slice; following a link closes it', async () => {
+  it('opening the menu tracks nav_open and opens the slice; following a link closes it', async () => {
     const { result, store, services } = mountHook()
     await act(async () => result.current.onOpenMenu())
     expect(store.getState().landing.navOpen).toBe(true)
     expect(tracked(services)).toContainEqual(['nav_open', null])
     act(() => result.current.onNavigate('#faq'))
     expect(store.getState().landing.navOpen).toBe(false)
+  })
+
+  it('opening the menu twice keeps it open, and following a link with it closed changes nothing', async () => {
+    const { result, store } = mountHook()
+    act(() => result.current.onNavigate('#faq'))
+    expect(store.getState().landing.navOpen).toBe(false)
+    await act(async () => result.current.onOpenMenu())
+    await act(async () => result.current.onOpenMenu())
+    expect(store.getState().landing.navOpen).toBe(true)
+  })
+
+  it('asking for the same platform twice yields two numbered requests', async () => {
+    const { result, store } = mountHook()
+    await act(async () => result.current.onPickPlatform('ios'))
+    await act(async () => result.current.onPickPlatform('ios'))
+    expect(store.getState().landing.platformRequest?.seq).toBe(2)
   })
 })

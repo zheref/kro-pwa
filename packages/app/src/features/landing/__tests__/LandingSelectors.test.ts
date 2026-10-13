@@ -7,6 +7,7 @@ import {
   selectFaqOpenId,
   selectHubUrl,
   selectIsNavOpen,
+  selectPlatformRequest,
   selectTheme,
   selectViewedCount,
 } from '../LandingSelectors'
@@ -94,6 +95,22 @@ describe('landing selectors', () => {
     })
     it('counts two for the menu fixture', () => {
       expect(selectViewedCount(rootWith(landingStateMocks.navOpen))).toBe(2)
+    })
+  })
+
+  describe('selectPlatformRequest', () => {
+    it('is null before the visitor asks for anything', () => {
+      expect(
+        selectPlatformRequest(rootWith(landingStateMocks.initial)),
+      ).toBeNull()
+    })
+    it('names the latest platform with its request count', () => {
+      expect(
+        selectPlatformRequest(rootWith(landingStateMocks.platformRequested)),
+      ).toEqual({ platform: 'macos', seq: 2 })
+    })
+    it('is not disturbed by the menu or theme fixtures', () => {
+      expect(selectPlatformRequest(rootWith(landingStateMocks.dark))).toBeNull()
     })
   })
 })

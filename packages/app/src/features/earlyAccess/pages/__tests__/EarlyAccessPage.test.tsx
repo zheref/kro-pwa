@@ -121,4 +121,20 @@ describe('EarlyAccessPage wiring (a REAL store, the stubbed Service)', () => {
     press(link)
     expect(onOpenHub).toHaveBeenCalledTimes(1)
   })
+
+  it('a platform requested by the landing arrives selected in the form', () => {
+    mount({ requestedPlatform: { platform: 'windows', seq: 1 } })
+    expect(
+      (screen.getByRole('radio', { name: 'Windows' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
+  })
+
+  it('without a request the form keeps its default pick', () => {
+    mount()
+    expect(
+      (screen.getByRole('radio', { name: 'iPhone' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
+  })
 })

@@ -4,7 +4,9 @@ import { landingStateMocks } from '../LandingMocks'
 import {
   withFaqClosed,
   withFaqOpened,
-  withNavToggled,
+  withNavClosed,
+  withNavOpened,
+  withPlatformRequested,
   withSectionViewed,
   withTheme,
   withViewLoaded,
@@ -78,18 +80,55 @@ describe('withFaqOpened / withFaqClosed', () => {
   })
 })
 
-describe('withNavToggled', () => {
+describe('withNavOpened', () => {
   it('opens a closed menu', () => {
-    expect(withNavToggled(initialLandingState).navOpen).toBe(true)
+    expect(withNavOpened(initialLandingState).navOpen).toBe(true)
   })
 
+  it('returns the very same state when the menu is already open', () => {
+    expect(withNavOpened(landingStateMocks.navOpen)).toBe(
+      landingStateMocks.navOpen,
+    )
+  })
+
+  it('touches nothing but the menu', () => {
+    const next = withNavOpened(landingStateMocks.midPage)
+    expect({ ...next, navOpen: false }).toEqual(landingStateMocks.midPage)
+  })
+})
+
+describe('withNavClosed', () => {
   it('closes an open menu', () => {
-    expect(withNavToggled(landingStateMocks.navOpen).navOpen).toBe(false)
+    expect(withNavClosed(landingStateMocks.navOpen).navOpen).toBe(false)
   })
 
-  it('toggling twice returns to the start', () => {
-    expect(withNavToggled(withNavToggled(initialLandingState))).toEqual(
+  it('returns the very same state when the menu is already closed', () => {
+    expect(withNavClosed(initialLandingState)).toBe(initialLandingState)
+  })
+
+  it('opening then closing returns to the start', () => {
+    expect(withNavClosed(withNavOpened(initialLandingState))).toEqual(
       initialLandingState,
+    )
+  })
+})
+
+describe('withPlatformRequested', () => {
+  it('the first ask is request 1', () => {
+    expect(
+      withPlatformRequested(initialLandingState, 'web').platformRequest,
+    ).toEqual({ platform: 'web', seq: 1 })
+  })
+
+  it('the same platform asked twice counts twice', () => {
+    const once = withPlatformRequested(initialLandingState, 'web')
+    expect(withPlatformRequested(once, 'web').platformRequest?.seq).toBe(2)
+  })
+
+  it('touches nothing but the request', () => {
+    const next = withPlatformRequested(landingStateMocks.midPage, 'ios')
+    expect({ ...next, platformRequest: null }).toEqual(
+      landingStateMocks.midPage,
     )
   })
 })

@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { umamiConfig } from './analyticsConfig'
 import { resolveHostRouting } from './hostRouting'
+import { landingSecurityHeaders } from './securityHeaders'
 
 /**
  * The host-routing adapter — a thin shell over `resolveHostRouting`.
@@ -12,6 +14,10 @@ import { resolveHostRouting } from './hostRouting'
  *
  * The hosts are read from `NEXT_PUBLIC_SITE_HOST` / `NEXT_PUBLIC_HUB_HOST`,
  * inlined at build time (see `hostRouting.ts`). Unset → no host redirects.
+ *
+ * The landing document — `/` served as is, which the decision table yields
+ * only on a non-hub host — also carries `landingSecurityHeaders` (`SEC-10`).
+ * The hub's `/` is a rewrite to the app and never gets the landing's policy.
  */
 export function middleware(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl
@@ -30,7 +36,17 @@ export function middleware(request: NextRequest): NextResponse {
     decision.kind === 'rewrite'
       ? NextResponse.rewrite(new URL(decision.url, request.url))
       : NextResponse.next()
-  for (const [name, value] of Object.entries(decision.headers ?? {})) {
+  const servesLanding = decision.kind === 'next' && pathname === '/'
+  const headers = {
+    ...(decision.headers ?? {}),
+    ...(servesLanding
+      ? landingSecurityHeaders({
+          umamiOrigin: umamiConfig()?.origin ?? null,
+          production: process.env.NODE_ENV === 'production',
+        })
+      : {}),
+  }
+  for (const [name, value] of Object.entries(headers)) {
     response.headers.set(name, value)
   }
   return response

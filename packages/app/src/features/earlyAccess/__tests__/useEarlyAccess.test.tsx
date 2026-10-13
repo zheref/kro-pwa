@@ -2,11 +2,11 @@ import { act, cleanup, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { StoreProvider } from '../../../library/StoreProvider'
-import { makeLandingStore } from '../../landing/LandingMocks'
-import { useEarlyAccess } from '../useEarlyAccess'
+import { makeRecordedStore } from './recordedStore'
+import { type RequestedPlatform, useEarlyAccess } from '../useEarlyAccess'
 
 const mountHook = () => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const wrapper = ({ children }: { children: ReactNode }) => (
     <StoreProvider store={store}>{children}</StoreProvider>
   )
@@ -71,5 +71,46 @@ describe('useEarlyAccess', () => {
     act(() => result.current.onStartOver())
     expect(result.current.email).toBe('')
     expect(result.current.submit.kind).toBe('idle')
+  })
+})
+
+describe('useEarlyAccess — a platform requested from above', () => {
+  const mountWith = (initial: RequestedPlatform | null) => {
+    const { store } = makeRecordedStore()
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StoreProvider store={store}>{children}</StoreProvider>
+    )
+    const rendered = renderHook(
+      ({ request }: { request: RequestedPlatform | null }) =>
+        useEarlyAccess(request),
+      { wrapper, initialProps: { request: initial } },
+    )
+    return { ...rendered, store }
+  }
+
+  it('no request leaves the default pick alone', () => {
+    const { result } = mountWith(null)
+    expect(result.current.platform).toBe('ios')
+  })
+
+  it("a request on mount selects that platform through the form's own event", () => {
+    const { result, store } = mountWith({ platform: 'android', seq: 1 })
+    expect(result.current.platform).toBe('android')
+    expect(store.getState().earlyAccess.platform).toBe('android')
+  })
+
+  it('the same platform asked again re-applies it after the visitor changed their mind', () => {
+    const { result, rerender } = mountWith({ platform: 'macos', seq: 1 })
+    act(() => result.current.onPlatformChange('web'))
+    expect(result.current.platform).toBe('web')
+    rerender({ request: { platform: 'macos', seq: 2 } })
+    expect(result.current.platform).toBe('macos')
+  })
+
+  it('a re-render with the same request does not undo a later pick', () => {
+    const { result, rerender } = mountWith({ platform: 'macos', seq: 1 })
+    act(() => result.current.onPlatformChange('web'))
+    rerender({ request: { platform: 'macos', seq: 1 } })
+    expect(result.current.platform).toBe('web')
   })
 })

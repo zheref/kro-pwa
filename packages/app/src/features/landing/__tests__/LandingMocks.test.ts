@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { makeEarlyAccessStore } from '../../earlyAccess/EarlyAccessMocks'
 import { initialLandingState } from '../LandingFeature'
 import {
   landingStateMocks,
@@ -43,12 +44,14 @@ describe('landingValueProps / noopLandingCallbacks', () => {
     }
   })
 
-  it('makeLandingStore builds on the one makeStore with both slices registered and recorders attached', () => {
-    const { store, services } = makeLandingStore()
+  it('makeLandingStore builds on the one makeStore with both slices registered', () => {
+    const { store } = makeLandingStore()
     const state = store.getState()
     expect(state.landing).toEqual(initialLandingState)
     expect(state.earlyAccess.submit).toEqual({ kind: 'idle' })
-    expect(services.analytics.calls).toEqual([])
-    expect(services.earlyAccess.calls).toEqual([])
+  })
+
+  it('makeLandingStore is the early-access store, so a story of either page shares one helper', () => {
+    expect(makeLandingStore).toBe(makeEarlyAccessStore)
   })
 })

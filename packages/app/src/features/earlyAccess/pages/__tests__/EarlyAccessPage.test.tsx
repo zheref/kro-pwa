@@ -2,14 +2,14 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { StoreProvider } from '../../../../library/StoreProvider'
 import { press } from '../../../landing/__tests__/domHelpers'
-import { makeLandingStore } from '../../../landing/LandingMocks'
+import { makeRecordedStore } from '../../__tests__/recordedStore'
 import { EarlyAccessPage } from '../EarlyAccessPage'
 import * as stories from '../EarlyAccessPage.stories'
 
 afterEach(cleanup)
 
 const mount = (props: Parameters<typeof EarlyAccessPage>[0] = {}) => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const view = render(
     <StoreProvider store={store}>
       <EarlyAccessPage {...props} />
@@ -120,5 +120,21 @@ describe('EarlyAccessPage wiring (a REAL store, the stubbed Service)', () => {
     expect(link.getAttribute('href')).toBe('https://app.kro.example')
     press(link)
     expect(onOpenHub).toHaveBeenCalledTimes(1)
+  })
+
+  it('a platform requested by the landing arrives selected in the form', () => {
+    mount({ requestedPlatform: { platform: 'windows', seq: 1 } })
+    expect(
+      (screen.getByRole('radio', { name: 'Windows' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
+  })
+
+  it('without a request the form keeps its default pick', () => {
+    mount()
+    expect(
+      (screen.getByRole('radio', { name: 'iPhone' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
   })
 })

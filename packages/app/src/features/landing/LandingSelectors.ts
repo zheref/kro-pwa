@@ -18,6 +18,12 @@ export const selectIsNavOpen = createSelector([slice], (s) => s.navOpen)
 
 export const selectTheme = createSelector([slice], (s) => s.theme)
 
+/** The latest platform the visitor asked for, or `null` before any ask. */
+export const selectPlatformRequest = createSelector(
+  [slice],
+  (s) => s.platformRequest,
+)
+
 export const selectHubUrl = createSelector([slice], (s) => s.hubUrl)
 
 /** How many distinct sections the visitor has scrolled through. */

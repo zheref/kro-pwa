@@ -10,10 +10,11 @@ import type {
   EarlyAccessExceptionKind,
   KroPlatform,
 } from '@kro/core'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
 import {
   type EarlyAccessSubmitState,
+  onPlatformRequested,
   userDidBlurEmail,
   userDidDismissFailure,
   userDidEditEmail,
@@ -55,8 +56,28 @@ export interface EarlyAccessViewModel {
   readonly onStartOver: () => void
 }
 
-export function useEarlyAccess(): EarlyAccessViewModel {
+/**
+ * A platform the page above asked for. `seq` counts the asks, so the same
+ * platform requested twice still reaches the form twice.
+ */
+export interface RequestedPlatform {
+  readonly platform: KroPlatform
+  readonly seq: number
+}
+
+export function useEarlyAccess(
+  requestedPlatform: RequestedPlatform | null = null,
+): EarlyAccessViewModel {
   const dispatch = useAppDispatch()
+
+  // The page above never writes this slice: it hands a request down, and the
+  // form turns it into its OWN event (`RC-1`). Keyed on `seq`, not the value.
+  const requestedSeq = requestedPlatform?.seq ?? null
+  const requested = requestedPlatform?.platform ?? null
+  useEffect(() => {
+    if (requestedSeq === null || requested === null) return
+    dispatch(onPlatformRequested({ platform: requested }))
+  }, [dispatch, requestedSeq, requested])
 
   const email = useAppSelector(selectEmail)
   const platform = useAppSelector(selectPlatform)

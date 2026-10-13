@@ -1,11 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { PALETTE_ATTRIBUTE } from '../../../design/system/tokens/appPalette'
-import { THEME_ATTRIBUTE } from '../../../design/system/tokens/readToken'
-import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import {
-  applyStoredAppearance,
-  storedAppearanceKey,
-} from '../applyStoredAppearance'
+import { PALETTE_ATTRIBUTE } from '../../design/system/tokens/appPalette'
+import { THEME_ATTRIBUTE } from '../../design/system/tokens/readToken'
+import { makeInMemoryLocalStore } from '../../services/localStore/InMemoryLocalStore'
+import { applyStoredAppearance, storedAppearanceKey } from '../storedAppearance'
 
 afterEach(() => {
   document.documentElement.removeAttribute(THEME_ATTRIBUTE)

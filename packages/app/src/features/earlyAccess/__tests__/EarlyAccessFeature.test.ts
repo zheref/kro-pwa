@@ -1,9 +1,12 @@
 import { EarlyAccessExceptions } from '@kro/core'
 import { earlyAccessMocks } from '@kro/core/mocks'
 import { describe, expect, it } from 'vitest'
+import type { RootState } from '../../../library/store'
+import { selectFailureCopy } from '../EarlyAccessSelectors'
 import {
   earlyAccessSlice,
   initialEarlyAccessState,
+  onPlatformRequested,
   userDidBlurEmail,
   userDidDismissFailure,
   userDidEditEmail,
@@ -81,6 +84,33 @@ describe('early-access reducers', () => {
           userDidPickPlatform({ platform: 'ipados' }),
         ).email,
       ).toBe('ada@example.com')
+    })
+  })
+
+  describe('onPlatformRequested', () => {
+    it('the landing asked for the Mac — the form picks it', () => {
+      expect(
+        reduce(
+          initialEarlyAccessState,
+          onPlatformRequested({ platform: 'macos' }),
+        ).platform,
+      ).toBe('macos')
+    })
+    it('replaces a pick the visitor already made (they just voted for another)', () => {
+      expect(
+        reduce(
+          EarlyAccessMocks.typing,
+          onPlatformRequested({ platform: 'android' }),
+        ).platform,
+      ).toBe('android')
+    })
+    it('keeps the typed address and a failed sign-up as they were', () => {
+      const next = reduce(
+        EarlyAccessMocks.failedOffline,
+        onPlatformRequested({ platform: 'web' }),
+      )
+      expect(next.email).toBe('ada@example.com')
+      expect(next.submit).toEqual(EarlyAccessMocks.failedOffline.submit)
     })
   })
 
@@ -177,7 +207,7 @@ describe('early-access extraReducers (the join Producer lifecycle)', () => {
     expect(next.submit).toEqual({ kind: 'failed', exception: error })
   })
 
-  it('defensive rejected degrades to an unknown failure with the error message', () => {
+  it('defensive rejected degrades to the generic unknown failure, never the thrown text', () => {
     const next = reduce(
       EarlyAccessMocks.submitting,
       joinEarlyAccessThunk.rejected(
@@ -186,10 +216,34 @@ describe('early-access extraReducers (the join Producer lifecycle)', () => {
         undefined,
       ),
     )
-    expect(next.submit).toMatchObject({
+    expect(next.submit).toEqual({
       kind: 'failed',
-      exception: { kind: 'unknown', message: 'serializer blew up' },
+      exception: EarlyAccessExceptions.unknown(),
     })
+  })
+
+  it('a rejected arm with an empty error message shows the same generic copy', () => {
+    const next = reduce(
+      EarlyAccessMocks.submitting,
+      joinEarlyAccessThunk.rejected(new Error(''), 'req', undefined),
+    )
+    expect(
+      selectFailureCopy({ earlyAccess: next } as unknown as RootState),
+    ).toBe(EarlyAccessExceptions.unknown().message)
+  })
+
+  it('the visitor never sees a thrown message: the copy the selector returns has no trace of it', () => {
+    const next = reduce(
+      EarlyAccessMocks.submitting,
+      joinEarlyAccessThunk.rejected(
+        new Error('TypeError: x is not a function at join.ts:42'),
+        'req',
+        undefined,
+      ),
+    )
+    expect(
+      selectFailureCopy({ earlyAccess: next } as unknown as RootState),
+    ).not.toMatch(/TypeError|join\.ts/)
   })
 
   it('rejected by ABORT returns early — cancellation is the one silent exit', () => {

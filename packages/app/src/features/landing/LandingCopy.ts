@@ -241,12 +241,12 @@ export const privacyCards: readonly PrivacyCard[] = [
   {
     id: 'never-sent',
     title: 'We never send what you write',
-    body: 'Counts and timings only — never the words you write.',
+    body: "Counts, timings, the page you are on and your browser's size and language — never the words you write.",
   },
   {
     id: 'random-id',
-    title: 'You are a random identifier',
-    body: 'Analytics is cookieless. A visit is a random identifier, not a name, an email or a profile.',
+    title: 'A visit is not a person',
+    body: 'Cookieless analytics: a visit is an anonymous, rotating hash, never a name or an email.',
   },
 ]
 
@@ -284,7 +284,7 @@ export const faqEntries: readonly FaqEntry[] = [
     id: 'data',
     question: 'Where is my data stored?',
     answer:
-      'On your device first. If you sign in, your plans sync through Kro Cloud. Analytics counts and timings only — never the words you write.',
+      "On your device first. If you sign in, your plans sync through Kro Cloud. Analytics counts, timings, the page you are on and your browser's size and language — never the words you write.",
   },
   {
     id: 'offline',

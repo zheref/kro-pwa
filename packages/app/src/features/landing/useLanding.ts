@@ -13,15 +13,17 @@ import { useCallback, useEffect, useRef } from 'react'
 import { resolveTheme } from '../../design'
 import { useActiveSection } from '../../design/marketing'
 import { useAppDispatch, useAppSelector } from '../../library/hooks'
-import { userDidPickPlatform } from '../earlyAccess/EarlyAccessFeature'
 import { faqEntries } from './LandingCopy'
 import {
   type LandingTheme,
+  type PlatformRequest,
   onSectionViewed,
   onViewLoaded,
   userDidCloseFaq,
+  userDidFollowNavLink,
   userDidOpenFaq,
-  userDidToggleNav,
+  userDidOpenNav,
+  userDidRequestPlatform,
 } from './LandingFeature'
 import {
   type CtaPlacement,
@@ -35,7 +37,7 @@ import { scrollToSection } from './LandingScroll'
 import {
   selectActiveSectionId,
   selectFaqOpenId,
-  selectIsNavOpen,
+  selectPlatformRequest,
   selectTheme,
 } from './LandingSelectors'
 import { LANDING_OBSERVED_IDS, LANDING_SECTION_IDS } from './LandingSections'
@@ -45,6 +47,8 @@ export interface LandingViewModel {
   readonly faqOpenId: string | null
   readonly theme: LandingTheme
   readonly hubUrl: string
+  /** The latest platform asked for; the early-access form reacts to it. */
+  readonly platformRequest: PlatformRequest | null
   readonly onToggleTheme: () => void
   readonly onOpenHub: (placement: CtaPlacement) => void
   readonly onGetEarlyAccess: (placement: CtaPlacement) => void
@@ -70,7 +74,7 @@ export function useLanding(hubUrl: string): LandingViewModel {
   const activeSectionId = useAppSelector(selectActiveSectionId)
   const faqOpenId = useAppSelector(selectFaqOpenId)
   const theme = useAppSelector(selectTheme)
-  const navOpen = useAppSelector(selectIsNavOpen)
+  const platformRequest = useAppSelector(selectPlatformRequest)
   const viewed = useRef(false)
 
   // Mount: stamp the resolved theme and hub link, and count one page view.
@@ -119,7 +123,7 @@ export function useLanding(hubUrl: string): LandingViewModel {
 
   const onPickPlatform = useCallback(
     (platform: KroPlatform) => {
-      dispatch(userDidPickPlatform({ platform }))
+      dispatch(userDidRequestPlatform({ platform }))
       void dispatch(
         userDidTapCtaThunk({ placement: 'platforms', target: 'early-access' }),
       )
@@ -131,7 +135,7 @@ export function useLanding(hubUrl: string): LandingViewModel {
   const onVotePlatform = useCallback(
     (platform: KroPlatform) => {
       void dispatch(userDidVotePlatformThunk({ platform }))
-      dispatch(userDidPickPlatform({ platform }))
+      dispatch(userDidRequestPlatform({ platform }))
       goToForm()
     },
     [dispatch, goToForm],
@@ -167,21 +171,22 @@ export function useLanding(hubUrl: string): LandingViewModel {
   )
 
   const onOpenMenu = useCallback(() => {
-    if (!navOpen) dispatch(userDidToggleNav())
+    dispatch(userDidOpenNav())
     void dispatch(trackLandingEventThunk({ name: 'nav_open' }))
-  }, [dispatch, navOpen])
+  }, [dispatch])
 
   // Following a link closes the menu (the primitive does that itself); keep
   // the slice in step. An Escape close cannot be seen and self-heals here.
   const onNavigate = useCallback(() => {
-    if (navOpen) dispatch(userDidToggleNav())
-  }, [dispatch, navOpen])
+    dispatch(userDidFollowNavLink())
+  }, [dispatch])
 
   return {
     activeSectionId,
     faqOpenId,
     theme,
     hubUrl,
+    platformRequest,
     onToggleTheme,
     onOpenHub,
     onGetEarlyAccess,

@@ -16,13 +16,15 @@ describe('PrivacySection (mirrors PrivacySection.stories)', () => {
     expect(container.querySelectorAll('article')).toHaveLength(3)
   })
 
-  it('Dark — says the never-sent promise and the random-identifier card', () => {
+  it('Dark — says the never-sent promise and the anonymous-visit card', () => {
     render(stories.Dark.render())
     expect(screen.getByText('We never send what you write')).toBeTruthy()
     expect(
-      screen.getByText('Counts and timings only — never the words you write.'),
+      screen.getByText(
+        "Counts, timings, the page you are on and your browser's size and language — never the words you write.",
+      ),
     ).toBeTruthy()
-    expect(screen.getByText('You are a random identifier')).toBeTruthy()
+    expect(screen.getByText('A visit is not a person')).toBeTruthy()
   })
 
   it('Phone — re-points the secondary ink to the on-glass token for this subtree only', () => {

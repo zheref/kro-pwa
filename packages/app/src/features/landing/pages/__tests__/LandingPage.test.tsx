@@ -4,12 +4,12 @@ import { installFakeObserver } from '../../../../design/marketing/__tests__/test
 import { StoreProvider } from '../../../../library/StoreProvider'
 import { press } from '../../__tests__/domHelpers'
 import { LANDING_OBSERVED_IDS } from '../../LandingSections'
-import { makeLandingStore } from '../../LandingMocks'
+import { makeRecordedStore } from '../../../earlyAccess/__tests__/recordedStore'
 import { LandingPage } from '../LandingPage'
 import * as stories from '../LandingPage.stories'
 
 const mount = (hubUrl?: string) => {
-  const { store, services } = makeLandingStore()
+  const { store, services } = makeRecordedStore()
   const view = render(
     <StoreProvider store={store}>
       <LandingPage {...(hubUrl === undefined ? {} : { hubUrl })} />
@@ -18,7 +18,7 @@ const mount = (hubUrl?: string) => {
   return { ...view, store, services }
 }
 
-const events = (services: ReturnType<typeof makeLandingStore>['services']) =>
+const events = (services: ReturnType<typeof makeRecordedStore>['services']) =>
   services.analytics.calls.map((c) =>
     c.kind === 'track' ? c.event : 'identify',
   )
@@ -94,6 +94,21 @@ describe('LandingPage wiring', () => {
       name: 'Android',
     }) as HTMLInputElement
     expect(android.checked).toBe(true)
+  })
+
+  it('voting twice for Android after choosing another platform selects Android again', async () => {
+    mount()
+    await act(async () =>
+      press(screen.getByRole('button', { name: 'Vote for Android' })),
+    )
+    press(screen.getByRole('radio', { name: 'Mac' }))
+    await act(async () =>
+      press(screen.getByRole('button', { name: 'Vote for Android' })),
+    )
+    expect(
+      (screen.getByRole('radio', { name: 'Android' }) as HTMLInputElement)
+        .checked,
+    ).toBe(true)
   })
 
   it('toggling the theme flips the toggle and paints the document', async () => {

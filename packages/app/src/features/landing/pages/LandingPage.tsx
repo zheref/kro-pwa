@@ -20,13 +20,14 @@ export interface LandingPageProps {
 }
 
 export function LandingPage({ hubUrl = DEFAULT_HUB_URL }: LandingPageProps) {
-  const landing = useLanding(hubUrl)
+  const { platformRequest, ...landing } = useLanding(hubUrl)
   return (
     <LandingFragment
       {...landing}
       earlyAccess={
         <EarlyAccessPage
           hubUrl={hubUrl}
+          requestedPlatform={platformRequest}
           onOpenHub={() => landing.onOpenHub('success')}
         />
       }

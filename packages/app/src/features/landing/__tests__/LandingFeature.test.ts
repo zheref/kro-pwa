@@ -3,11 +3,12 @@ import {
   initialLandingState,
   landingSlice,
   onSectionViewed,
-  onThemeApplied,
   onViewLoaded,
   userDidCloseFaq,
+  userDidFollowNavLink,
   userDidOpenFaq,
-  userDidToggleNav,
+  userDidOpenNav,
+  userDidRequestPlatform,
 } from '../LandingFeature'
 import { landingStateMocks } from '../LandingMocks'
 import { userDidToggleThemeThunk } from '../LandingProducer'
@@ -90,38 +91,63 @@ describe('landing reducers', () => {
     })
   })
 
-  describe('userDidToggleNav', () => {
-    it('opens the menu', () => {
-      expect(reduce(initialLandingState, userDidToggleNav()).navOpen).toBe(true)
+  describe('userDidOpenNav', () => {
+    it('opens a closed menu', () => {
+      expect(reduce(initialLandingState, userDidOpenNav()).navOpen).toBe(true)
     })
-    it('closes the menu', () => {
-      expect(
-        reduce(landingStateMocks.navOpen, userDidToggleNav()).navOpen,
-      ).toBe(false)
+    it('leaves an open menu open — opening twice is not a close', () => {
+      expect(reduce(landingStateMocks.navOpen, userDidOpenNav()).navOpen).toBe(
+        true,
+      )
     })
     it('leaves the active section alone', () => {
       expect(
-        reduce(landingStateMocks.navOpen, userDidToggleNav()).activeSectionId,
+        reduce(landingStateMocks.navOpen, userDidOpenNav()).activeSectionId,
       ).toBe('focus')
     })
   })
 
-  describe('onThemeApplied', () => {
-    it('records a theme read elsewhere', () => {
+  describe('userDidFollowNavLink', () => {
+    it('closes an open menu after a link is followed', () => {
       expect(
-        reduce(initialLandingState, onThemeApplied({ theme: 'dark' })).theme,
-      ).toBe('dark')
+        reduce(landingStateMocks.navOpen, userDidFollowNavLink()).navOpen,
+      ).toBe(false)
     })
-    it('is idempotent', () => {
-      expect(
-        reduce(landingStateMocks.dark, onThemeApplied({ theme: 'dark' })),
-      ).toEqual(landingStateMocks.dark)
+    it('is a no-op when the menu was already closed (a desktop link tap)', () => {
+      expect(reduce(landingStateMocks.midPage, userDidFollowNavLink())).toEqual(
+        landingStateMocks.midPage,
+      )
     })
-    it('can flip back to light', () => {
+    it('leaves the viewed sections alone', () => {
       expect(
-        reduce(landingStateMocks.dark, onThemeApplied({ theme: 'light' }))
-          .theme,
-      ).toBe('light')
+        reduce(landingStateMocks.navOpen, userDidFollowNavLink())
+          .viewedSectionIds,
+      ).toEqual(landingStateMocks.navOpen.viewedSectionIds)
+    })
+  })
+
+  describe('userDidRequestPlatform', () => {
+    it('first ask — records the platform as request 1', () => {
+      expect(
+        reduce(initialLandingState, userDidRequestPlatform({ platform: 'ios' }))
+          .platformRequest,
+      ).toEqual({ platform: 'ios', seq: 1 })
+    })
+    it('asking for the same platform again is a new request', () => {
+      expect(
+        reduce(
+          landingStateMocks.platformRequested,
+          userDidRequestPlatform({ platform: 'macos' }),
+        ).platformRequest,
+      ).toEqual({ platform: 'macos', seq: 3 })
+    })
+    it('a different platform replaces the earlier ask', () => {
+      expect(
+        reduce(
+          landingStateMocks.platformRequested,
+          userDidRequestPlatform({ platform: 'android' }),
+        ).platformRequest,
+      ).toEqual({ platform: 'android', seq: 3 })
     })
   })
 })

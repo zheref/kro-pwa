@@ -1,6 +1,6 @@
 import { StoreProvider } from '../../../library/StoreProvider'
 import { MarketingStage } from '../../../design/marketing/marketingStage'
-import { makeLandingStore } from '../../landing/LandingMocks'
+import { makeEarlyAccessStore } from '../EarlyAccessMocks'
 import {
   userDidBlurEmail,
   userDidEditEmail,
@@ -22,7 +22,7 @@ export default {
 export const Idle = {
   name: 'Idle',
   render: () => (
-    <StoreProvider store={makeLandingStore().store}>
+    <StoreProvider store={makeEarlyAccessStore().store}>
       <MarketingStage width={560}>
         <EarlyAccessPage />
       </MarketingStage>
@@ -33,7 +33,7 @@ export const Idle = {
 export const TypingForMac = {
   name: 'Typing · Mac picked',
   render: () => {
-    const { store } = makeLandingStore()
+    const { store } = makeEarlyAccessStore()
     store.dispatch(userDidEditEmail({ value: 'ada@example.com' }))
     store.dispatch(userDidPickPlatform({ platform: 'macos' }))
     return (
@@ -49,7 +49,7 @@ export const TypingForMac = {
 export const BadAddressLeft = {
   name: 'Bad address · field left',
   render: () => {
-    const { store } = makeLandingStore()
+    const { store } = makeEarlyAccessStore()
     store.dispatch(userDidEditEmail({ value: 'ada@' }))
     store.dispatch(userDidBlurEmail())
     return (

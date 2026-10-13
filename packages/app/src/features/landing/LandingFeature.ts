@@ -7,16 +7,24 @@
  * imports the other's shape (`RC-20`).
  *
  * Events name intent or signal, never mechanism: `onViewLoaded`,
- * `onSectionViewed`, `userDidOpenFaq`, `userDidToggleNav`, `onThemeApplied`.
- * A theme change made by the toggle arrives through its Producer's completion
- * event, handled in `extraReducers` — never by a thunk dispatching a reducer.
+ * `onSectionViewed`, `userDidOpenFaq`, `userDidOpenNav`, `userDidFollowNavLink`,
+ * `userDidRequestPlatform`. A theme change made by the toggle arrives through
+ * its Producer's completion event, handled in `extraReducers` — never by a
+ * thunk dispatching a reducer.
+ *
+ * The landing never writes the early-access slice (`RC-1`): a platform the
+ * visitor picks is recorded here as a `platformRequest`, and the form's own
+ * hook reacts to it by dispatching its own event.
  */
+import type { KroPlatform } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { userDidToggleThemeThunk } from './LandingProducer'
 import {
   withFaqClosed,
   withFaqOpened,
-  withNavToggled,
+  withNavClosed,
+  withNavOpened,
+  withPlatformRequested,
   withSectionViewed,
   withTheme,
   withViewLoaded,
@@ -24,11 +32,23 @@ import {
 
 export type LandingTheme = 'light' | 'dark'
 
+/**
+ * A visitor asked for a platform (a vote, or a pick in the platforms band).
+ * `seq` counts the requests, so asking for the same platform twice is two
+ * distinct requests a listener can tell apart.
+ */
+export interface PlatformRequest {
+  readonly platform: KroPlatform
+  readonly seq: number
+}
+
 export interface LandingState {
   readonly activeSectionId: string | null
   readonly faqOpenId: string | null
   readonly navOpen: boolean
+  // Redundancy: the document theme as read at mount (onViewLoaded) and after each toggle; a preference changed from another tab is not mirrored until the next mount.
   readonly theme: LandingTheme
+  readonly platformRequest: PlatformRequest | null
   readonly viewedSectionIds: readonly string[]
   readonly hubUrl: string
 }
@@ -41,6 +61,7 @@ export const initialLandingState: LandingState = {
   faqOpenId: null,
   navOpen: false,
   theme: 'light',
+  platformRequest: null,
   viewedSectionIds: [],
   hubUrl: DEFAULT_HUB_URL,
 }
@@ -70,13 +91,24 @@ export const landingSlice = createSlice({
       Object.assign(state, withFaqClosed(state))
     },
 
-    userDidToggleNav(state) {
-      Object.assign(state, withNavToggled(state))
+    userDidOpenNav(state) {
+      Object.assign(state, withNavOpened(state))
     },
 
-    /** Lifecycle signal: the document's theme was read or changed elsewhere. */
-    onThemeApplied(state, action: PayloadAction<{ theme: LandingTheme }>) {
-      Object.assign(state, withTheme(state, action.payload.theme))
+    /** User intent: a link in the menu was followed — the menu closes. */
+    userDidFollowNavLink(state) {
+      Object.assign(state, withNavClosed(state))
+    },
+
+    /** User intent: a platform was voted for or picked in the platforms band. */
+    userDidRequestPlatform(
+      state,
+      action: PayloadAction<{ platform: KroPlatform }>,
+    ) {
+      Object.assign(
+        state,
+        withPlatformRequested(state, action.payload.platform),
+      )
     },
   },
   extraReducers: (builder) => {
@@ -96,9 +128,10 @@ export const landingSlice = createSlice({
 
 export const {
   onSectionViewed,
-  onThemeApplied,
   onViewLoaded,
   userDidCloseFaq,
+  userDidFollowNavLink,
   userDidOpenFaq,
-  userDidToggleNav,
+  userDidOpenNav,
+  userDidRequestPlatform,
 } = landingSlice.actions

@@ -17,7 +17,11 @@ import { useId } from 'react'
 import { Button, GlassSurface, Input, Field } from '../../../design'
 import { Spinner } from '../../../design/fluent/status/Spinner'
 import type { EarlyAccessSubmitState } from '../EarlyAccessFeature'
-import { EARLY_ACCESS_PLATFORM_ORDER } from '../EarlyAccessCopy'
+import {
+  EARLY_ACCESS_PLATFORM_ORDER,
+  EARLY_ACCESS_PRIVACY_NOTICE,
+  EARLY_ACCESS_PROMISE,
+} from '../EarlyAccessCopy'
 
 export interface EarlyAccessFragmentProps {
   readonly email: string
@@ -71,6 +75,7 @@ export function EarlyAccessFragment({
   const ids = useId()
   const emailId = `${ids}-email`
   const errorId = `${ids}-error`
+  const noticeId = `${ids}-notice`
   const honeypotId = `${ids}-website`
   const submitting = submit.kind === 'submitting'
 
@@ -127,13 +132,7 @@ export function EarlyAccessFragment({
           onSubmit()
         }}
       >
-        <Field
-          label="Email address"
-          required
-          htmlFor={emailId}
-          validationState={emailError === null ? 'none' : 'error'}
-          validationMessage={emailError ?? undefined}
-        >
+        <Field label="Email address" required htmlFor={emailId}>
           <Input
             id={emailId}
             name="email"
@@ -145,12 +144,28 @@ export function EarlyAccessFragment({
             required
             aria-required="true"
             aria-invalid={emailError === null ? undefined : true}
-            aria-describedby={emailError === null ? undefined : errorId}
+            aria-describedby={
+              emailError === null ? noticeId : `${errorId} ${noticeId}`
+            }
             density="comfortable"
             className="min-h-11"
             onChange={(event) => onEmailChange(event.target.value)}
             onBlur={onEmailBlur}
           />
+          {/* `Field` keeps its message and hint ids to itself, so the error
+              and the notice are rendered here under ids the input can name. */}
+          {emailError === null ? null : (
+            <p
+              id={errorId}
+              role="alert"
+              className="m-0 text-kro-banner-danger text-sm"
+            >
+              {emailError}
+            </p>
+          )}
+          <p id={noticeId} className="m-0 text-kro-fore-secondary text-xs">
+            {EARLY_ACCESS_PRIVACY_NOTICE}
+          </p>
         </Field>
 
         <fieldset className="m-0 grid min-w-0 gap-kro-small border-0 p-0">
@@ -243,7 +258,7 @@ export function EarlyAccessFragment({
             className="m-0 max-w-[40ch] text-sm"
             style={{ color: 'var(--kro-color-fore-secondary-on-glass)' }}
           >
-            No fabricated counts: we'll email you when your platform is ready.
+            {EARLY_ACCESS_PROMISE}
           </p>
         </div>
       </form>

@@ -17,10 +17,32 @@ import {
   ok,
 } from '@kro/core'
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import type { RootState, ThunkExtra } from '../../library/store'
+import type {
+  AnalyticsEventName,
+  AnalyticsProps,
+  RootState,
+  ThunkExtra,
+} from '../../library/store'
 
 /** Where on the site the sign-up came from, sent as the request's `source`. */
 export const EARLY_ACCESS_SOURCE = 'landing'
+
+/**
+ * Count one event without ever letting the counter decide the sign-up: a
+ * tracker that throws (blocked, broken) is swallowed, exactly as the landing
+ * Producer does. A lost event is not a failed join (`RC-7`, `UZF-14`).
+ */
+const track = (
+  extra: ThunkExtra,
+  name: AnalyticsEventName,
+  props: AnalyticsProps,
+): void => {
+  try {
+    extra.analyticsService.track(name, props)
+  } catch {
+    // Analytics is best-effort by design.
+  }
+}
 
 export const joinEarlyAccessThunk = createAsyncThunk<
   Result<EarlyAccessReceipt, EarlyAccessException>,
@@ -44,14 +66,14 @@ export const joinEarlyAccessThunk = createAsyncThunk<
       })
     }
 
-    extra.analyticsService.track('early_access_submit', {
+    track(extra, 'early_access_submit', {
       platform,
       source: EARLY_ACCESS_SOURCE,
     })
 
     if (!EarlyAccessMapper.isLikelyEmail(address)) {
       const exception = EarlyAccessExceptions.invalidEmail()
-      extra.analyticsService.track('early_access_failed', {
+      track(extra, 'early_access_failed', {
         kind: exception.kind,
       })
       return err(exception)
@@ -65,12 +87,12 @@ export const joinEarlyAccessThunk = createAsyncThunk<
       const receipt = EarlyAccessMapper.toDomain(response)
       if (receipt === null) {
         const exception = EarlyAccessExceptions.unknown()
-        extra.analyticsService.track('early_access_failed', {
+        track(extra, 'early_access_failed', {
           kind: exception.kind,
         })
         return err(exception)
       }
-      extra.analyticsService.track('early_access_joined', {
+      track(extra, 'early_access_joined', {
         platform,
         hasPosition: receipt.position !== null,
       })
@@ -79,7 +101,7 @@ export const joinEarlyAccessThunk = createAsyncThunk<
       const exception = EarlyAccessMapper.toException(error)
       // An abort is the one silent exit: no event, and the slice ignores it.
       if (!signal.aborted) {
-        extra.analyticsService.track('early_access_failed', {
+        track(extra, 'early_access_failed', {
           kind: exception.kind,
         })
       }

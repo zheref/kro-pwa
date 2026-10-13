@@ -2,10 +2,8 @@ import type { EarlyAccessResponse } from '@kro/core'
 import { describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import type { EarlyAccessService } from '../../../library/store'
-import {
-  makeRecordingAnalyticsService,
-  makeRecordingEarlyAccessService,
-} from '../../../library/store'
+import { makeRecordingAnalyticsService } from '../../../services/analytics/AnalyticsService'
+import { makeRecordingEarlyAccessService } from '../../../services/earlyAccess/EarlyAccessService'
 import {
   userDidEditEmail,
   userDidEditHoneypot,
@@ -187,5 +185,50 @@ describe('joinEarlyAccessThunk', () => {
     const second = ctx.store.dispatch(joinEarlyAccessThunk())
     await Promise.all([first, second])
     expect(ctx.recording.calls).toHaveLength(1)
+  })
+})
+
+describe('joinEarlyAccessThunk — a tracker that throws', () => {
+  const throwingAnalytics = {
+    track: () => {
+      throw new Error('blocked by an extension')
+    },
+    identify: () => undefined,
+  }
+  const run = async (email: string) => {
+    const recording = makeRecordingEarlyAccessService()
+    const store = makeStore({
+      ...stubbedThunkExtra,
+      analyticsService: throwingAnalytics,
+      earlyAccessService: recording,
+    })
+    store.dispatch(userDidEditEmail({ value: email }))
+    const result = await store.dispatch(joinEarlyAccessThunk())
+    return { result, recording, submit: store.getState().earlyAccess.submit }
+  }
+
+  it('a successful join still resolves ok when every event throws', async () => {
+    const { result, recording, submit } = await run('ada@example.com')
+    expect(result.meta.requestStatus).toBe('fulfilled')
+    expect(submit.kind).toBe('joined')
+    expect(recording.calls).toHaveLength(1)
+  })
+
+  it('an invalid address still resolves invalidEmail — the thunk does not reject', async () => {
+    const { result, submit } = await run('ada@')
+    expect(result.meta.requestStatus).toBe('fulfilled')
+    expect(submit).toMatchObject({
+      kind: 'failed',
+      exception: { kind: 'invalidEmail' },
+    })
+  })
+
+  it('a service failure keeps its own kind rather than turning into a tracker error', async () => {
+    const { result, submit } = await run('offline@kro.invalid')
+    expect(result.meta.requestStatus).toBe('fulfilled')
+    expect(submit).toMatchObject({
+      kind: 'failed',
+      exception: { kind: 'offline' },
+    })
   })
 })

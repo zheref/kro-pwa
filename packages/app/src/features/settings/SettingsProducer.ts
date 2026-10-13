@@ -31,7 +31,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import type { ThunkExtra } from '../../library/store'
 import { type SettingsException, SettingsExceptions } from './SettingsException'
 import type { GoogleConnectionState } from './SettingsState'
-import { applyStoredAppearance } from './applyStoredAppearance'
+import { applyStoredAppearance } from '../../library/storedAppearance'
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)

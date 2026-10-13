@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { makeStore, stubbedThunkExtra } from '../../../library/store'
 import type { AnalyticsService, ThunkExtra } from '../../../library/store'
-import { makeRecordingAnalyticsService } from '../../../library/store'
+import { makeRecordingAnalyticsService } from '../../../services/analytics/AnalyticsService'
 import { makeInMemoryLocalStore } from '../../../services/localStore/InMemoryLocalStore'
-import { readStoredAppearance } from '../../settings/applyStoredAppearance'
+import { readStoredAppearance } from '../../../library/storedAppearance'
 import { onSectionViewed } from '../LandingFeature'
 import {
   onSectionEnteredThunk,

@@ -28,6 +28,26 @@ export {
   makeStore,
   stubbedThunkExtra,
 } from './library/store'
+/**
+ * The landing tier's Service contracts and their test doubles (P1-C). Types
+ * plus the stub/recording factories a suite or story injects into
+ * `makeStore({ ...stubbedThunkExtra, … })` — never a live binding, which a
+ * component must not be able to reach (`RC-6`). Routed through `store.ts`,
+ * the one file the boundary check lets import a Service module.
+ */
+export {
+  type AnalyticsCall,
+  type AnalyticsEventName,
+  type AnalyticsProps,
+  type AnalyticsService,
+  type EarlyAccessService,
+  type RecordingAnalyticsService,
+  type RecordingEarlyAccessService,
+  makeRecordingAnalyticsService,
+  makeRecordingEarlyAccessService,
+  stubbedAnalyticsService,
+  stubbedEarlyAccessService,
+} from './library/store'
 
 /*
  * No Service is exported here, including the navigation one (`RC-6`). The

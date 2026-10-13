@@ -1,0 +1,17 @@
+{
+  "description": "The analytics event catalog — the documented taxonomy. Counts and timings only: no event ever carries what a visitor typed (no email, no free text).",
+  "events": {
+    "page_view": "A page was shown (props: path).",
+    "section_view": "A landing section scrolled into view (props: section).",
+    "cta_open_web": "The 'Open Kro on the web' call to action was pressed (props: placement).",
+    "cta_early_access": "An early-access call to action was pressed (props: placement).",
+    "early_access_submit": "The early-access form was submitted (props: platform, source).",
+    "early_access_joined": "The early-access request succeeded (props: platform, hasPosition).",
+    "early_access_failed": "The early-access request failed (props: kind).",
+    "platform_vote": "A platform was picked in the platform picker (props: platform).",
+    "faq_open": "A FAQ entry was expanded (props: question index).",
+    "outbound": "An outbound link was followed (props: destination host).",
+    "theme_toggle": "The light/dark toggle was used (props: theme).",
+    "nav_open": "The mobile navigation menu was opened."
+  }
+}

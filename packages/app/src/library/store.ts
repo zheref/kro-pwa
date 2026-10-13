@@ -41,6 +41,11 @@ import { settingsSlice } from '../features/settings/SettingsFeature'
 import { thirstSlice } from '../features/thirst/ThirstFeature'
 import { triageSlice } from '../features/triage/TriageFeature'
 import {
+  type AnalyticsService,
+  liveAnalyticsService,
+  stubbedAnalyticsService,
+} from '../services/analytics/AnalyticsService'
+import {
   type AuthService,
   makeLiveAuthService,
   stubbedAuthService,
@@ -52,6 +57,11 @@ import {
   makeLiveGoogleCalendarService,
   stubbedGoogleCalendarService,
 } from '../services/googleCalendar'
+import {
+  type EarlyAccessService,
+  liveEarlyAccessService,
+  stubbedEarlyAccessService,
+} from '../services/earlyAccess/EarlyAccessService'
 import {
   type GreetingService,
   liveGreetingService,
@@ -206,6 +216,17 @@ export interface ThunkExtra {
    * "no counts, sign-in required to vote" rather than a crash.
    */
   readonly thirstService: ThirstService
+  /**
+   * The landing page's early-access sign-up. The browser binding posts to this
+   * app's own `/api/early-access` route, which owns the waitlist sink — no
+   * webhook URL or token is ever on this side of the wire.
+   */
+  readonly earlyAccessService: EarlyAccessService
+  /**
+   * Cookieless product analytics (Umami). Counts and timings only — never what
+   * a visitor wrote. Never throws, never blocks; see the Service's header.
+   */
+  readonly analyticsService: AnalyticsService
 }
 
 /**
@@ -263,6 +284,14 @@ const shippingKeyboardAcceleratorsOverride = enabledAssignment(
   FeatureFlags.keyboardAccelerators,
 )
 
+/**
+ * `landingPage` — the web-only marketing landing page and its early-access
+ * sign-up — ships **enabled** here while `statusQuoSet` dark-launches it. The
+ * flag stays the kill switch; the stubbed extra keeps the status quo, so a
+ * suite sees the landing surface only when it turns the flag on itself.
+ */
+const shippingLandingPageOverride = enabledAssignment(FeatureFlags.landingPage)
+
 const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
   overrides: [
     shippingAppearanceOverride,
@@ -270,6 +299,7 @@ const liveFeatureFlags: FeatureFlagService = makeHardcodedFeatureFlagService({
     shippingDetailPaneInboxOverride,
     shippingCaptureSuggestionsOverride,
     shippingKeyboardAcceleratorsOverride,
+    shippingLandingPageOverride,
   ],
 })
 
@@ -314,6 +344,8 @@ export const liveThunkExtra: ThunkExtra = {
   thirstService: makeLiveThirstService({
     clientProvider: liveSupabaseClientProvider,
   }),
+  earlyAccessService: liveEarlyAccessService,
+  analyticsService: liveAnalyticsService,
 }
 
 /**
@@ -360,7 +392,37 @@ export const stubbedThunkExtra: ThunkExtra = {
   // suite that wants a votable/voted surface builds its own binding with
   // `makeStubbedThirstService({ signedIn: true, ... })`.
   thirstService: stubbedThirstService,
+  // Fixture-backed: any address joins with no queue position, the reserved
+  // `already@` / `offline@` / `unavailable@kro.invalid` addresses fail. A
+  // suite asserting on calls passes `makeRecordingEarlyAccessService()`.
+  earlyAccessService: stubbedEarlyAccessService,
+  // Sends nothing. A suite asserting on events passes
+  // `makeRecordingAnalyticsService()`.
+  analyticsService: stubbedAnalyticsService,
 }
+
+/*
+ * The landing tier's Service TYPES and test doubles, re-exported here because
+ * `check-uzf-boundaries.mjs` lets only this file (and tests) import a Service
+ * module, and the package barrel re-exports from here. The live bindings are
+ * deliberately NOT re-exported: production code reaches them only through
+ * `liveThunkExtra`.
+ */
+export {
+  type AnalyticsCall,
+  type AnalyticsEventName,
+  type AnalyticsProps,
+  type AnalyticsService,
+  type RecordingAnalyticsService,
+  makeRecordingAnalyticsService,
+  stubbedAnalyticsService,
+} from '../services/analytics/AnalyticsService'
+export {
+  type EarlyAccessService,
+  type RecordingEarlyAccessService,
+  makeRecordingEarlyAccessService,
+  stubbedEarlyAccessService,
+} from '../services/earlyAccess/EarlyAccessService'
 
 export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
   configureStore({

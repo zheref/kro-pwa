@@ -119,9 +119,45 @@ describe('the shipping feature-flag overrides', () => {
     ).toBe(false)
   })
 
+  it('turns the landing page on for the shipping build only — dark-launched in the status quo', () => {
+    expect(
+      liveThunkExtra.featureFlags.isEnabled(FeatureFlags.landingPage),
+    ).toBe(true)
+    expect(
+      stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.landingPage),
+    ).toBe(false)
+  })
+
   it('leaves the stubbed extra on the status-quo set, so tests never sync by accident', () => {
     expect(
       stubbedThunkExtra.featureFlags.isEnabled(FeatureFlags.supabaseHosting),
     ).toBe(false)
+  })
+})
+
+describe('the landing services in the manifest', () => {
+  it('wires the fixture-backed early-access stub into the stubbed extra', async () => {
+    const response = await stubbedThunkExtra.earlyAccessService.join({
+      email: 'ada@example.com',
+      platform: 'ios',
+      source: null,
+      locale: null,
+    })
+    expect(response.position).toBeNull()
+  })
+
+  it('wires a silent analytics stub into the stubbed extra', () => {
+    expect(() =>
+      stubbedThunkExtra.analyticsService.track('page_view'),
+    ).not.toThrow()
+  })
+
+  it('gives the live extra a distinct binding for both, never the stubs', () => {
+    expect(liveThunkExtra.earlyAccessService).not.toBe(
+      stubbedThunkExtra.earlyAccessService,
+    )
+    expect(liveThunkExtra.analyticsService).not.toBe(
+      stubbedThunkExtra.analyticsService,
+    )
   })
 })

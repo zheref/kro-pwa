@@ -1,14 +1,16 @@
 /**
  * The live-shell stories the landing page's web screenshots are captured from
  * (`apps/web/e2e-kit/landing-captures.spec.ts`), rendered from their own
- * `render`: the capture is only as honest as these compositions.
+ * `render`, over the surface each story pins in `parameters.surface` — the
+ * test reads the window from the story rather than choosing its own, so the
+ * two cannot diverge (`RC-11`).
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import * as stories from '../MainShellPage.stories'
-import { resetSurfaceCache } from '../useSurfaceLayout'
+import { resetSurfaceCache } from '../../../main/useSurfaceLayout'
+import * as stories from '../DoInShell.stories'
 
-const installViewport = (width: number, coarse: boolean): void => {
+const installSurface = ({ width, coarse }: stories.LiveShellSurface): void => {
   Object.defineProperty(window, 'innerWidth', {
     value: width,
     configurable: true,
@@ -33,9 +35,9 @@ const installViewport = (width: number, coarse: boolean): void => {
 beforeEach(() => resetSurfaceCache())
 afterEach(cleanup)
 
-describe('MainShellPage live-shell stories', () => {
+describe('DoInShell live-shell stories', () => {
   it('MyDayInTheShell — a desktop-wide viewport shows the sidebar and the populated lanes', async () => {
-    installViewport(1440, false)
+    installSurface(stories.MyDayInTheShell.parameters.surface)
     render(stories.MyDayInTheShell.render())
     expect(await screen.findByRole('button', { name: 'Today' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Jot Down' })).toBeTruthy()
@@ -46,14 +48,14 @@ describe('MainShellPage live-shell stories', () => {
   })
 
   it('MyDayInTheTabBarShell — a phone-wide, touch viewport drops the sidebar for the tab bar', async () => {
-    installViewport(390, true)
+    installSurface(stories.MyDayInTheTabBarShell.parameters.surface)
     render(stories.MyDayInTheTabBarShell.render())
     await waitFor(() => expect(screen.getByTestId('do-surface')).toBeTruthy())
     expect(screen.queryByRole('button', { name: 'Jot Down' })).toBeNull()
   })
 
   it('AnEmptyDayInTheShell — the shell mounts with no destination in it', async () => {
-    installViewport(1440, false)
+    installSurface(stories.AnEmptyDayInTheShell.parameters.surface)
     render(stories.AnEmptyDayInTheShell.render())
     expect(await screen.findByRole('button', { name: 'Today' })).toBeTruthy()
     expect(screen.queryByTestId('do-surface')).toBeNull()

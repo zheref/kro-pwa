@@ -3,10 +3,17 @@
  * its price, one promise, what it includes and one door: Free opens the app,
  * Plus — not on sale yet — leads to the landing's early-access form.
  */
+import { assertNever } from '@kro/core'
 import { Check } from 'lucide-react'
 import { Button, ICON_SIZE, cn } from '../../../../design'
 import { MarketingSection, Reveal } from '../../../../design/marketing'
-import { type PricingTier, pricingCopy, pricingTiers } from '../../LandingCopy'
+import {
+  PRICING_CELL_TEXT,
+  type PricingTier,
+  type PricingTierId,
+  pricingCopy,
+  pricingTiers,
+} from '../../LandingCopy'
 import type { CtaPlacement } from '../../LandingProducer'
 import {
   LANDING_SECTION_IDS,
@@ -61,13 +68,20 @@ function TierCard({ tier, href, onPress }: TierCardProps) {
       </header>
       <ul className="m-0 grid list-none gap-kro-small p-0">
         {tier.features.map((feature) => (
-          <li key={feature} className="flex items-start gap-kro-small">
-            <Check
-              aria-hidden="true"
-              size={ICON_SIZE.small}
-              className="mt-1 shrink-0 text-kro-accent"
-            />
-            <span>{feature}</span>
+          <li key={feature.label} className="flex items-start gap-kro-small">
+            {feature.status === 'included' ? (
+              <Check
+                aria-hidden="true"
+                size={ICON_SIZE.small}
+                className="mt-1 shrink-0 text-kro-accent"
+              />
+            ) : (
+              // Not built yet: the word, never a check (the Planned rule).
+              <span className="mt-0.5 shrink-0 rounded-kro-pill border border-kro-hairline px-kro-small font-medium text-kro-fore-secondary text-xs">
+                {PRICING_CELL_TEXT.planned.mark}
+              </span>
+            )}
+            <span>{feature.label}</span>
           </li>
         ))}
       </ul>
@@ -94,6 +108,23 @@ export function PricingTiersSection({
   onGetEarlyAccess,
 }: PricingTiersSectionProps) {
   const titleId = headingIdFor(PRICING_SECTION_IDS.tiers)
+  // Every tier has exactly one door; a third tier fails to compile until it
+  // picks one (`RC-9`).
+  const doorFor = (
+    id: PricingTierId,
+  ): { readonly href: string; readonly onPress: () => void } => {
+    switch (id) {
+      case 'free':
+        return { href: hubUrl, onPress: () => onOpenHub('pricing') }
+      case 'plus':
+        return {
+          href: landingSectionHref(LANDING_SECTION_IDS.earlyAccess, 'pricing'),
+          onPress: () => onGetEarlyAccess('pricing'),
+        }
+      default:
+        return assertNever(id)
+    }
+  }
   return (
     <MarketingSection
       id={PRICING_SECTION_IDS.tiers}
@@ -104,26 +135,17 @@ export function PricingTiersSection({
         {pricingCopy.tiersTitle}
       </h2>
       <Reveal className="grid grid-cols-1 items-stretch gap-kro-large md:grid-cols-2">
-        {pricingTiers.map((tier) =>
-          tier.id === 'free' ? (
+        {pricingTiers.map((tier) => {
+          const door = doorFor(tier.id)
+          return (
             <TierCard
               key={tier.id}
               tier={tier}
-              href={hubUrl}
-              onPress={() => onOpenHub('pricing')}
+              href={door.href}
+              onPress={door.onPress}
             />
-          ) : (
-            <TierCard
-              key={tier.id}
-              tier={tier}
-              href={landingSectionHref(
-                LANDING_SECTION_IDS.earlyAccess,
-                'pricing',
-              )}
-              onPress={() => onGetEarlyAccess('pricing')}
-            />
-          ),
-        )}
+          )
+        })}
       </Reveal>
     </MarketingSection>
   )

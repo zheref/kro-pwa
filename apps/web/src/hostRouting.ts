@@ -18,7 +18,7 @@
  * |       |                         | marketing path such as `/pricing`)             |
  * | hub   | `/`                     | REWRITE to `/my-day?query` (`?code=` survives) |
  * | hub   | `/hub`, `/hub/<rest>`   | 307 → `/<rest>?query` on the hub               |
- * | hub   | a marketing path        | 307 → `https://<apex>/pricing?query`           |
+ * | hub   | a marketing path        | 307 → `https://<apex>/<path>?query`            |
  * | hub   | anything else           | served as is                                   |
  * | other | `/hub`, `/hub/<rest>`   | 307 → `/<rest>?query` on the same host         |
  * | other | anything else           | served as is (no host redirects at all)        |

@@ -84,13 +84,65 @@ describe('landing copy', () => {
     expect(plus?.alternate).toBe('or $48 a year, $4 a month')
   })
 
-  it('marks every Plus-only row Planned and never promises a Plus feature to Free', () => {
+  it('marks every Plus-only row Planned, and what is not built on any plan Planned on both — never a check', () => {
     const rows = pricingComparison.flatMap((group) => group.rows)
     for (const row of rows) {
       if (row.free === 'excluded') expect(row.plus).toBe('planned')
-      expect(row.free).not.toBe('planned')
+      if (row.free === 'planned') expect(row.plus).toBe('planned')
+      if (row.plus === 'included') expect(row.free).toBe('included')
     }
-    expect(rows.some((row) => row.plus === 'planned')).toBe(true)
+    // The status quo (`@kro/core` FeatureFlagAssignments) keeps habits and
+    // session breaks off, and matrix, board and blueprints carry no stage at all.
+    for (const feature of [
+      'Plan: the Priority Matrix',
+      'Habits',
+      'Breaks between Sessions',
+      'Board',
+      'Blueprints',
+    ]) {
+      const row = rows.find((r) => r.feature === feature)
+      expect(row, feature).toBeDefined()
+      expect(row?.free, feature).toBe('planned')
+      expect(row?.plus, feature).toBe('planned')
+    }
+    expect(
+      rows.some((row) => row.free === 'excluded' && row.plus === 'planned'),
+    ).toBe(true)
+  })
+
+  it('keeps what Free users have today on Free: the four palettes stay, Plus adds more', () => {
+    const rows = pricingComparison.flatMap((group) => group.rows)
+    expect(
+      rows.find((r) => r.feature === 'Light, dark and four palettes'),
+    ).toEqual({
+      feature: 'Light, dark and four palettes',
+      free: 'included',
+      plus: 'included',
+    })
+    expect(
+      rows.find((r) => r.feature === 'More palettes and themes')?.free,
+    ).toBe('excluded')
+    expect(rows.some((r) => /unlimited/i.test(r.feature))).toBe(false)
+  })
+
+  it('puts a check only beside tier features that are built; the rest read Planned', () => {
+    const free = pricingTiers.find((t) => t.id === 'free')
+    const plus = pricingTiers.find((t) => t.id === 'plus')
+    const planned = (tier: typeof free) =>
+      tier?.features.filter((f) => f.status === 'planned').map((f) => f.label)
+    expect(planned(free)).toEqual([
+      'Plan: the Priority Matrix',
+      'Habits',
+      'Breaks between Sessions',
+      'Board',
+      'Blueprints',
+    ])
+    expect(plus?.features[0]).toEqual({
+      label: 'Everything in Free',
+      status: 'included',
+    })
+    expect(planned(plus)).toHaveLength(9)
+    expect(plus?.features.at(-1)?.status).toBe('included')
   })
 
   it('answers "Is Kro free?" with the core free, Plus not on sale, and a link to pricing', () => {

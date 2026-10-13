@@ -174,25 +174,31 @@ you.**
   landing switched off, the pricing address goes to the app, like the front
   door.
 - **Free** — the whole loop on every platform, with no time limit: My Day,
-  Plan (timeline and Priority Matrix), tasks and lists, habits, focus
-  Sessions with breaks, Earn (rings, Challenges and Milestones), Inbox and
-  Triage, Board, Blueprints, one calendar connection, sync across devices,
-  and the web app and the Apple apps as they open. Its door opens the app.
+  Plan's timeline, tasks and lists, focus Sessions, Earn (rings, Challenges
+  and Milestones), Inbox and Triage, one calendar connection, sync across
+  devices, light, dark and the four palettes, and the web app and the Apple
+  apps as they open. The parts of the loop not built yet — the Priority
+  Matrix, Habits, breaks between Sessions, Board and Blueprints — sit on the
+  Free card marked Planned, never with a check. Its door opens the app.
 - **Plus** — $5 a month, or $48 a year ($4 a month). Everything in Free,
-  plus the AI: capture suggestions that turn a note into tasks, planning the
-  day, natural-language capture, Session lengths that learn, a weekly review
-  that writes itself, smart reminders; and several calendars (Google and
-  Outlook), more integrations, unlimited Blueprints, themes and palettes,
-  early access to new platforms — and keeping the maker shipping. Plus is
-  **not on sale**: its door leads to the landing's early-access form, and
-  the card says so.
+  plus the AI: AI capture that turns a note into tasks, planning the day,
+  natural-language capture, Session lengths that learn, a weekly review that
+  writes itself, smart reminders; and several calendars (Google and Outlook),
+  more palettes and themes, early access to new platforms — and keeping the
+  maker shipping. On the card every one of those is marked Planned; only
+  "Everything in Free" and "You keep the maker shipping" carry a check.
+  Nothing a Free user has today moves behind Plus: the four palettes stay
+  free, and Plus's row is *more* of them. Plus is **not on sale**: its door
+  leads to the landing's early-access form, and the card says so.
 - **Launch pricing.** The prices are labelled "Launch pricing, subject to
   change" beside the page's opening, once.
 - **The comparison.** One table, features as rows and the two plans as
   columns, grouped by part of the product. A cell is included, not included,
   or **Planned**. *The Planned rule:* anything not built today reads
-  Planned, never a check, and Planned is never a date. Every Plus-only row is
-  Planned today.
+  Planned, never a check, and Planned is never a date — on both plans when it
+  is not built on any plan (the Priority Matrix, Habits, breaks, Board,
+  Blueprints), and on Plus alone for everything Plus adds. Every Plus-only
+  row is Planned today.
 - **Pricing questions.** Four, answered in the open (nothing to expand):
   billing, cancelling, what happens to data on Free, and discounts. None
   promises terms that do not exist yet; where the terms are not set, the

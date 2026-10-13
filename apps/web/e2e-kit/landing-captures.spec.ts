@@ -21,25 +21,12 @@ test.skip(
 // served or committed.
 const OUT_DIR = join(__dirname, '..', '.landing-captures')
 
-type Clip = {
-  readonly x: number
-  readonly y: number
-  readonly width: number
-  readonly height: number
-}
-
 type Scene = {
   readonly name: string
   readonly story: string
   readonly idiom: 'desktop' | 'mobile'
   readonly scheme: 'light' | 'dark'
   readonly viewport: { readonly width: number; readonly height: number }
-  /** CSS-pixel region of the canvas; omitted = the story's own frame. */
-  readonly clip?: Clip
-  /** Capture the whole viewport (the story is the app, no gallery frame). */
-  readonly fullViewport?: boolean
-  /** Scroll the tallest scroller this far (0–1) before the picture. */
-  readonly scrollTo?: number
 }
 
 const DESKTOP = { width: 1440, height: 900 } as const
@@ -59,7 +46,6 @@ const SCENES: readonly Scene[] = [
     idiom: 'desktop',
     scheme: 'light',
     viewport: DESKTOP,
-    fullViewport: true,
   },
   {
     name: 'web-my-day-desktop-dark',
@@ -67,7 +53,6 @@ const SCENES: readonly Scene[] = [
     idiom: 'desktop',
     scheme: 'dark',
     viewport: DESKTOP,
-    fullViewport: true,
   },
 ]
 
@@ -94,43 +79,8 @@ for (const scene of SCENES) {
     })
     await page.waitForTimeout(300)
     mkdirSync(OUT_DIR, { recursive: true })
-    // The story's own frame (stories pin a device-sized frame inside the
-    // canvas), so the picture is the product surface and not the gallery
-    // backdrop around it.
-    if (scene.scrollTo !== undefined) {
-      await page.evaluate((fraction) => {
-        const scrollers = [
-          ...document.querySelectorAll<HTMLElement>('*'),
-        ].filter(
-          (el) =>
-            el.scrollHeight > el.clientHeight + 40 && el.clientHeight > 200,
-        )
-        const tallest = scrollers.sort(
-          (l, r) => r.scrollHeight - l.scrollHeight,
-        )[0]
-        if (tallest) tallest.scrollTop = tallest.scrollHeight * fraction
-      }, scene.scrollTo)
-      await page.waitForTimeout(200)
-    }
-    if (scene.fullViewport) {
-      await page.screenshot({ path: join(OUT_DIR, `${scene.name}.png`) })
-      await context.close()
-      return
-    }
-    if (scene.clip) {
-      await page.screenshot({
-        path: join(OUT_DIR, `${scene.name}.png`),
-        clip: scene.clip,
-      })
-      await context.close()
-      return
-    }
-    const frame = page
-      .locator(
-        '#storybook-root [data-theme] > :not([data-slot=story-kind-banner])',
-      )
-      .first()
-    await frame.screenshot({ path: join(OUT_DIR, `${scene.name}.png`) })
+    // The story is the whole app, so the picture is the whole viewport.
+    await page.screenshot({ path: join(OUT_DIR, `${scene.name}.png`) })
     await context.close()
   })
 }

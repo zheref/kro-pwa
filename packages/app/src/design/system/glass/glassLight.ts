@@ -96,6 +96,8 @@ export function approachGlassBar(
  * Reduced motion: no tracking and no easing (the stylesheet's resting light
  * stays), but the lit class is still toggled — a static state is not motion.
  * Touch never moves the light; a press lights a control through `:active`.
+ * A scroll or a resize re-runs the test from the last pointer position, so a
+ * piece carried out from under a resting pointer unlights.
  */
 export function startGlassLight(doc: Document = document): () => void {
   if (typeof window === 'undefined') return () => {}
@@ -170,11 +172,22 @@ export function startGlassLight(doc: Document = document): () => void {
     schedule()
   }
 
+  // Content moved under a resting pointer (a scroll, a resize): the lit test
+  // and the rims re-run from the last pointer position.
+  const onRelayout = () => {
+    if (Number.isNaN(pointerX)) return
+    schedule()
+  }
+
   doc.addEventListener('pointermove', onMove, { passive: true })
   doc.documentElement.addEventListener('pointerleave', onLeave)
+  doc.addEventListener('scroll', onRelayout, { passive: true, capture: true })
+  window.addEventListener('resize', onRelayout, { passive: true })
   return () => {
     doc.removeEventListener('pointermove', onMove)
     doc.documentElement.removeEventListener('pointerleave', onLeave)
+    doc.removeEventListener('scroll', onRelayout, { capture: true })
+    window.removeEventListener('resize', onRelayout)
     window.cancelAnimationFrame(frame)
   }
 }

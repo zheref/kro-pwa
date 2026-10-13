@@ -38,12 +38,34 @@ describe('PricingTiersSection (mirrors PricingTiersSection.stories)', () => {
 
   it('Phone — Plus lists the AI first after Free, and keeps the maker shipping', () => {
     render(stories.Phone.render())
-    const items = within(card('Plus'))
+    const labels = within(card('Plus'))
+      .getAllByRole('listitem')
+      .map((li) => li.lastElementChild?.textContent)
+    expect(labels[0]).toBe('Everything in Free')
+    expect(labels).toContain('Plan my day')
+    expect(labels.at(-1)).toBe('You keep the maker shipping')
+  })
+
+  it('never puts a check beside a feature that is not built — it reads Planned instead', () => {
+    render(stories.Desktop.render())
+    for (const name of ['Free', 'Plus'] as const) {
+      for (const li of within(card(name)).getAllByRole('listitem')) {
+        const planned = li.textContent?.startsWith('Planned') ?? false
+        expect(li.querySelector('svg') !== null, li.textContent ?? '').toBe(
+          !planned,
+        )
+      }
+    }
+    const plus = within(card('Plus'))
       .getAllByRole('listitem')
       .map((li) => li.textContent)
-    expect(items[0]).toBe('Everything in Free')
-    expect(items).toContain('Plan my day')
-    expect(items.at(-1)).toBe('You keep the maker shipping')
+    expect(plus.filter((t) => t?.startsWith('Planned'))).toHaveLength(9)
+    const free = within(card('Free'))
+      .getAllByRole('listitem')
+      .map((li) => li.textContent)
+    expect(free).toContain('PlannedHabits')
+    expect(free).toContain('PlannedBlueprints')
+    expect(free).toContain('My Day')
   })
 })
 

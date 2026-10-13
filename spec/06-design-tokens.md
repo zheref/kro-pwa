@@ -63,7 +63,8 @@ Every glass piece carries a light rim. Where it points is decided by one rule:
 - **A bar lights its bottom edge only.** The fixed top chrome sits on the viewport edges, so its
   top and sides are never drawn. Its bottom hairline has a hotspot that follows the pointer's x
   along the edge, and lights evenly along its whole length when the pointer is inside the bar or
-  a control in it has keyboard focus. Scrolled bars keep their shadow.
+  a control in it has keyboard focus. Scrolled bars keep their shadow. Under reduced transparency
+  the bar keeps an opaque bottom hairline, lit or not, while every other rim goes dark.
 - **The primary on marketing surfaces is tinted glass in both schemes**, never a flat fill. Dark:
   88 % accent (hover 92 %) over the glass surface with a restrained top sheen; ink is black.
   Light: 94 % accent (hover 96 %) with no sheen; ink is white. The ink floor is 4.5:1 at the 5th

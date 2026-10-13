@@ -418,6 +418,23 @@
     background: none;
   }
 
+  /* The bar keeps its bottom hairline, opaque, lit or not — the one edge it
+     draws; the rule above would otherwise erase it while the lit rule above
+     it (two classes deep) would bring it back only while lit. */
+  .kro-glass--bar::after,
+  .kro-glass--bar:is(.kro-glass--lit, :has(:focus-visible))::after {
+    background:
+      linear-gradient(
+        color-mix(
+            in srgb,
+            var(--kro-color-fore) 28%,
+            var(--kro-glass-surface-opaque)
+          )
+          0 0
+      )
+      0 100% / 100% 1px no-repeat;
+  }
+
   .kro-glass--interactive:hover::before {
     background: var(--kro-color-back-next);
   }

@@ -96,3 +96,18 @@ describe('the bar', () => {
     )
   })
 })
+
+describe('glass.css — reduced transparency', () => {
+  it('keeps the bar an opaque bottom hairline, lit or not, where every other rim goes dark', () => {
+    const reduced = CSS.slice(
+      CSS.indexOf('@media (prefers-reduced-transparency: reduce)'),
+    )
+    expect(reduced).toContain('background: none')
+    expect(reduced).toMatch(
+      /\.kro-glass--bar::after,\s*\.kro-glass--bar:is\([\s\S]*?\)\)::after\s*\{\s*background:\s*linear-gradient\(/,
+    )
+    expect(reduced.indexOf('.kro-glass--bar::after,')).toBeGreaterThan(
+      reduced.indexOf('background: none'),
+    )
+  })
+})

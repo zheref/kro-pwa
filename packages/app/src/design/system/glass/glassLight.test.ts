@@ -205,6 +205,58 @@ describe('startGlassLight — lit and tracked', () => {
     stop()
   })
 
+  it('unlights a piece carried out from under a resting pointer by a scroll', async () => {
+    const stop = startGlassLight(document)
+    const piece = mountPiece('kro-glass')
+
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 150, clientY: 120 }),
+    )
+    await nextFrame()
+    expect(piece.classList.contains(GLASS_LIT_CLASS)).toBe(true)
+
+    // The page scrolled 700px: the piece is now above the viewport, the
+    // pointer has not moved.
+    vi.spyOn(piece, 'getBoundingClientRect').mockReturnValue({
+      x: 100,
+      y: -600,
+      width: 200,
+      height: 80,
+      top: -600,
+      right: 300,
+      bottom: -520,
+      left: 100,
+      toJSON: () => ({}),
+    } as DOMRect)
+    document.dispatchEvent(new Event('scroll'))
+    await nextFrame()
+
+    expect(piece.classList.contains(GLASS_LIT_CLASS)).toBe(false)
+    stop()
+  })
+
+  it('re-runs the lit test on resize, and schedules nothing before a pointer was seen', async () => {
+    const stop = startGlassLight(document)
+    const piece = mountPiece('kro-glass')
+    const raf = vi.spyOn(window, 'requestAnimationFrame')
+
+    window.dispatchEvent(new Event('resize'))
+    // `schedule` requests its frame synchronously; nothing to re-run yet.
+    expect(raf).not.toHaveBeenCalled()
+    expect(piece.classList.contains(GLASS_LIT_CLASS)).toBe(false)
+
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 150, clientY: 120 }),
+    )
+    await nextFrame()
+    expect(piece.classList.contains(GLASS_LIT_CLASS)).toBe(true)
+    const before = raf.mock.calls.length
+    window.dispatchEvent(new Event('resize'))
+    expect(raf.mock.calls.length).toBe(before + 1)
+    await nextFrame()
+    stop()
+  })
+
   it('unlights every piece when the pointer leaves the window', async () => {
     const stop = startGlassLight(document)
     const piece = mountPiece('kro-glass')

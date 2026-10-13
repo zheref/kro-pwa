@@ -15,6 +15,7 @@ time actually earned.
 ## Canonical URLs
 
 - Landing page: https://kroapp.com/
+- Pricing: https://kroapp.com/pricing
 - The app: https://hub.kroapp.com/ (kroapp.com/hub redirects there)
 
 ## Privacy

@@ -1,3 +1,5 @@
+import { PRICING_PATH } from './LandingSections'
+
 /**
  * Everything the landing page says, typed and in one place.
  *
@@ -281,7 +283,7 @@ export const faqEntries: readonly FaqEntry[] = [
     question: 'Is Kro free?',
     answer:
       'The core is free on every platform: capture, triage, plan, do and earn, with sync across your devices. Plus adds the AI features for about $5 a month, or less paid yearly. Plus is not on sale yet.',
-    link: { label: 'See pricing', href: '/pricing' },
+    link: { label: 'See pricing', href: PRICING_PATH },
   },
   {
     id: 'data',
@@ -328,6 +330,18 @@ export const pricingCopy = {
   compareCaption: 'What Free and Plus include',
 } as const
 
+/** One line on a tier card: shipped today, or planned — never a check. */
+export interface PricingFeature {
+  readonly label: string
+  readonly status: 'included' | 'planned'
+}
+
+const has = (label: string): PricingFeature => ({ label, status: 'included' })
+const planned = (label: string): PricingFeature => ({
+  label,
+  status: 'planned',
+})
+
 export type PricingTierId = 'free' | 'plus'
 
 export interface PricingTier {
@@ -338,7 +352,7 @@ export interface PricingTier {
   /** A second way to pay, under the price. */
   readonly alternate?: string
   readonly promise: string
-  readonly features: readonly string[]
+  readonly features: readonly PricingFeature[]
   readonly cta: string
   /** A short status shown beside the name. */
   readonly status: string
@@ -354,18 +368,21 @@ export const pricingTiers: readonly PricingTier[] = [
     cadence: 'no card, no trial clock',
     promise: 'The whole loop, on every platform.',
     features: [
-      'My Day',
-      'Plan: timeline and Priority Matrix',
-      'Tasks and lists',
-      'Habits',
-      'Sessions: the focus timer and breaks',
-      'Earn: rings, Challenges and Milestones',
-      'Inbox and Triage',
-      'Board',
-      'Blueprints',
-      'One calendar connection',
-      'Sync across your devices',
-      'The web app, and the Apple apps as they open',
+      has('My Day'),
+      has('Plan: the timeline'),
+      planned('Plan: the Priority Matrix'),
+      has('Tasks and lists'),
+      planned('Habits'),
+      has('Sessions: the focus timer'),
+      planned('Breaks between Sessions'),
+      has('Earn: rings, Challenges and Milestones'),
+      has('Inbox and Triage'),
+      planned('Board'),
+      planned('Blueprints'),
+      has('One calendar connection'),
+      has('Sync across your devices'),
+      has('Light, dark and four palettes'),
+      has('The web app, and the Apple apps as they open'),
     ],
     cta: 'Open Kro for Web',
     status: 'Live today',
@@ -379,18 +396,17 @@ export const pricingTiers: readonly PricingTier[] = [
     alternate: 'or $48 a year, $4 a month',
     promise: 'Everything in Free, plus the part that thinks with you.',
     features: [
-      'Everything in Free',
-      'Capture suggestions: a note becomes tasks',
-      'Plan my day',
-      'Natural-language capture',
-      'Session lengths that learn from you',
-      'A weekly review that writes itself',
-      'Smart reminders',
-      'Several calendars: Google and Outlook',
-      'Unlimited Blueprints',
-      'Themes and palettes',
-      'Early access to new platforms',
-      'You keep the maker shipping',
+      has('Everything in Free'),
+      planned('AI capture: a note becomes tasks'),
+      planned('Plan my day'),
+      planned('Natural-language capture'),
+      planned('Session lengths that learn from you'),
+      planned('A weekly review that writes itself'),
+      planned('Smart reminders'),
+      planned('Several calendars: Google and Outlook'),
+      planned('More palettes and themes'),
+      planned('Early access to new platforms'),
+      has('You keep the maker shipping'),
     ],
     cta: 'Get early access',
     status: 'Not on sale yet',
@@ -425,31 +441,39 @@ const plusPlanned = (feature: string): PricingRow => ({
   plus: 'planned',
 })
 
+/** Not built on any plan yet: Planned in both columns, never a check. */
+const bothPlanned = (feature: string): PricingRow => ({
+  feature,
+  free: 'planned',
+  plus: 'planned',
+})
+
 export const pricingComparison: readonly PricingRowGroup[] = [
   {
     title: 'The loop',
     rows: [
       both('Capture, Inbox and Triage'),
       both('My Day'),
-      both('Plan: timeline and Priority Matrix'),
+      both('Plan: the timeline'),
+      bothPlanned('Plan: the Priority Matrix'),
       both('Tasks and lists'),
-      both('Habits'),
-      both('Board'),
-      both('Blueprints'),
-      plusPlanned('Unlimited Blueprints'),
+      bothPlanned('Habits'),
+      bothPlanned('Board'),
+      bothPlanned('Blueprints'),
     ],
   },
   {
     title: 'Focus and reward',
     rows: [
-      both('Sessions: the focus timer and breaks'),
+      both('Sessions: the focus timer'),
+      bothPlanned('Breaks between Sessions'),
       both('Earn: rings, Challenges and Milestones'),
     ],
   },
   {
     title: 'Thinks with you',
     rows: [
-      plusPlanned('Capture suggestions: a note becomes tasks'),
+      plusPlanned('AI capture: a note becomes tasks'),
       plusPlanned('Plan my day'),
       plusPlanned('Natural-language capture'),
       plusPlanned('Session lengths that learn from you'),
@@ -476,7 +500,10 @@ export const pricingComparison: readonly PricingRowGroup[] = [
   },
   {
     title: 'Make it yours',
-    rows: [both('Light and dark'), plusPlanned('Themes and palettes')],
+    rows: [
+      both('Light, dark and four palettes'),
+      plusPlanned('More palettes and themes'),
+    ],
   },
 ]
 

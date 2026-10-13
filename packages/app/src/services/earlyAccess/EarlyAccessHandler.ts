@@ -28,6 +28,14 @@
  *    other thrown value goes through `EarlyAccessMapper.toException`, and the
  *    status comes from the kind.
  *
+ * Every success — a new join, the "already on the list" fold and the
+ * honeypot alike — answers a receipt the handler writes itself: a generated
+ * `id`, `position: null`, the visitor's own email and platform, and
+ * `joined_at` from the clock (`SEC-12`). The sink's wire receipt never
+ * reaches the visitor: a webhook that answers its own id format or a queue
+ * position would otherwise make a new join distinguishable from the fold,
+ * and the route would be a membership oracle again.
+ *
  * Durable rate limiting and double opt-in need a shared store or the
  * platform's WAF; both are tracked as their own issue, not done here.
  *
@@ -93,7 +101,11 @@ const optionalText = (value: unknown, maxLength: number): string | null =>
     ? value.trim().slice(0, maxLength)
     : null
 
-/** A receipt indistinguishable from one a webhook with no queue answers. */
+/**
+ * The one receipt shape every success answers — never the sink's own, so a
+ * new join, the "already on the list" fold and the honeypot cannot be told
+ * apart by `id` format or `position`.
+ */
 const receiptFor = (
   email: string,
   platform: KroPlatform,
@@ -199,7 +211,9 @@ export const makeEarlyAccessHandler =
     }
 
     try {
-      return success(await dependencies.sink.add(earlyAccessRequest))
+      // The wire receipt is deliberately dropped — see the docblock (SEC-12).
+      await dependencies.sink.add(earlyAccessRequest)
+      return success(receiptFor(email, earlyAccessRequest.platform, now()))
     } catch (error) {
       const exception = EarlyAccessMapper.toException(error)
       // The sink dedupes; the visitor is told only that the request landed.

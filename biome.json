@@ -17,7 +17,8 @@
       "!**/test-results",
       "!**/storybook-static",
       "!pnpm-lock.yaml",
-      "!apps/web/public"
+      "!apps/web/public",
+      "!**/.claude/settings.local.json"
     ]
   },
   "formatter": {

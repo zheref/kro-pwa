@@ -1,0 +1,35 @@
+{
+  "$comment": "Issue-routing registry for this product repository and the tool repositories it consumes. Added 2026-10-12 (the nen 0.20 repin): without this file nen refuses to guess a taxonomy -- `nen repo classify`, `nen warmup`, `nen direct resolve` and `nen schema check` all read role, kind and gate from here rather than inferring them from the workflow file. The product code is KC, the one CLAUDE.md and docs/BANKAI-OPERATIONS.md already use. `pinned` is the nen tag this consumer's nen/contract.json pins (dependency.pinned_ref), so `nen warmup --current` can check it instead of reporting the consumer unpinned.",
+  "consumers": [
+    {
+      "repo": "zheref/kro-pwa",
+      "role": "Kro for Web -- the Next.js 15 App Router PWA (Scenario 5, react-uzf-v1), the kroapp.com landing page and the hub app; a schema CLIENT of Kro Cloud, never its owner (the Supabase schema belongs to zheref/KroApple)",
+      "kind": "product",
+      "gate": "G2",
+      "pinned": "v0.20.0",
+      "consumes": ["zheref/hatsu", "zheref/nen", "zheref/bankai-core"]
+    }
+  ],
+  "maintained_tools": [
+    {
+      "repo": "zheref/hatsu",
+      "role": "Hatsu workflow and skill prose"
+    },
+    {
+      "repo": "zheref/nen",
+      "role": "Shared deterministic machinery"
+    },
+    {
+      "repo": "zheref/bankai-handbooks",
+      "role": "Canonical handbooks, constitution and shared agent conventions (CON-13) -- the canon Hatsu reviewers resolve (UZF-, SEC-, UX-, QA-, REL-, RC-); this repository mirrors its stack rules under .claude/rules/",
+      "pinned": "v0.6.0"
+    }
+  ],
+  "product_codes": {
+    "KC": "zheref/kro-pwa",
+    "KRO": "zheref/KroApple",
+    "HA": "zheref/hatsu",
+    "NN": "zheref/nen",
+    "BH": "zheref/bankai-handbooks"
+  }
+}

@@ -47,3 +47,8 @@ next-env.d.ts
 # nen / hatsu (bankai local machinery)
 Reports/
 .nen/
+
+# Claude Code's own worktrees (the one harness-native exception to .nen/worktrees/<surface>/)
+.claude/worktrees/
+# The harness's per-checkout permission/settings file: local, may hold allow-lists, never committed
+.claude/settings.local.json

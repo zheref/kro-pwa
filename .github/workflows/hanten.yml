@@ -1,0 +1,67 @@
+name: Hanten
+
+# The `hanten` review round as a check (maintainer ruling 2026-10-05, adopted
+# in kro-pwa on 2026-10-12). Copilot and Cursor Bugbot are out of review
+# credits, so nen/gates.json names `hanten` as the base reviewer and
+# `nen pr ready` counts this job's SUCCESS as its round. The job reads only
+# the pull request BODY, which is where hatsu's shibari pastes hanten's
+# settled findings, so it re-runs on `edited`: settling a finding is a body
+# edit.
+#
+# WHY `pull_request_target`, NOT `pull_request` (Feitan, hanten reviews of
+# 2026-10-12 and 2026-10-13, SEC-14): on `pull_request` GitHub runs the
+# workflow file FROM THE PR'S OWN MERGE REF, so a pull request could delete the
+# guard below, or ship any job named `hanten`, and mint a COMPLETED check of
+# that name on its own head -- and nen's round_check_pattern matches the check
+# by NAME only. On `pull_request_target` the workflow file is taken from the
+# repository's DEFAULT branch (GitHub's rule since 2025-11), never from the PR
+# or its base, and the gate script below is checked out from that same
+# default branch: nothing the PR controls, and nothing a non-default base
+# branch holds, runs here. The job holds only `contents: read` and checks out
+# no PR code -- the body reaches the script through the environment as data.
+# A fork PR's round therefore stays unmet until the maintainer acts (the
+# same-repo guard), and a same-repo PR cannot weaken the gate it is judged by.
+# Consequence: the check is inert on every PR until this file is on `main`
+# (it first lands with zheref/kro-pwa#101), and until then `nen pr ready`
+# reads the round as owed. Binding the round to its producing workflow inside
+# nen itself is a handbook-question, tracked on zheref/hatsu.
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: hanten-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# SEC-14: least privilege. The gate reads the event payload and one script
+# from the default branch; it never needs a write and never touches PR code.
+permissions:
+  contents: read
+
+jobs:
+  hanten:
+    name: hanten
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Fork pull requests carry an untrusted body; their round stays unmet
+    # until the maintainer acts, the same guard every Kro consumer uses.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      # SEC-14: pinned to a reviewed commit SHA, the same pin as pr.yml. The
+      # gate script is checked out from the DEFAULT branch -- the one branch
+      # protected by the ruleset -- never from the PR, and never from a
+      # non-default base branch an integration child may target.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: scripts/hanten_gate.sh
+          sparse-checkout-cone-mode: false
+          # The gate makes no git call, so the job token is never persisted.
+          persist-credentials: false
+      - name: Check the hanten review is settled
+        # The body goes through the environment, never into the script text,
+        # so nothing in it can be executed.
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: bash scripts/hanten_gate.sh

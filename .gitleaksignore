@@ -1,0 +1,5 @@
+# gitleaks fingerprints that are not secrets (commit:path:rule:line).
+# notifications.fixtures.json: the stubbed push-subscription fixture -- its p256dh/auth values decode
+# to "fake-p256dh-public-key-for-tests" / "fake-auth-secret" and the endpoint is push.kro.invalid
+# (a reserved TLD). Judged by Feitan in the hanten review of 2026-10-12; nothing to rotate.
+8a52cfd0141850f17d7d1ffa5559d1626879e573:packages/app/src/services/platform/notifications/notifications.fixtures.json:generic-api-key:8

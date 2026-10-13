@@ -3,7 +3,7 @@
  * and the request body the Mapper produces for the other direction.
  */
 import { describe, expect, it } from 'vitest'
-import { earlyAccessRequestMocks } from '../__mocks__/EarlyAccess.mocks'
+import { earlyAccessRequestMocks } from '../__mocks__/EarlyAccessRequest.mocks'
 import { EarlyAccessMapper } from '../EarlyAccessMapper'
 import type {
   EarlyAccessRequestBody,

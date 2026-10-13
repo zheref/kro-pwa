@@ -3,7 +3,7 @@
  * off it — the fields a confirmation renders and their domain types.
  */
 import { describe, expect, it } from 'vitest'
-import { earlyAccessMocks } from '../__mocks__/EarlyAccess.mocks'
+import { earlyAccessMocks } from '../__mocks__/EarlyAccessReceipt.mocks'
 import type { EarlyAccessReceipt } from '../EarlyAccessReceipt'
 
 describe('EarlyAccessReceipt', () => {

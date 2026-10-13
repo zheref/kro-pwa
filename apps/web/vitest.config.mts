@@ -40,6 +40,12 @@ export default defineConfig({
           import.meta.url,
         ),
       ),
+      '@kro/app/early-access': fileURLToPath(
+        new URL(
+          '../../packages/app/src/services/earlyAccess/server.ts',
+          import.meta.url,
+        ),
+      ),
       '@kro/app/design': fileURLToPath(
         new URL('../../packages/app/src/design/index.ts', import.meta.url),
       ),

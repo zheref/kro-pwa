@@ -107,6 +107,7 @@ export const makeLiveAnalyticsService = (
       if (typeof setTimeout === 'function') setTimeout(callback, delayMs)
     })
 
+  // State holder: buffers calls until the deferred tracker loads (pending a handbook ruling).
   const queue: QueuedCall[] = []
   let polling = false
   let gaveUp = false

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * The sink is the one module that wraps the waitlist wire, so this is the one
  * suite that stands in for `fetch` — injected, never a global patch. Every
@@ -11,7 +12,7 @@ import {
   makeUnavailableEarlyAccessSink,
   makeWebhookEarlyAccessSink,
   stubbedEarlyAccessSink,
-} from './earlyAccessSink'
+} from '../EarlyAccessSinkService'
 
 const WEBHOOK = 'https://hooks.example.invalid/early-access'
 const now = () => new Date('2026-10-12T09:00:00.000Z')
@@ -117,7 +118,7 @@ describe('the webhook sink', () => {
     expect(EarlyAccessMapper.toException(error).kind).toBe('alreadyJoined')
   })
 
-  it('throws the bare status on any other refusal, without the email in the message', async () => {
+  it('keeps the status of a 5xx, without the email in the message', async () => {
     const sink = makeWebhookEarlyAccessSink({
       url: WEBHOOK,
       fetch: fetchAnswering(new Response('nope', { status: 500 })),
@@ -127,6 +128,80 @@ describe('the webhook sink', () => {
 
     expect(error).toMatchObject({ status: 500 })
     expect(String((error as Error).message)).not.toContain('ada@example.com')
+  })
+
+  it('bounds the call with a timeout and refuses to follow a redirect', async () => {
+    const fetchSpy = fetchAnswering(new Response(null, { status: 204 }))
+    const sink = makeWebhookEarlyAccessSink({ url: WEBHOOK, fetch: fetchSpy })
+
+    await sink.add(earlyAccessRequestMocks.bare)
+
+    const init = fetchSpy.mock.calls[0]?.[1]
+    expect(init?.redirect).toBe('error')
+    expect(init?.signal).toBeInstanceOf(AbortSignal)
+  })
+
+  it('rethrows a webhook that never answers as a status-less TimeoutError', async () => {
+    const hanging = vi.fn(
+      (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(init.signal?.reason),
+          )
+        }),
+    )
+    const sink = makeWebhookEarlyAccessSink({
+      url: WEBHOOK,
+      fetch: hanging,
+      timeoutMs: 5,
+    })
+
+    const error = await caught(sink.add(earlyAccessRequestMocks.typical))
+
+    expect(error).toMatchObject({ name: 'TimeoutError' })
+    expect(error).not.toHaveProperty('status')
+    expect(EarlyAccessMapper.toException(error).kind).toBe('unavailable')
+  })
+
+  it('reads an aborted call the same way as a timeout', async () => {
+    const sink = makeWebhookEarlyAccessSink({
+      url: WEBHOOK,
+      fetch: vi.fn(async () => {
+        throw new DOMException('aborted', 'AbortError')
+      }),
+    })
+
+    const error = await caught(sink.add(earlyAccessRequestMocks.typical))
+
+    expect(error).toMatchObject({ name: 'TimeoutError' })
+  })
+
+  it('passes a transport failure through untouched — a refused redirect is offline', async () => {
+    const sink = makeWebhookEarlyAccessSink({
+      url: WEBHOOK,
+      fetch: vi.fn(async () => {
+        throw new TypeError('fetch failed')
+      }),
+    })
+
+    const error = await caught(sink.add(earlyAccessRequestMocks.typical))
+
+    expect(error).toBeInstanceOf(TypeError)
+    expect(EarlyAccessMapper.toException(error).kind).toBe('offline')
+  })
+
+  it('collapses a non-409 4xx into a status-less error, so it never reads as invalidEmail', async () => {
+    for (const status of [400, 401, 422]) {
+      const sink = makeWebhookEarlyAccessSink({
+        url: WEBHOOK,
+        fetch: fetchAnswering(new Response('no', { status })),
+      })
+
+      const error = await caught(sink.add(earlyAccessRequestMocks.typical))
+
+      expect(error).not.toHaveProperty('status')
+      expect(EarlyAccessMapper.toException(error).kind).toBe('unknown')
+    }
   })
 
   it('stamps the wall clock when no clock is injected', async () => {
@@ -140,6 +215,14 @@ describe('the webhook sink', () => {
 })
 
 describe('the unavailable sink', () => {
+  it('says it cannot take sign-ups, so the handler answers before the honeypot', () => {
+    expect(makeUnavailableEarlyAccessSink().available).toBe(false)
+    expect(
+      makeWebhookEarlyAccessSink({ url: WEBHOOK, fetch: vi.fn() }).available,
+    ).toBe(true)
+    expect(makeStubbedEarlyAccessSink().available).toBe(true)
+  })
+
   it('always refuses with 503 — a deployment with no webhook configured', async () => {
     const error = await caught(
       makeUnavailableEarlyAccessSink().add(earlyAccessRequestMocks.typical),
@@ -165,6 +248,26 @@ describe('the stubbed sink', () => {
       status: 409,
     })
     expect(sink.added).toHaveLength(1)
+  })
+
+  it('answers the fixture’s canned receipt for a known address', async () => {
+    const receipt = await makeStubbedEarlyAccessSink().add({
+      ...earlyAccessRequestMocks.bare,
+      email: 'queued@kro.invalid',
+    })
+    expect(receipt).toMatchObject({ id: 'ea-fixture-queued', position: 12 })
+  })
+
+  it('fails the fixture’s failing addresses the way the webhook would', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const as = (email: string) =>
+      caught(sink.add({ ...earlyAccessRequestMocks.bare, email }))
+
+    expect(await as('already@kro.invalid')).toMatchObject({ status: 409 })
+    expect(await as('broken@kro.invalid')).toMatchObject({ status: 500 })
+    expect(await as('offline@kro.invalid')).toBeInstanceOf(TypeError)
+    expect(await as('slow@kro.invalid')).toMatchObject({ name: 'TimeoutError' })
+    expect(await as('invalid@kro.invalid')).not.toHaveProperty('status')
   })
 
   it('ships a shared default that answers a valid receipt', async () => {

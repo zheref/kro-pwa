@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Geist_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
+import { siteUrl } from '../hostRouting'
 
 /**
  * The root layout — passive, and nothing else (`RC-41`).
@@ -21,7 +22,15 @@ import localFont from 'next/font/local'
  *
  * A route group changes no URL: `/settings` was `/settings` inside `(legacy)`
  * and is `/settings` outside it. The group only ever decided which providers
- * wrapped a route.
+ * wrapped a route. Today there are two groups: `(shell)` (the app) and
+ * `(marketing)` (the landing at `/`, wrapped in the same `Providers` but not
+ * the shell).
+ *
+ * The metadata is the landing's SEO baseline. `metadataBase` comes from
+ * `NEXT_PUBLIC_SITE_URL` so Open Graph URLs resolve against the public apex.
+ * The `(shell)` routes inherit it too; that is fine, because the hub host
+ * answers `X-Robots-Tag: noindex` (see `hostRouting.ts`) and wins over the
+ * default `robots: index` here.
  */
 
 const beVietnamPro = localFont({
@@ -126,9 +135,27 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const DESCRIPTION =
+  'Control your time, do not let time control you. Plan, Do and Earn, in one personal execution system.'
+
 export const metadata: Metadata = {
-  title: 'Kro for Web',
-  description: 'by Zheref',
+  metadataBase: new URL(siteUrl()),
+  title: { default: 'Kro — Control your time', template: '%s · Kro' },
+  description: DESCRIPTION,
+  applicationName: 'Kro',
+  openGraph: {
+    siteName: 'Kro',
+    type: 'website',
+    locale: 'en_US',
+    title: 'Kro — Control your time',
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kro — Control your time',
+    description: DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
 }
 
 export default function RootLayout({

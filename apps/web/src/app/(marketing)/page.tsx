@@ -1,47 +1,41 @@
-import { oauthReturnQueryString } from '@kro/core'
 import { redirect } from 'next/navigation'
+import { LandingPageClient } from './LandingPageClient'
+import { type SearchParams, landingRouteDecision } from './landingRoute'
 
 /**
- * `/` — the app's front door.
+ * `/` — the front door, in the `(marketing)` group (a group changes no URL).
  *
- * A passive Server Component (`RC-38`): it resolves nothing, reads no store,
- * calls no hook, and renders no markup. Its whole behaviour is sending the
- * visitor into the parity shell's landing destination.
+ * A passive Server Component (`RC-38`): it reads its search params, asks
+ * `landingRouteDecision` what to do with the visit, and either redirects or
+ * forwards to the client wrapper. No hook, no store read, no markup of its own.
  *
- * **Why My Day.** Product canon decides the landing destination, not this repo:
- * KroApple's `ElementsRepository` builds the navigation with
- * `.add(element: .init(type: .doTab, isInitial: true), …)`, and `MainFeature`
- * selects `first(where: \.isInitial)` on the first emission — the Do surface,
- * which this port calls My Day and serves at `/my-day`. The port already
- * agreed: `MainFeature`'s initial `selected` is `DestinationKind.myDay` and
- * `NavigationSections` flags that same row initial. This file is only the URL
- * saying the same thing.
+ * **Today it still redirects every visit to My Day** (`landingEnabled: false`),
+ * exactly as before the marketing split — a cold visit gets `/my-day`, a
+ * provider return gets `/my-day?code=…`. On the hub host it is not even
+ * reached: the middleware rewrites the hub's `/` to `/my-day`.
  *
- * **Temporary, deliberately.** `redirect()` answers 307, not 308. The landing
- * destination is a product decision that can change, and the installed app's
- * `start_url` is this route (see `manifest.ts`) — a permanent redirect would be
- * cached by the browser past any such change, on exactly the surface that is
- * hardest to fix afterwards.
+ * **Why My Day.** Product canon decides the landing destination: KroApple's
+ * `ElementsRepository` flags the Do tab `isInitial`, which this port serves at
+ * `/my-day`; `MainFeature`'s initial selection agrees.
  *
- * This route used to be the create-next-app template page, parked in the
- * `(legacy)` group "until retired". KC-IS-#79 is that retirement: the group,
- * its Chakra provider tree and the vendored Chakra set are gone, and the three
- * addresses that hung off it (`/`, `/settings`, `/integrations`) are now three
- * passive redirects into the shell.
- */
-type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-
-/**
- * The provider's return survives the hop. Supabase Auth returns from a provider
- * to the address it was given with `?code=…` appended, and the browser's own
- * `start_url` is `/`; a redirect that dropped it would strand the PKCE exchange
- * one hop short of the page that performs it. Only the return parameters are
- * forwarded (`oauthReturnQueryString`), and the code does transit the server
- * tier on this route — hosting may exclude its query string from access logs.
+ * **Temporary, deliberately.** `redirect()` answers 307, not 308 — the landing
+ * destination is a product decision that can change, and a permanent redirect
+ * would be cached by browsers past any such change.
+ *
+ * **The provider return survives the hop.** Only the OAuth return parameters
+ * are forwarded (`oauthReturnQueryString`, inside `landingRouteDecision`), and
+ * the code does transit the server tier on this route — hosting may exclude its
+ * query string from access logs.
  */
 export default async function RootRoute(props: {
   readonly searchParams?: Promise<SearchParams>
 }) {
-  const suffix = oauthReturnQueryString((await props.searchParams) ?? {})
-  redirect(suffix.length === 0 ? '/my-day' : `/my-day?${suffix}`)
+  const decision = landingRouteDecision({
+    searchParams: (await props.searchParams) ?? {},
+    // TODO(landing): mount <LandingPageClient /> when kind === 'landing' (piece P2-B)
+    // — flip this to the landing's feature flag; the branch below already mounts it.
+    landingEnabled: false,
+  })
+  if (decision.kind === 'landing') return <LandingPageClient />
+  redirect(decision.to)
 }

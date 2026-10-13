@@ -19,6 +19,9 @@ import { Providers } from '../providers'
  *   Analytics Service, never through the script's own page-view tracking.
  *   `data-exclude-search="true"` keeps query strings out of every event, and
  *   `data-do-not-track="true"` honours the browser's Do Not Track setting.
+ *   `data-host-url` names where events go explicitly — the same
+ *   `collectOrigin` the CSP admits in `connect-src` — so the tracker never
+ *   falls back to a default origin the policy does not admit.
  */
 
 export default function MarketingLayout({
@@ -40,6 +43,7 @@ export default function MarketingLayout({
         <Script
           src={umami.scriptUrl}
           data-website-id={umami.websiteId}
+          data-host-url={umami.collectOrigin}
           data-auto-track="false"
           data-exclude-search="true"
           data-do-not-track="true"

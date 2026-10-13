@@ -13,6 +13,7 @@ describe('landingSecurityHeaders', () => {
   it('admits only self in production with analytics off', () => {
     const headers = landingSecurityHeaders({
       umamiOrigin: null,
+      umamiCollectOrigin: null,
       production: true,
     })
     const csp = directives(headers['Content-Security-Policy'] ?? '')
@@ -29,9 +30,10 @@ describe('landingSecurityHeaders', () => {
     expect(csp.get('font-src')).toBe("'self' data:")
   })
 
-  it('admits the Umami origin for its script and its event calls', () => {
+  it('admits Umami Cloud: the script host for scripts, the gateway for events', () => {
     const headers = landingSecurityHeaders({
       umamiOrigin: 'https://cloud.umami.is',
+      umamiCollectOrigin: 'https://gateway.umami.is',
       production: true,
     })
     const csp = directives(headers['Content-Security-Policy'] ?? '')
@@ -39,20 +41,38 @@ describe('landingSecurityHeaders', () => {
     expect(csp.get('script-src')).toBe(
       "'self' 'unsafe-inline' https://cloud.umami.is",
     )
-    expect(csp.get('connect-src')).toBe("'self' https://cloud.umami.is")
+    expect(csp.get('connect-src')).toBe("'self' https://gateway.umami.is")
     expect(csp.get('img-src')).not.toContain('umami')
+  })
+
+  it('admits a self-hosted Umami on its one origin in both directives', () => {
+    const headers = landingSecurityHeaders({
+      umamiOrigin: 'https://stats.example.com',
+      umamiCollectOrigin: 'https://stats.example.com',
+      production: true,
+    })
+    const csp = directives(headers['Content-Security-Policy'] ?? '')
+
+    expect(csp.get('script-src')).toBe(
+      "'self' 'unsafe-inline' https://stats.example.com",
+    )
+    expect(csp.get('connect-src')).toBe("'self' https://stats.example.com")
   })
 
   it("admits 'unsafe-eval' only outside production (Next's dev runtime)", () => {
     const dev = directives(
-      landingSecurityHeaders({ umamiOrigin: null, production: false })[
-        'Content-Security-Policy'
-      ] ?? '',
+      landingSecurityHeaders({
+        umamiOrigin: null,
+        umamiCollectOrigin: null,
+        production: false,
+      })['Content-Security-Policy'] ?? '',
     )
     const prod = directives(
-      landingSecurityHeaders({ umamiOrigin: null, production: true })[
-        'Content-Security-Policy'
-      ] ?? '',
+      landingSecurityHeaders({
+        umamiOrigin: null,
+        umamiCollectOrigin: null,
+        production: true,
+      })['Content-Security-Policy'] ?? '',
     )
 
     expect(dev.get('script-src')).toContain("'unsafe-eval'")
@@ -63,6 +83,7 @@ describe('landingSecurityHeaders', () => {
     for (const production of [true, false]) {
       const headers = landingSecurityHeaders({
         umamiOrigin: 'https://stats.example.com',
+        umamiCollectOrigin: 'https://stats.example.com',
         production,
       })
       expect(headers['X-Content-Type-Options']).toBe('nosniff')

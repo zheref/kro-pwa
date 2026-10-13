@@ -12,7 +12,9 @@
  * Order of checks:
  * 1. the `landingPage` flag (`enabled`) — off, every request is `unavailable`
  *    (503) before the body is read: the flag is the sign-up's kill switch too;
- * 2. a cross-site `Origin` is refused (403), and a body not declared as
+ * 2. a cross-site `Origin` — one that is neither the request URL's origin nor
+ *    on `allowedOrigins` (the deployment's public origins, for a proxied
+ *    request) — is refused (403), and a body not declared as
  *    `application/json` is refused (415) — together they force a browser's
  *    CORS preflight, so another site cannot post a visitor's address here;
  * 3. a sink that cannot take sign-ups answers `unavailable` (503) — decided
@@ -25,6 +27,14 @@
  *    the route never tells anyone whether an address has signed up; every
  *    other thrown value goes through `EarlyAccessMapper.toException`, and the
  *    status comes from the kind.
+ *
+ * Every success — a new join, the "already on the list" fold and the
+ * honeypot alike — answers a receipt the handler writes itself: a generated
+ * `id`, `position: null`, the visitor's own email and platform, and
+ * `joined_at` from the clock (`SEC-12`). The sink's wire receipt never
+ * reaches the visitor: a webhook that answers its own id format or a queue
+ * position would otherwise make a new join distinguishable from the fold,
+ * and the route would be a membership oracle again.
  *
  * Durable rate limiting and double opt-in need a shared store or the
  * platform's WAF; both are tracked as their own issue, not done here.
@@ -51,6 +61,13 @@ export interface EarlyAccessHandlerDependencies {
   readonly enabled?: () => boolean
   /** Stamps a receipt the handler writes itself. Defaults to the wall clock. */
   readonly now?: () => Date
+  /**
+   * Public origins a browser may post from besides the request URL's own —
+   * behind a TLS-terminating proxy the request URL is the bind address
+   * (`http://<bind>:<port>`), never the public `https://` origin. Built from
+   * configuration by the route, never from a request header. Defaults to none.
+   */
+  readonly allowedOrigins?: readonly string[]
 }
 
 const NO_STORE = { 'cache-control': 'no-store' }
@@ -84,7 +101,11 @@ const optionalText = (value: unknown, maxLength: number): string | null =>
     ? value.trim().slice(0, maxLength)
     : null
 
-/** A receipt indistinguishable from one a webhook with no queue answers. */
+/**
+ * The one receipt shape every success answers — never the sink's own, so a
+ * new join, the "already on the list" fold and the honeypot cannot be told
+ * apart by `id` format or `position`.
+ */
 const receiptFor = (
   email: string,
   platform: KroPlatform,
@@ -97,9 +118,19 @@ const receiptFor = (
   joined_at: now.toISOString(),
 })
 
-const isCrossSite = (request: Request): boolean => {
+/**
+ * An absent `Origin` is a non-browser client and passes; a present one must
+ * equal the request URL's origin or be on the configured list. `null` (an
+ * opaque origin — a sandboxed frame, a `data:` page) is on no list.
+ */
+const isCrossSite = (
+  request: Request,
+  allowedOrigins: readonly string[],
+): boolean => {
   const origin = request.headers.get('origin')
-  return origin !== null && origin !== new URL(request.url).origin
+  if (origin === null) return false
+  if (origin === new URL(request.url).origin) return false
+  return !allowedOrigins.includes(origin)
 }
 
 const isJson = (request: Request): boolean =>
@@ -115,7 +146,7 @@ export const makeEarlyAccessHandler =
     const now = dependencies.now ?? (() => new Date())
 
     if (!enabled()) return failure(EarlyAccessExceptions.unavailable())
-    if (isCrossSite(request)) {
+    if (isCrossSite(request, dependencies.allowedOrigins ?? [])) {
       return failure(
         EarlyAccessExceptions.unknown('Cross-site requests are not accepted.'),
         403,
@@ -180,7 +211,9 @@ export const makeEarlyAccessHandler =
     }
 
     try {
-      return success(await dependencies.sink.add(earlyAccessRequest))
+      // The wire receipt is deliberately dropped — see the docblock (SEC-12).
+      await dependencies.sink.add(earlyAccessRequest)
+      return success(receiptFor(email, earlyAccessRequest.platform, now()))
     } catch (error) {
       const exception = EarlyAccessMapper.toException(error)
       // The sink dedupes; the visitor is told only that the request landed.

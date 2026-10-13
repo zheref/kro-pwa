@@ -115,7 +115,9 @@ const receiptFieldsOf = async (
  * means "already on the list". The call is bounded by a timeout and refuses
  * to follow a redirect, so the bearer token only ever goes to the configured
  * URL. A webhook that answers with no id gets a generated one, and with no
- * position gets `null` — most webhooks have no queue to count.
+ * position gets `null` — most webhooks have no queue to count. This is the
+ * wire receipt only: the handler answers the visitor a receipt of its own
+ * and never forwards this `id` or `position` (`SEC-12`).
  */
 export const makeWebhookEarlyAccessSink = (
   options: WebhookEarlyAccessSinkOptions,

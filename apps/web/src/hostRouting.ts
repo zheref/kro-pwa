@@ -210,3 +210,58 @@ export const hubUrl = (
     ? `https://${host}${HUB_LANDING_PATH}`
     : HUB_LANDING_PATH
 }
+
+export interface SiteOriginsInput {
+  readonly siteHost?: string | null
+  readonly hubHost?: string | null
+  readonly siteUrl?: string | null
+}
+
+/** `https://<host>` when `host` is a bare hostname, else `null`. */
+const httpsOriginOf = (host: string): string | null => {
+  if (host.length === 0) return null
+  try {
+    const url = new URL(`https://${host}`)
+    return url.hostname === host ? url.origin : null
+  } catch {
+    return null
+  }
+}
+
+/** The origin of an `http:`/`https:` URL, else `null`. */
+const originOfUrl = (value: string): string | null => {
+  if (value.length === 0) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+      ? url.origin
+      : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The public origins this deployment is reached on — what the early-access
+ * route accepts as a browser `Origin` besides the request URL's own (`SEC-7`).
+ *
+ * Behind a TLS-terminating proxy Next sees `http://<bind>:<port>` as the
+ * request URL, so a same-origin check against it alone would refuse every real
+ * sign-up from `https://kroapp.com`. The list is built from configuration,
+ * never from a request header: `https://<NEXT_PUBLIC_SITE_HOST>`,
+ * `https://<NEXT_PUBLIC_HUB_HOST>` and the origin of `NEXT_PUBLIC_SITE_URL`,
+ * each only when set and valid, de-duplicated. Empty when nothing is
+ * configured — localhost and previews keep relying on the request origin.
+ */
+export const siteOrigins = ({
+  siteHost = process.env.NEXT_PUBLIC_SITE_HOST,
+  hubHost = process.env.NEXT_PUBLIC_HUB_HOST,
+  siteUrl: url = process.env.NEXT_PUBLIC_SITE_URL,
+}: SiteOriginsInput = {}): readonly string[] => {
+  const candidates = [
+    httpsOriginOf(normalizeHost(siteHost)),
+    httpsOriginOf(normalizeHost(hubHost)),
+    originOfUrl((url ?? '').trim()),
+  ]
+  return [...new Set(candidates.filter((o): o is string => o !== null))]
+}

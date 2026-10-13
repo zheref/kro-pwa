@@ -93,12 +93,26 @@ describe('the landing security headers (SEC-10)', () => {
 
     const csp = response.headers.get('content-security-policy') ?? ''
     expect(csp).toContain("frame-ancestors 'none'")
-    expect(csp).toContain('https://cloud.umami.is')
+    expect(csp).toMatch(/script-src [^;]*https:\/\/cloud\.umami\.is/)
+    expect(csp).toContain("connect-src 'self' https://gateway.umami.is")
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('referrer-policy')).toBe(
       'strict-origin-when-cross-origin',
     )
     expect(response.headers.get('x-frame-options')).toBe('DENY')
+  })
+
+  it('admits a self-hosted Umami origin for both its script and its events', () => {
+    production()
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_WEBSITE_ID', 'site-123')
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_SCRIPT_URL', 'https://stats.example.com/u.js')
+
+    const response = middleware(request('https://kroapp.com/', 'kroapp.com'))
+
+    const csp = response.headers.get('content-security-policy') ?? ''
+    expect(csp).toMatch(/script-src [^;]*https:\/\/stats\.example\.com/)
+    expect(csp).toContain("connect-src 'self' https://stats.example.com")
+    expect(csp).not.toContain('gateway.umami.is')
   })
 
   it('admits no third-party origin when analytics is off', () => {

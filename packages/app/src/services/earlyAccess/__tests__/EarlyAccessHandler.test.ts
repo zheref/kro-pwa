@@ -10,6 +10,7 @@ import { makeEarlyAccessHandler } from '../EarlyAccessHandler'
 import {
   makeStubbedEarlyAccessSink,
   makeUnavailableEarlyAccessSink,
+  makeWebhookEarlyAccessSink,
 } from '../EarlyAccessSinkService'
 
 const SITE = 'https://kro.app'
@@ -46,23 +47,60 @@ const json = async (response: Response): Promise<Body> =>
   (await response.json()) as Body
 
 describe('POST /api/early-access handler — joining', () => {
-  it('adds a valid request to the sink and answers its receipt', async () => {
+  it('adds a valid request to the sink and answers a receipt it writes itself', async () => {
     const sink = makeStubbedEarlyAccessSink()
-    const response = await makeEarlyAccessHandler({ sink })(post(valid))
+    const now = () => new Date('2026-10-12T12:00:00.000Z')
+    const response = await makeEarlyAccessHandler({ sink, now })(post(valid))
 
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toContain('no-store')
     expect(await response.json()).toEqual({
       ok: true,
       value: {
-        id: 'ea-stub-1',
+        id: expect.stringMatching(UUID),
         email: 'ada@example.com',
         platform: 'ios',
-        position: 1,
+        position: null,
         joined_at: '2026-10-12T12:00:00.000Z',
       },
     })
     expect(sink.added).toEqual([valid])
+  })
+
+  it("never forwards a webhook's own id or queue position — a new join looks like the fold", async () => {
+    const sink = makeWebhookEarlyAccessSink({
+      url: 'https://hooks.example.invalid/x',
+      fetch: async () => Response.json({ id: 'hook-1', position: 7 }),
+    })
+    const now = () => new Date('2026-10-12T09:30:00.000Z')
+    const response = await makeEarlyAccessHandler({ sink, now })(post(valid))
+
+    expect(response.status).toBe(200)
+    const body = await json(response)
+    expect(body.value.id).toMatch(UUID)
+    expect(body.value.id).not.toBe('hook-1')
+    expect(body.value.position).toBeNull()
+    expect(body.value.joined_at).toBe('2026-10-12T09:30:00.000Z')
+  })
+
+  it('answers a new join and an address already on the list with the same shape', async () => {
+    const now = () => new Date('2026-10-12T11:00:00.000Z')
+    const handler = makeEarlyAccessHandler({
+      sink: makeStubbedEarlyAccessSink(),
+      now,
+    })
+    const joined = await json(await handler(post(valid)))
+    const again = await json(
+      await handler(post({ ...valid, email: 'already@kro.invalid' })),
+    )
+
+    const shape = (value: Body['value']) => ({
+      ...value,
+      id: UUID.test(value.id),
+      email: typeof value.email,
+    })
+    expect(shape(joined.value)).toEqual(shape(again.value))
+    expect(joined.value.id).not.toBe(again.value.id)
   })
 
   it('accepts a same-origin request and a charset on the JSON content type', async () => {
@@ -125,6 +163,65 @@ describe('POST /api/early-access handler — the kill switch and the abuse surfa
       message: 'Cross-site requests are not accepted.',
     })
     expect(sink.added).toEqual([])
+  })
+
+  it('accepts the public Origin of a proxied request when it is on the allow-list', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const proxied = new Request('http://localhost:3000/api/early-access', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://kroapp.com',
+      },
+      body: JSON.stringify(valid),
+    })
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com', 'https://hub.kroapp.com'],
+    })(proxied)
+
+    expect(response.status).toBe(200)
+    expect(sink.added).toHaveLength(1)
+  })
+
+  it('refuses the public Origin of a proxied request when nothing lists it', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const proxied = new Request('http://localhost:3000/api/early-access', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://kroapp.com',
+      },
+      body: JSON.stringify(valid),
+    })
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://hub.kroapp.com'],
+    })(proxied)
+
+    expect(response.status).toBe(403)
+    expect(sink.added).toEqual([])
+  })
+
+  it('refuses an opaque null Origin even with an allow-list configured', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com'],
+    })(post(valid, { origin: 'null' }))
+
+    expect(response.status).toBe(403)
+    expect(sink.added).toEqual([])
+  })
+
+  it('accepts a request with no Origin at all — a non-browser client', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com'],
+    })(post(valid))
+
+    expect(response.status).toBe(200)
   })
 
   it('refuses a body not declared as JSON with 415 — a CORS simple request', async () => {

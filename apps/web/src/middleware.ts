@@ -37,11 +37,13 @@ export function middleware(request: NextRequest): NextResponse {
       ? NextResponse.rewrite(new URL(decision.url, request.url))
       : NextResponse.next()
   const servesLanding = decision.kind === 'next' && pathname === '/'
+  const umami = servesLanding ? umamiConfig() : null
   const headers = {
     ...(decision.headers ?? {}),
     ...(servesLanding
       ? landingSecurityHeaders({
-          umamiOrigin: umamiConfig()?.origin ?? null,
+          umamiOrigin: umami?.origin ?? null,
+          umamiCollectOrigin: umami?.collectOrigin ?? null,
           production: process.env.NODE_ENV === 'production',
         })
       : {}),

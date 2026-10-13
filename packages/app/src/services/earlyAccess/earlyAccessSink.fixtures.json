@@ -10,5 +10,6 @@
     "invalid@kro.invalid": { "status": 422 },
     "broken@kro.invalid": { "status": 500 }
   },
-  "networkFailures": ["offline@kro.invalid"]
+  "networkFailures": ["offline@kro.invalid"],
+  "timeouts": ["slow@kro.invalid"]
 }

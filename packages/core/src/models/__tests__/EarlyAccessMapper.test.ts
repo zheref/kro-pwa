@@ -98,6 +98,25 @@ describe('EarlyAccessMapper.fromDomain', () => {
 })
 
 describe('EarlyAccessMapper.toException', () => {
+  it('reads a sink that timed out as unavailable — the waitlist did not answer in time', () => {
+    const timedOut = Object.assign(new Error('timed out'), {
+      name: 'TimeoutError',
+    })
+    expect(EarlyAccessMapper.toException(timedOut).kind).toBe('unavailable')
+  })
+
+  it('reads an aborted call as unavailable, duck-typed on the name alone', () => {
+    expect(EarlyAccessMapper.toException({ name: 'AbortError' }).kind).toBe(
+      'unavailable',
+    )
+  })
+
+  it('reads a status-less refusal as unknown, never invalidEmail', () => {
+    expect(
+      EarlyAccessMapper.toException(new Error('sink refused the request')).kind,
+    ).toBe('unknown')
+  })
+
   it('reads a network TypeError as offline — the visitor lost signal', () => {
     expect(
       EarlyAccessMapper.toException(new TypeError('Failed to fetch')).kind,

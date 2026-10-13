@@ -6,6 +6,12 @@
  * optional sentence for the few call sites that know a better one (the route's
  * "that was not JSON"); the Mapper never passes a caught error's own text, so
  * a transport error string can never reach the page.
+ *
+ * `alreadyJoined` stays in the union for the browser's stubbed Service and
+ * the stories, but the web route never emits it: it answers an address
+ * already on the list with the same success a new join gets, because telling
+ * a visitor "you are already on the list" would let anyone learn whether
+ * someone else's address has signed up (SEC-8).
  */
 import { assertNever } from '../library/assertNever'
 import { type Exception, exception } from '../library/exception'

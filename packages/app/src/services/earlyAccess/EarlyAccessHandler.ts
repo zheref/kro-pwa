@@ -9,11 +9,25 @@
  * `@kro/app` because a Producer belongs to the shared tier, never to the app
  * shell (`RC-62`), and is reached through `@kro/app/early-access`.
  *
- * Order of checks: a body that is not a JSON object is `unknown` (400); a
- * filled honeypot (`website`) gets a convincing fake receipt and never reaches
- * the sink, so a bot learns nothing; then the email and the platform are
- * validated (`invalidEmail`, 400); then the sink. Every thrown value goes
- * through `EarlyAccessMapper.toException`, and the status comes from the kind.
+ * Order of checks:
+ * 1. the `landingPage` flag (`enabled`) — off, every request is `unavailable`
+ *    (503) before the body is read: the flag is the sign-up's kill switch too;
+ * 2. a cross-site `Origin` is refused (403), and a body not declared as
+ *    `application/json` is refused (415) — together they force a browser's
+ *    CORS preflight, so another site cannot post a visitor's address here;
+ * 3. a sink that cannot take sign-ups answers `unavailable` (503) — decided
+ *    before the honeypot, so a bot gets the status a person would;
+ * 4. a body that is not a JSON object is `unknown` (400);
+ * 5. a filled honeypot (`website`) gets a fake receipt shaped exactly like a
+ *    real one and never reaches the sink;
+ * 6. the email and the platform are validated (`invalidEmail`, 400);
+ * 7. the sink. "Already on the list" answers the same 200 as a new join, so
+ *    the route never tells anyone whether an address has signed up; every
+ *    other thrown value goes through `EarlyAccessMapper.toException`, and the
+ *    status comes from the kind.
+ *
+ * Durable rate limiting and double opt-in need a shared store or the
+ * platform's WAF; both are tracked as their own issue, not done here.
  *
  * Nothing here logs — least of all the email.
  */
@@ -23,13 +37,19 @@ import {
   EarlyAccessMapper,
   type EarlyAccessRequest,
   type EarlyAccessResponse,
+  type KroPlatform,
   isKroPlatform,
 } from '@kro/core'
 import type { EarlyAccessSink } from './EarlyAccessSinkService'
 
 export interface EarlyAccessHandlerDependencies {
   readonly sink: EarlyAccessSink
-  /** Stamps the honeypot's fake receipt. Defaults to the wall clock. */
+  /**
+   * Whether the sign-up is switched on — the `landingPage` flag read the route
+   * binds. Defaults to on.
+   */
+  readonly enabled?: () => boolean
+  /** Stamps a receipt the handler writes itself. Defaults to the wall clock. */
   readonly now?: () => Date
 }
 
@@ -64,9 +84,55 @@ const optionalText = (value: unknown, maxLength: number): string | null =>
     ? value.trim().slice(0, maxLength)
     : null
 
+/** A receipt indistinguishable from one a webhook with no queue answers. */
+const receiptFor = (
+  email: string,
+  platform: KroPlatform,
+  now: Date,
+): EarlyAccessResponse => ({
+  id: crypto.randomUUID(),
+  email,
+  platform,
+  position: null,
+  joined_at: now.toISOString(),
+})
+
+const isCrossSite = (request: Request): boolean => {
+  const origin = request.headers.get('origin')
+  return origin !== null && origin !== new URL(request.url).origin
+}
+
+const isJson = (request: Request): boolean =>
+  (request.headers.get('content-type') ?? '')
+    .trim()
+    .toLowerCase()
+    .startsWith('application/json')
+
 export const makeEarlyAccessHandler =
   (dependencies: EarlyAccessHandlerDependencies) =>
   async (request: Request): Promise<Response> => {
+    const enabled = dependencies.enabled ?? (() => true)
+    const now = dependencies.now ?? (() => new Date())
+
+    if (!enabled()) return failure(EarlyAccessExceptions.unavailable())
+    if (isCrossSite(request)) {
+      return failure(
+        EarlyAccessExceptions.unknown('Cross-site requests are not accepted.'),
+        403,
+      )
+    }
+    if (!isJson(request)) {
+      return failure(
+        EarlyAccessExceptions.unknown(
+          'The request body must be sent as application/json.',
+        ),
+        415,
+      )
+    }
+    if (!dependencies.sink.available) {
+      return failure(EarlyAccessExceptions.unavailable())
+    }
+
     let body: unknown
     try {
       body = await request.json()
@@ -90,14 +156,13 @@ export const makeEarlyAccessHandler =
 
     // Bots fill every field; people never see this one.
     if (typeof fields.website === 'string' && fields.website.length > 0) {
-      const now = (dependencies.now ?? (() => new Date()))()
-      return success({
-        id: `ea-${now.getTime().toString(36)}`,
-        email: typeof email === 'string' ? email : '',
-        platform: isKroPlatform(fields.platform) ? fields.platform : 'web',
-        position: null,
-        joined_at: now.toISOString(),
-      })
+      return success(
+        receiptFor(
+          typeof email === 'string' ? email : '',
+          isKroPlatform(fields.platform) ? fields.platform : 'web',
+          now(),
+        ),
+      )
     }
 
     if (
@@ -117,6 +182,11 @@ export const makeEarlyAccessHandler =
     try {
       return success(await dependencies.sink.add(earlyAccessRequest))
     } catch (error) {
-      return failure(EarlyAccessMapper.toException(error))
+      const exception = EarlyAccessMapper.toException(error)
+      // The sink dedupes; the visitor is told only that the request landed.
+      if (exception.kind === 'alreadyJoined') {
+        return success(receiptFor(email, earlyAccessRequest.platform, now()))
+      }
+      return failure(exception)
     }
   }

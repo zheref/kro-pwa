@@ -30,6 +30,16 @@ function statusOf(error: unknown): number | undefined {
   return typeof status === 'number' ? status : undefined
 }
 
+/**
+ * A timeout or an abort, read by name — duck-typed, because this tier has no
+ * DOM lib and so no `DOMException` to test against (`RC-50`).
+ */
+function isTimeoutOrAbort(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+  const name = (error as { name?: unknown }).name
+  return name === 'TimeoutError' || name === 'AbortError'
+}
+
 function kindOf(error: unknown): unknown {
   if (typeof error !== 'object' || error === null) return undefined
   return (error as { kind?: unknown }).kind
@@ -79,14 +89,17 @@ export const EarlyAccessMapper = {
   },
 
   /**
-   * A network failure (`TypeError`) is `offline`; a thrown value already
-   * carrying a declared `kind` (the route's error body, preserved by the
-   * browser Service) keeps it; otherwise an HTTP status maps to its kind; and
+   * A network failure (`TypeError`) is `offline`; a timeout or abort (an
+   * error named `TimeoutError` / `AbortError` — the waitlist sink not
+   * answering in time) is `unavailable`; a thrown value already carrying a
+   * declared `kind` (the route's error body, preserved by the browser
+   * Service) keeps it; otherwise an HTTP status maps to its kind; and
    * anything else is `unknown` — with the default copy, never the caught
    * error's own text.
    */
   toException(error: unknown): EarlyAccessException {
     if (error instanceof TypeError) return EarlyAccessExceptions.offline()
+    if (isTimeoutOrAbort(error)) return EarlyAccessExceptions.unavailable()
 
     const declared = EarlyAccessExceptions.fromKind(kindOf(error))
     if (declared !== null) return declared

@@ -4,25 +4,48 @@
  * runtime (`RC-43`). The sink's own wire behaviour has its suite in
  * `EarlyAccessSinkService.test.ts`.
  */
+import { earlyAccessRequestMocks } from '@kro/core/mocks'
 import { describe, expect, it, vi } from 'vitest'
 import { makeEarlyAccessHandler } from '../EarlyAccessHandler'
-import { makeStubbedEarlyAccessSink } from '../EarlyAccessSinkService'
+import {
+  makeStubbedEarlyAccessSink,
+  makeUnavailableEarlyAccessSink,
+} from '../EarlyAccessSinkService'
 
-const post = (body: unknown) =>
-  new Request('https://kro.app/api/early-access', {
+const SITE = 'https://kro.app'
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+
+const post = (body: unknown, headers: Record<string, string> = {}) =>
+  new Request(`${SITE}/api/early-access`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: typeof body === 'string' ? body : JSON.stringify(body),
   })
 
 const valid = {
-  email: 'ada@example.com',
-  platform: 'ios',
-  source: 'hero',
-  locale: 'en-US',
+  email: earlyAccessRequestMocks.typical.email,
+  platform: earlyAccessRequestMocks.typical.platform,
+  source: earlyAccessRequestMocks.typical.source,
+  locale: earlyAccessRequestMocks.typical.locale,
 }
 
-describe('POST /api/early-access handler', () => {
+type Body = {
+  ok: boolean
+  value: {
+    id: string
+    email: string
+    platform: string
+    position: unknown
+    joined_at: string
+  }
+  error: { kind: string; message: string }
+}
+
+const json = async (response: Response): Promise<Body> =>
+  (await response.json()) as Body
+
+describe('POST /api/early-access handler — joining', () => {
   it('adds a valid request to the sink and answers its receipt', async () => {
     const sink = makeStubbedEarlyAccessSink()
     const response = await makeEarlyAccessHandler({ sink })(post(valid))
@@ -40,6 +63,19 @@ describe('POST /api/early-access handler', () => {
       },
     })
     expect(sink.added).toEqual([valid])
+  })
+
+  it('accepts a same-origin request and a charset on the JSON content type', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({ sink })(
+      post(valid, {
+        origin: SITE,
+        'content-type': 'application/json; charset=utf-8',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(sink.added).toHaveLength(1)
   })
 
   it('trims the email and caps free-text context before it reaches the sink', async () => {
@@ -60,7 +96,118 @@ describe('POST /api/early-access handler', () => {
       locale: null,
     })
   })
+})
 
+describe('POST /api/early-access handler — the kill switch and the abuse surface', () => {
+  it('answers unavailable (503) with the sign-up switched off, before reading the body', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const request = post(valid)
+    const response = await makeEarlyAccessHandler({
+      sink,
+      enabled: () => false,
+    })(request)
+
+    expect(response.status).toBe(503)
+    expect((await json(response)).error.kind).toBe('unavailable')
+    expect(request.bodyUsed).toBe(false)
+    expect(sink.added).toEqual([])
+  })
+
+  it('refuses a cross-site Origin with 403 and never reaches the sink', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({ sink })(
+      post(valid, { origin: 'https://evil.example' }),
+    )
+
+    expect(response.status).toBe(403)
+    expect((await json(response)).error).toMatchObject({
+      kind: 'unknown',
+      message: 'Cross-site requests are not accepted.',
+    })
+    expect(sink.added).toEqual([])
+  })
+
+  it('refuses a body not declared as JSON with 415 — a CORS simple request', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const handler = makeEarlyAccessHandler({ sink })
+
+    const plain = await handler(post(valid, { 'content-type': 'text/plain' }))
+    expect(plain.status).toBe(415)
+    expect((await json(plain)).error.kind).toBe('unknown')
+
+    const none = await handler(
+      new Request(`${SITE}/api/early-access`, {
+        method: 'POST',
+        body: new Uint8Array([123, 125]),
+      }),
+    )
+    expect(none.status).toBe(415)
+    expect(sink.added).toEqual([])
+  })
+
+  it('answers unavailable (503) when the sink cannot take sign-ups, before validating', async () => {
+    const response = await makeEarlyAccessHandler({
+      sink: makeUnavailableEarlyAccessSink(),
+    })(post({ ...valid, email: 'nope' }))
+
+    expect(response.status).toBe(503)
+    expect((await json(response)).error.kind).toBe('unavailable')
+  })
+})
+
+describe('POST /api/early-access handler — the honeypot', () => {
+  it('answers a filled honeypot with a receipt shaped like a real one, never reaching the sink', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const now = () => new Date('2026-10-12T08:00:00.000Z')
+    const response = await makeEarlyAccessHandler({ sink, now })(
+      post({ ...valid, website: 'https://spam.example' }),
+    )
+
+    expect(response.status).toBe(200)
+    const body = await json(response)
+    expect(body.ok).toBe(true)
+    expect(body.value.id).toMatch(UUID)
+    expect(body.value.joined_at).toBe('2026-10-12T08:00:00.000Z')
+    expect(body.value.position).toBeNull()
+    expect(body.value.platform).toBe('ios')
+    expect(sink.added).toEqual([])
+  })
+
+  it('fakes success for a honeypot even when the rest of the body is junk', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({ sink })(
+      post({ website: 'x', email: 42, platform: 'beos' }),
+    )
+
+    expect(response.status).toBe(200)
+    expect((await json(response)).value).toMatchObject({
+      email: '',
+      platform: 'web',
+    })
+  })
+
+  it('gives a honeypot the same 503 a real request gets when no sink is configured', async () => {
+    const response = await makeEarlyAccessHandler({
+      sink: makeUnavailableEarlyAccessSink(),
+    })(post({ ...valid, website: 'x' }))
+
+    expect(response.status).toBe(503)
+    expect((await json(response)).error.kind).toBe('unavailable')
+  })
+
+  it('gives a honeypot the same 503 a real request gets with the sign-up switched off', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({
+      sink,
+      enabled: () => false,
+    })(post({ ...valid, website: 'x' }))
+
+    expect(response.status).toBe(503)
+    expect(sink.added).toEqual([])
+  })
+})
+
+describe('POST /api/early-access handler — refusals and sink failures', () => {
   it('refuses a malformed email with invalidEmail (400) and never calls the sink', async () => {
     const sink = makeStubbedEarlyAccessSink()
     const response = await makeEarlyAccessHandler({ sink })(
@@ -85,71 +232,73 @@ describe('POST /api/early-access handler', () => {
     expect(sink.added).toEqual([])
   })
 
-  it('answers a filled honeypot with a fake receipt and never reaches the sink — a bot learns nothing', async () => {
+  it('answers an address already on the list with the same 200 a new join gets — no membership oracle', async () => {
     const sink = makeStubbedEarlyAccessSink()
-    const now = () => new Date('2026-10-12T08:00:00.000Z')
+    const now = () => new Date('2026-10-12T10:00:00.000Z')
     const response = await makeEarlyAccessHandler({ sink, now })(
-      post({ ...valid, website: 'https://spam.example' }),
+      post({ ...valid, email: 'already@kro.invalid' }),
     )
 
     expect(response.status).toBe(200)
-    const body = (await response.json()) as {
-      ok: boolean
-      value: { joined_at: string; position: unknown; platform: string }
-    }
+    const body = await json(response)
     expect(body.ok).toBe(true)
-    expect(body.value.joined_at).toBe('2026-10-12T08:00:00.000Z')
-    expect(body.value.position).toBeNull()
-    expect(body.value.platform).toBe('ios')
-    expect(sink.added).toEqual([])
-  })
-
-  it('fakes success for a honeypot even when the rest of the body is junk', async () => {
-    const sink = makeStubbedEarlyAccessSink()
-    const response = await makeEarlyAccessHandler({ sink })(
-      post({ website: 'x', email: 42, platform: 'beos' }),
-    )
-    const body = (await response.json()) as {
-      value: { email: string; platform: string }
-    }
-
-    expect(response.status).toBe(200)
-    expect(body.value).toMatchObject({ email: '', platform: 'web' })
-  })
-
-  it('answers alreadyJoined (409) when the sink says the address is on the list', async () => {
-    const sink = makeStubbedEarlyAccessSink({ rejectWith: { status: 409 } })
-    const response = await makeEarlyAccessHandler({ sink })(post(valid))
-
-    expect(response.status).toBe(409)
-    expect(await response.json()).toMatchObject({
-      ok: false,
-      error: { kind: 'alreadyJoined', recoverable: false },
+    expect(body.value).toEqual({
+      id: expect.stringMatching(UUID),
+      email: 'already@kro.invalid',
+      platform: 'ios',
+      position: null,
+      joined_at: '2026-10-12T10:00:00.000Z',
     })
+    expect(sink.added).toHaveLength(1)
   })
 
-  it('answers unavailable (503) on a deployment with no sink configured', async () => {
-    const sink = makeStubbedEarlyAccessSink({ rejectWith: { status: 503 } })
+  it('answers a thrown alreadyJoined kind as a plain success too', async () => {
+    const sink = makeStubbedEarlyAccessSink({
+      rejectWith: { kind: 'alreadyJoined' },
+    })
     const response = await makeEarlyAccessHandler({ sink })(post(valid))
+    expect(response.status).toBe(200)
+  })
+
+  it('answers unknown (500) when the webhook refuses the payload with a 422 — never invalidEmail', async () => {
+    const response = await makeEarlyAccessHandler({
+      sink: makeStubbedEarlyAccessSink(),
+    })(post({ ...valid, email: 'invalid@kro.invalid' }))
+
+    expect(response.status).toBe(500)
+    expect((await json(response)).error.kind).toBe('unknown')
+  })
+
+  it('answers unavailable (503) when the webhook times out', async () => {
+    const response = await makeEarlyAccessHandler({
+      sink: makeStubbedEarlyAccessSink(),
+    })(post({ ...valid, email: 'slow@kro.invalid' }))
 
     expect(response.status).toBe(503)
-    expect(await response.json()).toMatchObject({
-      error: { kind: 'unavailable' },
-    })
+    expect((await json(response)).error.kind).toBe('unavailable')
+  })
+
+  it('answers unavailable (503) when the webhook itself says so', async () => {
+    const response = await makeEarlyAccessHandler({
+      sink: makeStubbedEarlyAccessSink(),
+    })(post({ ...valid, email: 'unavailable@kro.invalid' }))
+
+    expect(response.status).toBe(503)
   })
 
   it('answers offline (502) when the sink is unreachable, and unknown (500) otherwise', async () => {
-    const unreachable = makeStubbedEarlyAccessSink({
-      rejectWith: new TypeError('fetch failed'),
+    const handler = makeEarlyAccessHandler({
+      sink: makeStubbedEarlyAccessSink(),
     })
     expect(
-      (await makeEarlyAccessHandler({ sink: unreachable })(post(valid))).status,
+      (await handler(post({ ...valid, email: 'offline@kro.invalid' }))).status,
     ).toBe(502)
 
-    const broken = makeStubbedEarlyAccessSink({ rejectWith: { status: 500 } })
-    const response = await makeEarlyAccessHandler({ sink: broken })(post(valid))
+    const response = await handler(
+      post({ ...valid, email: 'broken@kro.invalid' }),
+    )
     expect(response.status).toBe(500)
-    expect(await response.json()).toMatchObject({ error: { kind: 'unknown' } })
+    expect((await json(response)).error.kind).toBe('unknown')
   })
 
   it('refuses a body that is not JSON, or not an object, with unknown (400)', async () => {

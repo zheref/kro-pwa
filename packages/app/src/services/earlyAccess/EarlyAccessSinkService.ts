@@ -16,12 +16,29 @@
  * values in, so the sink is testable with nothing exported in the shell and a
  * misconfiguration surfaces as the typed `unavailable` outcome, not a crash.
  *
+ * Failure shapes, read by `EarlyAccessMapper.toException`:
+ * - 409 keeps its status (the handler answers it as a plain success, so the
+ *   route is no membership oracle);
+ * - any other 4xx is collapsed into a status-less error — the address was
+ *   already validated, so a webhook refusing the payload is our fault
+ *   (`unknown`), never the visitor's (`invalidEmail`);
+ * - a 5xx keeps its status;
+ * - a timeout or abort is rethrown named `TimeoutError` with no status
+ *   (`unavailable`);
+ * - a transport failure, a redirect included, stays a `TypeError` (`offline`).
+ *
  * It never logs, and never puts the email anywhere but the request body.
  */
 import type { EarlyAccessRequest, EarlyAccessResponse } from '@kro/core'
 import fixtures from './earlyAccessSink.fixtures.json'
 
 export interface EarlyAccessSink {
+  /**
+   * Whether this sink can take a sign-up at all. `false` only for the sink a
+   * deployment with no (or no `https:`) webhook gets, so the handler can give
+   * a honeypot the very answer a real request would get.
+   */
+  readonly available: boolean
   add(request: EarlyAccessRequest): Promise<EarlyAccessResponse>
 }
 
@@ -30,6 +47,33 @@ const statusError = (status: number): Error =>
   Object.assign(new Error(`early-access sink answered HTTP ${status}`), {
     status,
   })
+
+/** A webhook that refused the payload: no status, so it maps to `unknown`. */
+const refusedError = (): Error =>
+  new Error('early-access sink refused the request')
+
+/** A webhook that did not answer in time: maps to `unavailable`. */
+const timeoutError = (): Error =>
+  Object.assign(new Error('early-access sink timed out'), {
+    name: 'TimeoutError',
+  })
+
+/** What a non-2xx webhook answer becomes — see the failure shapes above. */
+const errorForStatus = (status: number): Error => {
+  if (status === 409) return statusError(status)
+  if (status >= 400 && status < 500) return refusedError()
+  return statusError(status)
+}
+
+/** Duck-typed: `AbortSignal.timeout` rejects with a `DOMException` named so. */
+const isAbort = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false
+  const name = (error as { name?: unknown }).name
+  return name === 'TimeoutError' || name === 'AbortError'
+}
+
+/** How long the webhook gets before the sign-up answers `unavailable`. */
+export const EARLY_ACCESS_SINK_TIMEOUT_MS = 5000
 
 export interface WebhookEarlyAccessSinkOptions {
   /** The webhook to POST each request to. */
@@ -40,6 +84,8 @@ export interface WebhookEarlyAccessSinkOptions {
   readonly fetch?: typeof fetch
   /** Injected for specs; stamps `joined_at`. */
   readonly now?: () => Date
+  /** Injected for specs; defaults to `EARLY_ACCESS_SINK_TIMEOUT_MS`. */
+  readonly timeoutMs?: number
 }
 
 /** Reads `id` / `position` off the webhook's JSON answer, when it gave one. */
@@ -66,13 +112,15 @@ const receiptFieldsOf = async (
 /**
  * The live sink: a JSON POST of `{ email, platform, source, locale, joined_at }`
  * to any webhook (a Zapier/Make hook, a Sheet script, a list provider). A 409
- * means "already on the list"; any other non-2xx surfaces its status. A
- * webhook that answers with no id gets a generated one, and with no position
- * gets `null` — most webhooks have no queue to count.
+ * means "already on the list". The call is bounded by a timeout and refuses
+ * to follow a redirect, so the bearer token only ever goes to the configured
+ * URL. A webhook that answers with no id gets a generated one, and with no
+ * position gets `null` — most webhooks have no queue to count.
  */
 export const makeWebhookEarlyAccessSink = (
   options: WebhookEarlyAccessSinkOptions,
 ): EarlyAccessSink => ({
+  available: true,
   async add(request) {
     const doFetch = options.fetch ?? fetch
     const joinedAt = (options.now ?? (() => new Date()))().toISOString()
@@ -81,19 +129,29 @@ export const makeWebhookEarlyAccessSink = (
     }
     if (options.token) headers.authorization = `Bearer ${options.token}`
 
-    const response = await doFetch(options.url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        email: request.email,
-        platform: request.platform,
-        source: request.source,
-        locale: request.locale,
-        joined_at: joinedAt,
-      }),
-      cache: 'no-store',
-    })
-    if (!response.ok) throw statusError(response.status)
+    let response: Response
+    try {
+      response = await doFetch(options.url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email: request.email,
+          platform: request.platform,
+          source: request.source,
+          locale: request.locale,
+          joined_at: joinedAt,
+        }),
+        cache: 'no-store',
+        redirect: 'error',
+        signal: AbortSignal.timeout(
+          options.timeoutMs ?? EARLY_ACCESS_SINK_TIMEOUT_MS,
+        ),
+      })
+    } catch (error) {
+      if (isAbort(error)) throw timeoutError()
+      throw error
+    }
+    if (!response.ok) throw errorForStatus(response.status)
 
     const { id, position } = await receiptFieldsOf(response)
     return {
@@ -108,6 +166,7 @@ export const makeWebhookEarlyAccessSink = (
 
 /** The sink a deployment with no webhook configured gets: always 503. */
 export const makeUnavailableEarlyAccessSink = (): EarlyAccessSink => ({
+  available: false,
   async add() {
     throw statusError(503)
   },
@@ -137,7 +196,8 @@ const fixtureFailures = fixtures.failures as Record<
 /**
  * A recording, in-memory sink — no network at all. Backed by
  * `earlyAccessSink.fixtures.json`: the `*@kro.invalid` addresses there answer
- * a canned receipt, a status failure or a network failure; any other address
+ * a canned receipt, a status failure, a network failure or a timeout, each
+ * shaped exactly as the webhook binding throws it; any other address
  * joins with a sequential `ea-stub-<n>` id and position.
  */
 export const makeStubbedEarlyAccessSink = (
@@ -145,14 +205,16 @@ export const makeStubbedEarlyAccessSink = (
 ): StubbedEarlyAccessSink => {
   const added: EarlyAccessRequest[] = []
   return {
+    available: true,
     added,
     async add(request) {
       added.push(request)
       if (options.rejectWith !== undefined) throw options.rejectWith
       if (fixtures.networkFailures.includes(request.email))
         throw new TypeError('fetch failed')
+      if (fixtures.timeouts.includes(request.email)) throw timeoutError()
       const failure = fixtureFailures[request.email]
-      if (failure !== undefined) throw statusError(failure.status)
+      if (failure !== undefined) throw errorForStatus(failure.status)
       const canned = fixtureReceipts[request.email]
       return {
         id: canned?.id ?? `ea-stub-${added.length}`,

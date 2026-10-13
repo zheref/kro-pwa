@@ -1,23 +1,19 @@
 {
   "$schema": "nen.contract/v0.1",
   "$comment": "kro-pwa's own nen declaration -- one lane (web), the pnpm/Turborepo monorepo TOOLCHAIN.md and the Makefile already name as the canonical entry points. Every verb below is that Makefile's leaf command, cited by file and line in its 'why'; nothing here invents a command the repo does not already run. Scenario react-uzf-v1 (Stack Matrix Scenario 5 -- Web Only), per CLAUDE.md.",
-
   "dependency": {
     "name": "nen",
     "source": "zheref/nen",
     "repository": "https://github.com/zheref/nen",
-
-    "minimum": "0.7",
-    "minimum_semantics": "MAJOR.MINOR. At major zero a `0.A` pin is satisfied by an installed `0.B.z` when `A <= B` and either `A == B` or (`A` is at or above the binary's own compatibility floor and `B` is at or below the binary's own minor) -- nen decides this, and `nen shu tools --repo .` prints the exact range the verdict applied beside a `compat floor:` line naming the lowest `minimum` the installed nen satisfies; this prose is a convenience copy and nen's verdict wins. The floor moves only when a nen release's CHANGELOG carries a real breaking consumer bullet under `### Breaking / consumer notes` -- the mandatory `Repin:`/`No repin:` marker every release writes there does not count, and v0.8.0's section carries only that marker (`No repin: the compatibility floor stays 0.7`), so this pin holds at `0.7` unchanged and `pinned_ref` moves on its own to the newer release already inside the range it admits. Above major zero this reverts to the ordinary rule: `X.Y` means `>=X.Y.0 <(X+1).0.0`.",
-
-    "pinned_ref": "v0.8.0",
+    "minimum": "0.20",
+    "minimum_semantics": "MAJOR.MINOR. At major zero a `0.A` pin is satisfied by an installed `0.B.z` when `A <= B` and either `A == B` or (`A` is at or above the binary's own compatibility floor and `B` is at or below the binary's own minor) -- nen decides this, and `nen shu tools --repo .` prints the exact range the verdict applied beside a `compat floor:` line naming the lowest `minimum` the installed nen satisfies; this prose is a convenience copy and nen's verdict wins. The floor moves only when a nen release's CHANGELOG carries a real breaking consumer bullet under `### Breaking / consumer notes`. v0.17.0 raised the floor from 0.7 to 0.17, v0.18.0 to 0.18, v0.19.0 to 0.19 and v0.20.0 to 0.20; this pin moved from 0.7 to 0.20 in one step on 2026-10-12, absorbing each release's consumer notes (gates `round_quorum`, `shu tools` exit 7 for a present-but-behind host, `wc catch-up` exit 3 on mechanical-only conflicts, `commit write` exit 3 on an injected trailer, the `classify` and `direct` verb families). A pin at or above the floor is satisfied by every later 0.x release that keeps it, so a repin is owed again when the floor moves and not when the minor does. Above major zero this reverts to the ordinary rule: `X.Y` means `>=X.Y.0 <(X+1).0.0`.",
+    "pinned_ref": "v0.20.0",
     "version_probe": ["nen", "--version"],
-    "version_probe_output": "a bare semver on stdout, e.g. '0.8.0' -- no 'v' prefix, no other text",
-
+    "version_probe_output": "a bare semver on stdout, e.g. '0.20.0' -- no 'v' prefix, no other text",
     "bootstrap": {
       "vendored": false,
       "script_path_in_source": "bootstrap/nen.sh",
-      "url": "https://raw.githubusercontent.com/zheref/nen/v0.8.0/bootstrap/nen.sh",
+      "url": "https://raw.githubusercontent.com/zheref/nen/v0.20.0/bootstrap/nen.sh",
       "published_binaries": [
         "nen-darwin-arm64",
         "nen-linux-x64",
@@ -25,18 +21,17 @@
       ],
       "manifest_asset": "SHA256SUMS"
     },
-
-    "$comment": "What this repository needs FROM nen, as opposed to what nen runs IN it (`project`, below). `nen shu tools` synthesises a `nen` row from this block -- always verify-only, since re-pinning nen is `nen bootstrap`'s job and this repository's decision, never a side effect of a tools run. v0.8.0 is a PUBLISHED release carrying SHA256SUMS and the three platform binaries, which is what `bootstrap/nen.sh` verifies against; a tag with no release is refused at exit 6 by that script, so the pin is deliberately a released tag and not a branch or a bare tag."
+    "$comment": "What this repository needs FROM nen, as opposed to what nen runs IN it (`project`, below). `nen shu tools` synthesises a `nen` row from this block -- always verify-only, since re-pinning nen is `nen bootstrap`'s job and this repository's decision, never a side effect of a tools run. v0.20.0 is a PUBLISHED release carrying SHA256SUMS and the three platform binaries, which is what `bootstrap/nen.sh` verifies against; a tag with no release is refused at exit 6 by that script, so the pin is deliberately a released tag and not a branch or a bare tag. The pin matches zheref/hatsu's own nen/contract.json (the single source of truth for the dependency, D10) and zheref/KroApple's."
   },
-
   "project": {
     "scenario": "react-uzf-v1",
-
     "lanes": {
-      "web": { "stack": "nextjs", "cwd": "." }
+      "web": {
+        "stack": "nextjs",
+        "cwd": "."
+      }
     },
     "defaultLane": "web",
-
     "preconditions": {
       "web": [
         {
@@ -46,7 +41,6 @@
         }
       ]
     },
-
     "verbs": {
       "web": {
         "build": {
@@ -54,21 +48,28 @@
           "argv": ["turbo", "run", "build"],
           "why": "Makefile 'build' -> 'pnpm turbo run build', fanning out to each workspace member's 'next build' (apps/web/package.json)."
         },
-
         "test": {
           "exe": "pnpm",
           "argv": ["turbo", "run", "test"],
           "why": "Makefile 'test' -> 'pnpm turbo run test', fanning out to 'vitest run --coverage' in apps/web and 'vitest run' in the two packages."
         },
-
         "lint": {
           "steps": [
-            { "exe": "pnpm", "argv": ["exec", "biome", "check", "."] },
-            { "exe": "pnpm", "argv": ["turbo", "run", "lint"] }
+            {
+              "exe": "pnpm",
+              "argv": ["exec", "biome", "check", "."]
+            },
+            {
+              "exe": "pnpm",
+              "argv": ["turbo", "run", "lint"]
+            },
+            {
+              "exe": "bash",
+              "argv": ["scripts/test_hanten_gate.sh"]
+            }
           ],
-          "why": "Makefile 'lint' runs both, in order: the repo-wide Biome pass, then the per-workspace lint fan-out (which also runs @kro/core's platform-free check and @kro/app's UZF-boundary check). Running only the second step is a weaker check than 'make lint' itself performs."
+          "why": "Makefile 'lint' runs all three, in order: the repo-wide Biome pass, the per-workspace lint fan-out (which also runs @kro/core's platform-free check and @kro/app's UZF-boundary check), and the hanten review-round gate's own 40-case suite (make test-hanten-gate, scripts/test_hanten_gate.sh). Running only the second step is a weaker check than 'make lint' itself performs."
         },
-
         "coverage": {
           "steps": [
             {
@@ -79,7 +80,10 @@
               "exe": "pnpm",
               "argv": ["--filter", "@kro/app", "test:coverage"]
             },
-            { "exe": "pnpm", "argv": ["--filter", "@kro/web", "test"] }
+            {
+              "exe": "pnpm",
+              "argv": ["--filter", "@kro/web", "test"]
+            }
           ],
           "artifacts": [
             "packages/core/coverage/lcov.info",
@@ -88,7 +92,6 @@
           ],
           "why": "Makefile 'test-coverage', verbatim -- kept out of 'make test' and out of pr.yml on purpose (instrumentation roughly doubles the run; TOOLCHAIN.md). @kro/web's own 'test' script already runs 'vitest run --coverage' (apps/web/package.json), so the third step's lcov is real, not a gap. All three vitest configs declare 'reporter: [\"text\",\"lcov\"]' with 'reportsDirectory: \"coverage\"' (packages/core/vitest.config.ts, packages/app/vitest.config.ts, apps/web/vitest.config.mts), so no reporter change was needed to name these paths. 'nen shu coverage' parses the first declared artifact whose format it recognises -- packages/core's lcov.info -- and reports the other two's existence without parsing them a second time."
         },
-
         "ui-test": {
           "steps": [
             {
@@ -110,35 +113,30 @@
           ],
           "why": "Makefile 'test-e2e', verbatim: the browser install is part of this verb, not a precondition, because the repo runs it every time (Playwright is not in pr.yml yet, TOOLCHAIN.md)."
         },
-
         "dev": {
           "exe": "pnpm",
           "argv": ["turbo", "run", "dev"],
           "why": "Makefile 'dev' -> 'pnpm turbo run dev', fanning out to 'next dev' on :3000 (apps/web/package.json)."
         },
-
         "run": {
           "exe": "pnpm",
           "argv": ["--filter", "@kro/web", "exec", "next", "start"],
           "why": "The production server (apps/web/package.json 'start' -> 'next start'). Requires a prior 'build': this repo has no Makefile verb for it at all -- the Makefile stops at 'dev'/'build' -- so nen states the production-serve invocation directly against the workspace member."
         },
-
         "archive": {
           "unsupported": "no packaging step exists for this lane. kro-pwa ships as a web application with no distributable artifact; the Makefile names no 'archive'-shaped verb and TOOLCHAIN.md documents none."
         },
-
         "release": {
           "unsupported": "Kro Web is a PWA -- there is no package or store pipeline. Makefile 'publish': \"publish: n/a -- Kro Web is a PWA, there is no package or store pipeline. Releases ship via 'make deploy'.\""
         },
-
         "deploy": {
           "unsupported": "no target is wired yet -- host undecided, see TOOLCHAIN.md. Makefile 'deploy' is a stub that prints the open decision (Vercel vs Google Cloud Run) and exits 1 on purpose."
         }
       }
     },
-
-    "hosts": { "*": ["darwin", "linux", "win32"] },
-
+    "hosts": {
+      "*": ["darwin", "linux", "win32"]
+    },
     "launch": {
       "$comment": "project.launch is not read by nen 0.3.0 (preserved as an unknown key); the amaterasu skill reads it directly until 'nen shu dev --target' ships.",
       "web": {
@@ -146,12 +144,16 @@
         "note": "port precondition (3000, listening -> reuse) arrives with nen 0.4; until then the skill checks lsof by hand"
       }
     },
-
     "evidence": {
-      "$comment": "project.evidence is not read by nen 0.3.0 (preserved as an unknown key). Globs are the RC-11 stories-mirroring snapshot tests that are this stack's actual UZF-26 evidence carrier (kro-pwa/.claude/rules/react-uzf-v1/12-session-completion-checklist.md) -- vitest text snapshots under packages/app, all six tracked in git today. No PNG evidence is committed anywhere in this repo: apps/web/e2e/kc71-shots.spec.ts and kc79-shots.spec.ts write screenshots only when an env var (KC71_SHOTS / KC79_SHOTS) points at an external directory, and apps/web/playwright-report is gitignored (apps/web/.gitignore) -- neither is a path a glob here could honestly name.",
-      "globs": ["packages/app/src/**/__tests__/__snapshots__/*.snap"],
-      "mechanism": "files-changed",
-      "scene": "{suite}-{scene}"
+      "$comment": "Read by `nen shu evidence` and by hatsu:mukai step 7 / hatsu:shibari (UZF-26). MECHANISM CHANGED 2026-10-12 from files-changed to public-mirror: the maintainer asked for PR screenshots in the shape KroApple and KroAndroid use, so rendered-surface evidence is PNG captures recorded by Playwright from mock/stubbed data -- `apps/web/e2e/*-shots.spec.ts` writing under apps/web/e2e/__screenshots__/<suite>/<scene>.png, committed in git -- mirrored to the public zheref/kro-assets repository under kro-pwa/pr-<N>/ by scripts/pr_screenshots.sh and embedded through SHA-pinned raw URLs in the UZF-26 table. The landing-page effort's `apps/web/e2e/landing-shots.spec.ts` writes the first goldens there (19 scenes under __screenshots__/landing/, asserted with toHaveScreenshot); the older kc71-shots/kc79-shots specs write to an external KC71_SHOTS/KC79_SHOTS directory and record nothing here. A change that re-records no scene gets an empty row set from `nen shu evidence` (the truthful 'this change re-recorded nothing') and scripts/pr_screenshots.sh exits 0 with nothing to mirror; a UI change that records none declares the files-changed path of its RC-11 text snapshots under ## Evidence and names the gap. Only mock-fixture renders may ever be mirrored (the script confirms before pushing). Scenes are named {suite}-{scene} from the directory path (joined with '-') and file stem.",
+      "globs": ["apps/web/e2e/__screenshots__/**/*.png"],
+      "mechanism": "public-mirror",
+      "scene": "{suite}-{scene}",
+      "mirror": {
+        "repo": "zheref/kro-assets",
+        "layout": "kro-pwa/pr-<N>/<scene>.png",
+        "script": "scripts/pr_screenshots.sh"
+      }
     }
   }
 }

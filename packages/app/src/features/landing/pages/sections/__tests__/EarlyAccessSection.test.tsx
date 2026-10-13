@@ -18,6 +18,9 @@ describe('EarlyAccessSection (mirrors EarlyAccessSection.stories)', () => {
         ?.getAttribute('aria-labelledby'),
     ).toBe(h2.id)
     expect(screen.getByRole('textbox', { name: /Email address/ })).toBeTruthy()
+    expect(h2.closest('header')?.className).toContain(
+      'kro-section-header--on-glow',
+    )
   })
 
   it('TypingDark — shows the typed address from the mock', () => {

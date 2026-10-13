@@ -92,4 +92,17 @@ describe('HeroSection intents and CLS', () => {
         .getAttribute('href'),
     ).toBe('https://app.kro.example')
   })
+
+  it('keeps the secondary door in its glass ink, never snow on light glass (contrast)', () => {
+    render(
+      <HeroSection
+        hubUrl="/my-day"
+        onOpenHub={vi.fn()}
+        onGetEarlyAccess={vi.fn()}
+      />,
+    )
+    const secondary = screen.getByRole('link', { name: 'Get early access' })
+    expect(secondary.getAttribute('style')).toBeNull()
+    expect(secondary.className).toContain('text-kro-fore')
+  })
 })

@@ -43,4 +43,29 @@ describe('PlatformBadge', () => {
     expect(screen.queryByRole('button')).toBeNull()
     expect(container.textContent).toContain('In progress')
   })
+
+  it('tags each availability by data-status so the tint and dot follow it', () => {
+    const { container } = render(
+      <>
+        <PlatformBadge icon={Globe} label="Web" status="live" />
+        <PlatformBadge icon={Globe} label="Watch" status="coming" />
+      </>,
+    )
+    const tags = [...container.querySelectorAll('.kro-platform-badge__status')]
+    expect(tags.map((tag) => tag.getAttribute('data-status'))).toEqual([
+      'live',
+      'coming',
+    ])
+    expect(tags.map((tag) => tag.textContent)).toEqual(['Live', 'Coming soon'])
+  })
+
+  it('paints its words in fore, never in the status hue (contrast)', () => {
+    const { container } = render(
+      <PlatformBadge icon={Globe} label="Mac" status="in-progress" />,
+    )
+    const tag = container.querySelector(
+      '.kro-platform-badge__status',
+    ) as HTMLElement
+    expect(tag.getAttribute('style')).toBeNull()
+  })
 })

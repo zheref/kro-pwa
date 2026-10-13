@@ -21,6 +21,7 @@ const EXPECTED: Record<string, string> = {
   '--kro-text-display-2': 'clamp(2rem, 1.4rem + 2.2vw, 3rem)',
   '--kro-text-lede': 'clamp(1.125rem, 1rem + 0.5vw, 1.375rem)',
   '--kro-text-body-marketing': '1.0625rem',
+  '--kro-text-caption': '0.75rem',
   '--kro-tracking-display': '-0.045em',
   '--kro-tracking-title': '-0.03em',
   '--kro-container-narrow': '720px',
@@ -92,5 +93,23 @@ describe('marketing.css', () => {
 
   it('keeps the reveal visible by default (only is-armed hides)', () => {
     expect(MARKETING).not.toMatch(/\.kro-reveal\s*\{[^}]*opacity:\s*0/)
+  })
+
+  it('scopes a two-tone focus ring to the marketing roots, never the global token', () => {
+    expect(MARKETING).toMatch(
+      /--kro-ring:\s+0 0 0 2px var\(--kro-color-back\),\s+0 0 0 4px var\(--kro-color-accent\);/,
+    )
+    expect(MARKETING).toMatch(
+      /--kro-ring:\s+0 0 0 2px var\(--kro-color-snow\),\s+0 0 0 4px var\(--kro-color-total\);/,
+    )
+    expect(TOKENS).toContain(
+      'color-mix(in srgb, var(--kro-color-accent) 35%, transparent)',
+    )
+  })
+
+  it('gives the marketing primary an opaque accent fill so its label reads', () => {
+    expect(MARKETING).toMatch(
+      /\.kro-glass\.kro-glass--accent::before,[^{]*\{\s*background: var\(--kro-color-accent\);/,
+    )
   })
 })

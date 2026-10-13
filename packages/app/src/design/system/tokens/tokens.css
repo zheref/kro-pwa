@@ -54,6 +54,8 @@
   --kro-text-lede: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
   /* Running copy on marketing surfaces — 17px, the Apple body size. */
   --kro-text-body-marketing: 1.0625rem;
+  /* Status tags and window titles — 12px, the floor for any marketing text. */
+  --kro-text-caption: 0.75rem;
   /* Tight tracking for the largest type; looser as the size drops. */
   --kro-tracking-display: -0.045em;
   --kro-tracking-title: -0.03em;

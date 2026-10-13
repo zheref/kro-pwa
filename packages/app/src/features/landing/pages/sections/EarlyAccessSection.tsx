@@ -41,6 +41,7 @@ export function EarlyAccessSection({ children }: EarlyAccessSectionProps) {
           title={earlyAccessCopy.title}
           lede={earlyAccessCopy.lede}
           headingId={titleId}
+          className="kro-section-header--on-glow"
         />
         <Reveal>{children}</Reveal>
       </div>

@@ -298,11 +298,15 @@ for (const { name, viewport, scheme } of PRICING_SCENES) {
       await page.goto('/pricing')
       await expect(page).toHaveURL(/\/pricing$/)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-      await expect(
-        page
-          .getByRole('navigation', { name: 'Primary' })
-          .getByRole('link', { name: 'Pricing' }),
-      ).toHaveAttribute('aria-current', 'page')
+      // The bar's link row exists from 768px; below it the links live in the
+      // menu sheet, which the scene does not open.
+      if (viewport.width >= 768) {
+        await expect(
+          page
+            .getByRole('navigation', { name: 'Primary' })
+            .getByRole('link', { name: 'Pricing' }),
+        ).toHaveAttribute('aria-current', 'page')
+      }
       await settle(page)
       await expect(page).toHaveScreenshot(scene(name))
     })

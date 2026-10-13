@@ -9,13 +9,11 @@
  * stale or grow unused weight.
  *
  * `src` is the WebP master actually served — no PNG ships. `webp` stays in the
- * type as an optional override that the device frames read (`webp ?? src`).
  */
 export type LandingPlatform = 'web' | 'ios' | 'ipados' | 'watchos' | 'android'
 
 export type LandingAsset = {
   readonly src: string
-  readonly webp?: string
   readonly width: number
   readonly height: number
   readonly alt: string

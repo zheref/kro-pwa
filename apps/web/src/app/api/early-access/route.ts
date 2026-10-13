@@ -32,6 +32,7 @@ import {
 } from '@kro/app/early-access'
 // The same flag-registry read that gates the landing page gates its sign-up.
 import { isLandingEnabled } from '../../(marketing)/landingFlag'
+import { contactEmail } from '../../../contactConfig'
 import { siteOrigins } from '../../../hostRouting'
 
 export const dynamic = 'force-dynamic'
@@ -45,18 +46,12 @@ const isHttps = (raw: string): boolean => {
 }
 
 /** One `@`, something before it, and a dot somewhere after it. */
-const isContactAddress = (raw: string): boolean => {
-  const parts = raw.split('@')
-  if (parts.length !== 2) return false
-  const [local = '', domain = ''] = parts
-  return local.length > 0 && /^[^.\s]+(\.[^.\s]+)+$/.test(domain)
-}
 
 const sinkFromEnvironment = (): EarlyAccessSink => {
   const url = process.env.EARLY_ACCESS_WEBHOOK_URL?.trim()
   const token = process.env.EARLY_ACCESS_WEBHOOK_TOKEN?.trim()
-  const contact = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '').trim()
-  return url && isHttps(url) && isContactAddress(contact)
+  // The same reader the page uses to show the address under the field.
+  return url && isHttps(url) && contactEmail() !== null
     ? makeWebhookEarlyAccessSink({ url, token: token || null })
     : makeUnavailableEarlyAccessSink()
 }

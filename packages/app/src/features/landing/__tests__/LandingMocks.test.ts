@@ -51,7 +51,10 @@ describe('landingValueProps / noopLandingCallbacks', () => {
     expect(state.earlyAccess.submit).toEqual({ kind: 'idle' })
   })
 
-  it('makeLandingStore is the early-access store, so a story of either page shares one helper', () => {
-    expect(makeLandingStore).toBe(makeEarlyAccessStore)
+  it('makeLandingStore and makeEarlyAccessStore build the same stubbed store from the library helper', () => {
+    const landing = makeLandingStore().store
+    const earlyAccess = makeEarlyAccessStore().store
+    expect(landing).not.toBe(earlyAccess)
+    expect(landing.getState()).toEqual(earlyAccess.getState())
   })
 })

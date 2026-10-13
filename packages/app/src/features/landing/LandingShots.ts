@@ -17,7 +17,7 @@ export interface LandingShot {
 export function shotFor(key: LandingAssetKey): LandingShot {
   const asset = landingAssets[key]
   return {
-    src: asset.webp ?? asset.src,
+    src: asset.src,
     alt: asset.alt,
     width: asset.width,
     height: asset.height,

@@ -12,6 +12,7 @@ import {
   liveThunkExtra,
   makeStore,
   stubbedThunkExtra,
+  makeStubbedStore,
 } from '../store'
 
 afterEach(() => {
@@ -159,5 +160,39 @@ describe('the landing services in the manifest', () => {
     expect(liveThunkExtra.analyticsService).not.toBe(
       stubbedThunkExtra.analyticsService,
     )
+  })
+})
+
+describe('makeStubbedStore — the one store a story or a test builds', () => {
+  it('builds on the stubbed extra, so a thunk reaches a double and never the network', async () => {
+    const store = makeStubbedStore()
+    await store.dispatch(
+      fetchGreetingThunk({ recipient: greetingMocks.typical.recipient }),
+    )
+    expect(store.getState().greeting.load.kind).not.toBe('idle')
+  })
+
+  it('lets a caller swap one Service for its own double and keeps the rest stubbed', () => {
+    const calls: string[] = []
+    const greetingService: GreetingService = {
+      ...stubbedThunkExtra.greetingService,
+      fetchGreeting: async (recipient, options) => {
+        calls.push(recipient)
+        return stubbedThunkExtra.greetingService.fetchGreeting(
+          recipient,
+          options,
+        )
+      },
+    }
+    const store = makeStubbedStore({ greetingService })
+    void store.dispatch(fetchGreetingThunk({ recipient: 'Ada' }))
+    expect(calls).toEqual(['Ada'])
+  })
+
+  it('returns a fresh store on every call — two stories never share state', () => {
+    const a = makeStubbedStore()
+    const b = makeStubbedStore()
+    expect(a).not.toBe(b)
+    expect(a.getState()).toEqual(b.getState())
   })
 })

@@ -5,11 +5,7 @@
  */
 import { EarlyAccessExceptions, EarlyAccessMapper } from '@kro/core'
 import { earlyAccessMocks } from '@kro/core/mocks'
-import {
-  type ThunkExtra,
-  makeStore,
-  stubbedThunkExtra,
-} from '../../library/store'
+import { type ThunkExtra, makeStubbedStore } from '../../library/store'
 import { type EarlyAccessState, earlyAccessSlice } from './EarlyAccessFeature'
 
 const base: EarlyAccessState = earlyAccessSlice.getInitialState()
@@ -120,5 +116,5 @@ export const earlyAccessFragmentProps = (
  * module — a test may, a mocks file may not).
  */
 export const makeEarlyAccessStore = (overrides: Partial<ThunkExtra> = {}) => ({
-  store: makeStore({ ...stubbedThunkExtra, ...overrides }),
+  store: makeStubbedStore(overrides),
 })

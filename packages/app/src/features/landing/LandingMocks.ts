@@ -5,7 +5,7 @@
  * is never built inline. `makeLandingStore` is the one way a story or test
  * gets a store: through `makeStore`, never a second `configureStore` (`RC-22`).
  */
-import { makeEarlyAccessStore } from '../earlyAccess/EarlyAccessMocks'
+import { type ThunkExtra, makeStubbedStore } from '../../library/store'
 import { LANDING_SECTION_IDS } from './LandingSections'
 import { type LandingState, initialLandingState } from './LandingFeature'
 
@@ -76,4 +76,6 @@ export const landingValueProps = (state: LandingState) => ({
  * on the stubbed extra. A test that asserts on what was sent passes recording
  * doubles through `overrides`.
  */
-export const makeLandingStore = makeEarlyAccessStore
+export const makeLandingStore = (overrides: Partial<ThunkExtra> = {}) => ({
+  store: makeStubbedStore(overrides),
+})

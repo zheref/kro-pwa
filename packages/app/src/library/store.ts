@@ -395,6 +395,16 @@ export const makeStore = (extra: ThunkExtra = liveThunkExtra) =>
       }),
   })
 
+/**
+ * The one store a story or a test builds: `makeStore` over the stubbed extra,
+ * with `overrides` swapping a Service for a double the caller supplies (a
+ * recording one, imported from its Service module — a test may, a mocks file
+ * may not). Shared by every feature's `<F>Mocks.ts`, so no feature imports a
+ * sibling's mocks for it (`UZF-6`).
+ */
+export const makeStubbedStore = (overrides: Partial<ThunkExtra> = {}) =>
+  makeStore({ ...stubbedThunkExtra, ...overrides })
+
 export type AppStore = ReturnType<typeof makeStore>
 export type RootState = ReturnType<AppStore['getState']>
 export type AppDispatch = AppStore['dispatch']

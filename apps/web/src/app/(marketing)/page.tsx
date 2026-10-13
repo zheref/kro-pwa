@@ -10,10 +10,13 @@ import { type SearchParams, landingRouteDecision } from './landingRoute'
  * `landingRouteDecision` what to do with the visit, and either redirects or
  * forwards to the client wrapper. No hook, no store read, no markup of its own.
  *
- * **Today it still redirects every visit to My Day** (`landingEnabled: false`),
- * exactly as before the marketing split — a cold visit gets `/my-day`, a
- * provider return gets `/my-day?code=…`. On the hub host it is not even
- * reached: the middleware rewrites the hub's `/` to `/my-day`.
+ * **What it does depends on the `landingPage` flag** (`UZF-22`), which ships
+ * ON through the web product's shipping overrides in `@kro/core`. With the
+ * flag on, `/` mounts the landing — except a provider return (`?code=…`),
+ * which still 307s to `/my-day?code=…` so a sign-in never strands on a
+ * marketing page. With the flag off, the route is the 307 fallback to
+ * `/my-day` it was before the marketing split. On the hub host it is not
+ * even reached: the middleware rewrites the hub's `/` to `/my-day`.
  *
  * **Why My Day.** Product canon decides the landing destination: KroApple's
  * `ElementsRepository` flags the Do tab `isInitial`, which this port serves at

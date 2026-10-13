@@ -12,8 +12,10 @@ import { oauthReturnQueryString } from '@kro/core'
  *    `SEC-5`) — ride along to `/my-day`, where the PKCE exchange runs. This
  *    holds even while the landing is enabled: a sign-in must never strand on a
  *    marketing page.
- * 2. **Otherwise the landing, when it is enabled; My Day when it is not.** An
- *    arbitrary query (`?utm_source=…`) is never forwarded.
+ * 2. **Otherwise the landing** — the `landingPage` flag ships on through the
+ *    web product's shipping overrides in `@kro/core`, so this is what `/`
+ *    serves. With the flag off, the visit is the 307 fallback to `/my-day`.
+ *    An arbitrary query (`?utm_source=…`) is never forwarded either way.
  *
  * On the hub host this file is never reached for `/`: the middleware rewrites
  * it to `/my-day` first (see `hostRouting.ts`).

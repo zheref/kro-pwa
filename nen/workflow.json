@@ -1,6 +1,6 @@
 {
   "$schema": "nen.workflow/v0.1",
-  "$comment": "Policy for the hatsu skill lattice on kro-pwa. Not validated by nen 0.3.0 (schema + loader arrive in wave 2 / P1); read as plain data by hatsu until then.",
+  "$comment": "POLICY, not commands. nen/contract.json says what this repository runs; this file says how an agent working here behaves -- which verbs gate an iteration, which tests are required, what the coverage ladder is, where a launch goes, where reports land, which commit trailers are admitted, which reviewer hanten raises for a path. nen validates this file (`nen schema check`) and reads parts of it from 0.4.0; nen/contract.json's `dependency.minimum` floors this repository at 0.20 since 2026-10-12, so it is nen-read, not merely skill-read. Keys added 2026-10-12 to match the other Kro consumers (zheref/KroApple) and Hatsu's own declaration: `reports.sections`, `profile`, `mukai.autoEn`, `direct.publish`.",
   "branch": {
     "template": "{model}/{persona}/{descriptor}",
     "base": "main"
@@ -27,11 +27,61 @@
     "dir": "Reports",
     "retain": "final-only",
     "template": "rikugan",
-    "captures": "Reports/captures"
+    "$template": "one of: spiritual-message | rikugan",
+    "captures": "Reports/captures",
+    "$comment": "Reports/ is gitignored -- a session report is a working artifact, not repository content. Only the final report of an effort is kept.",
+    "$sectionsComment": "Which blocks each report variant renders, so `nen report render --variant` has something to render at all: with none declared the verb refuses every variant, which is what blocked aka's turn report on 2026-09-25. Modelled on zheref/hatsu's own declaration rather than invented here, so the two repositories' reports carry the same blocks in the same order. The block NAMES are configuration; every value inside a block is model-written.",
+    "sections": {
+      "turn": {
+        "template": "spiritual-message",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "lastTurn",
+          "landed",
+          "delta",
+          "evidence",
+          "launch",
+          "decisions"
+        ]
+      },
+      "turn-fast": {
+        "template": "spiritual-message",
+        "blocks": ["masthead", "tally", "desk", "lastTurn"]
+      },
+      "landing": {
+        "template": "spiritual-message",
+        "blocks": [
+          "masthead",
+          "tally",
+          "desk",
+          "lastTurn",
+          "landed",
+          "delta",
+          "evidence",
+          "spend",
+          "launch",
+          "decisions",
+          "prBody"
+        ]
+      },
+      "final": {
+        "template": "rikugan",
+        "blocks": ["masthead", "tally", "desk", "register", "spend", "legend"]
+      },
+      "register": {
+        "template": "rikugan",
+        "blocks": ["masthead", "tally", "desk", "register", "spend", "legend"]
+      }
+    }
   },
   "notifications": {
     "rungs": ["push", "os", "sound"],
-    "sound": "Glass"
+    "$rungs": "any of: push | os | sound",
+    "sound": "Glass",
+    "turn": "rung1",
+    "$turn": "one of: rung1 | all"
   },
   "commits": {
     "allowedAttributionTrailers": ["Akatsuki-Agent", "Hatsu-Agent"],
@@ -40,6 +90,13 @@
   "monitor": {
     "maxCycles": 20,
     "pollSeconds": 300
+  },
+  "profile": {
+    "default": "standard",
+    "$default": "one of: fast | standard | thorough",
+    "allowed": ["fast", "standard", "thorough"],
+    "$allowed": "any of: fast | standard | thorough",
+    "$comment": "The run profile hatsu:ren reads (zheref/hatsu#93). `default` applies to every turn that names none; a turn may name one with --profile or the words \"fast turn\" / \"thorough turn\", and only a value in `allowed` is accepted. fast: steps 1 to 3 per turn, a turn-fast page, the launch skipped for the turn; standard: today's turn; thorough: the impacted suites (kotoamatsukami) on every turn. A landing (mukai) always runs thorough. Validated by nen schema check from v0.13.0."
   },
   "models": {
     "rule": "latest alias only, never a version; subagents never on the frontier tier",
@@ -68,6 +125,16 @@
       "measurer": "fast",
       "orchestrator": "frontier"
     }
+  },
+  "mukai": {
+    "autoEn": true,
+    "$autoEn": "one of: true | false",
+    "$comment": "Maintainer's ruling of 2026-09-28 (zheref/hatsu docs/ROSTER.md, Rulings of 2026-09-26/27/28, ruling 8): once shibari has opened the PR and the landing report is rendered, mukai OFFERS to start en on it in one line and never starts it silently -- unless this key is true, in which case en starts immediately in the same turn. Set true on 2026-10-12 on the maintainer's request that every delivered PR be driven by en to G2-readiness without a further call (the landing-page effort's brief). Read by the mukai skill only; nen validates the file and hands no value out."
+  },
+  "direct": {
+    "publish": "label+comment",
+    "$publish": "one of: none | label | label+comment",
+    "$comment": "Opts this repository into hatsu:direct's GitHub write (the maintainer's ruling of 2026-10-05, mirrored from zheref/KroApple#619/#620): `label` applies one model/<line> label -- the primary pick's model line, never a tier, version, surface or effort -- through `nen label apply`, once per issue, after the verdict; `label+comment` also posts one marker-keyed comment per issue (`<!-- hatsu:direct -->`) carrying the primary, fallback and recommended picks. Never under ren. The five model/ labels are declared in nen/labels.json and reach GitHub through `nen labels sync` once that declaration lands on main."
   },
   "review": {
     "scopes": {

@@ -1,0 +1,45 @@
+name: Hanten
+
+# The `hanten` review round as a check (maintainer ruling 2026-10-05, adopted
+# in kro-pwa on 2026-10-12). Copilot and Cursor Bugbot are out of review
+# credits, so nen/gates.json names `hanten` as the base reviewer and
+# `nen pr ready` counts this job's SUCCESS as its round. The job reads only
+# the pull request BODY, which is where hatsu's shibari pastes hanten's
+# settled findings, so it re-runs on `edited`: settling a finding is a body
+# edit. An `edited` run here is never skipped for a same-repo PR, so it cannot
+# hide an earlier verdict behind a SKIPPED.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: hanten-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# SEC-14: least privilege. The gate reads the event payload and one script.
+permissions:
+  contents: read
+
+jobs:
+  hanten:
+    name: hanten
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Fork pull requests carry an untrusted body and head; their round stays
+    # unmet until the maintainer acts, the same guard every Kro consumer uses.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      # SEC-14: pinned to a reviewed commit SHA, the same pin as pr.yml.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/hanten_gate.sh
+          sparse-checkout-cone-mode: false
+          # The gate makes no git call, so the job token is never persisted.
+          persist-credentials: false
+      - name: Check the hanten review is settled
+        # The body goes through the environment, never into the script text,
+        # so nothing in it can be executed.
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: bash scripts/hanten_gate.sh

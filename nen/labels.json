@@ -1,0 +1,495 @@
+{
+  "$comment": "The repository's OWN label set, from three sources and never guessed -- nen refuses to guess a taxonomy, and a guessed one would report labels this repository does not have. The entries before the lang/ and job/ families were read from GitHub on 2026-10-12 with `gh label list` rather than authored by hand. The lang/ and job/ families are declared from Hatsu's classify taxonomy by `nen classify install --write` (hatsu:classify, the maintainer's rulings of 2026-10-04) and reach GitHub only through `nen classify install --sync` after this declaration lands on main. The model/ family (five lines: claude, gpt, gemini, grok, composer) is hatsu:direct's opt-in verdict label (nen/workflow.json -> direct.publish), declared here by hand from Hatsu's direct registry because nen's classify contract admits exactly two axes; it reaches GitHub through `nen labels sync` once this declaration lands and is applied only by hatsu:direct through `nen label apply`.",
+  "labels": [
+    {
+      "name": "bankai:agent/alphonse",
+      "description": "Routing: application-logic child issue for Alphonse (Alchemist)",
+      "color": "00acc1"
+    },
+    {
+      "name": "bankai:agent/edward",
+      "description": "Routing: UI child issue for Edward (Alchemist)",
+      "color": "e91e63"
+    },
+    {
+      "name": "bankai:agent/gon",
+      "description": "Owned by Gon (Hunter)",
+      "color": "2e7d32"
+    },
+    {
+      "name": "bankai:agent/kisuke",
+      "description": "Machinery/DevEx child for Kisuke (Scientist): workflows, bankai.yml, scripts, hooks, scaffolder",
+      "color": "455a64"
+    },
+    {
+      "name": "bankai:agent/naruto",
+      "description": "For Naruto (Hokage) — routes handbook-questions to the system steward",
+      "color": "ffb300"
+    },
+    {
+      "name": "bankai:agent/natsu",
+      "description": "Owned by Natsu (Wizard)",
+      "color": "ef6c00"
+    },
+    {
+      "name": "bankai:agent/okkotsu",
+      "description": "Owned by Okkotsu (Jujutsu)",
+      "color": "6a1b9a"
+    },
+    {
+      "name": "bankai:agent/roy",
+      "description": "Owned by Roy (Alchemist, Lead) — routing: system-wide/chore child issues",
+      "color": "c62828"
+    },
+    {
+      "name": "bankai:agent/rukia",
+      "description": "Owned by Rukia (Reaper) — offensive QA. UNSTAFFED: no App or workflow yet",
+      "color": "8e24aa"
+    },
+    {
+      "name": "bankai:agent/sasuke",
+      "description": "Owned by Sasuke (Ninja)",
+      "color": "4527a0"
+    },
+    {
+      "name": "bankai:agent/tanjiro",
+      "description": "Owned by Tanjiro (Slayer)",
+      "color": "00695c"
+    },
+    {
+      "name": "bankai:agent/tenma",
+      "description": "Owned by Tenma (Knight)",
+      "color": "1565c0"
+    },
+    {
+      "name": "bankai:agent/yamamoto",
+      "description": "Paired-spec child for Yamamoto (Canon Author): handbooks, schemas, agent-defs (CON-3/#304)",
+      "color": "ffb300"
+    },
+    {
+      "name": "bankai:bug",
+      "description": "Reproducible defect; wakes Tanjiro after triage",
+      "color": "d73a4a"
+    },
+    {
+      "name": "bankai:db-apply-failed",
+      "description": "UZF-25: prod apply FAILED — nothing reached prod; repair the ledger (SETUP.md C7)",
+      "color": "b60205"
+    },
+    {
+      "name": "bankai:epic",
+      "description": "A Gon-decomposed epic — parent issue with sequenced child issues (at-a-glance kind marker)",
+      "color": "8250df"
+    },
+    {
+      "name": "bankai:handbook-question",
+      "description": "Handbook/rule gap — scope-routed per CON-37; Ichigo sweeps the full open set locally",
+      "color": "c5def5"
+    },
+    {
+      "name": "bankai:observation-fix",
+      "description": "CON-34 G2 observation-fix; never-auto-merge marker: Roy holds, human merges at G2 (CON-26).",
+      "color": "5319e7"
+    },
+    {
+      "name": "bankai:qa/pre-release",
+      "description": "Pre-release quality-gate finding (QA-24). Local, advisory; never blocks G3.",
+      "color": "0e8a16"
+    },
+    {
+      "name": "bankai:severity/critical",
+      "description": "Blocks + pages the human",
+      "color": "b60205"
+    },
+    {
+      "name": "bankai:severity/high",
+      "description": "Must fix before merge/release",
+      "color": "d93f0b"
+    },
+    {
+      "name": "bankai:severity/low",
+      "description": "Nice to fix",
+      "color": "0e8a16"
+    },
+    {
+      "name": "bankai:severity/medium",
+      "description": "Fix soon",
+      "color": "fbca04"
+    },
+    {
+      "name": "bankai:stage/building",
+      "description": "Released to a builder — a child issue in progress (dev has/will open a PR)",
+      "color": "fbca04"
+    },
+    {
+      "name": "bankai:stage/deferred",
+      "description": "Maintainer-parked before release; reopenable at their discretion (CON-45).",
+      "color": "fef2c0"
+    },
+    {
+      "name": "bankai:stage/errored",
+      "description": "Build/agent run failed or produced no valid PR. Terminal (CON-45).",
+      "color": "b91c1c"
+    },
+    {
+      "name": "bankai:stage/fulfilled",
+      "description": "Closing PR merged, issue delivered. Terminal (CON-45).",
+      "color": "006b75"
+    },
+    {
+      "name": "bankai:stage/hardening",
+      "description": "Post-merge: Rukia (QA) and Okkotsu",
+      "color": "5319e7"
+    },
+    {
+      "name": "bankai:stage/human-review",
+      "description": "Waiting on you — any gate: a PR to merge, a stall escalated, or a delivered answer to accept",
+      "color": "b60205"
+    },
+    {
+      "name": "bankai:stage/idea",
+      "description": "Raw idea awaiting Gon",
+      "color": "ededed"
+    },
+    {
+      "name": "bankai:stage/in-review",
+      "description": "Sasuke and Tenma reviewing",
+      "color": "d93f0b"
+    },
+    {
+      "name": "bankai:stage/ready-for-bankai",
+      "description": "G1 approved — integration-branch team delivery (one final PR at G2)",
+      "color": "0e8a16"
+    },
+    {
+      "name": "bankai:stage/ready-for-shikai",
+      "description": "G1 approved — direct-to-main delivery (per-PR G2)",
+      "color": "0e8a16"
+    },
+    {
+      "name": "bankai:stage/release-ready",
+      "description": "Milestone complete; wakes Natsu",
+      "color": "0052cc"
+    },
+    {
+      "name": "bankai:stage/released",
+      "description": "Live for end users",
+      "color": "006b75"
+    },
+    {
+      "name": "bankai:stage/researched",
+      "description": "Epic drafted, awaiting G1 approval",
+      "color": "1d76db"
+    },
+    {
+      "name": "bankai:stage/slaying",
+      "description": "Tanjiro fixing",
+      "color": "f9d0c4"
+    },
+    {
+      "name": "bankai:stage/superseded",
+      "description": "Closed without a merge — duplicate, withdrawn, or decided against. Terminal.",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "bankai:stage/triage",
+      "description": "Bug awaiting triage",
+      "color": "e4e669"
+    },
+    {
+      "name": "bankai:wake/iterate",
+      "description": "CON-26/CON-38 non-vote wake: re-fires a builder's own ITERATE on its open PR; edge-triggered.",
+      "color": "fef2c0"
+    },
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    },
+    {
+      "name": "lang/swift",
+      "description": "Needs Swift: SwiftUI, TCA, UIKit/AppKit, SwiftPM, the Apple toolchain",
+      "color": "1d76db"
+    },
+    {
+      "name": "lang/kotlin",
+      "description": "Needs Kotlin: Compose, UDF, Gradle, the Android toolchain",
+      "color": "1d76db"
+    },
+    {
+      "name": "lang/typescript",
+      "description": "Needs TypeScript: React, Redux, Node and Bun CLIs, the web toolchain",
+      "color": "1d76db"
+    },
+    {
+      "name": "lang/csharp",
+      "description": "Needs C#: WinUI, UDF, .NET, MSBuild and NuGet, the Windows toolchain",
+      "color": "1d76db"
+    },
+    {
+      "name": "lang/prose",
+      "description": "Needs no code language: canon, governance, documentation, agentic prose, specifications",
+      "color": "1d76db"
+    },
+    {
+      "name": "job/discovery",
+      "description": "Framing the problem, the user, the evidence, the non-goals and what success measures",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/requirements",
+      "description": "Observable requirements, acceptance criteria, activation and divergence contracts",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/analysis",
+      "description": "Impact mapping, archaeology, ownership, debt and test-gap analysis before a change",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/backlog",
+      "description": "Filing with reconciliation, classification, consolidation, epic waves, delivery planning",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/orchestration",
+      "description": "Non-overlapping ownership, bounded parallelism, handoff schemas, fan-in verification",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/architecture",
+      "description": "Responsibilities, interfaces, dependency direction, state and effect design, large refactors",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/api-design",
+      "description": "A library's public contract: names, types, errors, lifecycle, supported platforms and runtimes",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/ux",
+      "description": "Normal, loading, empty, offline, error and recovery journeys with no dead ends",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/ui",
+      "description": "Hierarchy, layout, interaction, responsiveness, theming and every specified state",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/implementation",
+      "description": "Idiomatic code conforming to architecture and requirements, with passing builds and checks",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/integration",
+      "description": "Schemas, timeouts, retries, idempotency, serialization, platform-service substitution",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/security",
+      "description": "Data classes, permissions, secrets, supply chain, abuse and injection; remediation verified",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/accessibility",
+      "description": "Semantics, focus, scaling, contrast, assistive technologies, pluralization, string expansion",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/unit-tests",
+      "description": "Deterministic tests protecting pure logic, transitions, effects, cancellation and errors",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/integration-tests",
+      "description": "Modules and external boundaries proven together; shared fixtures; cross-version matrices",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/ui-automation",
+      "description": "Critical journeys on representative devices with stable selectors and visual evidence",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/performance",
+      "description": "Startup, responsiveness, memory, CPU, network, battery and throughput against budgets",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/review",
+      "description": "Challenging correctness, security, compatibility and tests; every finding disposed",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/release",
+      "description": "Versioning, packaging, signing, provenance, rollout, hotfix branches and backports",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/ci-cd",
+      "description": "Reproducibility, least privilege, cache correctness, gates, retries, idempotent deployment",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/observability",
+      "description": "Privacy-safe events, metrics, alerts, dashboards; production results against baselines",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/triage",
+      "description": "Impact, severity, affected versions, timeline, containment, owner and priority",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/bug-fix",
+      "description": "The smallest reliable reproduction, the first violated invariant, the smallest correct change",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/refactor",
+      "description": "Structure improved behind stable public contracts, with characterization evidence",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/upgrades",
+      "description": "Transitive changes, compatibility, deprecations, licenses, vulnerabilities, locks, rollback",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/machinery",
+      "description": "Deterministic compiler, project, generator, linter, bootstrap and policy-enforcement behaviour",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/documentation",
+      "description": "Setup, architecture, operations, troubleshooting and examples aligned with released behaviour",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/migration",
+      "description": "Ordered, resumable, idempotent migrations with validation, rollback and consumer codemods",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/deprecation",
+      "description": "Consumer inventory, warnings, migration paths, removal criteria, archival and provenance",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/mechanical-edit",
+      "description": "Deterministic transformations with no semantic drift, validated by build, tests and checks",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/prose-authoring",
+      "description": "Skills, personas, rules and canon: invariants, decision rules, outputs, failures, verification",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/schema",
+      "description": "Versioned machine-readable contracts with validation, defaults, unknown fields, migrations",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/adapters",
+      "description": "Canonical semantics compiled into each surface; generated files marked and reproducible",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/evals",
+      "description": "Rubrics, fixtures, trajectories, grades and costs; a real failure added before prose changes",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/drift-review",
+      "description": "Generated adapters and observed behaviour compared against canon; unexplained divergence blocked",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/parity",
+      "description": "Porting a behaviour across platforms; in a product repo it sets the parity domain for every job",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/onboarding",
+      "description": "nen/contract.json, nen/workflow.json, labels, permission packs and surface placement",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/provisioning",
+      "description": "Self-hosted runners, nen binding, device trust, signing identities and host toolchains",
+      "color": "5319e7"
+    },
+    {
+      "name": "job/delivery-ops",
+      "description": "Commits, PR preparation, reviewer rounds, thread settlement, catch-up, CI redrive, release PRs",
+      "color": "5319e7"
+    },
+    {
+      "name": "model/claude",
+      "description": "hatsu:direct primary pick: Anthropic Claude line (Opus, Sonnet, Fable) on Claude Code",
+      "color": "006b75"
+    },
+    {
+      "name": "model/gpt",
+      "description": "hatsu:direct primary pick: OpenAI GPT line (Sol, Terra, Astra) on Codex",
+      "color": "006b75"
+    },
+    {
+      "name": "model/gemini",
+      "description": "hatsu:direct primary pick: Google Gemini line (Pro, Flash) on Antigravity",
+      "color": "006b75"
+    },
+    {
+      "name": "model/grok",
+      "description": "hatsu:direct primary pick: Grok line, served by Cursor as its editor-native frontier agent",
+      "color": "006b75"
+    },
+    {
+      "name": "model/composer",
+      "description": "hatsu:direct primary pick: Cursor Composer line for low-ambiguity, repository-wide edits",
+      "color": "006b75"
+    }
+  ]
+}

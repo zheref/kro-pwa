@@ -28,9 +28,18 @@ describe('EarlyAccessFragment (mirrors EarlyAccessFragment.stories)', () => {
     ).toBeTruthy()
     expect(
       screen.getByText(
-        /No fabricated counts: we'll email you when your platform is ready\./,
+        /We don't show sign-up counts, ratings or quotes here\. We'll email you when your platform is ready\./,
       ),
     ).toBeTruthy()
+    expect(screen.queryByText(/fabricated/i)).toBeNull()
+  })
+
+  it('Idle — the privacy notice sits under the email field and the input is described by it', () => {
+    render(stories.Idle.render())
+    const notice = screen.getByText(/We keep your address and platform pick/)
+    expect(notice.textContent).toMatch(/then delete them/)
+    expect(notice.textContent).toMatch(/link in the footer/)
+    expect(email().getAttribute('aria-describedby')).toBe(notice.id)
   })
 
   it('Typing — shows the typed address and the Mac chosen', () => {
@@ -46,7 +55,14 @@ describe('EarlyAccessFragment (mirrors EarlyAccessFragment.stories)', () => {
     const alert = screen.getByRole('alert')
     expect(alert.textContent).toMatch(/does not look right/i)
     expect(email().getAttribute('aria-invalid')).toBe('true')
-    expect(email().getAttribute('aria-describedby')).toBeTruthy()
+    const ids = (email().getAttribute('aria-describedby') ?? '').split(' ')
+    expect(ids).toContain(alert.id)
+    expect(document.getElementById(ids[0] ?? '')?.textContent).toBe(
+      alert.textContent,
+    )
+    expect(
+      ids.map((id) => document.getElementById(id)?.textContent).join(' '),
+    ).toMatch(/We keep your address/)
   })
 
   it('Submitting — the button is disabled with a progress spinner, and the form is busy', () => {

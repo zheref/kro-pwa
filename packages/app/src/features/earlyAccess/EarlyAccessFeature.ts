@@ -9,8 +9,8 @@
 import {
   type EarlyAccessException,
   type EarlyAccessReceipt,
+  EarlyAccessExceptions,
   type KroPlatform,
-  unknownException,
 } from '@kro/core'
 import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { joinEarlyAccessThunk } from './EarlyAccessProducer'
@@ -105,13 +105,9 @@ export const earlyAccessSlice = createSlice({
         // Cancellation is the one silent exit (`UZF-14`); so is a dispatch the
         // thunk's own `condition` declined (a second press while submitting).
         if (action.meta.aborted || action.meta.condition) return
-        Object.assign(
-          state,
-          withFailed(
-            state,
-            unknownException(action.error.message ?? 'Unknown error'),
-          ),
-        )
+        // The generic copy, never the thrown text: a transport or serializer
+        // message must not reach the page (`RC-26`, `RC-8`).
+        Object.assign(state, withFailed(state, EarlyAccessExceptions.unknown()))
       })
   },
 })

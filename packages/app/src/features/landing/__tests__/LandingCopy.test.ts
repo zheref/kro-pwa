@@ -42,7 +42,7 @@ describe('landing copy', () => {
       'Plan, Do and Earn, in one personal execution system',
       'Available soon — vote to get it sooner',
       'We never send what you write',
-      'Counts and timings only — never the words you write.',
+      "Counts, timings, the page you are on and your browser's size and language — never the words you write.",
       'the one place where a thought becomes an endeavor',
       'A closed ring means you’ve finished everything the day asked of you.',
       'Manage your time, like the gods',

@@ -135,6 +135,8 @@ export const RADIUS_VARS = {
   panel: '--kro-radius-panel',
   large: '--kro-radius-large',
   pill: '--kro-radius-pill',
+  /** The phone frame's outer bezel (marketing). */
+  device: '--kro-radius-device',
 } as const
 
 export type RadiusRole = keyof typeof RADIUS_VARS

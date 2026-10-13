@@ -39,6 +39,34 @@
 
 :root {
   color-scheme: light dark;
+
+  /* Marketing scale — the landing page's display type, measure and rhythm.
+     Scheme-free on purpose: nothing here is a colour. Consumed by
+     `design/marketing/marketing.css`. */
+
+  /* Hero headline: fluid from a phone to a 4K display. */
+  --kro-text-hero: clamp(2.75rem, 1.4rem + 6.4vw, 6.5rem);
+  /* Section-opening headline. */
+  --kro-text-display-1: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  /* Sub-section headline. */
+  --kro-text-display-2: clamp(2rem, 1.4rem + 2.2vw, 3rem);
+  /* The sentence under a headline. */
+  --kro-text-lede: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  /* Running copy on marketing surfaces — 17px, the Apple body size. */
+  --kro-text-body-marketing: 1.0625rem;
+  /* Tight tracking for the largest type; looser as the size drops. */
+  --kro-tracking-display: -0.045em;
+  --kro-tracking-title: -0.03em;
+  /* Content measures: prose, default sections, full-bleed showcases. */
+  --kro-container-narrow: 720px;
+  --kro-container: 1120px;
+  --kro-container-wide: 1320px;
+  /* Vertical rhythm between marketing sections. */
+  --kro-section-gap: clamp(4rem, 10vw, 8rem);
+  /* Corner radius of the phone frame (outer bezel). */
+  --kro-radius-device: 44px;
+  /* Height of the fixed marketing navigation bar. */
+  --kro-nav-h: 48px;
 }
 
 :root,

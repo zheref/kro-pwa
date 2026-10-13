@@ -6,18 +6,31 @@ name: Hanten
 # `nen pr ready` counts this job's SUCCESS as its round. The job reads only
 # the pull request BODY, which is where hatsu's shibari pastes hanten's
 # settled findings, so it re-runs on `edited`: settling a finding is a body
-# edit. An `edited` run here is never skipped for a same-repo PR, so it cannot
-# hide an earlier verdict behind a SKIPPED.
+# edit.
+#
+# WHY `pull_request_target`, NOT `pull_request` (Feitan, hanten review of
+# 2026-10-12, SEC-14): on `pull_request` GitHub runs the workflow file FROM THE
+# PR'S OWN MERGE REF, so a pull request could delete the guard below, or ship
+# any job named `hanten`, and mint a COMPLETED check of that name on its own
+# head -- and nen's round_check_pattern matches the check by NAME only. On
+# `pull_request_target` the workflow file AND the gate script come from the
+# BASE branch: nothing the PR controls runs here. The job holds only
+# `contents: read` and checks out no PR code -- the body reaches the script
+# through the environment as data. A fork PR's round therefore stays unmet
+# until the maintainer acts (the same-repo guard), and a same-repo PR cannot
+# weaken the gate it is judged by. Binding the round to its producing workflow
+# inside nen itself is a handbook-question, tracked on zheref/hatsu.
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: hanten-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-# SEC-14: least privilege. The gate reads the event payload and one script.
+# SEC-14: least privilege. The gate reads the event payload and one script
+# from the BASE branch; it never needs a write and never touches PR code.
 permissions:
   contents: read
 
@@ -26,13 +39,16 @@ jobs:
     name: hanten
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Fork pull requests carry an untrusted body and head; their round stays
-    # unmet until the maintainer acts, the same guard every Kro consumer uses.
+    # Fork pull requests carry an untrusted body; their round stays unmet
+    # until the maintainer acts, the same guard every Kro consumer uses.
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      # SEC-14: pinned to a reviewed commit SHA, the same pin as pr.yml.
+      # SEC-14: pinned to a reviewed commit SHA, the same pin as pr.yml. On
+      # pull_request_target the default ref IS the base branch's head, so the
+      # gate script below is the trusted copy, never the PR's.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: scripts/hanten_gate.sh
           sparse-checkout-cone-mode: false
           # The gate makes no git call, so the job token is never persisted.

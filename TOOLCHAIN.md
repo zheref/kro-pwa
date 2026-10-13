@@ -72,7 +72,7 @@ Both columns do the same thing. `make` is the interface; pnpm is the mechanism.
 | `make setup` | `corepack enable && pnpm install` | install the toolchain and all dependencies |
 | `make dev` | `turbo run dev` | Next dev server on :3000 |
 | `make build` | `turbo run build` | production build of every member |
-| `make lint` | `turbo run lint` | Biome repo-wide + the `@kro/core` platform-free and UZF boundary checks |
+| `make lint` | `biome check .` + `turbo run lint` + `make test-hanten-gate` | Biome repo-wide, the `@kro/core` platform-free and `@kro/app` UZF boundary checks, and the hanten review-round gate's 40-case suite |
 | `make typecheck` | `pnpm -r exec tsc --noEmit` | type-check every member |
 | `make test` | `turbo run test` | Vitest suites in every member (`make test-e2e` runs Playwright locally) |
 | `make test-coverage` | each member's `test:coverage` | The same suites, instrumented. Kept out of `make test` and out of `pr.yml`: instrumentation roughly doubles the longest job, and the ≥80%-on-touched-files floor is a per-PR measurement no gate reads (KC-IS-#50). |
@@ -96,7 +96,7 @@ never masks the other. Type errors still fail the build.
 | `make typecheck` | ✅ green | all three members, `noUncheckedIndexedAccess` on |
 | `make test` | ✅ green | 9 264 tests: `@kro/core` 1 843 · `@kro/app` 7 288 · `@kro/web` 133 |
 | `make test-coverage` | ✅ green | Line coverage across the whole tree: `@kro/core` **97.54 %** · `@kro/app` **95.67 %** · `@kro/web` reported by its own `test` script. The per-PR bar is ≥80 % on *touched* files (`UZF-19`); these are the whole-package numbers the verb prints. |
-| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome now covers the whole repo with **no lint exclusion at all**: the last one, the vendored `apps/web/src/components/ui/**` set, went with those files in KC-IS-#79. |
+| `make lint` | ✅ green | Biome (0 errors; warnings allowed), plus the platform-free and UZF boundary checks. Biome covers the whole repo; its only exclusions are build output, `apps/web/public` and the Claude Code harness's globally git-ignored `.claude/settings.local.json` (added 2026-10-12 — it is not tracked and was the one error a clean local `make lint` reported). The last source exclusion, the vendored `apps/web/src/components/ui/**` set, went with those files in KC-IS-#79. |
 
 The `@kro/core` platform-free gate stays readable on its own:
 `pnpm --filter @kro/core lint`.

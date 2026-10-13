@@ -122,9 +122,11 @@ the only readiness claim that counts is `nen pr ready`'s verdict at the current 
 
 The Bankai review apps (Sasuke, Tenma, Bisky) cannot post yet, so the automated round is the
 `hanten` check: a PR here is held to local `lint`/`typecheck`/`test`/`build` green, the CON-17
-body sections present, a settled `## Adversarial review (hanten)` section, UZF-26 evidence
-mirrored to `zheref/kro-assets` by `scripts/pr_screenshots.sh`, the child issue's acceptance
-criteria demonstrably met, and the maintainer's own review. "Ready" in the full CON-32 sense is
+body sections present, a settled `## Adversarial review (hanten)` section, UZF-26 evidence where
+a rendered surface changed (PNG captures mirrored to `zheref/kro-assets` by
+`scripts/pr_screenshots.sh` once a capture spec writes under `apps/web/e2e/__screenshots__/`; until
+then the RC-11 text snapshots' Files-changed paths, with the gap named), the child issue's
+acceptance criteria demonstrably met, and the maintainer's own review. "Ready" in the full CON-32 sense is
 what `nen pr ready` answers; the day the review pair is live, their rows join `nen/gates.json` and
 nothing else in this document changes.
 

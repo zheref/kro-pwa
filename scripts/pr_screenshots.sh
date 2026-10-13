@@ -15,8 +15,13 @@
 # SIDE EFFECT — one-way public disclosure. This PUSHES the PNGs to a public
 # repo. Once pushed they are PERMANENTLY public (git history and any fork or
 # clone persists a later delete). Only captures rendered from mock fixtures /
-# stubbed services may ever be mirrored — never a capture of real data. The
-# script confirms before pushing unless -y is passed.
+# stubbed services may ever be mirrored — never a capture of real data. THAT
+# GUARANTEE IS PROCEDURAL, NOT ENFORCED HERE: the script cannot tell a mock
+# render from a real one. What enforces it is the capture spec writing under
+# apps/web/e2e/__screenshots__ against stubbed/mock data (Storybook stories or
+# a `stubbedThunkExtra` build), and the confirmation below. The script asks
+# before pushing; `-y` skips the prompt only on a TTY, and a non-interactive
+# caller must ALSO set KRO_ASSETS_PUBLISH_ACK=mock-only to state it checked.
 #
 # Prerequisites:
 #   • SSH push access to zheref/kro-assets
@@ -74,12 +79,15 @@ while IFS= read -r -d '' p; do sorted+=("$p"); done < <(printf '%s\0' "${snaps[@
 snaps=("${sorted[@]}")
 
 scene_of() {
-    # {suite}-{scene}: the suite is the directory under __screenshots__, so two
-    # suites with a same-named scene never collide on the destination filename.
+    # {suite}-{scene}: the suite is the WHOLE directory path under __screenshots__
+    # with '/' joined as '-', so a nested a/b/c.png and a/d/c.png never collide on
+    # the destination filename and silently overwrite each other in kro-assets.
     local rel="${1#"${SHOTS_ROOT}"/}"
-    local suite="${rel%%/*}"
     local b; b="$(basename "$1" .png)"
-    if [ "$suite" = "$rel" ]; then printf '%s' "$b"; else printf '%s-%s' "$suite" "$b"; fi
+    case "$rel" in
+        */*) printf '%s-%s' "$(printf '%s' "${rel%/*}" | tr '/' '-')" "$b" ;;
+        *)   printf '%s' "$b" ;;
+    esac
 }
 
 # --- Confirmation gate (one-way public disclosure) ---
@@ -88,12 +96,17 @@ for p in "${snaps[@]}"; do echo "  ${repo_name}/pr-${pr_num}/$(scene_of "$p").pn
 echo "They must be MOCK-fixture renders only (never real data) — this cannot be undone." >&2
 if [ "$ASSUME_YES" -ne 1 ]; then
     if [ ! -t 0 ]; then
-        echo "error: refusing to push without confirmation (no TTY). Re-run with -y once you've confirmed the images are mock-only." >&2
+        echo "error: refusing to push without confirmation (no TTY). Re-run with -y AND KRO_ASSETS_PUBLISH_ACK=mock-only once you've confirmed the images are mock-only." >&2
         exit 4
     fi
     printf 'Publish to the public host? [y/N] ' >&2
     read -r ans
     case "$ans" in y|Y|yes) ;; *) echo "aborted." >&2; exit 1 ;; esac
+elif [ ! -t 0 ] && [ "${KRO_ASSETS_PUBLISH_ACK:-}" != "mock-only" ]; then
+    # -y from a non-interactive caller (an agent, CI) is not a confirmation on
+    # its own: the permanent public push also needs the explicit acknowledgement.
+    echo "error: -y without a TTY needs KRO_ASSETS_PUBLISH_ACK=mock-only in the environment, stating the captures were checked to be mock-only." >&2
+    exit 4
 fi
 
 # --- Mirror + push ---

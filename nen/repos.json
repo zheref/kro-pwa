@@ -18,12 +18,18 @@
     {
       "repo": "zheref/nen",
       "role": "Shared deterministic machinery"
+    },
+    {
+      "repo": "zheref/bankai-handbooks",
+      "role": "Canonical handbooks, constitution and shared agent conventions (CON-13) -- the canon Hatsu reviewers resolve (UZF-, SEC-, UX-, QA-, REL-, RC-); this repository mirrors its stack rules under .claude/rules/",
+      "pinned": "v0.6.0"
     }
   ],
   "product_codes": {
     "KC": "zheref/kro-pwa",
     "KRO": "zheref/KroApple",
     "HA": "zheref/hatsu",
-    "NN": "zheref/nen"
+    "NN": "zheref/nen",
+    "BH": "zheref/bankai-handbooks"
   }
 }

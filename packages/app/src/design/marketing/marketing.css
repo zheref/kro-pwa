@@ -1,0 +1,881 @@
+/* ==========================================================================
+   Marketing primitives — the landing page's type, rhythm, reveal and frames.
+
+   Everything here reads `tokens.css`; no value is retyped, so dark mode falls
+   out of the tokens. The marketing scale (`--kro-text-*`, `--kro-container*`,
+   `--kro-section-gap`, `--kro-radius-device`, `--kro-nav-h`) is declared there.
+
+   Unlayered, like `hig.css`: these are element-specific recipes, not defaults
+   a utility class is meant to override.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Display type
+   -------------------------------------------------------------------------- */
+
+.kro-display-hero,
+.kro-display-1,
+.kro-display-2 {
+  margin: 0;
+  font-weight: 700;
+  color: inherit;
+  text-wrap: balance;
+}
+
+.kro-display-hero {
+  font-size: var(--kro-text-hero);
+  line-height: 1.02;
+  letter-spacing: var(--kro-tracking-display);
+  max-width: 14ch;
+}
+
+.kro-display-1 {
+  font-size: var(--kro-text-display-1);
+  line-height: 1.04;
+  letter-spacing: var(--kro-tracking-display);
+  max-width: 14ch;
+}
+
+.kro-display-2 {
+  font-size: var(--kro-text-display-2);
+  line-height: 1.05;
+  letter-spacing: var(--kro-tracking-title);
+  max-width: 18ch;
+}
+
+.kro-lede {
+  margin: 0;
+  font-size: var(--kro-text-lede);
+  line-height: 1.45;
+  text-wrap: pretty;
+  max-width: 58ch;
+  color: var(--kro-color-fore-secondary);
+}
+
+.kro-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--kro-color-fore-secondary);
+}
+
+.kro-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 22px;
+  height: 3px;
+  border-radius: var(--kro-radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--kro-color-header-gradient-indigo),
+    var(--kro-color-header-gradient-grape)
+  );
+}
+
+/** Gradient-filled text. The solid colour is the fallback and stays readable. */
+.kro-gradient-text {
+  color: var(--kro-color-header-gradient-indigo);
+  background-image: linear-gradient(
+    to right,
+    var(--kro-color-header-gradient-indigo),
+    var(--kro-color-header-gradient-grape)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .kro-gradient-text {
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Layout
+   -------------------------------------------------------------------------- */
+
+.kro-marketing-section {
+  position: relative;
+  padding-block: var(--kro-section-gap);
+  scroll-margin-top: 72px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+.kro-marketing-section[data-tone="canvas"] {
+  background-color: var(--kro-color-back);
+}
+
+.kro-marketing-section[data-tone="subtle"] {
+  background-color: var(--kro-color-back-next);
+}
+
+.kro-marketing-section[data-tone="gradient"],
+.kro-marketing-section[data-tone="glass"] {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* On the indigo field the ink is white in both schemes, as in `.kro-on-gradient`. */
+.kro-marketing-section[data-tone="gradient"] {
+  color: var(--kro-color-snow);
+}
+
+.kro-marketing-section[data-tone="gradient"] .kro-lede,
+.kro-marketing-section[data-tone="gradient"] .kro-eyebrow {
+  color: color-mix(in srgb, var(--kro-color-snow) 86%, transparent);
+}
+
+.kro-marketing-section__panel {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: 32px;
+}
+
+.kro-marketing-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--kro-container);
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.kro-marketing-container--narrow {
+  max-width: var(--kro-container-narrow);
+}
+
+.kro-marketing-container--wide {
+  max-width: var(--kro-container-wide);
+}
+
+.kro-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--kro-space-medium);
+  margin-bottom: var(--kro-space-xx-large);
+}
+
+.kro-section-header[data-align="center"] {
+  align-items: center;
+  text-align: center;
+}
+
+.kro-section-header[data-align="center"] .kro-display-1,
+.kro-section-header[data-align="center"] .kro-display-2,
+.kro-section-header[data-align="center"] .kro-lede {
+  margin-inline: auto;
+}
+
+.kro-section-header[data-level="3"] .kro-display-2 {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+}
+
+/* --------------------------------------------------------------------------
+   Reveal — visible by default so server-rendered content never depends on
+   script. `is-armed` is added only to elements that start below the fold.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .kro-reveal.is-armed {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .kro-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 480ms var(--kro-ease-out),
+      transform 480ms var(--kro-ease-out);
+    transition-delay: var(--kro-reveal-delay, 0ms);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Decoration
+   -------------------------------------------------------------------------- */
+
+.kro-glow-blob {
+  position: absolute;
+  z-index: 0;
+  width: 46vmax;
+  height: 46vmax;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    var(--kro-color-header-gradient-indigo),
+    transparent 68%
+  );
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.kro-glow-blob--grape {
+  background: radial-gradient(
+    circle at center,
+    var(--kro-color-header-gradient-grape),
+    transparent 68%
+  );
+}
+
+.kro-hairline-grid {
+  background-image:
+    linear-gradient(to right, var(--kro-color-hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--kro-color-hairline) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    black 30%,
+    transparent 75%
+  );
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+/* --------------------------------------------------------------------------
+   Device frames
+   -------------------------------------------------------------------------- */
+
+.kro-device {
+  display: block;
+  max-width: 100%;
+  box-sizing: border-box;
+  width: var(--kro-device-w, auto);
+}
+
+.kro-device img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.kro-device--phone {
+  position: relative;
+  padding: 10px;
+  border-radius: var(--kro-radius-device);
+  background: color-mix(
+    in srgb,
+    var(--kro-color-charcoal) 70%,
+    var(--kro-color-total)
+  );
+  box-shadow: var(--kro-shadow-card);
+}
+
+.kro-device--phone img {
+  border-radius: calc(var(--kro-radius-device) - 10px);
+}
+
+.kro-device--phone::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 20px;
+  left: 50%;
+  width: 28%;
+  max-width: 120px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-total);
+  pointer-events: none;
+}
+
+.kro-device--mac {
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: var(--kro-shadow-card);
+  border: 1px solid var(--kro-color-hairline);
+  background: var(--kro-color-absolute);
+}
+
+.kro-device__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding-inline: 14px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.kro-device__lights {
+  display: inline-flex;
+  gap: 7px;
+}
+
+.kro-device__light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--kro-color-payne-gray);
+  opacity: 0.55;
+}
+
+.kro-device__title {
+  flex: 1;
+  margin-right: 52px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kro-color-fore-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kro-device--watch {
+  position: relative;
+  padding: 8px;
+  border-radius: 28%;
+  background: color-mix(
+    in srgb,
+    var(--kro-color-charcoal) 70%,
+    var(--kro-color-total)
+  );
+  box-shadow: var(--kro-shadow-card);
+}
+
+.kro-device--watch img {
+  border-radius: 22%;
+}
+
+.kro-device--watch::after {
+  content: "";
+  position: absolute;
+  top: 28%;
+  right: -4px;
+  width: 5px;
+  height: 18%;
+  border-radius: 0 3px 3px 0;
+  background: var(--kro-color-charcoal);
+}
+
+/* --------------------------------------------------------------------------
+   Navigation
+   -------------------------------------------------------------------------- */
+
+.kro-marketing-nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 40;
+  height: var(--kro-nav-h);
+}
+
+.kro-marketing-nav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--kro-space-medium);
+  height: 100%;
+}
+
+.kro-marketing-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--kro-color-fore);
+  text-decoration: none;
+}
+
+.kro-marketing-nav__links-wrap {
+  display: none;
+}
+
+.kro-marketing-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kro-marketing-nav__link {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kro-color-fore);
+  text-decoration: none;
+}
+
+/* The hover pill is 32px tall inside a 44px target. */
+.kro-marketing-nav__link::before {
+  content: "";
+  position: absolute;
+  inset: 6px 0;
+  z-index: -1;
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-glass-surface);
+  opacity: 0;
+  transition: opacity var(--kro-duration-quick) var(--kro-ease-standard);
+}
+
+.kro-marketing-nav__link:hover::before,
+.kro-marketing-nav__link:focus-visible::before {
+  opacity: 1;
+}
+
+.kro-marketing-nav__link:focus-visible,
+.kro-marketing-nav__brand:focus-visible,
+.kro-marketing-nav__menu:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+  border-radius: var(--kro-radius-pill);
+}
+
+.kro-marketing-nav__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 12px;
+  bottom: 8px;
+  height: 2px;
+  border-radius: var(--kro-radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--kro-color-header-gradient-indigo),
+    var(--kro-color-header-gradient-grape)
+  );
+  transform: scaleX(0);
+  transition: transform var(--kro-duration-standard) var(--kro-ease-out);
+}
+
+.kro-marketing-nav__link.is-active::after {
+  transform: scaleX(1);
+}
+
+.kro-marketing-nav__cta {
+  display: none;
+  flex: none;
+  height: 32px;
+}
+
+.kro-marketing-nav__trailing {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.kro-marketing-nav__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--kro-color-fore);
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .kro-marketing-nav__links-wrap {
+    display: block;
+    margin-inline: auto;
+  }
+
+  .kro-marketing-nav__cta {
+    display: inline-flex;
+  }
+
+  .kro-marketing-nav__menu {
+    display: none;
+  }
+
+  .kro-marketing-nav__trailing {
+    margin-left: 0;
+  }
+}
+
+/* A finger needs the 44px floor even on the compact pill. */
+@media (pointer: coarse) {
+  .kro-marketing-nav__cta {
+    height: 44px;
+  }
+}
+
+.kro-marketing-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kro-marketing-menu__item {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 320ms var(--kro-ease-out),
+    transform 320ms var(--kro-ease-out);
+  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+}
+
+[data-state="open"] .kro-marketing-menu__item {
+  opacity: 1;
+  transform: none;
+}
+
+.kro-marketing-menu__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: var(--kro-tracking-title);
+  color: var(--kro-color-fore);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kro-marketing-menu__item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+
+.kro-marketing-footer {
+  border-top: 1px solid var(--kro-color-hairline);
+  background: var(--kro-color-back-next);
+  color: var(--kro-color-fore);
+  padding-block: var(--kro-space-xx-large) var(--kro-space-x-large);
+}
+
+.kro-marketing-footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--kro-space-x-large);
+}
+
+@media (min-width: 768px) {
+  .kro-marketing-footer__grid {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.kro-marketing-footer__columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--kro-space-xx-large);
+}
+
+.kro-marketing-footer__title {
+  margin: 0 0 var(--kro-space-small);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kro-marketing-footer__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kro-marketing-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  color: var(--kro-color-fore-secondary);
+  text-decoration: none;
+}
+
+.kro-marketing-footer__link:hover {
+  color: var(--kro-color-fore);
+  text-decoration: underline;
+}
+
+.kro-marketing-footer__tagline {
+  margin: 0;
+  max-width: 32ch;
+  font-size: 13px;
+  color: var(--kro-color-fore-secondary);
+}
+
+.kro-marketing-footer__legal {
+  margin: var(--kro-space-x-large) 0 0;
+  padding-top: var(--kro-space-medium);
+  border-top: 1px solid var(--kro-color-hairline);
+  font-size: 12px;
+  color: var(--kro-color-fore-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Feature card, stats, call to action, controls
+   -------------------------------------------------------------------------- */
+
+.kro-feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--kro-space-small);
+  padding: var(--kro-space-large);
+  padding-top: calc(var(--kro-space-large) + 3px);
+  overflow: hidden;
+  border: 1px solid var(--kro-color-hairline);
+  border-radius: var(--kro-radius-surface);
+  background: var(--kro-color-absolute);
+  box-shadow: var(--kro-shadow-subtle);
+  --kro-card-accent: var(--kro-color-accent);
+}
+
+.kro-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--kro-card-accent);
+}
+
+.kro-feature-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--kro-radius-field);
+  color: var(--kro-card-accent);
+  background: color-mix(in srgb, var(--kro-card-accent) 14%, transparent);
+}
+
+.kro-feature-card__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.kro-feature-card__body {
+  margin: 0;
+  font-size: var(--kro-text-body-marketing);
+  line-height: 1.5;
+  color: var(--kro-color-fore-secondary);
+}
+
+.kro-feature-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The whole card is the target; the heading link stretches over it. */
+.kro-feature-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.kro-feature-card__link:focus-visible {
+  outline: none;
+}
+
+.kro-feature-card:has(.kro-feature-card__link:focus-visible) {
+  box-shadow: var(--kro-ring);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .kro-feature-card {
+    transition:
+      transform var(--kro-duration-standard) var(--kro-ease-out),
+      box-shadow var(--kro-duration-standard) var(--kro-ease-out);
+  }
+
+  .kro-feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--kro-shadow-card);
+  }
+}
+
+.kro-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--kro-space-x-large);
+  margin: 0;
+}
+
+.kro-stat-row__item {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+}
+
+.kro-stat-row__value {
+  margin: 0;
+  font-size: var(--kro-text-display-2);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: var(--kro-tracking-title);
+}
+
+.kro-stat-row__label {
+  font-size: 14px;
+  color: var(--kro-color-fore-secondary);
+}
+
+.kro-glass-cta {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  justify-content: center;
+  padding-block: var(--kro-space-x-large);
+}
+
+.kro-glass-cta__card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--kro-space-medium);
+  width: 100%;
+  max-width: 820px;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 5vw, 3.5rem);
+  text-align: center;
+  --kro-glass-cta-radius: 32px;
+  border-radius: var(--kro-glass-cta-radius);
+}
+
+.kro-glass-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--kro-space-small);
+  margin-top: var(--kro-space-small);
+}
+
+.kro-back-to-top {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition:
+    opacity var(--kro-duration-standard) var(--kro-ease-out),
+    transform var(--kro-duration-standard) var(--kro-ease-out),
+    visibility 0s linear var(--kro-duration-standard);
+}
+
+.kro-back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kro-back-to-top {
+    transition: none;
+    transform: none;
+  }
+}
+
+.kro-theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--kro-color-fore);
+  cursor: pointer;
+}
+
+.kro-theme-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+.kro-theme-toggle__icon {
+  position: absolute;
+  transition:
+    opacity var(--kro-duration-standard) var(--kro-ease-out),
+    transform var(--kro-duration-standard) var(--kro-ease-out);
+}
+
+.kro-theme-toggle[data-value="light"] .kro-theme-toggle__icon--moon,
+.kro-theme-toggle[data-value="dark"] .kro-theme-toggle__icon--sun {
+  opacity: 0;
+  transform: rotate(-40deg) scale(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kro-theme-toggle__icon {
+    transition: none;
+  }
+}
+
+.kro-platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--kro-color-hairline);
+  border-radius: var(--kro-radius-pill);
+  background: var(--kro-color-absolute);
+  color: var(--kro-color-fore);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: default;
+}
+
+a.kro-platform-badge,
+button.kro-platform-badge {
+  cursor: pointer;
+}
+
+.kro-platform-badge:focus-visible {
+  outline: none;
+  box-shadow: var(--kro-ring);
+}
+
+@media (forced-colors: active) {
+  .kro-gradient-text {
+    -webkit-text-fill-color: currentColor;
+    color: CanvasText;
+    background: none;
+  }
+
+  .kro-glow-blob,
+  .kro-hairline-grid {
+    display: none;
+  }
+}

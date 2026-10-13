@@ -5,7 +5,7 @@ import { frameImageProps } from './frameImage'
 export interface PhoneFrameProps {
   /** Screenshot URL. */
   readonly src: string
-  /** What the screenshot shows — the frame's accessible name. */
+  /** What the screenshot shows — the image's alt text. */
   readonly alt: string
   /** Intrinsic width of the screenshot, px. Also the frame's max width. */
   readonly width: number
@@ -27,12 +27,10 @@ export function PhoneFrame({
 }: PhoneFrameProps) {
   return (
     <div
-      role="img"
-      aria-label={alt}
       className={cn('kro-device kro-device--phone', className)}
       style={{ '--kro-device-w': `${width + 20}px` } as CSSProperties}
     >
-      <img {...frameImageProps({ src, width, height, priority })} alt="" />
+      <img {...frameImageProps({ src, width, height, priority })} alt={alt} />
     </div>
   )
 }

@@ -29,6 +29,20 @@
   max-width: 14ch;
 }
 
+/* The hero's copy column is a size container. Once the hero splits (`lg`),
+   the headline follows the column rather than the viewport, so the calls to
+   action stay above the fold from 1024×768 up. Below `lg` it keeps the
+   viewport-fluid size. */
+.kro-hero-copy {
+  container-type: inline-size;
+}
+
+@media (min-width: 64rem) {
+  .kro-hero-copy .kro-display-hero {
+    font-size: var(--kro-text-hero-split);
+  }
+}
+
 .kro-display-1 {
   font-size: var(--kro-text-display-1);
   line-height: 1.04;
@@ -57,7 +71,7 @@
   align-items: center;
   gap: 10px;
   margin: 0;
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -97,6 +111,48 @@
 }
 
 /* --------------------------------------------------------------------------
+   Marketing scope — focus ring and the primary call to action
+
+   Every landing surface is one of these roots (the sections, the bar, the
+   menu sheet, the footer, the back-to-top button). The page has no single
+   wrapper class, so the scope is this list rather than one ancestor.
+
+   The system ring (accent at 35 %) is tuned for the app's quiet surfaces; on
+   glow, gradient and glass it falls under the 3:1 non-text floor. Here it is
+   two-tone: a back-coloured band, then the accent.
+
+   The accent glass recipe mixes the accent into the glass surface, which
+   lands the on-accent label at 1.9–3.9:1 over the page's glow. A marketing
+   primary is therefore an opaque accent fill — the same fill the
+   reduced-transparency fallback in `glass.css` uses, without the sheen.
+   -------------------------------------------------------------------------- */
+
+:where(
+  .kro-marketing-section,
+  .kro-marketing-nav,
+  .kro-marketing-menu,
+  .kro-marketing-footer,
+  .kro-back-to-top
+) {
+  --kro-ring:
+    0 0 0 2px var(--kro-color-back), 0 0 0 4px var(--kro-color-accent);
+}
+
+:is(.kro-marketing-section, .kro-marketing-nav)
+  .kro-glass.kro-glass--accent::before,
+:is(.kro-marketing-section, .kro-marketing-nav)
+  .kro-glass--accent.kro-glass--interactive:hover::before {
+  background: var(--kro-color-accent);
+}
+
+/* The white sheen over the accent lifts the fill under the label to ~3:1;
+   the rim (the ::after's inset shadow) stays, the hotspot goes. */
+:is(.kro-marketing-section, .kro-marketing-nav)
+.kro-glass.kro-glass--accent::after {
+  background: none;
+}
+
+/* --------------------------------------------------------------------------
    Layout
    -------------------------------------------------------------------------- */
 
@@ -122,14 +178,30 @@
   overflow: hidden;
 }
 
-/* On the indigo field the ink is white in both schemes, as in `.kro-on-gradient`. */
+/* On the indigo field the ink is white in both schemes, as in `.kro-on-gradient`.
+   The marketing ring's back-coloured inner band would vanish into the field, so
+   here the ring is snow inside total: one band always contrasts with the field
+   and the other with whatever control it surrounds. */
 .kro-marketing-section[data-tone="gradient"] {
+  color: var(--kro-color-snow);
+  --kro-ring: 0 0 0 2px var(--kro-color-snow), 0 0 0 4px var(--kro-color-total);
+}
+
+.kro-marketing-section[data-tone="gradient"] .kro-lede {
+  color: color-mix(in srgb, var(--kro-color-snow) 86%, transparent);
+}
+
+/* 14px uppercase is not large text: the eyebrow needs full-strength snow to
+   clear 4.5:1 over the field's lightest glow. */
+.kro-marketing-section[data-tone="gradient"] .kro-eyebrow {
   color: var(--kro-color-snow);
 }
 
-.kro-marketing-section[data-tone="gradient"] .kro-lede,
-.kro-marketing-section[data-tone="gradient"] .kro-eyebrow {
-  color: color-mix(in srgb, var(--kro-color-snow) 86%, transparent);
+/* A lede on a glass card sits over glow: use the on-glass secondary ink, as
+   the Privacy panel does. */
+.kro-glass-cta__card .kro-lede,
+.kro-section-header--on-glow .kro-lede {
+  color: var(--kro-color-fore-secondary-on-glass);
 }
 
 .kro-marketing-section__panel {
@@ -176,7 +248,7 @@
 }
 
 .kro-section-header[data-level="3"] .kro-display-2 {
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  font-size: var(--kro-text-display-3);
 }
 
 /* --------------------------------------------------------------------------
@@ -194,8 +266,8 @@
     opacity: 1;
     transform: none;
     transition:
-      opacity 480ms var(--kro-ease-out),
-      transform 480ms var(--kro-ease-out);
+      opacity var(--kro-duration-panel) var(--kro-ease-out),
+      transform var(--kro-duration-panel) var(--kro-ease-out);
     transition-delay: var(--kro-reveal-delay, 0ms);
   }
 }
@@ -324,7 +396,7 @@
   flex: 1;
   margin-right: 52px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--kro-text-caption);
   font-weight: 500;
   color: var(--kro-color-fore-secondary);
   overflow: hidden;
@@ -383,7 +455,7 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  font-size: 17px;
+  font-size: var(--kro-text-body-marketing);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--kro-color-fore);
@@ -410,7 +482,7 @@
   align-items: center;
   min-height: 44px;
   padding-inline: 12px;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   font-weight: 500;
   color: var(--kro-color-fore);
   text-decoration: none;
@@ -428,8 +500,9 @@
   transition: opacity var(--kro-duration-quick) var(--kro-ease-standard);
 }
 
-.kro-marketing-nav__link:hover::before,
-.kro-marketing-nav__link:focus-visible::before {
+/* Hover only: on focus the two-tone ring is the indicator, and a pill under it
+   in dark would dilute the ring's contrast against the bar. */
+.kro-marketing-nav__link:hover::before {
   opacity: 1;
 }
 
@@ -504,8 +577,9 @@
   }
 }
 
-/* A finger needs the 44px floor even on the compact pill. */
-@media (pointer: coarse) {
+/* A finger needs the 44px floor even on the compact pill — on any touch
+   pointer, so a touchscreen laptop (fine primary pointer) gets it too. */
+@media (any-pointer: coarse) {
   .kro-marketing-nav__cta {
     height: 44px;
   }
@@ -524,9 +598,10 @@
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity 320ms var(--kro-ease-out),
-    transform 320ms var(--kro-ease-out);
-  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+    opacity var(--kro-duration-quick) var(--kro-ease-out),
+    transform var(--kro-duration-quick) var(--kro-ease-out);
+  /* 20ms a row: the last of seven rows lands at 300ms, the motion ceiling. */
+  transition-delay: calc(var(--i, 0) * 20ms);
 }
 
 [data-state="open"] .kro-marketing-menu__item {
@@ -538,7 +613,7 @@
   display: flex;
   align-items: center;
   min-height: 44px;
-  font-size: 22px;
+  font-size: var(--kro-text-menu);
   font-weight: 600;
   letter-spacing: var(--kro-tracking-title);
   color: var(--kro-color-fore);
@@ -584,7 +659,7 @@
 
 .kro-marketing-footer__title {
   margin: 0 0 var(--kro-space-small);
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   font-weight: 600;
 }
 
@@ -598,7 +673,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   color: var(--kro-color-fore-secondary);
   text-decoration: none;
 }
@@ -611,7 +686,7 @@
 .kro-marketing-footer__tagline {
   margin: 0;
   max-width: 32ch;
-  font-size: 13px;
+  font-size: var(--kro-text-footnote);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -619,7 +694,7 @@
   margin: var(--kro-space-x-large) 0 0;
   padding-top: var(--kro-space-medium);
   border-top: 1px solid var(--kro-color-hairline);
-  font-size: 12px;
+  font-size: var(--kro-text-caption);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -663,7 +738,7 @@
 
 .kro-feature-card__title {
   margin: 0;
-  font-size: 19px;
+  font-size: var(--kro-text-card-title);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -730,7 +805,7 @@
 }
 
 .kro-stat-row__label {
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   color: var(--kro-color-fore-secondary);
 }
 
@@ -851,7 +926,7 @@
   border-radius: var(--kro-radius-pill);
   background: var(--kro-color-absolute);
   color: var(--kro-color-fore);
-  font-size: 14px;
+  font-size: var(--kro-text-label);
   font-weight: 600;
   text-decoration: none;
   cursor: default;
@@ -860,6 +935,43 @@
 a.kro-platform-badge,
 button.kro-platform-badge {
   cursor: pointer;
+}
+
+.kro-platform-badge__status {
+  --kro-status: var(--kro-color-fore-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding-inline: 8px;
+  border-radius: var(--kro-radius-pill);
+  background: color-mix(in srgb, var(--kro-status) 16%, transparent);
+  color: var(--kro-color-fore);
+  font-size: var(--kro-text-caption);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.kro-platform-badge__status::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--kro-status);
+}
+
+.kro-platform-badge__status[data-status="live"] {
+  --kro-status: var(--kro-color-focus-green);
+}
+
+.kro-platform-badge__status[data-status="testflight"] {
+  --kro-status: var(--kro-color-accent);
+}
+
+.kro-platform-badge__status[data-status="in-progress"] {
+  --kro-status: var(--kro-color-badge-orange);
 }
 
 .kro-platform-badge:focus-visible {

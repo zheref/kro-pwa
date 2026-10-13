@@ -46,14 +46,31 @@
 
   /* Hero headline: fluid from a phone to a 4K display. */
   --kro-text-hero: clamp(2.75rem, 1.4rem + 6.4vw, 6.5rem);
+  /* Hero headline once the hero splits into copy and shots (Tailwind `lg`):
+     sized by its text column (`cqi`), so a laptop viewport keeps the calls to
+     action above the fold. Resolves against the hero copy's container. */
+  --kro-text-hero-split: clamp(3rem, 14cqi, 6rem);
   /* Section-opening headline. */
   --kro-text-display-1: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
   /* Sub-section headline. */
   --kro-text-display-2: clamp(2rem, 1.4rem + 2.2vw, 3rem);
+  /* Sub-section (level 3) headline. */
+  --kro-text-display-3: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
   /* The sentence under a headline. */
   --kro-text-lede: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
   /* Running copy on marketing surfaces — 17px, the Apple body size. */
   --kro-text-body-marketing: 1.0625rem;
+  /* Small marketing type, smallest first. 12px is the floor for any text. */
+  /* Status tags, window titles, the legal line — 12px. */
+  --kro-text-caption: 0.75rem;
+  /* Nav links, footer titles, links and tagline — 13px. */
+  --kro-text-footnote: 0.8125rem;
+  /* Eyebrows, stat labels, platform chips — 14px. */
+  --kro-text-label: 0.875rem;
+  /* Feature-card titles — 19px. */
+  --kro-text-card-title: 1.1875rem;
+  /* Links in the small-screen menu sheet — 22px. */
+  --kro-text-menu: 1.375rem;
   /* Tight tracking for the largest type; looser as the size drops. */
   --kro-tracking-display: -0.045em;
   --kro-tracking-title: -0.03em;

@@ -12,9 +12,11 @@ const props = {
 }
 
 describe('WatchFrame', () => {
-  it('names itself for assistive tech with the alt text', () => {
+  it('carries the alt text on the screenshot itself, not on the frame', () => {
     render(<WatchFrame {...props} />)
-    expect(screen.getByRole('img', { name: props.alt })).toBeTruthy()
+    const image = screen.getByRole('img', { name: props.alt })
+    expect(image.tagName).toBe('IMG')
+    expect(image.getAttribute('alt')).toBe(props.alt)
   })
 
   it('reserves the screenshot box and lazy-loads it', () => {
@@ -34,7 +36,9 @@ describe('WatchFrame', () => {
 
   it('passes a className through next to the frame class', () => {
     render(<WatchFrame {...props} className="extra" />)
-    const frame = screen.getByRole('img', { name: props.alt })
+    const frame = screen
+      .getByRole('img', { name: props.alt })
+      .closest('.kro-device') as HTMLElement
     expect(frame.className).toContain('kro-device--watch')
     expect(frame.className).toContain('extra')
   })

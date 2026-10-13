@@ -92,4 +92,30 @@ describe('HeroSection intents and CLS', () => {
         .getAttribute('href'),
     ).toBe('https://app.kro.example')
   })
+
+  it('keeps the secondary door in its glass ink, never snow on light glass (contrast)', () => {
+    render(
+      <HeroSection
+        hubUrl="/my-day"
+        onOpenHub={vi.fn()}
+        onGetEarlyAccess={vi.fn()}
+      />,
+    )
+    const secondary = screen.getByRole('link', { name: 'Get early access' })
+    expect(secondary.getAttribute('style')).toBeNull()
+    expect(secondary.className).toContain('text-kro-fore')
+  })
+
+  it('sets the headline inside the copy column container, so it sizes to the column once split', () => {
+    render(
+      <HeroSection
+        hubUrl="/my-day"
+        onOpenHub={vi.fn()}
+        onGetEarlyAccess={vi.fn()}
+      />,
+    )
+    const h1 = screen.getByRole('heading', { level: 1 })
+    expect(h1.parentElement?.className).toContain('kro-hero-copy')
+    expect(h1.className).toContain('kro-display-hero')
+  })
 })

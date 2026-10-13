@@ -12,8 +12,8 @@ export interface FrameImageInput {
  * The `<img>` attributes every device frame shares.
  *
  * Explicit `width`/`height` reserve the box before the bytes arrive (no
- * layout shift). The frame carries the accessible name, so the image itself is
- * presentational: `alt=""`.
+ * layout shift). The `alt` is not here: each frame writes the catalog's alt
+ * on its `<img>` directly (WCAG 1.1.1) — the frame around it is decoration.
  */
 export function frameImageProps({
   src,
@@ -27,7 +27,6 @@ export function frameImageProps({
     src,
     width,
     height,
-    alt: '',
     decoding: 'async',
     loading: priority ? 'eager' : 'lazy',
     ...(priority ? { fetchPriority: 'high' as const } : {}),

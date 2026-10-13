@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Badge, type BadgeColor } from '../fluent/status/Badge'
 import { ICON_SIZE, type LucideIcon } from '../system/icons/icons'
 import { cn } from '../system/utils/cn'
 
@@ -25,14 +24,15 @@ export const PLATFORM_STATUS_TEXT: Record<PlatformStatus, string> = {
   coming: 'Coming soon',
 }
 
-const STATUS_COLOR: Record<PlatformStatus, BadgeColor> = {
-  live: 'success',
-  testflight: 'brand',
-  'in-progress': 'warning',
-  coming: 'subtle',
-}
-
-/** A platform chip: glyph, name and a status tag. Link, button or static. */
+/**
+ * A platform chip: glyph, name and a status tag. Link, button or static.
+ *
+ * The status tag is not the system `Badge`: its tint recipe paints the label
+ * in the hue itself, and on the 16 % tint `mist`, `focusGreen` and
+ * `badgeOrange` land at 1.1–4.3:1 in light. Here the hue lives in the tint and
+ * a dot (`data-status` picks it in `marketing.css`), and the words are `fore`,
+ * so every status reads at body contrast in both schemes.
+ */
 export function PlatformBadge({
   icon: Icon,
   label,
@@ -45,9 +45,9 @@ export function PlatformBadge({
     <>
       <Icon aria-hidden="true" size={ICON_SIZE.medium} />
       <span>{label}</span>
-      <Badge appearance="tint" size="small" color={STATUS_COLOR[status]}>
+      <span className="kro-platform-badge__status" data-status={status}>
         {PLATFORM_STATUS_TEXT[status]}
-      </Badge>
+      </span>
     </>
   )
   const classes = cn('kro-platform-badge', className)

@@ -27,9 +27,6 @@ export interface HeroSectionProps {
   readonly onGetEarlyAccess: (placement: CtaPlacement) => void
 }
 
-/** On the field the ink is white in both themes, so the secondary says so. */
-const ON_FIELD = { color: 'var(--kro-color-snow)' } as const
-
 export function HeroSection({
   hubUrl,
   onOpenHub,
@@ -54,7 +51,7 @@ export function HeroSection({
         />
       </div>
       <div className="relative grid grid-cols-1 items-center gap-kro-xx-large lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        <div className="grid grid-cols-1 justify-items-start gap-kro-large">
+        <div className="kro-hero-copy grid grid-cols-1 justify-items-start gap-kro-large">
           <p className="kro-eyebrow">{heroCopy.eyebrow}</p>
           <h1 id={titleId} className="kro-display-hero">
             {heroCopy.title}
@@ -66,13 +63,9 @@ export function HeroSection({
                 {heroCopy.primary}
               </a>
             </Button>
-            <Button
-              asChild
-              variant="secondary"
-              size="lg"
-              shape="circular"
-              style={ON_FIELD}
-            >
+            {/* The secondary keeps its glass ink (fore), not the field's snow:
+                light control glass over the gradient cannot carry white. */}
+            <Button asChild variant="secondary" size="lg" shape="circular">
               <a
                 href={sectionHref(LANDING_SECTION_IDS.earlyAccess)}
                 onClick={() => onGetEarlyAccess('hero')}

@@ -17,6 +17,7 @@ import * as marketingFooter from '../MarketingFooter.stories'
 import * as marketingNav from '../MarketingNav.stories'
 import * as marketingSection from '../MarketingSection.stories'
 import * as phoneFrame from '../PhoneFrame.stories'
+import * as tabletFrame from '../TabletFrame.stories'
 import * as platformBadge from '../PlatformBadge.stories'
 import * as reveal from '../Reveal.stories'
 import * as sectionHeader from '../SectionHeader.stories'
@@ -40,6 +41,7 @@ const MODULES: ReadonlyArray<[string, StoryModule]> = [
   ['MarketingNav', marketingNav],
   ['MarketingSection', marketingSection],
   ['PhoneFrame', phoneFrame],
+  ['TabletFrame', tabletFrame],
   ['PlatformBadge', platformBadge],
   ['Reveal', reveal],
   ['SectionHeader', sectionHeader],

@@ -315,86 +315,291 @@
 
 /* --------------------------------------------------------------------------
    Device frames
+
+   Drawn once in the device's own points and scaled by container units: the
+   outer `.kro-device` is the container (its width is a ceiling in px, capped
+   by the column), and `--u` is one logical point at the rendered width, so a
+   bezel is the same share of the screen at 240px as at 412px. The frame
+   modules set `--kro-device-w`, `--kro-spec-w` (the logical outer width) and
+   `--kro-screen-ar` inline; every other number lives here.
    -------------------------------------------------------------------------- */
 
 .kro-device {
+  --kro-device-metal: rgb(44 44 47);
+  --kro-device-metal-hi: rgb(74 74 79);
+  --kro-device-key: rgb(58 58 62);
+  position: relative;
   display: block;
   max-width: 100%;
   box-sizing: border-box;
-  width: var(--kro-device-w, auto);
+  width: var(--kro-device-w, 100%);
+  container-type: inline-size;
 }
 
-.kro-device img {
+.kro-device__body {
+  --u: calc(100cqw / var(--kro-spec-w, 412));
+  position: relative;
+  box-sizing: border-box;
+}
+
+.kro-device__body img {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: var(--kro-screen-ar, auto);
+  object-fit: cover;
+  object-position: top;
 }
 
-.kro-device--phone {
-  position: relative;
-  padding: 10px;
-  border-radius: var(--kro-radius-device);
-  background: color-mix(
-    in srgb,
-    var(--kro-color-charcoal) 70%,
-    var(--kro-color-total)
-  );
-  box-shadow: var(--kro-shadow-card);
-}
-
-.kro-device--phone img {
-  border-radius: calc(var(--kro-radius-device) - 10px);
-}
-
-.kro-device--phone::before {
+/* A phone's side keys: the left group is the action key and the two volume
+   keys, the right one is the side button. Half of each sits under the body. */
+.kro-device--phone::before,
+.kro-device--phone::after {
+  --u: calc(100cqw / var(--kro-spec-w, 412));
   content: "";
   position: absolute;
-  z-index: 1;
-  top: 20px;
-  left: 50%;
-  width: 28%;
-  max-width: 120px;
-  height: 22px;
-  transform: translateX(-50%);
-  border-radius: var(--kro-radius-pill);
-  background: var(--kro-color-total);
+  width: calc(var(--u) * 4);
+  background: var(--kro-device-key);
   pointer-events: none;
 }
 
-.kro-device--mac {
+.kro-device--phone::before {
+  left: calc(var(--u) * -3);
+  top: calc(var(--u) * 108);
+  height: calc(var(--u) * 170);
+  border-radius: calc(var(--u) * 2) 0 0 calc(var(--u) * 2);
+  background: linear-gradient(
+    to bottom,
+    var(--kro-device-key) 0 calc(var(--u) * 28),
+    transparent 0 calc(var(--u) * 52),
+    var(--kro-device-key) 0 calc(var(--u) * 106),
+    transparent 0 calc(var(--u) * 116),
+    var(--kro-device-key) 0
+  );
+}
+
+.kro-device--phone::after {
+  right: calc(var(--u) * -3);
+  top: calc(var(--u) * 200);
+  height: calc(var(--u) * 90);
+  border-radius: 0 calc(var(--u) * 2) calc(var(--u) * 2) 0;
+}
+
+/* iPhone: 11 pt bezel, 47 pt screen radius inside a 55 pt body. */
+.kro-device--ios .kro-device__body {
+  padding: calc(var(--u) * 11);
+  border-radius: calc(var(--u) * 55);
+  background: linear-gradient(
+    145deg,
+    var(--kro-device-metal-hi),
+    var(--kro-device-metal) 40%,
+    rgb(21 21 23)
+  );
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 1.5) rgb(255 255 255 / 0.16),
+    inset 0 0 0 calc(var(--u) * 4) rgb(0 0 0),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 calc(var(--u) * 24) calc(var(--u) * 64) rgb(0 0 0 / 0.32);
+}
+
+.kro-device--ios img {
+  border-radius: calc(var(--u) * 47);
+}
+
+/* The Dynamic Island: 126 x 37 pt, 11 pt below the top of the screen. */
+.kro-device--ios .kro-device__cutout {
+  position: absolute;
+  top: calc(var(--u) * 22);
+  left: 50%;
+  width: calc(var(--u) * 126);
+  height: calc(var(--u) * 37);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgb(0 0 0);
+}
+
+/* Android: thin 7 pt bezel, flatter 37 pt screen corners, a centred punch-hole. */
+.kro-device--android .kro-device__body {
+  padding: calc(var(--u) * 7);
+  border-radius: calc(var(--u) * 44);
+  background: linear-gradient(
+    145deg,
+    rgb(58 59 62),
+    rgb(29 30 32) 55%,
+    rgb(18 19 21)
+  );
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 1) rgb(255 255 255 / 0.14),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 calc(var(--u) * 24) calc(var(--u) * 64) rgb(0 0 0 / 0.32);
+}
+
+.kro-device--android img {
+  border-radius: calc(var(--u) * 37);
+}
+
+.kro-device--android .kro-device__cutout {
+  position: absolute;
+  top: calc(var(--u) * 21);
+  left: 50%;
+  width: calc(var(--u) * 20);
+  height: calc(var(--u) * 20);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgb(5 5 6);
+  box-shadow: 0 0 0 calc(var(--u) * 2) rgb(0 0 0 / 0.35);
+}
+
+/* Android keys sit on the right: volume above the power key. */
+.kro-device--android::before {
+  left: auto;
+  right: calc(var(--u) * -3);
+  top: calc(var(--u) * 190);
+  height: calc(var(--u) * 150);
+  border-radius: 0 calc(var(--u) * 2) calc(var(--u) * 2) 0;
+  background: linear-gradient(
+    to bottom,
+    var(--kro-device-key) 0 calc(var(--u) * 70),
+    transparent 0 calc(var(--u) * 90),
+    var(--kro-device-key) 0
+  );
+}
+
+.kro-device--android::after {
+  display: none;
+}
+
+/* iPad (11 inch, portrait): 18 pt bezel, a camera dot in the top bezel. */
+.kro-device--tablet .kro-device__body {
+  padding: calc(var(--u) * 18);
+  border-radius: calc(var(--u) * 36);
+  background: linear-gradient(
+    145deg,
+    rgb(70 70 75),
+    rgb(42 42 45) 45%,
+    rgb(22 22 24)
+  );
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 2) rgb(255 255 255 / 0.14),
+    inset 0 0 0 calc(var(--u) * 6) rgb(0 0 0),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 calc(var(--u) * 28) calc(var(--u) * 80) rgb(0 0 0 / 0.3);
+}
+
+.kro-device--tablet img {
+  border-radius: calc(var(--u) * 18);
+}
+
+.kro-device--tablet .kro-device__cutout {
+  position: absolute;
+  top: calc(var(--u) * 7);
+  left: 50%;
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgb(11 11 13);
+  box-shadow: inset 0 0 0 calc(var(--u) * 1.5) rgb(29 34 48);
+}
+
+/* Apple Watch, 45 mm: a 198 x 242 pt screen in a 16 pt black bezel and a
+   rounded-rectangle case; the Digital Crown and the side button on the right. */
+.kro-device--watch::before,
+.kro-device--watch::after {
+  --u: calc(100cqw / var(--kro-spec-w, 230));
+  content: "";
+  position: absolute;
+  background: linear-gradient(
+    to right,
+    rgb(31 31 34),
+    rgb(85 85 90) 55%,
+    rgb(42 42 45)
+  );
+  pointer-events: none;
+}
+
+.kro-device--watch::before {
+  top: calc(var(--u) * 78);
+  right: calc(var(--u) * -6);
+  width: calc(var(--u) * 10);
+  height: calc(var(--u) * 46);
+  border-radius: 0 calc(var(--u) * 5) calc(var(--u) * 5) 0;
+}
+
+.kro-device--watch::after {
+  top: calc(var(--u) * 150);
+  right: calc(var(--u) * -3);
+  width: calc(var(--u) * 6);
+  height: calc(var(--u) * 34);
+  border-radius: 0 calc(var(--u) * 3) calc(var(--u) * 3) 0;
+}
+
+.kro-device--watch .kro-device__body {
+  padding: calc(var(--u) * 16);
+  border-radius: calc(var(--u) * 62);
+  background: linear-gradient(
+    145deg,
+    rgb(90 90 95),
+    rgb(43 43 46) 50%,
+    rgb(22 22 24)
+  );
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 1.5) rgb(255 255 255 / 0.18),
+    inset 0 0 0 calc(var(--u) * 6) rgb(0 0 0),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 calc(var(--u) * 14) calc(var(--u) * 36) rgb(0 0 0 / 0.3);
+}
+
+.kro-device--watch img {
+  border-radius: calc(var(--u) * 46);
+}
+
+/* macOS window: 1440 pt content under a 28 pt title bar, 10 pt corners. */
+.kro-device--mac .kro-device__body {
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: var(--kro-shadow-card);
-  border: 1px solid var(--kro-color-hairline);
+  border-radius: calc(var(--u) * 10);
   background: var(--kro-color-absolute);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.38),
+    0 calc(var(--u) * 22) calc(var(--u) * 70) rgb(0 0 0 / 0.34);
 }
 
 .kro-device__titlebar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 36px;
-  padding-inline: 14px;
+  gap: calc(var(--u) * 12);
+  height: max(20px, calc(var(--u) * 28));
+  padding-inline: calc(var(--u) * 12);
   border-radius: 0;
   box-shadow: none;
 }
 
 .kro-device__lights {
   display: inline-flex;
-  gap: 7px;
+  gap: calc(var(--u) * 8);
 }
 
 .kro-device__light {
-  width: 12px;
-  height: 12px;
+  width: max(7px, calc(var(--u) * 12));
+  height: max(7px, calc(var(--u) * 12));
   border-radius: 50%;
-  background: var(--kro-color-payne-gray);
-  opacity: 0.55;
+}
+
+.kro-device__light--close {
+  background: rgb(255 95 87);
+}
+
+.kro-device__light--minimize {
+  background: rgb(254 188 46);
+}
+
+.kro-device__light--zoom {
+  background: rgb(40 200 64);
 }
 
 .kro-device__title {
   flex: 1;
-  margin-right: 52px;
+  margin-right: calc(var(--u) * 52);
   text-align: center;
   font-size: var(--kro-text-caption);
   font-weight: 500;
@@ -402,33 +607,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.kro-device--watch {
-  position: relative;
-  padding: 8px;
-  border-radius: 28%;
-  background: color-mix(
-    in srgb,
-    var(--kro-color-charcoal) 70%,
-    var(--kro-color-total)
-  );
-  box-shadow: var(--kro-shadow-card);
-}
-
-.kro-device--watch img {
-  border-radius: 22%;
-}
-
-.kro-device--watch::after {
-  content: "";
-  position: absolute;
-  top: 28%;
-  right: -4px;
-  width: 5px;
-  height: 18%;
-  border-radius: 0 3px 3px 0;
-  background: var(--kro-color-charcoal);
 }
 
 /* --------------------------------------------------------------------------

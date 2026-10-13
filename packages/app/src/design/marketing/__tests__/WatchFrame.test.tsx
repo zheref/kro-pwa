@@ -43,3 +43,21 @@ describe('WatchFrame', () => {
     expect(frame.className).toContain('extra')
   })
 })
+
+describe('WatchFrame size', () => {
+  it('is a 45 mm watch at its logical size: 198 pt screen + 16 pt bezels', () => {
+    const { container } = render(<WatchFrame {...props} />)
+    const frame = container.querySelector('.kro-device') as HTMLElement
+    expect(frame.style.getPropertyValue('--kro-device-w')).toBe('230px')
+    expect(frame.style.getPropertyValue('--kro-screen-ar')).toBe('198 / 242')
+  })
+
+  it('scales the case and the screen together', () => {
+    const { container } = render(<WatchFrame {...props} scale={1.5} />)
+    expect(
+      (
+        container.querySelector('.kro-device') as HTMLElement
+      ).style.getPropertyValue('--kro-device-w'),
+    ).toBe('345px')
+  })
+})

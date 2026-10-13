@@ -266,8 +266,8 @@
     opacity: 1;
     transform: none;
     transition:
-      opacity 480ms var(--kro-ease-out),
-      transform 480ms var(--kro-ease-out);
+      opacity var(--kro-duration-panel) var(--kro-ease-out),
+      transform var(--kro-duration-panel) var(--kro-ease-out);
     transition-delay: var(--kro-reveal-delay, 0ms);
   }
 }
@@ -577,8 +577,9 @@
   }
 }
 
-/* A finger needs the 44px floor even on the compact pill. */
-@media (pointer: coarse) {
+/* A finger needs the 44px floor even on the compact pill — on any touch
+   pointer, so a touchscreen laptop (fine primary pointer) gets it too. */
+@media (any-pointer: coarse) {
   .kro-marketing-nav__cta {
     height: 44px;
   }
@@ -597,9 +598,10 @@
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity 320ms var(--kro-ease-out),
-    transform 320ms var(--kro-ease-out);
-  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+    opacity var(--kro-duration-quick) var(--kro-ease-out),
+    transform var(--kro-duration-quick) var(--kro-ease-out);
+  /* 20ms a row: the last of seven rows lands at 300ms, the motion ceiling. */
+  transition-delay: calc(var(--i, 0) * 20ms);
 }
 
 [data-state="open"] .kro-marketing-menu__item {

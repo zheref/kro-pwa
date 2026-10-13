@@ -137,4 +137,20 @@ describe('marketing.css', () => {
       /@media \(min-width: 64rem\)\s*\{\s*\.kro-hero-copy \.kro-display-hero\s*\{\s*font-size: var\(--kro-text-hero-split\);/,
     )
   })
+
+  it('times every transition from a motion token, never a literal duration', () => {
+    const transitions = [...MARKETING.matchAll(/transition:\s*([^;]+);/g)].map(
+      (match) => match[1] ?? '',
+    )
+    expect(transitions.length).toBeGreaterThan(3)
+    for (const transition of transitions) {
+      expect(transition, transition).not.toMatch(/\b[1-9]\d*m?s\b/)
+    }
+  })
+
+  it('gives the compact nav CTA the 44px floor on any touch pointer', () => {
+    expect(MARKETING).toMatch(
+      /@media \(any-pointer: coarse\)\s*\{\s*\.kro-marketing-nav__cta\s*\{\s*height: 44px;/,
+    )
+  })
 })

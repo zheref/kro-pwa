@@ -5,7 +5,7 @@ import { frameImageProps } from './frameImage'
 export interface WatchFrameProps {
   /** Screenshot URL. */
   readonly src: string
-  /** What the screenshot shows — the frame's accessible name. */
+  /** What the screenshot shows — the image's alt text. */
   readonly alt: string
   readonly width: number
   readonly height: number
@@ -24,12 +24,10 @@ export function WatchFrame({
 }: WatchFrameProps) {
   return (
     <div
-      role="img"
-      aria-label={alt}
       className={cn('kro-device kro-device--watch', className)}
       style={{ '--kro-device-w': `${width + 16}px` } as CSSProperties}
     >
-      <img {...frameImageProps({ src, width, height, priority })} alt="" />
+      <img {...frameImageProps({ src, width, height, priority })} alt={alt} />
     </div>
   )
 }

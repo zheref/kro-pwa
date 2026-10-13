@@ -5,7 +5,7 @@ import { frameImageProps } from './frameImage'
 
 export interface MacWindowFrameProps {
   readonly src: string
-  /** What the screenshot shows — the frame's accessible name. */
+  /** What the screenshot shows — the image's alt text. */
   readonly alt: string
   readonly width: number
   readonly height: number
@@ -27,8 +27,6 @@ export function MacWindowFrame({
 }: MacWindowFrameProps) {
   return (
     <div
-      role="img"
-      aria-label={alt}
       className={cn('kro-device kro-device--mac', className)}
       style={{ '--kro-device-w': `${width}px` } as CSSProperties}
     >
@@ -46,7 +44,7 @@ export function MacWindowFrame({
           <span className="kro-device__title">{title}</span>
         )}
       </GlassSurface>
-      <img {...frameImageProps({ src, width, height, priority })} alt="" />
+      <img {...frameImageProps({ src, width, height, priority })} alt={alt} />
     </div>
   )
 }

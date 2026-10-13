@@ -41,11 +41,20 @@ export default defineConfig({
   use: {
     trace: 'on-first-retry',
   },
+  expect: {
+    // A recorded scene is evidence; a 1 % pixel drift is a changed surface.
+    toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled' },
+  },
   projects: [
     {
       name: 'app',
       testDir: './e2e',
       use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      // The UZF-26 goldens: `toHaveScreenshot('<scene>.png')` reads and writes
+      // `e2e/__screenshots__/landing/<scene>.png`, no platform suffix, so the
+      // committed file is the one the PR body mirrors (a slash inside the name
+      // would be flattened to a dash, hence the suite folder in the template).
+      snapshotPathTemplate: '{testDir}/__screenshots__/landing/{arg}{ext}',
     },
     {
       name: 'kit',

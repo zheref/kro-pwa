@@ -127,6 +127,65 @@ describe('POST /api/early-access handler — the kill switch and the abuse surfa
     expect(sink.added).toEqual([])
   })
 
+  it('accepts the public Origin of a proxied request when it is on the allow-list', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const proxied = new Request('http://localhost:3000/api/early-access', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://kroapp.com',
+      },
+      body: JSON.stringify(valid),
+    })
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com', 'https://hub.kroapp.com'],
+    })(proxied)
+
+    expect(response.status).toBe(200)
+    expect(sink.added).toHaveLength(1)
+  })
+
+  it('refuses the public Origin of a proxied request when nothing lists it', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const proxied = new Request('http://localhost:3000/api/early-access', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://kroapp.com',
+      },
+      body: JSON.stringify(valid),
+    })
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://hub.kroapp.com'],
+    })(proxied)
+
+    expect(response.status).toBe(403)
+    expect(sink.added).toEqual([])
+  })
+
+  it('refuses an opaque null Origin even with an allow-list configured', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com'],
+    })(post(valid, { origin: 'null' }))
+
+    expect(response.status).toBe(403)
+    expect(sink.added).toEqual([])
+  })
+
+  it('accepts a request with no Origin at all — a non-browser client', async () => {
+    const sink = makeStubbedEarlyAccessSink()
+    const response = await makeEarlyAccessHandler({
+      sink,
+      allowedOrigins: ['https://kroapp.com'],
+    })(post(valid))
+
+    expect(response.status).toBe(200)
+  })
+
   it('refuses a body not declared as JSON with 415 — a CORS simple request', async () => {
     const sink = makeStubbedEarlyAccessSink()
     const handler = makeEarlyAccessHandler({ sink })

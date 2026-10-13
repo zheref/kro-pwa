@@ -12,7 +12,9 @@
  * Order of checks:
  * 1. the `landingPage` flag (`enabled`) — off, every request is `unavailable`
  *    (503) before the body is read: the flag is the sign-up's kill switch too;
- * 2. a cross-site `Origin` is refused (403), and a body not declared as
+ * 2. a cross-site `Origin` — one that is neither the request URL's origin nor
+ *    on `allowedOrigins` (the deployment's public origins, for a proxied
+ *    request) — is refused (403), and a body not declared as
  *    `application/json` is refused (415) — together they force a browser's
  *    CORS preflight, so another site cannot post a visitor's address here;
  * 3. a sink that cannot take sign-ups answers `unavailable` (503) — decided
@@ -51,6 +53,13 @@ export interface EarlyAccessHandlerDependencies {
   readonly enabled?: () => boolean
   /** Stamps a receipt the handler writes itself. Defaults to the wall clock. */
   readonly now?: () => Date
+  /**
+   * Public origins a browser may post from besides the request URL's own —
+   * behind a TLS-terminating proxy the request URL is the bind address
+   * (`http://<bind>:<port>`), never the public `https://` origin. Built from
+   * configuration by the route, never from a request header. Defaults to none.
+   */
+  readonly allowedOrigins?: readonly string[]
 }
 
 const NO_STORE = { 'cache-control': 'no-store' }
@@ -97,9 +106,19 @@ const receiptFor = (
   joined_at: now.toISOString(),
 })
 
-const isCrossSite = (request: Request): boolean => {
+/**
+ * An absent `Origin` is a non-browser client and passes; a present one must
+ * equal the request URL's origin or be on the configured list. `null` (an
+ * opaque origin — a sandboxed frame, a `data:` page) is on no list.
+ */
+const isCrossSite = (
+  request: Request,
+  allowedOrigins: readonly string[],
+): boolean => {
   const origin = request.headers.get('origin')
-  return origin !== null && origin !== new URL(request.url).origin
+  if (origin === null) return false
+  if (origin === new URL(request.url).origin) return false
+  return !allowedOrigins.includes(origin)
 }
 
 const isJson = (request: Request): boolean =>
@@ -115,7 +134,7 @@ export const makeEarlyAccessHandler =
     const now = dependencies.now ?? (() => new Date())
 
     if (!enabled()) return failure(EarlyAccessExceptions.unavailable())
-    if (isCrossSite(request)) {
+    if (isCrossSite(request, dependencies.allowedOrigins ?? [])) {
       return failure(
         EarlyAccessExceptions.unknown('Cross-site requests are not accepted.'),
         403,

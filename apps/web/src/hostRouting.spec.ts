@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   APP_PATHS,
   isAppPath,
   isBypassed,
   normalizeHost,
   resolveHostRouting,
+  siteOrigins,
   siteUrl,
   hubUrl,
 } from './hostRouting'
@@ -249,5 +250,59 @@ describe('host routing — a /hub redirect never leaves the host (SEC-7)', () =>
       kind: 'redirect',
       url: '/?code=abc',
     })
+  })
+})
+
+describe('siteOrigins — the public origins a browser may post from', () => {
+  it('lists the apex, the hub and the site URL origin, de-duplicated', () => {
+    expect(
+      siteOrigins({
+        siteHost: 'kroapp.com',
+        hubHost: 'hub.kroapp.com',
+        siteUrl: 'https://kroapp.com/',
+      }),
+    ).toEqual(['https://kroapp.com', 'https://hub.kroapp.com'])
+  })
+
+  it('is empty when nothing is configured — localhost relies on the request origin', () => {
+    expect(siteOrigins({ siteHost: '', hubHost: '', siteUrl: '' })).toEqual([])
+    expect(
+      siteOrigins({ siteHost: undefined, hubHost: null, siteUrl: null }),
+    ).toEqual([])
+  })
+
+  it('normalises hosts and keeps a site URL port, dropping its path', () => {
+    expect(
+      siteOrigins({
+        siteHost: ' KroApp.com:443 ',
+        hubHost: '',
+        siteUrl: 'http://localhost:3000/my-day',
+      }),
+    ).toEqual(['https://kroapp.com', 'http://localhost:3000'])
+  })
+
+  it('skips values that are not a bare host or an http(s) URL', () => {
+    expect(
+      siteOrigins({
+        siteHost: 'kroapp.com/evil',
+        hubHost: 'bad host',
+        siteUrl: 'javascript:alert(1)',
+      }),
+    ).toEqual([])
+  })
+
+  it('reads the deployment environment by default', () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_HOST', 'kroapp.com')
+    vi.stubEnv('NEXT_PUBLIC_HUB_HOST', 'hub.kroapp.com')
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.kroapp.com')
+    try {
+      expect(siteOrigins()).toEqual([
+        'https://kroapp.com',
+        'https://hub.kroapp.com',
+        'https://www.kroapp.com',
+      ])
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })

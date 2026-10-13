@@ -121,10 +121,15 @@
    glow, gradient and glass it falls under the 3:1 non-text floor. Here it is
    two-tone: a back-coloured band, then the accent.
 
-   The accent glass recipe mixes the accent into the glass surface, which
-   lands the on-accent label at 1.9–3.9:1 over the page's glow. A marketing
-   primary is therefore an opaque accent fill — the same fill the
-   reduced-transparency fallback in `glass.css` uses, without the sheen.
+   The marketing primary is tinted glass in both schemes: the accent mixed
+   into the glass surface at a HIGH strength, so the label keeps its floor
+   (4.5:1) over the page's glow while the rim, the sheen and the blur still
+   say "glass". The stock 58 % recipe lands the label at 1.9–3.9:1.
+     - dark:  88 % accent (hover 92 %) over the dark glass, a light top sheen.
+              Black ink; the sheen only lightens the fill, which helps it.
+     - light: 94 % accent (hover 96 %), NO sheen — a white veil over the
+              accent lowers white ink, so the rim is the only light.
+   Reduced transparency falls back to the opaque accent, below.
    -------------------------------------------------------------------------- */
 
 :where(
@@ -138,18 +143,76 @@
     0 0 0 2px var(--kro-color-back), 0 0 0 4px var(--kro-color-accent);
 }
 
-:is(.kro-marketing-section, .kro-marketing-nav)
-  .kro-glass.kro-glass--accent::before,
-:is(.kro-marketing-section, .kro-marketing-nav)
-  .kro-glass--accent.kro-glass--interactive:hover::before {
-  background: var(--kro-color-accent);
+/* The primary's recipe, per scheme. */
+:is(.kro-marketing-section, .kro-marketing-nav) .kro-glass--accent {
+  --kro-primary-tint: 94%;
+  --kro-primary-tint-hover: 96%;
+  --kro-primary-sheen: none;
 }
 
-/* The white sheen over the accent lifts the fill under the label to ~3:1;
-   the rim (the ::after's inset shadow) stays, the hotspot goes. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])
+    :is(.kro-marketing-section, .kro-marketing-nav)
+    .kro-glass--accent {
+    --kro-primary-tint: 88%;
+    --kro-primary-tint-hover: 92%;
+    --kro-primary-sheen: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.16),
+      rgb(255 255 255 / 0) 55%
+    );
+  }
+}
+
+[data-theme="dark"]
+  :is(.kro-marketing-section, .kro-marketing-nav)
+  .kro-glass--accent {
+  --kro-primary-tint: 88%;
+  --kro-primary-tint-hover: 92%;
+  --kro-primary-sheen: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.16),
+    rgb(255 255 255 / 0) 55%
+  );
+}
+
+:is(.kro-marketing-section, .kro-marketing-nav)
+  .kro-glass.kro-glass--accent::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-accent) var(--kro-primary-tint),
+    var(--kro-glass-surface)
+  );
+}
+
+:is(.kro-marketing-section, .kro-marketing-nav)
+  .kro-glass--accent.kro-glass--interactive:hover::before {
+  background: color-mix(
+    in srgb,
+    var(--kro-color-accent) var(--kro-primary-tint-hover),
+    var(--kro-glass-surface-hover)
+  );
+}
+
+/* One restrained sheen, lit or not: the lit glow on a primary is the rim —
+   a centred radial would sit right under the label. */
 :is(.kro-marketing-section, .kro-marketing-nav)
 .kro-glass.kro-glass--accent::after {
-  background: none;
+  background: var(--kro-primary-sheen);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :is(.kro-marketing-section, .kro-marketing-nav)
+    .kro-glass.kro-glass--accent::before,
+  :is(.kro-marketing-section, .kro-marketing-nav)
+    .kro-glass--accent.kro-glass--interactive:hover::before {
+    background: var(--kro-color-accent);
+  }
+
+  :is(.kro-marketing-section, .kro-marketing-nav)
+    .kro-glass.kro-glass--accent::after {
+    background: none;
+  }
 }
 
 /* --------------------------------------------------------------------------

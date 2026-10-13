@@ -21,6 +21,7 @@ vi.mock('next/script', () => ({
       data-testid="umami"
       data-src={String(props.src)}
       data-website-id={String(props['data-website-id'])}
+      data-host-url={String(props['data-host-url'])}
       data-auto-track={String(props['data-auto-track'])}
       data-exclude-search={String(props['data-exclude-search'])}
       data-do-not-track={String(props['data-do-not-track'])}
@@ -70,6 +71,7 @@ describe('the marketing layout', () => {
       'https://cloud.umami.is/script.js',
     )
     expect(script).toHaveAttribute('data-website-id', 'site-123')
+    expect(script).toHaveAttribute('data-host-url', 'https://gateway.umami.is')
     expect(script).toHaveAttribute('data-auto-track', 'false')
     expect(script).toHaveAttribute('data-exclude-search', 'true')
     expect(script).toHaveAttribute('data-do-not-track', 'true')
@@ -82,10 +84,9 @@ describe('the marketing layout', () => {
 
     render(<MarketingLayout>{<p>landing content</p>}</MarketingLayout>)
 
-    expect(screen.getByTestId('umami')).toHaveAttribute(
-      'data-src',
-      'https://stats.example.com/u.js',
-    )
+    const script = screen.getByTestId('umami')
+    expect(script).toHaveAttribute('data-src', 'https://stats.example.com/u.js')
+    expect(script).toHaveAttribute('data-host-url', 'https://stats.example.com')
   })
 
   it('loads no analytics script when the override is not https — never the cloud fallback', () => {

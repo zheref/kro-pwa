@@ -104,8 +104,8 @@ Dependencies point one way: `apps/web` → `@kro/app` → `@kro/core`. Nothing p
 | `@kro/core` imports no react/next/DOM/Node | `scripts/check-platform-free.mjs` (its `lint` task) + `lib: ["ES2022"]`, `types: []` | `RC-50` |
 | `configureStore` only in `library/store.ts` | `packages/app/scripts/check-uzf-boundaries.mjs` | `RC-22` |
 | `react-redux` only in `hooks.ts` / `StoreProvider.tsx` | same | `RC-10` |
-| A Service module imported only by `store.ts` + tests | same | `RC-6`, `RC-21` |
-| `fetch(` only under `src/services/**` | same | `RC-3` |
+| A Service module imported only by `store.ts`, tests, and the `services/` tree's own files (a sibling binding, a subpath barrel such as `services/earlyAccess/server.ts` or `services/googleCalendar/index.ts`) | same | `RC-6`, `RC-21` |
+| `fetch(` only in a `…Service.ts` under `src/services/**` — a route-handler Producer beside its Service may call the Service, never the wire | same | `RC-3` |
 | `createSlice` / `createAsyncThunk` / `createSelector` only in `…Feature.ts` / `…Producer.ts` / `…Selectors.ts` | same | `RC-1`, `RC-3`, `RC-5` |
 | `@kro/app` imports no `next/*` | same | `RC-40` |
 
@@ -150,6 +150,7 @@ would breach `@kro/core`'s platform-free contract. Ruled that way in the deliver
 | Page (stateful container) | the only artifact calling `useAppSelector`/`useAppDispatch` for a feature; owns no markup beyond its single Fragment call | `<F>Page.tsx` | `RC-37`, `RC-61` |
 | Fragment (passive) | may `useAppSelector`, never dispatches a thunk; intent arrives via callback props | `<F>Fragment.tsx` | `RC-15`, `RC-61` |
 | Component (domain-less) | reusable, imports nothing from `react-redux`, a slice or a Producer | `design/` | `RC-14` |
+| Route handler (Producer-equivalent) | `services/<x>/<X>Handler.ts` in `packages/app`, beside the Service it binds and exported through a subpath (`@kro/app/early-access`); `apps/web`'s `route.ts` reads the environment and binds; the handler answers a `Result` and never touches the wire itself | `services/<x>/` | `RC-43`, `RC-62` |
 | Route entry | `apps/web/src/app/**/page.tsx` — a passive Server Component: param resolution + optional prefetch, no hook, no dispatch; a `…PageClient.tsx` wrapper ≤10 lines forwards props | `apps/web` | `RC-38`, `RC-39`, `RC-62` |
 | Composition root | `app/layout.tsx` passive; one client `providers.tsx` wires Store + Theme + Navigation and is the one place `makeStore(...)` is called | `apps/web` | `RC-41` |
 | Navigation | a `NavigationService` behind `ThunkExtra`; `router.navigate(...)` is invoked from a Producer, never a component | `RC-17`, `RC-63` |
@@ -260,9 +261,11 @@ so the generated mirror reads truthfully rather than describing a repo that does
 | `RC-44`/`RC-45` — Expo Router route files, `app/_layout.tsx` | N/A | No native target. |
 | `{{CI_TEST_WORKFLOW}}` = `test.yml` | `.github/workflows/pr.yml` | One workflow carries lint + typecheck + test + build here. |
 | `RC-11` — the stories' own captures are the `UZF-26` evidence | Playwright captures of the built page (`e2e/*-shots.spec.ts` → `e2e/__screenshots__/`), mirrored to the public assets repository | A story covers one module; a reviewer judges the page as the production build serves it, and the Storybook test-runner is not wired. Recorded, not ruled. |
-| `RC-53` — never `toMatchSnapshot()` on a DOM tree | The story-mirror sweeps (`__tests__/stories.test.tsx`) snapshot the normalised DOM beside RTL semantic tests | A repo-wide pattern older than the landing (nine files on `main`); the sweep guards "every story renders, unchanged", the RTL tests carry `RC-11`. Open handbook question **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
+| `09-testing.md` § What NOT to test (unnumbered) — never `toMatchSnapshot()` on a DOM tree | The story-mirror sweeps (`__tests__/stories.test.tsx`) snapshot the normalised DOM beside RTL semantic tests | A repo-wide pattern older than the landing (nine files on `main`); the sweep guards "every story renders, unchanged", the RTL tests carry `RC-11`. Open handbook question **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
 | `RC-6`/`UZF-16` — a Service holds no state | The live analytics Service buffers `track` calls until the deferred tracker loads (`// State holder:` inline) | A single-transport readiness buffer fits neither the stateless Service nor the two-Service Repository. Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
 | `RC-15`/`RC-37` — a Page owns one Fragment | `LandingPage` composes `EarlyAccessPage` as its Fragment's slot; each Page dispatches only its own events | Local precedent (`DestinationPage` → `EarnPage`, `MainShellPage` → `ProfileControlPage`). Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**. |
+| `RC-3` rule 5 — a Producer never touches a boundary directly | `userDidToggleThemeThunk` and `SettingsProducer` paint the document through `applyStoredAppearance` | The appearance paint predates the landing (`SettingsProducer.ts`, on `main`); an `AppearanceService` behind `ThunkExtra` is tracked as KC-IS-#106. |
+| `02-store-setup.md` § 7 — `library/` holds only what compiles against bare RTK | `library/storedAppearance.ts` (and the older `library/persistence`, `plan`, `rings`, `timeline`) hold domain helpers | `UZF-6` sends cross-feature logic to `library/`; the two readings conflict. Open: **[BC-IS-#958](https://github.com/zheref/bankai-core/issues/958)**, question 4. |
 
 `RC-26` vs `RC-3` (does a cancelled thunk's `.rejected` reach the exception Shifter?) is a
 further open question — **[BC-IS-#904](https://github.com/zheref/bankai-core/issues/904)**. This
@@ -289,9 +292,10 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   `/_next/*` and the static files (icons, sounds, `/landing/*`, `sw.js`, the manifest, robots,
   sitemap, `llms.txt`, the OG image) are never routed. The landing document (`/` on a non-hub
   host) answers the security headers `src/securityHeaders.ts` builds — a CSP admitting only the
-  page's own scripts and the configured analytics origin (the one third-party origin the policy
-  admits; a self-hosted Umami whose script and collect endpoint live on different origins needs
-  `connect-src` widened), `nosniff`, a referrer policy and `frame-ancestors 'none'` — and the hub
+  page's own scripts plus the analytics script's origin, and connections only to itself and the
+  tracker's collect origin (`gateway.umami.is` for Umami Cloud, the script's own origin for a
+  self-hosted instance; the tag's `data-host-url` names the same origin, so the policy and the
+  tracker agree), `nosniff`, a referrer policy and `frame-ancestors 'none'` — and the hub
   inherits none of them. `/landing/*` ships as WebP only,
   no PNG masters: provenance and regeneration live in `docs/landing-assets.md`, and
   `LandingAssets.test.ts` enforces that every catalog key is used by a section and that each
@@ -341,9 +345,13 @@ repo's answer today, pending the ruling: it does **not** — `action.meta.aborte
   `@kro/app/early-access` subpath, the `./google` precedent, so no `fetch` lives in the shell
   (`RC-3`). `route.ts` only reads the environment (an `https:` webhook URL, else the unavailable
   sink; the flag) and binds. The handler refuses cross-site origins and non-JSON bodies, gives the
-  honeypot the same answer a real request would get, and folds the sink's 409 into the success
-  answer so the route never reveals membership (SEC-8); durable throttling, double opt-in and a
-  nonce CSP are tracked in KC-IS-#104. `store.ts` re-exports the Service *types* a Producer needs
+  honeypot the same answer a real request would get, answers every join — new or already listed —
+  with a generated receipt (a fresh id, no queue position) so the two are indistinguishable
+  whatever the webhook returns (SEC-8, SEC-12), checks a browser's `Origin` against the
+  configured site and hub origins rather than the server's bind origin so a TLS-terminating proxy
+  never refuses a real sign-up (SEC-7), and binds the webhook only when a removal channel exists
+  (`NEXT_PUBLIC_CONTACT_EMAIL`, shown under the field): no collection without a way to be removed.
+  Durable throttling, double opt-in and a nonce CSP are tracked in KC-IS-#104. `store.ts` re-exports the Service *types* a Producer needs
   and nothing else: the stubbed and recording doubles are imported by tests from the Service
   modules, which the boundary script allows. A composing Page never dispatches into the composed
   feature's slice (`RC-1`): the landing hands the platform pick down as a numbered request and

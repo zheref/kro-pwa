@@ -42,9 +42,10 @@ and no promise about what is not built.
   sooner. A vote is an anonymous count; it does not collect an address.
 - **Early access request** — an email address plus the platform a visitor
   wants to hear about. Sending it stores the address and the platform, which
-  part of the page it came from, the browser's language and the time, on the
-  sign-up list the maintainer runs; a notice under the field says so and how
-  to be removed. The request leaves only from the site's own pages; a slow or
+  part of the page it came from and the time, on the sign-up list the
+  maintainer runs; a notice under the field says so and names the address to
+  write to for removal. The sign-up stays closed until that address is
+  configured, so nothing is collected without a way to be removed. The request leaves only from the site's own pages; a slow or
   absent list shows the "not open yet" message. Nothing else on the page asks
   for anything; the analytics count visits and events without a name or an
   address (see *Interactions*).
@@ -108,8 +109,9 @@ and no promise about what is not built.
 - **Early-access form: submitting** — the button is disabled and shows
   progress; a second press does nothing.
 - **Early-access form: joined** — a success card for the chosen platform.
-- **Early-access form: failed** — one of three messages: not a valid address,
-  offline, or sign-up not open yet. Every one can be retried.
+- **Early-access form: failed** — one of four messages: not a valid address,
+  offline, sign-up not open yet, or something went wrong. Every one can be
+  retried.
 
 ## Interactions with other features
 
@@ -166,9 +168,9 @@ and no promise about what is not built.
 - The `www` host: today it serves the app, indexable, like any unconfigured
   alias; whether it redirects to the apex is a hosting decision. Owner:
   maintainer. Opened 2026-10-13.
-- A contact address for removal requests: the notice under the field points
-  at the footer's link because the page has no mailbox yet. Owner: product.
-  Opened 2026-10-13.
+- A contact mailbox for removal requests: the deployment value the notice
+  shows, and the sign-up requires, is the maintainer's to create and set.
+  Owner: maintainer. Opened 2026-10-13.
 - The mobile menu's open state is read from the press on its button; closing
   it with the Escape key cannot be seen, so the remembered state self-corrects
   on the next link press. Owner: design system, if the bar should report

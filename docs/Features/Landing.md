@@ -43,9 +43,15 @@ and no promise about what is not built.
 - **Early access request** — an email address plus the platform a visitor
   wants to hear about. Sending it stores the address and the platform, which
   part of the page it came from and the time, on the sign-up list the
-  maintainer runs; a notice under the field says so and names the address to
-  write to for removal. The sign-up stays closed until that address is
-  configured, so nothing is collected without a way to be removed. The request leaves only from the site's own pages; a slow or
+  maintainer runs. Under the field the page says: "We keep your address and
+  platform pick only to tell you when early access opens, then delete them.
+  The sign-up also records which part of the page you used and the time."
+  When the deployment sets a contact address the notice adds "To be removed
+  sooner, write to <address>" as a mail link; without one the sentence is
+  absent and the sign-up stays closed, so nothing is collected without a way
+  to be removed. The repository is never the removal path. The contact
+  address is a deployment value that must look like an address (one @, a dot
+  after it, no spaces), otherwise it counts as unset. The request leaves only from the site's own pages; a slow or
   absent list shows the "not open yet" message. Nothing else on the page asks
   for anything; the analytics count visits and events without a name or an
   address (see *Interactions*).
@@ -106,9 +112,14 @@ and no promise about what is not built.
 - **Early-access form: idle** — an empty form, iPhone chosen.
 - **Early-access form: typing** — the address and platform filled in; an
   address that was left and does not look right shows a message.
-- **Early-access form: submitting** — the button is disabled and shows
-  progress; a second press does nothing.
+- **Early-access form: submitting** — the button reads as unavailable and
+  shows progress while keeping keyboard focus; a second press does nothing.
+  An address refused on submit returns focus to the email field, and the
+  inline message is readable in both colour schemes.
 - **Early-access form: joined** — a success card for the chosen platform.
+  Every confirmation looks the same, whether the address was new or already
+  on the list, and it never shows a place in line: the list keeps that to
+  itself.
 - **Early-access form: failed** — one of four messages: not a valid address,
   offline, sign-up not open yet, or something went wrong. Every one can be
   retried.
@@ -138,7 +149,7 @@ and no promise about what is not built.
 | Presses an Open Kro button | Where the button was (bar, hero, platforms, closing, success card) |
 | Presses a Get early access button or a TestFlight chip | Where it was |
 | Submits the early-access form | The platform and that it came from the landing page |
-| Joins successfully | The platform, and whether a queue position came back |
+| Joins successfully | The platform |
 | The sign-up fails | The kind of failure only |
 | Votes for a platform | The platform |
 | Opens a question | Its position in the list |

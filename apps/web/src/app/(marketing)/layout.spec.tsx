@@ -22,6 +22,8 @@ vi.mock('next/script', () => ({
       data-src={String(props.src)}
       data-website-id={String(props['data-website-id'])}
       data-auto-track={String(props['data-auto-track'])}
+      data-exclude-search={String(props['data-exclude-search'])}
+      data-do-not-track={String(props['data-do-not-track'])}
       data-strategy={String(props.strategy)}
     />
   ),
@@ -69,6 +71,8 @@ describe('the marketing layout', () => {
     )
     expect(script).toHaveAttribute('data-website-id', 'site-123')
     expect(script).toHaveAttribute('data-auto-track', 'false')
+    expect(script).toHaveAttribute('data-exclude-search', 'true')
+    expect(script).toHaveAttribute('data-do-not-track', 'true')
     expect(script).toHaveAttribute('data-strategy', 'afterInteractive')
   })
 
@@ -82,5 +86,14 @@ describe('the marketing layout', () => {
       'data-src',
       'https://stats.example.com/u.js',
     )
+  })
+
+  it('loads no analytics script when the override is not https — never the cloud fallback', () => {
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_WEBSITE_ID', 'site-123')
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_SCRIPT_URL', 'http://stats.example.com/u.js')
+
+    render(<MarketingLayout>{<p>landing content</p>}</MarketingLayout>)
+
+    expect(screen.queryByTestId('umami')).toBeNull()
   })
 })

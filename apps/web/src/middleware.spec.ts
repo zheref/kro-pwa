@@ -77,3 +77,71 @@ describe('the host-routing middleware', () => {
     expect(matcher.test('/opengraph-image-abc')).toBe(false)
   })
 })
+
+describe('the landing security headers (SEC-10)', () => {
+  const production = () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_HOST', 'kroapp.com')
+    vi.stubEnv('NEXT_PUBLIC_HUB_HOST', 'hub.kroapp.com')
+  }
+
+  it('puts the CSP and its companions on the apex landing document', () => {
+    production()
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_WEBSITE_ID', 'site-123')
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_SCRIPT_URL', '')
+
+    const response = middleware(request('https://kroapp.com/', 'kroapp.com'))
+
+    const csp = response.headers.get('content-security-policy') ?? ''
+    expect(csp).toContain("frame-ancestors 'none'")
+    expect(csp).toContain('https://cloud.umami.is')
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(response.headers.get('referrer-policy')).toBe(
+      'strict-origin-when-cross-origin',
+    )
+    expect(response.headers.get('x-frame-options')).toBe('DENY')
+  })
+
+  it('admits no third-party origin when analytics is off', () => {
+    production()
+    vi.stubEnv('NEXT_PUBLIC_UMAMI_WEBSITE_ID', '')
+
+    const response = middleware(request('https://kroapp.com/', 'kroapp.com'))
+
+    const csp = response.headers.get('content-security-policy') ?? ''
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'")
+    expect(csp).not.toContain('umami')
+  })
+
+  it('leaves the hub root (a rewrite into the app) without the landing policy', () => {
+    production()
+
+    const response = middleware(
+      request('https://hub.kroapp.com/', 'hub.kroapp.com'),
+    )
+
+    expect(response.headers.get('content-security-policy')).toBeNull()
+    expect(response.headers.get('x-frame-options')).toBeNull()
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow')
+  })
+
+  it('leaves an apex app-path redirect without the landing policy', () => {
+    production()
+
+    const response = middleware(
+      request('https://kroapp.com/my-day', 'kroapp.com'),
+    )
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('content-security-policy')).toBeNull()
+  })
+
+  it('leaves an ordinary apex page that is not the landing alone', () => {
+    production()
+
+    const response = middleware(
+      request('https://kroapp.com/privacy', 'kroapp.com'),
+    )
+
+    expect(response.headers.get('content-security-policy')).toBeNull()
+  })
+})

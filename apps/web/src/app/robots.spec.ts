@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { APP_PATHS } from '../hostRouting'
 import robots from './robots'
 
 afterEach(() => {
@@ -17,11 +18,15 @@ describe('robots', () => {
     expect(rule().userAgent).toBe('*')
   })
 
-  it('keeps crawlers out of the app, the API and the /hub bridge', () => {
-    const disallow = rule().disallow
-    expect(disallow).toEqual(
-      expect.arrayContaining(['/my-day', '/plan', '/lists', '/api/', '/hub']),
-    )
+  it('keeps crawlers out of the API and the /hub bridge only', () => {
+    expect(rule().disallow).toEqual(['/api/', '/hub'])
+  })
+
+  it('leaves every app address crawlable so the hub noindex header is read', () => {
+    const disallow = rule().disallow ?? []
+    for (const path of APP_PATHS) {
+      expect(disallow).not.toContain(path)
+    }
     expect(disallow).not.toContain('/')
   })
 

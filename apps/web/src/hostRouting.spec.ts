@@ -199,3 +199,55 @@ describe('hubUrl', () => {
     expect(hubUrl('HUB.kroapp.com')).toBe('https://hub.kroapp.com/my-day')
   })
 })
+
+describe('host routing — a /hub redirect never leaves the host (SEC-7)', () => {
+  const hostile = [
+    '/hub//evil.com',
+    '/hub///evil.com',
+    '/hub/\\evil.com',
+    '/hub/\\\\evil.com',
+    '/hub/\\/evil.com',
+  ]
+  const hosts: ReadonlyArray<readonly [string, string, typeof production]> = [
+    ['the apex', 'kroapp.com', production],
+    ['the hub', 'hub.kroapp.com', production],
+    [
+      'a host with the env unset',
+      'preview.vercel.app',
+      {} as typeof production,
+    ],
+  ]
+
+  for (const [label, host, env] of hosts) {
+    for (const pathname of hostile) {
+      it(`collapses the leading slashes of ${JSON.stringify(pathname)} on ${label}`, () => {
+        const decision = route(host, pathname, '', env)
+        if (decision.kind !== 'redirect') throw new Error('expected a redirect')
+        const path = decision.url.replace(/^https:\/\/hub\.kroapp\.com/, '')
+        expect(path).toBe('/evil.com')
+        expect(path.startsWith('//')).toBe(false)
+        expect(path.startsWith('/\\')).toBe(false)
+        expect(new URL(decision.url, `https://${host}/`).host).toBe(
+          host === 'kroapp.com' ? 'hub.kroapp.com' : host,
+        )
+      })
+    }
+
+    it(`keeps a percent-encoded //evil.com on the same host on ${label}`, () => {
+      const decision = route(host, '/hub/%2F%2Fevil.com', '', env)
+      if (decision.kind !== 'redirect') throw new Error('expected a redirect')
+      const path = decision.url.replace(/^https:\/\/hub\.kroapp\.com/, '')
+      expect(path).toBe('/%2F%2Fevil.com')
+      expect(new URL(decision.url, `https://${host}/`).host).toBe(
+        host === 'kroapp.com' ? 'hub.kroapp.com' : host,
+      )
+    })
+  }
+
+  it('still sends a bare /hub/ to the root', () => {
+    expect(route('hub.kroapp.com', '/hub/', '?code=abc')).toEqual({
+      kind: 'redirect',
+      url: '/?code=abc',
+    })
+  })
+})

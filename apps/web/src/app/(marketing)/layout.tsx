@@ -1,4 +1,5 @@
 import Script from 'next/script'
+import { umamiConfig } from '../../analyticsConfig'
 import { Providers } from '../providers'
 
 /**
@@ -12,22 +13,20 @@ import { Providers } from '../providers'
  * Two document-level additions, both inert without their inputs:
  *
  * - a **skip link** to `#main`, which the landing page's `<main>` carries;
- * - the **Umami** script, only when `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set.
+ * - the **Umami** script, only when `umamiConfig()` answers (a website id is
+ *   set and any `NEXT_PUBLIC_UMAMI_SCRIPT_URL` override is `https:`).
  *   `data-auto-track="false"`: the landing reports events through its
  *   Analytics Service, never through the script's own page-view tracking.
- *   `NEXT_PUBLIC_UMAMI_SCRIPT_URL` overrides the Umami Cloud script (a
- *   self-hosted instance).
+ *   `data-exclude-search="true"` keeps query strings out of every event, and
+ *   `data-do-not-track="true"` honours the browser's Do Not Track setting.
  */
-const UMAMI_CLOUD_SCRIPT = 'https://cloud.umami.is/script.js'
 
 export default function MarketingLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID
-  const umamiScript =
-    process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || UMAMI_CLOUD_SCRIPT
+  const umami = umamiConfig()
   return (
     <Providers>
       <a
@@ -37,11 +36,13 @@ export default function MarketingLayout({
         Skip to content
       </a>
       {children}
-      {umamiWebsiteId ? (
+      {umami ? (
         <Script
-          src={umamiScript}
-          data-website-id={umamiWebsiteId}
+          src={umami.scriptUrl}
+          data-website-id={umami.websiteId}
           data-auto-track="false"
+          data-exclude-search="true"
+          data-do-not-track="true"
           strategy="afterInteractive"
           defer
         />

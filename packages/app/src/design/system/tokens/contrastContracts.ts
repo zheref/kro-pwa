@@ -64,6 +64,7 @@ export const TEXT_ON_SURFACE: ReadonlyArray<{
 }> = [
   { fg: 'fore', on: ['back', 'backInner', 'backNext', 'absolute'] },
   { fg: 'foreSecondary', on: ['back', 'backInner', 'backNext', 'absolute'] },
+  { fg: 'foreDanger', on: ['back', 'backInner', 'backNext', 'absolute'] },
   { fg: 'total', on: ['absolute'] },
   { fg: 'accent', on: ['back', 'absolute'] },
   { fg: 'onAccent', on: ['accent'] },

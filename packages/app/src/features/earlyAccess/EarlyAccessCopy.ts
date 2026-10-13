@@ -15,13 +15,20 @@ export const EARLY_ACCESS_PLATFORM_ORDER: readonly KroPlatform[] = [
 ]
 
 /**
- * The notice under the email field: what is kept, why, for how long, and how
- * to be removed. It names everything the request carries (SEC-8) — the
- * address and platform, plus the page part, language and time the sign-up
- * records — and the removal path the page actually has (the footer link).
+ * The notice under the email field: what is kept, why and for how long. It
+ * names everything the request carries (SEC-8) — the address and platform,
+ * plus the page part and time the sign-up records. The removal path follows
+ * it only when the deployment gives a contact address.
  */
 export const EARLY_ACCESS_PRIVACY_NOTICE =
-  "We keep your address and platform pick only to tell you when early access opens, then delete them. The sign-up also records which part of the page you used, your browser's language and the time. To be removed sooner, write to us through the link in the footer."
+  'We keep your address and platform pick only to tell you when early access opens, then delete them. The sign-up also records which part of the page you used and the time.'
+
+/** The removal sentence, split around the address so it renders as a link. */
+export const EARLY_ACCESS_REMOVAL_LEAD = 'To be removed sooner, write to '
+
+/** The plain-text form of the removal sentence for an address. */
+export const earlyAccessRemovalNotice = (contactEmail: string): string =>
+  `${EARLY_ACCESS_REMOVAL_LEAD}${contactEmail}.`
 
 /** The line beside the submit button, in plain visitor language. */
 export const EARLY_ACCESS_PROMISE =

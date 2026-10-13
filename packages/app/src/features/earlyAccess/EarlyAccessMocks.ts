@@ -87,6 +87,7 @@ export const noopEarlyAccessCallbacks = {
 export const earlyAccessFragmentProps = (
   state: EarlyAccessState,
   hubUrl = '/my-day',
+  contactEmail: string | null = null,
 ) => {
   const failed = state.submit.kind === 'failed' ? state.submit.exception : null
   const emailError =
@@ -106,6 +107,7 @@ export const earlyAccessFragmentProps = (
     failureCopy: failed?.message ?? null,
     failureIsRetryable: failed?.recoverable ?? false,
     hubUrl,
+    contactEmail,
     ...noopEarlyAccessCallbacks,
   }
 }

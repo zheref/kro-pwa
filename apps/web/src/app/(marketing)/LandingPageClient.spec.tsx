@@ -1,11 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-const landingPage = vi.fn((_props: { hubUrl?: string }) => (
-  <div data-testid="landing-page" />
-))
+const landingPage = vi.fn(
+  (_props: { hubUrl?: string; contactEmail?: string | null }) => (
+    <div data-testid="landing-page" />
+  ),
+)
 vi.mock('@kro/app', () => ({
-  LandingPage: (props: { hubUrl?: string }) => landingPage(props),
+  LandingPage: (props: { hubUrl?: string; contactEmail?: string | null }) =>
+    landingPage(props),
 }))
 
 describe('LandingPageClient', () => {
@@ -22,7 +25,21 @@ describe('LandingPageClient', () => {
 
     render(<LandingPageClient />)
 
-    expect(landingPage).toHaveBeenLastCalledWith({ hubUrl: '/my-day' })
+    expect(landingPage).toHaveBeenLastCalledWith({
+      hubUrl: '/my-day',
+      contactEmail: null,
+    })
+  })
+
+  it('forwards the contact address the server read', async () => {
+    const { LandingPageClient } = await import('./LandingPageClient')
+
+    render(<LandingPageClient contactEmail="privacy@example.com" />)
+
+    expect(landingPage).toHaveBeenLastCalledWith({
+      hubUrl: '/my-day',
+      contactEmail: 'privacy@example.com',
+    })
   })
 
   it('owns no markup of its own beyond the Page it mounts (RC-39)', async () => {

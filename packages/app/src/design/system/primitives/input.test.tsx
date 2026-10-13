@@ -63,7 +63,7 @@ describe('Input', () => {
 
     const field = screen.getByLabelText('Title')
     expect(field.getAttribute('aria-invalid')).toBe('true')
-    expect(field.className).toContain('aria-invalid:border-kro-banner-danger')
+    expect(field.className).toContain('aria-invalid:border-kro-fore-danger')
   })
 
   it('forwards the input type', () => {

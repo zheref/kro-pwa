@@ -152,6 +152,35 @@ describe('the capture prompt’s glass pairs are under contract (Hanten H1–H3,
   })
 })
 
+describe('fore-danger — the danger role for text and borders, readable in both schemes (r2-hi-01)', () => {
+  it('reads as text on the page surface in light — 4.5:1 or better', () => {
+    expect(
+      ratioBetween(
+        resolveToken('--kro-color-fore-danger', 'light'),
+        resolveToken('--kro-color-back', 'light'),
+      ),
+    ).toBeGreaterThanOrEqual(AA_TEXT)
+  })
+
+  it('reads as text on the lightest dark glass pixel — 4.5:1 or better', () => {
+    expect(
+      ratioBetween(resolveToken('--kro-color-fore-danger', 'dark'), '#484853'),
+    ).toBeGreaterThanOrEqual(AA_TEXT)
+  })
+
+  it('reads as a border on the dark glass — 3:1 or better — where banner-danger did not', () => {
+    expect(
+      ratioBetween(resolveToken('--kro-color-fore-danger', 'dark'), '#484853'),
+    ).toBeGreaterThanOrEqual(3)
+    expect(
+      ratioBetween(
+        resolveToken('--kro-color-banner-danger', 'dark'),
+        '#484853',
+      ),
+    ).toBeLessThan(3)
+  })
+})
+
 describe('the premise the tokens exist to fix still holds', () => {
   it('the raw system tints the badge palette replaced would fail AA on white', () => {
     // KroApple: white on SwiftUI `.green` measured ~2.2:1 — the finding that

@@ -13,6 +13,53 @@ afterEach(cleanup)
 const email = () =>
   screen.getByRole('textbox', { name: /Email address/ }) as HTMLInputElement
 
+describe('EarlyAccessFragment keyboard focus (r2-hi-02)', () => {
+  it('submitting — the button keeps focus and reads aria-disabled, so a keyboard user is not dropped to the page', () => {
+    render(stories.Submitting.render())
+    const button = screen.getByRole('button', { name: /Joining the list/ })
+    button.focus()
+    expect(button.getAttribute('aria-disabled')).toBe('true')
+    expect((button as HTMLButtonElement).disabled).toBe(false)
+    expect(document.activeElement).toBe(button)
+  })
+
+  it('a second press while submitting dispatches nothing', () => {
+    const onSubmit = vi.fn()
+    render(
+      <EarlyAccessFragment
+        {...earlyAccessFragmentProps(EarlyAccessMocks.submitting)}
+        onSubmit={onSubmit}
+      />,
+    )
+    fireEvent.submit(email().closest('form') as HTMLFormElement)
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('idle — a press still submits once', () => {
+    const onSubmit = vi.fn()
+    render(
+      <EarlyAccessFragment
+        {...earlyAccessFragmentProps(EarlyAccessMocks.idle)}
+        onSubmit={onSubmit}
+      />,
+    )
+    fireEvent.submit(email().closest('form') as HTMLFormElement)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it('refused for the address — focus moves to the email field', () => {
+    render(stories.FailedInvalid.render())
+    expect(document.activeElement).toBe(email())
+  })
+
+  it('the inline error uses the danger text role, not the banner background', () => {
+    render(stories.TypingInvalid.render())
+    const cls = screen.getByRole('alert').className
+    expect(cls).toContain('text-kro-fore-danger')
+    expect(cls).not.toContain('banner-danger')
+  })
+})
+
 describe('EarlyAccessFragment (mirrors EarlyAccessFragment.stories)', () => {
   it('Idle — a labelled required email field, seven platform radios with iPhone chosen, one submit', () => {
     render(stories.Idle.render())
@@ -38,7 +85,26 @@ describe('EarlyAccessFragment (mirrors EarlyAccessFragment.stories)', () => {
     render(stories.Idle.render())
     const notice = screen.getByText(/We keep your address and platform pick/)
     expect(notice.textContent).toMatch(/then delete them/)
-    expect(notice.textContent).toMatch(/link in the footer/)
+    expect(email().getAttribute('aria-describedby')).toBe(notice.id)
+  })
+
+  it('Idle — with no contact address the notice has no link and never mentions the footer, the repository or language', () => {
+    render(stories.Idle.render())
+    const notice = screen.getByText(/We keep your address and platform pick/)
+    expect(notice.querySelector('a')).toBeNull()
+    expect(notice.textContent).not.toMatch(/footer|github|kro-pwa|language/i)
+    expect(notice.textContent).not.toMatch(/removed/)
+  })
+
+  it('IdleWithContact — the removal sentence links the deployment address by mailto', () => {
+    render(stories.IdleWithContact.render())
+    const link = screen.getByRole('link', { name: 'privacy@example.com' })
+    expect(link.getAttribute('href')).toBe('mailto:privacy@example.com')
+    const notice = link.closest('p') as HTMLElement
+    expect(notice.textContent).toMatch(
+      /To be removed sooner, write to privacy@example\.com\./,
+    )
+    expect(notice.textContent).not.toMatch(/footer|github|kro-pwa|language/i)
     expect(email().getAttribute('aria-describedby')).toBe(notice.id)
   })
 
@@ -70,7 +136,8 @@ describe('EarlyAccessFragment (mirrors EarlyAccessFragment.stories)', () => {
     const button = screen.getByRole('button', {
       name: /Joining the list/,
     }) as HTMLButtonElement
-    expect(button.disabled).toBe(true)
+    expect(button.disabled).toBe(false)
+    expect(button.getAttribute('aria-disabled')).toBe('true')
     expect(screen.getByRole('progressbar')).toBeTruthy()
     expect(container.querySelector('form')?.getAttribute('aria-busy')).toBe(
       'true',

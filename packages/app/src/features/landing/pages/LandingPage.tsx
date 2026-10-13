@@ -17,9 +17,14 @@ export interface LandingPageProps {
    * this package cannot read from the environment — `apps/web` passes it.
    */
   readonly hubUrl?: string
+  /** Where to write to be removed from the list; `null` when none is set. */
+  readonly contactEmail?: string | null
 }
 
-export function LandingPage({ hubUrl = DEFAULT_HUB_URL }: LandingPageProps) {
+export function LandingPage({
+  hubUrl = DEFAULT_HUB_URL,
+  contactEmail = null,
+}: LandingPageProps) {
   const { platformRequest, ...landing } = useLanding(hubUrl)
   return (
     <LandingFragment
@@ -27,6 +32,7 @@ export function LandingPage({ hubUrl = DEFAULT_HUB_URL }: LandingPageProps) {
       earlyAccess={
         <EarlyAccessPage
           hubUrl={hubUrl}
+          contactEmail={contactEmail}
           requestedPlatform={platformRequest}
           onOpenHub={() => landing.onOpenHub('success')}
         />

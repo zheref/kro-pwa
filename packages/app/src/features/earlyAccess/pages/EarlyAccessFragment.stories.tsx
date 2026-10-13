@@ -15,15 +15,22 @@ export default {
 const frame = (
   state: typeof EarlyAccessMocks.idle,
   theme: 'light' | 'dark' = 'light',
+  contactEmail: string | null = null,
 ) => (
   <MarketingStage theme={theme} width={560}>
     <div style={{ padding: 24 }}>
-      <EarlyAccessFragment {...earlyAccessFragmentProps(state)} />
+      <EarlyAccessFragment
+        {...earlyAccessFragmentProps(state, '/my-day', contactEmail)}
+      />
     </div>
   </MarketingStage>
 )
 
 export const Idle = { name: 'Idle', render: () => frame(EarlyAccessMocks.idle) }
+export const IdleWithContact = {
+  name: 'Idle · with a contact address',
+  render: () => frame(EarlyAccessMocks.idle, 'light', 'privacy@example.com'),
+}
 export const Typing = {
   name: 'Typing',
   render: () => frame(EarlyAccessMocks.typing),

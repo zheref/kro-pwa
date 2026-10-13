@@ -50,7 +50,7 @@ describe('Field', () => {
     expect(message.textContent).toBe(
       'A title is required before this can be saved.',
     )
-    expect(message.className).toContain('text-kro-banner-danger')
+    expect(message.className).toContain('text-kro-fore-danger')
   })
 
   it('tints warning and success only after the words are present', () => {

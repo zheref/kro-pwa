@@ -177,5 +177,9 @@
         ]
       }
     }
+  },
+  "classify": {
+    "publish": "label+comment",
+    "$publish": "one of: label | label+comment"
   }
 }

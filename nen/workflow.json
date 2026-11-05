@@ -177,5 +177,10 @@
         ]
       }
     }
+  },
+  "classify": {
+    "publish": "label+comment",
+    "$publish": "one of: label | label+comment",
+    "$comment": "Opts this repository into hatsu:classify's criteria comment (the maintainer's request of 2026-10-20: classify and direct always write back; zheref/hatsu docs/ROSTER.md section Rulings of 2026-10-20). Beside the lang/ and job/ labels it applies through nen classify apply, classify posts one marker-keyed comment per classified issue -- each decided key with confidence, status and signal category, never issue text; the whole contract is zheref/hatsu contracts/classify.taxonomy.json -> publish. Read at the default branch's tip, never under ren. direct.publish (above) was already label+comment."
   }
 }
